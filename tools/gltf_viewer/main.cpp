@@ -92,1203 +92,1203 @@ using toms::next::GltfRenderer;
 namespace {
 
 struct Args {
-    std::string file, screenshot, renderer = "auto", anim;
-    int frames = 0, w = 1280, h = 800, debug = 0;
-    float time = -1.0f, yaw = 35.0f, pitch = 20.0f, zoom = 1.0f;
-    bool ui = true, shadows = true, ground = true;
-    std::string light = "default";
-    std::vector<char> lightHints;   // --light-hints
-    float lightSpin = 0.0f;         // --light-spin (0 = off)
-    bool spotAim = false;           // --spot-aim
-    float spotAimYaw = 0.0f, spotAimPitch = -45.0f;
-    float shadowBias = 1.0f;
-    std::string camera;
-    float lookYaw = 0.0f, lookPitch = 0.0f;
-    int crowd = 0;
-    float crowdFps = 30.0f;
-    bool physics = true;
-    std::string select, tool;
-    float pickX = -1.0f, pickY = -1.0f;
-    glm::vec4 drag{-1.0f};
-    std::string env;                     // --env: an .hdr, "none", or "" = the default
-    float envRotation = 0.0f, envIntensity = 1.0f, backgroundBlur = 0.3f;
-    int background = 1;
+    std::string m_strFile, m_strScreenshot, m_strRenderer = "auto", m_strAnim;
+    int m_iFrames = 0, m_iW = 1280, m_iH = 800, m_iDebug = 0;
+    float m_fTime = -1.0f, m_fYaw = 35.0f, m_fPitch = 20.0f, m_fZoom = 1.0f;
+    bool m_bUi = true, m_bShadows = true, m_bGround = true;
+    std::string m_strLight = "default";
+    std::vector<char> m_vLightHints;   // --light-hints
+    float m_fLightSpin = 0.0f;         // --light-spin (0 = off)
+    bool m_bSpotAim = false;           // --spot-aim
+    float m_fSpotAimYaw = 0.0f, m_fSpotAimPitch = -45.0f;
+    float m_fShadowBias = 1.0f;
+    std::string m_strCamera;
+    float m_fLookYaw = 0.0f, m_fLookPitch = 0.0f;
+    int m_iCrowd = 0;
+    float m_fCrowdFps = 30.0f;
+    bool m_bPhysics = true;
+    std::string m_strSelect, m_strTool;
+    float m_fPickX = -1.0f, m_fPickY = -1.0f;
+    glm::vec4 m_v4Drag{-1.0f};
+    std::string m_strEnv;                     // --env: an .hdr, "none", or "" = the default
+    float m_fEnvRotation = 0.0f, m_fEnvIntensity = 1.0f, m_fBackgroundBlur = 0.3f;
+    int m_iBackground = 1;
 };
 
-const char* value(const std::string& s, const char* key) {
-    const size_t n = std::strlen(key);
-    return s.compare(0, n, key) == 0 ? s.c_str() + n : nullptr;
+const char* f_Value(const std::string& l_strS, const char* l_pszKey) {
+    const size_t l_nN = std::strlen(l_pszKey);
+    return l_strS.compare(0, l_nN, l_pszKey) == 0 ? l_strS.c_str() + l_nN : nullptr;
 }
 
-Args parseArgs(const std::vector<std::string>& argv) {
-    Args a;
-    for (size_t i = 1; i < argv.size(); i++) {
-        const std::string& s = argv[i];
-        if (const char* v = value(s, "--renderer=")) a.renderer = v;
-        else if (const char* v = value(s, "--anim=")) a.anim = v;
-        else if (const char* v = value(s, "--time=")) a.time = (float)std::atof(v);
-        else if (const char* v = value(s, "--frames=")) a.frames = std::atoi(v);
-        else if (const char* v = value(s, "--screenshot=")) a.screenshot = v;
-        else if (const char* v = value(s, "--yaw=")) a.yaw = (float)std::atof(v);
-        else if (const char* v = value(s, "--pitch=")) a.pitch = (float)std::atof(v);
-        else if (const char* v = value(s, "--zoom=")) a.zoom = (float)std::atof(v);
-        else if (const char* v = value(s, "--debug=")) a.debug = std::atoi(v);
-        else if (const char* v = value(s, "--size=")) std::sscanf(v, "%dx%d", &a.w, &a.h);
-        else if (s == "--no-ui") a.ui = false;
-        else if (const char* v = value(s, "--light=")) a.light = v;
-        else if (const char* v = value(s, "--light-spin=")) a.lightSpin = (float)std::atof(v);
-        else if (const char* v = value(s, "--spot-aim=")) a.spotAim = std::sscanf(v, "%f,%f", &a.spotAimYaw, &a.spotAimPitch) == 2;
-        else if (const char* v = value(s, "--light-hints=")) {
-            for (const char* c = v; *c; c++)
-                if (*c == '0' || *c == '1') a.lightHints.push_back(*c == '1' ? 1 : 0);
+Args f_ParseArgs(const std::vector<std::string>& l_vArgv) {
+    Args l_oA;
+    for (size_t l_nI = 1; l_nI < l_vArgv.size(); l_nI++) {
+        const std::string& l_strS = l_vArgv[l_nI];
+        if (const char* l_pszV = f_Value(l_strS, "--renderer=")) l_oA.m_strRenderer = l_pszV;
+        else if (const char* l_pszV = f_Value(l_strS, "--anim=")) l_oA.m_strAnim = l_pszV;
+        else if (const char* l_pszV = f_Value(l_strS, "--time=")) l_oA.m_fTime = (float)std::atof(l_pszV);
+        else if (const char* l_pszV = f_Value(l_strS, "--frames=")) l_oA.m_iFrames = std::atoi(l_pszV);
+        else if (const char* l_pszV = f_Value(l_strS, "--screenshot=")) l_oA.m_strScreenshot = l_pszV;
+        else if (const char* l_pszV = f_Value(l_strS, "--yaw=")) l_oA.m_fYaw = (float)std::atof(l_pszV);
+        else if (const char* l_pszV = f_Value(l_strS, "--pitch=")) l_oA.m_fPitch = (float)std::atof(l_pszV);
+        else if (const char* l_pszV = f_Value(l_strS, "--zoom=")) l_oA.m_fZoom = (float)std::atof(l_pszV);
+        else if (const char* l_pszV = f_Value(l_strS, "--debug=")) l_oA.m_iDebug = std::atoi(l_pszV);
+        else if (const char* l_pszV = f_Value(l_strS, "--size=")) std::sscanf(l_pszV, "%dx%d", &l_oA.m_iW, &l_oA.m_iH);
+        else if (l_strS == "--no-ui") l_oA.m_bUi = false;
+        else if (const char* l_pszV = f_Value(l_strS, "--light=")) l_oA.m_strLight = l_pszV;
+        else if (const char* l_pszV = f_Value(l_strS, "--light-spin=")) l_oA.m_fLightSpin = (float)std::atof(l_pszV);
+        else if (const char* l_pszV = f_Value(l_strS, "--spot-aim=")) l_oA.m_bSpotAim = std::sscanf(l_pszV, "%f,%f", &l_oA.m_fSpotAimYaw, &l_oA.m_fSpotAimPitch) == 2;
+        else if (const char* l_pszV = f_Value(l_strS, "--light-hints=")) {
+            for (const char* l_pszC = l_pszV; *l_pszC; l_pszC++)
+                if (*l_pszC == '0' || *l_pszC == '1') l_oA.m_vLightHints.push_back(*l_pszC == '1' ? 1 : 0);
         }
-        else if (const char* v = value(s, "--shadows=")) a.shadows = std::atoi(v) != 0;
-        else if (const char* v = value(s, "--ground=")) a.ground = std::atoi(v) != 0;
-        else if (const char* v = value(s, "--shadow-bias=")) a.shadowBias = (float)std::atof(v);
-        else if (const char* v = value(s, "--camera=")) a.camera = v;
-        else if (const char* v = value(s, "--look=")) std::sscanf(v, "%f,%f", &a.lookYaw, &a.lookPitch);
-        else if (const char* v = value(s, "--crowd=")) a.crowd = std::max(0, std::atoi(v));
-        else if (const char* v = value(s, "--crowd-fps=")) a.crowdFps = (float)std::atof(v);
-        else if (const char* v = value(s, "--physics=")) a.physics = std::atoi(v) != 0;
-        else if (const char* v = value(s, "--select=")) a.select = v;
-        else if (const char* v = value(s, "--tool=")) a.tool = v;
-        else if (const char* v = value(s, "--pick=")) std::sscanf(v, "%f,%f", &a.pickX, &a.pickY);
-        else if (const char* v = value(s, "--drag=")) std::sscanf(v, "%f,%f,%f,%f", &a.drag.x, &a.drag.y, &a.drag.z, &a.drag.w);
-        else if (const char* v = value(s, "--env=")) a.env = v;
-        else if (const char* v = value(s, "--env-rotation=")) a.envRotation = (float)std::atof(v);
-        else if (const char* v = value(s, "--env-intensity=")) a.envIntensity = (float)std::atof(v);
-        else if (const char* v = value(s, "--background=")) a.background = std::atoi(v);
-        else if (const char* v = value(s, "--background-blur=")) a.backgroundBlur = (float)std::atof(v);
-        else if (!s.empty() && s[0] != '-') a.file = s;
+        else if (const char* l_pszV = f_Value(l_strS, "--shadows=")) l_oA.m_bShadows = std::atoi(l_pszV) != 0;
+        else if (const char* l_pszV = f_Value(l_strS, "--ground=")) l_oA.m_bGround = std::atoi(l_pszV) != 0;
+        else if (const char* l_pszV = f_Value(l_strS, "--shadow-bias=")) l_oA.m_fShadowBias = (float)std::atof(l_pszV);
+        else if (const char* l_pszV = f_Value(l_strS, "--camera=")) l_oA.m_strCamera = l_pszV;
+        else if (const char* l_pszV = f_Value(l_strS, "--look=")) std::sscanf(l_pszV, "%f,%f", &l_oA.m_fLookYaw, &l_oA.m_fLookPitch);
+        else if (const char* l_pszV = f_Value(l_strS, "--crowd=")) l_oA.m_iCrowd = std::max(0, std::atoi(l_pszV));
+        else if (const char* l_pszV = f_Value(l_strS, "--crowd-fps=")) l_oA.m_fCrowdFps = (float)std::atof(l_pszV);
+        else if (const char* l_pszV = f_Value(l_strS, "--physics=")) l_oA.m_bPhysics = std::atoi(l_pszV) != 0;
+        else if (const char* l_pszV = f_Value(l_strS, "--select=")) l_oA.m_strSelect = l_pszV;
+        else if (const char* l_pszV = f_Value(l_strS, "--tool=")) l_oA.m_strTool = l_pszV;
+        else if (const char* l_pszV = f_Value(l_strS, "--pick=")) std::sscanf(l_pszV, "%f,%f", &l_oA.m_fPickX, &l_oA.m_fPickY);
+        else if (const char* l_pszV = f_Value(l_strS, "--drag=")) std::sscanf(l_pszV, "%f,%f,%f,%f", &l_oA.m_v4Drag.x, &l_oA.m_v4Drag.y, &l_oA.m_v4Drag.z, &l_oA.m_v4Drag.w);
+        else if (const char* l_pszV = f_Value(l_strS, "--env=")) l_oA.m_strEnv = l_pszV;
+        else if (const char* l_pszV = f_Value(l_strS, "--env-rotation=")) l_oA.m_fEnvRotation = (float)std::atof(l_pszV);
+        else if (const char* l_pszV = f_Value(l_strS, "--env-intensity=")) l_oA.m_fEnvIntensity = (float)std::atof(l_pszV);
+        else if (const char* l_pszV = f_Value(l_strS, "--background=")) l_oA.m_iBackground = std::atoi(l_pszV);
+        else if (const char* l_pszV = f_Value(l_strS, "--background-blur=")) l_oA.m_fBackgroundBlur = (float)std::atof(l_pszV);
+        else if (!l_strS.empty() && l_strS[0] != '-') l_oA.m_strFile = l_strS;
     }
-    return a;
+    return l_oA;
 }
 
-uint32_t abgr(float r, float g, float b, float a = 1.0f) {
-    auto c = [](float v) { return (uint32_t)std::lround(std::clamp(v, 0.0f, 1.0f) * 255.0f); };
-    return c(r) | c(g) << 8 | c(b) << 16 | c(a) << 24;
+uint32_t f_Abgr(float l_fR, float l_fG, float l_fB, float l_fA = 1.0f) {
+    auto l_fnC = [](float l_fV) { return (uint32_t)std::lround(std::clamp(l_fV, 0.0f, 1.0f) * 255.0f); };
+    return l_fnC(l_fR) | l_fnC(l_fG) << 8 | l_fnC(l_fB) << 16 | l_fnC(l_fA) << 24;
 }
-uint32_t rgbaHex(const glm::vec3& c) {   // bgfx clear colour 0xRRGGBBAA
-    auto b = [](float v) { return (uint32_t)std::lround(std::clamp(v, 0.0f, 1.0f) * 255.0f); };
-    return b(c.r) << 24 | b(c.g) << 16 | b(c.b) << 8 | 0xff;
+uint32_t f_RgbaHex(const glm::vec3& l_v3C) {   // bgfx clear colour 0xRRGGBBAA
+    auto l_fnB = [](float l_fV) { return (uint32_t)std::lround(std::clamp(l_fV, 0.0f, 1.0f) * 255.0f); };
+    return l_fnB(l_v3C.r) << 24 | l_fnB(l_v3C.g) << 16 | l_fnB(l_v3C.b) << 8 | 0xff;
 }
 
 struct Viewer {
-    Args args;
-    SDL_Window* window = nullptr;
-    GltfRenderer renderer;
-    next::ImGuiBgfx gui;
-    float uiScale = 1.0f;
+    Args m_oArgs;
+    SDL_Window* m_pWindow = nullptr;
+    GltfRenderer m_oRenderer;
+    next::ImGuiBgfx m_oGui;
+    float m_fUiScale = 1.0f;
 
     // The model.
-    std::unique_ptr<gltf::Model> model;
-    gltf::Pose pose;
-    std::shared_ptr<GltfRenderer::GpuModel> gpu;
-    std::string path, error;
-    std::mutex pendingLock;
-    std::string pending;   // a file chosen in the open dialog (its callback may run on another thread)
-    std::vector<std::string> testModels;   // web: the names in /models (tests/gltf), for the panel's list
+    std::unique_ptr<gltf::Model> m_upModel;
+    gltf::Pose m_oPose;
+    std::shared_ptr<GltfRenderer::GpuModel> m_spGpu;
+    std::string m_strPath, m_strError;
+    std::mutex m_oPendingLock;
+    std::string m_strPending;   // a file chosen in the open dialog (its callback may run on another thread)
+    std::vector<std::string> m_vTestModels;   // web: the names in /models (tests/gltf), for the panel's list
 
     // Camera (orbit around target).
-    glm::vec3 target{0.0f};
-    float yaw = 35.0f, pitch = 20.0f, distance = 5.0f, fov = 45.0f, radius = 1.0f;
-    glm::vec3 sceneMin{-1.0f}, sceneMax{1.0f};
+    glm::vec3 m_v3Target{0.0f};
+    float m_fYaw = 35.0f, m_fPitch = 20.0f, m_fDistance = 5.0f, m_fFov = 45.0f, m_fRadius = 1.0f;
+    glm::vec3 m_v3SceneMin{-1.0f}, m_v3SceneMax{1.0f};
 
     // Animation.
-    std::vector<char> playing;
-    double time = 0.0;
-    float speed = 1.0f;
-    bool paused = false;
-    std::map<std::pair<int, int>, float> manualWeights;   // (node, target) -> weight set by a slider
+    std::vector<char> m_vPlaying;
+    double m_dTime = 0.0;
+    float m_fSpeed = 1.0f;
+    bool m_bPaused = false;
+    std::map<std::pair<int, int>, float> m_mapManualWeights;   // (node, target) -> weight set by a slider
 
     // Display.
-    GltfRenderer::Frame frame;
-    glm::vec3 background{0.20f, 0.21f, 0.23f};
+    GltfRenderer::Frame m_oFrame;
+    glm::vec3 m_v3Background{0.20f, 0.21f, 0.23f};
     // The viewer's lights. Directional / spot lights aim by yaw / pitch (where the light comes FROM);
     // point / spot lights sit at a position. Rebuilt around the model when it loads (rigKind).
     struct RigLight {
-        GltfRenderer::Light l;
-        float yaw = -35.0f, pitch = 45.0f;
-        bool hint = true;                 // its shapes and markers in the view (the panel's "show hint")
+        GltfRenderer::Light m_oL;
+        float m_fYaw = -35.0f, m_fPitch = 45.0f;
+        bool m_bHint = true;                 // its shapes and markers in the view (the panel's "show hint")
         // A spot light shines at the model's middle, or (aimAtModel off) where its own aim says: a yaw round the up
         // axis and a pitch above (+) or below (-) the horizon, as fromAngles.
-        bool aimAtModel = true;
-        float aimYaw = 0.0f, aimPitch = -45.0f;
+        bool m_bAimAtModel = true;
+        float m_fAimYaw = 0.0f, m_fAimPitch = -45.0f;
         // "rotate": it circles the model round the up axis (a directional light turns its yaw), speed in degrees a
         // second (below 0: the other way). A spot light with its own aim turns its aim with it.
-        bool spin = false;
-        float spinSpeed = 30.0f;
+        bool m_bSpin = false;
+        float m_fSpinSpeed = 30.0f;
     };
-    std::vector<RigLight> rig;
-    std::string rigKind = "default";
-    bool useFileLights = true;            // the model's KHR_lights_punctual, when it has some
+    std::vector<RigLight> m_vRig;
+    std::string m_strRigKind = "default";
+    bool m_bUseFileLights = true;            // the model's KHR_lights_punctual, when it has some
     // The hemisphere ambient (sky / ground) the renderer adds to every light: with the file's own lights only a
     // little of it, so they light the scene (not the viewer's default look); with the rig, the usual amount.
-    float ambientFile = 0.1f, ambientRig = 0.7f;
-    bool fileLightsOn() const { return useFileLights && model && !model->lights.empty(); }
+    float m_fAmbientFile = 0.1f, m_fAmbientRig = 0.7f;
+    bool f_FileLightsOn() const { return m_bUseFileLights && m_upModel && !m_upModel->m_vLights.empty(); }
     // The floor that catches the shadows (a built-in quad model).
-    bool groundOn = true;
-    gltf::Model groundModel;
-    gltf::Pose groundPose;
-    std::shared_ptr<GltfRenderer::GpuModel> groundGpu;
+    bool m_bGroundOn = true;
+    gltf::Model m_oGroundModel;
+    gltf::Pose m_oGroundPose;
+    std::shared_ptr<GltfRenderer::GpuModel> m_spGroundGpu;
     // Image-based lighting (gltf_environment.h): an HDR picture of a room that the models reflect and are lit by,
     // instead of the plain sky / ground.
-    bool envOn = true;
-    std::string envName, envError;       // the picture's file name; why the last one did not load
-    float envRotation = 0.0f;            // degrees about +Y
-    float envIntensity = 1.0f;
-    bool envBackground = true;
-    float envBlur = 0.3f;
-    bool envActive() const { return envOn && renderer.hasEnvironment(); }
+    bool m_bEnvOn = true;
+    std::string m_strEnvName, m_strEnvError;       // the picture's file name; why the last one did not load
+    float m_fEnvRotation = 0.0f;            // degrees about +Y
+    float m_fEnvIntensity = 1.0f;
+    bool m_bEnvBackground = true;
+    float m_fEnvBlur = 0.3f;
+    bool f_EnvActive() const { return m_bEnvOn && m_oRenderer.f_HasEnvironment(); }
     // The lights' gizmos, solid shapes in each light's colour (with the panel only: never in --no-ui screenshots):
     // a glowing ball at a point / spot light with a line down to a mark on the floor under it; a spot light's cones
     // (outer and inner) reaching the floor, their base the lit spot; a directional light's sun and arrow at the
     // model. Unit shapes built in code, placed and coloured per light each frame.
     struct GizmoShape {
-        gltf::Model model;
-        gltf::Pose pose;
-        std::shared_ptr<GltfRenderer::GpuModel> gpu;
+        gltf::Model m_oModel;
+        gltf::Pose m_oPose;
+        std::shared_ptr<GltfRenderer::GpuModel> m_spGpu;
     };
-    GizmoShape gizmoSphere, gizmoCone, gizmoCylinder, gizmoDisc;
-    std::vector<char> fileLightHint;      // per light of the file (Model::lights), 1 = shown
-    std::vector<char> frameLightHint;     // per light of frame.lights (frameLights fills it)
-    bool hintsGiven = false;              // --light-hints applied (once, to the first lights shown)
-    bool spotAimGiven = false;            // --spot-aim applied
-    bool lightSpinGiven = false;          // --light-spin applied
-    bool grid = true, axes = false, skeleton = false, boundsBox = false, wireframe = false, autoRotate = false;
-    bool showUi = true;
+    GizmoShape m_oGizmoSphere, m_oGizmoCone, m_oGizmoCylinder, m_oGizmoDisc;
+    std::vector<char> m_vFileLightHint;      // per light of the file (Model::lights), 1 = shown
+    std::vector<char> m_vFrameLightHint;     // per light of frame.lights (frameLights fills it)
+    bool m_bHintsGiven = false;              // --light-hints applied (once, to the first lights shown)
+    bool m_bSpotAimGiven = false;            // --spot-aim applied
+    bool m_bLightSpinGiven = false;          // --light-spin applied
+    bool m_bGrid = true, m_bAxes = false, m_bSkeleton = false, m_bBoundsBox = false, m_bWireframe = false, m_bAutoRotate = false;
+    bool m_bShowUi = true;
 
     // Frame state.
-    int fbW = 0, fbH = 0, frameNo = 0, shotsBefore = -1;
-    uint64_t lastTicks = 0;
-    float fps = 0.0f, fpsAccum = 0.0f;
-    int fpsFrames = 0;
-    bool dragOrbit = false, dragPan = false;
+    int m_iFbW = 0, m_iFbH = 0, m_iFrameNo = 0, m_iShotsBefore = -1;
+    uint64_t m_u64LastTicks = 0;
+    float m_fFps = 0.0f, m_fFpsAccum = 0.0f;
+    int m_iFpsFrames = 0;
+    bool m_bDragOrbit = false, m_bDragPan = false;
     // -1 = the free orbit camera, else one of the file's cameras (index into pose.cameras()). Moving
     // the view (drag, wheel, arrows) leaves a file camera for the free one, from the same spot.
-    int activeCamera = -1;
+    int m_iActiveCamera = -1;
     // Looking around from a file camera, in its own frame (it keeps riding its node's animation):
     // a head turn (yaw about the camera's up), a nod (pitch about its right), a zoom of its lens.
-    float lookYaw = 0.0f, lookPitch = 0.0f, lookZoom = 1.0f;
-    bool dragLook = false;
-    void selectCamera(int i) {
-        activeCamera = i;
-        lookYaw = lookPitch = 0.0f;
-        lookZoom = 1.0f;
+    float m_fLookYaw = 0.0f, m_fLookPitch = 0.0f, m_fLookZoom = 1.0f;
+    bool m_bDragLook = false;
+    void f_SelectCamera(int l_iI) {
+        m_iActiveCamera = l_iI;
+        m_fLookYaw = m_fLookPitch = 0.0f;
+        m_fLookZoom = 1.0f;
     }
     // Crowd mode (--crowd=N): N copies of the model's first skin, animated from one baked texture.
-    int crowdCount = 0;                   // 0 = off
-    std::shared_ptr<gltf::AnimTexture> animTex;
-    std::shared_ptr<GltfRenderer::AnimTextureGpu> animGpu;
-    gltf::Crowd crowd;
-    float crowdBlend = 0.5f;              // the panel's held-blend weight
-    double bakeMs = 0.0;
-    std::string crowdError;
-    glm::vec3 modelMin{-1.0f}, modelMax{1.0f};   // one copy's bounds (the crowd's spacing)
+    int m_iCrowdCount = 0;                   // 0 = off
+    std::shared_ptr<gltf::AnimTexture> m_spAnimTex;
+    std::shared_ptr<GltfRenderer::AnimTextureGpu> m_spAnimGpu;
+    gltf::Crowd m_oCrowd;
+    float m_fCrowdBlend = 0.5f;              // the panel's held-blend weight
+    double m_dBakeMs = 0.0;
+    std::string m_strCrowdError;
+    glm::vec3 m_v3ModelMin{-1.0f}, m_v3ModelMax{1.0f};   // one copy's bounds (the crowd's spacing)
 
     // Bakes the first skinned node's skin and lays N copies out on a square grid. Deterministic: copy i plays
     // clip i % clips from time i x 0.37 s; every third holds a blend of two clips.
-    void buildCrowd(int n) {
-        crowdCount = n;
-        crowd.clear();
-        crowdError.clear();
-        if (n <= 0 || !model) return;
-        int skin = -1;
-        for (const gltf::Node& nd : model->nodes)
-            if (nd.skin >= 0 && nd.mesh >= 0) { skin = nd.skin; break; }
-        if (skin < 0) { crowdError = "crowd mode needs a skinned model"; return; }
-        if (!renderer.crowdsSupported()) { crowdError = "this backend cannot draw crowds (no RGBA32F textures)"; return; }
-        if (!animTex || animTex->skin != skin) {
-            const uint64_t t0 = SDL_GetTicksNS();
-            auto baked = std::make_shared<gltf::AnimTexture>();
-            std::string err;
-            if (!gltf::bakeAnimTexture(*model, skin, args.crowdFps, *baked, &err)) { crowdError = err; return; }
-            bakeMs = double(SDL_GetTicksNS() - t0) * 1e-6;
-            animTex = baked;
-            animGpu = renderer.uploadAnimTexture(animTex);
-            if (!animGpu) { crowdError = "the animation texture could not be uploaded"; return; }
-            std::fprintf(stderr, "[gltf] crowd: baked %d joints x %d frames (%zu clips) in %.1f ms, %.1f KB\n", animTex->joints,
-                         animTex->rows, animTex->clips.size(), bakeMs, animTex->bytes() / 1024.0);
+    void f_BuildCrowd(int l_iN) {
+        m_iCrowdCount = l_iN;
+        m_oCrowd.f_Clear();
+        m_strCrowdError.clear();
+        if (l_iN <= 0 || !m_upModel) return;
+        int l_iSkin = -1;
+        for (const gltf::Node& l_oNd : m_upModel->m_vNodes)
+            if (l_oNd.m_iSkin >= 0 && l_oNd.m_iMesh >= 0) { l_iSkin = l_oNd.m_iSkin; break; }
+        if (l_iSkin < 0) { m_strCrowdError = "crowd mode needs a skinned model"; return; }
+        if (!m_oRenderer.f_CrowdsSupported()) { m_strCrowdError = "this backend cannot draw crowds (no RGBA32F textures)"; return; }
+        if (!m_spAnimTex || m_spAnimTex->m_iSkin != l_iSkin) {
+            const uint64_t l_u64T0 = SDL_GetTicksNS();
+            auto l_spBaked = std::make_shared<gltf::AnimTexture>();
+            std::string l_strErr;
+            if (!gltf::f_BakeAnimTexture(*m_upModel, l_iSkin, m_oArgs.m_fCrowdFps, *l_spBaked, &l_strErr)) { m_strCrowdError = l_strErr; return; }
+            m_dBakeMs = double(SDL_GetTicksNS() - l_u64T0) * 1e-6;
+            m_spAnimTex = l_spBaked;
+            m_spAnimGpu = m_oRenderer.f_UploadAnimTexture(m_spAnimTex);
+            if (!m_spAnimGpu) { m_strCrowdError = "the animation texture could not be uploaded"; return; }
+            std::fprintf(stderr, "[gltf] crowd: baked %d joints x %d frames (%zu clips) in %.1f ms, %.1f KB\n", m_spAnimTex->m_iJoints,
+                         m_spAnimTex->m_iRows, m_spAnimTex->m_vClips.size(), m_dBakeMs, m_spAnimTex->f_Bytes() / 1024.0);
         }
-        crowd.setTexture(animTex);
-        const int clips = (int)animTex->clips.size();
-        const int side = (int)std::ceil(std::sqrt((double)n));
-        const glm::vec3 size = modelMax - modelMin;
-        const float spacing = std::max({size.x, size.z, size.y * 0.5f, 1e-3f}) * 1.3f;
-        for (int i = 0; i < n; i++) {
-            const float x = ((i % side) - (side - 1) * 0.5f) * spacing, z = ((i / side) - (side - 1) * 0.5f) * spacing;
-            const int c = crowd.add(glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, z)), i % clips, i * 0.37f);
-            if (clips > 1 && i % 3 == 2) crowd.setBlend(c, i % clips, (i + 1) % clips, 0.5f);
+        m_oCrowd.f_SetTexture(m_spAnimTex);
+        const int l_iClips = (int)m_spAnimTex->m_vClips.size();
+        const int l_iSide = (int)std::ceil(std::sqrt((double)l_iN));
+        const glm::vec3 l_v3Size = m_v3ModelMax - m_v3ModelMin;
+        const float l_fSpacing = std::max({l_v3Size.x, l_v3Size.z, l_v3Size.y * 0.5f, 1e-3f}) * 1.3f;
+        for (int l_iI = 0; l_iI < l_iN; l_iI++) {
+            const float l_fX = ((l_iI % l_iSide) - (l_iSide - 1) * 0.5f) * l_fSpacing, l_fZ = ((l_iI / l_iSide) - (l_iSide - 1) * 0.5f) * l_fSpacing;
+            const int l_iC = m_oCrowd.f_Add(glm::translate(glm::mat4(1.0f), glm::vec3(l_fX, 0.0f, l_fZ)), l_iI % l_iClips, l_iI * 0.37f);
+            if (l_iClips > 1 && l_iI % 3 == 2) m_oCrowd.f_SetBlend(l_iC, l_iI % l_iClips, (l_iI + 1) % l_iClips, 0.5f);
         }
-        frameScene();
+        f_FrameScene();
     }
 
     // ---- node editing: the selected node, its edits (applied after the animations), the view handles ----
     struct NodeEdit {
-        glm::vec3 t{0.0f}, s{1.0f};
-        glm::quat r{1.0f, 0.0f, 0.0f, 0.0f};
-        glm::vec3 euler{0.0f};             // degrees, what the inspector shows (kept, so it does not flip)
+        glm::vec3 m_v3T{0.0f}, m_v3S{1.0f};
+        glm::quat m_qR{1.0f, 0.0f, 0.0f, 0.0f};
+        glm::vec3 m_v3Euler{0.0f};             // degrees, what the inspector shows (kept, so it does not flip)
     };
-    std::map<int, NodeEdit> edits;
-    int selected = -1;
-    bool revealSelected = false;          // open the tree down to the selection (after a pick in the view)
+    std::map<int, NodeEdit> m_mapEdits;
+    int m_iSelected = -1;
+    bool m_bRevealSelected = false;          // open the tree down to the selection (after a pick in the view)
     enum class Tool { Move, Rotate, Scale };
-    Tool tool = Tool::Move;
-    int hoverHandle = -1;                 // 0..2 an axis, 3 the centre, -1 none
-    int dragHandle = -1;
-    glm::vec2 dragFrom{0.0f}, pressAt{0.0f};
-    bool pressPending = false;            // a left press that is a click (pick) unless the mouse moves
-    NodeEdit dragStart;
-    glm::vec3 dragOrigin{0.0f}, dragAxis{0.0f};
-    glm::vec2 dragScreen0{0.0f}, dragScreen1{0.0f};
-    float dragLength = 1.0f;
+    Tool m_eTool = Tool::Move;
+    int m_iHoverHandle = -1;                 // 0..2 an axis, 3 the centre, -1 none
+    int m_iDragHandle = -1;
+    glm::vec2 m_v2DragFrom{0.0f}, m_v2PressAt{0.0f};
+    bool m_bPressPending = false;            // a left press that is a click (pick) unless the mouse moves
+    NodeEdit m_oDragStart;
+    glm::vec3 m_v3DragOrigin{0.0f}, m_v3DragAxis{0.0f};
+    glm::vec2 m_v2DragScreen0{0.0f}, m_v2DragScreen1{0.0f};
+    float m_fDragLength = 1.0f;
 
-    NodeEdit& editOf(int n) {
-        auto it = edits.find(n);
-        if (it != edits.end()) return it->second;
-        NodeEdit e;
-        e.t = pose.translation(n);
-        e.r = pose.rotation(n);
-        e.s = pose.scale(n);
-        e.euler = glm::degrees(glm::eulerAngles(e.r));
-        return edits[n] = e;
+    NodeEdit& f_EditOf(int l_iN) {
+        auto l_itIt = m_mapEdits.find(l_iN);
+        if (l_itIt != m_mapEdits.end()) return l_itIt->second;
+        NodeEdit l_oE;
+        l_oE.m_v3T = m_oPose.f_Translation(l_iN);
+        l_oE.m_qR = m_oPose.f_Rotation(l_iN);
+        l_oE.m_v3S = m_oPose.f_Scale(l_iN);
+        l_oE.m_v3Euler = glm::degrees(glm::eulerAngles(l_oE.m_qR));
+        return m_mapEdits[l_iN] = l_oE;
     }
-    void editChanged(int n) {   // a body that moved: the simulation starts again from the edited scene
-        if (physicsOn && model && model->physics.any()) buildPhysics();
-        (void)n;
+    void f_EditChanged(int l_iN) {   // a body that moved: the simulation starts again from the edited scene
+        if (m_bPhysicsOn && m_upModel && m_upModel->m_oPhysics.f_Any()) f_BuildPhysics();
+        (void)l_iN;
     }
-    static glm::quat rotationOf(const glm::mat4& m) {
-        glm::vec3 c0(m[0]), c1(m[1]), c2(m[2]);
-        const float l0 = glm::length(c0), l1 = glm::length(c1), l2 = glm::length(c2);
-        return glm::normalize(glm::quat_cast(glm::mat3(c0 / std::max(l0, 1e-8f), c1 / std::max(l1, 1e-8f), c2 / std::max(l2, 1e-8f))));
+    static glm::quat f_RotationOf(const glm::mat4& l_mat4M) {
+        glm::vec3 l_v3C0(l_mat4M[0]), l_v3C1(l_mat4M[1]), l_v3C2(l_mat4M[2]);
+        const float l_fL0 = glm::length(l_v3C0), l_fL1 = glm::length(l_v3C1), l_fL2 = glm::length(l_v3C2);
+        return glm::normalize(glm::quat_cast(glm::mat3(l_v3C0 / std::max(l_fL0, 1e-8f), l_v3C1 / std::max(l_fL1, 1e-8f), l_v3C2 / std::max(l_fL2, 1e-8f))));
     }
-    glm::mat4 parentWorld(int n) const {
-        const int p = model->nodes[(size_t)n].parent;
-        return p >= 0 ? pose.world(p) : glm::mat4(1.0f);
+    glm::mat4 f_ParentWorld(int l_iN) const {
+        const int l_iP = m_upModel->m_vNodes[(size_t)l_iN].m_iParent;
+        return l_iP >= 0 ? m_oPose.f_World(l_iP) : glm::mat4(1.0f);
     }
 
     // World <-> backbuffer pixels (x right, y down), with the frame the last tick drew.
-    bool toScreen(const glm::vec3& p, glm::vec2& out) const {
-        const glm::vec4 c = frame.proj * frame.view * glm::vec4(p, 1.0f);
-        if (c.w <= 1e-6f) return false;
-        out = {(c.x / c.w * 0.5f + 0.5f) * float(fbW), (0.5f - c.y / c.w * 0.5f) * float(fbH)};
+    bool f_ToScreen(const glm::vec3& l_v3P, glm::vec2& l_v2Out) const {
+        const glm::vec4 l_v4C = m_oFrame.m_mat4Proj * m_oFrame.m_mat4View * glm::vec4(l_v3P, 1.0f);
+        if (l_v4C.w <= 1e-6f) return false;
+        l_v2Out = {(l_v4C.x / l_v4C.w * 0.5f + 0.5f) * float(m_iFbW), (0.5f - l_v4C.y / l_v4C.w * 0.5f) * float(m_iFbH)};
         return true;
     }
-    void rayAt(const glm::vec2& px, glm::vec3& origin, glm::vec3& dir) const {
-        const glm::mat4 inv = glm::inverse(frame.proj * frame.view);
-        const float x = px.x / float(std::max(fbW, 1)) * 2.0f - 1.0f, y = 1.0f - px.y / float(std::max(fbH, 1)) * 2.0f;
-        const float zNear = bgfx::getCaps()->homogeneousDepth ? -1.0f : 0.0f;
-        const glm::vec4 a = inv * glm::vec4(x, y, zNear, 1.0f), b = inv * glm::vec4(x, y, 0.5f, 1.0f);
-        origin = glm::vec3(a) / a.w;
-        dir = glm::normalize(glm::vec3(b) / b.w - origin);
+    void f_RayAt(const glm::vec2& l_v2Px, glm::vec3& l_v3Origin, glm::vec3& l_v3Dir) const {
+        const glm::mat4 l_mat4Inv = glm::inverse(m_oFrame.m_mat4Proj * m_oFrame.m_mat4View);
+        const float l_fX = l_v2Px.x / float(std::max(m_iFbW, 1)) * 2.0f - 1.0f, l_fY = 1.0f - l_v2Px.y / float(std::max(m_iFbH, 1)) * 2.0f;
+        const float l_fZNear = bgfx::getCaps()->homogeneousDepth ? -1.0f : 0.0f;
+        const glm::vec4 l_v4A = l_mat4Inv * glm::vec4(l_fX, l_fY, l_fZNear, 1.0f), l_v4B = l_mat4Inv * glm::vec4(l_fX, l_fY, 0.5f, 1.0f);
+        l_v3Origin = glm::vec3(l_v4A) / l_v4A.w;
+        l_v3Dir = glm::normalize(glm::vec3(l_v4B) / l_v4B.w - l_v3Origin);
     }
 
     // The node whose mesh a pixel hits first (its mesh bounds, instances included), else -1. Clicking again where the
     // selected node is hit picks the next node behind it (a see-through volume over a mesh, a parent's bounds).
-    int pickNode(const glm::vec2& px) const {
-        if (!model) return -1;
-        glm::vec3 o, d;
-        rayAt(px, o, d);
-        std::vector<std::pair<float, int>> hits;
-        for (size_t n = 0; n < model->nodes.size(); n++) {
-            const gltf::Node& node = model->nodes[n];
-            if (node.mesh < 0) continue;
-            glm::vec3 mn(FLT_MAX), mx(-FLT_MAX);
-            for (const gltf::Primitive& p : model->meshes[(size_t)node.mesh].primitives) {
-                mn = glm::min(mn, p.boundsMin);
-                mx = glm::max(mx, p.boundsMax);
+    int f_PickNode(const glm::vec2& l_v2Px) const {
+        if (!m_upModel) return -1;
+        glm::vec3 l_v3O, l_v3D;
+        f_RayAt(l_v2Px, l_v3O, l_v3D);
+        std::vector<std::pair<float, int>> l_vHits;
+        for (size_t l_nN = 0; l_nN < m_upModel->m_vNodes.size(); l_nN++) {
+            const gltf::Node& l_oNode = m_upModel->m_vNodes[l_nN];
+            if (l_oNode.m_iMesh < 0) continue;
+            glm::vec3 l_v3Mn(FLT_MAX), l_v3Mx(-FLT_MAX);
+            for (const gltf::Primitive& l_oP : m_upModel->m_vMeshes[(size_t)l_oNode.m_iMesh].m_vPrimitives) {
+                l_v3Mn = glm::min(l_v3Mn, l_oP.m_v3BoundsMin);
+                l_v3Mx = glm::max(l_v3Mx, l_oP.m_v3BoundsMax);
             }
-            if (mn.x > mx.x) continue;
-            const glm::mat4 world = node.skin >= 0 ? glm::mat4(1.0f) : pose.world((int)n);   // skinned: model space
-            std::vector<glm::mat4> placements;
-            if (node.instances.empty()) placements.push_back(world);
-            else for (const glm::mat4& i : node.instances) placements.push_back(world * i);
-            for (const glm::mat4& m : placements) {
-                const glm::mat4 inv = glm::inverse(m);
-                const glm::vec3 lo = glm::vec3(inv * glm::vec4(o, 1.0f)), ld = glm::vec3(inv * glm::vec4(d, 0.0f));
-                float t0 = 0.0f, t1 = FLT_MAX;
-                bool hit = true;
-                for (int k = 0; k < 3 && hit; k++) {
-                    if (std::fabs(ld[k]) < 1e-12f) { hit = lo[k] >= mn[k] && lo[k] <= mx[k]; continue; }
-                    float a = (mn[k] - lo[k]) / ld[k], b = (mx[k] - lo[k]) / ld[k];
-                    if (a > b) std::swap(a, b);
-                    t0 = std::max(t0, a);
-                    t1 = std::min(t1, b);
-                    hit = t0 <= t1;
+            if (l_v3Mn.x > l_v3Mx.x) continue;
+            const glm::mat4 l_mat4World = l_oNode.m_iSkin >= 0 ? glm::mat4(1.0f) : m_oPose.f_World((int)l_nN);   // skinned: model space
+            std::vector<glm::mat4> l_vPlacements;
+            if (l_oNode.m_vInstances.empty()) l_vPlacements.push_back(l_mat4World);
+            else for (const glm::mat4& l_mat4I : l_oNode.m_vInstances) l_vPlacements.push_back(l_mat4World * l_mat4I);
+            for (const glm::mat4& l_mat4M : l_vPlacements) {
+                const glm::mat4 l_mat4Inv = glm::inverse(l_mat4M);
+                const glm::vec3 l_v3Lo = glm::vec3(l_mat4Inv * glm::vec4(l_v3O, 1.0f)), l_v3Ld = glm::vec3(l_mat4Inv * glm::vec4(l_v3D, 0.0f));
+                float l_fT0 = 0.0f, l_fT1 = FLT_MAX;
+                bool l_bHit = true;
+                for (int l_iK = 0; l_iK < 3 && l_bHit; l_iK++) {
+                    if (std::fabs(l_v3Ld[l_iK]) < 1e-12f) { l_bHit = l_v3Lo[l_iK] >= l_v3Mn[l_iK] && l_v3Lo[l_iK] <= l_v3Mx[l_iK]; continue; }
+                    float l_fA = (l_v3Mn[l_iK] - l_v3Lo[l_iK]) / l_v3Ld[l_iK], l_fB = (l_v3Mx[l_iK] - l_v3Lo[l_iK]) / l_v3Ld[l_iK];
+                    if (l_fA > l_fB) std::swap(l_fA, l_fB);
+                    l_fT0 = std::max(l_fT0, l_fA);
+                    l_fT1 = std::min(l_fT1, l_fB);
+                    l_bHit = l_fT0 <= l_fT1;
                 }
-                if (hit) { hits.push_back({t0, (int)n}); break; }
+                if (l_bHit) { l_vHits.push_back({l_fT0, (int)l_nN}); break; }
             }
         }
-        if (hits.empty()) return -1;
-        std::sort(hits.begin(), hits.end());
-        for (size_t i = 0; i + 1 < hits.size(); i++)
-            if (hits[i].second == selected) return hits[i + 1].second;
-        return hits[0].second;
+        if (l_vHits.empty()) return -1;
+        std::sort(l_vHits.begin(), l_vHits.end());
+        for (size_t l_nI = 0; l_nI + 1 < l_vHits.size(); l_nI++)
+            if (l_vHits[l_nI].second == m_iSelected) return l_vHits[l_nI + 1].second;
+        return l_vHits[0].second;
     }
 
     // The handles of the selected node: where they are on screen. Move and rotate work in world axes, scale in the
     // node's own axes.
-    glm::vec3 handleAxis(int k) const {
-        if (tool != Tool::Scale) return glm::vec3(k == 0, k == 1, k == 2);
-        const glm::mat4& w = pose.world(selected);
-        const glm::vec3 a(w[k]);
-        return glm::length(a) > 1e-8f ? glm::normalize(a) : glm::vec3(k == 0, k == 1, k == 2);
+    glm::vec3 f_HandleAxis(int l_iK) const {
+        if (m_eTool != Tool::Scale) return glm::vec3(l_iK == 0, l_iK == 1, l_iK == 2);
+        const glm::mat4& l_mat4W = m_oPose.f_World(m_iSelected);
+        const glm::vec3 l_v3A(l_mat4W[l_iK]);
+        return glm::length(l_v3A) > 1e-8f ? glm::normalize(l_v3A) : glm::vec3(l_iK == 0, l_iK == 1, l_iK == 2);
     }
-    float handleLength(const glm::vec3& origin) const { return 0.16f * std::max(glm::length(frame.eye - origin), 1e-3f); }
-    std::vector<glm::vec3> ring(const glm::vec3& origin, const glm::vec3& axis, float r) const {
-        const glm::vec3 u = glm::normalize(glm::cross(axis, std::fabs(axis.y) > 0.9f ? glm::vec3(1, 0, 0) : glm::vec3(0, 1, 0)));
-        const glm::vec3 v = glm::cross(axis, u);
-        std::vector<glm::vec3> pts;
-        for (int i = 0; i <= 48; i++) {
-            const float a = 6.2831853f * i / 48.0f;
-            pts.push_back(origin + (u * std::cos(a) + v * std::sin(a)) * r);
+    float f_HandleLength(const glm::vec3& l_v3Origin) const { return 0.16f * std::max(glm::length(m_oFrame.m_v3Eye - l_v3Origin), 1e-3f); }
+    std::vector<glm::vec3> f_Ring(const glm::vec3& l_v3Origin, const glm::vec3& l_v3Axis, float l_fR) const {
+        const glm::vec3 l_v3U = glm::normalize(glm::cross(l_v3Axis, std::fabs(l_v3Axis.y) > 0.9f ? glm::vec3(1, 0, 0) : glm::vec3(0, 1, 0)));
+        const glm::vec3 l_v3V = glm::cross(l_v3Axis, l_v3U);
+        std::vector<glm::vec3> l_vPts;
+        for (int l_iI = 0; l_iI <= 48; l_iI++) {
+            const float l_fA = 6.2831853f * l_iI / 48.0f;
+            l_vPts.push_back(l_v3Origin + (l_v3U * std::cos(l_fA) + l_v3V * std::sin(l_fA)) * l_fR);
         }
-        return pts;
+        return l_vPts;
     }
-    static float segmentDistance(const glm::vec2& p, const glm::vec2& a, const glm::vec2& b) {
-        const glm::vec2 ab = b - a;
-        const float t = glm::dot(ab, ab) > 0.0f ? std::clamp(glm::dot(p - a, ab) / glm::dot(ab, ab), 0.0f, 1.0f) : 0.0f;
-        return glm::length(p - (a + ab * t));
+    static float f_SegmentDistance(const glm::vec2& l_v2P, const glm::vec2& l_v2A, const glm::vec2& l_v2B) {
+        const glm::vec2 l_v2Ab = l_v2B - l_v2A;
+        const float l_fT = glm::dot(l_v2Ab, l_v2Ab) > 0.0f ? std::clamp(glm::dot(l_v2P - l_v2A, l_v2Ab) / glm::dot(l_v2Ab, l_v2Ab), 0.0f, 1.0f) : 0.0f;
+        return glm::length(l_v2P - (l_v2A + l_v2Ab * l_fT));
     }
-    int handleAt(const glm::vec2& px) const {
-        if (selected < 0 || !model) return -1;
-        const glm::vec3 origin(pose.world(selected)[3]);
-        const float L = handleLength(origin), tol = 8.0f * pixelScale();
-        glm::vec2 c;
-        if (!toScreen(origin, c)) return -1;
-        int best = -1;
-        float bestD = tol;
-        if (tool != Tool::Rotate && glm::length(px - c) < 10.0f * pixelScale()) return 3;
-        for (int k = 0; k < 3; k++) {
-            const glm::vec3 axis = handleAxis(k);
-            float d = FLT_MAX;
-            if (tool == Tool::Rotate) {
-                const std::vector<glm::vec3> pts = ring(origin, axis, L);
-                for (size_t i = 0; i + 1 < pts.size(); i++) {
-                    glm::vec2 a, b;
-                    if (toScreen(pts[i], a) && toScreen(pts[i + 1], b)) d = std::min(d, segmentDistance(px, a, b));
+    int f_HandleAt(const glm::vec2& l_v2Px) const {
+        if (m_iSelected < 0 || !m_upModel) return -1;
+        const glm::vec3 l_v3Origin(m_oPose.f_World(m_iSelected)[3]);
+        const float l_fL = f_HandleLength(l_v3Origin), l_fTol = 8.0f * f_PixelScale();
+        glm::vec2 l_v2C;
+        if (!f_ToScreen(l_v3Origin, l_v2C)) return -1;
+        int l_iBest = -1;
+        float l_fBestD = l_fTol;
+        if (m_eTool != Tool::Rotate && glm::length(l_v2Px - l_v2C) < 10.0f * f_PixelScale()) return 3;
+        for (int l_iK = 0; l_iK < 3; l_iK++) {
+            const glm::vec3 l_v3Axis = f_HandleAxis(l_iK);
+            float l_fD = FLT_MAX;
+            if (m_eTool == Tool::Rotate) {
+                const std::vector<glm::vec3> l_vPts = f_Ring(l_v3Origin, l_v3Axis, l_fL);
+                for (size_t l_nI = 0; l_nI + 1 < l_vPts.size(); l_nI++) {
+                    glm::vec2 l_v2A, l_v2B;
+                    if (f_ToScreen(l_vPts[l_nI], l_v2A) && f_ToScreen(l_vPts[l_nI + 1], l_v2B)) l_fD = std::min(l_fD, f_SegmentDistance(l_v2Px, l_v2A, l_v2B));
                 }
             } else {
-                glm::vec2 e;
-                if (toScreen(origin + axis * L, e)) d = segmentDistance(px, c, e);
+                glm::vec2 l_v2E;
+                if (f_ToScreen(l_v3Origin + l_v3Axis * l_fL, l_v2E)) l_fD = f_SegmentDistance(l_v2Px, l_v2C, l_v2E);
             }
-            if (d < bestD) { bestD = d; best = k; }
+            if (l_fD < l_fBestD) { l_fBestD = l_fD; l_iBest = l_iK; }
         }
-        return best;
+        return l_iBest;
     }
-    void startHandleDrag(int h, const glm::vec2& px) {
-        dragHandle = h;
-        dragFrom = px;
-        dragStart = editOf(selected);
-        dragOrigin = glm::vec3(pose.world(selected)[3]);
-        dragLength = handleLength(dragOrigin);
-        dragAxis = h < 3 ? handleAxis(h) : glm::vec3(0.0f);
-        toScreen(dragOrigin, dragScreen0);
-        if (h < 3) toScreen(dragOrigin + dragAxis * dragLength, dragScreen1);
+    void f_StartHandleDrag(int l_iH, const glm::vec2& l_v2Px) {
+        m_iDragHandle = l_iH;
+        m_v2DragFrom = l_v2Px;
+        m_oDragStart = f_EditOf(m_iSelected);
+        m_v3DragOrigin = glm::vec3(m_oPose.f_World(m_iSelected)[3]);
+        m_fDragLength = f_HandleLength(m_v3DragOrigin);
+        m_v3DragAxis = l_iH < 3 ? f_HandleAxis(l_iH) : glm::vec3(0.0f);
+        f_ToScreen(m_v3DragOrigin, m_v2DragScreen0);
+        if (l_iH < 3) f_ToScreen(m_v3DragOrigin + m_v3DragAxis * m_fDragLength, m_v2DragScreen1);
         else {   // the centre: world units per pixel from the camera's right axis
-            const glm::mat4& v = frame.view;
-            toScreen(dragOrigin + glm::vec3(v[0][0], v[1][0], v[2][0]) * dragLength, dragScreen1);
+            const glm::mat4& l_mat4V = m_oFrame.m_mat4View;
+            f_ToScreen(m_v3DragOrigin + glm::vec3(l_mat4V[0][0], l_mat4V[1][0], l_mat4V[2][0]) * m_fDragLength, m_v2DragScreen1);
         }
     }
-    void dragHandleTo(const glm::vec2& px) {
-        if (dragHandle < 0 || selected < 0) return;
-        NodeEdit& e = editOf(selected);
-        const glm::vec2 m = px - dragFrom;
-        const glm::vec2 dir = dragScreen1 - dragScreen0;
-        const float len = std::max(glm::length(dir), 1.0f);
-        const glm::mat4 pw = parentWorld(selected);
-        if (tool == Tool::Move) {
-            glm::vec3 worldDelta;
-            if (dragHandle < 3) worldDelta = dragAxis * (glm::dot(m, dir / len) / len * dragLength);
+    void f_DragHandleTo(const glm::vec2& l_v2Px) {
+        if (m_iDragHandle < 0 || m_iSelected < 0) return;
+        NodeEdit& l_oE = f_EditOf(m_iSelected);
+        const glm::vec2 l_v2M = l_v2Px - m_v2DragFrom;
+        const glm::vec2 l_v2Dir = m_v2DragScreen1 - m_v2DragScreen0;
+        const float l_fLen = std::max(glm::length(l_v2Dir), 1.0f);
+        const glm::mat4 l_mat4Pw = f_ParentWorld(m_iSelected);
+        if (m_eTool == Tool::Move) {
+            glm::vec3 l_v3WorldDelta;
+            if (m_iDragHandle < 3) l_v3WorldDelta = m_v3DragAxis * (glm::dot(l_v2M, l_v2Dir / l_fLen) / l_fLen * m_fDragLength);
             else {
-                const glm::mat4& v = frame.view;
-                const glm::vec3 right(v[0][0], v[1][0], v[2][0]), up(v[0][1], v[1][1], v[2][1]);
-                worldDelta = (right * m.x - up * m.y) * (dragLength / len);
+                const glm::mat4& l_mat4V = m_oFrame.m_mat4View;
+                const glm::vec3 l_v3Right(l_mat4V[0][0], l_mat4V[1][0], l_mat4V[2][0]), l_v3Up(l_mat4V[0][1], l_mat4V[1][1], l_mat4V[2][1]);
+                l_v3WorldDelta = (l_v3Right * l_v2M.x - l_v3Up * l_v2M.y) * (m_fDragLength / l_fLen);
             }
-            e.t = dragStart.t + glm::inverse(glm::mat3(pw)) * worldDelta;
-        } else if (tool == Tool::Rotate && dragHandle < 3) {
-            const glm::vec2 a0 = dragFrom - dragScreen0, a1 = px - dragScreen0;
-            float angle = std::atan2(a1.y, a1.x) - std::atan2(a0.y, a0.x);
-            if (glm::dot(dragAxis, frame.eye - dragOrigin) > 0.0f) angle = -angle;   // the axis looks at us
-            const glm::quat pr = rotationOf(pw);
-            const glm::quat world = glm::angleAxis(angle, dragAxis) * (pr * dragStart.r);
-            e.r = glm::normalize(glm::inverse(pr) * world);
-            e.euler = glm::degrees(glm::eulerAngles(e.r));
-        } else if (tool == Tool::Scale) {
-            if (dragHandle < 3) {
-                const float f = std::max(0.01f, 1.0f + glm::dot(m, dir / len) / len);
-                e.s = dragStart.s;
-                e.s[dragHandle] *= f;
+            l_oE.m_v3T = m_oDragStart.m_v3T + glm::inverse(glm::mat3(l_mat4Pw)) * l_v3WorldDelta;
+        } else if (m_eTool == Tool::Rotate && m_iDragHandle < 3) {
+            const glm::vec2 l_v2A0 = m_v2DragFrom - m_v2DragScreen0, l_v2A1 = l_v2Px - m_v2DragScreen0;
+            float l_fAngle = std::atan2(l_v2A1.y, l_v2A1.x) - std::atan2(l_v2A0.y, l_v2A0.x);
+            if (glm::dot(m_v3DragAxis, m_oFrame.m_v3Eye - m_v3DragOrigin) > 0.0f) l_fAngle = -l_fAngle;   // the axis looks at us
+            const glm::quat l_qPr = f_RotationOf(l_mat4Pw);
+            const glm::quat l_qWorld = glm::angleAxis(l_fAngle, m_v3DragAxis) * (l_qPr * m_oDragStart.m_qR);
+            l_oE.m_qR = glm::normalize(glm::inverse(l_qPr) * l_qWorld);
+            l_oE.m_v3Euler = glm::degrees(glm::eulerAngles(l_oE.m_qR));
+        } else if (m_eTool == Tool::Scale) {
+            if (m_iDragHandle < 3) {
+                const float l_fF = std::max(0.01f, 1.0f + glm::dot(l_v2M, l_v2Dir / l_fLen) / l_fLen);
+                l_oE.m_v3S = m_oDragStart.m_v3S;
+                l_oE.m_v3S[m_iDragHandle] *= l_fF;
             } else {
-                e.s = dragStart.s * std::max(0.01f, 1.0f + (m.x - m.y) * 0.005f);
+                l_oE.m_v3S = m_oDragStart.m_v3S * std::max(0.01f, 1.0f + (l_v2M.x - l_v2M.y) * 0.005f);
             }
         }
     }
-    void drawHandles(std::vector<GltfRenderer::LinePoint>& out) {
-        if (selected < 0 || !model || selected >= (int)model->nodes.size()) return;
-        auto line = [&](const glm::vec3& a, const glm::vec3& b, uint32_t c) { out.push_back({a, c}); out.push_back({b, c}); };
-        const glm::vec3 origin(pose.world(selected)[3]);
-        const float L = handleLength(origin);
-        const int active = dragHandle >= 0 ? dragHandle : hoverHandle;
-        const uint32_t cols[3] = {abgr(1.0f, 0.3f, 0.3f), abgr(0.35f, 1.0f, 0.35f), abgr(0.35f, 0.55f, 1.0f)};
-        const uint32_t hot = abgr(1.0f, 0.9f, 0.2f);
-        const glm::mat4& v = frame.view;
-        const glm::vec3 right(v[0][0], v[1][0], v[2][0]), up(v[0][1], v[1][1], v[2][1]);
-        for (int k = 0; k < 3; k++) {
-            const glm::vec3 axis = handleAxis(k);
-            const uint32_t c = active == k ? hot : cols[k];
-            if (tool == Tool::Rotate) {
-                const std::vector<glm::vec3> pts = ring(origin, axis, L);
-                for (size_t i = 0; i + 1 < pts.size(); i++) line(pts[i], pts[i + 1], c);
+    void f_DrawHandles(std::vector<GltfRenderer::LinePoint>& l_vOut) {
+        if (m_iSelected < 0 || !m_upModel || m_iSelected >= (int)m_upModel->m_vNodes.size()) return;
+        auto l_fnLine = [&](const glm::vec3& l_v3A, const glm::vec3& l_v3B, uint32_t l_uC) { l_vOut.push_back({l_v3A, l_uC}); l_vOut.push_back({l_v3B, l_uC}); };
+        const glm::vec3 l_v3Origin(m_oPose.f_World(m_iSelected)[3]);
+        const float l_fL = f_HandleLength(l_v3Origin);
+        const int l_iActive = m_iDragHandle >= 0 ? m_iDragHandle : m_iHoverHandle;
+        const uint32_t l_arrCols[3] = {f_Abgr(1.0f, 0.3f, 0.3f), f_Abgr(0.35f, 1.0f, 0.35f), f_Abgr(0.35f, 0.55f, 1.0f)};
+        const uint32_t l_uHot = f_Abgr(1.0f, 0.9f, 0.2f);
+        const glm::mat4& l_mat4V = m_oFrame.m_mat4View;
+        const glm::vec3 l_v3Right(l_mat4V[0][0], l_mat4V[1][0], l_mat4V[2][0]), l_v3Up(l_mat4V[0][1], l_mat4V[1][1], l_mat4V[2][1]);
+        for (int l_iK = 0; l_iK < 3; l_iK++) {
+            const glm::vec3 l_v3Axis = f_HandleAxis(l_iK);
+            const uint32_t l_uC = l_iActive == l_iK ? l_uHot : l_arrCols[l_iK];
+            if (m_eTool == Tool::Rotate) {
+                const std::vector<glm::vec3> l_vPts = f_Ring(l_v3Origin, l_v3Axis, l_fL);
+                for (size_t l_nI = 0; l_nI + 1 < l_vPts.size(); l_nI++) l_fnLine(l_vPts[l_nI], l_vPts[l_nI + 1], l_uC);
                 continue;
             }
-            const glm::vec3 tip = origin + axis * L;
-            line(origin, tip, c);
-            const float h = L * 0.07f;
-            if (tool == Tool::Move) {   // an arrow head
-                const glm::vec3 side = glm::normalize(glm::cross(axis, std::fabs(axis.y) > 0.9f ? glm::vec3(1, 0, 0) : glm::vec3(0, 1, 0)));
-                const glm::vec3 side2 = glm::cross(axis, side);
-                for (const glm::vec3& sd : {side, -side, side2, -side2}) line(tip, tip - axis * h * 2.0f + sd * h, c);
+            const glm::vec3 l_v3Tip = l_v3Origin + l_v3Axis * l_fL;
+            l_fnLine(l_v3Origin, l_v3Tip, l_uC);
+            const float l_fH = l_fL * 0.07f;
+            if (m_eTool == Tool::Move) {   // an arrow head
+                const glm::vec3 l_v3Side = glm::normalize(glm::cross(l_v3Axis, std::fabs(l_v3Axis.y) > 0.9f ? glm::vec3(1, 0, 0) : glm::vec3(0, 1, 0)));
+                const glm::vec3 l_v3Side2 = glm::cross(l_v3Axis, l_v3Side);
+                for (const glm::vec3& l_v3Sd : {l_v3Side, -l_v3Side, l_v3Side2, -l_v3Side2}) l_fnLine(l_v3Tip, l_v3Tip - l_v3Axis * l_fH * 2.0f + l_v3Sd * l_fH, l_uC);
             } else {                    // a small box
-                for (const glm::vec3& a : {right, up}) {
-                    const glm::vec3 b = a == right ? up : right;
-                    line(tip + (a - b) * h, tip + (a + b) * h, c);
-                    line(tip - (a + b) * h, tip + (-a + b) * h, c);
+                for (const glm::vec3& l_v3A : {l_v3Right, l_v3Up}) {
+                    const glm::vec3 l_v3B = l_v3A == l_v3Right ? l_v3Up : l_v3Right;
+                    l_fnLine(l_v3Tip + (l_v3A - l_v3B) * l_fH, l_v3Tip + (l_v3A + l_v3B) * l_fH, l_uC);
+                    l_fnLine(l_v3Tip - (l_v3A + l_v3B) * l_fH, l_v3Tip + (-l_v3A + l_v3B) * l_fH, l_uC);
                 }
             }
         }
-        if (tool != Tool::Rotate) {   // the centre square
-            const uint32_t c = active == 3 ? hot : abgr(0.9f, 0.9f, 0.9f);
-            const float h = L * 0.06f;
-            const glm::vec3 p[4] = {origin + (-right - up) * h, origin + (right - up) * h, origin + (right + up) * h, origin + (-right + up) * h};
-            for (int i = 0; i < 4; i++) line(p[i], p[(i + 1) % 4], c);
+        if (m_eTool != Tool::Rotate) {   // the centre square
+            const uint32_t l_uC = l_iActive == 3 ? l_uHot : f_Abgr(0.9f, 0.9f, 0.9f);
+            const float l_fH = l_fL * 0.06f;
+            const glm::vec3 l_arrP[4] = {l_v3Origin + (-l_v3Right - l_v3Up) * l_fH, l_v3Origin + (l_v3Right - l_v3Up) * l_fH, l_v3Origin + (l_v3Right + l_v3Up) * l_fH, l_v3Origin + (-l_v3Right + l_v3Up) * l_fH};
+            for (int l_iI = 0; l_iI < 4; l_iI++) l_fnLine(l_arrP[l_iI], l_arrP[(l_iI + 1) % 4], l_uC);
         }
     }
 
     // ---- the Scene tree and the Node inspector ----
-    void treeNode(int n) {
-        const gltf::Node& node = model->nodes[(size_t)n];
-        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
-        if (node.children.empty()) flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-        if (n == selected) flags |= ImGuiTreeNodeFlags_Selected;
-        if (revealSelected && selected >= 0) {   // open every ancestor of the selection
-            for (int a = model->nodes[(size_t)selected].parent; a >= 0; a = model->nodes[(size_t)a].parent)
-                if (a == n) ImGui::SetNextItemOpen(true);
+    void f_TreeNode(int l_iN) {
+        const gltf::Node& l_oNode = m_upModel->m_vNodes[(size_t)l_iN];
+        ImGuiTreeNodeFlags l_iFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
+        if (l_oNode.m_vChildren.empty()) l_iFlags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+        if (l_iN == m_iSelected) l_iFlags |= ImGuiTreeNodeFlags_Selected;
+        if (m_bRevealSelected && m_iSelected >= 0) {   // open every ancestor of the selection
+            for (int l_iA = m_upModel->m_vNodes[(size_t)m_iSelected].m_iParent; l_iA >= 0; l_iA = m_upModel->m_vNodes[(size_t)l_iA].m_iParent)
+                if (l_iA == l_iN) ImGui::SetNextItemOpen(true);
         }
-        std::string label = node.name.empty() ? "node " + std::to_string(n) : node.name;
-        if (node.mesh >= 0) label += node.skin >= 0 ? "  [skinned mesh]" : "  [mesh]";
-        if (node.camera >= 0) label += "  [camera]";
-        if (node.light >= 0) label += "  [light]";
-        if (model->physics.any()) {
-            const gltf::NodePhysics& p = model->physics.nodes[(size_t)n];
-            if (p.hasMotion) label += p.kinematic ? "  [kinematic]" : "  [body]";
-            else if (p.hasCollider) label += "  [collider]";
-            if (p.hasTrigger) label += "  [trigger]";
-            if (p.hasJoint) label += "  [joint]";
+        std::string l_strLabel = l_oNode.m_strName.empty() ? "node " + std::to_string(l_iN) : l_oNode.m_strName;
+        if (l_oNode.m_iMesh >= 0) l_strLabel += l_oNode.m_iSkin >= 0 ? "  [skinned mesh]" : "  [mesh]";
+        if (l_oNode.m_iCamera >= 0) l_strLabel += "  [camera]";
+        if (l_oNode.m_iLight >= 0) l_strLabel += "  [light]";
+        if (m_upModel->m_oPhysics.f_Any()) {
+            const gltf::NodePhysics& l_oP = m_upModel->m_oPhysics.m_vNodes[(size_t)l_iN];
+            if (l_oP.m_bHasMotion) l_strLabel += l_oP.m_bKinematic ? "  [kinematic]" : "  [body]";
+            else if (l_oP.m_bHasCollider) l_strLabel += "  [collider]";
+            if (l_oP.m_bHasTrigger) l_strLabel += "  [trigger]";
+            if (l_oP.m_bHasJoint) l_strLabel += "  [joint]";
         }
-        if (edits.count(n)) label += "  *";
-        ImGui::PushID(n);
-        const bool open = ImGui::TreeNodeEx("##node", flags, "%s", label.c_str());
-        if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) selected = n;
-        if (n == selected && revealSelected) ImGui::SetScrollHereY(0.5f);
-        if (open && !node.children.empty()) {
-            for (int c : node.children) treeNode(c);
+        if (m_mapEdits.count(l_iN)) l_strLabel += "  *";
+        ImGui::PushID(l_iN);
+        const bool l_bOpen = ImGui::TreeNodeEx("##node", l_iFlags, "%s", l_strLabel.c_str());
+        if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) m_iSelected = l_iN;
+        if (l_iN == m_iSelected && m_bRevealSelected) ImGui::SetScrollHereY(0.5f);
+        if (l_bOpen && !l_oNode.m_vChildren.empty()) {
+            for (int l_iC : l_oNode.m_vChildren) f_TreeNode(l_iC);
             ImGui::TreePop();
         }
         ImGui::PopID();
     }
 
-    void sceneTreePanel() {
+    void f_SceneTreePanel() {
         if (ImGui::CollapsingHeader("Scene tree", ImGuiTreeNodeFlags_DefaultOpen)) {
             ImGui::TextDisabled("click to select (or click a mesh in the view)");
-            const float h = std::min(260.0f * uiScale, ImGui::GetContentRegionAvail().y * 0.5f);
-            if (ImGui::BeginChild("tree", ImVec2(0, std::max(h, 80.0f * uiScale)), true)) {
-                const std::vector<int>& roots = model->scenes.empty() ? std::vector<int>() : model->scenes[(size_t)std::max(model->scene, 0)].roots;
-                for (int r : roots) treeNode(r);
+            const float l_fH = std::min(260.0f * m_fUiScale, ImGui::GetContentRegionAvail().y * 0.5f);
+            if (ImGui::BeginChild("tree", ImVec2(0, std::max(l_fH, 80.0f * m_fUiScale)), true)) {
+                const std::vector<int>& l_vRoots = m_upModel->m_vScenes.empty() ? std::vector<int>() : m_upModel->m_vScenes[(size_t)std::max(m_upModel->m_iScene, 0)].m_vRoots;
+                for (int l_iR : l_vRoots) f_TreeNode(l_iR);
             }
             ImGui::EndChild();
-            revealSelected = false;
+            m_bRevealSelected = false;
         }
-        if (selected < 0 || selected >= (int)model->nodes.size()) return;
+        if (m_iSelected < 0 || m_iSelected >= (int)m_upModel->m_vNodes.size()) return;
         if (!ImGui::CollapsingHeader("Node", ImGuiTreeNodeFlags_DefaultOpen)) return;
-        const gltf::Node& node = model->nodes[(size_t)selected];
-        ImGui::Text("%s  (#%d)", node.name.empty() ? "(no name)" : node.name.c_str(), selected);
-        if (node.parent >= 0) {
+        const gltf::Node& l_oNode = m_upModel->m_vNodes[(size_t)m_iSelected];
+        ImGui::Text("%s  (#%d)", l_oNode.m_strName.empty() ? "(no name)" : l_oNode.m_strName.c_str(), m_iSelected);
+        if (l_oNode.m_iParent >= 0) {
             ImGui::SameLine();
-            const std::string& pn = model->nodes[(size_t)node.parent].name;
-            if (ImGui::SmallButton(("parent: " + (pn.empty() ? std::to_string(node.parent) : pn)).c_str())) { selected = node.parent; revealSelected = true; }
+            const std::string& l_strPn = m_upModel->m_vNodes[(size_t)l_oNode.m_iParent].m_strName;
+            if (ImGui::SmallButton(("parent: " + (l_strPn.empty() ? std::to_string(l_oNode.m_iParent) : l_strPn)).c_str())) { m_iSelected = l_oNode.m_iParent; m_bRevealSelected = true; }
         }
-        int t = (int)tool;
-        ImGui::RadioButton("move (T)", &t, 0);
+        int l_iT = (int)m_eTool;
+        ImGui::RadioButton("move (T)", &l_iT, 0);
         ImGui::SameLine();
-        ImGui::RadioButton("rotate (E)", &t, 1);
+        ImGui::RadioButton("rotate (E)", &l_iT, 1);
         ImGui::SameLine();
-        ImGui::RadioButton("scale (S)", &t, 2);
-        tool = (Tool)t;
+        ImGui::RadioButton("scale (S)", &l_iT, 2);
+        m_eTool = (Tool)l_iT;
         // The fields show the node's local transform now (animated), and edit a copy that replaces it.
-        NodeEdit shown;
-        const auto it = edits.find(selected);
-        if (it != edits.end()) shown = it->second;
+        NodeEdit l_oShown;
+        const auto l_itIt = m_mapEdits.find(m_iSelected);
+        if (l_itIt != m_mapEdits.end()) l_oShown = l_itIt->second;
         else {
-            shown.t = pose.translation(selected);
-            shown.r = pose.rotation(selected);
-            shown.s = pose.scale(selected);
-            shown.euler = glm::degrees(glm::eulerAngles(shown.r));
+            l_oShown.m_v3T = m_oPose.f_Translation(m_iSelected);
+            l_oShown.m_qR = m_oPose.f_Rotation(m_iSelected);
+            l_oShown.m_v3S = m_oPose.f_Scale(m_iSelected);
+            l_oShown.m_v3Euler = glm::degrees(glm::eulerAngles(l_oShown.m_qR));
         }
-        const float speed = std::max(radius * 0.005f, 1e-4f);
-        bool changed = false, done = false;
-        if (ImGui::DragFloat3("translation", &shown.t.x, speed, 0, 0, "%.3f")) { editOf(selected).t = shown.t; changed = true; }
-        done |= ImGui::IsItemDeactivatedAfterEdit();
-        if (ImGui::DragFloat3("rotation (deg)", &shown.euler.x, 0.5f, 0, 0, "%.1f")) {
-            NodeEdit& e = editOf(selected);
-            e.euler = shown.euler;
-            e.r = glm::quat(glm::radians(shown.euler));
-            changed = true;
+        const float l_fSpeed = std::max(m_fRadius * 0.005f, 1e-4f);
+        bool l_bChanged = false, l_bDone = false;
+        if (ImGui::DragFloat3("translation", &l_oShown.m_v3T.x, l_fSpeed, 0, 0, "%.3f")) { f_EditOf(m_iSelected).m_v3T = l_oShown.m_v3T; l_bChanged = true; }
+        l_bDone |= ImGui::IsItemDeactivatedAfterEdit();
+        if (ImGui::DragFloat3("rotation (deg)", &l_oShown.m_v3Euler.x, 0.5f, 0, 0, "%.1f")) {
+            NodeEdit& l_oE = f_EditOf(m_iSelected);
+            l_oE.m_v3Euler = l_oShown.m_v3Euler;
+            l_oE.m_qR = glm::quat(glm::radians(l_oShown.m_v3Euler));
+            l_bChanged = true;
         }
-        done |= ImGui::IsItemDeactivatedAfterEdit();
-        if (ImGui::DragFloat3("scale", &shown.s.x, 0.005f, 0.0f, 0.0f, "%.3f")) { editOf(selected).s = shown.s; changed = true; }
-        done |= ImGui::IsItemDeactivatedAfterEdit();
-        float uniform = 1.0f;
-        if (ImGui::DragFloat("uniform scale", &uniform, 0.005f, 0.01f, 100.0f, "x %.3f")) {
-            NodeEdit& e = editOf(selected);
-            e.s *= std::max(uniform, 0.01f);
-            changed = true;
+        l_bDone |= ImGui::IsItemDeactivatedAfterEdit();
+        if (ImGui::DragFloat3("scale", &l_oShown.m_v3S.x, 0.005f, 0.0f, 0.0f, "%.3f")) { f_EditOf(m_iSelected).m_v3S = l_oShown.m_v3S; l_bChanged = true; }
+        l_bDone |= ImGui::IsItemDeactivatedAfterEdit();
+        float l_fUniform = 1.0f;
+        if (ImGui::DragFloat("uniform scale", &l_fUniform, 0.005f, 0.01f, 100.0f, "x %.3f")) {
+            NodeEdit& l_oE = f_EditOf(m_iSelected);
+            l_oE.m_v3S *= std::max(l_fUniform, 0.01f);
+            l_bChanged = true;
         }
-        done |= ImGui::IsItemDeactivatedAfterEdit();
-        const glm::vec3 wp(pose.world(selected)[3]);
-        ImGui::TextDisabled("world position %.3f, %.3f, %.3f", wp.x, wp.y, wp.z);
-        if (edits.count(selected)) {
-            if (ImGui::Button("reset node (Delete)")) { edits.erase(selected); done = true; }
+        l_bDone |= ImGui::IsItemDeactivatedAfterEdit();
+        const glm::vec3 l_v3Wp(m_oPose.f_World(m_iSelected)[3]);
+        ImGui::TextDisabled("world position %.3f, %.3f, %.3f", l_v3Wp.x, l_v3Wp.y, l_v3Wp.z);
+        if (m_mapEdits.count(m_iSelected)) {
+            if (ImGui::Button("reset node (Delete)")) { m_mapEdits.erase(m_iSelected); l_bDone = true; }
             ImGui::SameLine();
         }
-        if (!edits.empty() && ImGui::Button(("reset all edits (" + std::to_string(edits.size()) + ")").c_str())) {
-            edits.clear();
-            done = true;
+        if (!m_mapEdits.empty() && ImGui::Button(("reset all edits (" + std::to_string(m_mapEdits.size()) + ")").c_str())) {
+            m_mapEdits.clear();
+            l_bDone = true;
         }
-        if (ImGui::Button("look at it")) target = wp;
+        if (ImGui::Button("look at it")) m_v3Target = l_v3Wp;
         ImGui::SameLine();
-        if (ImGui::Button("deselect")) selected = -1;
-        if (changed) posed();
-        if (done) editChanged(selected);
+        if (ImGui::Button("deselect")) m_iSelected = -1;
+        if (l_bChanged) f_Posed();
+        if (l_bDone) f_EditChanged(m_iSelected);
     }
 
     // Physics (KHR_physics_rigid_bodies, gltf_physics.h): the bodies move the pose's nodes after the animations.
-    gltf::PhysicsWorld physics;
-    bool physicsOn = false, physicsPaused = false, physicsBoxes = true, physicsFrozenDone = false;
-    std::vector<std::string> physicsLog;   // the last trigger events
+    gltf::PhysicsWorld m_oPhysics;
+    bool m_bPhysicsOn = false, m_bPhysicsPaused = false, m_bPhysicsBoxes = true, m_bPhysicsFrozenDone = false;
+    std::vector<std::string> m_vPhysicsLog;   // the last trigger events
 
-    void buildPhysics() {
-        physics.clear();
-        physicsFrozenDone = false;
-        physicsLog.clear();
-        if (!model || !model->physics.any() || !physicsOn) return;
-        const double keep = time;
-        time = 0.0;
-        posed();   // the bodies start where the file (and the animations at time 0) put them
-        std::string err;
-        if (!physics.build(*model, pose, &err)) {
-            std::fprintf(stderr, "[gltf] physics: %s\n", err.c_str());
+    void f_BuildPhysics() {
+        m_oPhysics.f_Clear();
+        m_bPhysicsFrozenDone = false;
+        m_vPhysicsLog.clear();
+        if (!m_upModel || !m_upModel->m_oPhysics.f_Any() || !m_bPhysicsOn) return;
+        const double l_dKeep = m_dTime;
+        m_dTime = 0.0;
+        f_Posed();   // the bodies start where the file (and the animations at time 0) put them
+        std::string l_strErr;
+        if (!m_oPhysics.f_Build(*m_upModel, m_oPose, &l_strErr)) {
+            std::fprintf(stderr, "[gltf] physics: %s\n", l_strErr.c_str());
             return;
         }
-        time = keep;
-        const gltf::PhysicsWorld::Stats st = physics.stats();
-        std::fprintf(stderr, "[gltf] physics: %d dynamic, %d kinematic, %d static, %d triggers, %d joints\n", st.dynamic,
-                     st.kinematic, st.statics, st.triggers, st.joints);
-        for (const std::string& w : physics.warnings()) std::fprintf(stderr, "[gltf]   physics warning: %s\n", w.c_str());
+        m_dTime = l_dKeep;
+        const gltf::PhysicsWorld::Stats l_oSt = m_oPhysics.f_Stats();
+        std::fprintf(stderr, "[gltf] physics: %d dynamic, %d kinematic, %d static, %d triggers, %d joints\n", l_oSt.m_iDynamic,
+                     l_oSt.m_iKinematic, l_oSt.m_iStatics, l_oSt.m_iTriggers, l_oSt.m_iJoints);
+        for (const std::string& l_strW : m_oPhysics.f_Warnings()) std::fprintf(stderr, "[gltf]   physics warning: %s\n", l_strW.c_str());
     }
 
     // After posed(): advance the simulation (or, with --time, simulate up to that time once) and put the bodies back
     // into the pose the animations just reset.
-    void simulate(float dt) {
-        if (!physics.built()) return;
-        if (args.time >= 0.0f) {
-            if (!physicsFrozenDone) {
-                physics.simulateTo(args.time, pose);
-                physicsFrozenDone = true;
+    void f_Simulate(float l_fDt) {
+        if (!m_oPhysics.f_Built()) return;
+        if (m_oArgs.m_fTime >= 0.0f) {
+            if (!m_bPhysicsFrozenDone) {
+                m_oPhysics.f_SimulateTo(m_oArgs.m_fTime, m_oPose);
+                m_bPhysicsFrozenDone = true;
             }
-        } else if (!physicsPaused) {
-            physics.step(dt * speed, pose);
+        } else if (!m_bPhysicsPaused) {
+            m_oPhysics.f_Step(l_fDt * m_fSpeed, m_oPose);
         }
-        physics.writePose(pose);
-        for (const gltf::TriggerEvent& e : physics.takeEvents()) {
-            auto name = [&](int n) { return n >= 0 && n < (int)model->nodes.size() && !model->nodes[(size_t)n].name.empty()
-                                                ? model->nodes[(size_t)n].name : std::to_string(n); };
-            char line[160];
-            std::snprintf(line, sizeof line, "%6.2f s  %s %s %s", physics.time(), name(e.other).c_str(), e.enter ? "entered" : "left",
-                          name(e.trigger).c_str());
-            physicsLog.push_back(line);
-            if (physicsLog.size() > 8) physicsLog.erase(physicsLog.begin());
+        m_oPhysics.f_WritePose(m_oPose);
+        for (const gltf::TriggerEvent& l_oE : m_oPhysics.f_TakeEvents()) {
+            auto l_fnName = [&](int l_iN) { return l_iN >= 0 && l_iN < (int)m_upModel->m_vNodes.size() && !m_upModel->m_vNodes[(size_t)l_iN].m_strName.empty()
+                                                ? m_upModel->m_vNodes[(size_t)l_iN].m_strName : std::to_string(l_iN); };
+            char l_pszLine[160];
+            std::snprintf(l_pszLine, sizeof l_pszLine, "%6.2f s  %s %s %s", m_oPhysics.f_Time(), l_fnName(l_oE.m_iOther).c_str(), l_oE.m_bEnter ? "entered" : "left",
+                          l_fnName(l_oE.m_iTrigger).c_str());
+            m_vPhysicsLog.push_back(l_pszLine);
+            if (m_vPhysicsLog.size() > 8) m_vPhysicsLog.erase(m_vPhysicsLog.begin());
         }
     }
 
     // Arrow keys: the camera moves moveSpeed x the model's radius per second (+ / - change it).
-    float moveSpeed = 1.0f;
-    static constexpr float kMoveStep = 1.5f, kMoveMin = 1.0f / 64.0f, kMoveMax = 64.0f;
+    float m_fMoveSpeed = 1.0f;
+    static constexpr float m_fMoveStep = 1.5f, m_fMoveMin = 1.0f / 64.0f, m_fMoveMax = 64.0f;
 
-    float maxDuration() const {
-        float d = 0.0f;
-        if (model)
-            for (size_t i = 0; i < model->animations.size(); i++)
-                if (playing[i]) d = std::max(d, model->animations[i].duration);
-        return d;
+    float f_MaxDuration() const {
+        float l_fD = 0.0f;
+        if (m_upModel)
+            for (size_t l_nI = 0; l_nI < m_upModel->m_vAnimations.size(); l_nI++)
+                if (m_vPlaying[l_nI]) l_fD = std::max(l_fD, m_upModel->m_vAnimations[l_nI].m_fDuration);
+        return l_fD;
     }
 
     // An .hdr: prefiltered on the CPU (about a second for the 1K default), then on the GPU.
-    bool loadEnvironment(const std::string& file) {
-        const auto t0 = std::chrono::steady_clock::now();
-        gltf::Equirect picture;
-        std::string err;
-        if (!gltf::loadEquirect(file, picture, &err)) {
-            envError = file + ": " + err;
-            std::fprintf(stderr, "[gltf] %s\n", envError.c_str());
+    bool f_LoadEnvironment(const std::string& l_strFile) {
+        const auto l_oT0 = std::chrono::steady_clock::now();
+        gltf::Equirect l_oPicture;
+        std::string l_strErr;
+        if (!gltf::f_LoadEquirect(l_strFile, l_oPicture, &l_strErr)) {
+            m_strEnvError = l_strFile + ": " + l_strErr;
+            std::fprintf(stderr, "[gltf] %s\n", m_strEnvError.c_str());
             return false;
         }
-        if (!renderer.setEnvironment(gltf::prefilterEnvironment(picture, 256, 48), &err)) {
-            envError = err;
+        if (!m_oRenderer.f_SetEnvironment(gltf::f_PrefilterEnvironment(l_oPicture, 256, 48), &l_strErr)) {
+            m_strEnvError = l_strErr;
             return false;
         }
-        const size_t slash = file.find_last_of("/\\");
-        envName = slash == std::string::npos ? file : file.substr(slash + 1);
-        envError.clear();
-        std::fprintf(stderr, "[gltf] environment %s: %d x %d, prefiltered in %.0f ms\n", envName.c_str(), picture.width,
-                     picture.height, std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count());
+        const size_t l_nSlash = l_strFile.find_last_of("/\\");
+        m_strEnvName = l_nSlash == std::string::npos ? l_strFile : l_strFile.substr(l_nSlash + 1);
+        m_strEnvError.clear();
+        std::fprintf(stderr, "[gltf] environment %s: %d x %d, prefiltered in %.0f ms\n", m_strEnvName.c_str(), l_oPicture.m_iWidth,
+                     l_oPicture.m_iHeight, std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - l_oT0).count());
         return true;
     }
 
     // A file from Open..., a drop or the web page: an .hdr is the environment, anything else a model.
-    void openFile(const std::string& file) {
-        const size_t dot = file.find_last_of('.');
-        std::string ext = dot == std::string::npos ? std::string() : file.substr(dot + 1);
-        for (char& c : ext) c = (char)std::tolower((unsigned char)c);
-        if (ext == "hdr") {
-            if (loadEnvironment(file)) envOn = true;
+    void f_OpenFile(const std::string& l_strFile) {
+        const size_t l_nDot = l_strFile.find_last_of('.');
+        std::string l_strExt = l_nDot == std::string::npos ? std::string() : l_strFile.substr(l_nDot + 1);
+        for (char& l_cC : l_strExt) l_cC = (char)std::tolower((unsigned char)l_cC);
+        if (l_strExt == "hdr") {
+            if (f_LoadEnvironment(l_strFile)) m_bEnvOn = true;
         } else {
-            load(file);
+            f_Load(l_strFile);
         }
     }
 
-    bool load(const std::string& file) {
-        auto m = std::make_unique<gltf::Model>();
-        std::string err;
-        if (!gltf::loadModel(file, *m, &err)) {
-            error = file + ": " + err;
-            std::fprintf(stderr, "[gltf] %s\n", error.c_str());
+    bool f_Load(const std::string& l_strFile) {
+        auto l_upM = std::make_unique<gltf::Model>();
+        std::string l_strErr;
+        if (!gltf::f_LoadModel(l_strFile, *l_upM, &l_strErr)) {
+            m_strError = l_strFile + ": " + l_strErr;
+            std::fprintf(stderr, "[gltf] %s\n", m_strError.c_str());
             return false;
         }
-        gpu.reset();   // the old model's buffers go first
-        physics.clear();   // it points at the old model
-        edits.clear();
-        selected = -1;
-        dragHandle = hoverHandle = -1;
-        animGpu.reset();
-        animTex.reset();
-        crowd.clear();
-        model = std::move(m);
-        path = file;
-        error.clear();
-        pose.bind(model.get());
-        gpu = renderer.upload(*model);
-        fileLightHint.assign(model->lights.size(), 1);   // a new model: every light's hint shown
-        playing.assign(model->animations.size(), 0);
-        manualWeights.clear();
-        time = 0.0;
+        m_spGpu.reset();   // the old model's buffers go first
+        m_oPhysics.f_Clear();   // it points at the old model
+        m_mapEdits.clear();
+        m_iSelected = -1;
+        m_iDragHandle = m_iHoverHandle = -1;
+        m_spAnimGpu.reset();
+        m_spAnimTex.reset();
+        m_oCrowd.f_Clear();
+        m_upModel = std::move(l_upM);
+        m_strPath = l_strFile;
+        m_strError.clear();
+        m_oPose.f_Bind(m_upModel.get());
+        m_spGpu = m_oRenderer.f_Upload(*m_upModel);
+        m_vFileLightHint.assign(m_upModel->m_vLights.size(), 1);   // a new model: every light's hint shown
+        m_vPlaying.assign(m_upModel->m_vAnimations.size(), 0);
+        m_mapManualWeights.clear();
+        m_dTime = 0.0;
         // The animation to play: --anim (index or name), else the first one.
-        int pick = model->animations.empty() ? -1 : 0;
-        if (!args.anim.empty()) {
-            pick = args.anim == "none" ? -1 : -2;
-            for (size_t i = 0; i < model->animations.size() && pick == -2; i++)
-                if (model->animations[i].name == args.anim || std::to_string(i) == args.anim) pick = (int)i;
-            if (pick == -2) pick = -1;
+        int l_iPick = m_upModel->m_vAnimations.empty() ? -1 : 0;
+        if (!m_oArgs.m_strAnim.empty()) {
+            l_iPick = m_oArgs.m_strAnim == "none" ? -1 : -2;
+            for (size_t l_nI = 0; l_nI < m_upModel->m_vAnimations.size() && l_iPick == -2; l_nI++)
+                if (m_upModel->m_vAnimations[l_nI].m_strName == m_oArgs.m_strAnim || std::to_string(l_nI) == m_oArgs.m_strAnim) l_iPick = (int)l_nI;
+            if (l_iPick == -2) l_iPick = -1;
         }
-        if (pick >= 0) playing[(size_t)pick] = 1;
+        if (l_iPick >= 0) m_vPlaying[(size_t)l_iPick] = 1;
         std::fprintf(stderr, "[gltf] %s: %zu vertices, %zu triangles, %zu meshes, %zu skins, %zu morph targets, %zu instances, %zu animations\n",
-                     file.c_str(), model->vertexCount(), model->triangleCount(), model->meshes.size(), model->skins.size(),
-                     model->morphTargetCount(), model->instanceCount(), model->animations.size());
-        for (const std::string& w : model->warnings) std::fprintf(stderr, "[gltf]   warning: %s\n", w.c_str());
-        for (const std::string& e : model->ignoredExtensions) std::fprintf(stderr, "[gltf]   ignored extension: %s\n", e.c_str());
-        activeCamera = -1;
-        if (!args.camera.empty()) {   // --camera=<index|name>
-            const std::vector<gltf::PlacedCamera> cams = pose.cameras();
-            for (size_t i = 0; i < cams.size(); i++)
-                if (std::to_string(i) == args.camera || model->cameras[(size_t)cams[i].camera].name == args.camera) {
-                    selectCamera((int)i);
-                    lookYaw = args.lookYaw;
-                    lookPitch = args.lookPitch;
+                     l_strFile.c_str(), m_upModel->f_VertexCount(), m_upModel->f_TriangleCount(), m_upModel->m_vMeshes.size(), m_upModel->m_vSkins.size(),
+                     m_upModel->f_MorphTargetCount(), m_upModel->f_InstanceCount(), m_upModel->m_vAnimations.size());
+        for (const std::string& l_strW : m_upModel->m_vWarnings) std::fprintf(stderr, "[gltf]   warning: %s\n", l_strW.c_str());
+        for (const std::string& l_strE : m_upModel->m_vIgnoredExtensions) std::fprintf(stderr, "[gltf]   ignored extension: %s\n", l_strE.c_str());
+        m_iActiveCamera = -1;
+        if (!m_oArgs.m_strCamera.empty()) {   // --camera=<index|name>
+            const std::vector<gltf::PlacedCamera> l_vCams = m_oPose.f_Cameras();
+            for (size_t l_nI = 0; l_nI < l_vCams.size(); l_nI++)
+                if (std::to_string(l_nI) == m_oArgs.m_strCamera || m_upModel->m_vCameras[(size_t)l_vCams[l_nI].m_iCamera].m_strName == m_oArgs.m_strCamera) {
+                    f_SelectCamera((int)l_nI);
+                    m_fLookYaw = m_oArgs.m_fLookYaw;
+                    m_fLookPitch = m_oArgs.m_fLookPitch;
                     break;
                 }
         }
-        const std::string title = "TOMS glTF Viewer - " + file;
-        SDL_SetWindowTitle(window, title.c_str());
-        frameScene();
-        if (crowdCount > 0 || args.crowd > 0) buildCrowd(crowdCount > 0 ? crowdCount : args.crowd);
-        physicsOn = args.physics && model->physics.any();
-        buildPhysics();
-        if (!args.select.empty())
-            for (size_t i = 0; i < model->nodes.size(); i++)
-                if (model->nodes[i].name == args.select || std::to_string(i) == args.select) { selected = (int)i; revealSelected = true; break; }
-        if (args.tool == "rotate") tool = Tool::Rotate;
-        else if (args.tool == "scale") tool = Tool::Scale;
+        const std::string l_strTitle = "TOMS glTF Viewer - " + l_strFile;
+        SDL_SetWindowTitle(m_pWindow, l_strTitle.c_str());
+        f_FrameScene();
+        if (m_iCrowdCount > 0 || m_oArgs.m_iCrowd > 0) f_BuildCrowd(m_iCrowdCount > 0 ? m_iCrowdCount : m_oArgs.m_iCrowd);
+        m_bPhysicsOn = m_oArgs.m_bPhysics && m_upModel->m_oPhysics.f_Any();
+        f_BuildPhysics();
+        if (!m_oArgs.m_strSelect.empty())
+            for (size_t l_nI = 0; l_nI < m_upModel->m_vNodes.size(); l_nI++)
+                if (m_upModel->m_vNodes[l_nI].m_strName == m_oArgs.m_strSelect || std::to_string(l_nI) == m_oArgs.m_strSelect) { m_iSelected = (int)l_nI; m_bRevealSelected = true; break; }
+        if (m_oArgs.m_strTool == "rotate") m_eTool = Tool::Rotate;
+        else if (m_oArgs.m_strTool == "scale") m_eTool = Tool::Scale;
         return true;
     }
 
     // Camera on the whole scene: bounds over the playing animations (sampled at a few times, so a
     // morph or a walk does not leave the view), then the pose at the current time again.
-    void frameScene() {
-        if (!model) return;
-        const double keep = time;
-        const float dur = maxDuration();
-        glm::vec3 mn(0.0f), mx(0.0f);
-        bool any = false;
-        for (int k = 0; k <= (dur > 0 ? 8 : 0); k++) {
-            time = dur * k / 8.0;
-            posed();
-            glm::vec3 a, b;
-            if (!pose.bounds(a, b)) continue;
-            mn = any ? glm::min(mn, a) : a;
-            mx = any ? glm::max(mx, b) : b;
-            any = true;
+    void f_FrameScene() {
+        if (!m_upModel) return;
+        const double l_dKeep = m_dTime;
+        const float l_fDur = f_MaxDuration();
+        glm::vec3 l_v3Mn(0.0f), l_v3Mx(0.0f);
+        bool l_bAny = false;
+        for (int l_iK = 0; l_iK <= (l_fDur > 0 ? 8 : 0); l_iK++) {
+            m_dTime = l_fDur * l_iK / 8.0;
+            f_Posed();
+            glm::vec3 l_v3A, l_v3B;
+            if (!m_oPose.f_Bounds(l_v3A, l_v3B)) continue;
+            l_v3Mn = l_bAny ? glm::min(l_v3Mn, l_v3A) : l_v3A;
+            l_v3Mx = l_bAny ? glm::max(l_v3Mx, l_v3B) : l_v3B;
+            l_bAny = true;
         }
-        time = keep;
-        posed();
-        if (!any) mn = glm::vec3(-1.0f), mx = glm::vec3(1.0f);
-        modelMin = mn;
-        modelMax = mx;
-        if (crowdCount > 0 && crowd.size() > 0) {   // the whole grid
-            for (int i = 0; i < crowd.size(); i++) {
-                const glm::vec3 o(crowd[i].placement[3]);
-                mn = glm::min(mn, modelMin + o);
-                mx = glm::max(mx, modelMax + o);
+        m_dTime = l_dKeep;
+        f_Posed();
+        if (!l_bAny) l_v3Mn = glm::vec3(-1.0f), l_v3Mx = glm::vec3(1.0f);
+        m_v3ModelMin = l_v3Mn;
+        m_v3ModelMax = l_v3Mx;
+        if (m_iCrowdCount > 0 && m_oCrowd.size() > 0) {   // the whole grid
+            for (int l_iI = 0; l_iI < m_oCrowd.size(); l_iI++) {
+                const glm::vec3 l_v3O(m_oCrowd[l_iI].m_mat4Placement[3]);
+                l_v3Mn = glm::min(l_v3Mn, m_v3ModelMin + l_v3O);
+                l_v3Mx = glm::max(l_v3Mx, m_v3ModelMax + l_v3O);
             }
         }
-        sceneMin = mn;
-        sceneMax = mx;
-        target = (mn + mx) * 0.5f;
-        radius = std::max(glm::length(mx - mn) * 0.5f, 1e-3f);
-        buildRig(rigKind);
-        distance = radius / std::sin(glm::radians(fov * 0.5f)) * 1.05f / std::max(args.zoom, 0.01f);
+        m_v3SceneMin = l_v3Mn;
+        m_v3SceneMax = l_v3Mx;
+        m_v3Target = (l_v3Mn + l_v3Mx) * 0.5f;
+        m_fRadius = std::max(glm::length(l_v3Mx - l_v3Mn) * 0.5f, 1e-3f);
+        f_BuildRig(m_strRigKind);
+        m_fDistance = m_fRadius / std::sin(glm::radians(m_fFov * 0.5f)) * 1.05f / std::max(m_oArgs.m_fZoom, 0.01f);
     }
 
     // The pose at the current time: every ticked animation, then the morph sliders.
-    void posed() {
-        pose.reset();
-        for (size_t i = 0; i < model->animations.size(); i++) {
-            if (!playing[i]) continue;
-            const float d = model->animations[i].duration;
-            pose.apply((int)i, d > 0 ? (float)std::fmod(time, (double)d) : 0.0f);
+    void f_Posed() {
+        m_oPose.f_Reset();
+        for (size_t l_nI = 0; l_nI < m_upModel->m_vAnimations.size(); l_nI++) {
+            if (!m_vPlaying[l_nI]) continue;
+            const float l_fD = m_upModel->m_vAnimations[l_nI].m_fDuration;
+            m_oPose.f_Apply((int)l_nI, l_fD > 0 ? (float)std::fmod(m_dTime, (double)l_fD) : 0.0f);
         }
-        for (const auto& [key, w] : manualWeights) pose.setWeight(key.first, (size_t)key.second, w);
-        for (const auto& [n, e] : edits) pose.setLocal(n, e.t, e.r, e.s);   // node edits replace the animation
-        pose.updateWorld();
+        for (const auto& [l_pairKey, l_fW] : m_mapManualWeights) m_oPose.f_SetWeight(l_pairKey.first, (size_t)l_pairKey.second, l_fW);
+        for (const auto& [l_iN, l_oE] : m_mapEdits) m_oPose.f_SetLocal(l_iN, l_oE.m_v3T, l_oE.m_qR, l_oE.m_v3S);   // node edits replace the animation
+        m_oPose.f_UpdateWorld();
     }
 
     // ---- lights --------------------------------------------------------------------------------------
-    static glm::vec3 fromAngles(float yawDeg, float pitchDeg) {   // a unit vector towards (yaw, pitch)
-        const float y = glm::radians(yawDeg), p = glm::radians(pitchDeg);
-        return glm::vec3(std::cos(p) * std::sin(y), std::sin(p), std::cos(p) * std::cos(y));
+    static glm::vec3 f_FromAngles(float l_fYawDeg, float l_fPitchDeg) {   // a unit vector towards (yaw, pitch)
+        const float l_fY = glm::radians(l_fYawDeg), l_fP = glm::radians(l_fPitchDeg);
+        return glm::vec3(std::cos(l_fP) * std::sin(l_fY), std::sin(l_fP), std::cos(l_fP) * std::cos(l_fY));
     }
 
     // The rig's rotating lights (RigLight::spin): round the up axis through the model's middle.
-    void spinLights(float dt) {
-        if (args.lightSpin != 0.0f && !lightSpinGiven && model) {   // --light-spin: every rig light, once
-            lightSpinGiven = true;
-            for (RigLight& r : rig) { r.spin = true; r.spinSpeed = args.lightSpin; }
+    void f_SpinLights(float l_fDt) {
+        if (m_oArgs.m_fLightSpin != 0.0f && !m_bLightSpinGiven && m_upModel) {   // --light-spin: every rig light, once
+            m_bLightSpinGiven = true;
+            for (RigLight& l_oR : m_vRig) { l_oR.m_bSpin = true; l_oR.m_fSpinSpeed = m_oArgs.m_fLightSpin; }
         }
-        auto wrap = [](float deg) { return std::remainder(deg, 360.0f); };   // -180 .. 180
-        const glm::vec3 c = (sceneMin + sceneMax) * 0.5f;
-        for (RigLight& r : rig) {
-            if (!r.spin || r.spinSpeed == 0.0f) continue;
-            const float a = r.spinSpeed * dt;
-            r.yaw = wrap(r.yaw + a);
-            if (r.l.type == GltfRenderer::Light::Type::Directional) continue;
-            r.l.position = c + glm::vec3(glm::rotate(glm::mat4(1.0f), glm::radians(a), glm::vec3(0, 1, 0)) *
-                                         glm::vec4(r.l.position - c, 0.0f));
-            if (!r.aimAtModel) r.aimYaw = wrap(r.aimYaw + a);
+        auto l_fnWrap = [](float l_fDeg) { return std::remainder(l_fDeg, 360.0f); };   // -180 .. 180
+        const glm::vec3 l_v3C = (m_v3SceneMin + m_v3SceneMax) * 0.5f;
+        for (RigLight& l_oR : m_vRig) {
+            if (!l_oR.m_bSpin || l_oR.m_fSpinSpeed == 0.0f) continue;
+            const float l_fA = l_oR.m_fSpinSpeed * l_fDt;
+            l_oR.m_fYaw = l_fnWrap(l_oR.m_fYaw + l_fA);
+            if (l_oR.m_oL.m_eType == GltfRenderer::Light::Type::Directional) continue;
+            l_oR.m_oL.m_v3Position = l_v3C + glm::vec3(glm::rotate(glm::mat4(1.0f), glm::radians(l_fA), glm::vec3(0, 1, 0)) *
+                                         glm::vec4(l_oR.m_oL.m_v3Position - l_v3C, 0.0f));
+            if (!l_oR.m_bAimAtModel) l_oR.m_fAimYaw = l_fnWrap(l_oR.m_fAimYaw + l_fA);
         }
     }
 
     // A rig around the model's bounds: "default" (key + fill directional), "point", "spot", "all".
-    void buildRig(const std::string& kind) {
-        rigKind = kind;
-        rig.clear();
-        const glm::vec3 c = (sceneMin + sceneMax) * 0.5f;
-        auto dirLight = [&](float yawDeg, float pitchDeg, float intensity, bool shadows) {
-            RigLight r;
-            r.yaw = yawDeg;
-            r.pitch = pitchDeg;
-            r.l.type = GltfRenderer::Light::Type::Directional;
-            r.l.intensity = intensity;
-            r.l.castShadows = shadows;
-            r.l.color = glm::vec3(1.0f, 0.97f, 0.92f);
-            return r;
+    void f_BuildRig(const std::string& l_strKind) {
+        m_strRigKind = l_strKind;
+        m_vRig.clear();
+        const glm::vec3 l_v3C = (m_v3SceneMin + m_v3SceneMax) * 0.5f;
+        auto l_fnDirLight = [&](float l_fYawDeg, float l_fPitchDeg, float l_fIntensity, bool l_bShadows) {
+            RigLight l_oR;
+            l_oR.m_fYaw = l_fYawDeg;
+            l_oR.m_fPitch = l_fPitchDeg;
+            l_oR.m_oL.m_eType = GltfRenderer::Light::Type::Directional;
+            l_oR.m_oL.m_fIntensity = l_fIntensity;
+            l_oR.m_oL.m_bCastShadows = l_bShadows;
+            l_oR.m_oL.m_v3Color = glm::vec3(1.0f, 0.97f, 0.92f);
+            return l_oR;
         };
-        auto placed = [&](GltfRenderer::Light::Type type, float yawDeg, float pitchDeg, float dist, glm::vec3 color) {
-            RigLight r;
-            r.yaw = yawDeg;
-            r.pitch = pitchDeg;
-            r.l.type = type;
-            r.l.position = c + fromAngles(yawDeg, pitchDeg) * dist;
-            r.l.intensity = 3.5f * dist * dist;   // about the key light's strength at the model
-            r.l.color = color;
-            r.l.innerCone = 0.3f;
-            r.l.outerCone = 0.55f;
-            return r;
+        auto l_fnPlaced = [&](GltfRenderer::Light::Type l_eType, float l_fYawDeg, float l_fPitchDeg, float l_fDist, glm::vec3 l_v3Color) {
+            RigLight l_oR;
+            l_oR.m_fYaw = l_fYawDeg;
+            l_oR.m_fPitch = l_fPitchDeg;
+            l_oR.m_oL.m_eType = l_eType;
+            l_oR.m_oL.m_v3Position = l_v3C + f_FromAngles(l_fYawDeg, l_fPitchDeg) * l_fDist;
+            l_oR.m_oL.m_fIntensity = 3.5f * l_fDist * l_fDist;   // about the key light's strength at the model
+            l_oR.m_oL.m_v3Color = l_v3Color;
+            l_oR.m_oL.m_fInnerCone = 0.3f;
+            l_oR.m_oL.m_fOuterCone = 0.55f;
+            return l_oR;
         };
-        const float d = radius * 2.2f;
-        if (kind == "point") {
-            rig.push_back(placed(GltfRenderer::Light::Type::Point, -70.0f, 40.0f, d, glm::vec3(1.0f, 0.92f, 0.8f)));
-            rig.push_back(dirLight(150.0f, 25.0f, 0.4f, false));
-        } else if (kind == "spot") {
-            rig.push_back(placed(GltfRenderer::Light::Type::Spot, -40.0f, 50.0f, d, glm::vec3(0.9f, 0.95f, 1.0f)));
-            rig.push_back(dirLight(150.0f, 25.0f, 0.4f, false));
-        } else if (kind == "all") {
-            rig.push_back(dirLight(-35.0f, 45.0f, 1.6f, true));
-            rig.push_back(placed(GltfRenderer::Light::Type::Point, 80.0f, 30.0f, d, glm::vec3(1.0f, 0.6f, 0.35f)));
-            rig.push_back(placed(GltfRenderer::Light::Type::Spot, -120.0f, 55.0f, d, glm::vec3(0.45f, 0.65f, 1.0f)));
+        const float l_fD = m_fRadius * 2.2f;
+        if (l_strKind == "point") {
+            m_vRig.push_back(l_fnPlaced(GltfRenderer::Light::Type::Point, -70.0f, 40.0f, l_fD, glm::vec3(1.0f, 0.92f, 0.8f)));
+            m_vRig.push_back(l_fnDirLight(150.0f, 25.0f, 0.4f, false));
+        } else if (l_strKind == "spot") {
+            m_vRig.push_back(l_fnPlaced(GltfRenderer::Light::Type::Spot, -40.0f, 50.0f, l_fD, glm::vec3(0.9f, 0.95f, 1.0f)));
+            m_vRig.push_back(l_fnDirLight(150.0f, 25.0f, 0.4f, false));
+        } else if (l_strKind == "all") {
+            m_vRig.push_back(l_fnDirLight(-35.0f, 45.0f, 1.6f, true));
+            m_vRig.push_back(l_fnPlaced(GltfRenderer::Light::Type::Point, 80.0f, 30.0f, l_fD, glm::vec3(1.0f, 0.6f, 0.35f)));
+            m_vRig.push_back(l_fnPlaced(GltfRenderer::Light::Type::Spot, -120.0f, 55.0f, l_fD, glm::vec3(0.45f, 0.65f, 1.0f)));
         } else {
-            rig.push_back(dirLight(-35.0f, 45.0f, 3.0f, true));
-            rig.push_back(dirLight(145.0f, 20.0f, 0.75f, false));
+            m_vRig.push_back(l_fnDirLight(-35.0f, 45.0f, 3.0f, true));
+            m_vRig.push_back(l_fnDirLight(145.0f, 20.0f, 0.75f, false));
         }
     }
 
     // This frame's lights: the model's own (KHR_lights_punctual) or the rig.
-    std::vector<GltfRenderer::Light> frameLights() {
-        std::vector<GltfRenderer::Light> out;
-        frameLightHint.clear();
-        if (!hintsGiven && model && !args.lightHints.empty()) {   // --light-hints, in the panel's order
-            hintsGiven = true;
-            const bool file = useFileLights && !model->lights.empty();
-            if (file) fileLightHint.resize(model->lights.size(), 1);
-            for (size_t i = 0; i < args.lightHints.size(); i++) {
-                if (file && i < fileLightHint.size()) fileLightHint[i] = args.lightHints[i];
-                if (!file && i < rig.size()) rig[i].hint = args.lightHints[i] != 0;
+    std::vector<GltfRenderer::Light> f_FrameLights() {
+        std::vector<GltfRenderer::Light> l_vOut;
+        m_vFrameLightHint.clear();
+        if (!m_bHintsGiven && m_upModel && !m_oArgs.m_vLightHints.empty()) {   // --light-hints, in the panel's order
+            m_bHintsGiven = true;
+            const bool l_bFile = m_bUseFileLights && !m_upModel->m_vLights.empty();
+            if (l_bFile) m_vFileLightHint.resize(m_upModel->m_vLights.size(), 1);
+            for (size_t l_nI = 0; l_nI < m_oArgs.m_vLightHints.size(); l_nI++) {
+                if (l_bFile && l_nI < m_vFileLightHint.size()) m_vFileLightHint[l_nI] = m_oArgs.m_vLightHints[l_nI];
+                if (!l_bFile && l_nI < m_vRig.size()) m_vRig[l_nI].m_bHint = m_oArgs.m_vLightHints[l_nI] != 0;
             }
         }
-        if (args.spotAim && !spotAimGiven && model) {   // --spot-aim: the rig's spot lights, once
-            spotAimGiven = true;
-            for (RigLight& r : rig)
-                if (r.l.type == GltfRenderer::Light::Type::Spot) {
-                    r.aimAtModel = false;
-                    r.aimYaw = args.spotAimYaw;
-                    r.aimPitch = args.spotAimPitch;
+        if (m_oArgs.m_bSpotAim && !m_bSpotAimGiven && m_upModel) {   // --spot-aim: the rig's spot lights, once
+            m_bSpotAimGiven = true;
+            for (RigLight& l_oR : m_vRig)
+                if (l_oR.m_oL.m_eType == GltfRenderer::Light::Type::Spot) {
+                    l_oR.m_bAimAtModel = false;
+                    l_oR.m_fAimYaw = m_oArgs.m_fSpotAimYaw;
+                    l_oR.m_fAimPitch = m_oArgs.m_fSpotAimPitch;
                 }
         }
-        if (useFileLights && model && !model->lights.empty()) {
-            fileLightHint.resize(model->lights.size(), 1);
-            for (const gltf::PlacedLight& p : pose.lights()) {
-                const gltf::Light& s = model->lights[(size_t)p.light];
-                GltfRenderer::Light l;
-                l.type = s.type == gltf::Light::Type::Directional ? GltfRenderer::Light::Type::Directional
-                       : s.type == gltf::Light::Type::Spot ? GltfRenderer::Light::Type::Spot : GltfRenderer::Light::Type::Point;
-                l.color = s.color;
-                l.intensity = s.intensity;
-                l.position = p.position;
-                l.direction = p.direction;
-                l.range = s.range;
-                l.innerCone = s.innerCone;
-                l.outerCone = s.outerCone;
-                out.push_back(l);
-                frameLightHint.push_back(fileLightHint[(size_t)p.light]);
-                if ((int)out.size() == GltfRenderer::kMaxLights) break;
+        if (m_bUseFileLights && m_upModel && !m_upModel->m_vLights.empty()) {
+            m_vFileLightHint.resize(m_upModel->m_vLights.size(), 1);
+            for (const gltf::PlacedLight& l_oP : m_oPose.f_Lights()) {
+                const gltf::Light& l_oS = m_upModel->m_vLights[(size_t)l_oP.m_iLight];
+                GltfRenderer::Light l_oL;
+                l_oL.m_eType = l_oS.m_eType == gltf::Light::Type::Directional ? GltfRenderer::Light::Type::Directional
+                       : l_oS.m_eType == gltf::Light::Type::Spot ? GltfRenderer::Light::Type::Spot : GltfRenderer::Light::Type::Point;
+                l_oL.m_v3Color = l_oS.m_v3Color;
+                l_oL.m_fIntensity = l_oS.m_fIntensity;
+                l_oL.m_v3Position = l_oP.m_v3Position;
+                l_oL.m_v3Direction = l_oP.m_v3Direction;
+                l_oL.m_fRange = l_oS.m_fRange;
+                l_oL.m_fInnerCone = l_oS.m_fInnerCone;
+                l_oL.m_fOuterCone = l_oS.m_fOuterCone;
+                l_vOut.push_back(l_oL);
+                m_vFrameLightHint.push_back(m_vFileLightHint[(size_t)l_oP.m_iLight]);
+                if ((int)l_vOut.size() == GltfRenderer::m_iMaxLights) break;
             }
-            return out;
+            return l_vOut;
         }
-        for (RigLight& r : rig) {
-            if (r.l.type != GltfRenderer::Light::Type::Point) {   // aim: from (yaw, pitch) at the model
-                if (r.l.type == GltfRenderer::Light::Type::Directional) r.l.direction = -fromAngles(r.yaw, r.pitch);
-                else if (!r.aimAtModel) r.l.direction = fromAngles(r.aimYaw, r.aimPitch);   // its own aim
-                else r.l.direction = glm::normalize((sceneMin + sceneMax) * 0.5f - r.l.position);
+        for (RigLight& l_oR : m_vRig) {
+            if (l_oR.m_oL.m_eType != GltfRenderer::Light::Type::Point) {   // aim: from (yaw, pitch) at the model
+                if (l_oR.m_oL.m_eType == GltfRenderer::Light::Type::Directional) l_oR.m_oL.m_v3Direction = -f_FromAngles(l_oR.m_fYaw, l_oR.m_fPitch);
+                else if (!l_oR.m_bAimAtModel) l_oR.m_oL.m_v3Direction = f_FromAngles(l_oR.m_fAimYaw, l_oR.m_fAimPitch);   // its own aim
+                else l_oR.m_oL.m_v3Direction = glm::normalize((m_v3SceneMin + m_v3SceneMax) * 0.5f - l_oR.m_oL.m_v3Position);
             }
-            out.push_back(r.l);
-            frameLightHint.push_back(r.hint ? 1 : 0);
+            l_vOut.push_back(l_oR.m_oL);
+            m_vFrameLightHint.push_back(l_oR.m_bHint ? 1 : 0);
         }
-        return out;
+        return l_vOut;
     }
-    bool lightHintShown(size_t i) const { return i >= frameLightHint.size() || frameLightHint[i] != 0; }
+    bool f_LightHintShown(size_t l_nI) const { return l_nI >= m_vFrameLightHint.size() || m_vFrameLightHint[l_nI] != 0; }
 
-    void makeGround() {   // a unit quad, scaled under the model each frame
-        gltf::Model& g = groundModel;
-        gltf::Primitive p;
-        p.position = {{-1, 0, -1}, {1, 0, -1}, {1, 0, 1}, {-1, 0, 1}};
-        p.normal.assign(4, glm::vec3(0, 1, 0));
-        p.uv0 = {{0, 0}, {1, 0}, {1, 1}, {0, 1}};
-        p.indices = {0, 2, 1, 0, 3, 2};
-        p.material = 0;
-        p.boundsMin = {-1, 0, -1};
-        p.boundsMax = {1, 0, 1};
-        gltf::Mesh mesh;
-        mesh.name = "ground";
-        mesh.primitives.push_back(p);
-        g.meshes.push_back(mesh);
-        gltf::Material mat;
-        mat.name = "ground";
-        mat.baseColor = glm::vec4(0.5f, 0.5f, 0.52f, 1.0f);
-        mat.metallic = 0.0f;
-        mat.roughness = 0.9f;
-        mat.doubleSided = true;
-        g.materials.push_back(mat);
-        gltf::Node node;
-        node.mesh = 0;
-        g.nodes.push_back(node);
-        g.scenes.push_back({"ground", {0}});
-        groundPose.bind(&groundModel);
-        groundGpu = renderer.upload(groundModel);
+    void f_MakeGround() {   // a unit quad, scaled under the model each frame
+        gltf::Model& l_oG = m_oGroundModel;
+        gltf::Primitive l_oP;
+        l_oP.m_vPosition = {{-1, 0, -1}, {1, 0, -1}, {1, 0, 1}, {-1, 0, 1}};
+        l_oP.m_vNormal.assign(4, glm::vec3(0, 1, 0));
+        l_oP.m_vUv0 = {{0, 0}, {1, 0}, {1, 1}, {0, 1}};
+        l_oP.m_vIndices = {0, 2, 1, 0, 3, 2};
+        l_oP.m_iMaterial = 0;
+        l_oP.m_v3BoundsMin = {-1, 0, -1};
+        l_oP.m_v3BoundsMax = {1, 0, 1};
+        gltf::Mesh l_oMesh;
+        l_oMesh.m_strName = "ground";
+        l_oMesh.m_vPrimitives.push_back(l_oP);
+        l_oG.m_vMeshes.push_back(l_oMesh);
+        gltf::Material l_oMat;
+        l_oMat.m_strName = "ground";
+        l_oMat.m_v4BaseColor = glm::vec4(0.5f, 0.5f, 0.52f, 1.0f);
+        l_oMat.m_fMetallic = 0.0f;
+        l_oMat.m_fRoughness = 0.9f;
+        l_oMat.m_bDoubleSided = true;
+        l_oG.m_vMaterials.push_back(l_oMat);
+        gltf::Node l_oNode;
+        l_oNode.m_iMesh = 0;
+        l_oG.m_vNodes.push_back(l_oNode);
+        l_oG.m_vScenes.push_back({"ground", {0}});
+        m_oGroundPose.f_Bind(&m_oGroundModel);
+        m_spGroundGpu = m_oRenderer.f_Upload(m_oGroundModel);
     }
 
     // The gizmos' unit shapes: a sphere (radius 1), a cone and a cylinder along +Y from 0 to 1 (radius 1 at y = 1; the
     // cone's tip at 0), a disc on y = 0. All closed, two-sided, unlit; drawLightGizmos colours and places them.
-    void makeGizmos() {
-        const int seg = 24, rings = 12;
-        auto finish = [this](GizmoShape& s, gltf::Primitive p, const char* name) {
-            p.material = 0;
-            p.boundsMin = glm::vec3(FLT_MAX);
-            p.boundsMax = glm::vec3(-FLT_MAX);
-            for (const glm::vec3& v : p.position) { p.boundsMin = glm::min(p.boundsMin, v); p.boundsMax = glm::max(p.boundsMax, v); }
-            gltf::Mesh mesh;
-            mesh.name = name;
-            mesh.primitives.push_back(std::move(p));
-            s.model.meshes.push_back(std::move(mesh));
-            gltf::Material mat;
-            mat.name = name;
-            mat.unlit = true;
-            mat.doubleSided = true;
-            mat.metallic = 0.0f;
-            s.model.materials.push_back(mat);
-            gltf::Node node;
-            node.mesh = 0;
-            s.model.nodes.push_back(node);
-            s.model.scenes.push_back({name, {0}});
-            s.pose.bind(&s.model);
-            s.gpu = renderer.upload(s.model);
+    void f_MakeGizmos() {
+        const int l_iSeg = 24, l_iRings = 12;
+        auto l_fnFinish = [this](GizmoShape& l_oS, gltf::Primitive l_oP, const char* l_pszName) {
+            l_oP.m_iMaterial = 0;
+            l_oP.m_v3BoundsMin = glm::vec3(FLT_MAX);
+            l_oP.m_v3BoundsMax = glm::vec3(-FLT_MAX);
+            for (const glm::vec3& l_v3V : l_oP.m_vPosition) { l_oP.m_v3BoundsMin = glm::min(l_oP.m_v3BoundsMin, l_v3V); l_oP.m_v3BoundsMax = glm::max(l_oP.m_v3BoundsMax, l_v3V); }
+            gltf::Mesh l_oMesh;
+            l_oMesh.m_strName = l_pszName;
+            l_oMesh.m_vPrimitives.push_back(std::move(l_oP));
+            l_oS.m_oModel.m_vMeshes.push_back(std::move(l_oMesh));
+            gltf::Material l_oMat;
+            l_oMat.m_strName = l_pszName;
+            l_oMat.m_bUnlit = true;
+            l_oMat.m_bDoubleSided = true;
+            l_oMat.m_fMetallic = 0.0f;
+            l_oS.m_oModel.m_vMaterials.push_back(l_oMat);
+            gltf::Node l_oNode;
+            l_oNode.m_iMesh = 0;
+            l_oS.m_oModel.m_vNodes.push_back(l_oNode);
+            l_oS.m_oModel.m_vScenes.push_back({l_pszName, {0}});
+            l_oS.m_oPose.f_Bind(&l_oS.m_oModel);
+            l_oS.m_spGpu = m_oRenderer.f_Upload(l_oS.m_oModel);
         };
-        auto ring = [seg](float a) { return glm::vec2(std::cos(a * 6.2831853f / seg), std::sin(a * 6.2831853f / seg)); };
+        auto l_fnRing = [l_iSeg](float l_fA) { return glm::vec2(std::cos(l_fA * 6.2831853f / l_iSeg), std::sin(l_fA * 6.2831853f / l_iSeg)); };
         {   // sphere
-            gltf::Primitive p;
-            for (int r = 0; r <= rings; r++) {
-                const float t = 3.14159265f * r / rings;
-                for (int k = 0; k <= seg; k++) {
-                    const glm::vec2 c = ring((float)k);
-                    const glm::vec3 v(std::sin(t) * c.x, std::cos(t), std::sin(t) * c.y);
-                    p.position.push_back(v);
-                    p.normal.push_back(v);
+            gltf::Primitive l_oP;
+            for (int l_iR = 0; l_iR <= l_iRings; l_iR++) {
+                const float l_fT = 3.14159265f * l_iR / l_iRings;
+                for (int l_iK = 0; l_iK <= l_iSeg; l_iK++) {
+                    const glm::vec2 l_v2C = l_fnRing((float)l_iK);
+                    const glm::vec3 l_v3V(std::sin(l_fT) * l_v2C.x, std::cos(l_fT), std::sin(l_fT) * l_v2C.y);
+                    l_oP.m_vPosition.push_back(l_v3V);
+                    l_oP.m_vNormal.push_back(l_v3V);
                 }
             }
-            for (int r = 0; r < rings; r++)
-                for (int k = 0; k < seg; k++) {
-                    const uint32_t a = (uint32_t)(r * (seg + 1) + k), b = a + seg + 1;
-                    p.indices.insert(p.indices.end(), {a, b, a + 1, a + 1, b, b + 1});
+            for (int l_iR = 0; l_iR < l_iRings; l_iR++)
+                for (int l_iK = 0; l_iK < l_iSeg; l_iK++) {
+                    const uint32_t l_uA = (uint32_t)(l_iR * (l_iSeg + 1) + l_iK), l_uB = l_uA + l_iSeg + 1;
+                    l_oP.m_vIndices.insert(l_oP.m_vIndices.end(), {l_uA, l_uB, l_uA + 1, l_uA + 1, l_uB, l_uB + 1});
                 }
-            finish(gizmoSphere, p, "gizmo_sphere");
+            l_fnFinish(m_oGizmoSphere, l_oP, "gizmo_sphere");
         }
-        auto tube = [&](GizmoShape& s, float bottomRadius, const char* name) {   // y 0 (bottomRadius) .. 1 (radius 1), capped
-            gltf::Primitive p;
-            for (int k = 0; k <= seg; k++) {
-                const glm::vec2 c = ring((float)k);
-                p.position.push_back(glm::vec3(c.x * bottomRadius, 0.0f, c.y * bottomRadius));
-                p.position.push_back(glm::vec3(c.x, 1.0f, c.y));
-                p.normal.push_back(glm::vec3(c.x, 0.0f, c.y));
-                p.normal.push_back(glm::vec3(c.x, 0.0f, c.y));
+        auto l_fnTube = [&](GizmoShape& l_oS, float l_fBottomRadius, const char* l_pszName) {   // y 0 (bottomRadius) .. 1 (radius 1), capped
+            gltf::Primitive l_oP;
+            for (int l_iK = 0; l_iK <= l_iSeg; l_iK++) {
+                const glm::vec2 l_v2C = l_fnRing((float)l_iK);
+                l_oP.m_vPosition.push_back(glm::vec3(l_v2C.x * l_fBottomRadius, 0.0f, l_v2C.y * l_fBottomRadius));
+                l_oP.m_vPosition.push_back(glm::vec3(l_v2C.x, 1.0f, l_v2C.y));
+                l_oP.m_vNormal.push_back(glm::vec3(l_v2C.x, 0.0f, l_v2C.y));
+                l_oP.m_vNormal.push_back(glm::vec3(l_v2C.x, 0.0f, l_v2C.y));
             }
-            for (int k = 0; k < seg; k++) {
-                const uint32_t a = (uint32_t)(k * 2);
-                p.indices.insert(p.indices.end(), {a, a + 1, a + 2, a + 2, a + 1, a + 3});
+            for (int l_iK = 0; l_iK < l_iSeg; l_iK++) {
+                const uint32_t l_uA = (uint32_t)(l_iK * 2);
+                l_oP.m_vIndices.insert(l_oP.m_vIndices.end(), {l_uA, l_uA + 1, l_uA + 2, l_uA + 2, l_uA + 1, l_uA + 3});
             }
-            for (float y : {0.0f, 1.0f}) {   // the caps
-                if (y == 0.0f && bottomRadius <= 0.0f) continue;
-                const float rr = y == 0.0f ? bottomRadius : 1.0f;
-                const uint32_t centre = (uint32_t)p.position.size();
-                p.position.push_back(glm::vec3(0.0f, y, 0.0f));
-                p.normal.push_back(glm::vec3(0.0f, y == 0.0f ? -1.0f : 1.0f, 0.0f));
-                for (int k = 0; k <= seg; k++) {
-                    const glm::vec2 c = ring((float)k);
-                    p.position.push_back(glm::vec3(c.x * rr, y, c.y * rr));
-                    p.normal.push_back(glm::vec3(0.0f, y == 0.0f ? -1.0f : 1.0f, 0.0f));
+            for (float l_fY : {0.0f, 1.0f}) {   // the caps
+                if (l_fY == 0.0f && l_fBottomRadius <= 0.0f) continue;
+                const float l_fRr = l_fY == 0.0f ? l_fBottomRadius : 1.0f;
+                const uint32_t l_uCentre = (uint32_t)l_oP.m_vPosition.size();
+                l_oP.m_vPosition.push_back(glm::vec3(0.0f, l_fY, 0.0f));
+                l_oP.m_vNormal.push_back(glm::vec3(0.0f, l_fY == 0.0f ? -1.0f : 1.0f, 0.0f));
+                for (int l_iK = 0; l_iK <= l_iSeg; l_iK++) {
+                    const glm::vec2 l_v2C = l_fnRing((float)l_iK);
+                    l_oP.m_vPosition.push_back(glm::vec3(l_v2C.x * l_fRr, l_fY, l_v2C.y * l_fRr));
+                    l_oP.m_vNormal.push_back(glm::vec3(0.0f, l_fY == 0.0f ? -1.0f : 1.0f, 0.0f));
                 }
-                for (int k = 0; k < seg; k++) p.indices.insert(p.indices.end(), {centre, centre + 1 + k, centre + 2 + k});
+                for (int l_iK = 0; l_iK < l_iSeg; l_iK++) l_oP.m_vIndices.insert(l_oP.m_vIndices.end(), {l_uCentre, l_uCentre + 1 + l_iK, l_uCentre + 2 + l_iK});
             }
-            finish(s, p, name);
+            l_fnFinish(l_oS, l_oP, l_pszName);
         };
-        tube(gizmoCone, 0.0f, "gizmo_cone");
-        tube(gizmoCylinder, 1.0f, "gizmo_cylinder");
+        l_fnTube(m_oGizmoCone, 0.0f, "gizmo_cone");
+        l_fnTube(m_oGizmoCylinder, 1.0f, "gizmo_cylinder");
         {   // disc
-            gltf::Primitive p;
-            p.position.push_back(glm::vec3(0.0f));
-            p.normal.push_back(glm::vec3(0, 1, 0));
-            for (int k = 0; k <= seg; k++) {
-                const glm::vec2 c = ring((float)k);
-                p.position.push_back(glm::vec3(c.x, 0.0f, c.y));
-                p.normal.push_back(glm::vec3(0, 1, 0));
+            gltf::Primitive l_oP;
+            l_oP.m_vPosition.push_back(glm::vec3(0.0f));
+            l_oP.m_vNormal.push_back(glm::vec3(0, 1, 0));
+            for (int l_iK = 0; l_iK <= l_iSeg; l_iK++) {
+                const glm::vec2 l_v2C = l_fnRing((float)l_iK);
+                l_oP.m_vPosition.push_back(glm::vec3(l_v2C.x, 0.0f, l_v2C.y));
+                l_oP.m_vNormal.push_back(glm::vec3(0, 1, 0));
             }
-            for (int k = 0; k < seg; k++) p.indices.insert(p.indices.end(), {0u, (uint32_t)(1 + k), (uint32_t)(2 + k)});
-            finish(gizmoDisc, p, "gizmo_disc");
+            for (int l_iK = 0; l_iK < l_iSeg; l_iK++) l_oP.m_vIndices.insert(l_oP.m_vIndices.end(), {0u, (uint32_t)(1 + l_iK), (uint32_t)(2 + l_iK)});
+            l_fnFinish(m_oGizmoDisc, l_oP, "gizmo_disc");
         }
     }
 
     // Each light as solid shapes (see gizmoSphere): where it is, which way it shines and where its light lands.
-    void drawLightGizmos() {
-        if (!showUi || !gizmoSphere.gpu) return;
-        const float groundY = sceneMin.y;
+    void f_DrawLightGizmos() {
+        if (!m_bShowUi || !m_oGizmoSphere.m_spGpu) return;
+        const float l_fGroundY = m_v3SceneMin.y;
         // a matrix that takes +Y to `d` (any roll), scaled (xz, y), at `at`
-        auto along = [](const glm::vec3& at, glm::vec3 d, float widthScale, float lengthScale) {
-            d = glm::normalize(d);
-            const glm::vec3 ref = std::fabs(d.y) > 0.9f ? glm::vec3(1, 0, 0) : glm::vec3(0, 1, 0);
-            const glm::vec3 x = glm::normalize(glm::cross(d, ref)), z = glm::cross(x, d);
-            glm::mat4 m(1.0f);
-            m[0] = glm::vec4(x * widthScale, 0.0f);
-            m[1] = glm::vec4(d * lengthScale, 0.0f);
-            m[2] = glm::vec4(z * widthScale, 0.0f);
-            m[3] = glm::vec4(at, 1.0f);
-            return m;
+        auto l_fnAlong = [](const glm::vec3& l_v3At, glm::vec3 l_v3D, float l_fWidthScale, float l_fLengthScale) {
+            l_v3D = glm::normalize(l_v3D);
+            const glm::vec3 l_v3Ref = std::fabs(l_v3D.y) > 0.9f ? glm::vec3(1, 0, 0) : glm::vec3(0, 1, 0);
+            const glm::vec3 l_v3X = glm::normalize(glm::cross(l_v3D, l_v3Ref)), l_v3Z = glm::cross(l_v3X, l_v3D);
+            glm::mat4 l_mat4M(1.0f);
+            l_mat4M[0] = glm::vec4(l_v3X * l_fWidthScale, 0.0f);
+            l_mat4M[1] = glm::vec4(l_v3D * l_fLengthScale, 0.0f);
+            l_mat4M[2] = glm::vec4(l_v3Z * l_fWidthScale, 0.0f);
+            l_mat4M[3] = glm::vec4(l_v3At, 1.0f);
+            return l_mat4M;
         };
-        auto put = [this](GizmoShape& s, const glm::mat4& m, const glm::vec3& colour, float alpha) {
-            gltf::Material& mat = s.model.materials[0];   // read by draw() as it submits: one shape, any colour
-            mat.baseColor = glm::vec4(colour, alpha);
-            mat.alphaMode = alpha < 1.0f ? gltf::AlphaMode::Blend : gltf::AlphaMode::Opaque;
-            renderer.draw(*s.gpu, s.pose, m, false);
+        auto l_fnPut = [this](GizmoShape& l_oS, const glm::mat4& l_mat4M, const glm::vec3& l_v3Colour, float l_fAlpha) {
+            gltf::Material& l_oMat = l_oS.m_oModel.m_vMaterials[0];   // read by draw() as it submits: one shape, any colour
+            l_oMat.m_v4BaseColor = glm::vec4(l_v3Colour, l_fAlpha);
+            l_oMat.m_eAlphaMode = l_fAlpha < 1.0f ? gltf::AlphaMode::Blend : gltf::AlphaMode::Opaque;
+            m_oRenderer.f_Draw(*l_oS.m_spGpu, l_oS.m_oPose, l_mat4M, false);
         };
-        auto ball = [](const glm::vec3& at, float r) { return glm::scale(glm::translate(glm::mat4(1.0f), at), glm::vec3(r)); };
-        for (size_t li = 0; li < frame.lights.size(); li++) {
-            const GltfRenderer::Light& l = frame.lights[li];
-            if (!lightHintShown(li)) continue;   // this light's hint is off (its "show hint")
+        auto l_fnBall = [](const glm::vec3& l_v3At, float l_fR) { return glm::scale(glm::translate(glm::mat4(1.0f), l_v3At), glm::vec3(l_fR)); };
+        for (size_t l_nLi = 0; l_nLi < m_oFrame.m_vLights.size(); l_nLi++) {
+            const GltfRenderer::Light& l_oL = m_oFrame.m_vLights[l_nLi];
+            if (!f_LightHintShown(l_nLi)) continue;   // this light's hint is off (its "show hint")
             // its colour at full brightness (a dim or very bright light still shows its hue)
-            const float top = std::max({l.color.r, l.color.g, l.color.b, 1e-3f});
-            const glm::vec3 col = l.color / top;
-            const float s = radius * 0.05f;
-            if (l.type == GltfRenderer::Light::Type::Directional) {
+            const float l_fTop = std::max({l_oL.m_v3Color.r, l_oL.m_v3Color.g, l_oL.m_v3Color.b, 1e-3f});
+            const glm::vec3 l_v3Col = l_oL.m_v3Color / l_fTop;
+            const float l_fS = m_fRadius * 0.05f;
+            if (l_oL.m_eType == GltfRenderer::Light::Type::Directional) {
                 // the sun up where the light comes from, and a solid arrow from it towards the model
-                const glm::vec3 d = glm::normalize(l.direction);
-                const glm::vec3 tail = target - d * radius * 1.7f;
-                const float shaft = radius * 0.55f, head = radius * 0.2f;
-                put(gizmoSphere, ball(tail, s * 1.3f), col, 1.0f);
-                put(gizmoSphere, ball(tail, s * 2.6f), col, 0.18f);
-                put(gizmoCylinder, along(tail, d, radius * 0.02f, shaft), col, 1.0f);
-                put(gizmoCone, along(tail + d * (shaft + head), -d, radius * 0.065f, head), col, 1.0f);
+                const glm::vec3 l_v3D = glm::normalize(l_oL.m_v3Direction);
+                const glm::vec3 l_v3Tail = m_v3Target - l_v3D * m_fRadius * 1.7f;
+                const float l_fShaft = m_fRadius * 0.55f, l_fHead = m_fRadius * 0.2f;
+                l_fnPut(m_oGizmoSphere, l_fnBall(l_v3Tail, l_fS * 1.3f), l_v3Col, 1.0f);
+                l_fnPut(m_oGizmoSphere, l_fnBall(l_v3Tail, l_fS * 2.6f), l_v3Col, 0.18f);
+                l_fnPut(m_oGizmoCylinder, l_fnAlong(l_v3Tail, l_v3D, m_fRadius * 0.02f, l_fShaft), l_v3Col, 1.0f);
+                l_fnPut(m_oGizmoCone, l_fnAlong(l_v3Tail + l_v3D * (l_fShaft + l_fHead), -l_v3D, m_fRadius * 0.065f, l_fHead), l_v3Col, 1.0f);
                 continue;
             }
             // a point or spot light: the glowing ball, and a mark on the floor under it
-            put(gizmoSphere, ball(l.position, s), col, 1.0f);
-            put(gizmoSphere, ball(l.position, s * 2.4f), col, 0.2f);
-            if (l.position.y > groundY) put(gizmoDisc, ball(glm::vec3(l.position.x, groundY + radius * 0.004f, l.position.z), s * 1.6f), col, 0.45f);
-            if (l.type == GltfRenderer::Light::Type::Point) {
-                if (l.range > 0.0f) put(gizmoSphere, ball(l.position, l.range), col, 0.035f);   // how far it reaches
+            l_fnPut(m_oGizmoSphere, l_fnBall(l_oL.m_v3Position, l_fS), l_v3Col, 1.0f);
+            l_fnPut(m_oGizmoSphere, l_fnBall(l_oL.m_v3Position, l_fS * 2.4f), l_v3Col, 0.2f);
+            if (l_oL.m_v3Position.y > l_fGroundY) l_fnPut(m_oGizmoDisc, l_fnBall(glm::vec3(l_oL.m_v3Position.x, l_fGroundY + m_fRadius * 0.004f, l_oL.m_v3Position.z), l_fS * 1.6f), l_v3Col, 0.45f);
+            if (l_oL.m_eType == GltfRenderer::Light::Type::Point) {
+                if (l_oL.m_fRange > 0.0f) l_fnPut(m_oGizmoSphere, l_fnBall(l_oL.m_v3Position, l_oL.m_fRange), l_v3Col, 0.035f);   // how far it reaches
                 continue;
             }
             // a spot light's cones, to the floor (or its range): the outer one faint, the inner one brighter
-            const glm::vec3 d = glm::normalize(l.direction);
-            float len = d.y < -0.05f ? (l.position.y - groundY) / -d.y : radius * 2.0f;
-            if (l.range > 0.0f) len = std::min(len, l.range);
-            len = std::clamp(len, radius * 0.3f, radius * 6.0f);
-            put(gizmoCone, along(l.position, d, len * std::tan(std::min(l.outerCone, 1.45f)), len), col, 0.12f);
-            put(gizmoCone, along(l.position, d, len * std::tan(std::min(l.innerCone, 1.45f)), len), col, 0.14f);
+            const glm::vec3 l_v3D = glm::normalize(l_oL.m_v3Direction);
+            float l_fLen = l_v3D.y < -0.05f ? (l_oL.m_v3Position.y - l_fGroundY) / -l_v3D.y : m_fRadius * 2.0f;
+            if (l_oL.m_fRange > 0.0f) l_fLen = std::min(l_fLen, l_oL.m_fRange);
+            l_fLen = std::clamp(l_fLen, m_fRadius * 0.3f, m_fRadius * 6.0f);
+            l_fnPut(m_oGizmoCone, l_fnAlong(l_oL.m_v3Position, l_v3D, l_fLen * std::tan(std::min(l_oL.m_fOuterCone, 1.45f)), l_fLen), l_v3Col, 0.12f);
+            l_fnPut(m_oGizmoCone, l_fnAlong(l_oL.m_v3Position, l_v3D, l_fLen * std::tan(std::min(l_oL.m_fInnerCone, 1.45f)), l_fLen), l_v3Col, 0.14f);
         }
     }
 
     // ---- input -----------------------------------------------------------------------------------
-    void onEvent(const SDL_Event& e, bool& quit) {
-        const bool uiMouse = showUi && ImGui::GetCurrentContext() && ImGui::GetIO().WantCaptureMouse;
-        switch (e.type) {
-        case SDL_EVENT_QUIT: quit = true; break;
+    void f_OnEvent(const SDL_Event& l_oE, bool& l_bQuit) {
+        const bool l_bUiMouse = m_bShowUi && ImGui::GetCurrentContext() && ImGui::GetIO().WantCaptureMouse;
+        switch (l_oE.type) {
+        case SDL_EVENT_QUIT: l_bQuit = true; break;
         case SDL_EVENT_DROP_FILE:
-            if (e.drop.data) openFile(e.drop.data);
+            if (l_oE.drop.data) f_OpenFile(l_oE.drop.data);
             break;
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
-            if (uiMouse) break;
-            if (activeCamera >= 0 && e.button.button == SDL_BUTTON_LEFT) {   // look around, still on the camera
-                if (e.button.clicks >= 2) lookYaw = lookPitch = 0.0f;
-                dragLook = true;
+            if (l_bUiMouse) break;
+            if (m_iActiveCamera >= 0 && l_oE.button.button == SDL_BUTTON_LEFT) {   // look around, still on the camera
+                if (l_oE.button.clicks >= 2) m_fLookYaw = m_fLookPitch = 0.0f;
+                m_bDragLook = true;
                 break;
             }
-            if (e.button.button == SDL_BUTTON_LEFT) {
-                const glm::vec2 px(e.button.x * pixelScale(), e.button.y * pixelScale());
-                const int h = handleAt(px);
-                if (h >= 0) {   // a handle of the selected node: drag it
-                    startHandleDrag(h, px);
+            if (l_oE.button.button == SDL_BUTTON_LEFT) {
+                const glm::vec2 l_v2Px(l_oE.button.x * f_PixelScale(), l_oE.button.y * f_PixelScale());
+                const int l_iH = f_HandleAt(l_v2Px);
+                if (l_iH >= 0) {   // a handle of the selected node: drag it
+                    f_StartHandleDrag(l_iH, l_v2Px);
                     break;
                 }
-                dragOrbit = true;
-                pressPending = true;   // a click (no movement) picks a node
-                pressAt = px;
+                m_bDragOrbit = true;
+                m_bPressPending = true;   // a click (no movement) picks a node
+                m_v2PressAt = l_v2Px;
             } else {
-                dragPan = true;
+                m_bDragPan = true;
             }
-            toFreeCamera();
+            f_ToFreeCamera();
             break;
         case SDL_EVENT_MOUSE_BUTTON_UP:
-            if (e.button.button == SDL_BUTTON_LEFT && dragHandle >= 0) {
-                dragHandle = -1;
-                editChanged(selected);
-            } else if (e.button.button == SDL_BUTTON_LEFT && pressPending) {
-                selected = pickNode(pressAt);
-                revealSelected = selected >= 0;
+            if (l_oE.button.button == SDL_BUTTON_LEFT && m_iDragHandle >= 0) {
+                m_iDragHandle = -1;
+                f_EditChanged(m_iSelected);
+            } else if (l_oE.button.button == SDL_BUTTON_LEFT && m_bPressPending) {
+                m_iSelected = f_PickNode(m_v2PressAt);
+                m_bRevealSelected = m_iSelected >= 0;
             }
-            pressPending = false;
-            dragOrbit = dragPan = dragLook = false;
+            m_bPressPending = false;
+            m_bDragOrbit = m_bDragPan = m_bDragLook = false;
             break;
         case SDL_EVENT_MOUSE_MOTION: {
-            const glm::vec2 px(e.motion.x * pixelScale(), e.motion.y * pixelScale());
-            if (dragHandle >= 0) {
-                dragHandleTo(px);
-                posed();
+            const glm::vec2 l_v2Px(l_oE.motion.x * f_PixelScale(), l_oE.motion.y * f_PixelScale());
+            if (m_iDragHandle >= 0) {
+                f_DragHandleTo(l_v2Px);
+                f_Posed();
                 break;
             }
-            if (pressPending && glm::length(px - pressAt) > 4.0f * pixelScale()) pressPending = false;
-            if (!dragOrbit && !dragPan && !dragLook && !uiMouse) hoverHandle = handleAt(px);
-            if (dragLook) {   // drag right: look right; drag up: look up
-                lookYaw -= e.motion.xrel * 0.25f;
-                lookPitch = std::clamp(lookPitch - e.motion.yrel * 0.25f, -89.0f, 89.0f);
-            } else if (dragOrbit) {
-                yaw -= e.motion.xrel * 0.4f;
-                pitch = std::clamp(pitch + e.motion.yrel * 0.4f, -89.0f, 89.0f);
-            } else if (dragPan) {
-                const glm::mat4 v = viewMatrix();
-                const glm::vec3 right(v[0][0], v[1][0], v[2][0]), up(v[0][1], v[1][1], v[2][1]);
-                const float k = distance * std::tan(glm::radians(fov * 0.5f)) * 2.0f / std::max(1, fbH) * pixelScale();
-                target += (-e.motion.xrel * right + e.motion.yrel * up) * k;
+            if (m_bPressPending && glm::length(l_v2Px - m_v2PressAt) > 4.0f * f_PixelScale()) m_bPressPending = false;
+            if (!m_bDragOrbit && !m_bDragPan && !m_bDragLook && !l_bUiMouse) m_iHoverHandle = f_HandleAt(l_v2Px);
+            if (m_bDragLook) {   // drag right: look right; drag up: look up
+                m_fLookYaw -= l_oE.motion.xrel * 0.25f;
+                m_fLookPitch = std::clamp(m_fLookPitch - l_oE.motion.yrel * 0.25f, -89.0f, 89.0f);
+            } else if (m_bDragOrbit) {
+                m_fYaw -= l_oE.motion.xrel * 0.4f;
+                m_fPitch = std::clamp(m_fPitch + l_oE.motion.yrel * 0.4f, -89.0f, 89.0f);
+            } else if (m_bDragPan) {
+                const glm::mat4 l_mat4V = f_ViewMatrix();
+                const glm::vec3 l_v3Right(l_mat4V[0][0], l_mat4V[1][0], l_mat4V[2][0]), l_v3Up(l_mat4V[0][1], l_mat4V[1][1], l_mat4V[2][1]);
+                const float l_fK = m_fDistance * std::tan(glm::radians(m_fFov * 0.5f)) * 2.0f / std::max(1, m_iFbH) * f_PixelScale();
+                m_v3Target += (-l_oE.motion.xrel * l_v3Right + l_oE.motion.yrel * l_v3Up) * l_fK;
             }
             break;
         }
         case SDL_EVENT_MOUSE_WHEEL:
-            if (uiMouse) break;
-            if (activeCamera >= 0) {   // zoom the camera's lens, still on it
-                lookZoom = std::clamp(lookZoom * std::pow(0.9f, e.wheel.y), 0.05f, 2.5f);
+            if (l_bUiMouse) break;
+            if (m_iActiveCamera >= 0) {   // zoom the camera's lens, still on it
+                m_fLookZoom = std::clamp(m_fLookZoom * std::pow(0.9f, l_oE.wheel.y), 0.05f, 2.5f);
                 break;
             }
-            distance *= std::pow(0.88f, e.wheel.y);
+            m_fDistance *= std::pow(0.88f, l_oE.wheel.y);
             break;
         case SDL_EVENT_KEY_DOWN:
             if (ImGui::GetCurrentContext() && ImGui::GetIO().WantCaptureKeyboard) break;
-            switch (e.key.key) {
-            case SDLK_ESCAPE: quit = true; break;
-            case SDLK_SPACE: paused = !paused; break;
+            switch (l_oE.key.key) {
+            case SDLK_ESCAPE: l_bQuit = true; break;
+            case SDLK_SPACE: m_bPaused = !m_bPaused; break;
             case SDLK_F:
-                activeCamera = -1;
-                frameScene();
+                m_iActiveCamera = -1;
+                f_FrameScene();
                 break;
-            case SDLK_C: cycleCamera(); break;
-            case SDLK_G: grid = !grid; break;
-            case SDLK_K: skeleton = !skeleton; break;
-            case SDLK_B: boundsBox = !boundsBox; break;
-            case SDLK_W: wireframe = !wireframe; break;
-            case SDLK_R: autoRotate = !autoRotate; break;
-            case SDLK_H: showUi = !showUi; break;
-            case SDLK_T: tool = Tool::Move; break;
-            case SDLK_E: tool = Tool::Rotate; break;
-            case SDLK_S: tool = Tool::Scale; break;
+            case SDLK_C: f_CycleCamera(); break;
+            case SDLK_G: m_bGrid = !m_bGrid; break;
+            case SDLK_K: m_bSkeleton = !m_bSkeleton; break;
+            case SDLK_B: m_bBoundsBox = !m_bBoundsBox; break;
+            case SDLK_W: m_bWireframe = !m_bWireframe; break;
+            case SDLK_R: m_bAutoRotate = !m_bAutoRotate; break;
+            case SDLK_H: m_bShowUi = !m_bShowUi; break;
+            case SDLK_T: m_eTool = Tool::Move; break;
+            case SDLK_E: m_eTool = Tool::Rotate; break;
+            case SDLK_S: m_eTool = Tool::Scale; break;
             case SDLK_DELETE:
             case SDLK_BACKSPACE:
-                if (selected >= 0 && edits.erase(selected)) { posed(); editChanged(selected); }
+                if (m_iSelected >= 0 && m_mapEdits.erase(m_iSelected)) { f_Posed(); f_EditChanged(m_iSelected); }
                 break;
             case SDLK_EQUALS:   // the + key (Shift not needed)
             case SDLK_PLUS:
-            case SDLK_KP_PLUS: moveSpeed = std::min(moveSpeed * kMoveStep, kMoveMax); break;
+            case SDLK_KP_PLUS: m_fMoveSpeed = std::min(m_fMoveSpeed * m_fMoveStep, m_fMoveMax); break;
             case SDLK_MINUS:
-            case SDLK_KP_MINUS: moveSpeed = std::max(moveSpeed / kMoveStep, kMoveMin); break;
+            case SDLK_KP_MINUS: m_fMoveSpeed = std::max(m_fMoveSpeed / m_fMoveStep, m_fMoveMin); break;
             default:
-                if (model && e.key.key >= SDLK_1 && e.key.key <= SDLK_9) {
-                    const size_t i = size_t(e.key.key - SDLK_1);
-                    if (i < playing.size()) {
-                        std::fill(playing.begin(), playing.end(), 0);
-                        playing[i] = 1;
-                        time = 0.0;
+                if (m_upModel && l_oE.key.key >= SDLK_1 && l_oE.key.key <= SDLK_9) {
+                    const size_t l_nI = size_t(l_oE.key.key - SDLK_1);
+                    if (l_nI < m_vPlaying.size()) {
+                        std::fill(m_vPlaying.begin(), m_vPlaying.end(), 0);
+                        m_vPlaying[l_nI] = 1;
+                        m_dTime = 0.0;
                     }
                 }
             }
@@ -1298,730 +1298,730 @@ struct Viewer {
     }
 
     // ---- the file's cameras -----------------------------------------------------------------------
-    std::string cameraLabel(size_t i, const gltf::PlacedCamera& pc) const {
-        const gltf::Camera& c = model->cameras[(size_t)pc.camera];
-        return std::to_string(i + 1) + ". " + (c.name.empty() ? "camera " + std::to_string(pc.camera) : c.name) +
-               (c.perspective ? "" : " (orthographic)");
+    std::string f_CameraLabel(size_t l_nI, const gltf::PlacedCamera& l_oPc) const {
+        const gltf::Camera& l_oC = m_upModel->m_vCameras[(size_t)l_oPc.m_iCamera];
+        return std::to_string(l_nI + 1) + ". " + (l_oC.m_strName.empty() ? "camera " + std::to_string(l_oPc.m_iCamera) : l_oC.m_strName) +
+               (l_oC.m_bPerspective ? "" : " (orthographic)");
     }
 
-    void cycleCamera() {
-        const int n = model ? (int)pose.cameras().size() : 0;
-        selectCamera(n == 0 ? -1 : (activeCamera + 2) % (n + 1) - 1);   // -1, 0 .. n-1, -1, ...
+    void f_CycleCamera() {
+        const int l_iN = m_upModel ? (int)m_oPose.f_Cameras().size() : 0;
+        f_SelectCamera(l_iN == 0 ? -1 : (m_iActiveCamera + 2) % (l_iN + 1) - 1);   // -1, 0 .. n-1, -1, ...
     }
 
     // The file camera's transform now, with the look-around on top (in the camera's own frame).
-    glm::mat4 lookedCamera(const gltf::PlacedCamera& pc) const {
-        const glm::mat4 turn = glm::rotate(glm::mat4(1.0f), glm::radians(lookYaw), glm::vec3(0, 1, 0));
-        return pc.world * glm::rotate(turn, glm::radians(lookPitch), glm::vec3(1, 0, 0));
+    glm::mat4 f_LookedCamera(const gltf::PlacedCamera& l_oPc) const {
+        const glm::mat4 l_mat4Turn = glm::rotate(glm::mat4(1.0f), glm::radians(m_fLookYaw), glm::vec3(0, 1, 0));
+        return l_oPc.m_mat4World * glm::rotate(l_mat4Turn, glm::radians(m_fLookPitch), glm::vec3(1, 0, 0));
     }
 
     // Leave a file camera for the free orbit camera, looking from the same place the same way.
-    void toFreeCamera() {
-        if (activeCamera < 0) return;
-        const std::vector<gltf::PlacedCamera> cams = pose.cameras();
-        if (activeCamera < (int)cams.size()) {
-            const glm::mat4 w = lookedCamera(cams[(size_t)activeCamera]);
-            const glm::vec3 eyePos(w[3]), fwd = -glm::normalize(glm::vec3(w[2]));
-            const glm::vec3 c = (sceneMin + sceneMax) * 0.5f;
-            const float d = std::max(glm::dot(c - eyePos, fwd), radius * 0.25f);   // orbit around what it looks at
-            target = eyePos + fwd * d;
-            distance = d;
-            pitch = glm::degrees(std::asin(std::clamp(-fwd.y, -1.0f, 1.0f)));
-            yaw = glm::degrees(std::atan2(-fwd.x, -fwd.z));
+    void f_ToFreeCamera() {
+        if (m_iActiveCamera < 0) return;
+        const std::vector<gltf::PlacedCamera> l_vCams = m_oPose.f_Cameras();
+        if (m_iActiveCamera < (int)l_vCams.size()) {
+            const glm::mat4 l_mat4W = f_LookedCamera(l_vCams[(size_t)m_iActiveCamera]);
+            const glm::vec3 l_v3EyePos(l_mat4W[3]), l_v3Fwd = -glm::normalize(glm::vec3(l_mat4W[2]));
+            const glm::vec3 l_v3C = (m_v3SceneMin + m_v3SceneMax) * 0.5f;
+            const float l_fD = std::max(glm::dot(l_v3C - l_v3EyePos, l_v3Fwd), m_fRadius * 0.25f);   // orbit around what it looks at
+            m_v3Target = l_v3EyePos + l_v3Fwd * l_fD;
+            m_fDistance = l_fD;
+            m_fPitch = glm::degrees(std::asin(std::clamp(-l_v3Fwd.y, -1.0f, 1.0f)));
+            m_fYaw = glm::degrees(std::atan2(-l_v3Fwd.x, -l_v3Fwd.z));
         }
-        activeCamera = -1;
+        m_iActiveCamera = -1;
     }
 
     // Held arrow keys move the camera (and what it looks at) across the screen.
-    void moveWithKeys(float dt) {
+    void f_MoveWithKeys(float l_fDt) {
         if (ImGui::GetCurrentContext() && ImGui::GetIO().WantCaptureKeyboard) return;
-        const bool* k = SDL_GetKeyboardState(nullptr);
-        const float x = float(k[SDL_SCANCODE_RIGHT]) - float(k[SDL_SCANCODE_LEFT]);
-        const float y = float(k[SDL_SCANCODE_UP]) - float(k[SDL_SCANCODE_DOWN]);
-        if (x == 0.0f && y == 0.0f) return;
-        toFreeCamera();
-        const glm::mat4 v = viewMatrix();
-        const glm::vec3 right(v[0][0], v[1][0], v[2][0]), up(v[0][1], v[1][1], v[2][1]);
-        target += (right * x + up * y) * (moveSpeed * radius * std::min(dt, 0.1f));
+        const bool* l_pK = SDL_GetKeyboardState(nullptr);
+        const float l_fX = float(l_pK[SDL_SCANCODE_RIGHT]) - float(l_pK[SDL_SCANCODE_LEFT]);
+        const float l_fY = float(l_pK[SDL_SCANCODE_UP]) - float(l_pK[SDL_SCANCODE_DOWN]);
+        if (l_fX == 0.0f && l_fY == 0.0f) return;
+        f_ToFreeCamera();
+        const glm::mat4 l_mat4V = f_ViewMatrix();
+        const glm::vec3 l_v3Right(l_mat4V[0][0], l_mat4V[1][0], l_mat4V[2][0]), l_v3Up(l_mat4V[0][1], l_mat4V[1][1], l_mat4V[2][1]);
+        m_v3Target += (l_v3Right * l_fX + l_v3Up * l_fY) * (m_fMoveSpeed * m_fRadius * std::min(l_fDt, 0.1f));
     }
 
-    float pixelScale() const {   // window points -> backbuffer pixels
-        int w = 0, h = 0;
-        SDL_GetWindowSize(window, &w, &h);
-        return w > 0 ? float(fbW) / float(w) : 1.0f;
+    float f_PixelScale() const {   // window points -> backbuffer pixels
+        int l_iW = 0, l_iH = 0;
+        SDL_GetWindowSize(m_pWindow, &l_iW, &l_iH);
+        return l_iW > 0 ? float(m_iFbW) / float(l_iW) : 1.0f;
     }
 
-    glm::vec3 eye() const {
-        const float y = glm::radians(yaw), p = glm::radians(pitch);
-        return target + distance * glm::vec3(std::cos(p) * std::sin(y), std::sin(p), std::cos(p) * std::cos(y));
+    glm::vec3 f_Eye() const {
+        const float l_fY = glm::radians(m_fYaw), l_fP = glm::radians(m_fPitch);
+        return m_v3Target + m_fDistance * glm::vec3(std::cos(l_fP) * std::sin(l_fY), std::sin(l_fP), std::cos(l_fP) * std::cos(l_fY));
     }
-    glm::mat4 viewMatrix() const { return glm::lookAt(eye(), target, glm::vec3(0, 1, 0)); }
+    glm::mat4 f_ViewMatrix() const { return glm::lookAt(f_Eye(), m_v3Target, glm::vec3(0, 1, 0)); }
 
     // ---- debug lines -----------------------------------------------------------------------------
-    void drawLines() {
-        std::vector<GltfRenderer::LinePoint> pts;
-        auto line = [&](const glm::vec3& a, const glm::vec3& b, uint32_t c) {
-            pts.push_back({a, c});
-            pts.push_back({b, c});
+    void f_DrawLines() {
+        std::vector<GltfRenderer::LinePoint> l_vPts;
+        auto l_fnLine = [&](const glm::vec3& l_v3A, const glm::vec3& l_v3B, uint32_t l_uC) {
+            l_vPts.push_back({l_v3A, l_uC});
+            l_vPts.push_back({l_v3B, l_uC});
         };
-        if (grid) {   // on the floor under the model, 20 cells over its size
-            const float step = std::pow(10.0f, std::floor(std::log10(radius * 2.0f))) * 0.25f;
-            const int n = 20;
-            const float y = sceneMin.y + radius * 0.001f;   // over the ground quad
-            const glm::vec3 c(std::round(target.x / step) * step, y, std::round(target.z / step) * step);
-            for (int i = -n; i <= n; i++) {
-                const uint32_t col = i == 0 ? abgr(0.55f, 0.55f, 0.55f, 0.8f) : abgr(0.42f, 0.42f, 0.42f, 0.45f);
-                line(c + glm::vec3(i * step, 0, -n * step), c + glm::vec3(i * step, 0, n * step), col);
-                line(c + glm::vec3(-n * step, 0, i * step), c + glm::vec3(n * step, 0, i * step), col);
+        if (m_bGrid) {   // on the floor under the model, 20 cells over its size
+            const float l_fStep = std::pow(10.0f, std::floor(std::log10(m_fRadius * 2.0f))) * 0.25f;
+            const int l_iN = 20;
+            const float l_fY = m_v3SceneMin.y + m_fRadius * 0.001f;   // over the ground quad
+            const glm::vec3 l_v3C(std::round(m_v3Target.x / l_fStep) * l_fStep, l_fY, std::round(m_v3Target.z / l_fStep) * l_fStep);
+            for (int l_iI = -l_iN; l_iI <= l_iN; l_iI++) {
+                const uint32_t l_uCol = l_iI == 0 ? f_Abgr(0.55f, 0.55f, 0.55f, 0.8f) : f_Abgr(0.42f, 0.42f, 0.42f, 0.45f);
+                l_fnLine(l_v3C + glm::vec3(l_iI * l_fStep, 0, -l_iN * l_fStep), l_v3C + glm::vec3(l_iI * l_fStep, 0, l_iN * l_fStep), l_uCol);
+                l_fnLine(l_v3C + glm::vec3(-l_iN * l_fStep, 0, l_iI * l_fStep), l_v3C + glm::vec3(l_iN * l_fStep, 0, l_iI * l_fStep), l_uCol);
             }
         }
-        if (axes) {
-            const float l = radius * 0.6f;
-            line(glm::vec3(0), glm::vec3(l, 0, 0), abgr(1, 0.25f, 0.25f));
-            line(glm::vec3(0), glm::vec3(0, l, 0), abgr(0.3f, 1, 0.3f));
-            line(glm::vec3(0), glm::vec3(0, 0, l), abgr(0.3f, 0.5f, 1));
+        if (m_bAxes) {
+            const float l_fL = m_fRadius * 0.6f;
+            l_fnLine(glm::vec3(0), glm::vec3(l_fL, 0, 0), f_Abgr(1, 0.25f, 0.25f));
+            l_fnLine(glm::vec3(0), glm::vec3(0, l_fL, 0), f_Abgr(0.3f, 1, 0.3f));
+            l_fnLine(glm::vec3(0), glm::vec3(0, 0, l_fL), f_Abgr(0.3f, 0.5f, 1));
         }
-        if (boundsBox && model) {
-            glm::vec3 mn, mx;
-            if (pose.bounds(mn, mx))
-                for (int a = 0; a < 3; a++)
-                    for (int c = 0; c < 4; c++) {
-                        glm::vec3 p0, p1;
-                        for (int k = 0, bit = 0; k < 3; k++) {
-                            if (k == a) {
-                                p0[k] = mn[k];
-                                p1[k] = mx[k];
+        if (m_bBoundsBox && m_upModel) {
+            glm::vec3 l_v3Mn, l_v3Mx;
+            if (m_oPose.f_Bounds(l_v3Mn, l_v3Mx))
+                for (int l_iA = 0; l_iA < 3; l_iA++)
+                    for (int l_iC = 0; l_iC < 4; l_iC++) {
+                        glm::vec3 l_v3P0, l_v3P1;
+                        for (int l_iK = 0, l_iBit = 0; l_iK < 3; l_iK++) {
+                            if (l_iK == l_iA) {
+                                l_v3P0[l_iK] = l_v3Mn[l_iK];
+                                l_v3P1[l_iK] = l_v3Mx[l_iK];
                             } else {
-                                p0[k] = p1[k] = ((c >> bit) & 1) ? mx[k] : mn[k];
-                                bit++;
+                                l_v3P0[l_iK] = l_v3P1[l_iK] = ((l_iC >> l_iBit) & 1) ? l_v3Mx[l_iK] : l_v3Mn[l_iK];
+                                l_iBit++;
                             }
                         }
-                        line(p0, p1, abgr(1, 0.85f, 0.2f));
+                        l_fnLine(l_v3P0, l_v3P1, f_Abgr(1, 0.85f, 0.2f));
                     }
         }
         // Physics: a box around every body's collider (grey static, blue kinematic, green dynamic -- dark when asleep --,
         // yellow trigger).
-        if (showUi && physicsBoxes && physics.built()) {
-            std::vector<gltf::PhysicsDebugBox> boxes;
-            physics.debugBoxes(boxes);
-            for (const gltf::PhysicsDebugBox& b : boxes) {
+        if (m_bShowUi && m_bPhysicsBoxes && m_oPhysics.f_Built()) {
+            std::vector<gltf::PhysicsDebugBox> l_vBoxes;
+            m_oPhysics.f_DebugBoxes(l_vBoxes);
+            for (const gltf::PhysicsDebugBox& l_oB : l_vBoxes) {
                 using K = gltf::PhysicsDebugBox::Kind;
-                const uint32_t col = b.kind == K::Static ? abgr(0.7f, 0.7f, 0.7f, 0.8f)
-                                   : b.kind == K::Kinematic ? abgr(0.35f, 0.6f, 1.0f)
-                                   : b.kind == K::Trigger ? abgr(1.0f, 0.85f, 0.2f)
-                                   : b.sleeping ? abgr(0.2f, 0.5f, 0.25f) : abgr(0.35f, 1.0f, 0.4f);
-                glm::vec3 c[8];
-                for (int k = 0; k < 8; k++)
-                    c[k] = glm::vec3(b.world * glm::vec4((k & 1 ? 1.0f : -1.0f) * b.halfExtents.x, (k & 2 ? 1.0f : -1.0f) * b.halfExtents.y,
-                                                         (k & 4 ? 1.0f : -1.0f) * b.halfExtents.z, 1.0f));
-                for (int k = 0; k < 8; k++)
-                    for (int bit : {1, 2, 4})
-                        if (!(k & bit)) line(c[k], c[k | bit], col);
+                const uint32_t l_uCol = l_oB.m_eKind == K::Static ? f_Abgr(0.7f, 0.7f, 0.7f, 0.8f)
+                                   : l_oB.m_eKind == K::Kinematic ? f_Abgr(0.35f, 0.6f, 1.0f)
+                                   : l_oB.m_eKind == K::Trigger ? f_Abgr(1.0f, 0.85f, 0.2f)
+                                   : l_oB.m_bSleeping ? f_Abgr(0.2f, 0.5f, 0.25f) : f_Abgr(0.35f, 1.0f, 0.4f);
+                glm::vec3 l_arrC[8];
+                for (int l_iK = 0; l_iK < 8; l_iK++)
+                    l_arrC[l_iK] = glm::vec3(l_oB.m_mat4World * glm::vec4((l_iK & 1 ? 1.0f : -1.0f) * l_oB.m_v3HalfExtents.x, (l_iK & 2 ? 1.0f : -1.0f) * l_oB.m_v3HalfExtents.y,
+                                                         (l_iK & 4 ? 1.0f : -1.0f) * l_oB.m_v3HalfExtents.z, 1.0f));
+                for (int l_iK = 0; l_iK < 8; l_iK++)
+                    for (int l_iBit : {1, 2, 4})
+                        if (!(l_iK & l_iBit)) l_fnLine(l_arrC[l_iK], l_arrC[l_iK | l_iBit], l_uCol);
             }
         }
         // The lights: a directional light's arrow, a point light's star, a spot light's cone (the solid shapes are
         // drawLightGizmos'); a point or spot light's line down to the floor.
-        if (showUi)
-            for (size_t li = 0; li < frame.lights.size(); li++) {
-                const GltfRenderer::Light& l = frame.lights[li];
-                if (!lightHintShown(li)) continue;   // this light's hint is off: no markers either
-                if (l.type != GltfRenderer::Light::Type::Directional && l.position.y > sceneMin.y)
-                    line(l.position, glm::vec3(l.position.x, sceneMin.y, l.position.z),
-                         abgr(std::min(l.color.r, 1.0f), std::min(l.color.g, 1.0f), std::min(l.color.b, 1.0f), 0.5f));
-                const uint32_t col = abgr(std::min(l.color.r, 1.0f), std::min(l.color.g, 1.0f), std::min(l.color.b, 1.0f), 0.9f);
-                const float s = radius * 0.12f;
-                if (l.type == GltfRenderer::Light::Type::Directional) {
-                    const glm::vec3 a = target - l.direction * radius * 1.6f, b = target - l.direction * radius * 1.1f;
-                    line(a, b, col);
-                    const glm::vec3 side = glm::normalize(glm::cross(l.direction, std::fabs(l.direction.y) > 0.9f ? glm::vec3(1, 0, 0)
+        if (m_bShowUi)
+            for (size_t l_nLi = 0; l_nLi < m_oFrame.m_vLights.size(); l_nLi++) {
+                const GltfRenderer::Light& l_oL = m_oFrame.m_vLights[l_nLi];
+                if (!f_LightHintShown(l_nLi)) continue;   // this light's hint is off: no markers either
+                if (l_oL.m_eType != GltfRenderer::Light::Type::Directional && l_oL.m_v3Position.y > m_v3SceneMin.y)
+                    l_fnLine(l_oL.m_v3Position, glm::vec3(l_oL.m_v3Position.x, m_v3SceneMin.y, l_oL.m_v3Position.z),
+                         f_Abgr(std::min(l_oL.m_v3Color.r, 1.0f), std::min(l_oL.m_v3Color.g, 1.0f), std::min(l_oL.m_v3Color.b, 1.0f), 0.5f));
+                const uint32_t l_uCol = f_Abgr(std::min(l_oL.m_v3Color.r, 1.0f), std::min(l_oL.m_v3Color.g, 1.0f), std::min(l_oL.m_v3Color.b, 1.0f), 0.9f);
+                const float l_fS = m_fRadius * 0.12f;
+                if (l_oL.m_eType == GltfRenderer::Light::Type::Directional) {
+                    const glm::vec3 l_v3A = m_v3Target - l_oL.m_v3Direction * m_fRadius * 1.6f, l_v3B = m_v3Target - l_oL.m_v3Direction * m_fRadius * 1.1f;
+                    l_fnLine(l_v3A, l_v3B, l_uCol);
+                    const glm::vec3 l_v3Side = glm::normalize(glm::cross(l_oL.m_v3Direction, std::fabs(l_oL.m_v3Direction.y) > 0.9f ? glm::vec3(1, 0, 0)
                                                                                                                  : glm::vec3(0, 1, 0)));
-                    line(b, b - l.direction * s * -1.0f + side * s * 0.5f, col);
-                    line(b, b - l.direction * s * -1.0f - side * s * 0.5f, col);
+                    l_fnLine(l_v3B, l_v3B - l_oL.m_v3Direction * l_fS * -1.0f + l_v3Side * l_fS * 0.5f, l_uCol);
+                    l_fnLine(l_v3B, l_v3B - l_oL.m_v3Direction * l_fS * -1.0f - l_v3Side * l_fS * 0.5f, l_uCol);
                 } else {
-                    for (const glm::vec3& ax : {glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1)})
-                        line(l.position - ax * s, l.position + ax * s, col);
-                    if (l.type == GltfRenderer::Light::Type::Spot) {
-                        const glm::vec3 d = glm::normalize(l.direction);
-                        const glm::vec3 u = glm::normalize(glm::cross(d, std::fabs(d.y) > 0.9f ? glm::vec3(1, 0, 0) : glm::vec3(0, 1, 0)));
-                        const glm::vec3 w = glm::cross(d, u);
-                        const float len = radius * 0.8f, rr = len * std::tan(l.outerCone);
-                        for (int k = 0; k < 8; k++) {
-                            const float a0 = 6.2831853f * k / 8, a1 = 6.2831853f * (k + 1) / 8;
-                            const glm::vec3 p0 = l.position + d * len + (u * std::cos(a0) + w * std::sin(a0)) * rr;
-                            const glm::vec3 p1 = l.position + d * len + (u * std::cos(a1) + w * std::sin(a1)) * rr;
-                            line(p0, p1, col);
-                            if (k % 2 == 0) line(l.position, p0, col);
+                    for (const glm::vec3& l_v3Ax : {glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1)})
+                        l_fnLine(l_oL.m_v3Position - l_v3Ax * l_fS, l_oL.m_v3Position + l_v3Ax * l_fS, l_uCol);
+                    if (l_oL.m_eType == GltfRenderer::Light::Type::Spot) {
+                        const glm::vec3 l_v3D = glm::normalize(l_oL.m_v3Direction);
+                        const glm::vec3 l_v3U = glm::normalize(glm::cross(l_v3D, std::fabs(l_v3D.y) > 0.9f ? glm::vec3(1, 0, 0) : glm::vec3(0, 1, 0)));
+                        const glm::vec3 l_v3W = glm::cross(l_v3D, l_v3U);
+                        const float l_fLen = m_fRadius * 0.8f, l_fRr = l_fLen * std::tan(l_oL.m_fOuterCone);
+                        for (int l_iK = 0; l_iK < 8; l_iK++) {
+                            const float l_fA0 = 6.2831853f * l_iK / 8, l_fA1 = 6.2831853f * (l_iK + 1) / 8;
+                            const glm::vec3 l_v3P0 = l_oL.m_v3Position + l_v3D * l_fLen + (l_v3U * std::cos(l_fA0) + l_v3W * std::sin(l_fA0)) * l_fRr;
+                            const glm::vec3 l_v3P1 = l_oL.m_v3Position + l_v3D * l_fLen + (l_v3U * std::cos(l_fA1) + l_v3W * std::sin(l_fA1)) * l_fRr;
+                            l_fnLine(l_v3P0, l_v3P1, l_uCol);
+                            if (l_iK % 2 == 0) l_fnLine(l_oL.m_v3Position, l_v3P0, l_uCol);
                         }
                     }
                 }
             }
-        renderer.lines(pts, true);
-        if (selected >= 0 && model) {   // the selection: its mesh bounds, then the handles over everything
-            std::vector<GltfRenderer::LinePoint> over;
-            const gltf::Node& node = model->nodes[(size_t)selected];
-            if (node.mesh >= 0 && node.skin < 0) {
-                glm::vec3 mn(FLT_MAX), mx(-FLT_MAX);
-                for (const gltf::Primitive& p : model->meshes[(size_t)node.mesh].primitives) {
-                    mn = glm::min(mn, p.boundsMin);
-                    mx = glm::max(mx, p.boundsMax);
+        m_oRenderer.f_Lines(l_vPts, true);
+        if (m_iSelected >= 0 && m_upModel) {   // the selection: its mesh bounds, then the handles over everything
+            std::vector<GltfRenderer::LinePoint> l_vOver;
+            const gltf::Node& l_oNode = m_upModel->m_vNodes[(size_t)m_iSelected];
+            if (l_oNode.m_iMesh >= 0 && l_oNode.m_iSkin < 0) {
+                glm::vec3 l_v3Mn(FLT_MAX), l_v3Mx(-FLT_MAX);
+                for (const gltf::Primitive& l_oP : m_upModel->m_vMeshes[(size_t)l_oNode.m_iMesh].m_vPrimitives) {
+                    l_v3Mn = glm::min(l_v3Mn, l_oP.m_v3BoundsMin);
+                    l_v3Mx = glm::max(l_v3Mx, l_oP.m_v3BoundsMax);
                 }
-                const glm::mat4& w = pose.world(selected);
-                glm::vec3 c[8];
-                for (int k = 0; k < 8; k++)
-                    c[k] = glm::vec3(w * glm::vec4(k & 1 ? mx.x : mn.x, k & 2 ? mx.y : mn.y, k & 4 ? mx.z : mn.z, 1.0f));
-                const uint32_t col = abgr(1.0f, 0.6f, 0.1f, 0.9f);
-                for (int k = 0; k < 8; k++)
-                    for (int bit : {1, 2, 4})
-                        if (!(k & bit)) { over.push_back({c[k], col}); over.push_back({c[k | bit], col}); }
+                const glm::mat4& l_mat4W = m_oPose.f_World(m_iSelected);
+                glm::vec3 l_arrC[8];
+                for (int l_iK = 0; l_iK < 8; l_iK++)
+                    l_arrC[l_iK] = glm::vec3(l_mat4W * glm::vec4(l_iK & 1 ? l_v3Mx.x : l_v3Mn.x, l_iK & 2 ? l_v3Mx.y : l_v3Mn.y, l_iK & 4 ? l_v3Mx.z : l_v3Mn.z, 1.0f));
+                const uint32_t l_uCol = f_Abgr(1.0f, 0.6f, 0.1f, 0.9f);
+                for (int l_iK = 0; l_iK < 8; l_iK++)
+                    for (int l_iBit : {1, 2, 4})
+                        if (!(l_iK & l_iBit)) { l_vOver.push_back({l_arrC[l_iK], l_uCol}); l_vOver.push_back({l_arrC[l_iK | l_iBit], l_uCol}); }
             }
-            drawHandles(over);
-            if (!over.empty()) renderer.lines(over, false);
+            f_DrawHandles(l_vOver);
+            if (!l_vOver.empty()) m_oRenderer.f_Lines(l_vOver, false);
         }
-        if (skeleton && model) {   // over the model: joints to their parent joints
-            std::vector<GltfRenderer::LinePoint> bones;
-            for (const gltf::Skin& s : model->skins)
-                for (int j : s.joints) {
-                    const int parent = model->nodes[(size_t)j].parent;
-                    if (parent < 0 || std::find(s.joints.begin(), s.joints.end(), parent) == s.joints.end()) continue;
-                    bones.push_back({glm::vec3(pose.world(parent)[3]), abgr(0.3f, 1.0f, 0.9f)});
-                    bones.push_back({glm::vec3(pose.world(j)[3]), abgr(1.0f, 0.4f, 0.9f)});
+        if (m_bSkeleton && m_upModel) {   // over the model: joints to their parent joints
+            std::vector<GltfRenderer::LinePoint> l_vBones;
+            for (const gltf::Skin& l_oS : m_upModel->m_vSkins)
+                for (int l_iJ : l_oS.m_vJoints) {
+                    const int l_iParent = m_upModel->m_vNodes[(size_t)l_iJ].m_iParent;
+                    if (l_iParent < 0 || std::find(l_oS.m_vJoints.begin(), l_oS.m_vJoints.end(), l_iParent) == l_oS.m_vJoints.end()) continue;
+                    l_vBones.push_back({glm::vec3(m_oPose.f_World(l_iParent)[3]), f_Abgr(0.3f, 1.0f, 0.9f)});
+                    l_vBones.push_back({glm::vec3(m_oPose.f_World(l_iJ)[3]), f_Abgr(1.0f, 0.4f, 0.9f)});
                 }
-            renderer.lines(bones, false);
+            m_oRenderer.f_Lines(l_vBones, false);
         }
     }
 
     // ---- the panel -------------------------------------------------------------------------------
-    void panel() {
-        const ImGuiIO& io = ImGui::GetIO();
-        const float w = std::min(380.0f * uiScale, io.DisplaySize.x * 0.34f);
-        ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - w - 8 * uiScale, 8 * uiScale), ImGuiCond_Always);
-        ImGui::SetNextWindowSize(ImVec2(w, io.DisplaySize.y - 16 * uiScale), ImGuiCond_Always);
+    void f_Panel() {
+        const ImGuiIO& l_oIo = ImGui::GetIO();
+        const float l_fW = std::min(380.0f * m_fUiScale, l_oIo.DisplaySize.x * 0.34f);
+        ImGui::SetNextWindowPos(ImVec2(l_oIo.DisplaySize.x - l_fW - 8 * m_fUiScale, 8 * m_fUiScale), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(l_fW, l_oIo.DisplaySize.y - 16 * m_fUiScale), ImGuiCond_Always);
         ImGui::SetNextWindowBgAlpha(0.88f);
         ImGui::Begin("glTF Viewer", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 
 #ifdef __EMSCRIPTEN__
         if (ImGui::Button("Open...")) EM_ASM({ if (window.tomsPickFiles) tomsPickFiles(); });   // web/shell.html
-        if (!testModels.empty()) {
+        if (!m_vTestModels.empty()) {
             ImGui::SameLine();
             ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x * 0.5f);
             if (ImGui::BeginCombo("##test", "Test models")) {
-                for (const std::string& f : testModels)
-                    if (ImGui::Selectable(f.c_str(), path == "/models/" + f)) load("/models/" + f);
+                for (const std::string& l_strF : m_vTestModels)
+                    if (ImGui::Selectable(l_strF.c_str(), m_strPath == "/models/" + l_strF)) f_Load("/models/" + l_strF);
                 ImGui::EndCombo();
             }
         }
 #else
         if (ImGui::Button("Open...")) {
-            static const SDL_DialogFileFilter filters[] = {{"glTF 2.0 / HDR environment", "gltf;glb;hdr"}};
+            static const SDL_DialogFileFilter l_arrFilters[] = {{"glTF 2.0 / HDR environment", "gltf;glb;hdr"}};
             SDL_ShowOpenFileDialog(
-                [](void* user, const char* const* list, int) {
-                    if (!list || !list[0]) return;
-                    Viewer* v = (Viewer*)user;
-                    std::lock_guard<std::mutex> g(v->pendingLock);
-                    v->pending = list[0];
+                [](void* l_pUser, const char* const* l_pList, int) {
+                    if (!l_pList || !l_pList[0]) return;
+                    Viewer* l_pV = (Viewer*)l_pUser;
+                    std::lock_guard<std::mutex> l_oG(l_pV->m_oPendingLock);
+                    l_pV->m_strPending = l_pList[0];
                 },
-                this, window, filters, 1, nullptr, false);
+                this, m_pWindow, l_arrFilters, 1, nullptr, false);
         }
 #endif
         ImGui::SameLine();
-        if (ImGui::Button("Frame (F)")) frameScene();
+        if (ImGui::Button("Frame (F)")) f_FrameScene();
         ImGui::TextDisabled("or drop a .gltf / .glb (or an .hdr environment)");
-        if (!error.empty()) ImGui::TextColored(ImVec4(1, 0.4f, 0.4f, 1), "%s", error.c_str());
-        if (!model) {
+        if (!m_strError.empty()) ImGui::TextColored(ImVec4(1, 0.4f, 0.4f, 1), "%s", m_strError.c_str());
+        if (!m_upModel) {
             ImGui::TextWrapped("No model. Drop a .gltf or .glb on the window.");
             ImGui::End();
             return;
         }
-        ImGui::TextWrapped("%s", path.c_str());
+        ImGui::TextWrapped("%s", m_strPath.c_str());
 
         if (ImGui::CollapsingHeader("Model", ImGuiTreeNodeFlags_DefaultOpen)) {
-            const gltf::Model& m = *model;
-            size_t joints = 0;
-            for (const gltf::Skin& s : m.skins) joints += s.joints.size();
-            ImGui::TextWrapped("%zu vertices, %zu triangles", m.vertexCount(), m.triangleCount());
-            ImGui::TextWrapped("%zu nodes, %zu meshes, %zu materials, %zu textures", m.nodes.size(), m.meshes.size(), m.materials.size(),
-                        m.textures.size());
-            ImGui::TextWrapped("%zu skins (%zu joints), %zu morph targets", m.skins.size(), joints, m.morphTargetCount());
-            ImGui::TextWrapped("%zu instances (EXT_mesh_gpu_instancing)", m.instanceCount());
-            if (!m.generator.empty()) ImGui::TextWrapped("generator: %s", m.generator.c_str());
-            for (const std::string& e : m.extensionsUsed) {
-                const bool ignored = std::find(m.ignoredExtensions.begin(), m.ignoredExtensions.end(), e) != m.ignoredExtensions.end();
-                ImGui::TextColored(ignored ? ImVec4(1, 0.75f, 0.3f, 1) : ImVec4(0.5f, 0.9f, 0.5f, 1), "%s %s", ignored ? "-" : "+", e.c_str());
-                if (ignored && ImGui::IsItemHovered()) ImGui::SetTooltip("used by the file, not drawn by this engine yet");
+            const gltf::Model& l_oM = *m_upModel;
+            size_t l_nJoints = 0;
+            for (const gltf::Skin& l_oS : l_oM.m_vSkins) l_nJoints += l_oS.m_vJoints.size();
+            ImGui::TextWrapped("%zu vertices, %zu triangles", l_oM.f_VertexCount(), l_oM.f_TriangleCount());
+            ImGui::TextWrapped("%zu nodes, %zu meshes, %zu materials, %zu textures", l_oM.m_vNodes.size(), l_oM.m_vMeshes.size(), l_oM.m_vMaterials.size(),
+                        l_oM.m_vTextures.size());
+            ImGui::TextWrapped("%zu skins (%zu joints), %zu morph targets", l_oM.m_vSkins.size(), l_nJoints, l_oM.f_MorphTargetCount());
+            ImGui::TextWrapped("%zu instances (EXT_mesh_gpu_instancing)", l_oM.f_InstanceCount());
+            if (!l_oM.m_strGenerator.empty()) ImGui::TextWrapped("generator: %s", l_oM.m_strGenerator.c_str());
+            for (const std::string& l_strE : l_oM.m_vExtensionsUsed) {
+                const bool l_bIgnored = std::find(l_oM.m_vIgnoredExtensions.begin(), l_oM.m_vIgnoredExtensions.end(), l_strE) != l_oM.m_vIgnoredExtensions.end();
+                ImGui::TextColored(l_bIgnored ? ImVec4(1, 0.75f, 0.3f, 1) : ImVec4(0.5f, 0.9f, 0.5f, 1), "%s %s", l_bIgnored ? "-" : "+", l_strE.c_str());
+                if (l_bIgnored && ImGui::IsItemHovered()) ImGui::SetTooltip("used by the file, not drawn by this engine yet");
             }
-            for (const std::string& wn : m.warnings) ImGui::TextColored(ImVec4(1, 0.6f, 0.3f, 1), "! %s", wn.c_str());
+            for (const std::string& l_strWn : l_oM.m_vWarnings) ImGui::TextColored(ImVec4(1, 0.6f, 0.3f, 1), "! %s", l_strWn.c_str());
         }
 
         {
-            const std::vector<gltf::PlacedCamera> cams = pose.cameras();
-            if (!cams.empty() && ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen)) {
-                const std::string current = activeCamera >= 0 && activeCamera < (int)cams.size()
-                                                ? cameraLabel((size_t)activeCamera, cams[(size_t)activeCamera])
+            const std::vector<gltf::PlacedCamera> l_vCams = m_oPose.f_Cameras();
+            if (!l_vCams.empty() && ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen)) {
+                const std::string l_strCurrent = m_iActiveCamera >= 0 && m_iActiveCamera < (int)l_vCams.size()
+                                                ? f_CameraLabel((size_t)m_iActiveCamera, l_vCams[(size_t)m_iActiveCamera])
                                                 : std::string("free (orbit)");
-                if (ImGui::BeginCombo("camera", current.c_str())) {
-                    if (ImGui::Selectable("free (orbit)", activeCamera < 0)) selectCamera(-1);
-                    for (size_t i = 0; i < cams.size(); i++)
-                        if (ImGui::Selectable(cameraLabel(i, cams[i]).c_str(), activeCamera == (int)i)) selectCamera((int)i);
+                if (ImGui::BeginCombo("camera", l_strCurrent.c_str())) {
+                    if (ImGui::Selectable("free (orbit)", m_iActiveCamera < 0)) f_SelectCamera(-1);
+                    for (size_t l_nI = 0; l_nI < l_vCams.size(); l_nI++)
+                        if (ImGui::Selectable(f_CameraLabel(l_nI, l_vCams[l_nI]).c_str(), m_iActiveCamera == (int)l_nI)) f_SelectCamera((int)l_nI);
                     ImGui::EndCombo();
                 }
                 // One button per view: the free camera and each of the file's cameras (the one in use lit), and
                 // previous / next through them.
-                const int n = (int)cams.size();
-                if (ImGui::ArrowButton("##camprev", ImGuiDir_Left)) selectCamera(activeCamera <= -1 ? n - 1 : activeCamera - 1);
+                const int l_iN = (int)l_vCams.size();
+                if (ImGui::ArrowButton("##camprev", ImGuiDir_Left)) f_SelectCamera(m_iActiveCamera <= -1 ? l_iN - 1 : m_iActiveCamera - 1);
                 ImGui::SameLine();
-                if (ImGui::ArrowButton("##camnext", ImGuiDir_Right)) cycleCamera();
-                const float right = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
-                for (int i = -1; i < n; i++) {
-                    const gltf::Camera* c = i >= 0 ? &model->cameras[(size_t)cams[(size_t)i].camera] : nullptr;
-                    const std::string label = i < 0 ? std::string("free")
-                                            : std::to_string(i + 1) + " " + (c->name.empty() ? "camera" : c->name);
-                    const float w = ImGui::CalcTextSize(label.c_str()).x + ImGui::GetStyle().FramePadding.x * 2;
-                    if (ImGui::GetItemRectMax().x + ImGui::GetStyle().ItemSpacing.x + w < right) ImGui::SameLine();
-                    const bool on = activeCamera == i;
-                    if (on) ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
-                    if (ImGui::Button((label + "##cam" + std::to_string(i)).c_str())) selectCamera(i);
-                    if (on) ImGui::PopStyleColor();
-                    if (c && ImGui::IsItemHovered())
-                        ImGui::SetTooltip("%s", c->perspective ? "perspective" : "orthographic");
+                if (ImGui::ArrowButton("##camnext", ImGuiDir_Right)) f_CycleCamera();
+                const float l_fRight = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+                for (int l_iI = -1; l_iI < l_iN; l_iI++) {
+                    const gltf::Camera* l_pC = l_iI >= 0 ? &m_upModel->m_vCameras[(size_t)l_vCams[(size_t)l_iI].m_iCamera] : nullptr;
+                    const std::string l_strLabel = l_iI < 0 ? std::string("free")
+                                            : std::to_string(l_iI + 1) + " " + (l_pC->m_strName.empty() ? "camera" : l_pC->m_strName);
+                    const float l_fW = ImGui::CalcTextSize(l_strLabel.c_str()).x + ImGui::GetStyle().FramePadding.x * 2;
+                    if (ImGui::GetItemRectMax().x + ImGui::GetStyle().ItemSpacing.x + l_fW < l_fRight) ImGui::SameLine();
+                    const bool l_bOn = m_iActiveCamera == l_iI;
+                    if (l_bOn) ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+                    if (ImGui::Button((l_strLabel + "##cam" + std::to_string(l_iI)).c_str())) f_SelectCamera(l_iI);
+                    if (l_bOn) ImGui::PopStyleColor();
+                    if (l_pC && ImGui::IsItemHovered())
+                        ImGui::SetTooltip("%s", l_pC->m_bPerspective ? "perspective" : "orthographic");
                 }
                 ImGui::TextWrapped("%zu in the file. C cycles. On a camera: left drag looks around, the wheel zooms "
-                                   "(it keeps riding the animation); right drag or the arrows go free from there.", cams.size());
-                if (activeCamera >= 0 && activeCamera < (int)cams.size()) {
-                    const gltf::Camera& c = model->cameras[(size_t)cams[(size_t)activeCamera].camera];
-                    ImGui::Text("look: %.0f deg right, %.0f deg up, zoom %.2fx", -lookYaw, lookPitch, 1.0f / lookZoom);
+                                   "(it keeps riding the animation); right drag or the arrows go free from there.", l_vCams.size());
+                if (m_iActiveCamera >= 0 && m_iActiveCamera < (int)l_vCams.size()) {
+                    const gltf::Camera& l_oC = m_upModel->m_vCameras[(size_t)l_vCams[(size_t)m_iActiveCamera].m_iCamera];
+                    ImGui::Text("look: %.0f deg right, %.0f deg up, zoom %.2fx", -m_fLookYaw, m_fLookPitch, 1.0f / m_fLookZoom);
                     if (ImGui::SmallButton("look ahead (double-click)")) {
-                        lookYaw = lookPitch = 0.0f;
-                        lookZoom = 1.0f;
+                        m_fLookYaw = m_fLookPitch = 0.0f;
+                        m_fLookZoom = 1.0f;
                     }
-                    if (c.perspective)
-                        ImGui::TextDisabled("perspective, fov %.0f deg, near %g, far %s", glm::degrees(c.yfov), c.znear,
-                                            c.zfar > 0 ? std::to_string(c.zfar).c_str() : "infinite");
+                    if (l_oC.m_bPerspective)
+                        ImGui::TextDisabled("perspective, fov %.0f deg, near %g, far %s", glm::degrees(l_oC.m_fYfov), l_oC.m_fZnear,
+                                            l_oC.m_fZfar > 0 ? std::to_string(l_oC.m_fZfar).c_str() : "infinite");
                     else
-                        ImGui::TextDisabled("orthographic, %g x %g, near %g, far %g", c.xmag * 2, c.ymag * 2, c.znear, c.zfar);
+                        ImGui::TextDisabled("orthographic, %g x %g, near %g, far %g", l_oC.m_fXmag * 2, l_oC.m_fYmag * 2, l_oC.m_fZnear, l_oC.m_fZfar);
                 }
             }
         }
 
-        sceneTreePanel();
+        f_SceneTreePanel();
 
-        if (!model->animations.empty() && ImGui::CollapsingHeader("Animation", ImGuiTreeNodeFlags_DefaultOpen)) {
-            if (ImGui::Button(paused ? "Play" : "Pause")) paused = !paused;
+        if (!m_upModel->m_vAnimations.empty() && ImGui::CollapsingHeader("Animation", ImGuiTreeNodeFlags_DefaultOpen)) {
+            if (ImGui::Button(m_bPaused ? "Play" : "Pause")) m_bPaused = !m_bPaused;
             ImGui::SameLine();
-            if (ImGui::Button("All")) std::fill(playing.begin(), playing.end(), 1);
+            if (ImGui::Button("All")) std::fill(m_vPlaying.begin(), m_vPlaying.end(), 1);
             ImGui::SameLine();
-            if (ImGui::Button("None")) std::fill(playing.begin(), playing.end(), 0);
-            ImGui::SliderFloat("speed", &speed, 0.0f, 3.0f, "%.2fx");
-            float t = (float)std::fmod(time, std::max(maxDuration(), 1e-6f));
-            if (ImGui::SliderFloat("time", &t, 0.0f, std::max(maxDuration(), 0.001f), "%.3f s")) {
-                time = t;
-                paused = true;
+            if (ImGui::Button("None")) std::fill(m_vPlaying.begin(), m_vPlaying.end(), 0);
+            ImGui::SliderFloat("speed", &m_fSpeed, 0.0f, 3.0f, "%.2fx");
+            float l_fT = (float)std::fmod(m_dTime, std::max(f_MaxDuration(), 1e-6f));
+            if (ImGui::SliderFloat("time", &l_fT, 0.0f, std::max(f_MaxDuration(), 0.001f), "%.3f s")) {
+                m_dTime = l_fT;
+                m_bPaused = true;
             }
-            for (size_t i = 0; i < model->animations.size(); i++) {
-                const gltf::Animation& a = model->animations[i];
-                bool on = playing[i] != 0;
-                const std::string label = std::to_string(i + 1) + ". " + a.name + "##anim" + std::to_string(i);
-                if (ImGui::Checkbox(label.c_str(), &on)) playing[i] = on;
+            for (size_t l_nI = 0; l_nI < m_upModel->m_vAnimations.size(); l_nI++) {
+                const gltf::Animation& l_oA = m_upModel->m_vAnimations[l_nI];
+                bool l_bOn = m_vPlaying[l_nI] != 0;
+                const std::string l_strLabel = std::to_string(l_nI + 1) + ". " + l_oA.m_strName + "##anim" + std::to_string(l_nI);
+                if (ImGui::Checkbox(l_strLabel.c_str(), &l_bOn)) m_vPlaying[l_nI] = l_bOn;
                 ImGui::SameLine();
-                ImGui::TextDisabled("%.2f s, %zu channels", a.duration, a.channels.size());
+                ImGui::TextDisabled("%.2f s, %zu channels", l_oA.m_fDuration, l_oA.m_vChannels.size());
             }
         }
 
-        if (model->morphTargetCount() > 0 && ImGui::CollapsingHeader("Morph targets", ImGuiTreeNodeFlags_DefaultOpen)) {
+        if (m_upModel->f_MorphTargetCount() > 0 && ImGui::CollapsingHeader("Morph targets", ImGuiTreeNodeFlags_DefaultOpen)) {
             ImGui::TextDisabled("A slider overrides the animation for that weight.");
-            for (size_t n = 0; n < model->nodes.size(); n++) {
-                const gltf::Node& node = model->nodes[n];
-                if (node.mesh < 0) continue;
-                const gltf::Mesh& mesh = model->meshes[(size_t)node.mesh];
-                if (mesh.weights.empty()) continue;
-                ImGui::Text("%s", node.name.empty() ? mesh.name.c_str() : node.name.c_str());
-                for (size_t k = 0; k < mesh.weights.size(); k++) {
-                    float wv = pose.weights((int)n)[k];
-                    const std::string name = (k < mesh.targetNames.size() ? mesh.targetNames[k] : "target " + std::to_string(k)) + "##w" +
-                                             std::to_string(n) + "_" + std::to_string(k);
-                    if (ImGui::SliderFloat(name.c_str(), &wv, 0.0f, 1.0f)) manualWeights[{(int)n, (int)k}] = wv;
+            for (size_t l_nN = 0; l_nN < m_upModel->m_vNodes.size(); l_nN++) {
+                const gltf::Node& l_oNode = m_upModel->m_vNodes[l_nN];
+                if (l_oNode.m_iMesh < 0) continue;
+                const gltf::Mesh& l_oMesh = m_upModel->m_vMeshes[(size_t)l_oNode.m_iMesh];
+                if (l_oMesh.m_vWeights.empty()) continue;
+                ImGui::Text("%s", l_oNode.m_strName.empty() ? l_oMesh.m_strName.c_str() : l_oNode.m_strName.c_str());
+                for (size_t l_nK = 0; l_nK < l_oMesh.m_vWeights.size(); l_nK++) {
+                    float l_fWv = m_oPose.f_Weights((int)l_nN)[l_nK];
+                    const std::string l_strName = (l_nK < l_oMesh.m_vTargetNames.size() ? l_oMesh.m_vTargetNames[l_nK] : "target " + std::to_string(l_nK)) + "##w" +
+                                             std::to_string(l_nN) + "_" + std::to_string(l_nK);
+                    if (ImGui::SliderFloat(l_strName.c_str(), &l_fWv, 0.0f, 1.0f)) m_mapManualWeights[{(int)l_nN, (int)l_nK}] = l_fWv;
                 }
             }
-            if (!manualWeights.empty() && ImGui::Button("Back to the animation")) manualWeights.clear();
+            if (!m_mapManualWeights.empty() && ImGui::Button("Back to the animation")) m_mapManualWeights.clear();
         }
 
         if (ImGui::CollapsingHeader("Display", ImGuiTreeNodeFlags_DefaultOpen)) {
-            ImGui::Checkbox("grid (G)", &grid);
+            ImGui::Checkbox("grid (G)", &m_bGrid);
             ImGui::SameLine();
-            ImGui::Checkbox("axes", &axes);
+            ImGui::Checkbox("axes", &m_bAxes);
             ImGui::SameLine();
-            ImGui::Checkbox("bounds (B)", &boundsBox);
-            ImGui::Checkbox("skeleton (K)", &skeleton);
+            ImGui::Checkbox("bounds (B)", &m_bBoundsBox);
+            ImGui::Checkbox("skeleton (K)", &m_bSkeleton);
             ImGui::SameLine();
-            ImGui::Checkbox("wireframe (W)", &wireframe);
-            ImGui::Checkbox("auto-rotate (R)", &autoRotate);
-            ImGui::ColorEdit3("background", &background.x, ImGuiColorEditFlags_NoInputs);
-            ImGui::SliderFloat("fov", &fov, 10.0f, 100.0f, "%.0f deg");
-            ImGui::SliderFloat("move speed", &moveSpeed, kMoveMin, kMoveMax, "%.2fx", ImGuiSliderFlags_Logarithmic);
+            ImGui::Checkbox("wireframe (W)", &m_bWireframe);
+            ImGui::Checkbox("auto-rotate (R)", &m_bAutoRotate);
+            ImGui::ColorEdit3("background", &m_v3Background.x, ImGuiColorEditFlags_NoInputs);
+            ImGui::SliderFloat("fov", &m_fFov, 10.0f, 100.0f, "%.0f deg");
+            ImGui::SliderFloat("move speed", &m_fMoveSpeed, m_fMoveMin, m_fMoveMax, "%.2fx", ImGuiSliderFlags_Logarithmic);
             if (ImGui::IsItemHovered()) ImGui::SetTooltip("Arrow keys move the camera; + / - change this");
-            static const char* views[] = {"lit", "normals", "base colour", "metal / rough", "uv", "shadow (first light)"};
-            ImGui::Combo("view", &frame.debug, views, 6);
+            static const char* l_arrViews[] = {"lit", "normals", "base colour", "metal / rough", "uv", "shadow (first light)"};
+            ImGui::Combo("view", &m_oFrame.m_iDebug, l_arrViews, 6);
         }
 
         if (ImGui::CollapsingHeader("Lights and shadows", ImGuiTreeNodeFlags_DefaultOpen)) {
-            if (!renderer.shadowsSupported()) ImGui::TextColored(ImVec4(1, 0.6f, 0.3f, 1), "This backend has no shadow maps.");
-            ImGui::Checkbox("shadows", &frame.shadows);
+            if (!m_oRenderer.f_ShadowsSupported()) ImGui::TextColored(ImVec4(1, 0.6f, 0.3f, 1), "This backend has no shadow maps.");
+            ImGui::Checkbox("shadows", &m_oFrame.m_bShadows);
             ImGui::SameLine();
-            ImGui::Checkbox("ground", &groundOn);
-            static const int sizes[] = {1024, 2048, 4096, 8192};
-            static const char* sizeNames[] = {"1024", "2048", "4096", "8192"};
-            int si = 2;
-            for (int i = 0; i < 4; i++)
-                if (sizes[i] == frame.shadowMapSize) si = i;
-            if (ImGui::Combo("shadow atlas", &si, sizeNames, 4)) frame.shadowMapSize = sizes[si];
-            ImGui::SliderFloat("shadow bias", &frame.shadowBias, 0.2f, 5.0f, "x %.2f");
-            if (model && !model->lights.empty())
-                ImGui::Checkbox(("the file's lights (" + std::to_string(model->lights.size()) + ", KHR_lights_punctual)").c_str(),
-                                &useFileLights);
-            const bool fileLights = useFileLights && model && !model->lights.empty();
-            if (fileLights) {   // the file's lights: each one's hint
-                fileLightHint.resize(model->lights.size(), 1);
-                static const char* kinds[] = {"directional", "point", "spot"};
-                for (size_t i = 0; i < model->lights.size(); i++) {
-                    const gltf::Light& fl = model->lights[i];
-                    bool on = fileLightHint[i] != 0;
-                    const std::string label = std::to_string(i + 1) + ". " + (fl.name.empty() ? std::string("light") : fl.name) + "  (" +
-                                              kinds[(int)fl.type] + ")  show hint##filelight" + std::to_string(i);
-                    ImGui::ColorButton(("##col" + std::to_string(i)).c_str(), ImVec4(fl.color.r, fl.color.g, fl.color.b, 1.0f),
+            ImGui::Checkbox("ground", &m_bGroundOn);
+            static const int l_arrSizes[] = {1024, 2048, 4096, 8192};
+            static const char* l_arrSizeNames[] = {"1024", "2048", "4096", "8192"};
+            int l_iSi = 2;
+            for (int l_iI = 0; l_iI < 4; l_iI++)
+                if (l_arrSizes[l_iI] == m_oFrame.m_iShadowMapSize) l_iSi = l_iI;
+            if (ImGui::Combo("shadow atlas", &l_iSi, l_arrSizeNames, 4)) m_oFrame.m_iShadowMapSize = l_arrSizes[l_iSi];
+            ImGui::SliderFloat("shadow bias", &m_oFrame.m_fShadowBias, 0.2f, 5.0f, "x %.2f");
+            if (m_upModel && !m_upModel->m_vLights.empty())
+                ImGui::Checkbox(("the file's lights (" + std::to_string(m_upModel->m_vLights.size()) + ", KHR_lights_punctual)").c_str(),
+                                &m_bUseFileLights);
+            const bool l_bFileLights = m_bUseFileLights && m_upModel && !m_upModel->m_vLights.empty();
+            if (l_bFileLights) {   // the file's lights: each one's hint
+                m_vFileLightHint.resize(m_upModel->m_vLights.size(), 1);
+                static const char* l_arrKinds[] = {"directional", "point", "spot"};
+                for (size_t l_nI = 0; l_nI < m_upModel->m_vLights.size(); l_nI++) {
+                    const gltf::Light& l_oFl = m_upModel->m_vLights[l_nI];
+                    bool l_bOn = m_vFileLightHint[l_nI] != 0;
+                    const std::string l_strLabel = std::to_string(l_nI + 1) + ". " + (l_oFl.m_strName.empty() ? std::string("light") : l_oFl.m_strName) + "  (" +
+                                              l_arrKinds[(int)l_oFl.m_eType] + ")  show hint##filelight" + std::to_string(l_nI);
+                    ImGui::ColorButton(("##col" + std::to_string(l_nI)).c_str(), ImVec4(l_oFl.m_v3Color.r, l_oFl.m_v3Color.g, l_oFl.m_v3Color.b, 1.0f),
                                        ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight()));
                     ImGui::SameLine();
-                    if (ImGui::Checkbox(label.c_str(), &on)) fileLightHint[i] = on ? 1 : 0;
+                    if (ImGui::Checkbox(l_strLabel.c_str(), &l_bOn)) m_vFileLightHint[l_nI] = l_bOn ? 1 : 0;
                 }
             }
-            if (!fileLights) {
-                static const char* rigs[] = {"default", "point", "spot", "all"};
-                int ri = 0;
-                for (int i = 0; i < 4; i++)
-                    if (rigKind == rigs[i]) ri = i;
-                if (ImGui::Combo("rig", &ri, rigs, 4)) buildRig(rigs[ri]);
-                static const char* types[] = {"directional", "point", "spot"};
-                int remove = -1;
-                for (size_t i = 0; i < rig.size(); i++) {
-                    RigLight& r = rig[i];
-                    ImGui::PushID((int)i);
-                    const std::string title = std::to_string(i + 1) + ". " + types[(int)r.l.type] + (r.l.castShadows ? "  (shadows)" : "");
-                    if (ImGui::TreeNodeEx(title.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
-                        int t = (int)r.l.type;
-                        if (ImGui::Combo("type", &t, types, 3)) r.l.type = (GltfRenderer::Light::Type)t;
-                        ImGui::ColorEdit3("colour", &r.l.color.x, ImGuiColorEditFlags_NoInputs);
+            if (!l_bFileLights) {
+                static const char* l_arrRigs[] = {"default", "point", "spot", "all"};
+                int l_iRi = 0;
+                for (int l_iI = 0; l_iI < 4; l_iI++)
+                    if (m_strRigKind == l_arrRigs[l_iI]) l_iRi = l_iI;
+                if (ImGui::Combo("rig", &l_iRi, l_arrRigs, 4)) f_BuildRig(l_arrRigs[l_iRi]);
+                static const char* l_arrTypes[] = {"directional", "point", "spot"};
+                int l_iRemove = -1;
+                for (size_t l_nI = 0; l_nI < m_vRig.size(); l_nI++) {
+                    RigLight& l_oR = m_vRig[l_nI];
+                    ImGui::PushID((int)l_nI);
+                    const std::string l_strTitle = std::to_string(l_nI + 1) + ". " + l_arrTypes[(int)l_oR.m_oL.m_eType] + (l_oR.m_oL.m_bCastShadows ? "  (shadows)" : "");
+                    if (ImGui::TreeNodeEx(l_strTitle.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
+                        int l_iT = (int)l_oR.m_oL.m_eType;
+                        if (ImGui::Combo("type", &l_iT, l_arrTypes, 3)) l_oR.m_oL.m_eType = (GltfRenderer::Light::Type)l_iT;
+                        ImGui::ColorEdit3("colour", &l_oR.m_oL.m_v3Color.x, ImGuiColorEditFlags_NoInputs);
                         ImGui::SameLine();
-                        ImGui::Checkbox("cast shadows", &r.l.castShadows);
+                        ImGui::Checkbox("cast shadows", &l_oR.m_oL.m_bCastShadows);
                         ImGui::SameLine();
-                        ImGui::Checkbox("show hint", &r.hint);
-                        ImGui::Checkbox("rotate", &r.spin);
+                        ImGui::Checkbox("show hint", &l_oR.m_bHint);
+                        ImGui::Checkbox("rotate", &l_oR.m_bSpin);
                         if (ImGui::IsItemHovered())
                             ImGui::SetTooltip("It circles the model round the up axis (a directional light turns its yaw).");
-                        if (r.spin) {
+                        if (l_oR.m_bSpin) {
                             ImGui::SameLine();
                             ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x * 0.6f);
-                            ImGui::SliderFloat("speed", &r.spinSpeed, -180.0f, 180.0f, "%.0f deg/s");
+                            ImGui::SliderFloat("speed", &l_oR.m_fSpinSpeed, -180.0f, 180.0f, "%.0f deg/s");
                             if (ImGui::IsItemHovered()) ImGui::SetTooltip("Degrees a second; below 0 the other way round.");
                         }
                         if (ImGui::IsItemHovered())
                             ImGui::SetTooltip("This light's hint in the view, in its colour: a ball at a point or spot light, with a\n"
                                               "line down to a mark on the floor; a spot light's outer and inner cones, reaching the\n"
                                               "floor where it shines; a directional light's sun and an arrow towards the model.");
-                        if (r.l.type == GltfRenderer::Light::Type::Directional) {
-                            ImGui::SliderFloat("intensity", &r.l.intensity, 0.0f, 10.0f);
-                            ImGui::SliderFloat("yaw", &r.yaw, -180.0f, 180.0f, "%.0f deg");
-                            ImGui::SliderFloat("pitch", &r.pitch, -10.0f, 90.0f, "%.0f deg");
+                        if (l_oR.m_oL.m_eType == GltfRenderer::Light::Type::Directional) {
+                            ImGui::SliderFloat("intensity", &l_oR.m_oL.m_fIntensity, 0.0f, 10.0f);
+                            ImGui::SliderFloat("yaw", &l_oR.m_fYaw, -180.0f, 180.0f, "%.0f deg");
+                            ImGui::SliderFloat("pitch", &l_oR.m_fPitch, -10.0f, 90.0f, "%.0f deg");
                         } else {
-                            ImGui::DragFloat("intensity", &r.l.intensity, std::max(r.l.intensity * 0.01f, 0.01f), 0.0f, 1e6f, "%.2f");
-                            ImGui::DragFloat3("position", &r.l.position.x, radius * 0.01f);
-                            ImGui::DragFloat("range", &r.l.range, radius * 0.01f, 0.0f, 1e5f, r.l.range > 0 ? "%.2f" : "infinite");
-                            if (r.l.type == GltfRenderer::Light::Type::Spot) {
-                                float inner = glm::degrees(r.l.innerCone), outer = glm::degrees(r.l.outerCone);
-                                if (ImGui::SliderFloat("inner cone", &inner, 0.0f, 89.0f, "%.0f deg")) r.l.innerCone = glm::radians(inner);
-                                if (ImGui::SliderFloat("outer cone", &outer, 1.0f, 89.0f, "%.0f deg")) r.l.outerCone = glm::radians(outer);
-                                if (ImGui::Checkbox("aim at the model", &r.aimAtModel) && !r.aimAtModel) {
+                            ImGui::DragFloat("intensity", &l_oR.m_oL.m_fIntensity, std::max(l_oR.m_oL.m_fIntensity * 0.01f, 0.01f), 0.0f, 1e6f, "%.2f");
+                            ImGui::DragFloat3("position", &l_oR.m_oL.m_v3Position.x, m_fRadius * 0.01f);
+                            ImGui::DragFloat("range", &l_oR.m_oL.m_fRange, m_fRadius * 0.01f, 0.0f, 1e5f, l_oR.m_oL.m_fRange > 0 ? "%.2f" : "infinite");
+                            if (l_oR.m_oL.m_eType == GltfRenderer::Light::Type::Spot) {
+                                float l_fInner = glm::degrees(l_oR.m_oL.m_fInnerCone), l_fOuter = glm::degrees(l_oR.m_oL.m_fOuterCone);
+                                if (ImGui::SliderFloat("inner cone", &l_fInner, 0.0f, 89.0f, "%.0f deg")) l_oR.m_oL.m_fInnerCone = glm::radians(l_fInner);
+                                if (ImGui::SliderFloat("outer cone", &l_fOuter, 1.0f, 89.0f, "%.0f deg")) l_oR.m_oL.m_fOuterCone = glm::radians(l_fOuter);
+                                if (ImGui::Checkbox("aim at the model", &l_oR.m_bAimAtModel) && !l_oR.m_bAimAtModel) {
                                     // its own aim starts where it shines now (no jump)
-                                    const glm::vec3 d = glm::normalize(r.l.direction);
-                                    r.aimPitch = glm::degrees(std::asin(std::clamp(d.y, -1.0f, 1.0f)));
-                                    r.aimYaw = glm::degrees(std::atan2(d.x, d.z));
+                                    const glm::vec3 l_v3D = glm::normalize(l_oR.m_oL.m_v3Direction);
+                                    l_oR.m_fAimPitch = glm::degrees(std::asin(std::clamp(l_v3D.y, -1.0f, 1.0f)));
+                                    l_oR.m_fAimYaw = glm::degrees(std::atan2(l_v3D.x, l_v3D.z));
                                 }
                                 if (ImGui::IsItemHovered())
                                     ImGui::SetTooltip("On: it always shines at the model's middle.\n"
                                                       "Off: it shines where its aim yaw and pitch say.");
-                                if (!r.aimAtModel) {
-                                    ImGui::SliderFloat("aim yaw", &r.aimYaw, -180.0f, 180.0f, "%.0f deg");
-                                    ImGui::SliderFloat("aim pitch", &r.aimPitch, -90.0f, 90.0f, "%.0f deg");
+                                if (!l_oR.m_bAimAtModel) {
+                                    ImGui::SliderFloat("aim yaw", &l_oR.m_fAimYaw, -180.0f, 180.0f, "%.0f deg");
+                                    ImGui::SliderFloat("aim pitch", &l_oR.m_fAimPitch, -90.0f, 90.0f, "%.0f deg");
                                     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Below 0: down towards the floor; above 0: up.");
                                 }
                             }
                         }
-                        if (ImGui::SmallButton("remove")) remove = (int)i;
+                        if (ImGui::SmallButton("remove")) l_iRemove = (int)l_nI;
                         ImGui::TreePop();
                     }
                     ImGui::PopID();
                 }
-                if (remove >= 0) rig.erase(rig.begin() + remove);
-                if ((int)rig.size() < GltfRenderer::kMaxLights) {
-                    for (int t = 0; t < 3; t++) {
-                        if (t) ImGui::SameLine();
-                        if (ImGui::Button((std::string("+ ") + types[t]).c_str())) {
-                            RigLight r;
-                            r.l.type = (GltfRenderer::Light::Type)t;
-                            r.yaw = 60.0f * (float)rig.size();
-                            r.pitch = 45.0f;
-                            r.l.position = (sceneMin + sceneMax) * 0.5f + fromAngles(r.yaw, r.pitch) * radius * 2.2f;
-                            if (t) r.l.intensity = 3.5f * radius * radius * 4.84f;
-                            rig.push_back(r);
+                if (l_iRemove >= 0) m_vRig.erase(m_vRig.begin() + l_iRemove);
+                if ((int)m_vRig.size() < GltfRenderer::m_iMaxLights) {
+                    for (int l_iT = 0; l_iT < 3; l_iT++) {
+                        if (l_iT) ImGui::SameLine();
+                        if (ImGui::Button((std::string("+ ") + l_arrTypes[l_iT]).c_str())) {
+                            RigLight l_oR;
+                            l_oR.m_oL.m_eType = (GltfRenderer::Light::Type)l_iT;
+                            l_oR.m_fYaw = 60.0f * (float)m_vRig.size();
+                            l_oR.m_fPitch = 45.0f;
+                            l_oR.m_oL.m_v3Position = (m_v3SceneMin + m_v3SceneMax) * 0.5f + f_FromAngles(l_oR.m_fYaw, l_oR.m_fPitch) * m_fRadius * 2.2f;
+                            if (l_iT) l_oR.m_oL.m_fIntensity = 3.5f * m_fRadius * m_fRadius * 4.84f;
+                            m_vRig.push_back(l_oR);
                         }
                     }
                 }
             }
             ImGui::Separator();
-            ImGui::SliderFloat("exposure", &frame.exposure, 0.1f, 4.0f);
-            ImGui::BeginDisabled(envActive());   // the environment lights the scene instead (its intensity: Environment)
-            ImGui::SliderFloat(fileLightsOn() ? "ambient (file lights)" : "ambient", fileLightsOn() ? &ambientFile : &ambientRig,
+            ImGui::SliderFloat("exposure", &m_oFrame.m_fExposure, 0.1f, 4.0f);
+            ImGui::BeginDisabled(f_EnvActive());   // the environment lights the scene instead (its intensity: Environment)
+            ImGui::SliderFloat(f_FileLightsOn() ? "ambient (file lights)" : "ambient", f_FileLightsOn() ? &m_fAmbientFile : &m_fAmbientRig,
                                0.0f, 3.0f);
             if (ImGui::IsItemHovered())
                 ImGui::SetTooltip("The sky / ground fill added to every light. With the file's lights it starts low (%.1f), so\n"
                                   "they light the scene; with the viewer's rig it starts at %.1f.", 0.1f, 0.7f);
-            ImGui::ColorEdit3("sky", &frame.sky.x, ImGuiColorEditFlags_NoInputs);
+            ImGui::ColorEdit3("sky", &m_oFrame.m_v3Sky.x, ImGuiColorEditFlags_NoInputs);
             ImGui::SameLine();
-            ImGui::ColorEdit3("ground", &frame.ground.x, ImGuiColorEditFlags_NoInputs);
+            ImGui::ColorEdit3("ground", &m_oFrame.m_v3Ground.x, ImGuiColorEditFlags_NoInputs);
             ImGui::EndDisabled();
-            ImGui::Checkbox("ACES tone mapping", &frame.tonemap);
+            ImGui::Checkbox("ACES tone mapping", &m_oFrame.m_bTonemap);
         }
 
         if (ImGui::CollapsingHeader("Environment", ImGuiTreeNodeFlags_DefaultOpen)) {
-            if (renderer.hasEnvironment()) {
-                ImGui::Checkbox("image-based lighting", &envOn);
+            if (m_oRenderer.f_HasEnvironment()) {
+                ImGui::Checkbox("image-based lighting", &m_bEnvOn);
                 ImGui::SameLine();
-                ImGui::TextDisabled("%s", envName.c_str());
+                ImGui::TextDisabled("%s", m_strEnvName.c_str());
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Open... or drop another .hdr to change it");
-                ImGui::BeginDisabled(!envOn);
-                ImGui::SliderFloat("intensity##env", &envIntensity, 0.0f, 4.0f);
-                ImGui::SliderFloat("rotation##env", &envRotation, -180.0f, 180.0f, "%.0f deg");
-                ImGui::Checkbox("background##env", &envBackground);
+                ImGui::BeginDisabled(!m_bEnvOn);
+                ImGui::SliderFloat("intensity##env", &m_fEnvIntensity, 0.0f, 4.0f);
+                ImGui::SliderFloat("rotation##env", &m_fEnvRotation, -180.0f, 180.0f, "%.0f deg");
+                ImGui::Checkbox("background##env", &m_bEnvBackground);
                 ImGui::SameLine();
-                ImGui::BeginDisabled(!envBackground);
-                ImGui::SliderFloat("blur##env", &envBlur, 0.0f, 1.0f);
+                ImGui::BeginDisabled(!m_bEnvBackground);
+                ImGui::SliderFloat("blur##env", &m_fEnvBlur, 0.0f, 1.0f);
                 ImGui::EndDisabled();
                 ImGui::EndDisabled();
             } else {
                 ImGui::TextDisabled("None: the plain sky / ground lights the model.");
             }
-            if (!envError.empty()) ImGui::TextColored(ImVec4(1, 0.4f, 0.4f, 1), "%s", envError.c_str());
+            if (!m_strEnvError.empty()) ImGui::TextColored(ImVec4(1, 0.4f, 0.4f, 1), "%s", m_strEnvError.c_str());
         }
 
-        if (model->physics.any() && ImGui::CollapsingHeader("Physics", ImGuiTreeNodeFlags_DefaultOpen)) {
-            if (ImGui::Checkbox("simulate (KHR_physics_rigid_bodies)", &physicsOn)) buildPhysics();
-            if (physics.built()) {
-                const gltf::PhysicsWorld::Stats st = physics.stats();
-                ImGui::Text("%.2f s simulated (%d steps of 1/60 s)", physics.time(), physics.steps());
-                ImGui::Text("%d dynamic (%d awake), %d kinematic, %d static", st.dynamic, st.awake, st.kinematic, st.statics);
-                ImGui::Text("%d triggers, %d joints", st.triggers, st.joints);
-                ImGui::Checkbox("paused", &physicsPaused);
+        if (m_upModel->m_oPhysics.f_Any() && ImGui::CollapsingHeader("Physics", ImGuiTreeNodeFlags_DefaultOpen)) {
+            if (ImGui::Checkbox("simulate (KHR_physics_rigid_bodies)", &m_bPhysicsOn)) f_BuildPhysics();
+            if (m_oPhysics.f_Built()) {
+                const gltf::PhysicsWorld::Stats l_oSt = m_oPhysics.f_Stats();
+                ImGui::Text("%.2f s simulated (%d steps of 1/60 s)", m_oPhysics.f_Time(), m_oPhysics.f_Steps());
+                ImGui::Text("%d dynamic (%d awake), %d kinematic, %d static", l_oSt.m_iDynamic, l_oSt.m_iAwake, l_oSt.m_iKinematic, l_oSt.m_iStatics);
+                ImGui::Text("%d triggers, %d joints", l_oSt.m_iTriggers, l_oSt.m_iJoints);
+                ImGui::Checkbox("paused", &m_bPhysicsPaused);
                 ImGui::SameLine();
-                if (ImGui::Button("step") && physicsPaused) physics.step(gltf::PhysicsWorld::kStep, pose);
+                if (ImGui::Button("step") && m_bPhysicsPaused) m_oPhysics.f_Step(gltf::PhysicsWorld::m_fStep, m_oPose);
                 ImGui::SameLine();
-                if (ImGui::Button("restart")) buildPhysics();
-                glm::vec3 g = physics.gravity();
-                if (ImGui::SliderFloat("gravity Y", &g.y, -20.0f, 5.0f, "%.2f m/s2")) physics.setGravity(g);
-                ImGui::Checkbox("collider boxes", &physicsBoxes);
-                for (const std::string& w : physics.warnings()) ImGui::TextColored(ImVec4(1, 0.8f, 0.3f, 1), "%s", w.c_str());
-                if (!physicsLog.empty()) {
+                if (ImGui::Button("restart")) f_BuildPhysics();
+                glm::vec3 l_v3G = m_oPhysics.f_Gravity();
+                if (ImGui::SliderFloat("gravity Y", &l_v3G.y, -20.0f, 5.0f, "%.2f m/s2")) m_oPhysics.f_SetGravity(l_v3G);
+                ImGui::Checkbox("collider boxes", &m_bPhysicsBoxes);
+                for (const std::string& l_strW : m_oPhysics.f_Warnings()) ImGui::TextColored(ImVec4(1, 0.8f, 0.3f, 1), "%s", l_strW.c_str());
+                if (!m_vPhysicsLog.empty()) {
                     ImGui::TextDisabled("triggers:");
-                    for (const std::string& l : physicsLog) ImGui::TextUnformatted(l.c_str());
+                    for (const std::string& l_strL : m_vPhysicsLog) ImGui::TextUnformatted(l_strL.c_str());
                 }
             }
         }
 
         if (ImGui::CollapsingHeader("Crowd (instanced skinning)")) {
-            int n = crowdCount;
-            if (ImGui::SliderInt("copies", &n, 0, 400)) buildCrowd(n);
+            int l_iN = m_iCrowdCount;
+            if (ImGui::SliderInt("copies", &l_iN, 0, 400)) f_BuildCrowd(l_iN);
             ImGui::TextDisabled("0 = off: the single model with its Pose");
-            if (!crowdError.empty()) ImGui::TextColored(ImVec4(1, 0.4f, 0.4f, 1), "%s", crowdError.c_str());
-            if (crowdCount > 0 && animTex) {
-                ImGui::Text("texture %dx%d RGBA32F, %.1f KB", animTex->width, animTex->rows, animTex->bytes() / 1024.0);
-                ImGui::Text("%d joints, %zu clips at %.0f fps, baked in %.1f ms", animTex->joints, animTex->clips.size(), animTex->fps, bakeMs);
-                if (animTex->maxScaleError > 0.01f) ImGui::TextColored(ImVec4(1, 0.8f, 0.3f, 1), "non-uniform joint scale averaged (%.0f %%)",
-                                                                        animTex->maxScaleError * 100.0f);
+            if (!m_strCrowdError.empty()) ImGui::TextColored(ImVec4(1, 0.4f, 0.4f, 1), "%s", m_strCrowdError.c_str());
+            if (m_iCrowdCount > 0 && m_spAnimTex) {
+                ImGui::Text("texture %dx%d RGBA32F, %.1f KB", m_spAnimTex->m_iWidth, m_spAnimTex->m_iRows, m_spAnimTex->f_Bytes() / 1024.0);
+                ImGui::Text("%d joints, %zu clips at %.0f fps, baked in %.1f ms", m_spAnimTex->m_iJoints, m_spAnimTex->m_vClips.size(), m_spAnimTex->m_fFps, m_dBakeMs);
+                if (m_spAnimTex->m_fMaxScaleError > 0.01f) ImGui::TextColored(ImVec4(1, 0.8f, 0.3f, 1), "non-uniform joint scale averaged (%.0f %%)",
+                                                                        m_spAnimTex->m_fMaxScaleError * 100.0f);
                 if (ImGui::Button("cross-fade all to the next clip (0.5 s)"))
-                    for (int i = 0; i < crowd.size(); i++) crowd.crossFade(i, (crowd[i].a.clip + 1) % (int)animTex->clips.size(), 0.5f);
-                if (animTex->clips.size() > 1 && ImGui::SliderFloat("blend clip 0 / 1", &crowdBlend, 0.0f, 1.0f))
-                    for (int i = 0; i < crowd.size(); i++) crowd.setBlend(i, 0, 1, crowdBlend);
-                if (ImGui::Button("each its own clip again")) buildCrowd(crowdCount);
+                    for (int l_iI = 0; l_iI < m_oCrowd.size(); l_iI++) m_oCrowd.f_CrossFade(l_iI, (m_oCrowd[l_iI].m_oA.m_iClip + 1) % (int)m_spAnimTex->m_vClips.size(), 0.5f);
+                if (m_spAnimTex->m_vClips.size() > 1 && ImGui::SliderFloat("blend clip 0 / 1", &m_fCrowdBlend, 0.0f, 1.0f))
+                    for (int l_iI = 0; l_iI < m_oCrowd.size(); l_iI++) m_oCrowd.f_SetBlend(l_iI, 0, 1, m_fCrowdBlend);
+                if (ImGui::Button("each its own clip again")) f_BuildCrowd(m_iCrowdCount);
             }
         }
 
         if (ImGui::CollapsingHeader("Performance", ImGuiTreeNodeFlags_DefaultOpen)) {
-            const GltfRenderer::Stats& s = renderer.stats();
-            ImGui::Text("%.1f fps   %s", fps, next::bgfxHostRendererName().c_str());
-            ImGui::Text("%d draw calls, %d instances", s.drawCalls, s.instances);
-            ImGui::Text("%d skinned draws, %d morph uploads", s.skinnedDraws, s.morphUploads);
-            if (s.crowdInstances > 0) ImGui::Text("%d crowd instances (no CPU posing)", s.crowdInstances);
-            ImGui::Text("%d shadow tiles, %d shadow draws", s.shadowTiles, s.shadowDraws);
+            const GltfRenderer::Stats& l_oS = m_oRenderer.f_Stats();
+            ImGui::Text("%.1f fps   %s", m_fFps, next::f_BgfxHostRendererName().c_str());
+            ImGui::Text("%d draw calls, %d instances", l_oS.m_iDrawCalls, l_oS.m_iInstances);
+            ImGui::Text("%d skinned draws, %d morph uploads", l_oS.m_iSkinnedDraws, l_oS.m_iMorphUploads);
+            if (l_oS.m_iCrowdInstances > 0) ImGui::Text("%d crowd instances (no CPU posing)", l_oS.m_iCrowdInstances);
+            ImGui::Text("%d shadow tiles, %d shadow draws", l_oS.m_iShadowTiles, l_oS.m_iShadowDraws);
         }
         ImGui::End();
     }
 
     // ---- one frame -------------------------------------------------------------------------------
-    void tick() {
-        const uint64_t now = SDL_GetTicksNS();
-        const float dt = lastTicks ? float(double(now - lastTicks) * 1e-9) : 1.0f / 60.0f;
-        lastTicks = now;
-        fpsAccum += dt;
-        if (++fpsFrames >= 20) {
-            fps = fpsFrames / std::max(fpsAccum, 1e-6f);
-            fpsAccum = 0;
-            fpsFrames = 0;
+    void f_Tick() {
+        const uint64_t l_u64Now = SDL_GetTicksNS();
+        const float l_fDt = m_u64LastTicks ? float(double(l_u64Now - m_u64LastTicks) * 1e-9) : 1.0f / 60.0f;
+        m_u64LastTicks = l_u64Now;
+        m_fFpsAccum += l_fDt;
+        if (++m_iFpsFrames >= 20) {
+            m_fFps = m_iFpsFrames / std::max(m_fFpsAccum, 1e-6f);
+            m_fFpsAccum = 0;
+            m_iFpsFrames = 0;
         }
         {
-            std::string next;
+            std::string l_strNext;
             {
-                std::lock_guard<std::mutex> g(pendingLock);
-                next.swap(pending);
+                std::lock_guard<std::mutex> l_oG(m_oPendingLock);
+                l_strNext.swap(m_strPending);
             }
-            if (!next.empty()) openFile(next);
+            if (!l_strNext.empty()) f_OpenFile(l_strNext);
         }
-        int w = 0, h = 0;
-        SDL_GetWindowSizeInPixels(window, &w, &h);
-        if (w != fbW || h != fbH) {
-            fbW = w;
-            fbH = h;
-            next::bgfxHostReset((uint32_t)w, (uint32_t)h);
+        int l_iW = 0, l_iH = 0;
+        SDL_GetWindowSizeInPixels(m_pWindow, &l_iW, &l_iH);
+        if (l_iW != m_iFbW || l_iH != m_iFbH) {
+            m_iFbW = l_iW;
+            m_iFbH = l_iH;
+            next::f_BgfxHostReset((uint32_t)l_iW, (uint32_t)l_iH);
         }
 
-        if (args.time >= 0.0f) time = args.time;
-        else if (!paused) {
-            time += double(dt) * speed;
-            crowd.update(dt * speed);
+        if (m_oArgs.m_fTime >= 0.0f) m_dTime = m_oArgs.m_fTime;
+        else if (!m_bPaused) {
+            m_dTime += double(l_fDt) * m_fSpeed;
+            m_oCrowd.f_Update(l_fDt * m_fSpeed);
         }
-        if (autoRotate) yaw += dt * 20.0f;
-        spinLights(dt);
-        moveWithKeys(dt);
+        if (m_bAutoRotate) m_fYaw += l_fDt * 20.0f;
+        f_SpinLights(l_fDt);
+        f_MoveWithKeys(l_fDt);
 
         // UI first (it decides whether the mouse belongs to it).
-        float mx = 0, my = 0;
-        const SDL_MouseButtonFlags buttons = SDL_GetMouseState(&mx, &my);
-        next::ImGuiBgfx::Input in;
-        const float ps = pixelScale();
-        in.mouseX = mx * ps;
-        in.mouseY = my * ps;
-        in.mouseDown[0] = (buttons & SDL_BUTTON_LMASK) != 0;
-        in.mouseDown[1] = (buttons & SDL_BUTTON_RMASK) != 0;
-        in.mouseDown[2] = (buttons & SDL_BUTTON_MMASK) != 0;
-        in.wheel = wheel;
-        wheel = 0;
-        gui.newFrame((uint32_t)fbW, (uint32_t)fbH, dt, in);
-        if (showUi) panel();
+        float l_fMx = 0, l_fMy = 0;
+        const SDL_MouseButtonFlags l_uButtons = SDL_GetMouseState(&l_fMx, &l_fMy);
+        next::ImGuiBgfx::Input l_oIn;
+        const float l_fPs = f_PixelScale();
+        l_oIn.m_fMouseX = l_fMx * l_fPs;
+        l_oIn.m_fMouseY = l_fMy * l_fPs;
+        l_oIn.m_arrMouseDown[0] = (l_uButtons & SDL_BUTTON_LMASK) != 0;
+        l_oIn.m_arrMouseDown[1] = (l_uButtons & SDL_BUTTON_RMASK) != 0;
+        l_oIn.m_arrMouseDown[2] = (l_uButtons & SDL_BUTTON_MMASK) != 0;
+        l_oIn.m_fWheel = m_fWheel;
+        m_fWheel = 0;
+        m_oGui.f_NewFrame((uint32_t)m_iFbW, (uint32_t)m_iFbH, l_fDt, l_oIn);
+        if (m_bShowUi) f_Panel();
 
         // The scene.
-        if (model) {
-            posed();
-            simulate(dt);
+        if (m_upModel) {
+            f_Posed();
+            f_Simulate(l_fDt);
         }
-        frame.lights = frameLights();
-        frame.ambient = envActive() ? 1.0f : fileLightsOn() ? ambientFile : ambientRig;   // an environment: its own intensity
-        frame.environment = envOn;
-        frame.environmentIntensity = envIntensity;
-        frame.environmentYaw = glm::radians(envRotation);
-        frame.background = envBackground;
-        frame.backgroundBlur = envBlur;
+        m_oFrame.m_vLights = f_FrameLights();
+        m_oFrame.m_fAmbient = f_EnvActive() ? 1.0f : f_FileLightsOn() ? m_fAmbientFile : m_fAmbientRig;   // an environment: its own intensity
+        m_oFrame.m_bEnvironment = m_bEnvOn;
+        m_oFrame.m_fEnvironmentIntensity = m_fEnvIntensity;
+        m_oFrame.m_fEnvironmentYaw = glm::radians(m_fEnvRotation);
+        m_oFrame.m_bBackground = m_bEnvBackground;
+        m_oFrame.m_fBackgroundBlur = m_fEnvBlur;
         // Shadows cover the model and the floor around it (where its shadow falls).
-        frame.boundsMin = glm::vec3(sceneMin.x - radius, sceneMin.y, sceneMin.z - radius);
-        frame.boundsMax = glm::vec3(sceneMax.x + radius, sceneMax.y, sceneMax.z + radius);
-        const float aspect = float(fbW) / float(std::max(fbH, 1));
-        const std::vector<gltf::PlacedCamera> cams = model ? pose.cameras() : std::vector<gltf::PlacedCamera>();
-        if (activeCamera >= (int)cams.size()) activeCamera = -1;
-        if (activeCamera >= 0) {   // through the file's camera (it moves with its node's animation)
-            const gltf::PlacedCamera& pc = cams[(size_t)activeCamera];
-            const gltf::Camera& c = model->cameras[(size_t)pc.camera];
-            const glm::mat4 world = lookedCamera(pc);
-            frame.eye = glm::vec3(world[3]);
-            frame.view = glm::inverse(world);
-            const float zn = std::max(c.znear, 1e-4f);
-            const float zf = c.zfar > zn ? c.zfar : zn + radius * 100.0f + glm::length(frame.eye - target);
-            if (c.perspective) {
-                const float fovY = 2.0f * std::atan(std::tan(c.yfov * 0.5f) * lookZoom);   // the wheel zooms the lens
-                frame.proj = GltfRenderer::projection(glm::degrees(fovY), aspect, zn, zf);
+        m_oFrame.m_v3BoundsMin = glm::vec3(m_v3SceneMin.x - m_fRadius, m_v3SceneMin.y, m_v3SceneMin.z - m_fRadius);
+        m_oFrame.m_v3BoundsMax = glm::vec3(m_v3SceneMax.x + m_fRadius, m_v3SceneMax.y, m_v3SceneMax.z + m_fRadius);
+        const float l_fAspect = float(m_iFbW) / float(std::max(m_iFbH, 1));
+        const std::vector<gltf::PlacedCamera> l_vCams = m_upModel ? m_oPose.f_Cameras() : std::vector<gltf::PlacedCamera>();
+        if (m_iActiveCamera >= (int)l_vCams.size()) m_iActiveCamera = -1;
+        if (m_iActiveCamera >= 0) {   // through the file's camera (it moves with its node's animation)
+            const gltf::PlacedCamera& l_oPc = l_vCams[(size_t)m_iActiveCamera];
+            const gltf::Camera& l_oC = m_upModel->m_vCameras[(size_t)l_oPc.m_iCamera];
+            const glm::mat4 l_mat4World = f_LookedCamera(l_oPc);
+            m_oFrame.m_v3Eye = glm::vec3(l_mat4World[3]);
+            m_oFrame.m_mat4View = glm::inverse(l_mat4World);
+            const float l_fZn = std::max(l_oC.m_fZnear, 1e-4f);
+            const float l_fZf = l_oC.m_fZfar > l_fZn ? l_oC.m_fZfar : l_fZn + m_fRadius * 100.0f + glm::length(m_oFrame.m_v3Eye - m_v3Target);
+            if (l_oC.m_bPerspective) {
+                const float l_fFovY = 2.0f * std::atan(std::tan(l_oC.m_fYfov * 0.5f) * m_fLookZoom);   // the wheel zooms the lens
+                m_oFrame.m_mat4Proj = GltfRenderer::f_Projection(glm::degrees(l_fFovY), l_fAspect, l_fZn, l_fZf);
             } else {   // the window's aspect, the camera's height
-                const float ym = c.ymag * lookZoom, xm = ym * aspect;
-                frame.proj = bgfx::getCaps()->homogeneousDepth ? glm::orthoRH_NO(-xm, xm, -ym, ym, zn, zf)
-                                                               : glm::orthoRH_ZO(-xm, xm, -ym, ym, zn, zf);
+                const float l_fYm = l_oC.m_fYmag * m_fLookZoom, l_fXm = l_fYm * l_fAspect;
+                m_oFrame.m_mat4Proj = bgfx::getCaps()->homogeneousDepth ? glm::orthoRH_NO(-l_fXm, l_fXm, -l_fYm, l_fYm, l_fZn, l_fZf)
+                                                               : glm::orthoRH_ZO(-l_fXm, l_fXm, -l_fYm, l_fYm, l_fZn, l_fZf);
             }
         } else {
-            frame.eye = eye();
-            frame.view = viewMatrix();
-            const float zn = std::max(distance - radius * 4.0f, distance * 0.002f);
-            frame.proj = GltfRenderer::projection(fov, aspect, zn, distance + radius * 50.0f);
+            m_oFrame.m_v3Eye = f_Eye();
+            m_oFrame.m_mat4View = f_ViewMatrix();
+            const float l_fZn = std::max(m_fDistance - m_fRadius * 4.0f, m_fDistance * 0.002f);
+            m_oFrame.m_mat4Proj = GltfRenderer::f_Projection(m_fFov, l_fAspect, l_fZn, m_fDistance + m_fRadius * 50.0f);
         }
 #if TOMS_GAMMA_SPACE
         // No sRGB backbuffer (the web: color_space.h): the shader encodes, and so does the clear colour here, which the
         // desktop's sRGB backbuffer encodes by itself -- otherwise everything is drawn too dark.
-        frame.srgbOut = true;
-        const glm::vec3 clear = glm::pow(glm::max(background, glm::vec3(0.0f)), glm::vec3(1.0f / 2.2f));
+        m_oFrame.m_bSrgbOut = true;
+        const glm::vec3 l_v3Clear = glm::pow(glm::max(m_v3Background, glm::vec3(0.0f)), glm::vec3(1.0f / 2.2f));
 #else
-        frame.srgbOut = false;   // the host's backbuffer is sRGB: the GPU encodes
-        const glm::vec3 clear = background;
+        m_oFrame.m_bSrgbOut = false;   // the host's backbuffer is sRGB: the GPU encodes
+        const glm::vec3 l_v3Clear = m_v3Background;
 #endif
-        if (showUi && fbW > 0) {   // centre the model in the part the panel leaves free
-            const float panel = std::min(380.0f * uiScale, float(fbW) * 0.34f) + 16.0f * uiScale;
-            frame.proj = glm::translate(glm::mat4(1.0f), glm::vec3(-panel / float(fbW), 0.0f, 0.0f)) * frame.proj;
+        if (m_bShowUi && m_iFbW > 0) {   // centre the model in the part the panel leaves free
+            const float l_fPanel = std::min(380.0f * m_fUiScale, float(m_iFbW) * 0.34f) + 16.0f * m_fUiScale;
+            m_oFrame.m_mat4Proj = glm::translate(glm::mat4(1.0f), glm::vec3(-l_fPanel / float(m_iFbW), 0.0f, 0.0f)) * m_oFrame.m_mat4Proj;
         }
-        renderer.begin(0, frame, (uint32_t)fbW, (uint32_t)fbH, rgbaHex(clear));   // views 0 .. kViews - 1
-        if (model && gpu && crowdCount > 0 && animGpu && crowd.size() > 0) {
-            if (args.time >= 0.0f && frameNo == 0) crowd.update(args.time);   // --time: freeze the crowd there too
-            renderer.drawCrowd(*gpu, *animGpu, crowd);
-        } else if (model && gpu) {
-            renderer.draw(*gpu, pose);
+        m_oRenderer.begin(0, m_oFrame, (uint32_t)m_iFbW, (uint32_t)m_iFbH, f_RgbaHex(l_v3Clear));   // views 0 .. kViews - 1
+        if (m_upModel && m_spGpu && m_iCrowdCount > 0 && m_spAnimGpu && m_oCrowd.size() > 0) {
+            if (m_oArgs.m_fTime >= 0.0f && m_iFrameNo == 0) m_oCrowd.f_Update(m_oArgs.m_fTime);   // --time: freeze the crowd there too
+            m_oRenderer.f_DrawCrowd(*m_spGpu, *m_spAnimGpu, m_oCrowd);
+        } else if (m_upModel && m_spGpu) {
+            m_oRenderer.f_Draw(*m_spGpu, m_oPose);
         }
-        if (groundOn && model && groundGpu) {   // a floor under the model: receives shadows, casts none
-            const glm::vec3 c = (sceneMin + sceneMax) * 0.5f;
-            const glm::mat4 place = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(c.x, sceneMin.y - radius * 0.002f, c.z)),
-                                               glm::vec3(radius * 6.0f));
-            renderer.draw(*groundGpu, groundPose, place, false);
+        if (m_bGroundOn && m_upModel && m_spGroundGpu) {   // a floor under the model: receives shadows, casts none
+            const glm::vec3 l_v3C = (m_v3SceneMin + m_v3SceneMax) * 0.5f;
+            const glm::mat4 l_mat4Place = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(l_v3C.x, m_v3SceneMin.y - m_fRadius * 0.002f, l_v3C.z)),
+                                               glm::vec3(m_fRadius * 6.0f));
+            m_oRenderer.f_Draw(*m_spGroundGpu, m_oGroundPose, l_mat4Place, false);
         }
-        drawLightGizmos();
-        drawLines();
-        bgfx::setDebug(wireframe ? BGFX_DEBUG_WIREFRAME : BGFX_DEBUG_NONE);
-        gui.render(GltfRenderer::kViews + 4);
+        f_DrawLightGizmos();
+        f_DrawLines();
+        bgfx::setDebug(m_bWireframe ? BGFX_DEBUG_WIREFRAME : BGFX_DEBUG_NONE);
+        m_oGui.f_Render(GltfRenderer::m_u16Views + 4);
 
-        if (frameNo == 1 && args.pickX >= 0.0f) {   // --pick: as a click there, once the frame's matrices exist
-            selected = pickNode(glm::vec2(args.pickX, args.pickY));
-            revealSelected = selected >= 0;
-            std::fprintf(stderr, "[gltf] pick %.0f,%.0f: node %d (%s)\n", args.pickX, args.pickY, selected,
-                         selected >= 0 ? model->nodes[(size_t)selected].name.c_str() : "nothing");
+        if (m_iFrameNo == 1 && m_oArgs.m_fPickX >= 0.0f) {   // --pick: as a click there, once the frame's matrices exist
+            m_iSelected = f_PickNode(glm::vec2(m_oArgs.m_fPickX, m_oArgs.m_fPickY));
+            m_bRevealSelected = m_iSelected >= 0;
+            std::fprintf(stderr, "[gltf] pick %.0f,%.0f: node %d (%s)\n", m_oArgs.m_fPickX, m_oArgs.m_fPickY, m_iSelected,
+                         m_iSelected >= 0 ? m_upModel->m_vNodes[(size_t)m_iSelected].m_strName.c_str() : "nothing");
         }
-        if (frameNo == 2 && args.drag != glm::vec4(-1.0f) && selected >= 0) {   // --drag: as a press, a move and a release
-            glm::vec2 o(0.0f);
-            toScreen(glm::vec3(pose.world(selected)[3]), o);
-            const glm::vec2 p0 = o + glm::vec2(args.drag.x, args.drag.y), p1 = o + glm::vec2(args.drag.z, args.drag.w);
-            const int h = handleAt(p0);
-            if (h >= 0) {
-                startHandleDrag(h, p0);
-                dragHandleTo(p1);
-                dragHandle = -1;
-                posed();
-                editChanged(selected);
+        if (m_iFrameNo == 2 && m_oArgs.m_v4Drag != glm::vec4(-1.0f) && m_iSelected >= 0) {   // --drag: as a press, a move and a release
+            glm::vec2 l_v2O(0.0f);
+            f_ToScreen(glm::vec3(m_oPose.f_World(m_iSelected)[3]), l_v2O);
+            const glm::vec2 l_v2P0 = l_v2O + glm::vec2(m_oArgs.m_v4Drag.x, m_oArgs.m_v4Drag.y), l_v2P1 = l_v2O + glm::vec2(m_oArgs.m_v4Drag.z, m_oArgs.m_v4Drag.w);
+            const int l_iH = f_HandleAt(l_v2P0);
+            if (l_iH >= 0) {
+                f_StartHandleDrag(l_iH, l_v2P0);
+                f_DragHandleTo(l_v2P1);
+                m_iDragHandle = -1;
+                f_Posed();
+                f_EditChanged(m_iSelected);
             }
-            const NodeEdit e = edits.count(selected) ? edits[selected] : NodeEdit();
-            std::fprintf(stderr, "[gltf] drag handle %d: t %.3f %.3f %.3f  euler %.1f %.1f %.1f  s %.3f %.3f %.3f\n", h, e.t.x, e.t.y,
-                         e.t.z, e.euler.x, e.euler.y, e.euler.z, e.s.x, e.s.y, e.s.z);
+            const NodeEdit l_oE = m_mapEdits.count(m_iSelected) ? m_mapEdits[m_iSelected] : NodeEdit();
+            std::fprintf(stderr, "[gltf] drag handle %d: t %.3f %.3f %.3f  euler %.1f %.1f %.1f  s %.3f %.3f %.3f\n", l_iH, l_oE.m_v3T.x, l_oE.m_v3T.y,
+                         l_oE.m_v3T.z, l_oE.m_v3Euler.x, l_oE.m_v3Euler.y, l_oE.m_v3Euler.z, l_oE.m_v3S.x, l_oE.m_v3S.y, l_oE.m_v3S.z);
         }
-        if (args.frames > 0 && frameNo == args.frames && !args.screenshot.empty()) {
-            shotsBefore = next::bgfxHostScreenshotsWritten();
-            bgfx::requestScreenShot(BGFX_INVALID_HANDLE, args.screenshot.c_str());
+        if (m_oArgs.m_iFrames > 0 && m_iFrameNo == m_oArgs.m_iFrames && !m_oArgs.m_strScreenshot.empty()) {
+            m_iShotsBefore = next::f_BgfxHostScreenshotsWritten();
+            bgfx::requestScreenShot(BGFX_INVALID_HANDLE, m_oArgs.m_strScreenshot.c_str());
         }
-        next::bgfxHostFrame();
-        frameNo++;
+        next::f_BgfxHostFrame();
+        m_iFrameNo++;
     }
 
-    float wheel = 0.0f;
+    float m_fWheel = 0.0f;
 };
 
 }  // namespace
 
 // assets/media (resources.json): env ASSET_DIR, else the folder baked in at build time; the web page's /assets.
-std::string assetDir() {
-    if (const char* env = std::getenv("ASSET_DIR")) return env;
+std::string f_AssetDir() {
+    if (const char* l_pszEnv = std::getenv("ASSET_DIR")) return l_pszEnv;
 #if defined(__EMSCRIPTEN__)
     return "/assets";
 #elif defined(TOMS_DEFAULT_ASSET_DIR)
@@ -2033,190 +2033,190 @@ std::string assetDir() {
 
 // The command line as UTF-8. On Windows argv is in the ANSI code page, so a file like "Unicode❤♻Test.glb" came in
 // as "Unicode??Test.glb" and could not be found: read the wide command line instead.
-std::vector<std::string> utf8Args(int argc, char** argv) {
-    std::vector<std::string> out;
+std::vector<std::string> f_Utf8Args(int l_iArgc, char** l_pArgv) {
+    std::vector<std::string> l_vOut;
 #ifdef _WIN32
-    int n = 0;
-    if (LPWSTR* w = CommandLineToArgvW(GetCommandLineW(), &n)) {
-        for (int i = 0; i < n; i++) {
-            const int len = WideCharToMultiByte(CP_UTF8, 0, w[i], -1, nullptr, 0, nullptr, nullptr);
-            std::string a(len > 0 ? (size_t)len - 1 : 0, char(0));
-            if (len > 1) WideCharToMultiByte(CP_UTF8, 0, w[i], -1, &a[0], len, nullptr, nullptr);
-            out.push_back(a);
+    int l_iN = 0;
+    if (LPWSTR* l_pW = CommandLineToArgvW(GetCommandLineW(), &l_iN)) {
+        for (int l_iI = 0; l_iI < l_iN; l_iI++) {
+            const int l_iLen = WideCharToMultiByte(CP_UTF8, 0, l_pW[l_iI], -1, nullptr, 0, nullptr, nullptr);
+            std::string l_strA(l_iLen > 0 ? (size_t)l_iLen - 1 : 0, char(0));
+            if (l_iLen > 1) WideCharToMultiByte(CP_UTF8, 0, l_pW[l_iI], -1, &l_strA[0], l_iLen, nullptr, nullptr);
+            l_vOut.push_back(l_strA);
         }
-        LocalFree(w);
-        return out;
+        LocalFree(l_pW);
+        return l_vOut;
     }
 #endif
-    for (int i = 0; i < argc; i++) out.push_back(argv[i]);
+    for (int l_iI = 0; l_iI < l_iArgc; l_iI++) l_vOut.push_back(l_pArgv[l_iI]);
 #ifdef __EMSCRIPTEN__
     // The page's URL: ?file=skin_tube.gltf&anim=bend&no-ui -> {"skin_tube.gltf", "--anim=bend", "--no-ui"}
     // (as src/game/src/main_sdl.cpp urlArgs; the values are taken as they are, not %-decoded).
-    char* q = (char*)EM_ASM_PTR({
+    char* l_pszQ = (char*)EM_ASM_PTR({
         var s = (typeof location !== 'undefined' && location.search) ? location.search.substring(1) : "";
         return stringToNewUTF8(s);
     });
-    const std::string query = q ? q : "";
-    free(q);
-    for (size_t pos = 0; pos < query.size();) {
-        const size_t amp = query.find('&', pos);
-        const std::string kv = query.substr(pos, amp == std::string::npos ? std::string::npos : amp - pos);
-        if (kv.compare(0, 5, "file=") == 0) out.push_back(kv.substr(5));
-        else if (!kv.empty()) out.push_back("--" + kv);
-        if (amp == std::string::npos) break;
-        pos = amp + 1;
+    const std::string l_strQuery = l_pszQ ? l_pszQ : "";
+    free(l_pszQ);
+    for (size_t l_nPos = 0; l_nPos < l_strQuery.size();) {
+        const size_t l_nAmp = l_strQuery.find('&', l_nPos);
+        const std::string l_strKv = l_strQuery.substr(l_nPos, l_nAmp == std::string::npos ? std::string::npos : l_nAmp - l_nPos);
+        if (l_strKv.compare(0, 5, "file=") == 0) l_vOut.push_back(l_strKv.substr(5));
+        else if (!l_strKv.empty()) l_vOut.push_back("--" + l_strKv);
+        if (l_nAmp == std::string::npos) break;
+        l_nPos = l_nAmp + 1;
     }
 #endif
-    return out;
+    return l_vOut;
 }
 
 #ifdef __EMSCRIPTEN__
-Viewer* g_viewer = nullptr;   // for the page's hooks below
+Viewer* g_pViewer = nullptr;   // for the page's hooks below
 
-void webFrame(void*) {
-    SDL_Event e;
-    bool quit = false;   // a web page stays: Esc and closing the tab do nothing here
-    while (SDL_PollEvent(&e)) {
-        if (e.type == SDL_EVENT_MOUSE_WHEEL) g_viewer->wheel += e.wheel.y;
-        g_viewer->onEvent(e, quit);
+void f_WebFrame(void*) {
+    SDL_Event l_oE;
+    bool l_bQuit = false;   // a web page stays: Esc and closing the tab do nothing here
+    while (SDL_PollEvent(&l_oE)) {
+        if (l_oE.type == SDL_EVENT_MOUSE_WHEEL) g_pViewer->m_fWheel += l_oE.wheel.y;
+        g_pViewer->f_OnEvent(l_oE, l_bQuit);
     }
-    g_viewer->tick();
+    g_pViewer->f_Tick();
 }
 
 extern "C" {
 // web/shell.html wrote the picked or dropped files into the in-memory file system: open this one.
-EMSCRIPTEN_KEEPALIVE void jsOpenFile(const char* path) {
-    if (!g_viewer || !path) return;
-    std::lock_guard<std::mutex> g(g_viewer->pendingLock);
-    g_viewer->pending = path;
+EMSCRIPTEN_KEEPALIVE void jsOpenFile(const char* l_pszPath) {
+    if (!g_pViewer || !l_pszPath) return;
+    std::lock_guard<std::mutex> l_oG(g_pViewer->m_oPendingLock);
+    g_pViewer->m_strPending = l_pszPath;
 }
 }
 #endif
 
-int main(int argc, char** argv) {
+int main(int l_iArgc, char** l_pArgv) {
     // On the heap: on the web, main returns while the browser keeps calling webFrame.
-    Viewer& v = *new Viewer;
-    v.args = parseArgs(utf8Args(argc, argv));
+    Viewer& l_oV = *new Viewer;
+    l_oV.m_oArgs = f_ParseArgs(f_Utf8Args(l_iArgc, l_pArgv));
 #ifdef __EMSCRIPTEN__
-    std::error_code ec;
-    for (const auto& f : std::filesystem::directory_iterator("/models", ec)) v.testModels.push_back(f.path().filename().string());
-    std::sort(v.testModels.begin(), v.testModels.end());
-    if (v.args.file.empty() && !v.testModels.empty())
-        v.args.file = std::find(v.testModels.begin(), v.testModels.end(), "skin_tube.gltf") != v.testModels.end() ? "skin_tube.gltf"
-                                                                                                                  : v.testModels[0];
-    if (!v.args.file.empty() && v.args.file[0] != '/') v.args.file = "/models/" + v.args.file;
+    std::error_code l_oEc;
+    for (const auto& l_oF : std::filesystem::directory_iterator("/models", l_oEc)) l_oV.m_vTestModels.push_back(l_oF.path().filename().string());
+    std::sort(l_oV.m_vTestModels.begin(), l_oV.m_vTestModels.end());
+    if (l_oV.m_oArgs.m_strFile.empty() && !l_oV.m_vTestModels.empty())
+        l_oV.m_oArgs.m_strFile = std::find(l_oV.m_vTestModels.begin(), l_oV.m_vTestModels.end(), "skin_tube.gltf") != l_oV.m_vTestModels.end() ? "skin_tube.gltf"
+                                                                                                                  : l_oV.m_vTestModels[0];
+    if (!l_oV.m_oArgs.m_strFile.empty() && l_oV.m_oArgs.m_strFile[0] != '/') l_oV.m_oArgs.m_strFile = "/models/" + l_oV.m_oArgs.m_strFile;
 #endif
-    v.showUi = v.args.ui;
-    v.yaw = v.args.yaw;
-    v.pitch = v.args.pitch;
-    v.frame.debug = std::clamp(v.args.debug, 0, 5);
-    v.frame.shadows = v.args.shadows;
-    v.frame.shadowBias = v.args.shadowBias;
-    v.groundOn = v.args.ground;
-    v.useFileLights = v.args.light == "file" || v.args.light == "default";
-    v.rigKind = v.args.light == "file" ? std::string("default") : v.args.light;
+    l_oV.m_bShowUi = l_oV.m_oArgs.m_bUi;
+    l_oV.m_fYaw = l_oV.m_oArgs.m_fYaw;
+    l_oV.m_fPitch = l_oV.m_oArgs.m_fPitch;
+    l_oV.m_oFrame.m_iDebug = std::clamp(l_oV.m_oArgs.m_iDebug, 0, 5);
+    l_oV.m_oFrame.m_bShadows = l_oV.m_oArgs.m_bShadows;
+    l_oV.m_oFrame.m_fShadowBias = l_oV.m_oArgs.m_fShadowBias;
+    l_oV.m_bGroundOn = l_oV.m_oArgs.m_bGround;
+    l_oV.m_bUseFileLights = l_oV.m_oArgs.m_strLight == "file" || l_oV.m_oArgs.m_strLight == "default";
+    l_oV.m_strRigKind = l_oV.m_oArgs.m_strLight == "file" ? std::string("default") : l_oV.m_oArgs.m_strLight;
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         std::fprintf(stderr, "SDL: %s\n", SDL_GetError());
         return 1;
     }
     // A screenshot run draws into a hidden window: no window flashing open and shut on the desktop.
-    v.window = SDL_CreateWindow("TOMS glTF Viewer", v.args.w, v.args.h,
+    l_oV.m_pWindow = SDL_CreateWindow("TOMS glTF Viewer", l_oV.m_oArgs.m_iW, l_oV.m_oArgs.m_iH,
                                 SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY |
-                                    (v.args.screenshot.empty() ? SDL_WindowFlags(0) : SDL_WINDOW_HIDDEN));
-    if (!v.window) {
+                                    (l_oV.m_oArgs.m_strScreenshot.empty() ? SDL_WindowFlags(0) : SDL_WINDOW_HIDDEN));
+    if (!l_oV.m_pWindow) {
         std::fprintf(stderr, "SDL window: %s\n", SDL_GetError());
         return 1;
     }
-    next::BgfxHostConfig cfg;
+    next::BgfxHostConfig l_oCfg;
 #if defined(__EMSCRIPTEN__)
     // bgfx's WebGL backend takes the canvas CSS selector as its "window handle" (as src/game/src/main_sdl.cpp).
-    static std::string canvas;
-    const char* id = SDL_GetStringProperty(SDL_GetWindowProperties(v.window), SDL_PROP_WINDOW_EMSCRIPTEN_CANVAS_ID_STRING, "#canvas");
-    canvas = (id && id[0] == '#') ? id : std::string("#") + (id ? id : "canvas");
-    cfg.nativeWindow = (void*)canvas.c_str();
+    static std::string l_strCanvas;
+    const char* l_pszId = SDL_GetStringProperty(SDL_GetWindowProperties(l_oV.m_pWindow), SDL_PROP_WINDOW_EMSCRIPTEN_CANVAS_ID_STRING, "#canvas");
+    l_strCanvas = (l_pszId && l_pszId[0] == '#') ? l_pszId : std::string("#") + (l_pszId ? l_pszId : "canvas");
+    l_oCfg.m_pNativeWindow = (void*)l_strCanvas.c_str();
 #elif defined(_WIN32)
-    cfg.nativeWindow = SDL_GetPointerProperty(SDL_GetWindowProperties(v.window), SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
+    l_oCfg.m_pNativeWindow = SDL_GetPointerProperty(SDL_GetWindowProperties(l_oV.m_pWindow), SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
 #elif defined(__linux__)
     cfg.nativeWindow = (void*)(uintptr_t)SDL_GetNumberProperty(SDL_GetWindowProperties(v.window), SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0);
     cfg.nativeDisplay = SDL_GetPointerProperty(SDL_GetWindowProperties(v.window), SDL_PROP_WINDOW_X11_DISPLAY_POINTER, nullptr);
 #endif
-    SDL_GetWindowSizeInPixels(v.window, &v.fbW, &v.fbH);
-    cfg.width = (uint32_t)v.fbW;
-    cfg.height = (uint32_t)v.fbH;
-    cfg.renderer = v.args.renderer;
+    SDL_GetWindowSizeInPixels(l_oV.m_pWindow, &l_oV.m_iFbW, &l_oV.m_iFbH);
+    l_oCfg.m_uWidth = (uint32_t)l_oV.m_iFbW;
+    l_oCfg.m_uHeight = (uint32_t)l_oV.m_iFbH;
+    l_oCfg.m_strRenderer = l_oV.m_oArgs.m_strRenderer;
 #ifdef __EMSCRIPTEN__
-    cfg.msaa = 0;   // bgfx's MSAA back buffer on WebGL calls glFramebufferTexture2DMultisampleEXT, which WebGL lacks
+    l_oCfg.m_iMsaa = 0;   // bgfx's MSAA back buffer on WebGL calls glFramebufferTexture2DMultisampleEXT, which WebGL lacks
 #else
-    cfg.msaa = 4;
+    l_oCfg.m_iMsaa = 4;
 #endif
-    std::string err;
-    if (!next::bgfxHostInit(cfg, err)) {
+    std::string l_strErr;
+    if (!next::f_BgfxHostInit(l_oCfg, l_strErr)) {
 #ifdef __EMSCRIPTEN__
-        EM_ASM({ if (typeof tomsShowError === 'function') tomsShowError('The glTF viewer could not start', UTF8ToString($0)); }, err.c_str());
+        EM_ASM({ if (typeof tomsShowError === 'function') tomsShowError('The glTF viewer could not start', UTF8ToString($0)); }, l_strErr.c_str());
 #else
-        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "glTF Viewer", err.c_str(), v.window);
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "glTF Viewer", l_strErr.c_str(), l_oV.m_pWindow);
 #endif
         return 1;
     }
-    if (!v.renderer.init() || !v.gui.init()) {
+    if (!l_oV.m_oRenderer.f_Init() || !l_oV.m_oGui.f_Init()) {
         std::fprintf(stderr, "[gltf] the renderer could not start\n");
-        next::bgfxHostShutdown();
+        next::f_BgfxHostShutdown();
         return 1;
     }
-    v.makeGround();
-    v.makeGizmos();
-    v.envRotation = v.args.envRotation;
-    v.envIntensity = v.args.envIntensity;
-    v.envBackground = v.args.background != 0;
-    v.envBlur = v.args.backgroundBlur;
-    if (v.args.env == "none") {
-        v.envOn = false;
+    l_oV.f_MakeGround();
+    l_oV.f_MakeGizmos();
+    l_oV.m_fEnvRotation = l_oV.m_oArgs.m_fEnvRotation;
+    l_oV.m_fEnvIntensity = l_oV.m_oArgs.m_fEnvIntensity;
+    l_oV.m_bEnvBackground = l_oV.m_oArgs.m_iBackground != 0;
+    l_oV.m_fEnvBlur = l_oV.m_oArgs.m_fBackgroundBlur;
+    if (l_oV.m_oArgs.m_strEnv == "none") {
+        l_oV.m_bEnvOn = false;
     } else {
-        std::string envFile = v.args.env;
-        if (envFile.empty()) {   // the default, by its key in the resource manifest
-            res::ResourceManager res;
-            res.setRoot(assetDir());
-            if (res.loadManifest("resources.json")) envFile = res.resolve(key::kEnvDefault);
-            else v.envError = "no resources.json in " + assetDir();
+        std::string l_strEnvFile = l_oV.m_oArgs.m_strEnv;
+        if (l_strEnvFile.empty()) {   // the default, by its key in the resource manifest
+            res::ResourceManager l_oRes;
+            l_oRes.f_SetRoot(f_AssetDir());
+            if (l_oRes.f_LoadManifest("resources.json")) l_strEnvFile = l_oRes.f_Resolve(key::g_pszEnvDefault);
+            else l_oV.m_strEnvError = "no resources.json in " + f_AssetDir();
         }
-        if (envFile.empty() || !v.loadEnvironment(envFile)) v.envOn = false;
+        if (l_strEnvFile.empty() || !l_oV.f_LoadEnvironment(l_strEnvFile)) l_oV.m_bEnvOn = false;
     }
-    v.uiScale = std::max(1.0f, SDL_GetWindowDisplayScale(v.window) * 0.8f);
-    ImGui::GetIO().FontGlobalScale = v.uiScale;
-    ImGui::GetStyle().ScaleAllSizes(v.uiScale);
-    ImGui::GetStyle().WindowRounding = 6.0f * v.uiScale;
-    if (!v.args.file.empty() && !v.load(v.args.file) && v.args.frames > 0) {
-        next::bgfxHostShutdown();
+    l_oV.m_fUiScale = std::max(1.0f, SDL_GetWindowDisplayScale(l_oV.m_pWindow) * 0.8f);
+    ImGui::GetIO().FontGlobalScale = l_oV.m_fUiScale;
+    ImGui::GetStyle().ScaleAllSizes(l_oV.m_fUiScale);
+    ImGui::GetStyle().WindowRounding = 6.0f * l_oV.m_fUiScale;
+    if (!l_oV.m_oArgs.m_strFile.empty() && !l_oV.f_Load(l_oV.m_oArgs.m_strFile) && l_oV.m_oArgs.m_iFrames > 0) {
+        next::f_BgfxHostShutdown();
         return 2;   // a test asked for a model that does not load
     }
 
 #ifdef __EMSCRIPTEN__
-    g_viewer = &v;
-    emscripten_set_main_loop_arg(webFrame, nullptr, 0, false);   // every animation frame; main returns, the page runs on
+    g_pViewer = &l_oV;
+    emscripten_set_main_loop_arg(f_WebFrame, nullptr, 0, false);   // every animation frame; main returns, the page runs on
     return 0;
 #endif
-    bool quit = false;
-    while (!quit) {
-        SDL_Event e;
-        while (SDL_PollEvent(&e)) {
-            if (e.type == SDL_EVENT_MOUSE_WHEEL) v.wheel += e.wheel.y;
-            v.onEvent(e, quit);
+    bool l_bQuit = false;
+    while (!l_bQuit) {
+        SDL_Event l_oE;
+        while (SDL_PollEvent(&l_oE)) {
+            if (l_oE.type == SDL_EVENT_MOUSE_WHEEL) l_oV.m_fWheel += l_oE.wheel.y;
+            l_oV.f_OnEvent(l_oE, l_bQuit);
         }
-        v.tick();
+        l_oV.f_Tick();
         // A test: quit once the screenshot is on disk (or a while after asking).
-        if (v.args.frames > 0 && v.frameNo > v.args.frames &&
-            (v.args.screenshot.empty() || next::bgfxHostScreenshotsWritten() > v.shotsBefore || v.frameNo > v.args.frames + 60))
-            quit = true;
+        if (l_oV.m_oArgs.m_iFrames > 0 && l_oV.m_iFrameNo > l_oV.m_oArgs.m_iFrames &&
+            (l_oV.m_oArgs.m_strScreenshot.empty() || next::f_BgfxHostScreenshotsWritten() > l_oV.m_iShotsBefore || l_oV.m_iFrameNo > l_oV.m_oArgs.m_iFrames + 60))
+            l_bQuit = true;
     }
-    v.gpu.reset();
-    v.animGpu.reset();   // the crowd's texture: before bgfx goes
-    v.groundGpu.reset();
-    for (auto* g : {&v.gizmoSphere, &v.gizmoCone, &v.gizmoCylinder, &v.gizmoDisc}) g->gpu.reset();
-    v.renderer.shutdown();
-    v.gui.shutdown();
-    next::bgfxHostShutdown();
-    SDL_DestroyWindow(v.window);
+    l_oV.m_spGpu.reset();
+    l_oV.m_spAnimGpu.reset();   // the crowd's texture: before bgfx goes
+    l_oV.m_spGroundGpu.reset();
+    for (auto* l_pG : {&l_oV.m_oGizmoSphere, &l_oV.m_oGizmoCone, &l_oV.m_oGizmoCylinder, &l_oV.m_oGizmoDisc}) l_pG->m_spGpu.reset();
+    l_oV.m_oRenderer.f_Shutdown();
+    l_oV.m_oGui.f_Shutdown();
+    next::f_BgfxHostShutdown();
+    SDL_DestroyWindow(l_oV.m_pWindow);
     SDL_Quit();
-    delete &v;
+    delete &l_oV;
     return 0;
 }

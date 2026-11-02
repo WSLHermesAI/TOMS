@@ -16,7 +16,7 @@ namespace {
 
 // One shared scratch canvas. Setting canvas.width also resets the 2D context, so every call sets
 // the font state it needs.
-EM_JS(void, toms_text_metrics, (const char* font, const char* lang, float size, float* out), {
+EM_JS(void, toms_text_metrics, (const char* l_pszFont, const char* l_pszLang, float l_fSize, float* l_pOut), {
     if (!Module.__tomsText) {
         var c = document.createElement('canvas');
         c.width = 8; c.height = 8;
@@ -39,7 +39,7 @@ EM_JS(void, toms_text_metrics, (const char* font, const char* lang, float size, 
     HEAPF32[(out >> 2) + 3] = ctx.measureText('…').width > 0 ? 1 : 0;
 });
 
-EM_JS(double, toms_text_width, (const char* font, const char* lang, const char* text, float letterSpacing), {
+EM_JS(double, toms_text_width, (const char* l_pszFont, const char* l_pszLang, const char* l_pszText, float l_fLetterSpacing), {
     var t = Module.__tomsText;
     var ctx = t.ctx;
     if ('lang' in ctx) ctx.lang = UTF8ToString(lang);
@@ -50,8 +50,8 @@ EM_JS(double, toms_text_width, (const char* font, const char* lang, const char* 
 
 // Draws `text` white on transparent into a w x h RGBA buffer at `out`; (x, baseline) in UI px,
 // scaled by `scale` to the texture's pixels.
-EM_JS(void, toms_text_render, (const char* font, const char* lang, const char* text, float letterSpacing,
-                               int rtl, float scale, float x, float baseline, int w, int h, unsigned char* out), {
+EM_JS(void, toms_text_render, (const char* l_pszFont, const char* l_pszLang, const char* l_pszText, float l_fLetterSpacing,
+                               int l_iRtl, float l_fScale, float l_fX, float l_fBaseline, int l_iW, int l_iH, unsigned char* l_pOut), {
     var t = Module.__tomsText;
     var c = t.canvas;
     c.width = w; c.height = h;     // also clears it and resets the context
@@ -68,141 +68,141 @@ EM_JS(void, toms_text_render, (const char* font, const char* lang, const char* t
     HEAPU8.set(ctx.getImageData(0, 0, w, h).data, out);
 });
 
-constexpr size_t kMaxTextureBytes = 48u * 1024 * 1024;   // then drop the cache and re-render on demand
+constexpr size_t g_nMaxTextureBytes = 48u * 1024 * 1024;   // then drop the cache and re-render on demand
 
 }  // namespace
 
 namespace toms::next {
 
-void CanvasFontEngine::setLanguage(const std::string& langTag, const std::string& cssFonts) {
-    if (langTag == lang_ && cssFonts == cssFonts_) return;
-    lang_ = langTag;
-    cssFonts_ = cssFonts;
-    for (Face& f : faces_) updateFace(f);   // handles stay valid; their fonts and metrics change
-    clearCaches();
+void CanvasFontEngine::f_SetLanguage(const std::string& l_strLangTag, const std::string& l_strCssFonts) {
+    if (l_strLangTag == m_strLang && l_strCssFonts == m_strCssFonts) return;
+    m_strLang = l_strLangTag;
+    m_strCssFonts = l_strCssFonts;
+    for (Face& l_oF : m_vFaces) f_UpdateFace(l_oF);   // handles stay valid; their fonts and metrics change
+    f_ClearCaches();
 }
 
-void CanvasFontEngine::setPixelScale(float scale) {
+void CanvasFontEngine::f_SetPixelScale(float l_fScale) {
     // Quarter steps, at least 1: a phone at 2.4x draws at 2.5x; a window drag doesn't re-render text
     // every frame.
-    const float s = std::max(1.0f, std::round(scale * 4.0f) / 4.0f);
-    if (s == scale_) return;
-    scale_ = s;
-    clearCaches();
+    const float l_fS = std::max(1.0f, std::round(l_fScale * 4.0f) / 4.0f);
+    if (l_fS == m_fScale) return;
+    m_fScale = l_fS;
+    f_ClearCaches();
 }
 
-void CanvasFontEngine::clearCaches() {
-    texts_.clear();
-    widths_.clear();
-    textureBytes_ = 0;
-    ++version_;   // RmlUi regenerates every string's geometry
+void CanvasFontEngine::f_ClearCaches() {
+    m_mapTexts.clear();
+    m_mapWidths.clear();
+    m_nTextureBytes = 0;
+    ++m_iVersion;   // RmlUi regenerates every string's geometry
 }
 
-void CanvasFontEngine::updateFace(Face& f) {
-    const std::string stack = (f.family == "rmlui-debugger-font") ? std::string("sans-serif")
-                            : (cssFonts_.empty() ? std::string("sans-serif") : cssFonts_);
-    f.css = std::string(f.italic ? "italic " : "") + std::to_string(f.weight) + " " + std::to_string(f.size) + "px " + stack;
-    float m[4] = {0, 0, 0, 0};
-    toms_text_metrics(f.css.c_str(), lang_.c_str(), (float)f.size, m);
-    f.metrics.size = f.size;
-    f.metrics.ascent = m[0];
-    f.metrics.descent = m[1];
-    f.metrics.line_spacing = m[0] + m[1];
-    f.metrics.x_height = m[2];
-    f.metrics.underline_position = std::max(1.0f, f.size * 0.1f);
-    f.metrics.underline_thickness = std::max(1.0f, f.size / 16.0f);
-    f.metrics.has_ellipsis = m[3] > 0.5f;
+void CanvasFontEngine::f_UpdateFace(Face& l_oF) {
+    const std::string l_strStack = (l_oF.m_strFamily == "rmlui-debugger-font") ? std::string("sans-serif")
+                            : (m_strCssFonts.empty() ? std::string("sans-serif") : m_strCssFonts);
+    l_oF.m_strCss = std::string(l_oF.m_bItalic ? "italic " : "") + std::to_string(l_oF.m_iWeight) + " " + std::to_string(l_oF.m_iSize) + "px " + l_strStack;
+    float l_arrM[4] = {0, 0, 0, 0};
+    toms_text_metrics(l_oF.m_strCss.c_str(), m_strLang.c_str(), (float)l_oF.m_iSize, l_arrM);
+    l_oF.m_oMetrics.size = l_oF.m_iSize;
+    l_oF.m_oMetrics.ascent = l_arrM[0];
+    l_oF.m_oMetrics.descent = l_arrM[1];
+    l_oF.m_oMetrics.line_spacing = l_arrM[0] + l_arrM[1];
+    l_oF.m_oMetrics.x_height = l_arrM[2];
+    l_oF.m_oMetrics.underline_position = std::max(1.0f, l_oF.m_iSize * 0.1f);
+    l_oF.m_oMetrics.underline_thickness = std::max(1.0f, l_oF.m_iSize / 16.0f);
+    l_oF.m_oMetrics.has_ellipsis = l_arrM[3] > 0.5f;
 }
 
-Rml::FontFaceHandle CanvasFontEngine::GetFontFaceHandle(const Rml::String& family, Rml::Style::FontStyle style,
-                                                        Rml::Style::FontWeight weight, int size) {
-    const bool italic = style == Rml::Style::FontStyle::Italic;
-    const int w = weight == Rml::Style::FontWeight::Auto ? 400 : (int)weight;
-    for (size_t i = 0; i < faces_.size(); i++) {
-        const Face& f = faces_[i];
-        if (f.family == family && f.italic == italic && f.weight == w && f.size == size) return (Rml::FontFaceHandle)(i + 1);
+Rml::FontFaceHandle CanvasFontEngine::GetFontFaceHandle(const Rml::String& l_strFamily, Rml::Style::FontStyle l_eStyle,
+                                                        Rml::Style::FontWeight l_eWeight, int l_iSize) {
+    const bool l_bItalic = l_eStyle == Rml::Style::FontStyle::Italic;
+    const int l_iW = l_eWeight == Rml::Style::FontWeight::Auto ? 400 : (int)l_eWeight;
+    for (size_t l_nI = 0; l_nI < m_vFaces.size(); l_nI++) {
+        const Face& l_oF = m_vFaces[l_nI];
+        if (l_oF.m_strFamily == l_strFamily && l_oF.m_bItalic == l_bItalic && l_oF.m_iWeight == l_iW && l_oF.m_iSize == l_iSize) return (Rml::FontFaceHandle)(l_nI + 1);
     }
-    Face f;
-    f.family = family;
-    f.italic = italic;
-    f.weight = w;
-    f.size = std::max(1, size);
-    updateFace(f);
-    faces_.push_back(f);
-    return (Rml::FontFaceHandle)faces_.size();
+    Face l_oF;
+    l_oF.m_strFamily = l_strFamily;
+    l_oF.m_bItalic = l_bItalic;
+    l_oF.m_iWeight = l_iW;
+    l_oF.m_iSize = std::max(1, l_iSize);
+    f_UpdateFace(l_oF);
+    m_vFaces.push_back(l_oF);
+    return (Rml::FontFaceHandle)m_vFaces.size();
 }
 
-const Rml::FontMetrics& CanvasFontEngine::GetFontMetrics(Rml::FontFaceHandle handle) {
-    static const Rml::FontMetrics none{};
-    if (handle == 0 || handle > faces_.size()) return none;
-    return faces_[handle - 1].metrics;
+const Rml::FontMetrics& CanvasFontEngine::GetFontMetrics(Rml::FontFaceHandle l_u64Handle) {
+    static const Rml::FontMetrics l_oNone{};
+    if (l_u64Handle == 0 || l_u64Handle > m_vFaces.size()) return l_oNone;
+    return m_vFaces[l_u64Handle - 1].m_oMetrics;
 }
 
-float CanvasFontEngine::measure(const Face& f, const std::string& s, float letterSpacing) {
-    std::string key = f.css;
-    key += '\x1f';
-    key += std::to_string(letterSpacing);
-    key += '\x1f';
-    key += s;
-    auto it = widths_.find(key);
-    if (it != widths_.end()) return it->second;
-    const float w = (float)toms_text_width(f.css.c_str(), lang_.c_str(), s.c_str(), letterSpacing);
-    widths_.emplace(std::move(key), w);
-    return w;
+float CanvasFontEngine::f_Measure(const Face& l_oF, const std::string& l_strS, float l_fLetterSpacing) {
+    std::string l_strKey = l_oF.m_strCss;
+    l_strKey += '\x1f';
+    l_strKey += std::to_string(l_fLetterSpacing);
+    l_strKey += '\x1f';
+    l_strKey += l_strS;
+    auto l_itIt = m_mapWidths.find(l_strKey);
+    if (l_itIt != m_mapWidths.end()) return l_itIt->second;
+    const float l_fW = (float)toms_text_width(l_oF.m_strCss.c_str(), m_strLang.c_str(), l_strS.c_str(), l_fLetterSpacing);
+    m_mapWidths.emplace(std::move(l_strKey), l_fW);
+    return l_fW;
 }
 
-int CanvasFontEngine::GetStringWidth(Rml::FontFaceHandle handle, Rml::StringView string, const Rml::TextShapingContext& ctx,
+int CanvasFontEngine::GetStringWidth(Rml::FontFaceHandle l_u64Handle, Rml::StringView l_oString, const Rml::TextShapingContext& l_oCtx,
                                      Rml::Character) {
-    if (handle == 0 || handle > faces_.size() || string.begin() == string.end()) return 0;
-    return (int)std::lround(measure(faces_[handle - 1], std::string(string.begin(), string.end()), ctx.letter_spacing));
+    if (l_u64Handle == 0 || l_u64Handle > m_vFaces.size() || l_oString.begin() == l_oString.end()) return 0;
+    return (int)std::lround(f_Measure(m_vFaces[l_u64Handle - 1], std::string(l_oString.begin(), l_oString.end()), l_oCtx.letter_spacing));
 }
 
-int CanvasFontEngine::GenerateString(Rml::RenderManager& render_manager, Rml::FontFaceHandle handle, Rml::FontEffectsHandle,
-                                     Rml::StringView string, Rml::Vector2f position, Rml::ColourbPremultiplied colour,
-                                     float, const Rml::TextShapingContext& ctx, Rml::TexturedMeshList& mesh_list) {
-    if (handle == 0 || handle > faces_.size() || string.begin() == string.end()) return 0;
-    const Face& f = faces_[handle - 1];
-    const std::string text(string.begin(), string.end());
-    const bool rtl = ctx.text_direction == Rml::Style::Direction::Rtl;
-    const float pad = std::ceil(f.size * 0.3f);   // room for overhangs, marks above/below the line
+int CanvasFontEngine::GenerateString(Rml::RenderManager& l_oRenderManager, Rml::FontFaceHandle l_u64Handle, Rml::FontEffectsHandle,
+                                     Rml::StringView l_oString, Rml::Vector2f l_oPosition, Rml::ColourbPremultiplied l_oColour,
+                                     float, const Rml::TextShapingContext& l_oCtx, Rml::TexturedMeshList& l_vMeshList) {
+    if (l_u64Handle == 0 || l_u64Handle > m_vFaces.size() || l_oString.begin() == l_oString.end()) return 0;
+    const Face& l_oF = m_vFaces[l_u64Handle - 1];
+    const std::string l_strText(l_oString.begin(), l_oString.end());
+    const bool l_bRtl = l_oCtx.text_direction == Rml::Style::Direction::Rtl;
+    const float l_fPad = std::ceil(l_oF.m_iSize * 0.3f);   // room for overhangs, marks above/below the line
 
-    std::string key = std::to_string(handle);
-    key += rtl ? "\x1fR\x1f" : "\x1fL\x1f";
-    key += std::to_string(ctx.letter_spacing);
-    key += '\x1f';
-    key += text;
-    auto it = texts_.find(key);
-    if (it == texts_.end()) {
-        Text t;
-        t.width = measure(f, text, ctx.letter_spacing);
-        t.boxW = t.width + 2 * pad;
-        t.boxH = f.metrics.ascent + f.metrics.descent + 2 * pad;
-        const int w = std::max(1, (int)std::ceil(t.boxW * scale_));
-        const int h = std::max(1, (int)std::ceil(t.boxH * scale_));
-        t.boxW = w / scale_;   // the quad covers exactly the texture's pixels
-        t.boxH = h / scale_;
-        if (textureBytes_ + (size_t)w * h * 4 > kMaxTextureBytes) clearCaches();
-        textureBytes_ += (size_t)w * h * 4;
+    std::string l_strKey = std::to_string(l_u64Handle);
+    l_strKey += l_bRtl ? "\x1fR\x1f" : "\x1fL\x1f";
+    l_strKey += std::to_string(l_oCtx.letter_spacing);
+    l_strKey += '\x1f';
+    l_strKey += l_strText;
+    auto l_itIt = m_mapTexts.find(l_strKey);
+    if (l_itIt == m_mapTexts.end()) {
+        Text l_oT;
+        l_oT.m_fWidth = f_Measure(l_oF, l_strText, l_oCtx.letter_spacing);
+        l_oT.m_fBoxW = l_oT.m_fWidth + 2 * l_fPad;
+        l_oT.m_fBoxH = l_oF.m_oMetrics.ascent + l_oF.m_oMetrics.descent + 2 * l_fPad;
+        const int l_iW = std::max(1, (int)std::ceil(l_oT.m_fBoxW * m_fScale));
+        const int l_iH = std::max(1, (int)std::ceil(l_oT.m_fBoxH * m_fScale));
+        l_oT.m_fBoxW = l_iW / m_fScale;   // the quad covers exactly the texture's pixels
+        l_oT.m_fBoxH = l_iH / m_fScale;
+        if (m_nTextureBytes + (size_t)l_iW * l_iH * 4 > g_nMaxTextureBytes) f_ClearCaches();
+        m_nTextureBytes += (size_t)l_iW * l_iH * 4;
         // Rendered when RmlUi first needs the texture (and again if the GPU texture is ever lost),
         // so no pixel copy is kept on the CPU side.
-        const std::string css = f.css, lang = lang_;
-        const float scale = scale_, letterSpacing = ctx.letter_spacing, baseline = pad + f.metrics.ascent;
-        t.texture = Rml::CallbackTextureSource([=](const Rml::CallbackTextureInterface& ti) -> bool {
-            std::vector<Rml::byte> px((size_t)w * h * 4);
-            toms_text_render(css.c_str(), lang.c_str(), text.c_str(), letterSpacing, rtl ? 1 : 0, scale, pad, baseline,
-                             w, h, px.data());
-            for (size_t i = 0; i < px.size(); i += 4) px[i] = px[i + 1] = px[i + 2] = px[i + 3];   // white -> premultiplied
-            return ti.GenerateTexture(px, Rml::Vector2i(w, h));
+        const std::string l_strCss = l_oF.m_strCss, l_strLang = m_strLang;
+        const float l_fScale = m_fScale, l_fLetterSpacing = l_oCtx.letter_spacing, l_fBaseline = l_fPad + l_oF.m_oMetrics.ascent;
+        l_oT.m_oTexture = Rml::CallbackTextureSource([=](const Rml::CallbackTextureInterface& l_oTi) -> bool {
+            std::vector<Rml::byte> l_vPx((size_t)l_iW * l_iH * 4);
+            toms_text_render(l_strCss.c_str(), l_strLang.c_str(), l_strText.c_str(), l_fLetterSpacing, l_bRtl ? 1 : 0, l_fScale, l_fPad, l_fBaseline,
+                             l_iW, l_iH, l_vPx.data());
+            for (size_t l_nI = 0; l_nI < l_vPx.size(); l_nI += 4) l_vPx[l_nI] = l_vPx[l_nI + 1] = l_vPx[l_nI + 2] = l_vPx[l_nI + 3];   // white -> premultiplied
+            return l_oTi.GenerateTexture(l_vPx, Rml::Vector2i(l_iW, l_iH));
         });
-        it = texts_.emplace(std::move(key), std::move(t)).first;
+        l_itIt = m_mapTexts.emplace(std::move(l_strKey), std::move(l_oT)).first;
     }
-    const Text& t = it->second;
-    Rml::TexturedMesh tm;
-    Rml::MeshUtilities::GenerateQuad(tm.mesh, Rml::Vector2f(position.x - pad, position.y - f.metrics.ascent - pad),
-                                     Rml::Vector2f(t.boxW, t.boxH), colour, Rml::Vector2f(0, 0), Rml::Vector2f(1, 1));
-    tm.texture = t.texture.GetTexture(render_manager);
-    mesh_list.push_back(std::move(tm));
-    return (int)std::lround(t.width);
+    const Text& l_oT = l_itIt->second;
+    Rml::TexturedMesh l_oTm;
+    Rml::MeshUtilities::GenerateQuad(l_oTm.mesh, Rml::Vector2f(l_oPosition.x - l_fPad, l_oPosition.y - l_oF.m_oMetrics.ascent - l_fPad),
+                                     Rml::Vector2f(l_oT.m_fBoxW, l_oT.m_fBoxH), l_oColour, Rml::Vector2f(0, 0), Rml::Vector2f(1, 1));
+    l_oTm.texture = l_oT.m_oTexture.GetTexture(l_oRenderManager);
+    l_vMeshList.push_back(std::move(l_oTm));
+    return (int)std::lround(l_oT.m_fWidth);
 }
 
 }  // namespace toms::next

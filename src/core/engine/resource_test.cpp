@@ -12,250 +12,250 @@
 #include <string>
 
 namespace {
-int g_fail = 0;
-#define CHECK(cond, msg) do { if (!(cond)) { std::printf("FAIL: %s  (line %d)\n", msg, __LINE__); ++g_fail; } } while (0)
+int g_iFail = 0;
+#define CHECK(cond, msg) do { if (!(cond)) { std::printf("FAIL: %s  (line %d)\n", msg, __LINE__); ++g_iFail; } } while (0)
 
 // Counts textures made and freed; draws nothing.
 class CountingRenderer : public IRenderer {
 public:
-    int made = 0, freed = 0;
-    uint16_t next = 1;
-    void init(uint32_t, uint32_t) override {}
-    void loadSprites(const std::vector<std::vector<uint8_t>>&, uint32_t, uint32_t) override {}
-    void loadSpriteAtlas(const std::vector<uint8_t>&, uint32_t, uint32_t, const std::string&) override {}
-    uint16_t loadTexture(const std::vector<uint8_t>&, uint32_t, uint32_t) override { made++; return next++; }
-    void releaseTexture(uint16_t) override { freed++; }
+    int m_iMade = 0, m_iFreed = 0;
+    uint16_t m_u16Next = 1;
+    void f_Init(uint32_t, uint32_t) override {}
+    void f_LoadSprites(const std::vector<std::vector<uint8_t>>&, uint32_t, uint32_t) override {}
+    void f_LoadSpriteAtlas(const std::vector<uint8_t>&, uint32_t, uint32_t, const std::string&) override {}
+    uint16_t f_LoadTexture(const std::vector<uint8_t>&, uint32_t, uint32_t) override { m_iMade++; return m_u16Next++; }
+    void f_ReleaseTexture(uint16_t) override { m_iFreed++; }
     void begin() override {}
-    void drawSprite(const Quad&) override {}
+    void f_DrawSprite(const Quad&) override {}
     void end() override {}
-    uint32_t width() const override { return 1024; }
-    uint32_t height() const override { return 768; }
+    uint32_t f_Width() const override { return 1024; }
+    uint32_t f_Height() const override { return 768; }
 };
 
 namespace fs = std::filesystem;
 
-void copyFile(const fs::path& from, const fs::path& to) {
-    std::error_code ec;
-    fs::copy_file(from, to, fs::copy_options::overwrite_existing, ec);
+void f_CopyFile(const fs::path& l_oFrom, const fs::path& l_oTo) {
+    std::error_code l_oEc;
+    fs::copy_file(l_oFrom, l_oTo, fs::copy_options::overwrite_existing, l_oEc);
 }
 
-void writeText(const fs::path& p, const std::string& text) {
-    std::ofstream f(p, std::ios::binary);
-    f << text;
+void f_WriteText(const fs::path& l_oP, const std::string& l_strText) {
+    std::ofstream l_oF(l_oP, std::ios::binary);
+    l_oF << l_strText;
 }
 
 // bump the file's time and size so checkFiles() sees a change even within the same second
-void touch(const fs::path& p, const std::string& extra) {
-    std::ofstream f(p, std::ios::binary | std::ios::app);
-    f << extra;
-    f.close();
-    std::error_code ec;
-    fs::last_write_time(p, fs::last_write_time(p, ec) + std::chrono::seconds(2), ec);
+void f_Touch(const fs::path& l_oP, const std::string& l_strExtra) {
+    std::ofstream l_oF(l_oP, std::ios::binary | std::ios::app);
+    l_oF << l_strExtra;
+    l_oF.close();
+    std::error_code l_oEc;
+    fs::last_write_time(l_oP, fs::last_write_time(l_oP, l_oEc) + std::chrono::seconds(2), l_oEc);
 }
 }  // namespace
 
 int main() {
     using namespace toms::res;
-    const std::string idle = "media/anim/monster_idle.anim", door = "media/anim/door_open.anim";
-    if (!toms::vfsExists(idle)) {
-        std::printf("resource_test: run in assets/ (%s not found)\n", idle.c_str());
+    const std::string l_strIdle = "media/anim/monster_idle.anim", l_strDoor = "media/anim/door_open.anim";
+    if (!toms::f_VfsExists(l_strIdle)) {
+        std::printf("resource_test: run in assets/ (%s not found)\n", l_strIdle.c_str());
         return 1;
     }
 
     // ---- keys ----
-    CHECK(ResourceManager::key("Media\\Atlas/../atlas/./FX.atlas") == "media/atlas/fx.atlas", "key folds separators, dots and case");
-    CHECK(ResourceManager::normalize("a/b/../C.png") == "a/C.png", "normalize keeps the case");
-    CHECK(ResourceManager::join("media/anim/", "../atlas/fx.atlas") == "media/anim/../atlas/fx.atlas", "join relative");
-    CHECK(ResourceManager::join("media/anim/", "C:/x.atlas") == "C:/x.atlas", "join keeps an absolute path");
+    CHECK(ResourceManager::f_Key("Media\\Atlas/../atlas/./FX.atlas") == "media/atlas/fx.atlas", "key folds separators, dots and case");
+    CHECK(ResourceManager::f_Normalize("a/b/../C.png") == "a/C.png", "normalize keeps the case");
+    CHECK(ResourceManager::f_Join("media/anim/", "../atlas/fx.atlas") == "media/anim/../atlas/fx.atlas", "join relative");
+    CHECK(ResourceManager::f_Join("media/anim/", "C:/x.atlas") == "C:/x.atlas", "join keeps an absolute path");
 
-    CountingRenderer ren;
+    CountingRenderer l_oRen;
     {
-        ResourceManager rm(&ren);
+        ResourceManager l_oRm(&l_oRen);
 
         // ---- one object per file; dependencies shared ----
-        auto a1 = rm.get<AnimRes>(idle);
-        auto a2 = rm.get<AnimRes>("media/anim/../anim/monster_idle.anim");
-        CHECK(a1 == a2, "the same file gives the same object");
-        CHECK(a1->ok() && a1->find("idle_slime"), "the idle clips load");
-        auto d = rm.get<AnimRes>(door);
-        auto fx1 = rm.get<AtlasRes>("media/atlas/fx.atlas");
-        CHECK(fx1->ok(), "fx.atlas loads");
-        bool idleHasFx = false, doorHasFx = false;
-        for (const auto& e : a1->atlases().entries) idleHasFx |= e.atlas == &fx1->atlas();
-        for (const auto& e : d->atlases().entries) doorHasFx |= e.atlas == &fx1->atlas();
-        CHECK(idleHasFx && doorHasFx, "the idle and door clips share one fx atlas (it was loaded twice before)");
-        const int texturesAfterBoth = ren.made;
-        CHECK(texturesAfterBoth == 2, "fx.png and game.png uploaded once each, not once per clip file");
-        CHECK(!fx1->pageTextures().empty() && fx1->pageTextures()[0] != kSpriteAtlasTexture, "the atlas page is a real texture");
-        CHECK(std::string(a1->Type()) == "AnimRes" && a1->Name() == a1->path(), "a resource is a named, typed Object");
+        auto l_spA1 = l_oRm.f_Get<AnimRes>(l_strIdle);
+        auto l_spA2 = l_oRm.f_Get<AnimRes>("media/anim/../anim/monster_idle.anim");
+        CHECK(l_spA1 == l_spA2, "the same file gives the same object");
+        CHECK(l_spA1->f_Ok() && l_spA1->f_Find("idle_slime"), "the idle clips load");
+        auto l_spD = l_oRm.f_Get<AnimRes>(l_strDoor);
+        auto l_spFx1 = l_oRm.f_Get<AtlasRes>("media/atlas/fx.atlas");
+        CHECK(l_spFx1->f_Ok(), "fx.atlas loads");
+        bool l_bIdleHasFx = false, l_bDoorHasFx = false;
+        for (const auto& l_oE : l_spA1->f_Atlases().m_vEntries) l_bIdleHasFx |= l_oE.m_pAtlas == &l_spFx1->f_Atlas();
+        for (const auto& l_oE : l_spD->f_Atlases().m_vEntries) l_bDoorHasFx |= l_oE.m_pAtlas == &l_spFx1->f_Atlas();
+        CHECK(l_bIdleHasFx && l_bDoorHasFx, "the idle and door clips share one fx atlas (it was loaded twice before)");
+        const int l_iTexturesAfterBoth = l_oRen.m_iMade;
+        CHECK(l_iTexturesAfterBoth == 2, "fx.png and game.png uploaded once each, not once per clip file");
+        CHECK(!l_spFx1->f_PageTextures().empty() && l_spFx1->f_PageTextures()[0] != g_u16SpriteAtlasTexture, "the atlas page is a real texture");
+        CHECK(std::string(l_spA1->f_Type()) == "AnimRes" && l_spA1->f_Name() == l_spA1->f_Path(), "a resource is a named, typed Object");
 
         // ---- failures: cached once, never null ----
-        auto missing = rm.get<AtlasRes>("media/atlas/nope.atlas");
-        CHECK(missing && !missing->ok() && !missing->error().empty(), "a missing file is a Failed resource with its error");
-        CHECK(rm.get<AtlasRes>("media/atlas/nope.atlas") == missing, "the failure is cached (not read again)");
+        auto l_spMissing = l_oRm.f_Get<AtlasRes>("media/atlas/nope.atlas");
+        CHECK(l_spMissing && !l_spMissing->f_Ok() && !l_spMissing->f_Error().empty(), "a missing file is a Failed resource with its error");
+        CHECK(l_oRm.f_Get<AtlasRes>("media/atlas/nope.atlas") == l_spMissing, "the failure is cached (not read again)");
 
         // ---- the game's sprite atlas, provided ----
-        toms::AtlasFile spriteAtlas;
-        spriteAtlas.regions.push_back({});
-        auto provided = rm.provide<AtlasRes>(ResourceManager::kSpriteAtlas, [&](AtlasRes& r) { r.setProvided(spriteAtlas); });
-        CHECK(provided->ok() && provided->pageTextures().empty(), "a provided atlas draws with the sprite texture");
-        const int pv = provided->version();
-        auto again = rm.provide<AtlasRes>(ResourceManager::kSpriteAtlas, [&](AtlasRes& r) { r.setProvided(spriteAtlas); });
-        CHECK(again == provided && provided->version() == pv + 1, "providing again updates the same object");
-        rm.setPathMapper([](const std::string& p) {
-            return p.size() >= 16 && p.compare(p.size() - 16, 16, "atlas/game.atlas") == 0 ? std::string(ResourceManager::kSpriteAtlas) : p;
+        toms::AtlasFile l_oSpriteAtlas;
+        l_oSpriteAtlas.m_vRegions.push_back({});
+        auto l_spProvided = l_oRm.f_Provide<AtlasRes>(ResourceManager::m_pszSpriteAtlas, [&](AtlasRes& l_oR) { l_oR.f_SetProvided(l_oSpriteAtlas); });
+        CHECK(l_spProvided->f_Ok() && l_spProvided->f_PageTextures().empty(), "a provided atlas draws with the sprite texture");
+        const int l_iPv = l_spProvided->f_Version();
+        auto l_spAgain = l_oRm.f_Provide<AtlasRes>(ResourceManager::m_pszSpriteAtlas, [&](AtlasRes& l_oR) { l_oR.f_SetProvided(l_oSpriteAtlas); });
+        CHECK(l_spAgain == l_spProvided && l_spProvided->f_Version() == l_iPv + 1, "providing again updates the same object");
+        l_oRm.f_SetPathMapper([](const std::string& l_strP) {
+            return l_strP.size() >= 16 && l_strP.compare(l_strP.size() - 16, 16, "atlas/game.atlas") == 0 ? std::string(ResourceManager::m_pszSpriteAtlas) : l_strP;
         });
-        CHECK(rm.get<AtlasRes>("media/atlas/game.atlas") == provided, "the path mapper sends game.atlas to the provided atlas");
-        rm.setPathMapper(nullptr);
+        CHECK(l_oRm.f_Get<AtlasRes>("media/atlas/game.atlas") == l_spProvided, "the path mapper sends game.atlas to the provided atlas");
+        l_oRm.f_SetPathMapper(nullptr);
 
         // ---- memory: unused kept until the budget ----
-        a1.reset(); a2.reset(); d.reset(); fx1.reset(); missing.reset(); again.reset();
-        CHECK(rm.unusedBytes() > 0, "unused resources stay cached under the budget");
-        CHECK(rm.get<AnimRes>(idle)->ok() && ren.made == texturesAfterBoth, "asking again costs nothing");
-        rm.setBudget(0);
-        CHECK(rm.unusedBytes() == 0, "a budget of 0 frees every unused resource");
-        CHECK(ren.freed == ren.made, "their textures were freed with them");
-        CHECK(rm.find<AtlasRes>(ResourceManager::kSpriteAtlas) == provided, "a provided resource is never freed");
-        rm.setBudget(64u << 20);
+        l_spA1.reset(); l_spA2.reset(); l_spD.reset(); l_spFx1.reset(); l_spMissing.reset(); l_spAgain.reset();
+        CHECK(l_oRm.f_UnusedBytes() > 0, "unused resources stay cached under the budget");
+        CHECK(l_oRm.f_Get<AnimRes>(l_strIdle)->f_Ok() && l_oRen.m_iMade == l_iTexturesAfterBoth, "asking again costs nothing");
+        l_oRm.f_SetBudget(0);
+        CHECK(l_oRm.f_UnusedBytes() == 0, "a budget of 0 frees every unused resource");
+        CHECK(l_oRen.m_iFreed == l_oRen.m_iMade, "their textures were freed with them");
+        CHECK(l_oRm.f_Find<AtlasRes>(ResourceManager::m_pszSpriteAtlas) == l_spProvided, "a provided resource is never freed");
+        l_oRm.f_SetBudget(64u << 20);
 
         // ---- stamps ----
-        auto before = rm.get<AtlasRes>("media/atlas/fx.atlas");   // base stamp
-        const int made0 = ren.made;
+        auto l_spBefore = l_oRm.f_Get<AtlasRes>("media/atlas/fx.atlas");   // base stamp
+        const int l_iMade0 = l_oRen.m_iMade;
         {
-            ResourceStamp s(rm, "preview");
-            auto inside = rm.get<AnimRes>(door);                   // new in the stamp; fx.atlas was already loaded
-            auto held = rm.get<AtlasRes>("media/atlas/game.atlas"); // new, and still held when the stamp ends
-            CHECK(inside->ok() && held->ok(), "loads inside a stamp");
-            CHECK(ren.made == made0 + 1, "only game.png was new");
-            inside.reset();
+            ResourceStamp l_oS(l_oRm, "preview");
+            auto l_spInside = l_oRm.f_Get<AnimRes>(l_strDoor);                   // new in the stamp; fx.atlas was already loaded
+            auto l_spHeld = l_oRm.f_Get<AtlasRes>("media/atlas/game.atlas"); // new, and still held when the stamp ends
+            CHECK(l_spInside->f_Ok() && l_spHeld->f_Ok(), "loads inside a stamp");
+            CHECK(l_oRen.m_iMade == l_iMade0 + 1, "only game.png was new");
+            l_spInside.reset();
             {
-                auto keepMe = held;
-                rm.keep(keepMe);
+                auto l_spKeepMe = l_spHeld;
+                l_oRm.f_Keep(l_spKeepMe);
             }
-            held.reset();
+            l_spHeld.reset();
         }
-        CHECK(!rm.find<AnimRes>(door), "what the stamp loaded and nobody holds is freed when it ends");
-        CHECK(rm.find<AtlasRes>("media/atlas/fx.atlas") == before, "what was loaded before the stamp stays");
-        CHECK(rm.find<AtlasRes>("media/atlas/game.atlas") != nullptr, "keep() moved it out of the stamp");
-        before.reset();
+        CHECK(!l_oRm.f_Find<AnimRes>(l_strDoor), "what the stamp loaded and nobody holds is freed when it ends");
+        CHECK(l_oRm.f_Find<AtlasRes>("media/atlas/fx.atlas") == l_spBefore, "what was loaded before the stamp stays");
+        CHECK(l_oRm.f_Find<AtlasRes>("media/atlas/game.atlas") != nullptr, "keep() moved it out of the stamp");
+        l_spBefore.reset();
 
         // ---- report ----
-        bool sawFx = false;
-        for (const auto& i : rm.report()) sawFx |= i.type == "AtlasRes" && i.path == "media/atlas/fx.atlas";
-        CHECK(sawFx && rm.totalBytes() > 0, "report lists what is loaded");
+        bool l_bSawFx = false;
+        for (const auto& l_oI : l_oRm.f_Report()) l_bSawFx |= l_oI.m_strType == "AtlasRes" && l_oI.m_strPath == "media/atlas/fx.atlas";
+        CHECK(l_bSawFx && l_oRm.f_TotalBytes() > 0, "report lists what is loaded");
     }
-    CHECK(ren.freed == ren.made, "every texture is freed when the manager goes");
+    CHECK(l_oRen.m_iFreed == l_oRen.m_iMade, "every texture is freed when the manager goes");
 
     // ---- reloading in place ----
     {
-        std::error_code ec;
-        const fs::path dir = fs::temp_directory_path() / "toms_resource_test";
-        fs::create_directories(dir, ec);
-        copyFile("media/atlas/fx.atlas", dir / "fx.atlas");
-        copyFile("media/atlas/fx.png", dir / "fx.png");
-        const std::string atlasPath = (dir / "fx.atlas").generic_string();
-        CountingRenderer r2;
-        ResourceManager rm(&r2);
-        auto atlas = rm.get<AtlasRes>(atlasPath);
-        CHECK(atlas->ok() && atlas->find("dot"), "the copy loads");
-        const int v0 = atlas->version(), c0 = atlas->contentVersion();
-        CHECK(rm.checkFiles() == 0, "nothing changed: nothing reloaded");
-        touch(dir / "fx.atlas", "\n");
-        CHECK(rm.checkFiles() == 1, "a changed .atlas reloads");
-        CHECK(rm.get<AtlasRes>(atlasPath) == atlas && atlas->version() == v0 + 1, "in place: same object, version + 1");
-        touch(dir / "fx.png", std::string(1, '\0'));
-        const int freedBefore = r2.freed;
-        CHECK(rm.checkFiles() == 1 && atlas->contentVersion() > c0 + 1, "a changed page bumps the atlas's content version");
-        CHECK(r2.freed == freedBefore + 1, "the old page texture was freed after the new one was up");
-        writeText(dir / "fx.atlas", "size: 1, 1\n");   // a field before any page: parseAtlas fails
-        touch(dir / "fx.atlas", "");
-        rm.checkFiles();
-        CHECK(atlas->ok() && atlas->find("dot"), "a broken reload keeps the old contents");
+        std::error_code l_oEc;
+        const fs::path l_oDir = fs::temp_directory_path() / "toms_resource_test";
+        fs::create_directories(l_oDir, l_oEc);
+        f_CopyFile("media/atlas/fx.atlas", l_oDir / "fx.atlas");
+        f_CopyFile("media/atlas/fx.png", l_oDir / "fx.png");
+        const std::string l_strAtlasPath = (l_oDir / "fx.atlas").generic_string();
+        CountingRenderer l_oR2;
+        ResourceManager l_oRm(&l_oR2);
+        auto l_spAtlas = l_oRm.f_Get<AtlasRes>(l_strAtlasPath);
+        CHECK(l_spAtlas->f_Ok() && l_spAtlas->f_Find("dot"), "the copy loads");
+        const int l_iV0 = l_spAtlas->f_Version(), l_iC0 = l_spAtlas->f_ContentVersion();
+        CHECK(l_oRm.f_CheckFiles() == 0, "nothing changed: nothing reloaded");
+        f_Touch(l_oDir / "fx.atlas", "\n");
+        CHECK(l_oRm.f_CheckFiles() == 1, "a changed .atlas reloads");
+        CHECK(l_oRm.f_Get<AtlasRes>(l_strAtlasPath) == l_spAtlas && l_spAtlas->f_Version() == l_iV0 + 1, "in place: same object, version + 1");
+        f_Touch(l_oDir / "fx.png", std::string(1, '\0'));
+        const int l_iFreedBefore = l_oR2.m_iFreed;
+        CHECK(l_oRm.f_CheckFiles() == 1 && l_spAtlas->f_ContentVersion() > l_iC0 + 1, "a changed page bumps the atlas's content version");
+        CHECK(l_oR2.m_iFreed == l_iFreedBefore + 1, "the old page texture was freed after the new one was up");
+        f_WriteText(l_oDir / "fx.atlas", "size: 1, 1\n");   // a field before any page: parseAtlas fails
+        f_Touch(l_oDir / "fx.atlas", "");
+        l_oRm.f_CheckFiles();
+        CHECK(l_spAtlas->f_Ok() && l_spAtlas->f_Find("dot"), "a broken reload keeps the old contents");
 
         // a renderer that goes first: textures still held are freed now, not later through a dead pointer
-        rm.detachRenderer();
-        CHECK(r2.freed == r2.made, "detachRenderer frees every texture");
-        const int freedAfterDetach = r2.freed;
-        atlas.reset();
-        rm.releaseUnused();
-        CHECK(r2.freed == freedAfterDetach, "nothing is freed through the renderer after it was detached");
-        fs::remove_all(dir, ec);
+        l_oRm.f_DetachRenderer();
+        CHECK(l_oR2.m_iFreed == l_oR2.m_iMade, "detachRenderer frees every texture");
+        const int l_iFreedAfterDetach = l_oR2.m_iFreed;
+        l_spAtlas.reset();
+        l_oRm.f_ReleaseUnused();
+        CHECK(l_oR2.m_iFreed == l_iFreedAfterDetach, "nothing is freed through the renderer after it was detached");
+        fs::remove_all(l_oDir, l_oEc);
     }
 
     // ---- the manifest: keys, the root folder, type checks, the missing handler, preload ----
     {
-        std::error_code ec;
-        const fs::path dir = fs::temp_directory_path() / "toms_manifest_test";
-        fs::create_directories(dir / "atlas", ec);
-        copyFile("media/atlas/fx.atlas", dir / "atlas" / "fx.atlas");
-        copyFile("media/atlas/fx.png", dir / "atlas" / "fx.png");
-        writeText(dir / "resources.json", R"({"resources": {
+        std::error_code l_oEc;
+        const fs::path l_oDir = fs::temp_directory_path() / "toms_manifest_test";
+        fs::create_directories(l_oDir / "atlas", l_oEc);
+        f_CopyFile("media/atlas/fx.atlas", l_oDir / "atlas" / "fx.atlas");
+        f_CopyFile("media/atlas/fx.png", l_oDir / "atlas" / "fx.png");
+        f_WriteText(l_oDir / "resources.json", R"({"resources": {
             "atlas.fx":   {"type": "atlas", "path": "atlas/fx.atlas", "preload": true},
             "atlas.gone": {"type": "atlas", "path": "atlas/gone.atlas"},
             "anim.wrong": {"type": "anim",  "path": "atlas/fx.png"}}})");
-        ResourceManager rm;
-        rm.setRoot(dir.generic_string());
-        std::vector<std::string> missing;
-        rm.setOnMissing([&](const std::string& name, const std::string&, const std::string&) { missing.push_back(name); });
-        CHECK(rm.loadManifest("resources.json"), "the manifest loads from the root folder");
-        CHECK(rm.has("atlas.fx") && rm.keys().size() == 3, "its keys are known");
-        CHECK(rm.preload() == 0 && rm.find<AtlasRes>("atlas.fx") != nullptr, "preload loads the entries marked preload");
-        auto byKey = rm.get<AtlasRes>("atlas.fx");
-        auto byPath = rm.get<AtlasRes>("atlas/fx.atlas");
-        CHECK(byKey->ok() && byKey == byPath, "a key and its path give the same object");
-        CHECK(rm.resolve("atlas/fx.atlas") == rm.resolve("atlas.fx"), "a path is read under the root, like the key's");
-        CHECK(missing.empty(), "nothing missing so far");
-        auto gone = rm.get<AtlasRes>("atlas.gone");
-        rm.get<AtlasRes>("atlas.gone");
-        CHECK(!gone->ok() && missing.size() == 1 && missing[0] == "atlas.gone", "a missing file is told once, by its key");
-        auto wrong = rm.get<AnimRes>("anim.wrong");
-        CHECK(!wrong->ok() && missing.size() == 2, "a manifest entry read as its type: an atlas is not an anim");
-        auto wrongType = rm.get<AnimRes>("atlas.fx");
-        CHECK(!wrongType->ok() && wrongType->error().find("is a atlas") != std::string::npos, "asking for a key as another type says so");
-        CHECK(!rm.get<AtlasRes>("no/such/file.atlas")->ok() && missing.size() == 4, "a path that is not there is told too");
-        CHECK(!rm.loadManifest("nope.json") && missing.size() == 5, "a missing manifest is told");
-        fs::remove_all(dir, ec);
+        ResourceManager l_oRm;
+        l_oRm.f_SetRoot(l_oDir.generic_string());
+        std::vector<std::string> l_vMissing;
+        l_oRm.f_SetOnMissing([&](const std::string& l_strName, const std::string&, const std::string&) { l_vMissing.push_back(l_strName); });
+        CHECK(l_oRm.f_LoadManifest("resources.json"), "the manifest loads from the root folder");
+        CHECK(l_oRm.f_Has("atlas.fx") && l_oRm.f_Keys().size() == 3, "its keys are known");
+        CHECK(l_oRm.f_Preload() == 0 && l_oRm.f_Find<AtlasRes>("atlas.fx") != nullptr, "preload loads the entries marked preload");
+        auto l_spByKey = l_oRm.f_Get<AtlasRes>("atlas.fx");
+        auto l_spByPath = l_oRm.f_Get<AtlasRes>("atlas/fx.atlas");
+        CHECK(l_spByKey->f_Ok() && l_spByKey == l_spByPath, "a key and its path give the same object");
+        CHECK(l_oRm.f_Resolve("atlas/fx.atlas") == l_oRm.f_Resolve("atlas.fx"), "a path is read under the root, like the key's");
+        CHECK(l_vMissing.empty(), "nothing missing so far");
+        auto l_spGone = l_oRm.f_Get<AtlasRes>("atlas.gone");
+        l_oRm.f_Get<AtlasRes>("atlas.gone");
+        CHECK(!l_spGone->f_Ok() && l_vMissing.size() == 1 && l_vMissing[0] == "atlas.gone", "a missing file is told once, by its key");
+        auto l_spWrong = l_oRm.f_Get<AnimRes>("anim.wrong");
+        CHECK(!l_spWrong->f_Ok() && l_vMissing.size() == 2, "a manifest entry read as its type: an atlas is not an anim");
+        auto l_spWrongType = l_oRm.f_Get<AnimRes>("atlas.fx");
+        CHECK(!l_spWrongType->f_Ok() && l_spWrongType->f_Error().find("is a atlas") != std::string::npos, "asking for a key as another type says so");
+        CHECK(!l_oRm.f_Get<AtlasRes>("no/such/file.atlas")->f_Ok() && l_vMissing.size() == 4, "a path that is not there is told too");
+        CHECK(!l_oRm.f_LoadManifest("nope.json") && l_vMissing.size() == 5, "a missing manifest is told");
+        fs::remove_all(l_oDir, l_oEc);
     }
 
     // ---- the shipped manifest: every entry is there and loads as its type ----
     {
-        ResourceManager rm;
-        rm.setRoot("media");
-        std::vector<std::string> missing;
-        rm.setOnMissing([&](const std::string& name, const std::string& path, const std::string& error) {
-            missing.push_back(name + " (" + path + "): " + error);
+        ResourceManager l_oRm;
+        l_oRm.f_SetRoot("media");
+        std::vector<std::string> l_vMissing;
+        l_oRm.f_SetOnMissing([&](const std::string& l_strName, const std::string& l_strPath, const std::string& l_strError) {
+            l_vMissing.push_back(l_strName + " (" + l_strPath + "): " + l_strError);
         });
-        CHECK(rm.loadManifest("resources.json"), "assets/media/resources.json loads");
-        CHECK(!rm.keys().empty(), "it names some resources");
-        for (const std::string& k : rm.keys()) {
-            const auto* e = rm.entry(k);
-            const std::string t = e ? e->type : std::string();
-            CHECK(e && (e->optional || (t == "folder" ? !toms::vfsListDir(rm.resolve(k)).empty() : toms::vfsExists(rm.resolve(k)))),
-                  ("the manifest's file is there: " + k).c_str());
-            CHECK(t == "texture" || t == "atlas" || t == "anim" || t == "particle" || t == "font" || t == "json" ||
-                  t == "file" || t == "folder", ("a known type: " + k + " (" + t + ")").c_str());
+        CHECK(l_oRm.f_LoadManifest("resources.json"), "assets/media/resources.json loads");
+        CHECK(!l_oRm.f_Keys().empty(), "it names some resources");
+        for (const std::string& l_strK : l_oRm.f_Keys()) {
+            const auto* l_pE = l_oRm.f_Entry(l_strK);
+            const std::string l_strT = l_pE ? l_pE->m_strType : std::string();
+            CHECK(l_pE && (l_pE->m_bOptional || (l_strT == "folder" ? !toms::f_VfsListDir(l_oRm.f_Resolve(l_strK)).empty() : toms::f_VfsExists(l_oRm.f_Resolve(l_strK)))),
+                  ("the manifest's file is there: " + l_strK).c_str());
+            CHECK(l_strT == "texture" || l_strT == "atlas" || l_strT == "anim" || l_strT == "particle" || l_strT == "font" || l_strT == "json" ||
+                  l_strT == "file" || l_strT == "folder", ("a known type: " + l_strK + " (" + l_strT + ")").c_str());
         }
-        rm.preload();
-        for (const std::string& k : rm.keys())
-            if (rm.entry(k)->type == "atlas") rm.get<AtlasRes>(k);
-            else if (rm.entry(k)->type == "anim") rm.get<AnimRes>(k);
-        for (const std::string& m : missing) std::printf("  missing: %s\n", m.c_str());
-        CHECK(missing.empty(), "every shipped manifest entry loads");
+        l_oRm.f_Preload();
+        for (const std::string& l_strK : l_oRm.f_Keys())
+            if (l_oRm.f_Entry(l_strK)->m_strType == "atlas") l_oRm.f_Get<AtlasRes>(l_strK);
+            else if (l_oRm.f_Entry(l_strK)->m_strType == "anim") l_oRm.f_Get<AnimRes>(l_strK);
+        for (const std::string& l_strM : l_vMissing) std::printf("  missing: %s\n", l_strM.c_str());
+        CHECK(l_vMissing.empty(), "every shipped manifest entry loads");
     }
 
     // ---- UTF-8 paths (a non-ASCII folder) ----
     {
-        std::error_code ec;
-        const fs::path dir = fs::temp_directory_path() / toms::vfsPath("toms_資源_test");
-        fs::create_directories(dir, ec);
-        copyFile("media/atlas/fx.atlas", dir / "fx.atlas");
-        copyFile("media/atlas/fx.png", dir / "fx.png");
-        ResourceManager rm;
-        auto atlas = rm.get<AtlasRes>(toms::vfsUtf8(dir / "fx.atlas"));
-        CHECK(atlas->ok() && atlas->find("dot"), "a UTF-8 path with Chinese letters opens");
-        fs::remove_all(dir, ec);
+        std::error_code l_oEc;
+        const fs::path l_oDir = fs::temp_directory_path() / toms::f_VfsPath("toms_資源_test");
+        fs::create_directories(l_oDir, l_oEc);
+        f_CopyFile("media/atlas/fx.atlas", l_oDir / "fx.atlas");
+        f_CopyFile("media/atlas/fx.png", l_oDir / "fx.png");
+        ResourceManager l_oRm;
+        auto l_spAtlas = l_oRm.f_Get<AtlasRes>(toms::f_VfsUtf8(l_oDir / "fx.atlas"));
+        CHECK(l_spAtlas->f_Ok() && l_spAtlas->f_Find("dot"), "a UTF-8 path with Chinese letters opens");
+        fs::remove_all(l_oDir, l_oEc);
     }
 
-    std::printf("resource_test: %s (%d failure(s))\n", g_fail ? "FAILED" : "passed", g_fail);
-    return g_fail ? 1 : 0;
+    std::printf("resource_test: %s (%d failure(s))\n", g_iFail ? "FAILED" : "passed", g_iFail);
+    return g_iFail ? 1 : 0;
 }

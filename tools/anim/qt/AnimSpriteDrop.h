@@ -16,15 +16,15 @@ class AnimSpriteDrop : public QObject
     Q_OBJECT
 public:
     using TimeAt = std::function<float(const QPoint&)>;   // widget position -> clip time
-    AnimSpriteDrop(QWidget* target, TimeAt timeAt);
+    AnimSpriteDrop(QWidget* l_pTarget, TimeAt l_fnTimeAt);
 
 signals:
-    void dropped(const QStringList& refs, float time);
+    void f_Dropped(const QStringList& l_oRefs, float l_fTime);
 
 protected:
-    bool eventFilter(QObject* watched, QEvent* e) override;
+    bool eventFilter(QObject* l_pWatched, QEvent* l_pE) override;
 
 private:
-    QWidget* m_target;
-    TimeAt m_timeAt;
+    QWidget* m_pTarget;
+    TimeAt m_fnTimeAt;
 };

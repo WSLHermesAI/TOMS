@@ -7,149 +7,149 @@
 
 using namespace toms;
 
-static int g_fail = 0;
-#define CHECK(cond, msg) do { if(!(cond)){ printf("FAIL: %s\n", msg); g_fail++; } } while(0)
+static int g_iFail = 0;
+#define CHECK(cond, msg) do { if(!(cond)){ printf("FAIL: %s\n", msg); g_iFail++; } } while(0)
 
 namespace {   // test-local: toms_tests links every test into one program
 struct MockContext : ConditionContext {
-    std::set<std::string> flags;
-    int beat = 0;
-    std::map<std::string, int> items;
-    std::map<std::string, int> stats;
-    std::set<std::string> missionsComplete, missionsActive, stagesCleared;
+    std::set<std::string> m_setFlags;
+    int m_iBeat = 0;
+    std::map<std::string, int> m_mapItems;
+    std::map<std::string, int> m_mapStats;
+    std::set<std::string> m_setMissionsComplete, m_setMissionsActive, m_setStagesCleared;
 
-    bool storyFlagSet(const std::string& f) const override { return flags.count(f) != 0; }
-    int  storyBeat() const override { return beat; }
-    bool itemHeld(const std::string& id, int count) const override {
-        auto it = items.find(id); return it != items.end() && it->second >= count;
+    bool f_StoryFlagSet(const std::string& l_strF) const override { return m_setFlags.count(l_strF) != 0; }
+    int  f_StoryBeat() const override { return m_iBeat; }
+    bool f_ItemHeld(const std::string& l_strId, int l_iCount) const override {
+        auto l_itIt = m_mapItems.find(l_strId); return l_itIt != m_mapItems.end() && l_itIt->second >= l_iCount;
     }
-    int statValue(const std::string& s) const override {
-        auto it = stats.find(s); return it == stats.end() ? 0 : it->second;
+    int f_StatValue(const std::string& l_strS) const override {
+        auto l_itIt = m_mapStats.find(l_strS); return l_itIt == m_mapStats.end() ? 0 : l_itIt->second;
     }
-    bool missionComplete(const std::string& id) const override { return missionsComplete.count(id) != 0; }
-    bool missionActive(const std::string& id) const override { return missionsActive.count(id) != 0; }
-    bool stageCleared(const std::string& id) const override { return stagesCleared.count(id) != 0; }
+    bool f_MissionComplete(const std::string& l_strId) const override { return m_setMissionsComplete.count(l_strId) != 0; }
+    bool f_MissionActive(const std::string& l_strId) const override { return m_setMissionsActive.count(l_strId) != 0; }
+    bool f_StageCleared(const std::string& l_strId) const override { return m_setStagesCleared.count(l_strId) != 0; }
 
     // ---- S3 leaves (docs/story/STORY_DATA_SCHEMA.md section 2.2) ----
-    std::map<std::string, std::string> choices;        // choiceId -> optionId
-    std::map<std::string, std::string> sideStories;    // sideStoryId -> state
-    std::map<std::string, int> counters;
-    int cycle = 1;
-    bool choiceMade(const std::string& c, const std::string& o) const override {
-        auto it = choices.find(c); return it != choices.end() && it->second == o;
+    std::map<std::string, std::string> m_mapChoices;        // choiceId -> optionId
+    std::map<std::string, std::string> m_mapSideStories;    // sideStoryId -> state
+    std::map<std::string, int> m_mapCounters;
+    int m_iCycle = 1;
+    bool f_ChoiceMade(const std::string& l_strC, const std::string& l_strO) const override {
+        auto l_itIt = m_mapChoices.find(l_strC); return l_itIt != m_mapChoices.end() && l_itIt->second == l_strO;
     }
-    std::string sideStoryState(const std::string& id) const override {
-        auto it = sideStories.find(id); return it == sideStories.end() ? std::string() : it->second;
+    std::string f_SideStoryState(const std::string& l_strId) const override {
+        auto l_itIt = m_mapSideStories.find(l_strId); return l_itIt == m_mapSideStories.end() ? std::string() : l_itIt->second;
     }
-    int counter(const std::string& name) const override {
-        auto it = counters.find(name); return it == counters.end() ? 0 : it->second;
+    int f_Counter(const std::string& l_strName) const override {
+        auto l_itIt = m_mapCounters.find(l_strName); return l_itIt == m_mapCounters.end() ? 0 : l_itIt->second;
     }
     // M9: a separate set from `flags` above -- storyFlagSet reads META flags, runFlagSet reads
     // RUN flags, and they are genuinely different namespaces in the real game (game_condition.h).
-    std::set<std::string> runFlags;
-    bool runFlagSet(const std::string& f) const override { return runFlags.count(f) != 0; }
-    int cycleIndex() const override { return cycle; }
+    std::set<std::string> m_setRunFlags;
+    bool f_RunFlagSet(const std::string& l_strF) const override { return m_setRunFlags.count(l_strF) != 0; }
+    int f_CycleIndex() const override { return m_iCycle; }
     // M7
-    int shards = 0;
-    int memoryShardCount() const override { return shards; }
-    int deaths = 0;
-    int deathsNonBoss() const override { return deaths; }
+    int m_iShards = 0;
+    int f_MemoryShardCount() const override { return m_iShards; }
+    int m_iDeaths = 0;
+    int f_DeathsNonBoss() const override { return m_iDeaths; }
 };
 }  // namespace
 
 int main() {
-    MockContext ctx;
-    ctx.beat = 4;
-    ctx.flags = {"beat_04_scholar_hint_given"};
-    ctx.items = {{"key_blue", 1}, {"gem_atk", 3}};
-    ctx.stats = {{"atk", 20}, {"def", 5}};
-    ctx.stagesCleared = {"stage_03"};
-    ctx.missionsComplete = {"m_intro_once"};
+    MockContext l_oCtx;
+    l_oCtx.m_iBeat = 4;
+    l_oCtx.m_setFlags = {"beat_04_scholar_hint_given"};
+    l_oCtx.m_mapItems = {{"key_blue", 1}, {"gem_atk", 3}};
+    l_oCtx.m_mapStats = {{"atk", 20}, {"def", 5}};
+    l_oCtx.m_setStagesCleared = {"stage_03"};
+    l_oCtx.m_setMissionsComplete = {"m_intro_once"};
 
-    CHECK(evaluate(nlohmann::json(), ctx), "null condition is always true");
+    CHECK(f_Evaluate(nlohmann::json(), l_oCtx), "null condition is always true");
 
     // ---- S3: the four new leaf types (docs/story/STORY_DATA_SCHEMA.md section 2.2) ----
-    ctx.choices = {{"c_motive", "opt_know_self"}};
-    ctx.sideStories = {{"ss_08", "completed"}};
-    ctx.counters = {{"insight", 6}, {"resolve", -3}};
-    ctx.cycle = 2;
-    CHECK(evaluate({{"type","choiceMade"},{"choiceId","c_motive"},{"optionId","opt_know_self"}}, ctx),
+    l_oCtx.m_mapChoices = {{"c_motive", "opt_know_self"}};
+    l_oCtx.m_mapSideStories = {{"ss_08", "completed"}};
+    l_oCtx.m_mapCounters = {{"insight", 6}, {"resolve", -3}};
+    l_oCtx.m_iCycle = 2;
+    CHECK(f_Evaluate({{"type","choiceMade"},{"choiceId","c_motive"},{"optionId","opt_know_self"}}, l_oCtx),
           "choiceMade: the taken option is true");
-    CHECK(!evaluate({{"type","choiceMade"},{"choiceId","c_motive"},{"optionId","opt_avenge"}}, ctx),
+    CHECK(!f_Evaluate({{"type","choiceMade"},{"choiceId","c_motive"},{"optionId","opt_avenge"}}, l_oCtx),
           "choiceMade: an option not taken is false");
-    CHECK(!evaluate({{"type","choiceMade"},{"choiceId","c_never"},{"optionId","opt_x"}}, ctx),
+    CHECK(!f_Evaluate({{"type","choiceMade"},{"choiceId","c_never"},{"optionId","opt_x"}}, l_oCtx),
           "choiceMade: an unmade choice is false");
-    CHECK(evaluate({{"type","sideStoryState"},{"sideStoryId","ss_08"},{"state","completed"}}, ctx),
+    CHECK(f_Evaluate({{"type","sideStoryState"},{"sideStoryId","ss_08"},{"state","completed"}}, l_oCtx),
           "sideStoryState: matching state is true");
-    CHECK(!evaluate({{"type","sideStoryState"},{"sideStoryId","ss_08"},{"state","failed"}}, ctx),
+    CHECK(!f_Evaluate({{"type","sideStoryState"},{"sideStoryId","ss_08"},{"state","failed"}}, l_oCtx),
           "sideStoryState: a different state is false");
-    CHECK(!evaluate({{"type","sideStoryState"},{"sideStoryId","ss_09"},{"state","completed"}}, ctx),
+    CHECK(!f_Evaluate({{"type","sideStoryState"},{"sideStoryId","ss_09"},{"state","completed"}}, l_oCtx),
           "sideStoryState: an unknown side story is false");
-    CHECK(evaluate({{"type","counterAtLeast"},{"counter","insight"},{"min",6}}, ctx),
+    CHECK(f_Evaluate({{"type","counterAtLeast"},{"counter","insight"},{"min",6}}, l_oCtx),
           "counterAtLeast: at the threshold");
-    CHECK(!evaluate({{"type","counterAtLeast"},{"counter","insight"},{"min",7}}, ctx),
+    CHECK(!f_Evaluate({{"type","counterAtLeast"},{"counter","insight"},{"min",7}}, l_oCtx),
           "counterAtLeast: below the threshold");
-    CHECK(!evaluate({{"type","counterAtLeast"},{"counter","resolve"},{"min",0}}, ctx),
+    CHECK(!f_Evaluate({{"type","counterAtLeast"},{"counter","resolve"},{"min",0}}, l_oCtx),
           "counterAtLeast: a negative counter fails a positive floor");
-    CHECK(evaluate({{"type","cycleIndexAtLeast"},{"min",2}}, ctx),
+    CHECK(f_Evaluate({{"type","cycleIndexAtLeast"},{"min",2}}, l_oCtx),
           "cycleIndexAtLeast: second cycle passes min 2");
-    CHECK(!evaluate({{"type","cycleIndexAtLeast"},{"min",3}}, ctx),
+    CHECK(!f_Evaluate({{"type","cycleIndexAtLeast"},{"min",3}}, l_oCtx),
           "cycleIndexAtLeast: second cycle fails min 3");
     // combinators and fail-closed behaviour are unchanged by the additions
-    CHECK(evaluate({{"all", nlohmann::json::array({{{"type","choiceMade"},{"choiceId","c_motive"},{"optionId","opt_know_self"}},
-                                                   {{"type","counterAtLeast"},{"counter","insight"},{"min",6}}})}}, ctx),
+    CHECK(f_Evaluate({{"all", nlohmann::json::array({{{"type","choiceMade"},{"choiceId","c_motive"},{"optionId","opt_know_self"}},
+                                                   {{"type","counterAtLeast"},{"counter","insight"},{"min",6}}})}}, l_oCtx),
           "the new leaves compose with all()");
-    CHECK(evaluate({{"not", {{"type","cycleIndexAtLeast"},{"min",3}}}}, ctx),
+    CHECK(f_Evaluate({{"not", {{"type","cycleIndexAtLeast"},{"min",3}}}}, l_oCtx),
           "the new leaves compose with not()");
 
-    CHECK(evaluate({{"type","storyBeatAtLeast"},{"value",4}}, ctx), "storyBeatAtLeast: 4>=4 true");
-    CHECK(!evaluate({{"type","storyBeatAtLeast"},{"value",5}}, ctx), "storyBeatAtLeast: 4>=5 false");
-    CHECK(evaluate({{"type","storyFlagSet"},{"flag","beat_04_scholar_hint_given"}}, ctx), "storyFlagSet: set flag true");
-    CHECK(!evaluate({{"type","storyFlagSet"},{"flag","never_set"}}, ctx), "storyFlagSet: unset flag false");
-    ctx.runFlags.insert("event_ev_library_torn_page");
-    CHECK(evaluate({{"type","runFlagSet"},{"flag","event_ev_library_torn_page"}}, ctx), "runFlagSet: set run flag true");
-    CHECK(!evaluate({{"type","runFlagSet"},{"flag","beat_04_scholar_hint_given"}}, ctx),
+    CHECK(f_Evaluate({{"type","storyBeatAtLeast"},{"value",4}}, l_oCtx), "storyBeatAtLeast: 4>=4 true");
+    CHECK(!f_Evaluate({{"type","storyBeatAtLeast"},{"value",5}}, l_oCtx), "storyBeatAtLeast: 4>=5 false");
+    CHECK(f_Evaluate({{"type","storyFlagSet"},{"flag","beat_04_scholar_hint_given"}}, l_oCtx), "storyFlagSet: set flag true");
+    CHECK(!f_Evaluate({{"type","storyFlagSet"},{"flag","never_set"}}, l_oCtx), "storyFlagSet: unset flag false");
+    l_oCtx.m_setRunFlags.insert("event_ev_library_torn_page");
+    CHECK(f_Evaluate({{"type","runFlagSet"},{"flag","event_ev_library_torn_page"}}, l_oCtx), "runFlagSet: set run flag true");
+    CHECK(!f_Evaluate({{"type","runFlagSet"},{"flag","beat_04_scholar_hint_given"}}, l_oCtx),
           "runFlagSet: a META flag of the same kind of name is NOT a run flag -- separate namespaces");
-    CHECK(evaluate({{"type","itemHeld"},{"itemId","key_blue"},{"count",1}}, ctx), "itemHeld: held true");
-    CHECK(!evaluate({{"type","itemHeld"},{"itemId","key_red"},{"count",1}}, ctx), "itemHeld: not held false");
-    CHECK(evaluate({{"type","itemHeld"},{"itemId","gem_atk"},{"count",3}}, ctx), "itemHeld: exact count true");
-    CHECK(!evaluate({{"type","itemHeld"},{"itemId","gem_atk"},{"count",4}}, ctx), "itemHeld: insufficient count false");
-    CHECK(evaluate({{"type","statAtLeast"},{"stat","atk"},{"value",20}}, ctx), "statAtLeast: 20>=20 true");
-    CHECK(!evaluate({{"type","statAtLeast"},{"stat","atk"},{"value",21}}, ctx), "statAtLeast: 20>=21 false");
-    CHECK(evaluate({{"type","missionComplete"},{"missionId","m_intro_once"}}, ctx), "missionComplete: complete true");
-    CHECK(!evaluate({{"type","missionComplete"},{"missionId","m_other"}}, ctx), "missionComplete: not complete false");
-    CHECK(evaluate({{"type","stageCleared"},{"stageId","stage_03"}}, ctx), "stageCleared: cleared true");
-    CHECK(!evaluate({{"type","stageCleared"},{"stageId","stage_09"}}, ctx), "stageCleared: not cleared false");
+    CHECK(f_Evaluate({{"type","itemHeld"},{"itemId","key_blue"},{"count",1}}, l_oCtx), "itemHeld: held true");
+    CHECK(!f_Evaluate({{"type","itemHeld"},{"itemId","key_red"},{"count",1}}, l_oCtx), "itemHeld: not held false");
+    CHECK(f_Evaluate({{"type","itemHeld"},{"itemId","gem_atk"},{"count",3}}, l_oCtx), "itemHeld: exact count true");
+    CHECK(!f_Evaluate({{"type","itemHeld"},{"itemId","gem_atk"},{"count",4}}, l_oCtx), "itemHeld: insufficient count false");
+    CHECK(f_Evaluate({{"type","statAtLeast"},{"stat","atk"},{"value",20}}, l_oCtx), "statAtLeast: 20>=20 true");
+    CHECK(!f_Evaluate({{"type","statAtLeast"},{"stat","atk"},{"value",21}}, l_oCtx), "statAtLeast: 20>=21 false");
+    CHECK(f_Evaluate({{"type","missionComplete"},{"missionId","m_intro_once"}}, l_oCtx), "missionComplete: complete true");
+    CHECK(!f_Evaluate({{"type","missionComplete"},{"missionId","m_other"}}, l_oCtx), "missionComplete: not complete false");
+    CHECK(f_Evaluate({{"type","stageCleared"},{"stageId","stage_03"}}, l_oCtx), "stageCleared: cleared true");
+    CHECK(!f_Evaluate({{"type","stageCleared"},{"stageId","stage_09"}}, l_oCtx), "stageCleared: not cleared false");
 
-    nlohmann::json allExpr = { {"all", nlohmann::json::array({
+    nlohmann::json l_jAllExpr = { {"all", nlohmann::json::array({
         nlohmann::json{{"type","storyBeatAtLeast"},{"value",4}},
         nlohmann::json{{"type","itemHeld"},{"itemId","key_blue"},{"count",1}}
     })} };
-    CHECK(evaluate(allExpr, ctx), "all: both sub-conditions true -> true");
+    CHECK(f_Evaluate(l_jAllExpr, l_oCtx), "all: both sub-conditions true -> true");
 
-    nlohmann::json allExprFail = { {"all", nlohmann::json::array({
+    nlohmann::json l_jAllExprFail = { {"all", nlohmann::json::array({
         nlohmann::json{{"type","storyBeatAtLeast"},{"value",4}},
         nlohmann::json{{"type","itemHeld"},{"itemId","key_red"},{"count",1}}
     })} };
-    CHECK(!evaluate(allExprFail, ctx), "all: one sub-condition false -> false");
+    CHECK(!f_Evaluate(l_jAllExprFail, l_oCtx), "all: one sub-condition false -> false");
 
-    nlohmann::json anyExpr = { {"any", nlohmann::json::array({
+    nlohmann::json l_jAnyExpr = { {"any", nlohmann::json::array({
         nlohmann::json{{"type","itemHeld"},{"itemId","key_red"},{"count",1}},
         nlohmann::json{{"type","statAtLeast"},{"stat","atk"},{"value",20}}
     })} };
-    CHECK(evaluate(anyExpr, ctx), "any: one sub-condition true -> true");
+    CHECK(f_Evaluate(l_jAnyExpr, l_oCtx), "any: one sub-condition true -> true");
 
-    nlohmann::json anyExprFail = { {"any", nlohmann::json::array({
+    nlohmann::json l_jAnyExprFail = { {"any", nlohmann::json::array({
         nlohmann::json{{"type","itemHeld"},{"itemId","key_red"},{"count",1}},
         nlohmann::json{{"type","statAtLeast"},{"stat","atk"},{"value",99}}
     })} };
-    CHECK(!evaluate(anyExprFail, ctx), "any: all sub-conditions false -> false");
+    CHECK(!f_Evaluate(l_jAnyExprFail, l_oCtx), "any: all sub-conditions false -> false");
 
-    nlohmann::json notExpr = { {"not", nlohmann::json{{"type","itemHeld"},{"itemId","key_red"},{"count",1}}} };
-    CHECK(evaluate(notExpr, ctx), "not: negates a false leaf -> true");
+    nlohmann::json l_jNotExpr = { {"not", nlohmann::json{{"type","itemHeld"},{"itemId","key_red"},{"count",1}}} };
+    CHECK(f_Evaluate(l_jNotExpr, l_oCtx), "not: negates a false leaf -> true");
 
     // Nested combinators, matching the architecture-doc §9.1 worked-example shape.
-    nlohmann::json nested = { {"all", nlohmann::json::array({
+    nlohmann::json l_jNested = { {"all", nlohmann::json::array({
         nlohmann::json{{"type","storyBeatAtLeast"},{"value",4}},
         nlohmann::json{{"type","itemHeld"},{"itemId","key_blue"},{"count",1}},
         nlohmann::json{{"any", nlohmann::json::array({
@@ -157,28 +157,28 @@ int main() {
             nlohmann::json{{"type","statAtLeast"},{"stat","atk"},{"value",99}}
         })}}
     })} };
-    CHECK(evaluate(nested, ctx), "nested all/any evaluates correctly");
+    CHECK(f_Evaluate(l_jNested, l_oCtx), "nested all/any evaluates correctly");
 
-    CHECK(!evaluate(nlohmann::json{{"type","somethingMadeUp"}}, ctx), "unknown leaf type fails closed");
-    CHECK(!evaluate(nlohmann::json{{"all", "not-an-array"}}, ctx), "malformed 'all' (not an array) fails closed");
-    CHECK(!evaluate(nlohmann::json::array({1, 2, 3}), ctx), "a bare JSON array (not an object) fails closed");
+    CHECK(!f_Evaluate(nlohmann::json{{"type","somethingMadeUp"}}, l_oCtx), "unknown leaf type fails closed");
+    CHECK(!f_Evaluate(nlohmann::json{{"all", "not-an-array"}}, l_oCtx), "malformed 'all' (not an array) fails closed");
+    CHECK(!f_Evaluate(nlohmann::json::array({1, 2, 3}), l_oCtx), "a bare JSON array (not an object) fails closed");
 
     // M7: "always" -- the endings resolver's guaranteed-fallback leaf.
-    CHECK(evaluate(nlohmann::json{{"type","always"}}, ctx), "'always' is unconditionally true");
+    CHECK(f_Evaluate(nlohmann::json{{"type","always"}}, l_oCtx), "'always' is unconditionally true");
 
     // M7: "memoryShards" -- e_07's own condition.
-    ctx.shards = 4;
-    CHECK(!evaluate(nlohmann::json{{"type","memoryShards"},{"min",5}}, ctx), "4 shards does not satisfy a min of 5");
-    ctx.shards = 5;
-    CHECK(evaluate(nlohmann::json{{"type","memoryShards"},{"min",5}}, ctx), "5 shards satisfies a min of 5");
+    l_oCtx.m_iShards = 4;
+    CHECK(!f_Evaluate(nlohmann::json{{"type","memoryShards"},{"min",5}}, l_oCtx), "4 shards does not satisfy a min of 5");
+    l_oCtx.m_iShards = 5;
+    CHECK(f_Evaluate(nlohmann::json{{"type","memoryShards"},{"min",5}}, l_oCtx), "5 shards satisfies a min of 5");
 
     // M7: "deathsNonBoss" -- e_13's own condition, a dedicated field, not a generic named counter.
-    ctx.deaths = 11;
-    CHECK(!evaluate(nlohmann::json{{"type","deathsNonBoss"},{"min",12}}, ctx), "11 non-boss deaths does not satisfy a min of 12");
-    ctx.deaths = 12;
-    CHECK(evaluate(nlohmann::json{{"type","deathsNonBoss"},{"min",12}}, ctx), "12 non-boss deaths satisfies a min of 12");
+    l_oCtx.m_iDeaths = 11;
+    CHECK(!f_Evaluate(nlohmann::json{{"type","deathsNonBoss"},{"min",12}}, l_oCtx), "11 non-boss deaths does not satisfy a min of 12");
+    l_oCtx.m_iDeaths = 12;
+    CHECK(f_Evaluate(nlohmann::json{{"type","deathsNonBoss"},{"min",12}}, l_oCtx), "12 non-boss deaths satisfies a min of 12");
 
-    if (g_fail == 0) { printf("condition_eval_test: ALL PASS (29 checks)\n"); return 0; }
-    printf("condition_eval_test: %d CHECK(s) FAILED\n", g_fail);
+    if (g_iFail == 0) { printf("condition_eval_test: ALL PASS (29 checks)\n"); return 0; }
+    printf("condition_eval_test: %d CHECK(s) FAILED\n", g_iFail);
     return 1;
 }

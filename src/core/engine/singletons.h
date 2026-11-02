@@ -17,7 +17,7 @@
 
 namespace toms {
 
-void onReleaseSingletons(const char* name, std::function<void()> release);
-void releaseSingletons();
+void f_OnReleaseSingletons(const char* l_pszName, std::function<void()> l_fnRelease);
+void f_ReleaseSingletons();
 
 } // namespace toms

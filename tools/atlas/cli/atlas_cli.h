@@ -6,7 +6,7 @@
 
 // args: the arguments after the program name, UTF-8. Returns the exit code
 // (0 ok, 1 warnings with --strict, 2 errors, 3 bad command line).
-int atlasCliMain(const std::vector<std::string>& args);
+int f_AtlasCliMain(const std::vector<std::string>& l_vArgs);
 // The process's arguments (without the program name) as UTF-8 -- on Windows read from the wide
 // command line, since argv cannot hold characters outside the ANSI code page.
-std::vector<std::string> utf8CommandLine(int argc, char** argv);
+std::vector<std::string> f_Utf8CommandLine(int l_iArgc, char** l_pArgv);

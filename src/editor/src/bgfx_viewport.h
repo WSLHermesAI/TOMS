@@ -19,73 +19,73 @@
 class BgfxViewport : public QWidget {
     Q_OBJECT
 public:
-    explicit BgfxViewport(QWidget* parent = nullptr);
+    explicit BgfxViewport(QWidget* l_pParent = nullptr);
     ~BgfxViewport() override;
 
     QPaintEngine* paintEngine() const override { return nullptr; }
 
-    bool restartGame(const QString& stage = QStringLiteral("stage01"));
-    void loadStage(const QString& id);
+    bool f_RestartGame(const QString& l_oStage = QStringLiteral("stage01"));
+    void f_LoadStage(const QString& l_oId);
     // A test scenario (docs/gameplay/08_TEST_SCENARIOS.md): a fresh game, straight in the scenario's scene. When the view is not
     // up yet the scenario waits and starts with the game. False (with the reason) when the scenario cannot start.
-    bool startScenario(const QString& path, QString& error);
-    void setShowStats(bool on);
+    bool f_StartScenario(const QString& l_oPath, QString& l_oError);
+    void f_SetShowStats(bool l_bOn);
     // Smoke test: after `frames` frames, save the viewport (bgfx screenshot) to `png` and emit smokeTestDone.
-    void runSmokeTest(int frames, const QString& png);
-    void setDebugOverlay(bool on);
+    void f_RunSmokeTest(int l_iFrames, const QString& l_oPng);
+    void f_SetDebugOverlay(bool l_bOn);
     // The game's speed (the battle editor): 0 pauses it (it still draws), 2 runs it twice as fast.
-    void setTimeScale(double s) { timeScale_ = s < 0.0 ? 0.0 : s; }
+    void f_SetTimeScale(double l_dS) { m_dTimeScale = l_dS < 0.0 ? 0.0 : l_dS; }
     // Inspect (the UI editor): a left click is not passed to the game; inspectClicked() says where it was.
-    void setInspectMode(bool on) { inspectMode_ = on; }
-    bool inspectMode() const { return inspectMode_; }
-    int frameCount() const { return frameCount_; }   // frames drawn since the window opened (smoke tests)
-    QString rendererName() const;
-    QString assetDir() const;
-    toms::next::GameSession& session() { return session_; }
+    void f_SetInspectMode(bool l_bOn) { m_bInspectMode = l_bOn; }
+    bool f_InspectMode() const { return m_bInspectMode; }
+    int f_FrameCount() const { return m_iFrameCount; }   // frames drawn since the window opened (smoke tests)
+    QString f_RendererName() const;
+    QString f_AssetDir() const;
+    toms::next::GameSession& f_Session() { return m_oSession; }
 
 signals:
-    void statusMessage(const QString& text);
-    void frameInfo(double fps, int quads, int drawCalls);
-    void startFailed(const QString& title, const QString& text);
-    void smokeTestDone();
-    void inspectClicked();   // inspect mode: a left click; the UI's hover element is the one under it
+    void f_StatusMessage(const QString& l_oText);
+    void f_FrameInfo(double l_dFps, int l_iQuads, int l_iDrawCalls);
+    void f_StartFailed(const QString& l_oTitle, const QString& l_oText);
+    void f_SmokeTestDone();
+    void f_InspectClicked();   // inspect mode: a left click; the UI's hover element is the one under it
 
 protected:
-    void showEvent(QShowEvent* e) override;
-    void resizeEvent(QResizeEvent* e) override;
+    void showEvent(QShowEvent* l_pE) override;
+    void resizeEvent(QResizeEvent* l_pE) override;
     void paintEvent(QPaintEvent*) override {}
-    void keyPressEvent(QKeyEvent* e) override;
-    void keyReleaseEvent(QKeyEvent* e) override;
-    void mousePressEvent(QMouseEvent* e) override;
-    void mouseReleaseEvent(QMouseEvent* e) override;
-    void mouseMoveEvent(QMouseEvent* e) override;
-    void wheelEvent(QWheelEvent* e) override;
-    void focusOutEvent(QFocusEvent* e) override;
-    void leaveEvent(QEvent* e) override;
+    void keyPressEvent(QKeyEvent* l_pE) override;
+    void keyReleaseEvent(QKeyEvent* l_pE) override;
+    void mousePressEvent(QMouseEvent* l_pE) override;
+    void mouseReleaseEvent(QMouseEvent* l_pE) override;
+    void mouseMoveEvent(QMouseEvent* l_pE) override;
+    void wheelEvent(QWheelEvent* l_pE) override;
+    void focusOutEvent(QFocusEvent* l_pE) override;
+    void leaveEvent(QEvent* l_pE) override;
     bool focusNextPrevChild(bool) override { return false; }   // Tab belongs to the game (stage select)
 
 private:
-    bool ensureBgfx();
-    void tick();
-    void setKey(int qtKey, bool down);
-    void updateMouse(const QPointF& logicalPos, Qt::MouseButtons buttons);
-    uint32_t pixelWidth() const;
-    uint32_t pixelHeight() const;
+    bool f_EnsureBgfx();
+    void f_Tick();
+    void f_SetKey(int l_iQtKey, bool l_bDown);
+    void f_UpdateMouse(const QPointF& l_oLogicalPos, Qt::MouseButtons l_oButtons);
+    uint32_t f_PixelWidth() const;
+    uint32_t f_PixelHeight() const;
 
-    QTimer timer_;
-    QElapsedTimer clock_;
-    toms::next::GameSession session_;
-    toms::next::InputState input_;
-    QString pendingStage_ = QStringLiteral("stage01");
-    QString pendingScenario_;   // startScenario before bgfx was up: started by showEvent
-    bool bgfxReady_ = false;
-    bool inspectMode_ = false;
-    double timeScale_ = 1.0;
-    double timeCarry_ = 0.0;   // the part of a millisecond a scaled frame left over
-    bool failed_ = false;
-    int framesSinceReport_ = 0;
-    qint64 msSinceReport_ = 0;
-    int frameCount_ = 0;
-    int smokeFrames_ = 0;
-    QString smokePng_;
+    QTimer m_oTimer;
+    QElapsedTimer m_oClock;
+    toms::next::GameSession m_oSession;
+    toms::next::InputState m_oInput;
+    QString m_oPendingStage = QStringLiteral("stage01");
+    QString m_oPendingScenario;   // startScenario before bgfx was up: started by showEvent
+    bool m_bBgfxReady = false;
+    bool m_bInspectMode = false;
+    double m_dTimeScale = 1.0;
+    double m_dTimeCarry = 0.0;   // the part of a millisecond a scaled frame left over
+    bool m_bFailed = false;
+    int m_iFramesSinceReport = 0;
+    qint64 m_i64MsSinceReport = 0;
+    int m_iFrameCount = 0;
+    int m_iSmokeFrames = 0;
+    QString m_oSmokePng;
 };

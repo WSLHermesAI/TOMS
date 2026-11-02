@@ -24,57 +24,57 @@ namespace toms {
 class ConditionContext {
 public:
     virtual ~ConditionContext() = default;
-    virtual bool storyFlagSet(const std::string& flag) const = 0;
-    virtual int  storyBeat() const = 0;
-    virtual bool itemHeld(const std::string& itemId, int count) const = 0;
-    virtual int  statValue(const std::string& stat) const = 0;   // "atk"/"def"/"hp"/"lv"/"gold"/"exp"
-    virtual bool missionComplete(const std::string& missionId) const = 0;
-    virtual bool missionActive(const std::string& missionId) const = 0;
-    virtual bool stageCleared(const std::string& stageId) const = 0;
+    virtual bool f_StoryFlagSet(const std::string& l_strFlag) const = 0;
+    virtual int  f_StoryBeat() const = 0;
+    virtual bool f_ItemHeld(const std::string& l_strItemId, int l_iCount) const = 0;
+    virtual int  f_StatValue(const std::string& l_strStat) const = 0;   // "atk"/"def"/"hp"/"lv"/"gold"/"exp"
+    virtual bool f_MissionComplete(const std::string& l_strMissionId) const = 0;
+    virtual bool f_MissionActive(const std::string& l_strMissionId) const = 0;
+    virtual bool f_StageCleared(const std::string& l_strStageId) const = 0;
 
     // ---- S3 (docs/story/STORY_DATA_SCHEMA.md section 2.2) --------------------------------------------
     // The four leaves the 70-floor story needs. They are DEFAULTED here rather than pure virtual so
     // every existing context (and every test mock) keeps compiling unchanged and simply answers
     // "no choice made / no counter / cycle 1" -- a mock that does not care cannot accidentally make
     // a gated screen appear.
-    virtual bool choiceMade(const std::string& /*choiceId*/, const std::string& /*optionId*/) const {
+    virtual bool f_ChoiceMade(const std::string& /*choiceId*/, const std::string& /*optionId*/) const {
         return false;
     }
-    virtual std::string sideStoryState(const std::string& /*sideStoryId*/) const { return ""; }
-    virtual int counter(const std::string& /*counter*/) const { return 0; }
-    virtual int cycleIndex() const { return 1; }
+    virtual std::string f_SideStoryState(const std::string& /*sideStoryId*/) const { return ""; }
+    virtual int f_Counter(const std::string& /*counter*/) const { return 0; }
+    virtual int f_CycleIndex() const { return 1; }
     // M7 (docs/story/STORY_DATA_SCHEMA.md §2.2/§7): e_07's own condition ("記憶碎片不足"). Defaulted
     // to 0 for the same "an uninterested mock can't accidentally grant something" reason as the S3
     // leaves above.
-    virtual int memoryShardCount() const { return 0; }
+    virtual int f_MemoryShardCount() const { return 0; }
     // M7: e_13's own condition ("非首領戰死亡累積 ≥12"). RunStoryState::deathsNonBoss() is a
     // dedicated field, not one of the generic named counters (insight/resolve/humanity), so it
     // gets its own leaf rather than being smuggled through "counterAtLeast" under a fake name.
-    virtual int deathsNonBoss() const { return 0; }
+    virtual int f_DeathsNonBoss() const { return 0; }
     // M9: storyFlagSet() above only ever reads the META save's flags (toms::hasStoryFlag) -- the
     // RUN-scoped flags a floor event tile sets on itself ("event_<id>", game_input.cpp) and the
     // ones a choice's own setFlags list writes (e.g. flag_page_returned) live in RunStoryState
     // instead and had no leaf able to read them back at all until a dialogue choice (ss_04) needed
     // to gate on one. Defaulted like the S3/M7 leaves above.
-    virtual bool runFlagSet(const std::string& /*flag*/) const { return false; }
+    virtual bool f_RunFlagSet(const std::string& /*flag*/) const { return false; }
     // NPCs and their events (docs/gameplay/event_editor/08_NPC_DIALOGUE.md): event variables (story/vars.json; a bool is
     // 0 / 1), how many times the player has talked to an NPC this run, and the stage the player is on.
     // Defaulted like the leaves above.
-    virtual int varValue(const std::string& /*var*/) const { return 0; }
-    virtual int talkCount(const std::string& /*npc*/) const { return 0; }
-    virtual std::string currentStage() const { return ""; }
+    virtual int f_VarValue(const std::string& /*var*/) const { return 0; }
+    virtual int f_TalkCount(const std::string& /*npc*/) const { return 0; }
+    virtual std::string f_CurrentStage() const { return ""; }
 };
 
 // A JSON value as an event variable's number: true / false are 1 / 0 (story/vars.json "bool" variables).
-inline int varNumber(const nlohmann::json& v) {
-    if (v.is_boolean()) return v.get<bool>() ? 1 : 0;
-    if (v.is_number()) return v.get<int>();
+inline int f_VarNumber(const nlohmann::json& l_jV) {
+    if (l_jV.is_boolean()) return l_jV.get<bool>() ? 1 : 0;
+    if (l_jV.is_number()) return l_jV.get<int>();
     return 0;
 }
 
 // Recursively evaluates `expr` against `ctx`. A null/non-object `expr` is vacuously true (no
 // requirement). An unrecognized leaf `type`, or a malformed combinator (a missing or
 // wrong-typed array), fails closed (returns false) rather than silently granting access.
-bool evaluate(const nlohmann::json& expr, const ConditionContext& ctx);
+bool f_Evaluate(const nlohmann::json& l_jExpr, const ConditionContext& l_oCtx);
 
 } // namespace toms

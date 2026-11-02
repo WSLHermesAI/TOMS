@@ -79,28 +79,28 @@ namespace toms::anim {
 // name ("linear", "quadraticIn", ..., "backInOut", "stepped"), or a cubic Bezier
 // [x1, y1, x2, y2] like CSS cubic-bezier().
 struct Ease {
-    int kind = 1;                      // tweeny::easing::enumerated as int; kBezier = Bezier
-    float bezier[4] = {0, 0, 1, 1};
-    static constexpr int kBezier = 1000;
+    int m_iKind = 1;                      // tweeny::easing::enumerated as int; kBezier = Bezier
+    float m_arrBezier[4] = {0, 0, 1, 1};
+    static constexpr int m_iBezier = 1000;
 
-    bool operator==(const Ease& o) const;
-    bool operator!=(const Ease& o) const { return !(*this == o); }
+    bool operator==(const Ease& l_oO) const;
+    bool operator!=(const Ease& l_oO) const { return !(*this == l_oO); }
 
-    bool isLinear() const { return kind == 1; }
-    bool isStepped() const { return kind == 2; }
-    float apply(float progress) const;  // 0..1 -> eased 0..1 (may overshoot for back/elastic)
+    bool f_IsLinear() const { return m_iKind == 1; }
+    bool f_IsStepped() const { return m_iKind == 2; }
+    float f_Apply(float l_fProgress) const;  // 0..1 -> eased 0..1 (may overshoot for back/elastic)
 };
-const std::vector<std::string>& easeNames();   // index = Ease::kind
-bool parseEase(const std::string& name, Ease& out);
-std::string easeName(const Ease& e);           // "" for a Bezier
+const std::vector<std::string>& f_EaseNames();   // index = Ease::kind
+bool f_ParseEase(const std::string& l_strName, Ease& l_oOut);
+std::string f_EaseName(const Ease& l_oE);           // "" for a Bezier
 
 template <class T> struct Key {
-    float t = 0;
-    T v{};
-    Ease ease;                         // interpolated channels only
+    float m_fT = 0;
+    T m_oV{};
+    Ease m_oEase;                         // interpolated channels only
 
-    bool operator==(const Key& o) const { return t == o.t && v == o.v && ease == o.ease; }
-    bool operator!=(const Key& o) const { return !(*this == o); }
+    bool operator==(const Key& l_oO) const { return m_fT == l_oO.m_fT && m_oV == l_oO.m_oV && m_oEase == l_oO.m_oEase; }
+    bool operator!=(const Key& l_oO) const { return !(*this == l_oO); }
 };
 
 enum class Blend { Normal, Add };
@@ -114,148 +114,148 @@ enum class Blend { Normal, Add };
 //   flash       amount, -, -, -                     towards `color` (0..1), the alpha kept
 //   outline     width, intensity, -, -              a band of `color` around the subtree's alpha
 enum class FxShader { None, Group, MotionBlur, Glow, Flash, Outline };
-const char* fxShaderName(FxShader s);           // "" for None
-bool parseFxShader(const std::string& name, FxShader& out);
+const char* f_FxShaderName(FxShader l_eS);           // "" for None
+bool f_ParseFxShader(const std::string& l_strName, FxShader& l_eOut);
 struct NodeFx {
-    FxShader shader = FxShader::None;            // None: no picture of its own
-    glm::vec4 params{0, 0, 0, 0};                // at rest (fx keys animate them)
-    glm::vec4 color{1, 1, 1, 1};
-    bool operator==(const NodeFx& o) const { return shader == o.shader && params == o.params && color == o.color; }
-    bool operator!=(const NodeFx& o) const { return !(*this == o); }
+    FxShader m_eShader = FxShader::None;            // None: no picture of its own
+    glm::vec4 m_v4Params{0, 0, 0, 0};                // at rest (fx keys animate them)
+    glm::vec4 m_v4Color{1, 1, 1, 1};
+    bool operator==(const NodeFx& l_oO) const { return m_eShader == l_oO.m_eShader && m_v4Params == l_oO.m_v4Params && m_v4Color == l_oO.m_v4Color; }
+    bool operator!=(const NodeFx& l_oO) const { return !(*this == l_oO); }
 };
 // A node's afterimages (see the top): `count` copies of its subtree as it was gap, 2 gap, ... seconds earlier, tinted by
 // `color` (the nearest with color.a, fading to the oldest), drawn behind it; trail keys (0..1) scale them, no keys = 1.
 struct NodeTrail {
-    int count = 0;                               // 0 = none
-    float gap = 0.04f;
-    glm::vec4 color{1, 1, 1, 0.5f};
-    bool additive = false;
-    bool operator==(const NodeTrail& o) const { return count == o.count && gap == o.gap && color == o.color && additive == o.additive; }
-    bool operator!=(const NodeTrail& o) const { return !(*this == o); }
+    int m_iCount = 0;                               // 0 = none
+    float m_fGap = 0.04f;
+    glm::vec4 m_v4Color{1, 1, 1, 0.5f};
+    bool m_bAdditive = false;
+    bool operator==(const NodeTrail& l_oO) const { return m_iCount == l_oO.m_iCount && m_fGap == l_oO.m_fGap && m_v4Color == l_oO.m_v4Color && m_bAdditive == l_oO.m_bAdditive; }
+    bool operator!=(const NodeTrail& l_oO) const { return !(*this == l_oO); }
 };
-constexpr int kMaxTrail = 16;
+constexpr int g_iMaxTrail = 16;
 
 // One deform key's value: lattice point index (row major: row * cols + col) -> its offset, sprite pixels.
 using Deform = std::map<int, glm::vec2>;
-constexpr int kDefaultLattice = 4;   // points across and down when a node does not set its lattice
-constexpr int kMaxLattice = 16;
-constexpr int kMaxMeshGrid = 32;    // a node's meshGrid, cells across or down
-constexpr int kMeshCell = 8;        // without a meshGrid: square cells of this many pixels
+constexpr int g_iDefaultLattice = 4;   // points across and down when a node does not set its lattice
+constexpr int g_iMaxLattice = 16;
+constexpr int g_iMaxMeshGrid = 32;    // a node's meshGrid, cells across or down
+constexpr int g_iMeshCell = 8;        // without a meshGrid: square cells of this many pixels
 
 struct Node {
-    std::string name;
-    std::string sprite;                // rest sprite ("atlas:name" or "name"); "" = a group node
-    glm::vec3 pos{0, 0, 0};
-    glm::vec3 rot{0, 0, 0};            // Euler degrees (see the top); z = the screen-plane turn
-    glm::vec3 scale{1, 1, 1};
-    glm::vec4 color{1, 1, 1, 1};
-    bool visible = true;
-    bool hasPivot = false;             // false: the sprite's pivot from the atlas (x_pivot, default centre)
-    glm::vec2 pivot{0.5f, 0.5f};       // 0..1 of the sprite's original size, from the top-left
-    int order = 0;                     // among siblings; < 0 draws before the parent's own sprite
-    Blend blend = Blend::Normal;
-    bool inheritColor = true;
-    bool loop = false;                 // after its key range: play it again (see the top)
-    bool stayAtLastFrame = true;       // after its key range (not looping): false = hide the subtree
+    std::string m_strName;
+    std::string m_strSprite;                // rest sprite ("atlas:name" or "name"); "" = a group node
+    glm::vec3 m_v3Pos{0, 0, 0};
+    glm::vec3 m_v3Rot{0, 0, 0};            // Euler degrees (see the top); z = the screen-plane turn
+    glm::vec3 m_v3Scale{1, 1, 1};
+    glm::vec4 m_v4Color{1, 1, 1, 1};
+    bool m_bVisible = true;
+    bool m_bHasPivot = false;             // false: the sprite's pivot from the atlas (x_pivot, default centre)
+    glm::vec2 m_v2Pivot{0.5f, 0.5f};       // 0..1 of the sprite's original size, from the top-left
+    int m_iOrder = 0;                     // among siblings; < 0 draws before the parent's own sprite
+    Blend m_eBlend = Blend::Normal;
+    bool m_bInheritColor = true;
+    bool m_bLoop = false;                 // after its key range: play it again (see the top)
+    bool m_bStayAtLastFrame = true;       // after its key range (not looping): false = hide the subtree
     // The skin (see the top): bone node names; empty = not skinned. skinWeights: kSkinInfluences
     // (bone index into skinBones, weight) pairs per mesh vertex; empty = automatic.
-    std::vector<std::string> skinBones;
-    std::vector<float> skinWeights;
-    bool skinned() const { return !skinBones.empty(); }
+    std::vector<std::string> m_vSkinBones;
+    std::vector<float> m_vSkinWeights;
+    bool f_Skinned() const { return !m_vSkinBones.empty(); }
     // The deform lattice (see the top): points across and down, 0 = the default; and its keys.
-    int lattice[2] = {0, 0};
-    std::vector<Key<Deform>> deformKeys;
-    bool deformed() const { return !deformKeys.empty(); }
-    int latticeCols() const { return lattice[0] >= 2 ? lattice[0] : kDefaultLattice; }
-    int latticeRows() const { return lattice[1] >= 2 ? lattice[1] : kDefaultLattice; }
+    int m_arrLattice[2] = {0, 0};
+    std::vector<Key<Deform>> m_vDeformKeys;
+    bool f_Deformed() const { return !m_vDeformKeys.empty(); }
+    int f_LatticeCols() const { return m_arrLattice[0] >= 2 ? m_arrLattice[0] : g_iDefaultLattice; }
+    int f_LatticeRows() const { return m_arrLattice[1] >= 2 ? m_arrLattice[1] : g_iDefaultLattice; }
     // The grid its sprite's mesh is cut on, cells across and down (1 .. kMaxMeshGrid); 0 = 8-pixel cells.
-    int meshGrid[2] = {0, 0};
-    bool hasMeshGrid() const { return meshGrid[0] > 0 && meshGrid[1] > 0; }
+    int m_arrMeshGrid[2] = {0, 0};
+    bool f_HasMeshGrid() const { return m_arrMeshGrid[0] > 0 && m_arrMeshGrid[1] > 0; }
     // Drawn as a bent mesh (a skin or a deform), not a quad.
-    bool usesMesh() const { return skinned() || deformed(); }
+    bool f_UsesMesh() const { return f_Skinned() || f_Deformed(); }
 
-    NodeFx fx;                         // see the top: effects
-    std::vector<Key<glm::vec4>> fxKeys;
-    NodeTrail trail;
-    std::vector<Key<float>> trailKeys;
-    bool hasFx() const { return fx.shader != FxShader::None; }
-    bool hasTrail() const { return trail.count > 0; }
+    NodeFx m_oFx;                         // see the top: effects
+    std::vector<Key<glm::vec4>> m_vFxKeys;
+    NodeTrail m_oTrail;
+    std::vector<Key<float>> m_vTrailKeys;
+    bool f_HasFx() const { return m_oFx.m_eShader != FxShader::None; }
+    bool f_HasTrail() const { return m_oTrail.m_iCount > 0; }
 
-    std::vector<Key<glm::vec3>> posKeys, rotKeys, scaleKeys;
-    std::vector<Key<glm::vec4>> colorKeys;
-    std::vector<Key<std::string>> spriteKeys, eventKeys;
-    std::vector<Key<bool>> visibleKeys;
+    std::vector<Key<glm::vec3>> m_vPosKeys, m_vRotKeys, m_vScaleKeys;
+    std::vector<Key<glm::vec4>> m_vColorKeys;
+    std::vector<Key<std::string>> m_vSpriteKeys, m_vEventKeys;
+    std::vector<Key<bool>> m_vVisibleKeys;
 
-    std::vector<Node> children;
+    std::vector<Node> m_vChildren;
 
-    float lastKeyTime() const;         // over this node's tracks and its subtree
-    float firstKeyTime() const;        // over this node's tracks and its subtree (0 without keys)
-    bool hasKeys() const;              // any key in this node's tracks or its subtree
-    bool timed() const { return loop || !stayAtLastFrame; }   // plays its range its own way
+    float f_LastKeyTime() const;         // over this node's tracks and its subtree
+    float f_FirstKeyTime() const;        // over this node's tracks and its subtree (0 without keys)
+    bool f_HasKeys() const;              // any key in this node's tracks or its subtree
+    bool f_Timed() const { return m_bLoop || !m_bStayAtLastFrame; }   // plays its range its own way
 
     // Every field, keys and children included (what the editor's undo compares; exact floats).
-    bool operator==(const Node& o) const;
-    bool operator!=(const Node& o) const { return !(*this == o); }
+    bool operator==(const Node& l_oO) const;
+    bool operator!=(const Node& l_oO) const { return !(*this == l_oO); }
 };
 
 struct Clip {
-    std::string name;
-    float length = 0;                  // seconds; 0 = up to the last key
-    int playCount = 1;                 // times to play; -1 = loop forever
-    bool stayAtLastFrame = true;       // after the last play: keep showing the end (else hide)
-    Node root;
+    std::string m_strName;
+    float m_fLength = 0;                  // seconds; 0 = up to the last key
+    int m_iPlayCount = 1;                 // times to play; -1 = loop forever
+    bool m_bStayAtLastFrame = true;       // after the last play: keep showing the end (else hide)
+    Node m_oRoot;
 
-    float duration() const;            // length, or the last key time when length is 0
+    float f_Duration() const;            // length, or the last key time when length is 0
 
-    bool operator==(const Clip& o) const {
-        return name == o.name && length == o.length && playCount == o.playCount && stayAtLastFrame == o.stayAtLastFrame &&
-               root == o.root;
+    bool operator==(const Clip& l_oO) const {
+        return m_strName == l_oO.m_strName && m_fLength == l_oO.m_fLength && m_iPlayCount == l_oO.m_iPlayCount && m_bStayAtLastFrame == l_oO.m_bStayAtLastFrame &&
+               m_oRoot == l_oO.m_oRoot;
     }
-    bool operator!=(const Clip& o) const { return !(*this == o); }
+    bool operator!=(const Clip& l_oO) const { return !(*this == l_oO); }
 };
 
 // One atlas a file draws from. `path` is relative to the .anim. `id` names it in sprite
 // references; by default it is the file name without ".atlas", and a file sets another one when two
 // atlases share a file name (an art style's game.atlas next to the original's).
 struct AtlasRef {
-    std::string id;
-    std::string path;
-    bool operator==(const AtlasRef& o) const { return id == o.id && path == o.path; }
+    std::string m_strId;
+    std::string m_strPath;
+    bool operator==(const AtlasRef& l_oO) const { return m_strId == l_oO.m_strId && m_strPath == l_oO.m_strPath; }
 };
-std::string defaultAtlasId(const std::string& path);   // "../fx/fx.atlas" -> "fx"
+std::string f_DefaultAtlasId(const std::string& l_strPath);   // "../fx/fx.atlas" -> "fx"
 
 // A sprite reference -- a node's sprite or a sprite key -- is "atlas:sprite" (the sprite in the
 // atlas with that id, like MPDI's PIName + ImageName), or a bare "sprite": the first atlas that
 // has it.
 struct SpriteRef {
-    std::string atlas;   // "" = the first atlas that has the sprite
-    std::string name;
+    std::string m_strAtlas;   // "" = the first atlas that has the sprite
+    std::string m_strName;
 };
-SpriteRef parseSpriteRef(const std::string& ref);
-std::string spriteRef(const std::string& atlasId, const std::string& name);   // "id:name", or "name" when id is ""
+SpriteRef f_ParseSpriteRef(const std::string& l_strRef);
+std::string f_SpriteRef(const std::string& l_strAtlasId, const std::string& l_strName);   // "id:name", or "name" when id is ""
 
-constexpr int kAnimVersion = 4;       // the newest this build reads: 3 = skins, 4 = effects (each written only when used)
-constexpr int kSkinInfluences = 4;    // bones per skinned vertex
+constexpr int g_iAnimVersion = 4;       // the newest this build reads: 3 = skins, 4 = effects (each written only when used)
+constexpr int g_iSkinInfluences = 4;    // bones per skinned vertex
 
 struct AnimFile {
-    int version = kAnimVersion;        // as read; saving writes 4 with an effect, 3 with a skin, else 2
+    int m_iVersion = g_iAnimVersion;        // as read; saving writes 4 with an effect, 3 with a skin, else 2
     // The .atlas files its sprites come from (anim_player.h AtlasSet), in lookup order. JSON:
     // "atlases": ["path", {"id": "...", "path": "..."}, ...] -- a plain path's id is its file name
     // without ".atlas"; an older file's single "atlas": "path" reads as a one-entry list.
-    std::vector<AtlasRef> atlases;
-    std::vector<Clip> clips;
+    std::vector<AtlasRef> m_vAtlases;
+    std::vector<Clip> m_vClips;
 
-    const Clip* find(const std::string& name) const;
+    const Clip* f_Find(const std::string& l_strName) const;
 
-    bool operator==(const AnimFile& o) const { return atlases == o.atlases && clips == o.clips; }   // not the version
-    bool operator!=(const AnimFile& o) const { return !(*this == o); }
+    bool operator==(const AnimFile& l_oO) const { return m_vAtlases == l_oO.m_vAtlases && m_vClips == l_oO.m_vClips; }   // not the version
+    bool operator!=(const AnimFile& l_oO) const { return !(*this == l_oO); }
 };
 
-bool parseAnim(const std::string& json, AnimFile& out, std::string* err = nullptr);
-std::string animToJson(const AnimFile& f);
+bool f_ParseAnim(const std::string& l_strJson, AnimFile& l_oOut, std::string* l_pErr = nullptr);
+std::string f_AnimToJson(const AnimFile& l_oF);
 // One node and its subtree in the file's node format (what the editor's Copy puts on the clipboard).
-std::string nodeToJsonText(const Node& n);
-bool parseNodeJson(const std::string& json, Node& out, std::string* err = nullptr);
+std::string f_NodeToJsonText(const Node& l_oN);
+bool f_ParseNodeJson(const std::string& l_strJson, Node& l_oOut, std::string* l_pErr = nullptr);
 
 // ---- characters ---------------------------------------------------------------------------------
 //
@@ -268,44 +268,44 @@ bool parseNodeJson(const std::string& json, Node& out, std::string* err = nullpt
 // visible body (head to feet) and its x its distance from the body's right edge -- both measured from the sprites'
 // visible pixels (boxOf: a sprite reference -> its SpriteBox; false = unknown, the hand is not moved). `extra` is added
 // on top (a per-character nudge, assets/data/character_fit.json). The clip itself is not changed.
-glm::vec2 characterHandOffset(const glm::vec2& handRest, const toms::SpriteBox& from, const toms::SpriteBox& to);
-Clip fitCharacter(const Clip& c, const std::string& sprite,
-                  const std::function<bool(const std::string& ref, toms::SpriteBox& out)>& boxOf,
-                  const glm::vec2& extra = glm::vec2(0.0f));
+glm::vec2 f_CharacterHandOffset(const glm::vec2& l_v2HandRest, const toms::SpriteBox& l_oFrom, const toms::SpriteBox& l_oTo);
+Clip f_FitCharacter(const Clip& l_oC, const std::string& l_strSprite,
+                  const std::function<bool(const std::string& l_strRef, toms::SpriteBox& l_oOut)>& l_fnBoxOf,
+                  const glm::vec2& l_v2Extra = glm::vec2(0.0f));
 // The first node with this name (depth first), or nullptr.
-const Node* findNode(const Node& root, const std::string& name);
+const Node* f_FindNode(const Node& l_oRoot, const std::string& l_strName);
 
 // ---- evaluation --------------------------------------------------------------------------------
 
 // One node at one time, in draw order.
 struct NodePose {
-    const Node* node = nullptr;
-    int depth = 0;
-    glm::mat4 world{1.0f};             // node space -> clip space (pixels, y down, z into the screen)
-    glm::vec4 color{1, 1, 1, 1};       // with the parents' colour when inherited
-    std::string sprite;                // "" = nothing to draw
-    bool visible = true;               // false: hidden (itself or a parent)
-    float time = 0;                    // the time its own tracks see (a looping ancestor's wraps it): deformAt
-    float clipTime = 0;                // the clip's time these poses are for
-    uint32_t first = 0, end = 0;       // its subtree's poses: [first, end), itself among them (effects draw them)
+    const Node* m_pNode = nullptr;
+    int m_iDepth = 0;
+    glm::mat4 m_mat4World{1.0f};             // node space -> clip space (pixels, y down, z into the screen)
+    glm::vec4 m_v4Color{1, 1, 1, 1};       // with the parents' colour when inherited
+    std::string m_strSprite;                // "" = nothing to draw
+    bool m_bVisible = true;               // false: hidden (itself or a parent)
+    float m_fTime = 0;                    // the time its own tracks see (a looping ancestor's wraps it): deformAt
+    float m_fClipTime = 0;                // the clip's time these poses are for
+    uint32_t m_uFirst = 0, m_uEnd = 0;       // its subtree's poses: [first, end), itself among them (effects draw them)
 };
 
 // The time a node's tracks (and its children) see when its parent's time is t, with its key range
 // first..last: wraps into the range for a looping node. `ended` (optional) is set when a
 // stayAtLastFrame=false node is past its range (hidden).
-float nodeTime(const Node& n, float t, float first, float last, bool* ended = nullptr);
+float f_NodeTime(const Node& l_oN, float l_fT, float l_fFirst, float l_fLast, bool* l_pEnded = nullptr);
 // Any node in the clip loops (the clip keeps moving after its timeline ends).
-bool hasLoopingNodes(const Clip& c);
+bool f_HasLoopingNodes(const Clip& l_oC);
 
 // The local transform of a node at time t: T(pos) * R(rot) * S(scale), R = Rx * Ry * Rz.
-glm::mat4 localTransform(const Node& n, float t);
-glm::mat4 compose(const glm::vec3& pos, const glm::vec3& rotDegrees, const glm::vec3& scale);
+glm::mat4 f_LocalTransform(const Node& l_oN, float l_fT);
+glm::mat4 f_Compose(const glm::vec3& l_v3Pos, const glm::vec3& l_v3RotDegrees, const glm::vec3& l_v3Scale);
 // A 3D transform seen by the orthographic screen camera (looking down +z): the 2D affine map of the
 // xy plane (z = 0) onto the screen. What the sprites are drawn with today.
-glm::mat3 flatten(const glm::mat4& m);
+glm::mat3 f_Flatten(const glm::mat4& l_mat4M);
 // Every node of the clip at time t (clip time, 0..duration), in draw order (see the top). Hidden
 // nodes are included with visible = false so an editor can still show them.
-void evaluate(const Clip& c, float t, std::vector<NodePose>& out);
+void f_Evaluate(const Clip& l_oC, float l_fT, std::vector<NodePose>& l_vOut);
 // The poses of one clip kept from frame to frame (what AnimPlayer uses; evaluate() is the stateless
 // reference with the same results). Each node holds its current position, rotation, scale, colour,
 // sprite and visibility, starting at its rest values, and each of its key tracks a cursor. A seek
@@ -315,62 +315,62 @@ void evaluate(const Clip& c, float t, std::vector<NodePose>& out);
 // transform / colour is only rebuilt when its own values or a parent's changed.
 class PoseCache {
 public:
-    void bind(const Clip* clip);       // the rest pose; nullptr = nothing. The clip must outlive the binding.
-    const Clip* clip() const { return clip_; }
-    void seek(float t);                // clip time (0..duration); any direction, any step
-    const std::vector<NodePose>& poses() const { return poses_; }   // draw order, as evaluate()
+    void f_Bind(const Clip* l_pClip);       // the rest pose; nullptr = nothing. The clip must outlive the binding.
+    const Clip* f_Clip() const { return m_pClip; }
+    void f_Seek(float l_fT);                // clip time (0..duration); any direction, any step
+    const std::vector<NodePose>& f_Poses() const { return m_vPoses; }   // draw order, as evaluate()
     // Pose i changed (world, colour, visibility or sprite) in the last seek.
-    bool changed(size_t i) const { return i < changed_.size() && changed_[i]; }
-    int changedCount() const { return changedCount_; }
-    int animatedNodes() const { return animated_; }   // nodes with at least one key track
+    bool f_Changed(size_t l_nI) const { return l_nI < m_vChanged.size() && m_vChanged[l_nI]; }
+    int f_ChangedCount() const { return m_iChangedCount; }
+    int f_AnimatedNodes() const { return m_iAnimated; }   // nodes with at least one key track
 
 private:
     enum { kPos, kRot, kScale, kColor, kSprite, kVisible, kTracks };
     struct Item {
-        const Node* node = nullptr;
-        int parent = -1;               // index in items_ (parents come first)
-        size_t pose = 0;               // index in poses_
-        bool animated = false;
-        int cursor[kTracks];           // last key at or before the time, -1 = before the first
-        int held[kTracks];             // the key whose value the track holds now, -1 = between keys
-        glm::vec3 pos{0}, rot{0}, scale{1};
-        glm::vec4 color{1};            // own, unclamped (before the parents' colour)
-        bool visible = true;           // own
-        bool timed = false;            // loop or !stayAtLastFrame: its time is remapped
-        float first = 0, last = 0;     // its subtree's key range (timed nodes)
-        float time = 0;                // the time its tracks saw in the last seek
-        bool ended = false;            // stayAtLastFrame=false and past its range: hidden
-        glm::mat4 local{1.0f};
-        bool worldChanged = false, colorChanged = false, visibleChanged = false;   // in this seek
+        const Node* m_pNode = nullptr;
+        int m_iParent = -1;               // index in items_ (parents come first)
+        size_t m_nPose = 0;               // index in poses_
+        bool m_bAnimated = false;
+        int m_arrCursor[kTracks];           // last key at or before the time, -1 = before the first
+        int m_arrHeld[kTracks];             // the key whose value the track holds now, -1 = between keys
+        glm::vec3 m_v3Pos{0}, m_v3Rot{0}, m_v3Scale{1};
+        glm::vec4 m_v4Color{1};            // own, unclamped (before the parents' colour)
+        bool m_bVisible = true;           // own
+        bool m_bTimed = false;            // loop or !stayAtLastFrame: its time is remapped
+        float m_fFirst = 0, m_fLast = 0;     // its subtree's key range (timed nodes)
+        float m_fTime = 0;                // the time its tracks saw in the last seek
+        bool m_bEnded = false;            // stayAtLastFrame=false and past its range: hidden
+        glm::mat4 m_mat4Local{1.0f};
+        bool m_bWorldChanged = false, m_bColorChanged = false, m_bVisibleChanged = false;   // in this seek
     };
-    int addItems(const Node& n, int parent, int depth);
+    int f_AddItems(const Node& l_oN, int l_iParent, int l_iDepth);
 
-    const Clip* clip_ = nullptr;
-    std::vector<Item> items_;
-    std::vector<NodePose> poses_;
-    std::vector<unsigned char> changed_;
-    int changedCount_ = 0;
-    int animated_ = 0;
-    bool fresh_ = true;                // the first seek computes everything
+    const Clip* m_pClip = nullptr;
+    std::vector<Item> m_vItems;
+    std::vector<NodePose> m_vPoses;
+    std::vector<unsigned char> m_vChanged;
+    int m_iChangedCount = 0;
+    int m_iAnimated = 0;
+    bool m_bFresh = true;                // the first seek computes everything
 };
 
 // Event names whose key time lies in (t0, t1], in time order. For a clip that wrapped around,
 // call it for each part.
-void eventsBetween(const Clip& c, float t0, float t1, std::vector<std::string>& out);
+void f_EventsBetween(const Clip& l_oC, float l_fT0, float l_fT1, std::vector<std::string>& l_vOut);
 
 // Channel values at time t (rest value when the track is empty).
-glm::vec3 positionAt(const Node& n, float t);
-glm::vec3 rotationAt(const Node& n, float t);
-glm::vec3 scaleAt(const Node& n, float t);
-glm::vec4 colorAt(const Node& n, float t);
-std::string spriteAt(const Node& n, float t);
-bool visibleAt(const Node& n, float t);
+glm::vec3 f_PositionAt(const Node& l_oN, float l_fT);
+glm::vec3 f_RotationAt(const Node& l_oN, float l_fT);
+glm::vec3 f_ScaleAt(const Node& l_oN, float l_fT);
+glm::vec4 f_ColorAt(const Node& l_oN, float l_fT);
+std::string f_SpriteAt(const Node& l_oN, float l_fT);
+bool f_VisibleAt(const Node& l_oN, float l_fT);
 // An effect's params at time t (fx keys; the rest params without keys) and a trail's strength (0..1; 1 without keys).
-glm::vec4 fxParamsAt(const Node& n, float t);
-float trailAt(const Node& n, float t);
+glm::vec4 f_FxParamsAt(const Node& l_oN, float l_fT);
+float f_TrailAt(const Node& l_oN, float l_fT);
 // Any node of the clip has an effect or a trail.
-bool hasEffects(const Clip& c);
+bool f_HasEffects(const Clip& l_oC);
 // The lattice's offsets at time t: every point (latticeCols() * latticeRows(), row major), eased between keys.
-std::vector<glm::vec2> deformAt(const Node& n, float t);
+std::vector<glm::vec2> f_DeformAt(const Node& l_oN, float l_fT);
 
 }  // namespace toms::anim

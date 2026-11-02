@@ -5,111 +5,111 @@
 
 using namespace toms;
 
-static int g_fail = 0;
-#define CHECK(cond, msg) do { if(!(cond)){ printf("FAIL: %s\n", msg); g_fail++; } } while(0)
+static int g_iFail = 0;
+#define CHECK(cond, msg) do { if(!(cond)){ printf("FAIL: %s\n", msg); g_iFail++; } } while(0)
 
 int main() {
     // 1. MissionKind / MissionState toString+fromString round-trip, and fail-safe defaults.
-    for (auto k : {MissionKind::Side, MissionKind::Daily, MissionKind::Once})
-        CHECK(missionKindFromString(toString(k)) == k, "MissionKind round-trips toString(k)");
-    CHECK(missionKindFromString("bogus") == MissionKind::Side, "unrecognized MissionKind defaults to Side");
+    for (auto l_eK : {MissionKind::Side, MissionKind::Daily, MissionKind::Once})
+        CHECK(f_MissionKindFromString(f_ToString(l_eK)) == l_eK, "MissionKind round-trips toString(k)");
+    CHECK(f_MissionKindFromString("bogus") == MissionKind::Side, "unrecognized MissionKind defaults to Side");
 
-    for (auto s : {MissionState::Locked, MissionState::Available, MissionState::Active,
+    for (auto l_eS : {MissionState::Locked, MissionState::Available, MissionState::Active,
                    MissionState::Completed, MissionState::Claimed})
-        CHECK(missionStateFromString(toString(s)) == s, "MissionState round-trips toString(s)");
-    CHECK(missionStateFromString("bogus") == MissionState::Locked, "unrecognized MissionState defaults to Locked");
+        CHECK(f_MissionStateFromString(f_ToString(l_eS)) == l_eS, "MissionState round-trips toString(s)");
+    CHECK(f_MissionStateFromString("bogus") == MissionState::Locked, "unrecognized MissionState defaults to Locked");
 
     // 2. MissionDefinition JSON round-trip.
     {
-        MissionDefinition d;
-        d.missionId = "m_scholar_favor";
-        d.kind = MissionKind::Side;
-        d.giver = "skeleton_scholar";
-        d.prerequisites = nlohmann::json{{"type", "storyBeatAtLeast"}, {"value", 4}};
-        d.objective = { "defeat", "golem_stone", 1 };
-        d.rewardExp = 50; d.rewardGold = 20; d.rewardItemId = "gem_atk";
+        MissionDefinition l_oD;
+        l_oD.m_strMissionId = "m_scholar_favor";
+        l_oD.m_eKind = MissionKind::Side;
+        l_oD.m_strGiver = "skeleton_scholar";
+        l_oD.m_jPrerequisites = nlohmann::json{{"type", "storyBeatAtLeast"}, {"value", 4}};
+        l_oD.m_oObjective = { "defeat", "golem_stone", 1 };
+        l_oD.m_iRewardExp = 50; l_oD.m_iRewardGold = 20; l_oD.m_strRewardItemId = "gem_atk";
 
-        auto j = toJson(d);
-        MissionDefinition d2 = missionDefinitionFromJson(j);
-        CHECK(d2.missionId == "m_scholar_favor", "MissionDefinition round-trip: missionId");
-        CHECK(d2.kind == MissionKind::Side, "MissionDefinition round-trip: kind");
-        CHECK(d2.giver == "skeleton_scholar", "MissionDefinition round-trip: giver");
-        CHECK(d2.prerequisites == d.prerequisites, "MissionDefinition round-trip: prerequisites");
-        CHECK(d2.objective.type == "defeat" && d2.objective.targetId == "golem_stone" && d2.objective.count == 1,
+        auto l_jJ = f_ToJson(l_oD);
+        MissionDefinition l_oD2 = f_MissionDefinitionFromJson(l_jJ);
+        CHECK(l_oD2.m_strMissionId == "m_scholar_favor", "MissionDefinition round-trip: missionId");
+        CHECK(l_oD2.m_eKind == MissionKind::Side, "MissionDefinition round-trip: kind");
+        CHECK(l_oD2.m_strGiver == "skeleton_scholar", "MissionDefinition round-trip: giver");
+        CHECK(l_oD2.m_jPrerequisites == l_oD.m_jPrerequisites, "MissionDefinition round-trip: prerequisites");
+        CHECK(l_oD2.m_oObjective.m_strType == "defeat" && l_oD2.m_oObjective.m_strTargetId == "golem_stone" && l_oD2.m_oObjective.m_iCount == 1,
               "MissionDefinition round-trip: objective");
-        CHECK(d2.rewardExp == 50 && d2.rewardGold == 20 && d2.rewardItemId == "gem_atk",
+        CHECK(l_oD2.m_iRewardExp == 50 && l_oD2.m_iRewardGold == 20 && l_oD2.m_strRewardItemId == "gem_atk",
               "MissionDefinition round-trip: rewards");
     }
 
     // 3. MissionTracker JSON round-trip.
     {
-        MissionTracker t;
-        t.missionId = "m_daily_slimes"; t.state = MissionState::Active; t.progress = 2; t.lastResetDate = "2026-09-07";
-        auto j = toJson(t);
-        MissionTracker t2 = missionTrackerFromJson(j);
-        CHECK(t2.missionId == "m_daily_slimes" && t2.state == MissionState::Active &&
-              t2.progress == 2 && t2.lastResetDate == "2026-09-07", "MissionTracker round-trip");
+        MissionTracker l_oT;
+        l_oT.m_strMissionId = "m_daily_slimes"; l_oT.m_eState = MissionState::Active; l_oT.m_iProgress = 2; l_oT.m_strLastResetDate = "2026-09-07";
+        auto l_jJ = f_ToJson(l_oT);
+        MissionTracker l_oT2 = f_MissionTrackerFromJson(l_jJ);
+        CHECK(l_oT2.m_strMissionId == "m_daily_slimes" && l_oT2.m_eState == MissionState::Active &&
+              l_oT2.m_iProgress == 2 && l_oT2.m_strLastResetDate == "2026-09-07", "MissionTracker round-trip");
     }
 
     // 4. rollDailyReset: side/once missions are never touched.
     {
-        MissionDefinition side; side.kind = MissionKind::Side;
-        MissionTracker t; t.state = MissionState::Active; t.progress = 3; t.lastResetDate = "2026-09-01";
-        rollDailyReset(t, side, "2026-09-07");
-        CHECK(t.state == MissionState::Active && t.progress == 3 && t.lastResetDate == "2026-09-01",
+        MissionDefinition l_oSide; l_oSide.m_eKind = MissionKind::Side;
+        MissionTracker l_oT; l_oT.m_eState = MissionState::Active; l_oT.m_iProgress = 3; l_oT.m_strLastResetDate = "2026-09-01";
+        f_RollDailyReset(l_oT, l_oSide, "2026-09-07");
+        CHECK(l_oT.m_eState == MissionState::Active && l_oT.m_iProgress == 3 && l_oT.m_strLastResetDate == "2026-09-01",
               "rollDailyReset is a no-op for a Side mission");
 
-        MissionDefinition once; once.kind = MissionKind::Once;
-        MissionTracker t2; t2.state = MissionState::Completed; t2.progress = 1; t2.lastResetDate = "";
-        rollDailyReset(t2, once, "2026-09-07");
-        CHECK(t2.state == MissionState::Completed && t2.progress == 1,
+        MissionDefinition l_oOnce; l_oOnce.m_eKind = MissionKind::Once;
+        MissionTracker l_oT2; l_oT2.m_eState = MissionState::Completed; l_oT2.m_iProgress = 1; l_oT2.m_strLastResetDate = "";
+        f_RollDailyReset(l_oT2, l_oOnce, "2026-09-07");
+        CHECK(l_oT2.m_eState == MissionState::Completed && l_oT2.m_iProgress == 1,
               "rollDailyReset is a no-op for a Once mission (never re-arms)");
     }
 
     // 5. rollDailyReset: a Daily mission rolls on a new day, is idempotent within the same day,
     //    and rolls again on the next new day.
     {
-        MissionDefinition daily; daily.kind = MissionKind::Daily;
-        MissionTracker t; t.state = MissionState::Locked; t.progress = 0; t.lastResetDate = "";
+        MissionDefinition l_oDaily; l_oDaily.m_eKind = MissionKind::Daily;
+        MissionTracker l_oT; l_oT.m_eState = MissionState::Locked; l_oT.m_iProgress = 0; l_oT.m_strLastResetDate = "";
 
-        rollDailyReset(t, daily, "2026-09-07");
-        CHECK(t.state == MissionState::Available && t.progress == 0 && t.lastResetDate == "2026-09-07",
+        f_RollDailyReset(l_oT, l_oDaily, "2026-09-07");
+        CHECK(l_oT.m_eState == MissionState::Available && l_oT.m_iProgress == 0 && l_oT.m_strLastResetDate == "2026-09-07",
               "first rollDailyReset (never reset before) rolls to Available");
 
-        t.state = MissionState::Active; t.progress = 2;   // simulate the player working on it today
-        rollDailyReset(t, daily, "2026-09-07");
-        CHECK(t.state == MissionState::Active && t.progress == 2,
+        l_oT.m_eState = MissionState::Active; l_oT.m_iProgress = 2;   // simulate the player working on it today
+        f_RollDailyReset(l_oT, l_oDaily, "2026-09-07");
+        CHECK(l_oT.m_eState == MissionState::Active && l_oT.m_iProgress == 2,
               "rollDailyReset called again the same day is a no-op (doesn't clobber in-progress state)");
 
-        rollDailyReset(t, daily, "2026-09-08");
-        CHECK(t.state == MissionState::Available && t.progress == 0 && t.lastResetDate == "2026-09-08",
+        f_RollDailyReset(l_oT, l_oDaily, "2026-09-08");
+        CHECK(l_oT.m_eState == MissionState::Available && l_oT.m_iProgress == 0 && l_oT.m_strLastResetDate == "2026-09-08",
               "rollDailyReset on a new day resets progress and re-arms the mission");
     }
 
     // 6. applyProgressEvent: only active missions gain progress, and only on a matching event.
     {
-        MissionDefinition def; def.objective = { "defeat", "golem_stone", 2 };
+        MissionDefinition l_oDef; l_oDef.m_oObjective = { "defeat", "golem_stone", 2 };
 
-        MissionTracker locked; locked.state = MissionState::Locked;
-        applyProgressEvent(locked, def, "defeat", "golem_stone");
-        CHECK(locked.progress == 0, "applyProgressEvent: a Locked mission never gains progress");
+        MissionTracker l_oLocked; l_oLocked.m_eState = MissionState::Locked;
+        f_ApplyProgressEvent(l_oLocked, l_oDef, "defeat", "golem_stone");
+        CHECK(l_oLocked.m_iProgress == 0, "applyProgressEvent: a Locked mission never gains progress");
 
-        MissionTracker active; active.state = MissionState::Active; active.progress = 0;
-        applyProgressEvent(active, def, "collect", "golem_stone");
-        CHECK(active.progress == 0, "applyProgressEvent: wrong event type does not advance progress");
-        applyProgressEvent(active, def, "defeat", "slime");
-        CHECK(active.progress == 0, "applyProgressEvent: wrong targetId does not advance progress");
-        applyProgressEvent(active, def, "defeat", "golem_stone");
-        CHECK(active.progress == 1 && active.state == MissionState::Active,
+        MissionTracker l_oActive; l_oActive.m_eState = MissionState::Active; l_oActive.m_iProgress = 0;
+        f_ApplyProgressEvent(l_oActive, l_oDef, "collect", "golem_stone");
+        CHECK(l_oActive.m_iProgress == 0, "applyProgressEvent: wrong event type does not advance progress");
+        f_ApplyProgressEvent(l_oActive, l_oDef, "defeat", "slime");
+        CHECK(l_oActive.m_iProgress == 0, "applyProgressEvent: wrong targetId does not advance progress");
+        f_ApplyProgressEvent(l_oActive, l_oDef, "defeat", "golem_stone");
+        CHECK(l_oActive.m_iProgress == 1 && l_oActive.m_eState == MissionState::Active,
               "applyProgressEvent: matching event advances progress, not yet complete");
-        applyProgressEvent(active, def, "defeat", "golem_stone");
-        CHECK(active.progress == 2 && active.state == MissionState::Completed,
+        f_ApplyProgressEvent(l_oActive, l_oDef, "defeat", "golem_stone");
+        CHECK(l_oActive.m_iProgress == 2 && l_oActive.m_eState == MissionState::Completed,
               "applyProgressEvent: reaching objective.count flips state to Completed");
-        applyProgressEvent(active, def, "defeat", "golem_stone");
-        CHECK(active.progress == 2, "applyProgressEvent: progress never over-increments past objective.count");
+        f_ApplyProgressEvent(l_oActive, l_oDef, "defeat", "golem_stone");
+        CHECK(l_oActive.m_iProgress == 2, "applyProgressEvent: progress never over-increments past objective.count");
     }
 
-    if (g_fail == 0) { printf("mission_test: ALL PASS (28 checks)\n"); return 0; }
-    printf("mission_test: %d CHECK(s) FAILED\n", g_fail);
+    if (g_iFail == 0) { printf("mission_test: ALL PASS (28 checks)\n"); return 0; }
+    printf("mission_test: %d CHECK(s) FAILED\n", g_iFail);
     return 1;
 }

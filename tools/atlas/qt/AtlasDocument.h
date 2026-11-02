@@ -19,43 +19,43 @@ class QUndoStack;
 
 // The format Save (and Export Copy) always writes, on top of the project's list: Cocos Creator
 // reads sprite atlases only as a .plist.
-inline constexpr const char* kAlwaysExported = "plist";
+inline constexpr const char* g_pszAlwaysExported = "plist";
 
 // One sprite as the editor lists it (atlas::resolveSprites() of the shown variant).
 struct SpriteInfo {
-    QString name;
-    QString parent;          // child sprites: the parent's name
-    bool child = false;
-    bool variantArt = false; // the shown variant has its own art for this image
+    QString m_oName;
+    QString m_oParent;          // child sprites: the parent's name
+    bool m_bChild = false;
+    bool m_bVariantArt = false; // the shown variant has its own art for this image
 };
 
 // Everything one background build produced, ready for the GUI thread. Immutable once published,
 // so widgets may keep a shared_ptr to it while a newer build runs.
 struct BuildSnapshot {
-    quint64 generation = 0;
-    QString variant;
-    atlas::BuildResult result;
-    std::vector<SpriteInfo> sprites;     // sorted by name
-    QHash<QString, int> spriteIndex;     // name -> index in sprites
-    QVector<QImage> pages;               // premultiplied, ready to paint
-    QHash<QString, QImage> thumbnails;   // name -> small image (at most 64 px)
-    qint64 elapsedMs = 0;
+    quint64 m_u64Generation = 0;
+    QString m_oVariant;
+    atlas::BuildResult m_oResult;
+    std::vector<SpriteInfo> m_vSprites;     // sorted by name
+    QHash<QString, int> m_oSpriteIndex;     // name -> index in sprites
+    QVector<QImage> m_oPages;               // premultiplied, ready to paint
+    QHash<QString, QImage> m_oThumbnails;   // name -> small image (at most 64 px)
+    qint64 m_i64ElapsedMs = 0;
 
-    const SpriteInfo* sprite(const QString& name) const;
-    const atlas::Region* region(const QString& name) const;
+    const SpriteInfo* f_Sprite(const QString& l_oName) const;
+    const atlas::Region* f_Region(const QString& l_oName) const;
 };
 using BuildSnapshotPtr = std::shared_ptr<const BuildSnapshot>;
 
 // A PNG to bring into the project and the sprite name it gets.
 struct ImageFile {
-    QString name;
-    QString path;
+    QString m_oName;
+    QString m_oPath;
 };
 
 // What a save wrote, for the log.
 struct SaveReport {
-    QStringList written;
-    std::vector<atlas::Diagnostic> diagnostics;
+    QStringList m_oWritten;
+    std::vector<atlas::Diagnostic> m_vDiagnostics;
 };
 
 // The open .atlasproj and everything around it: undo stack, selection, current variant, the
@@ -68,136 +68,136 @@ class AtlasDocument : public QObject
     Q_OBJECT
 
 public:
-    explicit AtlasDocument(QObject* parent = nullptr);
+    explicit AtlasDocument(QObject* l_pParent = nullptr);
     ~AtlasDocument() override;
 
-    const atlas::Project& project() const { return m_project; }
-    QString filePath() const;
-    QString displayName() const;   // file name, or "Untitled"
-    bool isDirty() const;
-    QUndoStack* undoStack() const { return m_undo; }
+    const atlas::Project& f_Project() const { return m_oProject; }
+    QString f_FilePath() const;
+    QString f_DisplayName() const;   // file name, or "Untitled"
+    bool f_IsDirty() const;
+    QUndoStack* f_UndoStack() const { return m_pUndo; }
     // A copy for AutoBackup: the project and its packed atlas (where an embedded project keeps its
     // images) in a folder named after `path` (without the extension), every output inside it --
     // never the project's own output folders. Writes in the background; the document does not change.
-    bool writeBackup(const QString& path, QString* error) const;
+    bool f_WriteBackup(const QString& l_oPath, QString* l_pError) const;
 
-    void newProject();
+    void f_NewProject();
     // Opens a project; a folder project is converted to an embedded one (and left dirty).
-    bool open(const QString& path, QString* error);
+    bool f_Open(const QString& l_oPath, QString* l_pError);
     // Takes a project made elsewhere (e.g. imported); it starts out dirty.
-    void adopt(const atlas::Project& p);
+    void f_Adopt(const atlas::Project& l_oP);
     // Writes the project, its packed atlas and output formats (plus kAlwaysExported) on a worker
     // thread, waiting with a local event loop. Also plain Save (same path). On failure nothing
     // was written and the document stays dirty.
-    bool save(const QString& path, SaveReport* report, QString* error);
-    bool isSaving() const { return m_saving; }
-    QString storeFile(const QString& variant = QString()) const;   // the packed atlas Save writes
+    bool f_Save(const QString& l_oPath, SaveReport* l_pReport, QString* l_pError);
+    bool f_IsSaving() const { return m_bSaving; }
+    QString f_StoreFile(const QString& l_oVariant = QString()) const;   // the packed atlas Save writes
 
     // Selection: sprite names; the last one is the "current" sprite.
-    const QStringList& selection() const { return m_selection; }
-    QString currentSprite() const { return m_selection.isEmpty() ? QString() : m_selection.last(); }
-    void setSelection(const QStringList& names);
+    const QStringList& f_Selection() const { return m_oSelection; }
+    QString f_CurrentSprite() const { return m_oSelection.isEmpty() ? QString() : m_oSelection.last(); }
+    void f_SetSelection(const QStringList& l_oNames);
 
     // Which art the canvas shows: "" = base, otherwise a variant id.
-    QString variant() const { return m_variant; }
-    void setVariant(const QString& id);
-    const atlas::Variant* currentVariant() const;
+    QString f_Variant() const { return m_oVariant; }
+    void f_SetVariant(const QString& l_oId);
+    const atlas::Variant* f_CurrentVariant() const;
 
-    BuildSnapshotPtr snapshot() const { return m_snapshot; }
-    bool isBuilding() const;
+    BuildSnapshotPtr f_Snapshot() const { return m_spSnapshot; }
+    bool f_IsBuilding() const;
     // The sprite at its original size (transparent where trimmed), from the current build.
-    QImage spriteImage(const QString& name) const;
+    QImage f_SpriteImage(const QString& l_oName) const;
     // The sprite's entry, or a default one when an image has none yet.
-    atlas::SpriteDef spriteDef(const QString& name) const;
-    bool isImage(const QString& name) const;                         // has pixels of its own
-    bool hasVariantArt(const QString& name, const QString& variant) const;
-    bool spriteExists(const QString& name) const;
-    QString uniqueName(const QString& base) const;
-    QStringList descendants(const QString& name) const;   // children, grandchildren, ...
+    atlas::SpriteDef f_SpriteDef(const QString& l_oName) const;
+    bool f_IsImage(const QString& l_oName) const;                         // has pixels of its own
+    bool f_HasVariantArt(const QString& l_oName, const QString& l_oVariant) const;
+    bool f_SpriteExists(const QString& l_oName) const;
+    QString f_UniqueName(const QString& l_oBase) const;
+    QStringList f_Descendants(const QString& l_oName) const;   // children, grandchildren, ...
     // Paths stored in the project: relative to the project file once it is saved, absolute
     // before (Save rebases them).
-    QString toProjectPath(const QString& absolutePath) const;
-    QString resolvePath(const QString& projectPath) const;
+    QString f_ToProjectPath(const QString& l_oAbsolutePath) const;
+    QString f_ResolvePath(const QString& l_oProjectPath) const;
 
     // ---- editing (each call is one undo step) ----
     // mergeKey: consecutive edits with the same key and selection within a short time collapse
     // into one undo step (spin box arrows, typing).
-    bool edit(const QString& text, const std::function<void(atlas::Project&)>& change,
-              const QString& mergeKey = QString(), const QStringList* selectionAfter = nullptr);
+    bool f_Edit(const QString& l_oText, const std::function<void(atlas::Project&)>& l_fnChange,
+              const QString& l_oMergeKey = QString(), const QStringList* l_pSelectionAfter = nullptr);
     // Applies `change` to the entries of `names`, creating entries for images as needed and
     // dropping entries that end up holding nothing but defaults.
-    bool editSprites(const QStringList& names, const QString& text,
-                     const std::function<void(atlas::SpriteDef&)>& change, const QString& mergeKey = QString());
+    bool f_EditSprites(const QStringList& l_oNames, const QString& l_oText,
+                     const std::function<void(atlas::SpriteDef&)>& l_fnChange, const QString& l_oMergeKey = QString());
     // Child sprites inside `parent` (rects in the parent's original pixels); selects them.
-    bool addChildren(const QString& parent, const std::vector<std::pair<QString, atlas::IRect>>& children,
-                     const QString& text);
+    bool f_AddChildren(const QString& l_oParent, const std::vector<std::pair<QString, atlas::IRect>>& l_vChildren,
+                     const QString& l_oText);
     // Renames a sprite: its image and variant art, its entry, children's parent, animation frames.
-    bool renameSprite(const QString& from, const QString& to, QString* error);
+    bool f_RenameSprite(const QString& l_oFrom, const QString& l_oTo, QString* l_pError);
     // Removes sprites with their images, variant art and child sprites.
-    void deleteSprites(const QStringList& names);
-    QStringList deletionClosure(const QStringList& names) const;   // names + every descendant
+    void f_DeleteSprites(const QStringList& l_oNames);
+    QStringList f_DeletionClosure(const QStringList& l_oNames) const;   // names + every descendant
 
     // ---- images ----
     // PNG files (named by their file name) and folders (every PNG below, named by its path in
     // the folder), in order, without duplicate names.
-    static QList<ImageFile> collectPngs(const QStringList& paths);
+    static QList<ImageFile> f_CollectPngs(const QStringList& l_oPaths);
     // Copies the pixels in as one undo step: base art, or a variant's replacement art. Existing
     // images of the same name are replaced. Returns how many went in; `errors` gets the rest.
-    int setImages(const QList<ImageFile>& files, const QString& variant, const QString& text, QStringList* errors);
-    bool removeVariantArt(const QStringList& names, const QString& variant);
-    bool saveSpriteImage(const QString& name, const QString& file, QString* error) const;
-    bool extractImages(const QString& dir, bool children, int* count, QString* error) const;
+    int f_SetImages(const QList<ImageFile>& l_oFiles, const QString& l_oVariant, const QString& l_oText, QStringList* l_pErrors);
+    bool f_RemoveVariantArt(const QStringList& l_oNames, const QString& l_oVariant);
+    bool f_SaveSpriteImage(const QString& l_oName, const QString& l_oFile, QString* l_pError) const;
+    bool f_ExtractImages(const QString& l_oDir, bool l_bChildren, int* l_pCount, QString* l_pError) const;
 
     // ---- references (folders new or changed art is imported from) ----
-    bool addReference(const QString& dir);
-    bool removeReference(int index);
-    bool setVariantReference(const QString& variant, const QString& dir);
+    bool f_AddReference(const QString& l_oDir);
+    bool f_RemoveReference(int l_iIndex);
+    bool f_SetVariantReference(const QString& l_oVariant, const QString& l_oDir);
 
     // ---- export copy (writes files elsewhere; runs in the background) ----
-    bool isExporting() const;
+    bool f_IsExporting() const;
     // Base (or the shown variant) into `dir`; with allVariants the base into `dir` and each
     // variant into `dir`/<variant id>. Never touches the project or its packed atlas.
-    void exportCopy(const QString& dir, bool allVariants);
+    void f_ExportCopy(const QString& l_oDir, bool l_bAllVariants);
 
 signals:
-    void projectReset();      // another project was opened / created (also emits projectChanged)
-    void projectChanged();
-    void selectionChanged();
-    void variantChanged();
-    void filePathChanged();
-    void dirtyChanged(bool dirty);
-    void buildStarted();
-    void buildFinished();
-    void saveStarted();
-    void saveFinished(bool ok);
-    void exportFinished(bool ok, const QString& summary);
-    void message(const QString& text);
+    void f_ProjectReset();      // another project was opened / created (also emits projectChanged)
+    void f_ProjectChanged();
+    void f_SelectionChanged();
+    void f_VariantChanged();
+    void f_FilePathChanged();
+    void f_DirtyChanged(bool l_bDirty);
+    void f_BuildStarted();
+    void f_BuildFinished();
+    void f_SaveStarted();
+    void f_SaveFinished(bool l_bOk);
+    void f_ExportFinished(bool l_bOk, const QString& l_oSummary);
+    void f_Message(const QString& l_oText);
 
 private:
     friend class ProjectCommand;
     // Called by ProjectCommand on redo/undo.
-    void restoreState(const atlas::Project& p, const QStringList& selection);
+    void f_RestoreState(const atlas::Project& l_oP, const QStringList& l_oSelection);
 
-    void reset(const atlas::Project& p, bool dirty);
-    void setForcedDirty(bool on);
-    void scheduleRebuild();
-    void startBuild();
-    void onBuildDone();
+    void f_Reset(const atlas::Project& l_oP, bool l_bDirty);
+    void f_SetForcedDirty(bool l_bOn);
+    void f_ScheduleRebuild();
+    void f_StartBuild();
+    void f_OnBuildDone();
 
-    atlas::Project m_project;
-    QUndoStack* m_undo;
-    QStringList m_selection;
-    QString m_variant;
-    bool m_forcedDirty = false;      // converted / imported: unsaved although nothing was undone
-    quint64 m_changeCount = 0;       // every change of m_project (edits, undo, redo)
-    bool m_saving = false;
+    atlas::Project m_oProject;
+    QUndoStack* m_pUndo;
+    QStringList m_oSelection;
+    QString m_oVariant;
+    bool m_bForcedDirty = false;      // converted / imported: unsaved although nothing was undone
+    quint64 m_u64ChangeCount = 0;       // every change of m_project (edits, undo, redo)
+    bool m_bSaving = false;
 
-    QTimer* m_rebuildTimer;
-    QFutureWatcher<BuildSnapshotPtr> m_buildWatcher;
-    quint64 m_generation = 0;
-    bool m_rebuildQueued = false;
-    BuildSnapshotPtr m_snapshot;
-    mutable QHash<QString, QImage> m_spriteImages;   // per snapshot
+    QTimer* m_pRebuildTimer;
+    QFutureWatcher<BuildSnapshotPtr> m_oBuildWatcher;
+    quint64 m_u64Generation = 0;
+    bool m_bRebuildQueued = false;
+    BuildSnapshotPtr m_spSnapshot;
+    mutable QHash<QString, QImage> m_oSpriteImages;   // per snapshot
 
-    QFutureWatcher<std::pair<bool, QString>> m_exportWatcher;
+    QFutureWatcher<std::pair<bool, QString>> m_oExportWatcher;
 };

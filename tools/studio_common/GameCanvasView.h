@@ -24,47 +24,47 @@ class BgfxRenderer;
 // Helpers for drawing a canvas's game scene through the game's renderer, in widget coordinates
 // (logical pixels; the renderer's design space is the widget).
 struct GameScene {
-    toms::next::BgfxRenderer& ren;
-    double width, height;
+    toms::next::BgfxRenderer& m_oRen;
+    double m_dWidth, m_dHeight;
 
     // Content -> widget (CanvasView::viewTransform) as the placement matrix the game's drawing
     // functions take (anim::appendQuads, fx::EffectInstance::draw).
-    static glm::mat3 placement(const QTransform& contentToWidget);
+    static glm::mat3 f_Placement(const QTransform& l_oContentToWidget);
 
-    void quad(const QPointF& a, const QPointF& b, const QPointF& c, const QPointF& d, const QColor& col) const;
-    void rect(const QRectF& r, const QColor& col) const;
-    void line(const QPointF& a, const QPointF& b, double width, const QColor& col) const;
+    void f_Quad(const QPointF& l_oA, const QPointF& l_oB, const QPointF& l_oC, const QPointF& l_oD, const QColor& l_oCol) const;
+    void f_Rect(const QRectF& l_oR, const QColor& l_oCol) const;
+    void f_Line(const QPointF& l_oA, const QPointF& l_oB, double l_dWidth, const QColor& l_oCol) const;
     // A texture (the renderer's) on a widget rectangle; uv in 0..1 of the texture.
-    void image(uint16_t texture, const QRectF& r, const QRectF& uv = QRectF(0, 0, 1, 1), float alpha = 1.0f) const;
+    void f_Image(uint16_t l_u16Texture, const QRectF& l_oR, const QRectF& l_oUv = QRectF(0, 0, 1, 1), float l_fAlpha = 1.0f) const;
 };
 
 // Textures for an editor: images uploaded to the game renderer (straight-alpha RGBA, as the game
 // loads its PNGs), released together.
 class GameTextures {
 public:
-    ~GameTextures() { clear(); }
-    void attach(toms::next::BgfxRenderer* ren);    // nullptr: everything released (the renderer goes)
-    bool ready() const { return m_ren != nullptr; }
-    uint16_t upload(const QImage& img);            // 0xFFFF: failed
+    ~GameTextures() { f_Clear(); }
+    void f_Attach(toms::next::BgfxRenderer* l_pRen);    // nullptr: everything released (the renderer goes)
+    bool f_Ready() const { return m_pRen != nullptr; }
+    uint16_t f_Upload(const QImage& l_oImg);            // 0xFFFF: failed
     // An image kept by key (re-uploaded when cacheKey differs, e.g. a page that was rebuilt).
-    uint16_t cached(const QString& key, const QImage& img);
+    uint16_t f_Cached(const QString& l_oKey, const QImage& l_oImg);
     // .atlas files with their page images as textures: an AtlasSet the game's draw functions take.
     // `atlases` = (id, absolute .atlas path, parsed atlas); pages are read from disk next to it.
-    void setAtlases(const std::vector<std::tuple<std::string, std::string, const toms::AtlasFile*>>& atlases);
-    const toms::anim::AtlasSet& atlasSet() const { return *m_set; }
+    void f_SetAtlases(const std::vector<std::tuple<std::string, std::string, const toms::AtlasFile*>>& l_vAtlases);
+    const toms::anim::AtlasSet& f_AtlasSet() const { return *m_upSet; }
     // The meshes of the atlas with this id (kept by the caller; nullptr = none): skinned and deformed nodes bend them.
-    void setMeshes(const std::string& id, const toms::SpriteMeshFile* meshes) {
-        if (m_set) for (auto& e : m_set->entries) if (e.id == id) e.meshes = meshes;
+    void f_SetMeshes(const std::string& l_strId, const toms::SpriteMeshFile* l_pMeshes) {
+        if (m_upSet) for (auto& l_oE : m_upSet->m_vEntries) if (l_oE.m_strId == l_strId) l_oE.m_pMeshes = l_pMeshes;
     }
-    void clear();
+    void f_Clear();
 
 private:
-    toms::next::BgfxRenderer* m_ren = nullptr;
-    std::vector<uint16_t> m_all;
-    struct Cached { QString key; qint64 cacheKey = 0; uint16_t tex = 0xFFFF; };
-    std::vector<Cached> m_cached;
-    std::vector<std::unique_ptr<toms::AtlasFile>> m_atlases;
-    std::unique_ptr<toms::anim::AtlasSet> m_set;
+    toms::next::BgfxRenderer* m_pRen = nullptr;
+    std::vector<uint16_t> m_vAll;
+    struct Cached { QString m_oKey; qint64 m_i64CacheKey = 0; uint16_t m_u16Tex = 0xFFFF; };
+    std::vector<Cached> m_vCached;
+    std::vector<std::unique_ptr<toms::AtlasFile>> m_vAtlases;
+    std::unique_ptr<toms::anim::AtlasSet> m_upSet;
 };
 
 // A CanvasView whose game content is drawn by the game's own renderer (toms_game's BgfxRenderer)
@@ -82,53 +82,53 @@ class GameCanvasView : public CanvasView
     Q_OBJECT
 
 public:
-    GameCanvasView(bool gameRenderer, QWidget* parent = nullptr);
+    GameCanvasView(bool l_bGameRenderer, QWidget* l_pParent = nullptr);
     ~GameCanvasView() override;
 
     // An editor's choice: the setting "preview/gameRenderer" of QSettings("TOMS", app) (default on),
     // never on a windowless platform (offscreen, minimal).
-    static bool gameRendererWanted(const QString& app);
+    static bool f_GameRendererWanted(const QString& l_oApp);
 
-    bool usingGameRenderer() const { return m_active; }
-    QString rendererName() const;                 // "Direct3D 11 (game renderer)" / "QPainter"
+    bool f_UsingGameRenderer() const { return m_bActive; }
+    QString f_RendererName() const;                 // "Direct3D 11 (game renderer)" / "QPainter"
     QPaintEngine* paintEngine() const override;
-    bool saveGameRendererShot(const QString& path);   // a bgfx screenshot of the next frame
-    int framesDrawn() const { return m_frames; }
+    bool f_SaveGameRendererShot(const QString& l_oPath);   // a bgfx screenshot of the next frame
+    int f_FramesDrawn() const { return m_iFrames; }
     // Tests: draw no frame while on (a capture of the window, which asks it to paint, then sees what was shown).
-    void holdFrames(bool on) { m_hold = on; }
-    toms::next::BgfxRenderer* gameRenderer() const;   // while usingGameRenderer()
+    void f_HoldFrames(bool l_bOn) { m_bHold = l_bOn; }
+    toms::next::BgfxRenderer* f_GameRenderer() const;   // while usingGameRenderer()
     // One picture of w x h drawn by `draw` through the game renderer, offscreen: a transparent background, the design
     // space 0..w x 0..h, nothing of the editor (BgfxRenderer::setCapture). Waits for the GPU. Format_RGBA8888 with
     // straight alpha; a null image without the game renderer.
-    QImage renderOffscreen(int w, int h, const std::function<void(const GameScene&)>& draw);
+    QImage f_RenderOffscreen(int l_iW, int l_iH, const std::function<void(const GameScene&)>& l_fnDraw);
 
 signals:
-    void rendererChanged();                       // the game renderer started, or failed (QPainter)
+    void f_RendererChanged();                       // the game renderer started, or failed (QPainter)
 
 protected:
-    virtual void paintGameScene(const GameScene& s) { (void)s; }
+    virtual void f_PaintGameScene(const GameScene& l_oS) { (void)l_oS; }
     // The renderer starts (ren) or stops (nullptr): upload / release the canvas's textures.
-    virtual void gameRendererChanged(toms::next::BgfxRenderer* ren) { (void)ren; }
+    virtual void f_GameRendererChanged(toms::next::BgfxRenderer* l_pRen) { (void)l_pRen; }
     // The checkerboard under the scene (as CanvasView::paintBackground); false = the scene fills it.
-    virtual bool drawCheckerboard() const { return true; }
-    bool overGameScene() const { return m_overGame; }
+    virtual bool f_DrawCheckerboard() const { return true; }
+    bool f_OverGameScene() const { return m_bOverGame; }
     // Stops using the renderer (gameRendererChanged(nullptr) first). A subclass calls this in its
     // destructor: from the base destructor the virtual call would not reach it any more.
-    void releaseGameRenderer();
+    void f_ReleaseGameRenderer();
 
-    void paintEvent(QPaintEvent* e) override;
-    void showEvent(QShowEvent* e) override;
+    void paintEvent(QPaintEvent* l_pE) override;
+    void showEvent(QShowEvent* l_pE) override;
     // A new native window (the canvas moved to another top-level window): bgfx moves to it on the next paint.
-    bool event(QEvent* e) override;
-    void resizeEvent(QResizeEvent* e) override;
+    bool event(QEvent* l_pE) override;
+    void resizeEvent(QResizeEvent* l_pE) override;
 
 private:
-    bool attach();
+    bool f_Attach();
 
-    bool m_wanted = false, m_active = false, m_failed = false, m_overGame = false;
-    uint16_t m_overlay = 0xFFFF;
-    QSize m_overlaySize;
-    QString m_shotPath;
-    int m_frames = 0;
-    bool m_hold = false;
+    bool m_bWanted = false, m_bActive = false, m_bFailed = false, m_bOverGame = false;
+    uint16_t m_u16Overlay = 0xFFFF;
+    QSize m_oOverlaySize;
+    QString m_oShotPath;
+    int m_iFrames = 0;
+    bool m_bHold = false;
 };

@@ -19,65 +19,65 @@ class ParticlePlayback : public QObject
     Q_OBJECT
 
 public:
-    explicit ParticlePlayback(ParticleDocument* doc, QObject* parent = nullptr);
+    explicit ParticlePlayback(ParticleDocument* l_pDoc, QObject* l_pParent = nullptr);
 
-    const toms::fx::EffectInstance& instance() const { return m_fx; }
-    bool playing() const { return m_playing; }
-    float time() const { return m_fx.time(); }
-    float speed() const { return m_speed; }
-    uint32_t seed() const { return m_seed; }
-    QPointF origin() const { return m_origin; }
-    bool autoRestart() const { return m_autoRestart; }
-    double lastStepMs() const { return m_lastStepMs; }
+    const toms::fx::EffectInstance& f_Instance() const { return m_oFx; }
+    bool f_Playing() const { return m_bPlaying; }
+    float f_Time() const { return m_oFx.f_Time(); }
+    float f_Speed() const { return m_fSpeed; }
+    uint32_t f_Seed() const { return m_uSeed; }
+    QPointF f_Origin() const { return m_oOrigin; }
+    bool f_AutoRestart() const { return m_bAutoRestart; }
+    double f_LastStepMs() const { return m_dLastStepMs; }
 
-    void play();
-    void pause();
-    void togglePlay();
-    void restart();               // time 0, playing
-    void stepFrame();             // one 1/60 s step, paused
-    void seek(float t);           // paused at effect time t (a fresh play with the same seed)
-    void setSpeed(float s) { m_speed = s; }
-    void setSeed(uint32_t s);
-    void randomizeSeed();
-    void setAutoRestart(bool on) { m_autoRestart = on; }
+    void f_Play();
+    void f_Pause();
+    void f_TogglePlay();
+    void f_Restart();               // time 0, playing
+    void f_StepFrame();             // one 1/60 s step, paused
+    void f_Seek(float l_fT);           // paused at effect time t (a fresh play with the same seed)
+    void f_SetSpeed(float l_fS) { m_fSpeed = l_fS; }
+    void f_SetSeed(uint32_t l_uS);
+    void f_RandomizeSeed();
+    void f_SetAutoRestart(bool l_bOn) { m_bAutoRestart = l_bOn; }
     // Where the effect is in the viewport. restart: play again from there (a burst "fired" at
     // the click); otherwise it moves while playing (world-space trails stay behind).
-    void setOrigin(const QPointF& p, bool restart);
-    void advance(float seconds);  // as timer ticks would (the selftest drives this directly)
+    void f_SetOrigin(const QPointF& l_oP, bool l_bRestart);
+    void f_Advance(float l_fSeconds);  // as timer ticks would (the selftest drives this directly)
 
     // The game renderer the preview draws with (ParticleViewport's game-renderer mode): emitters set
     // to "gpu", or "auto" ones above `threshold`, are then simulated on the GPU as in the game.
     // nullptr: everything on the CPU (the QPainter preview).
-    void setGpuRenderer(IRenderer* ren, int threshold);
-    IRenderer* gpuRenderer() const { return m_gpuRen; }
-    int gpuThreshold() const { return m_gpuThreshold; }
-    toms::fx::EffectInstance& instanceForDraw() { return m_fx; }   // EffectInstance::draw is not const
+    void f_SetGpuRenderer(IRenderer* l_pRen, int l_iThreshold);
+    IRenderer* f_GpuRenderer() const { return m_pGpuRen; }
+    int f_GpuThreshold() const { return m_iGpuThreshold; }
+    toms::fx::EffectInstance& f_InstanceForDraw() { return m_oFx; }   // EffectInstance::draw is not const
 
-    bool isHidden(int emitter) const { return m_hidden.contains(emitter); }
-    void setHidden(int emitter, bool hidden);
+    bool f_IsHidden(int l_iEmitter) const { return m_oHidden.contains(l_iEmitter); }
+    void f_SetHidden(int l_iEmitter, bool l_bHidden);
 
 signals:
-    void ticked();                // a new frame to draw
-    void stateChanged();          // playing / paused / seed / speed
+    void f_Ticked();                // a new frame to draw
+    void f_StateChanged();          // playing / paused / seed / speed
 
 private:
-    void rebuild(bool keepTime);
-    void tick();
+    void f_Rebuild(bool l_bKeepTime);
+    void f_Tick();
 
-    ParticleDocument* m_doc;
-    toms::fx::Effect m_preview;       // the current effect, hidden emitters muted
-    toms::fx::EffectInstance m_fx;
-    QTimer* m_timer;
-    QElapsedTimer m_clock;
-    QSet<int> m_hidden;
-    QPointF m_origin{0, 0};
-    float m_speed = 1;
-    float m_idle = 0;                 // seconds since a one-shot finished
-    uint32_t m_seed = 1;
-    int m_effect = -1;
-    bool m_playing = true;
-    bool m_autoRestart = true;
-    double m_lastStepMs = 0;
-    IRenderer* m_gpuRen = nullptr;
-    int m_gpuThreshold = 5000;   // the desktop default of GameSettings::particleGpuThreshold
+    ParticleDocument* m_pDoc;
+    toms::fx::Effect m_oPreview;       // the current effect, hidden emitters muted
+    toms::fx::EffectInstance m_oFx;
+    QTimer* m_pTimer;
+    QElapsedTimer m_oClock;
+    QSet<int> m_oHidden;
+    QPointF m_oOrigin{0, 0};
+    float m_fSpeed = 1;
+    float m_fIdle = 0;                 // seconds since a one-shot finished
+    uint32_t m_uSeed = 1;
+    int m_iEffect = -1;
+    bool m_bPlaying = true;
+    bool m_bAutoRestart = true;
+    double m_dLastStepMs = 0;
+    IRenderer* m_pGpuRen = nullptr;
+    int m_iGpuThreshold = 5000;   // the desktop default of GameSettings::particleGpuThreshold
 };

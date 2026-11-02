@@ -16,20 +16,20 @@ class ReferencesDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit ReferencesDialog(AtlasDocument* doc, QWidget* parent = nullptr);
+    explicit ReferencesDialog(AtlasDocument* l_pDoc, QWidget* l_pParent = nullptr);
 
-    QString variant() const { return m_variant; }
-    QList<ImageFile> chosen() const;
+    QString f_Variant() const { return m_oVariant; }
+    QList<ImageFile> f_Chosen() const;
 
 private:
-    void scan();
-    void updateCount();
-    void checkAll(bool newOnes, bool changed);
+    void f_Scan();
+    void f_UpdateCount();
+    void f_CheckAll(bool l_bNewOnes, bool l_bChanged);
 
-    AtlasDocument* m_doc;
-    QString m_variant;
-    QLabel* m_header;
-    QLabel* m_summary;
-    QTableWidget* m_table;
-    QPushButton* m_import;
+    AtlasDocument* m_pDoc;
+    QString m_oVariant;
+    QLabel* m_pHeader;
+    QLabel* m_pSummary;
+    QTableWidget* m_pTable;
+    QPushButton* m_pImport;
 };

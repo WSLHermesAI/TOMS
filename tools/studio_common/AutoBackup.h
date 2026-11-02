@@ -26,44 +26,44 @@ public:
     // Writes the document to `path` (references stored so the copy opens from there, e.g. absolute
     // atlas paths). May write a folder named after `path` instead (the atlas editor: a project and
     // its packed atlas). False + error on failure.
-    using Writer = std::function<bool(const QString& path, QString* error)>;
+    using Writer = std::function<bool(const QString& l_oPath, QString* l_pError)>;
 
     struct Settings {
-        bool enabled = true;
-        int minutes = 5;
-        int edits = 20;
-        int keep = 20;
+        bool m_bEnabled = true;
+        int m_iMinutes = 5;
+        int m_iEdits = 20;
+        int m_iKeep = 20;
     };
-    static Settings settings();
-    static void setSettings(const Settings& s);   // every AutoBackup of the process follows
+    static Settings f_Settings();
+    static void f_SetSettings(const Settings& l_oS);   // every AutoBackup of the process follows
 
     // currentFile: the document's path ("" while untitled). extension: with the dot (".anim").
-    AutoBackup(QUndoStack* stack, const QString& extension, std::function<QString()> currentFile, Writer write,
-               QObject* parent = nullptr);
+    AutoBackup(QUndoStack* l_pStack, const QString& l_oExtension, std::function<QString()> l_fnCurrentFile, Writer l_fnWrite,
+               QObject* l_pParent = nullptr);
     ~AutoBackup() override;
 
-    static QString folder();                       // the backups folder of this editor
-    QString backupNow(QString* error = nullptr);   // the written path, "" on failure
-    int pendingEdits() const { return m_pending; }
+    static QString f_Folder();                       // the backups folder of this editor
+    QString f_BackupNow(QString* l_pError = nullptr);   // the written path, "" on failure
+    int f_PendingEdits() const { return m_iPending; }
 
     // File > Backups: Back Up Now, Open Backup Folder, Settings...
-    QMenu* addMenu(QMenu* fileMenu, QWidget* dialogParent);
+    QMenu* f_AddMenu(QMenu* l_pFileMenu, QWidget* l_pDialogParent);
 
 signals:
-    void message(const QString& text);   // for the status bar
+    void f_Message(const QString& l_oText);   // for the status bar
 
 private:
-    void applySettings();
-    void edited();
-    void prune(const QString& dir, const QString& stem) const;
+    void f_ApplySettings();
+    void f_Edited();
+    void f_Prune(const QString& l_oDir, const QString& l_oStem) const;
 
-    QUndoStack* m_stack;
-    QString m_ext;
-    std::function<QString()> m_file;
-    Writer m_write;
-    QTimer m_timer;
-    int m_pending = 0;
+    QUndoStack* m_pStack;
+    QString m_oExt;
+    std::function<QString()> m_fnFile;
+    Writer m_fnWrite;
+    QTimer m_oTimer;
+    int m_iPending = 0;
 };
 
 // The undo history as a dock: every step of the document, click one to go back (or forward) to it.
-QDockWidget* createHistoryDock(QUndoStack* stack, QWidget* parent);
+QDockWidget* f_CreateHistoryDock(QUndoStack* l_pStack, QWidget* l_pParent);

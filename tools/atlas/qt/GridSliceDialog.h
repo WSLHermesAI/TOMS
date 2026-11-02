@@ -25,24 +25,24 @@ class GridSliceDialog : public QDialog
 
 public:
     // exists: whether a sprite name is taken (the dialog refuses to create duplicates).
-    GridSliceDialog(const QImage& image, const QString& parentName, std::function<bool(const QString&)> exists,
-                    QWidget* parent = nullptr);
+    GridSliceDialog(const QImage& l_oImage, const QString& l_oParentName, std::function<bool(const QString&)> l_fnExists,
+                    QWidget* l_pParent = nullptr);
 
     // Names and rects (in the parent's pixels) of the cells to create, row by row.
-    std::vector<std::pair<QString, atlas::IRect>> cells() const { return m_cells; }
+    std::vector<std::pair<QString, atlas::IRect>> f_Cells() const { return m_vCells; }
 
 private:
-    void recompute();
+    void f_Recompute();
 
-    QImage m_image;
-    std::function<bool(const QString&)> m_exists;
-    std::vector<std::pair<QString, atlas::IRect>> m_cells;
+    QImage m_oImage;
+    std::function<bool(const QString&)> m_fnExists;
+    std::vector<std::pair<QString, atlas::IRect>> m_vCells;
 
-    QRadioButton* m_byCount;
-    QSpinBox *m_rows, *m_cols, *m_cellW, *m_cellH, *m_margin, *m_spacing, *m_start;
-    QLineEdit* m_prefix;
-    QCheckBox* m_skipEmpty;
-    QLabel* m_preview;
-    QLabel* m_summary;
-    QDialogButtonBox* m_buttons;
+    QRadioButton* m_pByCount;
+    QSpinBox *m_pRows, *m_pCols, *m_pCellW, *m_pCellH, *m_pMargin, *m_pSpacing, *m_pStart;
+    QLineEdit* m_pPrefix;
+    QCheckBox* m_pSkipEmpty;
+    QLabel* m_pPreview;
+    QLabel* m_pSummary;
+    QDialogButtonBox* m_pButtons;
 };

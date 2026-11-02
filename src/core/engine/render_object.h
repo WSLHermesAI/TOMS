@@ -36,239 +36,239 @@ class RenderObjectFactory;
 class RenderObject : public GameObject {
     TOMS_OBJECT(RenderObject)
 public:
-    float tint[4] = {1, 1, 1, 1};   // multiplies this object's colours (not its children's)
+    float m_arrTint[4] = {1, 1, 1, 1};   // multiplies this object's colours (not its children's)
 
     // Its place relative to its parent (pixels, y down), its scale and its rotation (degrees): the node's local transform.
-    void setPos(float x, float y) { pos_ = {x, y}; applyTransform(); }
-    void setScale(float sx, float sy) { scale_ = {sx, sy}; applyTransform(); }
-    void setRotation(float degrees) { rotation_ = degrees; applyTransform(); }
-    glm::vec2 pos() const { return pos_; }
-    glm::vec2 scale() const { return scale_; }
-    float rotation() const { return rotation_; }
+    void f_SetPos(float l_fX, float l_fY) { m_v2Pos = {l_fX, l_fY}; f_ApplyTransform(); }
+    void f_SetScale(float l_fSx, float l_fSy) { m_v2Scale = {l_fSx, l_fSy}; f_ApplyTransform(); }
+    void f_SetRotation(float l_fDegrees) { m_fRotation = l_fDegrees; f_ApplyTransform(); }
+    glm::vec2 f_Pos() const { return m_v2Pos; }
+    glm::vec2 f_Scale() const { return m_v2Scale; }
+    float f_Rotation() const { return m_fRotation; }
 
     // Children it owns: drawn after it, in order, placed by its transform. (Node's tree links them; the shared_ptr
     // keeps them alive.)
-    void addChild(std::shared_ptr<RenderObject> child);
-    const std::vector<std::shared_ptr<RenderObject>>& children() const { return owned_; }
+    void f_AddChild(std::shared_ptr<RenderObject> l_spChild);
+    const std::vector<std::shared_ptr<RenderObject>>& f_Children() const { return m_vOwned; }
 
     // Advances clips and effects (seconds), its children too.
-    virtual void update(float dt);
+    virtual void f_Update(float l_fDt);
     // The camera it is seen through, for it and its children: it draws at view * its transform. An effect keeps its
     // particles under the view (where they were born on the map), so a scrolling camera carries them along.
-    void setView(const glm::mat3& view);
-    const glm::mat3& view() const { return view_; }
+    void f_SetView(const glm::mat3& l_mat3View);
+    const glm::mat3& f_View() const { return m_mat3View; }
     // Draws itself; RenderTree() draws it and its children, skipping a hidden one with everything under it.
-    void Render(IRenderer* ren) override;
+    void f_Render(IRenderer* l_pRen) override;
 
     // A copy that shares its resources, with its children cloned.
-    virtual std::shared_ptr<RenderObject> clone() const = 0;
+    virtual std::shared_ptr<RenderObject> f_Clone() const = 0;
     // The JSON it was made from (its current state): factory.make(o->toJson()) makes the same object.
-    virtual nlohmann::json toJson() const = 0;
-    virtual const char* typeName() const = 0;   // its "type"
+    virtual nlohmann::json f_ToJson() const = 0;
+    virtual const char* f_TypeName() const = 0;   // its "type"
 
     // Its own resources were reloaded (contentVersion changed) -- they look things up again on their own; this is
     // for tests and tools.
-    virtual bool ok() const { return true; }
+    virtual bool f_Ok() const { return true; }
 
 protected:
-    virtual void draw(IRenderer* ren, const glm::mat3& world) = 0;
+    virtual void f_Draw(IRenderer* l_pRen, const glm::mat3& l_mat3World) = 0;
     // For clone() / toJson(): the fields every type shares (transform, tint, visibility, name, children).
-    void copyCommonTo(RenderObject& o) const;
-    nlohmann::json commonJson() const;
+    void f_CopyCommonTo(RenderObject& l_oO) const;
+    nlohmann::json f_CommonJson() const;
 
 private:
     friend class RenderObjectFactory;   // build() sets the common fields
-    void applyTransform();
-    std::vector<std::shared_ptr<RenderObject>> owned_;
-    glm::mat3 view_{1.0f};
-    glm::vec2 pos_{0.0f, 0.0f}, scale_{1.0f, 1.0f};
-    float rotation_ = 0;
+    void f_ApplyTransform();
+    std::vector<std::shared_ptr<RenderObject>> m_vOwned;
+    glm::mat3 m_mat3View{1.0f};
+    glm::vec2 m_v2Pos{0.0f, 0.0f}, m_v2Scale{1.0f, 1.0f};
+    float m_fRotation = 0;
 };
 
 // What a maker gets: the resources, the factory (for children) and where the object is in the JSON (for errors).
 struct BuildContext {
-    res::ResourceManager& res;
-    const RenderObjectFactory& factory;
-    std::string where;   // "children[2]" ... ("" at the top)
+    res::ResourceManager& m_oRes;
+    const RenderObjectFactory& m_oFactory;
+    std::string m_strWhere;   // "children[2]" ... ("" at the top)
 };
 
 class RenderObjectFactory {
 public:
-    using MakeFn = std::shared_ptr<RenderObject> (*)(const nlohmann::json& j, BuildContext& ctx, std::string& error);
+    using MakeFn = std::shared_ptr<RenderObject> (*)(const nlohmann::json& l_jJ, BuildContext& l_oCtx, std::string& l_strError);
 
-    // A class with `static constexpr const char* kTypeName` and `static std::shared_ptr<RenderObject> fromJson(const
+    // A class with `static constexpr const char* m_pszTypeName` and `static std::shared_ptr<RenderObject> f_FromJson(const
     // nlohmann::json&, BuildContext&, std::string&)` -- checked when it compiles.
-    template <class T> void add() { add(T::kTypeName, &T::fromJson); }
-    void add(const std::string& type, MakeFn make);
-    bool has(const std::string& type) const { return makers_.count(type) != 0; }
-    std::vector<std::string> types() const;
+    template <class T> void f_Add() { f_Add(T::m_pszTypeName, &T::f_FromJson); }
+    void f_Add(const std::string& l_strType, MakeFn l_fnMake);
+    bool f_Has(const std::string& l_strType) const { return m_mapMakers.count(l_strType) != 0; }
+    std::vector<std::string> f_Types() const;
 
     // The object a JSON description makes, with its common fields and children. Null when the type is unknown, a file
     // or a sprite is missing, or a field is wrong: `error` says what and where ("children[1]: no sprite 'x' in ...").
-    std::shared_ptr<RenderObject> make(const nlohmann::json& j, res::ResourceManager& res, std::string* error = nullptr) const;
+    std::shared_ptr<RenderObject> f_Make(const nlohmann::json& l_jJ, res::ResourceManager& l_oRes, std::string* l_pError = nullptr) const;
     // As make(), but never null: a mistake gives a MissingObject (a red box) that shows where it is.
-    std::shared_ptr<RenderObject> makeOrMissing(const nlohmann::json& j, res::ResourceManager& res, std::string* error = nullptr) const;
+    std::shared_ptr<RenderObject> f_MakeOrMissing(const nlohmann::json& l_jJ, res::ResourceManager& l_oRes, std::string* l_pError = nullptr) const;
     // A clone of the object this description made before (made now the first time). For descriptions used many times.
-    std::shared_ptr<RenderObject> instance(const nlohmann::json& j, res::ResourceManager& res, std::string* error = nullptr);
-    void clearPrototypes() { prototypes_.clear(); }
+    std::shared_ptr<RenderObject> f_Instance(const nlohmann::json& l_jJ, res::ResourceManager& l_oRes, std::string* l_pError = nullptr);
+    void f_ClearPrototypes() { m_mapPrototypes.clear(); }
 
-    std::shared_ptr<RenderObject> build(const nlohmann::json& j, BuildContext& ctx, std::string& error) const;
+    std::shared_ptr<RenderObject> f_Build(const nlohmann::json& l_jJ, BuildContext& l_oCtx, std::string& l_strError) const;
 
 private:
-    std::map<std::string, MakeFn> makers_;
-    std::map<std::string, std::shared_ptr<RenderObject>> prototypes_;   // by the description's text
+    std::map<std::string, MakeFn> m_mapMakers;
+    std::map<std::string, std::shared_ptr<RenderObject>> m_mapPrototypes;   // by the description's text
 };
 
 // sprite, clip, particle, text, group, missing.
-void registerBuiltinRenderObjects(RenderObjectFactory& f);
+void f_RegisterBuiltinRenderObjects(RenderObjectFactory& l_oF);
 
 // ---- the built-in types ----------------------------------------------------------------------------------------
 
 class SpriteObject : public RenderObject {
     TOMS_OBJECT(SpriteObject)
 public:
-    static constexpr const char* kTypeName = "sprite";
-    static std::shared_ptr<RenderObject> fromJson(const nlohmann::json& j, BuildContext& ctx, std::string& error);
-    std::shared_ptr<RenderObject> clone() const override;
-    nlohmann::json toJson() const override;
-    const char* typeName() const override { return kTypeName; }
+    static constexpr const char* m_pszTypeName = "sprite";
+    static std::shared_ptr<RenderObject> f_FromJson(const nlohmann::json& l_jJ, BuildContext& l_oCtx, std::string& l_strError);
+    std::shared_ptr<RenderObject> f_Clone() const override;
+    nlohmann::json f_ToJson() const override;
+    const char* f_TypeName() const override { return m_pszTypeName; }
 
-    const std::shared_ptr<res::AtlasRes>& atlas() const { return atlas_; }
-    const std::string& spriteName() const { return name_; }
-    bool additive = false;
-    bool solid = false;      // one flat colour (the tint) in the sprite's shape: a gate's key colour washed over it
+    const std::shared_ptr<res::AtlasRes>& f_Atlas() const { return m_spAtlas; }
+    const std::string& f_SpriteName() const { return m_strName; }
+    bool m_bAdditive = false;
+    bool m_bSolid = false;      // one flat colour (the tint) in the sprite's shape: a gate's key colour washed over it
 
 protected:
-    void draw(IRenderer* ren, const glm::mat3& world) override;
+    void f_Draw(IRenderer* l_pRen, const glm::mat3& l_mat3World) override;
 
 private:
-    std::shared_ptr<res::AtlasRes> atlas_;
-    std::string name_;
-    std::string atlasPath_;   // as written in the JSON
+    std::shared_ptr<res::AtlasRes> m_spAtlas;
+    std::string m_strName;
+    std::string m_strAtlasPath;   // as written in the JSON
     // the quad, kept until the transform, the tint or the atlas changes
-    Quad quad_{};
-    bool hasQuad_ = false;
-    glm::mat3 quadWorld_{0.0f};
-    float quadTint_[4] = {-1, -1, -1, -1};
-    int quadVersion_ = -1;
+    Quad m_oQuad{};
+    bool m_bHasQuad = false;
+    glm::mat3 m_mat3QuadWorld{0.0f};
+    float m_arrQuadTint[4] = {-1, -1, -1, -1};
+    int m_iQuadVersion = -1;
 };
 
 class ClipObject : public RenderObject {
     TOMS_OBJECT(ClipObject)
 public:
-    static constexpr const char* kTypeName = "clip";
-    static std::shared_ptr<RenderObject> fromJson(const nlohmann::json& j, BuildContext& ctx, std::string& error);
-    std::shared_ptr<RenderObject> clone() const override;
-    nlohmann::json toJson() const override;
-    const char* typeName() const override { return kTypeName; }
-    void update(float dt) override;
+    static constexpr const char* m_pszTypeName = "clip";
+    static std::shared_ptr<RenderObject> f_FromJson(const nlohmann::json& l_jJ, BuildContext& l_oCtx, std::string& l_strError);
+    std::shared_ptr<RenderObject> f_Clone() const override;
+    nlohmann::json f_ToJson() const override;
+    const char* f_TypeName() const override { return m_pszTypeName; }
+    void f_Update(float l_fDt) override;
 
-    const std::shared_ptr<res::AnimRes>& anim() const { return anim_; }
-    const std::string& clipName() const { return clip_; }
-    const anim::AnimPlayer& player() const { return player_; }
-    bool loop = false;       // play again when it finishes (a clip with looping nodes keeps moving anyway)
-    float phase = 0;         // seconds it starts in (a row of the same clip out of step)
-    bool ok() const override { return anim_ && anim_->find(clip_) != nullptr; }
+    const std::shared_ptr<res::AnimRes>& f_Anim() const { return m_spAnim; }
+    const std::string& f_ClipName() const { return m_strClip; }
+    const anim::AnimPlayer& f_Player() const { return m_oPlayer; }
+    bool m_bLoop = false;       // play again when it finishes (a clip with looping nodes keeps moving anyway)
+    float m_fPhase = 0;         // seconds it starts in (a row of the same clip out of step)
+    bool f_Ok() const override { return m_spAnim && m_spAnim->f_Find(m_strClip) != nullptr; }
     // Driven by an outside clock instead of update(): shows the clip at this time (seconds since it started).
-    void setTime(float seconds);
-    float duration() const;  // of one play (0 when the clip is missing)
+    void f_SetTime(float l_fSeconds);
+    float f_Duration() const;  // of one play (0 when the clip is missing)
 
 protected:
-    void draw(IRenderer* ren, const glm::mat3& world) override;
+    void f_Draw(IRenderer* l_pRen, const glm::mat3& l_mat3World) override;
 
 private:
-    void start();
-    std::shared_ptr<res::AnimRes> anim_;
-    std::string clip_, animPath_;
-    anim::AnimPlayer player_;
-    int seenVersion_ = -1, seenContent_ = -1;
-    float carryMs_ = 0;
+    void f_Start();
+    std::shared_ptr<res::AnimRes> m_spAnim;
+    std::string m_strClip, m_strAnimPath;
+    anim::AnimPlayer m_oPlayer;
+    int m_iSeenVersion = -1, m_iSeenContent = -1;
+    float m_fCarryMs = 0;
 };
 
 class ParticleObject : public RenderObject {
     TOMS_OBJECT(ParticleObject)
 public:
-    static constexpr const char* kTypeName = "particle";
-    static std::shared_ptr<RenderObject> fromJson(const nlohmann::json& j, BuildContext& ctx, std::string& error);
-    std::shared_ptr<RenderObject> clone() const override;
-    nlohmann::json toJson() const override;
-    const char* typeName() const override { return kTypeName; }
-    void update(float dt) override;
+    static constexpr const char* m_pszTypeName = "particle";
+    static std::shared_ptr<RenderObject> f_FromJson(const nlohmann::json& l_jJ, BuildContext& l_oCtx, std::string& l_strError);
+    std::shared_ptr<RenderObject> f_Clone() const override;
+    nlohmann::json f_ToJson() const override;
+    const char* f_TypeName() const override { return m_pszTypeName; }
+    void f_Update(float l_fDt) override;
 
-    const std::shared_ptr<res::ParticleRes>& file() const { return file_; }
-    const fx::EffectInstance& instance() const { return fx_; }
-    bool loop = false;       // a one-shot effect plays again once it has finished
-    uint32_t seed = 0;       // 0: the effect's own
-    int gpuThreshold = 0;    // emitters above this many particles simulate on the GPU (0 = never; EffectInstance)
-    bool ok() const override { return file_ && file_->find(effect_) != nullptr; }
+    const std::shared_ptr<res::ParticleRes>& f_File() const { return m_spFile; }
+    const fx::EffectInstance& f_Instance() const { return m_oFx; }
+    bool m_bLoop = false;       // a one-shot effect plays again once it has finished
+    uint32_t m_uSeed = 0;       // 0: the effect's own
+    int m_iGpuThreshold = 0;    // emitters above this many particles simulate on the GPU (0 = never; EffectInstance)
+    bool f_Ok() const override { return m_spFile && m_spFile->f_Find(m_strEffect) != nullptr; }
 
 protected:
-    void draw(IRenderer* ren, const glm::mat3& world) override;
+    void f_Draw(IRenderer* l_pRen, const glm::mat3& l_mat3World) override;
 
 private:
-    void start(IRenderer* ren, const glm::mat3& world);
-    std::shared_ptr<res::ParticleRes> file_;
-    std::string effect_, filePath_;
-    fx::EffectInstance fx_;
-    int seenVersion_ = -1;
-    bool placed_ = false;
+    void f_Start(IRenderer* l_pRen, const glm::mat3& l_mat3World);
+    std::shared_ptr<res::ParticleRes> m_spFile;
+    std::string m_strEffect, m_strFilePath;
+    fx::EffectInstance m_oFx;
+    int m_iSeenVersion = -1;
+    bool m_bPlaced = false;
 };
 
 class TextObject : public RenderObject {
     TOMS_OBJECT(TextObject)
 public:
-    static constexpr const char* kTypeName = "text";
-    static std::shared_ptr<RenderObject> fromJson(const nlohmann::json& j, BuildContext& ctx, std::string& error);
-    std::shared_ptr<RenderObject> clone() const override;
-    nlohmann::json toJson() const override;
-    const char* typeName() const override { return kTypeName; }
+    static constexpr const char* m_pszTypeName = "text";
+    static std::shared_ptr<RenderObject> f_FromJson(const nlohmann::json& l_jJ, BuildContext& l_oCtx, std::string& l_strError);
+    std::shared_ptr<RenderObject> f_Clone() const override;
+    nlohmann::json f_ToJson() const override;
+    const char* f_TypeName() const override { return m_pszTypeName; }
 
-    std::string text;        // UTF-8
-    ::BitmapFont::Align align = ::BitmapFont::Align::Left;
-    float size = 1;          // the font's scale
+    std::string m_strText;        // UTF-8
+    ::BitmapFont::Align m_eAlign = ::BitmapFont::Align::Left;
+    float m_fSize = 1;          // the font's scale
 
 protected:
-    void draw(IRenderer* ren, const glm::mat3& world) override;
+    void f_Draw(IRenderer* l_pRen, const glm::mat3& l_mat3World) override;
 
 private:
-    std::shared_ptr<res::FontRes> font_;
-    std::string fontPath_;
-    std::vector<Quad> quads_;
+    std::shared_ptr<res::FontRes> m_spFont;
+    std::string m_strFontPath;
+    std::vector<Quad> m_vQuads;
 };
 
 class GroupObject : public RenderObject {
     TOMS_OBJECT(GroupObject)
 public:
-    static constexpr const char* kTypeName = "group";
-    static std::shared_ptr<RenderObject> fromJson(const nlohmann::json& j, BuildContext& ctx, std::string& error);
-    std::shared_ptr<RenderObject> clone() const override;
-    nlohmann::json toJson() const override;
-    const char* typeName() const override { return kTypeName; }
+    static constexpr const char* m_pszTypeName = "group";
+    static std::shared_ptr<RenderObject> f_FromJson(const nlohmann::json& l_jJ, BuildContext& l_oCtx, std::string& l_strError);
+    std::shared_ptr<RenderObject> f_Clone() const override;
+    nlohmann::json f_ToJson() const override;
+    const char* f_TypeName() const override { return m_pszTypeName; }
 
 protected:
-    void draw(IRenderer*, const glm::mat3&) override {}
+    void f_Draw(IRenderer*, const glm::mat3&) override {}
 };
 
 // What a mistake in the data draws: a red box (32 x 32 around its origin), so it is seen, never a crash.
 class MissingObject : public RenderObject {
     TOMS_OBJECT(MissingObject)
 public:
-    static constexpr const char* kTypeName = "missing";
-    static std::shared_ptr<RenderObject> fromJson(const nlohmann::json& j, BuildContext& ctx, std::string& error);
-    std::shared_ptr<RenderObject> clone() const override;
-    nlohmann::json toJson() const override;
-    const char* typeName() const override { return kTypeName; }
-    std::string what;        // the error it stands for
-    bool ok() const override { return false; }
+    static constexpr const char* m_pszTypeName = "missing";
+    static std::shared_ptr<RenderObject> f_FromJson(const nlohmann::json& l_jJ, BuildContext& l_oCtx, std::string& l_strError);
+    std::shared_ptr<RenderObject> f_Clone() const override;
+    nlohmann::json f_ToJson() const override;
+    const char* f_TypeName() const override { return m_pszTypeName; }
+    std::string m_strWhat;        // the error it stands for
+    bool f_Ok() const override { return false; }
 
 protected:
-    void draw(IRenderer* ren, const glm::mat3& world) override;
+    void f_Draw(IRenderer* l_pRen, const glm::mat3& l_mat3World) override;
 };
 
 // The stage editor's object "look" ({"sprite": "slime.png", "anim": "anim/x.anim#clip", "tint": [...]}; anim wins over
 // sprite) as a render description: a looping "clip", else a "sprite" from `spriteAtlas`. Paths in it are relative to
 // `mediaDir` (the assets/media folder). Empty when it names neither.
-nlohmann::json lookToRenderJson(const nlohmann::json& look, const std::string& mediaDir,
-                                const std::string& spriteAtlas = res::ResourceManager::kSpriteAtlas);
+nlohmann::json f_LookToRenderJson(const nlohmann::json& l_jLook, const std::string& l_strMediaDir,
+                                const std::string& l_strSpriteAtlas = res::ResourceManager::m_pszSpriteAtlas);
 
 }  // namespace toms

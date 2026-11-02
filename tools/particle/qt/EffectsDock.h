@@ -17,24 +17,24 @@ class EffectsDock : public QDockWidget
     Q_OBJECT
 
 public:
-    EffectsDock(ParticleDocument* doc, ParticlePlayback* playback, QWidget* parent = nullptr);
-    QTreeWidget* tree() const { return m_tree; }
-    QToolBar* toolBar() const { return m_bar; }
+    EffectsDock(ParticleDocument* l_pDoc, ParticlePlayback* l_pPlayback, QWidget* l_pParent = nullptr);
+    QTreeWidget* f_Tree() const { return m_pTree; }
+    QToolBar* f_ToolBar() const { return m_pBar; }
 
-    void addEffect();
-    void addEmitter();
-    void duplicateSelected();
-    void deleteSelected();
+    void f_AddEffect();
+    void f_AddEmitter();
+    void f_DuplicateSelected();
+    void f_DeleteSelected();
 
 private:
-    void rebuild();
-    void scheduleRebuild();
-    void syncSelection();
+    void f_Rebuild();
+    void f_ScheduleRebuild();
+    void f_SyncSelection();
 
-    ParticleDocument* m_doc;
-    ParticlePlayback* m_play;
-    QTreeWidget* m_tree;
-    QToolBar* m_bar;
-    bool m_rebuilding = false;
-    bool m_pending = false;
+    ParticleDocument* m_pDoc;
+    ParticlePlayback* m_pPlay;
+    QTreeWidget* m_pTree;
+    QToolBar* m_pBar;
+    bool m_bRebuilding = false;
+    bool m_bPending = false;
 };

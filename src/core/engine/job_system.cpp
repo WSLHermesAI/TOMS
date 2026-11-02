@@ -25,12 +25,12 @@ namespace toms {
 
 #ifdef TOMS_NO_THREADS
 
-void JobSystem::start(int) {}
-void JobSystem::stop() {}
-int JobSystem::workers() { return 0; }
-bool JobSystem::threadsAvailable() { return false; }
-void JobSystem::parallelFor(int count, const std::function<void(int)>& body) {
-    for (int i = 0; i < count; ++i) body(i);
+void JobSystem::f_Start(int) {}
+void JobSystem::f_Stop() {}
+int JobSystem::f_Workers() { return 0; }
+bool JobSystem::f_ThreadsAvailable() { return false; }
+void JobSystem::f_ParallelFor(int l_iCount, const std::function<void(int)>& l_fnBody) {
+    for (int l_iI = 0; l_iI < l_iCount; ++l_iI) l_fnBody(l_iI);
 }
 
 #else
@@ -38,70 +38,70 @@ void JobSystem::parallelFor(int count, const std::function<void(int)>& body) {
 namespace {
 
 struct Job {
-    const std::function<void(int)>* body = nullptr;
-    int count = 0;
-    std::atomic<int> next{0};    // next index to take
-    std::atomic<int> done{0};    // indices finished
+    const std::function<void(int)>* m_pBody = nullptr;
+    int m_iCount = 0;
+    std::atomic<int> m_oNext{0};    // next index to take
+    std::atomic<int> m_oDone{0};    // indices finished
 };
 
 struct Pool {
-    std::vector<std::thread> threads;
-    std::mutex m;                // guards job, generation, active, stopping
-    std::condition_variable wake;      // workers: a new job (or stop)
-    std::condition_variable finished;  // caller: the last worker left the job
-    Job job;
-    unsigned generation = 0;
-    int active = 0;              // workers currently inside the job
-    bool stopping = false;
-    std::mutex callMutex;        // one parallelFor at a time
+    std::vector<std::thread> m_vThreads;
+    std::mutex m_oM;                // guards job, generation, active, stopping
+    std::condition_variable m_oWake;      // workers: a new job (or stop)
+    std::condition_variable m_oFinished;  // caller: the last worker left the job
+    Job m_oJob;
+    unsigned m_uGeneration = 0;
+    int m_iActive = 0;              // workers currently inside the job
+    bool m_bStopping = false;
+    std::mutex m_oCallMutex;        // one parallelFor at a time
     // Still-running std::threads abort the program when destroyed, so a pool left running until
     // exit is stopped here.
     ~Pool() {
         {
-            std::lock_guard<std::mutex> lk(m);
-            stopping = true;
+            std::lock_guard<std::mutex> l_oLk(m_oM);
+            m_bStopping = true;
         }
-        wake.notify_all();
-        for (std::thread& t : threads) if (t.joinable()) t.join();
+        m_oWake.notify_all();
+        for (std::thread& l_oT : m_vThreads) if (l_oT.joinable()) l_oT.join();
     }
 };
 
-Pool& pool() { static Pool p; return p; }
-thread_local bool t_inJob = false;   // nested parallelFor runs inline
+Pool& f_Pool() { static Pool l_oP; return l_oP; }
+thread_local bool g_bTInJob = false;   // nested parallelFor runs inline
 
-void runIndices(Job& job) {
-    for (int i; (i = job.next.fetch_add(1)) < job.count;) {
-        (*job.body)(i);
-        job.done.fetch_add(1);
+void f_RunIndices(Job& l_oJob) {
+    for (int l_iI; (l_iI = l_oJob.m_oNext.fetch_add(1)) < l_oJob.m_iCount;) {
+        (*l_oJob.m_pBody)(l_iI);
+        l_oJob.m_oDone.fetch_add(1);
     }
 }
 
-void workerMain(unsigned seen) {
-    Pool& p = pool();
-    std::unique_lock<std::mutex> lk(p.m);
+void f_WorkerMain(unsigned l_uSeen) {
+    Pool& l_oP = f_Pool();
+    std::unique_lock<std::mutex> l_oLk(l_oP.m_oM);
     for (;;) {
-        p.wake.wait(lk, [&] { return p.stopping || p.generation != seen; });
-        if (p.stopping) return;
-        seen = p.generation;
-        ++p.active;
-        lk.unlock();
-        t_inJob = true;
-        runIndices(p.job);
-        t_inJob = false;
-        lk.lock();
-        if (--p.active == 0) p.finished.notify_all();
+        l_oP.m_oWake.wait(l_oLk, [&] { return l_oP.m_bStopping || l_oP.m_uGeneration != l_uSeen; });
+        if (l_oP.m_bStopping) return;
+        l_uSeen = l_oP.m_uGeneration;
+        ++l_oP.m_iActive;
+        l_oLk.unlock();
+        g_bTInJob = true;
+        f_RunIndices(l_oP.m_oJob);
+        g_bTInJob = false;
+        l_oLk.lock();
+        if (--l_oP.m_iActive == 0) l_oP.m_oFinished.notify_all();
     }
 }
 
 }  // namespace
 
-void JobSystem::start(int workers) {
-    Pool& p = pool();
-    std::lock_guard<std::mutex> call(p.callMutex);
-    if (!p.threads.empty()) return;
-    if (workers < 0) {
-        const int hw = (int)std::thread::hardware_concurrency();
-        workers = std::max(0, std::min(hw - 1, 8));
+void JobSystem::f_Start(int l_iWorkers) {
+    Pool& l_oP = f_Pool();
+    std::lock_guard<std::mutex> l_oCall(l_oP.m_oCallMutex);
+    if (!l_oP.m_vThreads.empty()) return;
+    if (l_iWorkers < 0) {
+        const int l_iHw = (int)std::thread::hardware_concurrency();
+        l_iWorkers = std::max(0, std::min(l_iHw - 1, 8));
     }
 #ifdef __EMSCRIPTEN__
     // Only the pre-started pool: a new Web Worker would need the main thread to return to the
@@ -109,64 +109,64 @@ void JobSystem::start(int workers) {
     workers = std::min(workers, TOMS_WEB_THREAD_POOL);
 #endif
     {
-        std::lock_guard<std::mutex> lk(p.m);
-        p.stopping = false;
+        std::lock_guard<std::mutex> l_oLk(l_oP.m_oM);
+        l_oP.m_bStopping = false;
     }
-    for (int i = 0; i < workers; ++i) p.threads.emplace_back(workerMain, p.generation);
-    std::fprintf(stderr, "[jobs] %d worker thread(s)\n", workers);
+    for (int l_iI = 0; l_iI < l_iWorkers; ++l_iI) l_oP.m_vThreads.emplace_back(f_WorkerMain, l_oP.m_uGeneration);
+    std::fprintf(stderr, "[jobs] %d worker thread(s)\n", l_iWorkers);
     // A singleton with threads: stopped (and its thread list freed) by releaseSingletons() at the end of main()
-    if (workers > 0) onReleaseSingletons("job system", [] {
-        JobSystem::stop();
-        std::vector<std::thread>().swap(pool().threads);
+    if (l_iWorkers > 0) f_OnReleaseSingletons("job system", [] {
+        JobSystem::f_Stop();
+        std::vector<std::thread>().swap(f_Pool().m_vThreads);
     });
 }
 
-void JobSystem::stop() {
-    Pool& p = pool();
-    std::lock_guard<std::mutex> call(p.callMutex);
+void JobSystem::f_Stop() {
+    Pool& l_oP = f_Pool();
+    std::lock_guard<std::mutex> l_oCall(l_oP.m_oCallMutex);
     {
-        std::lock_guard<std::mutex> lk(p.m);
-        p.stopping = true;
+        std::lock_guard<std::mutex> l_oLk(l_oP.m_oM);
+        l_oP.m_bStopping = true;
     }
-    p.wake.notify_all();
-    for (std::thread& t : p.threads) t.join();
-    p.threads.clear();
+    l_oP.m_oWake.notify_all();
+    for (std::thread& l_oT : l_oP.m_vThreads) l_oT.join();
+    l_oP.m_vThreads.clear();
 }
 
-int JobSystem::workers() { return (int)pool().threads.size(); }
-bool JobSystem::threadsAvailable() { return true; }
+int JobSystem::f_Workers() { return (int)f_Pool().m_vThreads.size(); }
+bool JobSystem::f_ThreadsAvailable() { return true; }
 
-void JobSystem::parallelFor(int count, const std::function<void(int)>& body) {
-    if (count <= 0) return;
-    Pool& p = pool();
-    if (t_inJob || count == 1) {           // nested, or nothing to share
-        for (int i = 0; i < count; ++i) body(i);
+void JobSystem::f_ParallelFor(int l_iCount, const std::function<void(int)>& l_fnBody) {
+    if (l_iCount <= 0) return;
+    Pool& l_oP = f_Pool();
+    if (g_bTInJob || l_iCount == 1) {           // nested, or nothing to share
+        for (int l_iI = 0; l_iI < l_iCount; ++l_iI) l_fnBody(l_iI);
         return;
     }
-    std::lock_guard<std::mutex> call(p.callMutex);
-    if (p.threads.empty()) {
-        t_inJob = true;                    // a nested call must not take callMutex again
-        for (int i = 0; i < count; ++i) body(i);
-        t_inJob = false;
+    std::lock_guard<std::mutex> l_oCall(l_oP.m_oCallMutex);
+    if (l_oP.m_vThreads.empty()) {
+        g_bTInJob = true;                    // a nested call must not take callMutex again
+        for (int l_iI = 0; l_iI < l_iCount; ++l_iI) l_fnBody(l_iI);
+        g_bTInJob = false;
         return;
     }
     {
         // A worker that woke late for the previous job may still be inside it (finding nothing
         // left to take): let it leave before the job is reused.
-        std::unique_lock<std::mutex> lk(p.m);
-        p.finished.wait(lk, [&] { return p.active == 0; });
-        p.job.body = &body;
-        p.job.count = count;
-        p.job.next.store(0);
-        p.job.done.store(0);
-        ++p.generation;
+        std::unique_lock<std::mutex> l_oLk(l_oP.m_oM);
+        l_oP.m_oFinished.wait(l_oLk, [&] { return l_oP.m_iActive == 0; });
+        l_oP.m_oJob.m_pBody = &l_fnBody;
+        l_oP.m_oJob.m_iCount = l_iCount;
+        l_oP.m_oJob.m_oNext.store(0);
+        l_oP.m_oJob.m_oDone.store(0);
+        ++l_oP.m_uGeneration;
     }
-    p.wake.notify_all();
-    t_inJob = true;
-    runIndices(p.job);                     // the caller works too
-    t_inJob = false;
-    std::unique_lock<std::mutex> lk(p.m);
-    p.finished.wait(lk, [&] { return p.job.done.load() == count && p.active == 0; });
+    l_oP.m_oWake.notify_all();
+    g_bTInJob = true;
+    f_RunIndices(l_oP.m_oJob);                     // the caller works too
+    g_bTInJob = false;
+    std::unique_lock<std::mutex> l_oLk(l_oP.m_oM);
+    l_oP.m_oFinished.wait(l_oLk, [&] { return l_oP.m_oJob.m_oDone.load() == l_iCount && l_oP.m_iActive == 0; });
 }
 
 #endif

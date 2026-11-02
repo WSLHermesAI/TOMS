@@ -31,44 +31,44 @@
 class QTimer;
 
 struct LogicGraphState {
-    QPointF pan{30, 24};
-    double zoom = 1.0;
-    std::map<std::string, QPointF> pos;   // node id ("ev:x", "var:x" ...) -> top-left, in graph units
-    std::set<std::string> extra;          // nodes added from the menu (shown even without links)
-    std::set<std::string> sel;
-    int selLink = -1;
-    bool loaded = false;                  // positions read from QSettings
+    QPointF m_oPan{30, 24};
+    double m_dZoom = 1.0;
+    std::map<std::string, QPointF> m_mapPos;   // node id ("ev:x", "var:x" ...) -> top-left, in graph units
+    std::set<std::string> m_setExtra;          // nodes added from the menu (shown even without links)
+    std::set<std::string> m_setSel;
+    int m_iSelLink = -1;
+    bool m_bLoaded = false;                  // positions read from QSettings
 };
 
 class LogicGraph : public QWidget {
     Q_OBJECT
 public:
-    struct Pin { std::string id, kind; QString label; bool ghost = false; };
+    struct Pin { std::string m_strId, m_strKind; QString m_oLabel; bool m_bGhost = false; };
     struct Node {
-        std::string id, type, name;
-        QString title, sub;
-        QColor color;
-        std::vector<Pin> ins, outs;
-        bool missing = false;
-        double w = 190, h = 60;
+        std::string m_strId, m_strType, m_strName;
+        QString m_oTitle, m_oSub;
+        QColor m_oColor;
+        std::vector<Pin> m_vIns, m_vOuts;
+        bool m_bMissing = false;
+        double m_dW = 190, m_dH = 60;
     };
-    struct Link { std::string from, to, kind, who; std::function<void()> del; };   // from / to: "node|pin"
+    struct Link { std::string m_strFrom, m_strTo, m_strKind, m_strWho; std::function<void()> m_fnDel; };   // from / to: "node|pin"
 
     // edit(label, fn): one undo step; textOf: a {zh_TW, en} object in the editor's language
-    LogicGraph(stage::EventProject& p, LogicGraphState& st, std::function<void(const QString&, std::function<void()>)> edit,
-               std::function<QString(const stage::Json&)> textOf, QWidget* parent = nullptr);
+    LogicGraph(stage::EventProject& l_oP, LogicGraphState& l_oSt, std::function<void(const QString&, std::function<void()>)> l_fnEdit,
+               std::function<QString(const stage::Json&)> l_fnTextOf, QWidget* l_pParent = nullptr);
 
-    std::function<void(const std::string&)> onSelectEvent;   // an event node clicked
-    std::function<void(const std::string&)> onOpenValue;     // a value node double-clicked ("var:x" ...)
+    std::function<void(const std::string&)> m_fnOnSelectEvent;   // an event node clicked
+    std::function<void(const std::string&)> m_fnOnOpenValue;     // a value node double-clicked ("var:x" ...)
 
-    int eventNodes() const;
-    int valueNodes() const;
+    int f_EventNodes() const;
+    int f_ValueNodes() const;
     // for the self test: connect two pins as a drag would; true when it made an edit
-    bool connectPins(const std::string& from, const std::string& to);
-    bool hasNode(const std::string& id) const { return m_nodes.count(id) > 0; }
-    std::vector<std::string> nodeIds() const { return m_order; }
-    const std::vector<Link>& links() const { return m_links; }
-    void fit();
+    bool f_ConnectPins(const std::string& l_strFrom, const std::string& l_strTo);
+    bool f_HasNode(const std::string& l_strId) const { return m_mapNodes.count(l_strId) > 0; }
+    std::vector<std::string> f_NodeIds() const { return m_vOrder; }
+    const std::vector<Link>& f_Links() const { return m_vLinks; }
+    void f_Fit();
 
     QSize sizeHint() const override { return {800, 420}; }
     QSize minimumSizeHint() const override { return {200, 160}; }
@@ -85,53 +85,53 @@ protected:
 
 private:
     // the model (from the project, like the HTML editor's neGraph / makeNode / linkAction)
-    void rebuild();
-    bool makeNode(const std::string& id, Node& n) const;
+    void f_Rebuild();
+    bool f_MakeNode(const std::string& l_strId, Node& l_oN) const;
     using Action = std::pair<QString, std::function<void()>>;
-    bool linkAction(const Node& outN, const Pin& outP, const Node& inN, const Pin& inP, Action& act) const;
-    struct PinRef { const Node* n = nullptr; const Pin* p = nullptr; bool out = false; };
-    PinRef pinOf(const std::string& pid) const;
-    bool actionFor(const PinRef& a, const PinRef& b, Action* act = nullptr) const;
-    void autoLayout();
-    void measure(Node& n) const;
-    QString condLabel(const stage::Json& l) const;
-    QString actLabel(const stage::Json& a) const;
-    QString trigSub(const stage::Json& e) const;
+    bool f_LinkAction(const Node& l_oOutN, const Pin& l_oOutP, const Node& l_oInN, const Pin& l_oInP, Action& l_pairAct) const;
+    struct PinRef { const Node* m_pN = nullptr; const Pin* m_pP = nullptr; bool m_bOut = false; };
+    PinRef f_PinOf(const std::string& l_strPid) const;
+    bool f_ActionFor(const PinRef& l_oA, const PinRef& l_oB, Action* l_pAct = nullptr) const;
+    void f_AutoLayout();
+    void f_Measure(Node& l_oN) const;
+    QString f_CondLabel(const stage::Json& l_jL) const;
+    QString f_ActLabel(const stage::Json& l_jA) const;
+    QString f_TrigSub(const stage::Json& l_jE) const;
 
     // geometry (graph units)
-    QPointF pinPos(const std::string& pid) const;
-    QRectF nodeRect(const Node& n) const;
-    QPointF toGraph(const QPointF& w) const { return (w - m_st.pan) / m_st.zoom; }
-    std::string pinAt(const QPointF& g) const;
-    std::string nodeAt(const QPointF& g) const;
-    int linkAt(const QPointF& g) const;
-    QPainterPath curve(const QPointF& a, const QPointF& b) const;
+    QPointF f_PinPos(const std::string& l_strPid) const;
+    QRectF f_NodeRect(const Node& l_oN) const;
+    QPointF f_ToGraph(const QPointF& l_oW) const { return (l_oW - m_oSt.m_oPan) / m_oSt.m_dZoom; }
+    std::string f_PinAt(const QPointF& l_oG) const;
+    std::string f_NodeAt(const QPointF& l_oG) const;
+    int f_LinkAt(const QPointF& l_oG) const;
+    QPainterPath f_Curve(const QPointF& l_oA, const QPointF& l_oB) const;
 
-    void addMenu(const QPoint& at, const std::string& pending);
-    void savePositions();
-    void updateFlow();
+    void f_AddMenu(const QPoint& l_oAt, const std::string& l_strPending);
+    void f_SavePositions();
+    void f_UpdateFlow();
 
-    stage::EventProject& m_p;
-    LogicGraphState& m_st;
-    std::function<void(const QString&, std::function<void()>)> m_edit;
-    std::function<QString(const stage::Json&)> m_textOf;
-    std::map<std::string, Node> m_nodes;
-    std::vector<std::string> m_order;     // drawing order
-    std::vector<Link> m_links;
-    std::set<std::string> m_used;         // pins with a link
+    stage::EventProject& m_oP;
+    LogicGraphState& m_oSt;
+    std::function<void(const QString&, std::function<void()>)> m_fnEdit;
+    std::function<QString(const stage::Json&)> m_fnTextOf;
+    std::map<std::string, Node> m_mapNodes;
+    std::vector<std::string> m_vOrder;     // drawing order
+    std::vector<Link> m_vLinks;
+    std::set<std::string> m_setUsed;         // pins with a link
 
     enum class Drag { None, Pan, Node, Link, Box };
-    Drag m_drag = Drag::None;
-    QPoint m_press;
-    bool m_moved = false;
-    Qt::MouseButton m_btn = Qt::NoButton;
-    QPointF m_panStart;
-    std::string m_dragNode, m_linkFrom;
-    QPointF m_linkTo;                     // graph units
-    std::map<std::string, QPointF> m_origPos;
-    std::set<std::string> m_ok;           // pins the dragged link fits
-    QRect m_box;
-    QTimer* m_flowTimer = nullptr;
-    double m_flowOffset = 0;
-    bool m_fitPending = false;
+    Drag m_eDrag = Drag::None;
+    QPoint m_oPress;
+    bool m_bMoved = false;
+    Qt::MouseButton m_eBtn = Qt::NoButton;
+    QPointF m_oPanStart;
+    std::string m_strDragNode, m_strLinkFrom;
+    QPointF m_oLinkTo;                     // graph units
+    std::map<std::string, QPointF> m_mapOrigPos;
+    std::set<std::string> m_setOk;           // pins the dragged link fits
+    QRect m_oBox;
+    QTimer* m_pFlowTimer = nullptr;
+    double m_dFlowOffset = 0;
+    bool m_bFitPending = false;
 };

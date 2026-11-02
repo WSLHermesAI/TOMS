@@ -11,22 +11,22 @@ namespace toms::next {
 class ImGuiBgfx {
 public:
     struct Input {
-        float mouseX = 0, mouseY = 0;   // backbuffer pixels
-        bool  mouseDown[3] = {false, false, false};
-        float wheel = 0;
-        bool  hasMouse = true;
+        float m_fMouseX = 0, m_fMouseY = 0;   // backbuffer pixels
+        bool  m_arrMouseDown[3] = {false, false, false};
+        float m_fWheel = 0;
+        bool  m_bHasMouse = true;
     };
 
-    bool init();                        // creates the ImGui context, font texture and program
-    void shutdown();
-    void newFrame(uint32_t width, uint32_t height, float dtSeconds, const Input& in);
-    void render(uint16_t viewId);       // ImGui::Render() + submit to viewId
-    bool ready() const { return ready_; }
+    bool f_Init();                        // creates the ImGui context, font texture and program
+    void f_Shutdown();
+    void f_NewFrame(uint32_t l_uWidth, uint32_t l_uHeight, float l_fDtSeconds, const Input& l_oIn);
+    void f_Render(uint16_t l_u16ViewId);       // ImGui::Render() + submit to viewId
+    bool f_Ready() const { return m_bReady; }
 
 private:
-    bool ready_ = false;
-    uint16_t program_ = UINT16_MAX, sampler_ = UINT16_MAX, fontTex_ = UINT16_MAX;
-    uint32_t width_ = 0, height_ = 0;
+    bool m_bReady = false;
+    uint16_t m_u16Program = UINT16_MAX, m_u16Sampler = UINT16_MAX, m_u16FontTex = UINT16_MAX;
+    uint32_t m_uWidth = 0, m_uHeight = 0;
 };
 
 }  // namespace toms::next

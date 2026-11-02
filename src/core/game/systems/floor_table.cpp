@@ -12,22 +12,22 @@ namespace toms {
 namespace {
 
 // "ch_07" -> 7, so the act's ordinal comes from the same string the chapters use.
-int actOrdinal(const std::string& act) {
-    int value = 0;
-    bool haveDigit = false;
-    for (char c : act) {
-        if (c >= '0' && c <= '9') { value = value * 10 + (c - '0'); haveDigit = true; }
-        else if (haveDigit) break;               // stop at the end of the numeric run
+int f_ActOrdinal(const std::string& l_strAct) {
+    int l_iValue = 0;
+    bool l_bHaveDigit = false;
+    for (char l_cC : l_strAct) {
+        if (l_cC >= '0' && l_cC <= '9') { l_iValue = l_iValue * 10 + (l_cC - '0'); l_bHaveDigit = true; }
+        else if (l_bHaveDigit) break;               // stop at the end of the numeric run
     }
-    return haveDigit ? value : 1;
+    return l_bHaveDigit ? l_iValue : 1;
 }
 
-nlohmann::json readJson(const std::string& path) {
-    std::string text;
-    if (!toms::vfsReadAll(path, text)) return nlohmann::json();
-    if (text.empty()) return nlohmann::json();
+nlohmann::json f_ReadJson(const std::string& l_strPath) {
+    std::string l_strText;
+    if (!toms::f_VfsReadAll(l_strPath, l_strText)) return nlohmann::json();
+    if (l_strText.empty()) return nlohmann::json();
     try {
-        return nlohmann::json::parse(text);
+        return nlohmann::json::parse(l_strText);
     } catch (...) {
         return nlohmann::json();                 // a malformed spec is skipped, not fatal
     }
@@ -35,131 +35,131 @@ nlohmann::json readJson(const std::string& path) {
 
 } // namespace
 
-FloorTable FloorTable::fromSpecs(const std::vector<nlohmann::json>& specs) {
-    FloorTable table;
-    std::map<std::string, FloorInfo> byId;
-    std::vector<std::string> order;              // chain order, filled while walking nextFloor
+FloorTable FloorTable::f_FromSpecs(const std::vector<nlohmann::json>& l_vSpecs) {
+    FloorTable l_oTable;
+    std::map<std::string, FloorInfo> l_mapById;
+    std::vector<std::string> l_vOrder;              // chain order, filled while walking nextFloor
 
-    for (const auto& j : specs) {
-        if (!j.is_object() || !j.contains("id")) continue;
-        FloorInfo f;
-        f.id = j.value("id", std::string());
-        if (f.id.empty()) continue;
-        f.act = j.value("act", std::string());
-        f.actIndex = actOrdinal(f.act);
-        for (char ch : f.act) if (ch != '_') f.actKey += ch;   // "ch_01" -> "ch01"
-        f.indexInAct = j.value("indexInAct", 1);
-        f.role = j.value("role", std::string("normal"));
-        f.seal = j.value("seal", std::string());
-        f.handAuthoredStage = j.value("handAuthoredStage", std::string());
-        if (j.contains("nextFloor") && j["nextFloor"].is_string()) f.nextFloor = j["nextFloor"].get<std::string>();
-        if (j.contains("name")) f.nameKey = j["name"].is_string() ? j["name"].get<std::string>() : std::string();
-        if (j.contains("events") && j["events"].is_array()) {
-            f.eventCount = (int)j["events"].size();
-            for (const auto& ev : j["events"]) if (ev.is_string()) f.eventIds.push_back(ev.get<std::string>());
+    for (const auto& l_jJ : l_vSpecs) {
+        if (!l_jJ.is_object() || !l_jJ.contains("id")) continue;
+        FloorInfo l_oF;
+        l_oF.m_strId = l_jJ.value("id", std::string());
+        if (l_oF.m_strId.empty()) continue;
+        l_oF.m_strAct = l_jJ.value("act", std::string());
+        l_oF.m_iActIndex = f_ActOrdinal(l_oF.m_strAct);
+        for (char l_cCh : l_oF.m_strAct) if (l_cCh != '_') l_oF.m_strActKey += l_cCh;   // "ch_01" -> "ch01"
+        l_oF.m_iIndexInAct = l_jJ.value("indexInAct", 1);
+        l_oF.m_strRole = l_jJ.value("role", std::string("normal"));
+        l_oF.m_strSeal = l_jJ.value("seal", std::string());
+        l_oF.m_strHandAuthoredStage = l_jJ.value("handAuthoredStage", std::string());
+        if (l_jJ.contains("nextFloor") && l_jJ["nextFloor"].is_string()) l_oF.m_strNextFloor = l_jJ["nextFloor"].get<std::string>();
+        if (l_jJ.contains("name")) l_oF.m_strNameKey = l_jJ["name"].is_string() ? l_jJ["name"].get<std::string>() : std::string();
+        if (l_jJ.contains("events") && l_jJ["events"].is_array()) {
+            l_oF.m_iEventCount = (int)l_jJ["events"].size();
+            for (const auto& l_jEv : l_jJ["events"]) if (l_jEv.is_string()) l_oF.m_vEventIds.push_back(l_jEv.get<std::string>());
         }
-        if (j.contains("stairs") && j["stairs"].is_array()) {
-            f.stairs = stairLinksFromJson(j["stairs"]);
-            f.hasStairs = true;
+        if (l_jJ.contains("stairs") && l_jJ["stairs"].is_array()) {
+            l_oF.m_vStairs = f_StairLinksFromJson(l_jJ["stairs"]);
+            l_oF.m_bHasStairs = true;
         }
-        if (j.contains("story") && j["story"].is_object()) {
-            const auto& st = j["story"];
-            if (st.contains("intro") && st["intro"].is_string()) f.introKey = st["intro"].get<std::string>();
-            if (st.contains("ambient") && st["ambient"].is_array())
-                for (const auto& a : st["ambient"]) if (a.is_string()) f.ambientKeys.push_back(a.get<std::string>());
+        if (l_jJ.contains("story") && l_jJ["story"].is_object()) {
+            const auto& l_jSt = l_jJ["story"];
+            if (l_jSt.contains("intro") && l_jSt["intro"].is_string()) l_oF.m_strIntroKey = l_jSt["intro"].get<std::string>();
+            if (l_jSt.contains("ambient") && l_jSt["ambient"].is_array())
+                for (const auto& l_jA : l_jSt["ambient"]) if (l_jA.is_string()) l_oF.m_vAmbientKeys.push_back(l_jA.get<std::string>());
         }
-        byId[f.id] = f;
+        l_mapById[l_oF.m_strId] = l_oF;
     }
-    if (byId.empty()) return table;
+    if (l_mapById.empty()) return l_oTable;
 
     // Order by walking the nextFloor chain from the first floor (the one nothing points at). That
     // way `seq` -- and therefore the HUD counter -- always agrees with the way the run actually
     // progresses, instead of trusting the file names to be in order.
-    std::map<std::string, int> incoming;
-    for (auto& kv : byId) if (!kv.second.nextFloor.empty()) incoming[kv.second.nextFloor]++;
-    std::string cursor;
-    for (auto& kv : byId) {
-        if (incoming.count(kv.first) == 0) { cursor = kv.first; break; }   // the entrance
+    std::map<std::string, int> l_mapIncoming;
+    for (auto& l_pairKv : l_mapById) if (!l_pairKv.second.m_strNextFloor.empty()) l_mapIncoming[l_pairKv.second.m_strNextFloor]++;
+    std::string l_strCursor;
+    for (auto& l_pairKv : l_mapById) {
+        if (l_mapIncoming.count(l_pairKv.first) == 0) { l_strCursor = l_pairKv.first; break; }   // the entrance
     }
-    if (cursor.empty()) {                        // cyclic/degenerate data: fall back to id order
-        for (auto& kv : byId) order.push_back(kv.first);
-        std::sort(order.begin(), order.end());
+    if (l_strCursor.empty()) {                        // cyclic/degenerate data: fall back to id order
+        for (auto& l_pairKv : l_mapById) l_vOrder.push_back(l_pairKv.first);
+        std::sort(l_vOrder.begin(), l_vOrder.end());
     } else {
-        while (!cursor.empty() && byId.count(cursor) && order.size() <= byId.size()) {
-            order.push_back(cursor);
-            cursor = byId[cursor].nextFloor;
+        while (!l_strCursor.empty() && l_mapById.count(l_strCursor) && l_vOrder.size() <= l_mapById.size()) {
+            l_vOrder.push_back(l_strCursor);
+            l_strCursor = l_mapById[l_strCursor].m_strNextFloor;
         }
         // Any spec the chain did not visit (a broken link would strand a floor) is appended in id
         // order rather than dropped: an unreachable floor must show up in the table so a test can
         // report it, not silently vanish from the tower.
-        std::vector<std::string> rest;
-        for (auto& kv : byId)
-            if (std::find(order.begin(), order.end(), kv.first) == order.end()) rest.push_back(kv.first);
-        std::sort(rest.begin(), rest.end());
-        order.insert(order.end(), rest.begin(), rest.end());
+        std::vector<std::string> l_vRest;
+        for (auto& l_pairKv : l_mapById)
+            if (std::find(l_vOrder.begin(), l_vOrder.end(), l_pairKv.first) == l_vOrder.end()) l_vRest.push_back(l_pairKv.first);
+        std::sort(l_vRest.begin(), l_vRest.end());
+        l_vOrder.insert(l_vOrder.end(), l_vRest.begin(), l_vRest.end());
     }
 
-    int seq = 1;
-    for (const std::string& id : order) {
-        FloorInfo f = byId[id];
-        f.seq = seq++;
-        table.floors_.push_back(f);
+    int l_iSeq = 1;
+    for (const std::string& l_strId : l_vOrder) {
+        FloorInfo l_oF = l_mapById[l_strId];
+        l_oF.m_iSeq = l_iSeq++;
+        l_oTable.m_vFloors.push_back(l_oF);
     }
-    return table;
+    return l_oTable;
 }
 
-FloorTable FloorTable::loadFromDirectory(const std::string& dir) {
-    std::vector<nlohmann::json> specs;
-    for (const std::string& name : toms::vfsListDir(dir)) {     // vfs: APK folders on Android
-        if (name.empty() || name[0] != 'F') continue;
-        if (name.size() >= 11 && name.compare(name.size() - 11, 11, ".stage.json") == 0) continue;  // the map
-        if (name.size() < 5 || name.compare(name.size() - 5, 5, ".json") != 0) continue;
-        nlohmann::json j = readJson(dir + "/" + name);
-        if (j.is_object()) specs.push_back(j);
+FloorTable FloorTable::f_LoadFromDirectory(const std::string& l_strDir) {
+    std::vector<nlohmann::json> l_vSpecs;
+    for (const std::string& l_strName : toms::f_VfsListDir(l_strDir)) {     // vfs: APK folders on Android
+        if (l_strName.empty() || l_strName[0] != 'F') continue;
+        if (l_strName.size() >= 11 && l_strName.compare(l_strName.size() - 11, 11, ".stage.json") == 0) continue;  // the map
+        if (l_strName.size() < 5 || l_strName.compare(l_strName.size() - 5, 5, ".json") != 0) continue;
+        nlohmann::json l_jJ = f_ReadJson(l_strDir + "/" + l_strName);
+        if (l_jJ.is_object()) l_vSpecs.push_back(l_jJ);
     }
-    return fromSpecs(specs);
+    return f_FromSpecs(l_vSpecs);
 }
 
-const FloorInfo& FloorTable::at(int seq) const {
-    static const FloorInfo kEmpty;
-    if (floors_.empty()) return kEmpty;
-    if (seq < 1) seq = 1;
-    if (seq > (int)floors_.size()) seq = (int)floors_.size();
-    return floors_[seq - 1];
+const FloorInfo& FloorTable::f_At(int l_iSeq) const {
+    static const FloorInfo l_oEmpty;
+    if (m_vFloors.empty()) return l_oEmpty;
+    if (l_iSeq < 1) l_iSeq = 1;
+    if (l_iSeq > (int)m_vFloors.size()) l_iSeq = (int)m_vFloors.size();
+    return m_vFloors[l_iSeq - 1];
 }
 
-const FloorInfo* FloorTable::find(const std::string& id) const {
-    for (const FloorInfo& f : floors_) if (f.id == id) return &f;
+const FloorInfo* FloorTable::f_Find(const std::string& l_strId) const {
+    for (const FloorInfo& l_oF : m_vFloors) if (l_oF.m_strId == l_strId) return &l_oF;
     return nullptr;
 }
 
-FloorInfo* FloorTable::edit(const std::string& id) {
-    for (FloorInfo& f : floors_) if (f.id == id) return &f;
+FloorInfo* FloorTable::f_Edit(const std::string& l_strId) {
+    for (FloorInfo& l_oF : m_vFloors) if (l_oF.m_strId == l_strId) return &l_oF;
     return nullptr;
 }
 
-std::string FloorTable::next(const std::string& id) const {
-    const FloorInfo* f = find(id);
-    return f ? f->nextFloor : std::string();
+std::string FloorTable::f_Next(const std::string& l_strId) const {
+    const FloorInfo* l_pF = f_Find(l_strId);
+    return l_pF ? l_pF->m_strNextFloor : std::string();
 }
 
-std::string FloorTable::prev(const std::string& id) const {
-    for (int i = 0; i < (int)floors_.size(); i++) {
-        if (floors_[i].id == id) return i == 0 ? std::string() : floors_[i - 1].id;
+std::string FloorTable::f_Prev(const std::string& l_strId) const {
+    for (int l_iI = 0; l_iI < (int)m_vFloors.size(); l_iI++) {
+        if (m_vFloors[l_iI].m_strId == l_strId) return l_iI == 0 ? std::string() : m_vFloors[l_iI - 1].m_strId;
     }
     return std::string();
 }
 
-int FloorTable::seqOf(const std::string& id) const {
-    for (const FloorInfo& f : floors_) if (f.id == id) return f.seq;
+int FloorTable::f_SeqOf(const std::string& l_strId) const {
+    for (const FloorInfo& l_oF : m_vFloors) if (l_oF.m_strId == l_strId) return l_oF.m_iSeq;
     return 0;
 }
 
-std::string FloorTable::mapRelPath(const std::string& id) const {
-    const FloorInfo* f = find(id);
-    if (!f) return std::string();
-    if (!f->handAuthoredStage.empty()) return "data/stages/" + f->handAuthoredStage;
-    return "data/story/floors/" + f->id + ".stage.json";
+std::string FloorTable::f_MapRelPath(const std::string& l_strId) const {
+    const FloorInfo* l_pF = f_Find(l_strId);
+    if (!l_pF) return std::string();
+    if (!l_pF->m_strHandAuthoredStage.empty()) return "data/stages/" + l_pF->m_strHandAuthoredStage;
+    return "data/story/floors/" + l_pF->m_strId + ".stage.json";
 }
 
 } // namespace toms

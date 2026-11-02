@@ -33,872 +33,872 @@ using atlas::SpriteDef;
 
 namespace {
 
-QString qs(const std::string& s) { return QString::fromStdString(s); }
-std::string u8(const QString& s) { return s.toStdString(); }
+QString f_Qs(const std::string& l_strS) { return QString::fromStdString(l_strS); }
+std::string f_U8(const QString& l_oS) { return l_oS.toStdString(); }
 
-const char* kMixed = "–";
+const char* g_pszMixed = "–";
 
 // Spin boxes that can show "mixed": one step below the real minimum is the blank state.
-QSpinBox* mixedSpin(int lo, int hi, QWidget* parent)
+QSpinBox* f_MixedSpin(int l_iLo, int l_iHi, QWidget* l_pParent)
 {
-    auto* s = new QSpinBox(parent);
-    s->setRange(lo - 1, hi);
-    s->setSpecialValueText(QString::fromUtf8(kMixed));
-    s->setKeyboardTracking(false);   // commit on Enter / focus out / arrow, not per keystroke
-    s->setMinimumWidth(56);
-    return s;
+    auto* l_pS = new QSpinBox(l_pParent);
+    l_pS->setRange(l_iLo - 1, l_iHi);
+    l_pS->setSpecialValueText(QString::fromUtf8(g_pszMixed));
+    l_pS->setKeyboardTracking(false);   // commit on Enter / focus out / arrow, not per keystroke
+    l_pS->setMinimumWidth(56);
+    return l_pS;
 }
 
-QDoubleSpinBox* mixedDoubleSpin(double lo, double hi, QWidget* parent)
+QDoubleSpinBox* f_MixedDoubleSpin(double l_dLo, double l_dHi, QWidget* l_pParent)
 {
-    auto* s = new QDoubleSpinBox(parent);
-    s->setDecimals(3);
-    s->setSingleStep(0.05);
-    s->setRange(lo - 0.001, hi);
-    s->setSpecialValueText(QString::fromUtf8(kMixed));
-    s->setKeyboardTracking(false);
-    s->setMinimumWidth(64);
-    return s;
+    auto* l_pS = new QDoubleSpinBox(l_pParent);
+    l_pS->setDecimals(3);
+    l_pS->setSingleStep(0.05);
+    l_pS->setRange(l_dLo - 0.001, l_dHi);
+    l_pS->setSpecialValueText(QString::fromUtf8(g_pszMixed));
+    l_pS->setKeyboardTracking(false);
+    l_pS->setMinimumWidth(64);
+    return l_pS;
 }
 
-bool isMixed(const QSpinBox* s) { return s->value() == s->minimum(); }
-bool isMixed(const QDoubleSpinBox* s) { return s->value() <= s->minimum(); }
+bool f_IsMixed(const QSpinBox* l_pS) { return l_pS->value() == l_pS->minimum(); }
+bool f_IsMixed(const QDoubleSpinBox* l_pS) { return l_pS->value() <= l_pS->minimum(); }
 
-void showValue(QSpinBox* s, bool same, int v) { s->setValue(same ? v : s->minimum()); }
-void showValue(QDoubleSpinBox* s, bool same, double v) { s->setValue(same ? v : s->minimum()); }
+void f_ShowValue(QSpinBox* l_pS, bool l_bSame, int l_iV) { l_pS->setValue(l_bSame ? l_iV : l_pS->minimum()); }
+void f_ShowValue(QDoubleSpinBox* l_pS, bool l_bSame, double l_dV) { l_pS->setValue(l_bSame ? l_dV : l_pS->minimum()); }
 
-void showValue(QCheckBox* b, bool same, bool v)
+void f_ShowValue(QCheckBox* l_pB, bool l_bSame, bool l_bV)
 {
-    b->setTristate(!same);
-    if (same) b->setChecked(v);
-    else b->setCheckState(Qt::PartiallyChecked);
+    l_pB->setTristate(!l_bSame);
+    if (l_bSame) l_pB->setChecked(l_bV);
+    else l_pB->setCheckState(Qt::PartiallyChecked);
 }
 
-void showValue(QLineEdit* e, bool same, const QString& v)
+void f_ShowValue(QLineEdit* l_pE, bool l_bSame, const QString& l_oV)
 {
-    e->setText(same ? v : QString());
-    e->setPlaceholderText(same ? QString() : QObject::tr("(mixed)"));
+    l_pE->setText(l_bSame ? l_oV : QString());
+    l_pE->setPlaceholderText(l_bSame ? QString() : QObject::tr("(mixed)"));
 }
 
 // True when get() gives the same value for every def; `out` gets the first one.
 template <class T, class F>
-bool common(const std::vector<SpriteDef>& defs, F get, T& out)
+bool f_Common(const std::vector<SpriteDef>& l_vDefs, F l_oGet, T& l_oOut)
 {
-    out = get(defs.front());
-    for (const SpriteDef& d : defs)
-        if (!(get(d) == out)) return false;
+    l_oOut = l_oGet(l_vDefs.front());
+    for (const SpriteDef& l_oD : l_vDefs)
+        if (!(l_oGet(l_oD) == l_oOut)) return false;
     return true;
 }
 
 // Shows the value get() has for every def, or "mixed" when they differ.
 template <class W, class F>
-void showCommon(W* w, const std::vector<SpriteDef>& defs, F get)
+void f_ShowCommon(W* l_pW, const std::vector<SpriteDef>& l_vDefs, F l_oGet)
 {
-    decltype(get(defs.front())) v{};
-    const bool same = common(defs, get, v);
-    showValue(w, same, v);
+    decltype(l_oGet(l_vDefs.front())) l_oV{};
+    const bool l_bSame = f_Common(l_vDefs, l_oGet, l_oV);
+    f_ShowValue(l_pW, l_bSame, l_oV);
 }
 
-QSpinBox* plainSpin(int lo, int hi, QWidget* parent)
+QSpinBox* f_PlainSpin(int l_iLo, int l_iHi, QWidget* l_pParent)
 {
-    auto* s = new QSpinBox(parent);
-    s->setRange(lo, hi);
-    s->setKeyboardTracking(false);
-    s->setMinimumWidth(64);
-    return s;
+    auto* l_pS = new QSpinBox(l_pParent);
+    l_pS->setRange(l_iLo, l_iHi);
+    l_pS->setKeyboardTracking(false);
+    l_pS->setMinimumWidth(64);
+    return l_pS;
 }
 
 // A row of labelled fields: "x [ ] y [ ] ...".
-QWidget* fieldRow(QWidget* parent, const QList<QPair<QString, QWidget*>>& fields, QWidget* trailing = nullptr)
+QWidget* f_FieldRow(QWidget* l_pParent, const QList<QPair<QString, QWidget*>>& l_oFields, QWidget* l_pTrailing = nullptr)
 {
-    auto* row = new QWidget(parent);
-    auto* l = new QHBoxLayout(row);
-    l->setContentsMargins(0, 0, 0, 0);
-    l->setSpacing(4);
-    for (const auto& f : fields) {
-        if (!f.first.isEmpty()) {
-            auto* lab = new QLabel(f.first, row);
-            lab->setForegroundRole(QPalette::PlaceholderText);
-            l->addWidget(lab);
+    auto* l_pRow = new QWidget(l_pParent);
+    auto* l_pL = new QHBoxLayout(l_pRow);
+    l_pL->setContentsMargins(0, 0, 0, 0);
+    l_pL->setSpacing(4);
+    for (const auto& l_pairF : l_oFields) {
+        if (!l_pairF.first.isEmpty()) {
+            auto* l_pLab = new QLabel(l_pairF.first, l_pRow);
+            l_pLab->setForegroundRole(QPalette::PlaceholderText);
+            l_pL->addWidget(l_pLab);
         }
-        l->addWidget(f.second, 1);
+        l_pL->addWidget(l_pairF.second, 1);
     }
-    if (trailing) l->addWidget(trailing);
-    return row;
+    if (l_pTrailing) l_pL->addWidget(l_pTrailing);
+    return l_pRow;
 }
 
-QLabel* infoLabel(QWidget* parent)
+QLabel* f_InfoLabel(QWidget* l_pParent)
 {
-    auto* l = new QLabel(parent);
-    l->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    auto* l_pL = new QLabel(l_pParent);
+    l_pL->setTextInteractionFlags(Qt::TextSelectableByMouse);
     // Long paths must not widen the dock: clip, the tooltip has the full text.
-    l->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
-    return l;
+    l_pL->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+    return l_pL;
 }
 
-const atlas::Heuristic kHeuristics[] = {atlas::Heuristic::Auto,        atlas::Heuristic::BestShortSideFit,
+const atlas::Heuristic g_arrHeuristics[] = {atlas::Heuristic::Auto,        atlas::Heuristic::BestShortSideFit,
                                         atlas::Heuristic::BestLongSideFit, atlas::Heuristic::BestAreaFit,
                                         atlas::Heuristic::BottomLeft,  atlas::Heuristic::ContactPoint,
                                         atlas::Heuristic::Shelf};
 
 }  // namespace
 
-PropertiesDock::PropertiesDock(AtlasDocument* doc, QWidget* parent)
-    : QDockWidget(tr("Properties"), parent)
-    , m_doc(doc)
+PropertiesDock::PropertiesDock(AtlasDocument* l_pDoc, QWidget* l_pParent)
+    : QDockWidget(tr("Properties"), l_pParent)
+    , m_pDoc(l_pDoc)
 {
     setObjectName(QStringLiteral("PropertiesDock"));
-    auto* scroll = new QScrollArea(this);
-    scroll->setWidgetResizable(true);
-    scroll->setFrameShape(QFrame::NoFrame);
+    auto* l_pScroll = new QScrollArea(this);
+    l_pScroll->setWidgetResizable(true);
+    l_pScroll->setFrameShape(QFrame::NoFrame);
     // Rows are laid out to fit the dock; a sideways scroll bar would only hide the right column.
-    scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    auto* body = new QWidget(scroll);
-    auto* layout = new QVBoxLayout(body);
-    layout->setContentsMargins(6, 6, 6, 6);
-    layout->setSpacing(8);
-    layout->addWidget(buildSpriteGroup());
-    layout->addWidget(buildVariantGroup());
-    layout->addWidget(buildAtlasGroup());
-    layout->addWidget(buildReferencesGroup());
-    layout->addStretch(1);
-    scroll->setWidget(body);
-    setWidget(scroll);
+    l_pScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    auto* l_pBody = new QWidget(l_pScroll);
+    auto* l_pLayout = new QVBoxLayout(l_pBody);
+    l_pLayout->setContentsMargins(6, 6, 6, 6);
+    l_pLayout->setSpacing(8);
+    l_pLayout->addWidget(f_BuildSpriteGroup());
+    l_pLayout->addWidget(f_BuildVariantGroup());
+    l_pLayout->addWidget(f_BuildAtlasGroup());
+    l_pLayout->addWidget(f_BuildReferencesGroup());
+    l_pLayout->addStretch(1);
+    l_pScroll->setWidget(l_pBody);
+    setWidget(l_pScroll);
 
-    connect(doc, &AtlasDocument::projectChanged, this, [this] {
-        refreshAtlas();
-        refreshSprite();
-        refreshVariant();
-        refreshReferences();
+    connect(l_pDoc, &AtlasDocument::f_ProjectChanged, this, [this] {
+        f_RefreshAtlas();
+        f_RefreshSprite();
+        f_RefreshVariant();
+        f_RefreshReferences();
     });
-    connect(doc, &AtlasDocument::variantChanged, this, [this] {
-        refreshVariant();
-        refreshSprite();
+    connect(l_pDoc, &AtlasDocument::f_VariantChanged, this, [this] {
+        f_RefreshVariant();
+        f_RefreshSprite();
     });
     // Relative paths are shown as stored; their tooltips follow the project file.
-    connect(doc, &AtlasDocument::filePathChanged, this, &PropertiesDock::refreshReferences);
-    connect(doc, &AtlasDocument::selectionChanged, this, &PropertiesDock::refreshSprite);
-    connect(doc, &AtlasDocument::buildFinished, this, &PropertiesDock::refreshInfo);
-    refreshAtlas();
-    refreshSprite();
-    refreshVariant();
-    refreshReferences();
+    connect(l_pDoc, &AtlasDocument::f_FilePathChanged, this, &PropertiesDock::f_RefreshReferences);
+    connect(l_pDoc, &AtlasDocument::f_SelectionChanged, this, &PropertiesDock::f_RefreshSprite);
+    connect(l_pDoc, &AtlasDocument::f_BuildFinished, this, &PropertiesDock::f_RefreshInfo);
+    f_RefreshAtlas();
+    f_RefreshSprite();
+    f_RefreshVariant();
+    f_RefreshReferences();
 }
 
 // ---- Atlas group --------------------------------------------------------------------------------
 
-void PropertiesDock::bindInt(QSpinBox* spin, const QString& key, const QString& text, std::function<void(Project&, int)> set)
+void PropertiesDock::f_BindInt(QSpinBox* l_pSpin, const QString& l_oKey, const QString& l_oText, std::function<void(Project&, int)> l_fnSet)
 {
-    connect(spin, &QSpinBox::valueChanged, this, [this, key, text, set](int v) {
-        if (m_updating) return;
-        m_doc->edit(text, [&](Project& p) { set(p, v); }, QStringLiteral("atlas.") + key);
+    connect(l_pSpin, &QSpinBox::valueChanged, this, [this, l_oKey, l_oText, l_fnSet](int l_iV) {
+        if (m_bUpdating) return;
+        m_pDoc->f_Edit(l_oText, [&](Project& l_oP) { l_fnSet(l_oP, l_iV); }, QStringLiteral("atlas.") + l_oKey);
     });
 }
 
-void PropertiesDock::bindBool(QCheckBox* box, const QString& text, std::function<void(Project&, bool)> set)
+void PropertiesDock::f_BindBool(QCheckBox* l_pBox, const QString& l_oText, std::function<void(Project&, bool)> l_fnSet)
 {
-    connect(box, &QCheckBox::toggled, this, [this, text, set](bool v) {
-        if (m_updating) return;
-        m_doc->edit(text, [&](Project& p) { set(p, v); });
+    connect(l_pBox, &QCheckBox::toggled, this, [this, l_oText, l_fnSet](bool l_bV) {
+        if (m_bUpdating) return;
+        m_pDoc->f_Edit(l_oText, [&](Project& l_oP) { l_fnSet(l_oP, l_bV); });
     });
 }
 
-QWidget* PropertiesDock::buildAtlasGroup()
+QWidget* PropertiesDock::f_BuildAtlasGroup()
 {
-    auto* group = new QGroupBox(tr("Atlas"));
-    auto* form = new QFormLayout(group);
-    form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
+    auto* l_pGroup = new QGroupBox(tr("Atlas"));
+    auto* l_pForm = new QFormLayout(l_pGroup);
+    l_pForm->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
 
-    m_projectName = new QLineEdit(group);
-    form->addRow(tr("Name"), m_projectName);
-    connect(m_projectName, &QLineEdit::editingFinished, this, [this] {
-        const std::string n = u8(m_projectName->text().trimmed());
-        if (m_updating || n.empty() || n == m_doc->project().name) return;
-        m_doc->edit(tr("Rename atlas"), [&](Project& p) { p.name = n; });
+    m_pProjectName = new QLineEdit(l_pGroup);
+    l_pForm->addRow(tr("Name"), m_pProjectName);
+    connect(m_pProjectName, &QLineEdit::editingFinished, this, [this] {
+        const std::string l_strN = f_U8(m_pProjectName->text().trimmed());
+        if (m_bUpdating || l_strN.empty() || l_strN == m_pDoc->f_Project().m_strName) return;
+        m_pDoc->f_Edit(tr("Rename atlas"), [&](Project& l_oP) { l_oP.m_strName = l_strN; });
     });
 
-    m_maxW = plainSpin(16, 16384, group);
-    m_maxH = plainSpin(16, 16384, group);
-    m_minW = plainSpin(1, 16384, group);
-    m_minH = plainSpin(1, 16384, group);
-    form->addRow(tr("Max size"), fieldRow(group, {{QString(), m_maxW}, {QStringLiteral("×"), m_maxH}}));
-    form->addRow(tr("Min size"), fieldRow(group, {{QString(), m_minW}, {QStringLiteral("×"), m_minH}}));
-    bindInt(m_maxW, QStringLiteral("maxW"), tr("Max width"), [](Project& p, int v) { p.settings.maxWidth = v; });
-    bindInt(m_maxH, QStringLiteral("maxH"), tr("Max height"), [](Project& p, int v) { p.settings.maxHeight = v; });
-    bindInt(m_minW, QStringLiteral("minW"), tr("Min width"), [](Project& p, int v) { p.settings.minWidth = v; });
-    bindInt(m_minH, QStringLiteral("minH"), tr("Min height"), [](Project& p, int v) { p.settings.minHeight = v; });
+    m_pMaxW = f_PlainSpin(16, 16384, l_pGroup);
+    m_pMaxH = f_PlainSpin(16, 16384, l_pGroup);
+    m_pMinW = f_PlainSpin(1, 16384, l_pGroup);
+    m_pMinH = f_PlainSpin(1, 16384, l_pGroup);
+    l_pForm->addRow(tr("Max size"), f_FieldRow(l_pGroup, {{QString(), m_pMaxW}, {QStringLiteral("×"), m_pMaxH}}));
+    l_pForm->addRow(tr("Min size"), f_FieldRow(l_pGroup, {{QString(), m_pMinW}, {QStringLiteral("×"), m_pMinH}}));
+    f_BindInt(m_pMaxW, QStringLiteral("maxW"), tr("Max width"), [](Project& l_oP, int l_iV) { l_oP.m_oSettings.m_iMaxWidth = l_iV; });
+    f_BindInt(m_pMaxH, QStringLiteral("maxH"), tr("Max height"), [](Project& l_oP, int l_iV) { l_oP.m_oSettings.m_iMaxHeight = l_iV; });
+    f_BindInt(m_pMinW, QStringLiteral("minW"), tr("Min width"), [](Project& l_oP, int l_iV) { l_oP.m_oSettings.m_iMinWidth = l_iV; });
+    f_BindInt(m_pMinH, QStringLiteral("minH"), tr("Min height"), [](Project& l_oP, int l_iV) { l_oP.m_oSettings.m_iMinHeight = l_iV; });
 
-    m_pot = new QCheckBox(tr("Power of two"), group);
-    m_square = new QCheckBox(tr("Square"), group);
-    m_fixedSize = new QCheckBox(tr("Fixed size"), group);
-    m_fixedSize->setToolTip(tr("Always use the maximum size instead of shrinking the page to fit"));
-    auto* sizeFlags = new QWidget(group);
-    auto* sl = new QGridLayout(sizeFlags);
-    sl->setContentsMargins(0, 0, 0, 0);
-    sl->addWidget(m_pot, 0, 0);
-    sl->addWidget(m_square, 0, 1);
-    sl->addWidget(m_fixedSize, 1, 0);
-    form->addRow(QString(), sizeFlags);
-    bindBool(m_pot, tr("Power of two"), [](Project& p, bool v) { p.settings.powerOfTwo = v; });
-    bindBool(m_square, tr("Square pages"), [](Project& p, bool v) { p.settings.square = v; });
-    bindBool(m_fixedSize, tr("Fixed size"), [](Project& p, bool v) { p.settings.fixedSize = v; });
+    m_pPot = new QCheckBox(tr("Power of two"), l_pGroup);
+    m_pSquare = new QCheckBox(tr("Square"), l_pGroup);
+    m_pFixedSize = new QCheckBox(tr("Fixed size"), l_pGroup);
+    m_pFixedSize->setToolTip(tr("Always use the maximum size instead of shrinking the page to fit"));
+    auto* l_pSizeFlags = new QWidget(l_pGroup);
+    auto* l_pSl = new QGridLayout(l_pSizeFlags);
+    l_pSl->setContentsMargins(0, 0, 0, 0);
+    l_pSl->addWidget(m_pPot, 0, 0);
+    l_pSl->addWidget(m_pSquare, 0, 1);
+    l_pSl->addWidget(m_pFixedSize, 1, 0);
+    l_pForm->addRow(QString(), l_pSizeFlags);
+    f_BindBool(m_pPot, tr("Power of two"), [](Project& l_oP, bool l_bV) { l_oP.m_oSettings.m_bPowerOfTwo = l_bV; });
+    f_BindBool(m_pSquare, tr("Square pages"), [](Project& l_oP, bool l_bV) { l_oP.m_oSettings.m_bSquare = l_bV; });
+    f_BindBool(m_pFixedSize, tr("Fixed size"), [](Project& l_oP, bool l_bV) { l_oP.m_oSettings.m_bFixedSize = l_bV; });
 
-    m_padding = plainSpin(0, 64, group);
-    m_border = plainSpin(0, 64, group);
-    m_extrude = plainSpin(0, 16, group);
-    m_padding->setToolTip(tr("Empty pixels between sprites"));
-    m_border->setToolTip(tr("Empty pixels along the page edges"));
-    m_extrude->setToolTip(tr("Edge pixels copied outward around each sprite, so scaling or filtering never picks "
+    m_pPadding = f_PlainSpin(0, 64, l_pGroup);
+    m_pBorder = f_PlainSpin(0, 64, l_pGroup);
+    m_pExtrude = f_PlainSpin(0, 16, l_pGroup);
+    m_pPadding->setToolTip(tr("Empty pixels between sprites"));
+    m_pBorder->setToolTip(tr("Empty pixels along the page edges"));
+    m_pExtrude->setToolTip(tr("Edge pixels copied outward around each sprite, so scaling or filtering never picks "
                             "up a neighbour or the gap (default 1). Raise it when sprites are drawn much smaller "
                             "(mipmaps, strong zoom-out); 0 only if every sprite is always drawn at a whole-number "
                             "scale."));
-    form->addRow(tr("Padding"), m_padding);
-    form->addRow(tr("Border"), m_border);
-    form->addRow(tr("Extrude"), m_extrude);
-    bindInt(m_padding, QStringLiteral("padding"), tr("Padding"), [](Project& p, int v) { p.settings.padding = v; });
-    bindInt(m_border, QStringLiteral("border"), tr("Border"), [](Project& p, int v) { p.settings.border = v; });
-    bindInt(m_extrude, QStringLiteral("extrude"), tr("Extrude"), [](Project& p, int v) { p.settings.extrude = v; });
+    l_pForm->addRow(tr("Padding"), m_pPadding);
+    l_pForm->addRow(tr("Border"), m_pBorder);
+    l_pForm->addRow(tr("Extrude"), m_pExtrude);
+    f_BindInt(m_pPadding, QStringLiteral("padding"), tr("Padding"), [](Project& l_oP, int l_iV) { l_oP.m_oSettings.m_iPadding = l_iV; });
+    f_BindInt(m_pBorder, QStringLiteral("border"), tr("Border"), [](Project& l_oP, int l_iV) { l_oP.m_oSettings.m_iBorder = l_iV; });
+    f_BindInt(m_pExtrude, QStringLiteral("extrude"), tr("Extrude"), [](Project& l_oP, int l_iV) { l_oP.m_oSettings.m_iExtrude = l_iV; });
 
-    m_trim = new QCheckBox(tr("Trim transparent edges"), group);
-    m_alphaThreshold = plainSpin(0, 254, group);
-    m_alphaThreshold->setToolTip(tr("Alpha at or below this counts as transparent when trimming"));
-    form->addRow(QString(), m_trim);
-    form->addRow(tr("Alpha ≤"), m_alphaThreshold);
-    bindBool(m_trim, tr("Trim"), [](Project& p, bool v) { p.settings.trim = v; });
-    bindInt(m_alphaThreshold, QStringLiteral("alpha"), tr("Alpha threshold"), [](Project& p, int v) { p.settings.alphaThreshold = v; });
+    m_pTrim = new QCheckBox(tr("Trim transparent edges"), l_pGroup);
+    m_pAlphaThreshold = f_PlainSpin(0, 254, l_pGroup);
+    m_pAlphaThreshold->setToolTip(tr("Alpha at or below this counts as transparent when trimming"));
+    l_pForm->addRow(QString(), m_pTrim);
+    l_pForm->addRow(tr("Alpha ≤"), m_pAlphaThreshold);
+    f_BindBool(m_pTrim, tr("Trim"), [](Project& l_oP, bool l_bV) { l_oP.m_oSettings.m_bTrim = l_bV; });
+    f_BindInt(m_pAlphaThreshold, QStringLiteral("alpha"), tr("Alpha threshold"), [](Project& l_oP, int l_iV) { l_oP.m_oSettings.m_iAlphaThreshold = l_iV; });
 
-    m_dedupe = new QCheckBox(tr("Merge identical images"), group);
-    m_premultiply = new QCheckBox(tr("Premultiply alpha"), group);
-    form->addRow(QString(), m_dedupe);
-    form->addRow(QString(), m_premultiply);
-    bindBool(m_dedupe, tr("Dedupe"), [](Project& p, bool v) { p.settings.dedupe = v; });
-    bindBool(m_premultiply, tr("Premultiply alpha"), [](Project& p, bool v) { p.settings.premultiplyAlpha = v; });
+    m_pDedupe = new QCheckBox(tr("Merge identical images"), l_pGroup);
+    m_pPremultiply = new QCheckBox(tr("Premultiply alpha"), l_pGroup);
+    l_pForm->addRow(QString(), m_pDedupe);
+    l_pForm->addRow(QString(), m_pPremultiply);
+    f_BindBool(m_pDedupe, tr("Dedupe"), [](Project& l_oP, bool l_bV) { l_oP.m_oSettings.m_bDedupe = l_bV; });
+    f_BindBool(m_pPremultiply, tr("Premultiply alpha"), [](Project& l_oP, bool l_bV) { l_oP.m_oSettings.m_bPremultiplyAlpha = l_bV; });
 
-    m_filter = new QComboBox(group);
-    m_filter->addItems({QStringLiteral("Nearest"), QStringLiteral("Linear")});
-    form->addRow(tr("Filter"), m_filter);
-    connect(m_filter, &QComboBox::activated, this, [this] {
-        const std::string f = u8(m_filter->currentText());
-        m_doc->edit(tr("Filter"), [&](Project& p) { p.settings.filter = f; });
+    m_pFilter = new QComboBox(l_pGroup);
+    m_pFilter->addItems({QStringLiteral("Nearest"), QStringLiteral("Linear")});
+    l_pForm->addRow(tr("Filter"), m_pFilter);
+    connect(m_pFilter, &QComboBox::activated, this, [this] {
+        const std::string l_strF = f_U8(m_pFilter->currentText());
+        m_pDoc->f_Edit(tr("Filter"), [&](Project& l_oP) { l_oP.m_oSettings.m_strFilter = l_strF; });
     });
 
-    m_heuristic = new QComboBox(group);
-    for (atlas::Heuristic h : kHeuristics) m_heuristic->addItem(QString::fromLatin1(atlas::heuristicName(h)));
-    m_heuristic->setToolTip(tr("Placement rule; Auto tries them all and keeps the smallest result"));
-    form->addRow(tr("Heuristic"), m_heuristic);
-    connect(m_heuristic, &QComboBox::activated, this, [this](int i) {
-        m_doc->edit(tr("Heuristic"), [&](Project& p) { p.settings.heuristic = kHeuristics[i]; });
+    m_pHeuristic = new QComboBox(l_pGroup);
+    for (atlas::Heuristic l_eH : g_arrHeuristics) m_pHeuristic->addItem(QString::fromLatin1(atlas::f_HeuristicName(l_eH)));
+    m_pHeuristic->setToolTip(tr("Placement rule; Auto tries them all and keeps the smallest result"));
+    l_pForm->addRow(tr("Heuristic"), m_pHeuristic);
+    connect(m_pHeuristic, &QComboBox::activated, this, [this](int l_iI) {
+        m_pDoc->f_Edit(tr("Heuristic"), [&](Project& l_oP) { l_oP.m_oSettings.m_eHeuristic = g_arrHeuristics[l_iI]; });
     });
 
-    m_defPivotX = mixedDoubleSpin(-10, 10, group);
-    m_defPivotY = mixedDoubleSpin(-10, 10, group);
-    form->addRow(tr("Default pivot"), fieldRow(group, {{QStringLiteral("x"), m_defPivotX}, {QStringLiteral("y"), m_defPivotY}}));
-    for (int axis = 0; axis < 2; axis++) {
-        QDoubleSpinBox* s = axis ? m_defPivotY : m_defPivotX;
-        connect(s, &QDoubleSpinBox::valueChanged, this, [this, axis](double v) {
-            if (m_updating) return;
-            m_doc->edit(tr("Default pivot"), [&](Project& p) { p.settings.defaultPivot[axis] = float(v); },
-                        QStringLiteral("atlas.pivot%1").arg(axis));
+    m_pDefPivotX = f_MixedDoubleSpin(-10, 10, l_pGroup);
+    m_pDefPivotY = f_MixedDoubleSpin(-10, 10, l_pGroup);
+    l_pForm->addRow(tr("Default pivot"), f_FieldRow(l_pGroup, {{QStringLiteral("x"), m_pDefPivotX}, {QStringLiteral("y"), m_pDefPivotY}}));
+    for (int l_iAxis = 0; l_iAxis < 2; l_iAxis++) {
+        QDoubleSpinBox* l_pS = l_iAxis ? m_pDefPivotY : m_pDefPivotX;
+        connect(l_pS, &QDoubleSpinBox::valueChanged, this, [this, l_iAxis](double l_dV) {
+            if (m_bUpdating) return;
+            m_pDoc->f_Edit(tr("Default pivot"), [&](Project& l_oP) { l_oP.m_oSettings.m_arrDefaultPivot[l_iAxis] = float(l_dV); },
+                        QStringLiteral("atlas.pivot%1").arg(l_iAxis));
         });
     }
 
     // Output.
-    auto* outLabel = new QLabel(tr("<b>Output</b>"), group);
-    form->addRow(outLabel);
-    m_outDir = new QLineEdit(group);
-    auto* browse = new QToolButton(group);
-    browse->setText(QStringLiteral("…"));
-    browse->setToolTip(tr("Choose the output folder"));
-    m_outDir->setToolTip(tr("Where Save writes the packed atlas (it holds the images) and the output formats; "
+    auto* l_pOutLabel = new QLabel(tr("<b>Output</b>"), l_pGroup);
+    l_pForm->addRow(l_pOutLabel);
+    m_pOutDir = new QLineEdit(l_pGroup);
+    auto* l_pBrowse = new QToolButton(l_pGroup);
+    l_pBrowse->setText(QStringLiteral("…"));
+    l_pBrowse->setToolTip(tr("Choose the output folder"));
+    m_pOutDir->setToolTip(tr("Where Save writes the packed atlas (it holds the images) and the output formats; "
                             "\".\" = next to the project"));
-    form->addRow(tr("Folder"), fieldRow(group, {{QString(), m_outDir}}, browse));
-    connect(m_outDir, &QLineEdit::editingFinished, this, [this] {
-        const std::string d = u8(QDir::fromNativeSeparators(m_outDir->text().trimmed()));
-        if (m_updating || d == m_doc->project().output.dir) return;
-        m_doc->edit(tr("Output folder"), [&](Project& p) { p.output.dir = d.empty() ? "." : d; });
+    l_pForm->addRow(tr("Folder"), f_FieldRow(l_pGroup, {{QString(), m_pOutDir}}, l_pBrowse));
+    connect(m_pOutDir, &QLineEdit::editingFinished, this, [this] {
+        const std::string l_strD = f_U8(QDir::fromNativeSeparators(m_pOutDir->text().trimmed()));
+        if (m_bUpdating || l_strD == m_pDoc->f_Project().m_oOutput.m_strDir) return;
+        m_pDoc->f_Edit(tr("Output folder"), [&](Project& l_oP) { l_oP.m_oOutput.m_strDir = l_strD.empty() ? "." : l_strD; });
     });
-    connect(browse, &QToolButton::clicked, this, [this] {
-        const QString dir = QFileDialog::getExistingDirectory(this, tr("Output Folder"),
-                                                              m_doc->resolvePath(qs(m_doc->project().output.dir)));
-        if (dir.isEmpty()) return;
-        const std::string d = u8(m_doc->toProjectPath(dir));
-        m_doc->edit(tr("Output folder"), [&](Project& p) { p.output.dir = d; });
-    });
-
-    m_outName = new QLineEdit(group);
-    form->addRow(tr("File name"), m_outName);
-    connect(m_outName, &QLineEdit::editingFinished, this, [this] {
-        const std::string n = u8(m_outName->text().trimmed());
-        if (m_updating || n == m_doc->project().output.name) return;
-        m_doc->edit(tr("Output name"), [&](Project& p) { p.output.name = n; });
+    connect(l_pBrowse, &QToolButton::clicked, this, [this] {
+        const QString l_oDir = QFileDialog::getExistingDirectory(this, tr("Output Folder"),
+                                                              m_pDoc->f_ResolvePath(f_Qs(m_pDoc->f_Project().m_oOutput.m_strDir)));
+        if (l_oDir.isEmpty()) return;
+        const std::string l_strD = f_U8(m_pDoc->f_ToProjectPath(l_oDir));
+        m_pDoc->f_Edit(tr("Output folder"), [&](Project& l_oP) { l_oP.m_oOutput.m_strDir = l_strD; });
     });
 
-    auto* formats = new QWidget(group);
-    auto* grid = new QGridLayout(formats);
-    grid->setContentsMargins(0, 0, 0, 0);
-    const std::vector<std::string>& all = atlas::exportFormats();
-    for (size_t i = 0; i < all.size(); i++) {
-        auto* box = new QCheckBox(qs(all[i]), formats);
-        if (all[i] == kAlwaysExported) {
-            box->setEnabled(false);
-            box->setToolTip(tr("Save always writes the .plist (Cocos Creator Sprite Atlas)"));
-        } else if (all[i] == "atlas") {
-            box->setEnabled(false);
-            box->setToolTip(tr("Save always writes the .atlas: the packed atlas holds the project's images"));
+    m_pOutName = new QLineEdit(l_pGroup);
+    l_pForm->addRow(tr("File name"), m_pOutName);
+    connect(m_pOutName, &QLineEdit::editingFinished, this, [this] {
+        const std::string l_strN = f_U8(m_pOutName->text().trimmed());
+        if (m_bUpdating || l_strN == m_pDoc->f_Project().m_oOutput.m_strName) return;
+        m_pDoc->f_Edit(tr("Output name"), [&](Project& l_oP) { l_oP.m_oOutput.m_strName = l_strN; });
+    });
+
+    auto* l_pFormats = new QWidget(l_pGroup);
+    auto* l_pGrid = new QGridLayout(l_pFormats);
+    l_pGrid->setContentsMargins(0, 0, 0, 0);
+    const std::vector<std::string>& l_vAll = atlas::f_ExportFormats();
+    for (size_t l_nI = 0; l_nI < l_vAll.size(); l_nI++) {
+        auto* l_pBox = new QCheckBox(f_Qs(l_vAll[l_nI]), l_pFormats);
+        if (l_vAll[l_nI] == g_pszAlwaysExported) {
+            l_pBox->setEnabled(false);
+            l_pBox->setToolTip(tr("Save always writes the .plist (Cocos Creator Sprite Atlas)"));
+        } else if (l_vAll[l_nI] == "atlas") {
+            l_pBox->setEnabled(false);
+            l_pBox->setToolTip(tr("Save always writes the .atlas: the packed atlas holds the project's images"));
         }
-        grid->addWidget(box, int(i / 2), int(i % 2));
-        m_formats.push_back(box);
-        connect(box, &QCheckBox::toggled, this, [this] {
-            if (m_updating) return;
-            std::vector<std::string> f;
-            for (QCheckBox* b : m_formats)
-                if (b->isChecked()) f.push_back(u8(b->text()));
-            m_doc->edit(tr("Export formats"), [&](Project& p) { p.output.formats = f; });
+        l_pGrid->addWidget(l_pBox, int(l_nI / 2), int(l_nI % 2));
+        m_vFormats.push_back(l_pBox);
+        connect(l_pBox, &QCheckBox::toggled, this, [this] {
+            if (m_bUpdating) return;
+            std::vector<std::string> l_vF;
+            for (QCheckBox* l_pB : m_vFormats)
+                if (l_pB->isChecked()) l_vF.push_back(f_U8(l_pB->text()));
+            m_pDoc->f_Edit(tr("Export formats"), [&](Project& l_oP) { l_oP.m_oOutput.m_vFormats = l_vF; });
         });
     }
-    form->addRow(tr("Formats"), formats);
-    return group;
+    l_pForm->addRow(tr("Formats"), l_pFormats);
+    return l_pGroup;
 }
 
-void PropertiesDock::refreshAtlas()
+void PropertiesDock::f_RefreshAtlas()
 {
-    m_updating = true;
-    const Project& p = m_doc->project();
-    const atlas::Settings& s = p.settings;
-    m_projectName->setText(qs(p.name));
-    m_maxW->setValue(s.maxWidth);
-    m_maxH->setValue(s.maxHeight);
-    m_minW->setValue(s.minWidth);
-    m_minH->setValue(s.minHeight);
-    m_pot->setChecked(s.powerOfTwo);
-    m_square->setChecked(s.square);
-    m_fixedSize->setChecked(s.fixedSize);
-    m_padding->setValue(s.padding);
-    m_border->setValue(s.border);
-    m_extrude->setValue(s.extrude);
-    m_trim->setChecked(s.trim);
-    m_alphaThreshold->setValue(s.alphaThreshold);
-    m_alphaThreshold->setEnabled(s.trim);
-    m_dedupe->setChecked(s.dedupe);
-    m_premultiply->setChecked(s.premultiplyAlpha);
-    m_filter->setCurrentIndex(std::max(0, m_filter->findText(qs(s.filter), Qt::MatchFixedString)));
-    for (int i = 0; i < int(std::size(kHeuristics)); i++)
-        if (kHeuristics[i] == s.heuristic) m_heuristic->setCurrentIndex(i);
-    m_defPivotX->setValue(s.defaultPivot[0]);
-    m_defPivotY->setValue(s.defaultPivot[1]);
-    m_outDir->setText(QDir::toNativeSeparators(qs(p.output.dir)));
-    m_outName->setText(qs(p.output.name));
-    m_outName->setPlaceholderText(qs(p.name));
-    for (QCheckBox* b : m_formats)
-        b->setChecked(u8(b->text()) == kAlwaysExported || b->text() == QLatin1String("atlas") ||
-                      std::find(p.output.formats.begin(), p.output.formats.end(), u8(b->text())) != p.output.formats.end());
-    m_updating = false;
+    m_bUpdating = true;
+    const Project& l_oP = m_pDoc->f_Project();
+    const atlas::Settings& l_oS = l_oP.m_oSettings;
+    m_pProjectName->setText(f_Qs(l_oP.m_strName));
+    m_pMaxW->setValue(l_oS.m_iMaxWidth);
+    m_pMaxH->setValue(l_oS.m_iMaxHeight);
+    m_pMinW->setValue(l_oS.m_iMinWidth);
+    m_pMinH->setValue(l_oS.m_iMinHeight);
+    m_pPot->setChecked(l_oS.m_bPowerOfTwo);
+    m_pSquare->setChecked(l_oS.m_bSquare);
+    m_pFixedSize->setChecked(l_oS.m_bFixedSize);
+    m_pPadding->setValue(l_oS.m_iPadding);
+    m_pBorder->setValue(l_oS.m_iBorder);
+    m_pExtrude->setValue(l_oS.m_iExtrude);
+    m_pTrim->setChecked(l_oS.m_bTrim);
+    m_pAlphaThreshold->setValue(l_oS.m_iAlphaThreshold);
+    m_pAlphaThreshold->setEnabled(l_oS.m_bTrim);
+    m_pDedupe->setChecked(l_oS.m_bDedupe);
+    m_pPremultiply->setChecked(l_oS.m_bPremultiplyAlpha);
+    m_pFilter->setCurrentIndex(std::max(0, m_pFilter->findText(f_Qs(l_oS.m_strFilter), Qt::MatchFixedString)));
+    for (int l_iI = 0; l_iI < int(std::size(g_arrHeuristics)); l_iI++)
+        if (g_arrHeuristics[l_iI] == l_oS.m_eHeuristic) m_pHeuristic->setCurrentIndex(l_iI);
+    m_pDefPivotX->setValue(l_oS.m_arrDefaultPivot[0]);
+    m_pDefPivotY->setValue(l_oS.m_arrDefaultPivot[1]);
+    m_pOutDir->setText(QDir::toNativeSeparators(f_Qs(l_oP.m_oOutput.m_strDir)));
+    m_pOutName->setText(f_Qs(l_oP.m_oOutput.m_strName));
+    m_pOutName->setPlaceholderText(f_Qs(l_oP.m_strName));
+    for (QCheckBox* l_pB : m_vFormats)
+        l_pB->setChecked(f_U8(l_pB->text()) == g_pszAlwaysExported || l_pB->text() == QLatin1String("atlas") ||
+                      std::find(l_oP.m_oOutput.m_vFormats.begin(), l_oP.m_oOutput.m_vFormats.end(), f_U8(l_pB->text())) != l_oP.m_oOutput.m_vFormats.end());
+    m_bUpdating = false;
 }
 
 // ---- Sprite group -------------------------------------------------------------------------------
 
-std::vector<SpriteDef> PropertiesDock::selectedDefs() const
+std::vector<SpriteDef> PropertiesDock::f_SelectedDefs() const
 {
-    std::vector<SpriteDef> defs;
-    for (const QString& n : m_doc->selection())
-        if (m_doc->spriteExists(n)) defs.push_back(m_doc->spriteDef(n));
-    return defs;
+    std::vector<SpriteDef> l_vDefs;
+    for (const QString& l_oN : m_pDoc->f_Selection())
+        if (m_pDoc->f_SpriteExists(l_oN)) l_vDefs.push_back(m_pDoc->f_SpriteDef(l_oN));
+    return l_vDefs;
 }
 
-void PropertiesDock::editSelection(const QString& text, const QString& mergeKey, const std::function<void(SpriteDef&)>& change,
-                                   bool childrenOnly)
+void PropertiesDock::f_EditSelection(const QString& l_oText, const QString& l_oMergeKey, const std::function<void(SpriteDef&)>& l_fnChange,
+                                   bool l_bChildrenOnly)
 {
-    if (m_updating) return;
-    QStringList names;
-    for (const SpriteDef& d : selectedDefs())
-        if (!childrenOnly || d.isChild()) names << qs(d.name);
-    m_doc->editSprites(names, text, change, mergeKey.isEmpty() ? QString() : QStringLiteral("sprite.") + mergeKey);
+    if (m_bUpdating) return;
+    QStringList l_oNames;
+    for (const SpriteDef& l_oD : f_SelectedDefs())
+        if (!l_bChildrenOnly || l_oD.f_IsChild()) l_oNames << f_Qs(l_oD.m_strName);
+    m_pDoc->f_EditSprites(l_oNames, l_oText, l_fnChange, l_oMergeKey.isEmpty() ? QString() : QStringLiteral("sprite.") + l_oMergeKey);
 }
 
-QWidget* PropertiesDock::buildSpriteGroup()
+QWidget* PropertiesDock::f_BuildSpriteGroup()
 {
-    m_spriteGroup = new QGroupBox(tr("Sprite"));
-    auto* outer = new QVBoxLayout(m_spriteGroup);
-    m_noSelection = new QLabel(tr("Select a sprite in the tree or on the canvas."), m_spriteGroup);
-    m_noSelection->setForegroundRole(QPalette::PlaceholderText);
-    m_noSelection->setWordWrap(true);
-    outer->addWidget(m_noSelection);
-    auto* formHost = new QWidget(m_spriteGroup);
-    outer->addWidget(formHost);
-    m_spriteForm = new QFormLayout(formHost);
-    m_spriteForm->setContentsMargins(0, 0, 0, 0);
-    m_spriteForm->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
-    QWidget* g = formHost;
+    m_pSpriteGroup = new QGroupBox(tr("Sprite"));
+    auto* l_pOuter = new QVBoxLayout(m_pSpriteGroup);
+    m_pNoSelection = new QLabel(tr("Select a sprite in the tree or on the canvas."), m_pSpriteGroup);
+    m_pNoSelection->setForegroundRole(QPalette::PlaceholderText);
+    m_pNoSelection->setWordWrap(true);
+    l_pOuter->addWidget(m_pNoSelection);
+    auto* l_pFormHost = new QWidget(m_pSpriteGroup);
+    l_pOuter->addWidget(l_pFormHost);
+    m_pSpriteForm = new QFormLayout(l_pFormHost);
+    m_pSpriteForm->setContentsMargins(0, 0, 0, 0);
+    m_pSpriteForm->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
+    QWidget* l_pG = l_pFormHost;
 
-    m_name = new QLineEdit(g);
-    m_spriteForm->addRow(tr("Name"), m_name);
-    connect(m_name, &QLineEdit::editingFinished, this, [this] {
-        const QString from = m_doc->currentSprite();
-        const QString to = m_name->text().trimmed();
-        if (m_updating || m_doc->selection().size() != 1 || to == from) return;
-        QString err;
-        if (!m_doc->renameSprite(from, to, &err)) {
-            QMessageBox::warning(this, tr("Rename"), err);
-            m_name->setText(from);
+    m_pName = new QLineEdit(l_pG);
+    m_pSpriteForm->addRow(tr("Name"), m_pName);
+    connect(m_pName, &QLineEdit::editingFinished, this, [this] {
+        const QString l_oFrom = m_pDoc->f_CurrentSprite();
+        const QString l_oTo = m_pName->text().trimmed();
+        if (m_bUpdating || m_pDoc->f_Selection().size() != 1 || l_oTo == l_oFrom) return;
+        QString l_oErr;
+        if (!m_pDoc->f_RenameSprite(l_oFrom, l_oTo, &l_oErr)) {
+            QMessageBox::warning(this, tr("Rename"), l_oErr);
+            m_pName->setText(l_oFrom);
         }
     });
 
-    m_kind = new QLabel(g);
-    m_spriteForm->addRow(tr("Kind"), m_kind);
+    m_pKind = new QLabel(l_pG);
+    m_pSpriteForm->addRow(tr("Kind"), m_pKind);
 
-    m_parent = new QComboBox(g);
-    m_parent->setPlaceholderText(tr("(mixed)"));
-    m_spriteForm->addRow(tr("Parent"), m_parent);
-    connect(m_parent, &QComboBox::activated, this, [this] {
-        const std::string par = u8(m_parent->currentText());
-        editSelection(tr("Change parent"), QString(), [&](SpriteDef& d) { d.parent = par; }, true);
+    m_pParent = new QComboBox(l_pG);
+    m_pParent->setPlaceholderText(tr("(mixed)"));
+    m_pSpriteForm->addRow(tr("Parent"), m_pParent);
+    connect(m_pParent, &QComboBox::activated, this, [this] {
+        const std::string l_strPar = f_U8(m_pParent->currentText());
+        f_EditSelection(tr("Change parent"), QString(), [&](SpriteDef& l_oD) { l_oD.m_strParent = l_strPar; }, true);
     });
 
-    m_rectX = mixedSpin(0, 65535, g);
-    m_rectY = mixedSpin(0, 65535, g);
-    m_rectW = mixedSpin(1, 65535, g);
-    m_rectH = mixedSpin(1, 65535, g);
-    m_rectRow = new QWidget(g);
+    m_pRectX = f_MixedSpin(0, 65535, l_pG);
+    m_pRectY = f_MixedSpin(0, 65535, l_pG);
+    m_pRectW = f_MixedSpin(1, 65535, l_pG);
+    m_pRectH = f_MixedSpin(1, 65535, l_pG);
+    m_pRectRow = new QWidget(l_pG);
     {
-        auto* grid = new QGridLayout(m_rectRow);
-        grid->setContentsMargins(0, 0, 0, 0);
-        grid->setHorizontalSpacing(4);
-        const QList<QPair<QString, QSpinBox*>> cells = {{QStringLiteral("x"), m_rectX}, {QStringLiteral("y"), m_rectY},
-                                                        {QStringLiteral("w"), m_rectW}, {QStringLiteral("h"), m_rectH}};
-        for (int i = 0; i < 4; i++) {
-            auto* lab = new QLabel(cells[i].first, m_rectRow);
-            lab->setForegroundRole(QPalette::PlaceholderText);
-            grid->addWidget(lab, i / 2, (i % 2) * 2);
-            grid->addWidget(cells[i].second, i / 2, (i % 2) * 2 + 1);
+        auto* l_pGrid = new QGridLayout(m_pRectRow);
+        l_pGrid->setContentsMargins(0, 0, 0, 0);
+        l_pGrid->setHorizontalSpacing(4);
+        const QList<QPair<QString, QSpinBox*>> l_oCells = {{QStringLiteral("x"), m_pRectX}, {QStringLiteral("y"), m_pRectY},
+                                                        {QStringLiteral("w"), m_pRectW}, {QStringLiteral("h"), m_pRectH}};
+        for (int l_iI = 0; l_iI < 4; l_iI++) {
+            auto* l_pLab = new QLabel(l_oCells[l_iI].first, m_pRectRow);
+            l_pLab->setForegroundRole(QPalette::PlaceholderText);
+            l_pGrid->addWidget(l_pLab, l_iI / 2, (l_iI % 2) * 2);
+            l_pGrid->addWidget(l_oCells[l_iI].second, l_iI / 2, (l_iI % 2) * 2 + 1);
         }
-        grid->setColumnStretch(1, 1);
-        grid->setColumnStretch(3, 1);
+        l_pGrid->setColumnStretch(1, 1);
+        l_pGrid->setColumnStretch(3, 1);
     }
-    m_spriteForm->addRow(tr("Rect"), m_rectRow);
-    QSpinBox* rectSpins[4] = {m_rectX, m_rectY, m_rectW, m_rectH};
-    for (int i = 0; i < 4; i++) {
-        connect(rectSpins[i], &QSpinBox::valueChanged, this, [this, i](int v) {
-            if (isMixed(i == 0 ? m_rectX : i == 1 ? m_rectY : i == 2 ? m_rectW : m_rectH)) return;
-            editSelection(tr("Child rect"), QStringLiteral("rect%1").arg(i), [&](SpriteDef& d) {
-                int* f[4] = {&d.rect.x, &d.rect.y, &d.rect.w, &d.rect.h};
-                *f[i] = v;
+    m_pSpriteForm->addRow(tr("Rect"), m_pRectRow);
+    QSpinBox* l_arrRectSpins[4] = {m_pRectX, m_pRectY, m_pRectW, m_pRectH};
+    for (int l_iI = 0; l_iI < 4; l_iI++) {
+        connect(l_arrRectSpins[l_iI], &QSpinBox::valueChanged, this, [this, l_iI](int l_iV) {
+            if (f_IsMixed(l_iI == 0 ? m_pRectX : l_iI == 1 ? m_pRectY : l_iI == 2 ? m_pRectW : m_pRectH)) return;
+            f_EditSelection(tr("Child rect"), QStringLiteral("rect%1").arg(l_iI), [&](SpriteDef& l_oD) {
+                int* l_arrF[4] = {&l_oD.m_oRect.m_iX, &l_oD.m_oRect.m_iY, &l_oD.m_oRect.m_iW, &l_oD.m_oRect.m_iH};
+                *l_arrF[l_iI] = l_iV;
             }, true);
         });
     }
 
-    m_bake = new QCheckBox(tr("Bake (own copy of the pixels)"), g);
-    m_bake->setToolTip(tr("A baked child is packed as its own image instead of pointing into its parent"));
-    m_spriteForm->addRow(QString(), m_bake);
-    connect(m_bake, &QCheckBox::clicked, this, [this] {
-        m_bake->setTristate(false);
-        const bool v = m_bake->isChecked();
-        editSelection(v ? tr("Bake") : tr("Unbake"), QString(), [&](SpriteDef& d) { d.bake = v; }, true);
+    m_pBake = new QCheckBox(tr("Bake (own copy of the pixels)"), l_pG);
+    m_pBake->setToolTip(tr("A baked child is packed as its own image instead of pointing into its parent"));
+    m_pSpriteForm->addRow(QString(), m_pBake);
+    connect(m_pBake, &QCheckBox::clicked, this, [this] {
+        m_pBake->setTristate(false);
+        const bool l_bV = m_pBake->isChecked();
+        f_EditSelection(l_bV ? tr("Bake") : tr("Unbake"), QString(), [&](SpriteDef& l_oD) { l_oD.m_bBake = l_bV; }, true);
     });
 
-    m_pivotX = mixedDoubleSpin(-10, 10, g);
-    m_pivotY = mixedDoubleSpin(-10, 10, g);
-    m_pivotReset = new QToolButton(g);
-    m_pivotReset->setText(tr("Default"));
-    m_pivotReset->setToolTip(tr("Use the atlas default pivot"));
-    m_pivotRow = fieldRow(g, {{QStringLiteral("x"), m_pivotX}, {QStringLiteral("y"), m_pivotY}}, m_pivotReset);
-    m_spriteForm->addRow(tr("Pivot"), m_pivotRow);
-    for (int axis = 0; axis < 2; axis++) {
-        QDoubleSpinBox* s = axis ? m_pivotY : m_pivotX;
-        connect(s, &QDoubleSpinBox::valueChanged, this, [this, s, axis](double v) {
-            if (isMixed(s)) return;
-            const float* def = m_doc->project().settings.defaultPivot;
-            editSelection(tr("Pivot"), QStringLiteral("pivot%1").arg(axis), [&](SpriteDef& d) {
-                if (!d.hasPivot) {   // start from what it showed: the default pivot
-                    d.pivot[0] = def[0];
-                    d.pivot[1] = def[1];
+    m_pPivotX = f_MixedDoubleSpin(-10, 10, l_pG);
+    m_pPivotY = f_MixedDoubleSpin(-10, 10, l_pG);
+    m_pPivotReset = new QToolButton(l_pG);
+    m_pPivotReset->setText(tr("Default"));
+    m_pPivotReset->setToolTip(tr("Use the atlas default pivot"));
+    m_pPivotRow = f_FieldRow(l_pG, {{QStringLiteral("x"), m_pPivotX}, {QStringLiteral("y"), m_pPivotY}}, m_pPivotReset);
+    m_pSpriteForm->addRow(tr("Pivot"), m_pPivotRow);
+    for (int l_iAxis = 0; l_iAxis < 2; l_iAxis++) {
+        QDoubleSpinBox* l_pS = l_iAxis ? m_pPivotY : m_pPivotX;
+        connect(l_pS, &QDoubleSpinBox::valueChanged, this, [this, l_pS, l_iAxis](double l_dV) {
+            if (f_IsMixed(l_pS)) return;
+            const float* l_pDef = m_pDoc->f_Project().m_oSettings.m_arrDefaultPivot;
+            f_EditSelection(tr("Pivot"), QStringLiteral("pivot%1").arg(l_iAxis), [&](SpriteDef& l_oD) {
+                if (!l_oD.m_bHasPivot) {   // start from what it showed: the default pivot
+                    l_oD.m_arrPivot[0] = l_pDef[0];
+                    l_oD.m_arrPivot[1] = l_pDef[1];
                 }
-                d.hasPivot = true;
-                d.pivot[axis] = float(v);
+                l_oD.m_bHasPivot = true;
+                l_oD.m_arrPivot[l_iAxis] = float(l_dV);
             });
         });
     }
-    connect(m_pivotReset, &QToolButton::clicked, this, [this] {
-        editSelection(tr("Default pivot"), QString(), [](SpriteDef& d) {
-            d.hasPivot = false;
-            d.pivot[0] = d.pivot[1] = 0.5f;
+    connect(m_pPivotReset, &QToolButton::clicked, this, [this] {
+        f_EditSelection(tr("Default pivot"), QString(), [](SpriteDef& l_oD) {
+            l_oD.m_bHasPivot = false;
+            l_oD.m_arrPivot[0] = l_oD.m_arrPivot[1] = 0.5f;
         });
     });
 
-    m_splitOn = new QCheckBox(tr("9-slice"), g);
-    const char* sides[4] = {"l", "r", "t", "b"};
-    m_splitRow = new QWidget(g);
+    m_pSplitOn = new QCheckBox(tr("9-slice"), l_pG);
+    const char* l_arrSides[4] = {"l", "r", "t", "b"};
+    m_pSplitRow = new QWidget(l_pG);
     {
-        auto* grid = new QGridLayout(m_splitRow);
-        grid->setContentsMargins(0, 0, 0, 0);
-        grid->setHorizontalSpacing(4);
-        grid->addWidget(m_splitOn, 0, 0, 1, 4);
-        for (int i = 0; i < 4; i++) {
-            m_split[i] = mixedSpin(0, 65535, m_splitRow);
-            auto* lab = new QLabel(QString::fromLatin1(sides[i]), m_splitRow);
-            lab->setForegroundRole(QPalette::PlaceholderText);
-            grid->addWidget(lab, 1 + i / 2, (i % 2) * 2);
-            grid->addWidget(m_split[i], 1 + i / 2, (i % 2) * 2 + 1);
+        auto* l_pGrid = new QGridLayout(m_pSplitRow);
+        l_pGrid->setContentsMargins(0, 0, 0, 0);
+        l_pGrid->setHorizontalSpacing(4);
+        l_pGrid->addWidget(m_pSplitOn, 0, 0, 1, 4);
+        for (int l_iI = 0; l_iI < 4; l_iI++) {
+            m_arrSplit[l_iI] = f_MixedSpin(0, 65535, m_pSplitRow);
+            auto* l_pLab = new QLabel(QString::fromLatin1(l_arrSides[l_iI]), m_pSplitRow);
+            l_pLab->setForegroundRole(QPalette::PlaceholderText);
+            l_pGrid->addWidget(l_pLab, 1 + l_iI / 2, (l_iI % 2) * 2);
+            l_pGrid->addWidget(m_arrSplit[l_iI], 1 + l_iI / 2, (l_iI % 2) * 2 + 1);
         }
-        grid->setColumnStretch(1, 1);
-        grid->setColumnStretch(3, 1);
+        l_pGrid->setColumnStretch(1, 1);
+        l_pGrid->setColumnStretch(3, 1);
     }
-    m_split[0]->setToolTip(tr("Left border (pixels)"));
-    m_split[1]->setToolTip(tr("Right border (pixels)"));
-    m_split[2]->setToolTip(tr("Top border (pixels)"));
-    m_split[3]->setToolTip(tr("Bottom border (pixels)"));
-    m_spriteForm->addRow(tr("Borders"), m_splitRow);
-    connect(m_splitOn, &QCheckBox::clicked, this, [this] {
-        m_splitOn->setTristate(false);
-        const bool v = m_splitOn->isChecked();
-        editSelection(v ? tr("Enable 9-slice") : tr("Disable 9-slice"), QString(), [&](SpriteDef& d) { d.hasSplit = v; });
+    m_arrSplit[0]->setToolTip(tr("Left border (pixels)"));
+    m_arrSplit[1]->setToolTip(tr("Right border (pixels)"));
+    m_arrSplit[2]->setToolTip(tr("Top border (pixels)"));
+    m_arrSplit[3]->setToolTip(tr("Bottom border (pixels)"));
+    m_pSpriteForm->addRow(tr("Borders"), m_pSplitRow);
+    connect(m_pSplitOn, &QCheckBox::clicked, this, [this] {
+        m_pSplitOn->setTristate(false);
+        const bool l_bV = m_pSplitOn->isChecked();
+        f_EditSelection(l_bV ? tr("Enable 9-slice") : tr("Disable 9-slice"), QString(), [&](SpriteDef& l_oD) { l_oD.m_bHasSplit = l_bV; });
     });
-    for (int i = 0; i < 4; i++) {
-        connect(m_split[i], &QSpinBox::valueChanged, this, [this, i](int v) {
-            if (isMixed(m_split[i])) return;
-            editSelection(tr("9-slice border"), QStringLiteral("split%1").arg(i), [&](SpriteDef& d) {
-                d.hasSplit = true;
-                d.split[i] = v;
+    for (int l_iI = 0; l_iI < 4; l_iI++) {
+        connect(m_arrSplit[l_iI], &QSpinBox::valueChanged, this, [this, l_iI](int l_iV) {
+            if (f_IsMixed(m_arrSplit[l_iI])) return;
+            f_EditSelection(tr("9-slice border"), QStringLiteral("split%1").arg(l_iI), [&](SpriteDef& l_oD) {
+                l_oD.m_bHasSplit = true;
+                l_oD.m_arrSplit[l_iI] = l_iV;
             });
         });
     }
 
-    m_trimOverride = new QComboBox(g);
-    m_trimOverride->addItems({tr("Atlas setting"), tr("Trim"), tr("Keep full size")});
-    m_trimOverride->setPlaceholderText(tr("(mixed)"));
-    m_spriteForm->addRow(tr("Trim"), m_trimOverride);
-    connect(m_trimOverride, &QComboBox::activated, this, [this](int i) {
-        editSelection(tr("Trim"), QString(), [&](SpriteDef& d) { d.trim = i == 0 ? -1 : i == 1 ? 1 : 0; });
+    m_pTrimOverride = new QComboBox(l_pG);
+    m_pTrimOverride->addItems({tr("Atlas setting"), tr("Trim"), tr("Keep full size")});
+    m_pTrimOverride->setPlaceholderText(tr("(mixed)"));
+    m_pSpriteForm->addRow(tr("Trim"), m_pTrimOverride);
+    connect(m_pTrimOverride, &QComboBox::activated, this, [this](int l_iI) {
+        f_EditSelection(tr("Trim"), QString(), [&](SpriteDef& l_oD) { l_oD.m_iTrim = l_iI == 0 ? -1 : l_iI == 1 ? 1 : 0; });
     });
 
-    m_pinned = new QCheckBox(tr("Pinned"), g);
-    m_pinned->setToolTip(tr("Keep a fixed place in the atlas (drag a sprite on the canvas to pin it)"));
-    m_pinPage = mixedSpin(0, 64, g);
-    m_pinX = mixedSpin(0, 65535, g);
-    m_pinY = mixedSpin(0, 65535, g);
-    m_pinRow = new QWidget(g);
+    m_pPinned = new QCheckBox(tr("Pinned"), l_pG);
+    m_pPinned->setToolTip(tr("Keep a fixed place in the atlas (drag a sprite on the canvas to pin it)"));
+    m_pPinPage = f_MixedSpin(0, 64, l_pG);
+    m_pPinX = f_MixedSpin(0, 65535, l_pG);
+    m_pPinY = f_MixedSpin(0, 65535, l_pG);
+    m_pPinRow = new QWidget(l_pG);
     {
-        auto* grid = new QGridLayout(m_pinRow);
-        grid->setContentsMargins(0, 0, 0, 0);
-        grid->setHorizontalSpacing(4);
-        grid->addWidget(m_pinned, 0, 0, 1, 2);
-        auto* pl = new QLabel(tr("page"), m_pinRow);
-        pl->setForegroundRole(QPalette::PlaceholderText);
-        grid->addWidget(pl, 0, 2);
-        grid->addWidget(m_pinPage, 0, 3);
-        const QList<QPair<QString, QSpinBox*>> cells = {{QStringLiteral("x"), m_pinX}, {QStringLiteral("y"), m_pinY}};
-        for (int i = 0; i < 2; i++) {
-            auto* lab = new QLabel(cells[i].first, m_pinRow);
-            lab->setForegroundRole(QPalette::PlaceholderText);
-            grid->addWidget(lab, 1, i * 2);
-            grid->addWidget(cells[i].second, 1, i * 2 + 1);
+        auto* l_pGrid = new QGridLayout(m_pPinRow);
+        l_pGrid->setContentsMargins(0, 0, 0, 0);
+        l_pGrid->setHorizontalSpacing(4);
+        l_pGrid->addWidget(m_pPinned, 0, 0, 1, 2);
+        auto* l_pPl = new QLabel(tr("page"), m_pPinRow);
+        l_pPl->setForegroundRole(QPalette::PlaceholderText);
+        l_pGrid->addWidget(l_pPl, 0, 2);
+        l_pGrid->addWidget(m_pPinPage, 0, 3);
+        const QList<QPair<QString, QSpinBox*>> l_oCells = {{QStringLiteral("x"), m_pPinX}, {QStringLiteral("y"), m_pPinY}};
+        for (int l_iI = 0; l_iI < 2; l_iI++) {
+            auto* l_pLab = new QLabel(l_oCells[l_iI].first, m_pPinRow);
+            l_pLab->setForegroundRole(QPalette::PlaceholderText);
+            l_pGrid->addWidget(l_pLab, 1, l_iI * 2);
+            l_pGrid->addWidget(l_oCells[l_iI].second, 1, l_iI * 2 + 1);
         }
-        grid->setColumnStretch(1, 1);
-        grid->setColumnStretch(3, 1);
+        l_pGrid->setColumnStretch(1, 1);
+        l_pGrid->setColumnStretch(3, 1);
     }
-    m_spriteForm->addRow(tr("Place"), m_pinRow);
-    connect(m_pinned, &QCheckBox::clicked, this, [this] {
-        m_pinned->setTristate(false);
-        const bool v = m_pinned->isChecked();
-        const BuildSnapshotPtr snap = m_doc->snapshot();
-        editSelection(v ? tr("Pin") : tr("Unpin"), QString(), [&](SpriteDef& d) {
+    m_pSpriteForm->addRow(tr("Place"), m_pPinRow);
+    connect(m_pPinned, &QCheckBox::clicked, this, [this] {
+        m_pPinned->setTristate(false);
+        const bool l_bV = m_pPinned->isChecked();
+        const BuildSnapshotPtr l_spSnap = m_pDoc->f_Snapshot();
+        f_EditSelection(l_bV ? tr("Pin") : tr("Unpin"), QString(), [&](SpriteDef& l_oD) {
             // Pinning keeps the sprite where the last build put it.
-            if (v && !d.pinned && snap)
-                if (const atlas::Region* r = snap->region(qs(d.name)); r && r->aliasOf.empty()) {
-                    d.pinPage = r->page;
-                    d.pinX = r->frame.x;
-                    d.pinY = r->frame.y;
+            if (l_bV && !l_oD.m_bPinned && l_spSnap)
+                if (const atlas::Region* l_pR = l_spSnap->f_Region(f_Qs(l_oD.m_strName)); l_pR && l_pR->m_strAliasOf.empty()) {
+                    l_oD.m_iPinPage = l_pR->m_iPage;
+                    l_oD.m_iPinX = l_pR->m_oFrame.m_iX;
+                    l_oD.m_iPinY = l_pR->m_oFrame.m_iY;
                 }
-            d.pinned = v;
+            l_oD.m_bPinned = l_bV;
         });
     });
-    QSpinBox* pinSpins[3] = {m_pinPage, m_pinX, m_pinY};
-    for (int i = 0; i < 3; i++) {
-        QSpinBox* s = pinSpins[i];
-        connect(s, &QSpinBox::valueChanged, this, [this, s, i](int v) {
-            if (isMixed(s)) return;
-            editSelection(tr("Pin position"), QStringLiteral("pin%1").arg(i), [&](SpriteDef& d) {
-                d.pinned = true;
-                (i == 0 ? d.pinPage : i == 1 ? d.pinX : d.pinY) = v;
+    QSpinBox* l_arrPinSpins[3] = {m_pPinPage, m_pPinX, m_pPinY};
+    for (int l_iI = 0; l_iI < 3; l_iI++) {
+        QSpinBox* l_pS = l_arrPinSpins[l_iI];
+        connect(l_pS, &QSpinBox::valueChanged, this, [this, l_pS, l_iI](int l_iV) {
+            if (f_IsMixed(l_pS)) return;
+            f_EditSelection(tr("Pin position"), QStringLiteral("pin%1").arg(l_iI), [&](SpriteDef& l_oD) {
+                l_oD.m_bPinned = true;
+                (l_iI == 0 ? l_oD.m_iPinPage : l_iI == 1 ? l_oD.m_iPinX : l_oD.m_iPinY) = l_iV;
             });
         });
     }
 
-    m_tags = new QLineEdit(g);
-    m_tags->setPlaceholderText(tr("comma separated"));
-    m_spriteForm->addRow(tr("Tags"), m_tags);
-    connect(m_tags, &QLineEdit::editingFinished, this, [this] {
+    m_pTags = new QLineEdit(l_pG);
+    m_pTags->setPlaceholderText(tr("comma separated"));
+    m_pSpriteForm->addRow(tr("Tags"), m_pTags);
+    connect(m_pTags, &QLineEdit::editingFinished, this, [this] {
         // Leaving a "(mixed)" field untouched must not wipe everyone's tags.
-        if (m_updating || (m_tags->text().isEmpty() && m_tags->placeholderText() == tr("(mixed)"))) return;
-        std::vector<std::string> tags;
-        for (const QString& t : m_tags->text().split(QLatin1Char(','), Qt::SkipEmptyParts))
-            if (!t.trimmed().isEmpty()) tags.push_back(u8(t.trimmed()));
-        editSelection(tr("Tags"), QString(), [&](SpriteDef& d) { d.tags = tags; });
+        if (m_bUpdating || (m_pTags->text().isEmpty() && m_pTags->placeholderText() == tr("(mixed)"))) return;
+        std::vector<std::string> l_vTags;
+        for (const QString& l_oT : m_pTags->text().split(QLatin1Char(','), Qt::SkipEmptyParts))
+            if (!l_oT.trimmed().isEmpty()) l_vTags.push_back(f_U8(l_oT.trimmed()));
+        f_EditSelection(tr("Tags"), QString(), [&](SpriteDef& l_oD) { l_oD.m_vTags = l_vTags; });
     });
 
-    m_frame = infoLabel(g);
-    m_orig = infoLabel(g);
-    m_offset = infoLabel(g);
-    m_source = infoLabel(g);
-    m_spriteForm->addRow(tr("Frame"), m_frame);
-    m_spriteForm->addRow(tr("Original"), m_orig);
-    m_spriteForm->addRow(tr("Offset"), m_offset);
-    m_spriteForm->addRow(tr("Art"), m_source);
-    return m_spriteGroup;
+    m_pFrame = f_InfoLabel(l_pG);
+    m_pOrig = f_InfoLabel(l_pG);
+    m_pOffset = f_InfoLabel(l_pG);
+    m_pSource = f_InfoLabel(l_pG);
+    m_pSpriteForm->addRow(tr("Frame"), m_pFrame);
+    m_pSpriteForm->addRow(tr("Original"), m_pOrig);
+    m_pSpriteForm->addRow(tr("Offset"), m_pOffset);
+    m_pSpriteForm->addRow(tr("Art"), m_pSource);
+    return m_pSpriteGroup;
 }
 
-void PropertiesDock::refreshSprite()
+void PropertiesDock::f_RefreshSprite()
 {
-    const std::vector<SpriteDef> defs = selectedDefs();
-    const bool any = !defs.empty();
-    m_noSelection->setVisible(!any);
-    m_spriteForm->parentWidget()->setVisible(any);
-    m_spriteGroup->setTitle(defs.size() > 1 ? tr("Sprite (%1 selected)").arg(defs.size()) : tr("Sprite"));
-    if (!any) return;
+    const std::vector<SpriteDef> l_vDefs = f_SelectedDefs();
+    const bool l_bAny = !l_vDefs.empty();
+    m_pNoSelection->setVisible(!l_bAny);
+    m_pSpriteForm->parentWidget()->setVisible(l_bAny);
+    m_pSpriteGroup->setTitle(l_vDefs.size() > 1 ? tr("Sprite (%1 selected)").arg(l_vDefs.size()) : tr("Sprite"));
+    if (!l_bAny) return;
 
-    m_updating = true;
-    const bool single = defs.size() == 1;
-    int children = 0;
-    for (const SpriteDef& d : defs) children += d.isChild();
-    const bool allChildren = children == int(defs.size()), noChildren = children == 0;
-    const SpriteDef& first = defs.front();
+    m_bUpdating = true;
+    const bool l_bSingle = l_vDefs.size() == 1;
+    int l_iChildren = 0;
+    for (const SpriteDef& l_oD : l_vDefs) l_iChildren += l_oD.f_IsChild();
+    const bool l_bAllChildren = l_iChildren == int(l_vDefs.size()), l_bNoChildren = l_iChildren == 0;
+    const SpriteDef& l_oFirst = l_vDefs.front();
 
     // Name / kind.
-    m_name->setEnabled(single);
-    showValue(m_name, single, single ? qs(first.name) : QString());
-    if (!single) m_name->setPlaceholderText(tr("%1 sprites").arg(defs.size()));
-    QString kind;
-    if (!single) kind = allChildren ? tr("child sprites") : noChildren ? tr("image sprites") : tr("images and children");
-    else if (first.isChild()) kind = first.bake ? tr("child (baked)") : tr("child");
-    else kind = m_doc->hasVariantArt(qs(first.name), m_doc->variant()) ? tr("image + %1 art").arg(m_doc->variant()) : tr("image");
-    m_kind->setText(kind);
+    m_pName->setEnabled(l_bSingle);
+    f_ShowValue(m_pName, l_bSingle, l_bSingle ? f_Qs(l_oFirst.m_strName) : QString());
+    if (!l_bSingle) m_pName->setPlaceholderText(tr("%1 sprites").arg(l_vDefs.size()));
+    QString l_oKind;
+    if (!l_bSingle) l_oKind = l_bAllChildren ? tr("child sprites") : l_bNoChildren ? tr("image sprites") : tr("images and children");
+    else if (l_oFirst.f_IsChild()) l_oKind = l_oFirst.m_bBake ? tr("child (baked)") : tr("child");
+    else l_oKind = m_pDoc->f_HasVariantArt(f_Qs(l_oFirst.m_strName), m_pDoc->f_Variant()) ? tr("image + %1 art").arg(m_pDoc->f_Variant()) : tr("image");
+    m_pKind->setText(l_oKind);
 
     // Child fields.
-    m_spriteForm->setRowVisible(m_parent, allChildren);
-    m_spriteForm->setRowVisible(m_rectRow, allChildren);
-    m_spriteForm->setRowVisible(m_bake, allChildren);
-    if (allChildren) {
+    m_pSpriteForm->setRowVisible(m_pParent, l_bAllChildren);
+    m_pSpriteForm->setRowVisible(m_pRectRow, l_bAllChildren);
+    m_pSpriteForm->setRowVisible(m_pBake, l_bAllChildren);
+    if (l_bAllChildren) {
         // A sprite cannot become a child of itself or of its own descendants.
-        QSet<QString> banned;
-        for (const SpriteDef& d : defs) {
-            banned.insert(qs(d.name));
-            for (const QString& c : m_doc->descendants(qs(d.name))) banned.insert(c);
+        QSet<QString> l_oBanned;
+        for (const SpriteDef& l_oD : l_vDefs) {
+            l_oBanned.insert(f_Qs(l_oD.m_strName));
+            for (const QString& l_oC : m_pDoc->f_Descendants(f_Qs(l_oD.m_strName))) l_oBanned.insert(l_oC);
         }
-        m_parent->clear();
-        if (const BuildSnapshotPtr snap = m_doc->snapshot())
-            for (const SpriteInfo& s : snap->sprites)
-                if (!banned.contains(s.name)) m_parent->addItem(s.name);
-        std::string par;
-        const bool sameParent = common(defs, [](const SpriteDef& d) { return d.parent; }, par);
-        if (sameParent && m_parent->findText(qs(par)) < 0) m_parent->addItem(qs(par));   // a missing parent stays visible
-        m_parent->setCurrentIndex(sameParent ? m_parent->findText(qs(par)) : -1);
-        showCommon(m_rectX, defs, [](const SpriteDef& d) { return d.rect.x; });
-        showCommon(m_rectY, defs, [](const SpriteDef& d) { return d.rect.y; });
-        showCommon(m_rectW, defs, [](const SpriteDef& d) { return d.rect.w; });
-        showCommon(m_rectH, defs, [](const SpriteDef& d) { return d.rect.h; });
-        showCommon(m_bake, defs, [](const SpriteDef& d) { return d.bake; });
+        m_pParent->clear();
+        if (const BuildSnapshotPtr l_spSnap = m_pDoc->f_Snapshot())
+            for (const SpriteInfo& l_oS : l_spSnap->m_vSprites)
+                if (!l_oBanned.contains(l_oS.m_oName)) m_pParent->addItem(l_oS.m_oName);
+        std::string l_strPar;
+        const bool l_bSameParent = f_Common(l_vDefs, [](const SpriteDef& l_oD) { return l_oD.m_strParent; }, l_strPar);
+        if (l_bSameParent && m_pParent->findText(f_Qs(l_strPar)) < 0) m_pParent->addItem(f_Qs(l_strPar));   // a missing parent stays visible
+        m_pParent->setCurrentIndex(l_bSameParent ? m_pParent->findText(f_Qs(l_strPar)) : -1);
+        f_ShowCommon(m_pRectX, l_vDefs, [](const SpriteDef& l_oD) { return l_oD.m_oRect.m_iX; });
+        f_ShowCommon(m_pRectY, l_vDefs, [](const SpriteDef& l_oD) { return l_oD.m_oRect.m_iY; });
+        f_ShowCommon(m_pRectW, l_vDefs, [](const SpriteDef& l_oD) { return l_oD.m_oRect.m_iW; });
+        f_ShowCommon(m_pRectH, l_vDefs, [](const SpriteDef& l_oD) { return l_oD.m_oRect.m_iH; });
+        f_ShowCommon(m_pBake, l_vDefs, [](const SpriteDef& l_oD) { return l_oD.m_bBake; });
     }
 
     // Pivot (the default when the sprite has none of its own).
-    const float* defPivot = m_doc->project().settings.defaultPivot;
-    showCommon(m_pivotX, defs, [&](const SpriteDef& d) { return d.hasPivot ? d.pivot[0] : defPivot[0]; });
-    showCommon(m_pivotY, defs, [&](const SpriteDef& d) { return d.hasPivot ? d.pivot[1] : defPivot[1]; });
-    bool hasPivot = false;
-    m_pivotReset->setEnabled(!common(defs, [](const SpriteDef& d) { return d.hasPivot; }, hasPivot) || hasPivot);
+    const float* l_pDefPivot = m_pDoc->f_Project().m_oSettings.m_arrDefaultPivot;
+    f_ShowCommon(m_pPivotX, l_vDefs, [&](const SpriteDef& l_oD) { return l_oD.m_bHasPivot ? l_oD.m_arrPivot[0] : l_pDefPivot[0]; });
+    f_ShowCommon(m_pPivotY, l_vDefs, [&](const SpriteDef& l_oD) { return l_oD.m_bHasPivot ? l_oD.m_arrPivot[1] : l_pDefPivot[1]; });
+    bool l_bHasPivot = false;
+    m_pPivotReset->setEnabled(!f_Common(l_vDefs, [](const SpriteDef& l_oD) { return l_oD.m_bHasPivot; }, l_bHasPivot) || l_bHasPivot);
 
     // 9-slice.
-    bool b = false;
-    const bool sameSplit = common(defs, [](const SpriteDef& d) { return d.hasSplit; }, b);
-    showValue(m_splitOn, sameSplit, b);
-    for (int i = 0; i < 4; i++) {
-        showCommon(m_split[i], defs, [i](const SpriteDef& d) { return d.split[i]; });
-        m_split[i]->setEnabled(!sameSplit || b);
+    bool l_bB = false;
+    const bool l_bSameSplit = f_Common(l_vDefs, [](const SpriteDef& l_oD) { return l_oD.m_bHasSplit; }, l_bB);
+    f_ShowValue(m_pSplitOn, l_bSameSplit, l_bB);
+    for (int l_iI = 0; l_iI < 4; l_iI++) {
+        f_ShowCommon(m_arrSplit[l_iI], l_vDefs, [l_iI](const SpriteDef& l_oD) { return l_oD.m_arrSplit[l_iI]; });
+        m_arrSplit[l_iI]->setEnabled(!l_bSameSplit || l_bB);
     }
 
     // Trim (images only).
-    m_spriteForm->setRowVisible(m_trimOverride, noChildren);
-    int trim = -1;
-    m_trimOverride->setCurrentIndex(common(defs, [](const SpriteDef& d) { return d.trim; }, trim) ? (trim < 0 ? 0 : trim == 1 ? 1 : 2) : -1);
+    m_pSpriteForm->setRowVisible(m_pTrimOverride, l_bNoChildren);
+    int l_iTrim = -1;
+    m_pTrimOverride->setCurrentIndex(f_Common(l_vDefs, [](const SpriteDef& l_oD) { return l_oD.m_iTrim; }, l_iTrim) ? (l_iTrim < 0 ? 0 : l_iTrim == 1 ? 1 : 2) : -1);
 
     // Pin (sprites with their own place: images and baked children).
-    bool pinnable = true;
-    for (const SpriteDef& d : defs) pinnable = pinnable && (!d.isChild() || d.bake);
-    m_spriteForm->setRowVisible(m_pinRow, pinnable);
-    const bool samePinned = common(defs, [](const SpriteDef& d) { return d.pinned; }, b);
-    showValue(m_pinned, samePinned, b);
-    showCommon(m_pinPage, defs, [](const SpriteDef& d) { return d.pinPage; });
-    showCommon(m_pinX, defs, [](const SpriteDef& d) { return d.pinX; });
-    showCommon(m_pinY, defs, [](const SpriteDef& d) { return d.pinY; });
-    for (QSpinBox* s : {m_pinPage, m_pinX, m_pinY}) s->setEnabled(!samePinned || b);
+    bool l_bPinnable = true;
+    for (const SpriteDef& l_oD : l_vDefs) l_bPinnable = l_bPinnable && (!l_oD.f_IsChild() || l_oD.m_bBake);
+    m_pSpriteForm->setRowVisible(m_pPinRow, l_bPinnable);
+    const bool l_bSamePinned = f_Common(l_vDefs, [](const SpriteDef& l_oD) { return l_oD.m_bPinned; }, l_bB);
+    f_ShowValue(m_pPinned, l_bSamePinned, l_bB);
+    f_ShowCommon(m_pPinPage, l_vDefs, [](const SpriteDef& l_oD) { return l_oD.m_iPinPage; });
+    f_ShowCommon(m_pPinX, l_vDefs, [](const SpriteDef& l_oD) { return l_oD.m_iPinX; });
+    f_ShowCommon(m_pPinY, l_vDefs, [](const SpriteDef& l_oD) { return l_oD.m_iPinY; });
+    for (QSpinBox* l_pS : {m_pPinPage, m_pPinX, m_pPinY}) l_pS->setEnabled(!l_bSamePinned || l_bB);
 
     // Tags.
-    QStringList tagList;
-    for (const std::string& t : first.tags) tagList << qs(t);
-    std::vector<std::string> tags;
-    const bool sameTags = common(defs, [](const SpriteDef& d) { return d.tags; }, tags);
-    m_tags->setText(sameTags ? tagList.join(QStringLiteral(", ")) : QString());
-    m_tags->setPlaceholderText(sameTags ? tr("comma separated") : tr("(mixed)"));
-    m_updating = false;
-    refreshInfo();
+    QStringList l_oTagList;
+    for (const std::string& l_strT : l_oFirst.m_vTags) l_oTagList << f_Qs(l_strT);
+    std::vector<std::string> l_vTags;
+    const bool l_bSameTags = f_Common(l_vDefs, [](const SpriteDef& l_oD) { return l_oD.m_vTags; }, l_vTags);
+    m_pTags->setText(l_bSameTags ? l_oTagList.join(QStringLiteral(", ")) : QString());
+    m_pTags->setPlaceholderText(l_bSameTags ? tr("comma separated") : tr("(mixed)"));
+    m_bUpdating = false;
+    f_RefreshInfo();
 }
 
-void PropertiesDock::refreshInfo()
+void PropertiesDock::f_RefreshInfo()
 {
-    const QString name = m_doc->selection().size() == 1 ? m_doc->currentSprite() : QString();
-    const BuildSnapshotPtr snap = m_doc->snapshot();
-    const atlas::Region* r = snap && !name.isEmpty() ? snap->region(name) : nullptr;
-    for (QLabel* l : {m_frame, m_orig, m_offset, m_source}) m_spriteForm->setRowVisible(l, !name.isEmpty());
-    if (name.isEmpty()) return;
-    if (!r) {
-        m_frame->setText(tr("not in the atlas (see Problems)"));
-        m_orig->clear();
-        m_offset->clear();
-        m_source->clear();
+    const QString l_oName = m_pDoc->f_Selection().size() == 1 ? m_pDoc->f_CurrentSprite() : QString();
+    const BuildSnapshotPtr l_spSnap = m_pDoc->f_Snapshot();
+    const atlas::Region* l_pR = l_spSnap && !l_oName.isEmpty() ? l_spSnap->f_Region(l_oName) : nullptr;
+    for (QLabel* l_pL : {m_pFrame, m_pOrig, m_pOffset, m_pSource}) m_pSpriteForm->setRowVisible(l_pL, !l_oName.isEmpty());
+    if (l_oName.isEmpty()) return;
+    if (!l_pR) {
+        m_pFrame->setText(tr("not in the atlas (see Problems)"));
+        m_pOrig->clear();
+        m_pOffset->clear();
+        m_pSource->clear();
         return;
     }
-    QString frame = tr("%1, %2  %3 × %4  page %5").arg(r->frame.x).arg(r->frame.y).arg(r->frame.w).arg(r->frame.h).arg(r->page + 1);
-    if (!r->aliasOf.empty()) frame += QStringLiteral("\n") + tr("same pixels as %1").arg(qs(r->aliasOf));
-    m_frame->setText(frame);
-    m_orig->setText(QStringLiteral("%1 × %2").arg(r->origW).arg(r->origH));
-    m_offset->setText(r->child ? tr("%1, %2 in %3").arg(r->local.x).arg(r->local.y).arg(qs(r->parent))
-                               : QStringLiteral("%1, %2%3").arg(r->offsetX).arg(r->offsetY).arg(r->trimmed() ? tr("  (trimmed)") : QString()));
-    QString art;
-    if (r->child) art = r->baked ? tr("baked copy from %1").arg(qs(r->parent)) : tr("inside %1").arg(qs(r->parent));
-    else if (m_doc->hasVariantArt(name, m_doc->variant())) art = tr("%1 art (embedded)").arg(m_doc->variant());
-    else art = m_doc->variant().isEmpty() ? tr("embedded") : tr("base art (embedded)");
-    m_source->setText(art);
-    m_source->setToolTip(QDir::toNativeSeparators(m_doc->storeFile(m_doc->variant())));
+    QString l_oFrame = tr("%1, %2  %3 × %4  page %5").arg(l_pR->m_oFrame.m_iX).arg(l_pR->m_oFrame.m_iY).arg(l_pR->m_oFrame.m_iW).arg(l_pR->m_oFrame.m_iH).arg(l_pR->m_iPage + 1);
+    if (!l_pR->m_strAliasOf.empty()) l_oFrame += QStringLiteral("\n") + tr("same pixels as %1").arg(f_Qs(l_pR->m_strAliasOf));
+    m_pFrame->setText(l_oFrame);
+    m_pOrig->setText(QStringLiteral("%1 × %2").arg(l_pR->m_iOrigW).arg(l_pR->m_iOrigH));
+    m_pOffset->setText(l_pR->m_bChild ? tr("%1, %2 in %3").arg(l_pR->m_oLocal.m_iX).arg(l_pR->m_oLocal.m_iY).arg(f_Qs(l_pR->m_strParent))
+                               : QStringLiteral("%1, %2%3").arg(l_pR->m_iOffsetX).arg(l_pR->m_iOffsetY).arg(l_pR->f_Trimmed() ? tr("  (trimmed)") : QString()));
+    QString l_oArt;
+    if (l_pR->m_bChild) l_oArt = l_pR->m_bBaked ? tr("baked copy from %1").arg(f_Qs(l_pR->m_strParent)) : tr("inside %1").arg(f_Qs(l_pR->m_strParent));
+    else if (m_pDoc->f_HasVariantArt(l_oName, m_pDoc->f_Variant())) l_oArt = tr("%1 art (embedded)").arg(m_pDoc->f_Variant());
+    else l_oArt = m_pDoc->f_Variant().isEmpty() ? tr("embedded") : tr("base art (embedded)");
+    m_pSource->setText(l_oArt);
+    m_pSource->setToolTip(QDir::toNativeSeparators(m_pDoc->f_StoreFile(m_pDoc->f_Variant())));
 }
 
 // ---- Variant group ------------------------------------------------------------------------------
 
-QWidget* PropertiesDock::buildVariantGroup()
+QWidget* PropertiesDock::f_BuildVariantGroup()
 {
-    m_variantGroup = new QGroupBox(tr("Variant"));
-    auto* form = new QFormLayout(m_variantGroup);
-    form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
+    m_pVariantGroup = new QGroupBox(tr("Variant"));
+    auto* l_pForm = new QFormLayout(m_pVariantGroup);
+    l_pForm->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
 
-    m_variantArt = infoLabel(m_variantGroup);
-    form->addRow(tr("Own art"), m_variantArt);
-    m_variantStore = infoLabel(m_variantGroup);
-    form->addRow(tr("Packed"), m_variantStore);
+    m_pVariantArt = f_InfoLabel(m_pVariantGroup);
+    l_pForm->addRow(tr("Own art"), m_pVariantArt);
+    m_pVariantStore = f_InfoLabel(m_pVariantGroup);
+    l_pForm->addRow(tr("Packed"), m_pVariantStore);
 
-    m_variantRef = new QLineEdit(m_variantGroup);
-    m_variantRef->setPlaceholderText(tr("(none)"));
-    auto* browse = new QToolButton(m_variantGroup);
-    browse->setText(QStringLiteral("…"));
-    browse->setToolTip(tr("Choose the variant's reference folder"));
-    form->addRow(tr("Reference"), fieldRow(m_variantGroup, {{QString(), m_variantRef}}, browse));
-    connect(m_variantRef, &QLineEdit::editingFinished, this, [this] {
-        const atlas::Variant* v = m_doc->currentVariant();
-        const std::string d = u8(QDir::fromNativeSeparators(m_variantRef->text().trimmed()));
-        if (m_updating || !v || d == v->reference) return;
-        const std::string id = v->id;
-        m_doc->edit(tr("Variant reference folder"), [&](Project& p) {
-            for (atlas::Variant& x : p.variants)
-                if (x.id == id) x.reference = d;
+    m_pVariantRef = new QLineEdit(m_pVariantGroup);
+    m_pVariantRef->setPlaceholderText(tr("(none)"));
+    auto* l_pBrowse = new QToolButton(m_pVariantGroup);
+    l_pBrowse->setText(QStringLiteral("…"));
+    l_pBrowse->setToolTip(tr("Choose the variant's reference folder"));
+    l_pForm->addRow(tr("Reference"), f_FieldRow(m_pVariantGroup, {{QString(), m_pVariantRef}}, l_pBrowse));
+    connect(m_pVariantRef, &QLineEdit::editingFinished, this, [this] {
+        const atlas::Variant* l_pV = m_pDoc->f_CurrentVariant();
+        const std::string l_strD = f_U8(QDir::fromNativeSeparators(m_pVariantRef->text().trimmed()));
+        if (m_bUpdating || !l_pV || l_strD == l_pV->m_strReference) return;
+        const std::string l_strId = l_pV->m_strId;
+        m_pDoc->f_Edit(tr("Variant reference folder"), [&](Project& l_oP) {
+            for (atlas::Variant& l_oX : l_oP.m_vVariants)
+                if (l_oX.m_strId == l_strId) l_oX.m_strReference = l_strD;
         });
     });
-    connect(browse, &QToolButton::clicked, this, [this] {
-        const atlas::Variant* v = m_doc->currentVariant();
-        if (!v) return;
-        const QString start = v->reference.empty() ? QFileInfo(m_doc->filePath()).absolutePath() : m_doc->resolvePath(qs(v->reference));
-        const QString dir = QFileDialog::getExistingDirectory(this, tr("Reference Folder for %1").arg(qs(v->id)), start);
-        if (!dir.isEmpty()) m_doc->setVariantReference(qs(v->id), dir);
+    connect(l_pBrowse, &QToolButton::clicked, this, [this] {
+        const atlas::Variant* l_pV = m_pDoc->f_CurrentVariant();
+        if (!l_pV) return;
+        const QString l_oStart = l_pV->m_strReference.empty() ? QFileInfo(m_pDoc->f_FilePath()).absolutePath() : m_pDoc->f_ResolvePath(f_Qs(l_pV->m_strReference));
+        const QString l_oDir = QFileDialog::getExistingDirectory(this, tr("Reference Folder for %1").arg(f_Qs(l_pV->m_strId)), l_oStart);
+        if (!l_oDir.isEmpty()) m_pDoc->f_SetVariantReference(f_Qs(l_pV->m_strId), l_oDir);
     });
 
-    auto* import = new QPushButton(tr("Import From Reference…"), m_variantGroup);
-    form->addRow(QString(), import);
-    connect(import, &QPushButton::clicked, this, &PropertiesDock::importReferencesRequested);
-    return m_variantGroup;
+    auto* l_pImport = new QPushButton(tr("Import From Reference…"), m_pVariantGroup);
+    l_pForm->addRow(QString(), l_pImport);
+    connect(l_pImport, &QPushButton::clicked, this, &PropertiesDock::f_ImportReferencesRequested);
+    return m_pVariantGroup;
 }
 
-void PropertiesDock::refreshVariant()
+void PropertiesDock::f_RefreshVariant()
 {
-    const atlas::Variant* v = m_doc->currentVariant();
-    m_variantGroup->setVisible(v != nullptr);
-    if (!v) return;
-    m_updating = true;
-    m_variantGroup->setTitle(tr("Variant: %1").arg(qs(v->id)));
-    m_variantArt->setText(tr("%1 of %2 image(s)").arg(v->images.size()).arg(m_doc->project().images.size()));
-    const QString store = m_doc->storeFile(qs(v->id));
-    m_variantStore->setText(QDir::toNativeSeparators(m_doc->toProjectPath(store)));
-    m_variantStore->setToolTip(tr("The variant's packed atlas (holds its own art): %1").arg(QDir::toNativeSeparators(store)));
-    m_variantRef->setText(QDir::toNativeSeparators(qs(v->reference)));
-    m_variantRef->setToolTip(v->reference.empty() ? tr("Folder the variant's replacement art is imported from (<sprite name>.png)")
-                                                  : QDir::toNativeSeparators(m_doc->resolvePath(qs(v->reference))));
-    m_updating = false;
+    const atlas::Variant* l_pV = m_pDoc->f_CurrentVariant();
+    m_pVariantGroup->setVisible(l_pV != nullptr);
+    if (!l_pV) return;
+    m_bUpdating = true;
+    m_pVariantGroup->setTitle(tr("Variant: %1").arg(f_Qs(l_pV->m_strId)));
+    m_pVariantArt->setText(tr("%1 of %2 image(s)").arg(l_pV->m_mapImages.size()).arg(m_pDoc->f_Project().m_mapImages.size()));
+    const QString l_oStore = m_pDoc->f_StoreFile(f_Qs(l_pV->m_strId));
+    m_pVariantStore->setText(QDir::toNativeSeparators(m_pDoc->f_ToProjectPath(l_oStore)));
+    m_pVariantStore->setToolTip(tr("The variant's packed atlas (holds its own art): %1").arg(QDir::toNativeSeparators(l_oStore)));
+    m_pVariantRef->setText(QDir::toNativeSeparators(f_Qs(l_pV->m_strReference)));
+    m_pVariantRef->setToolTip(l_pV->m_strReference.empty() ? tr("Folder the variant's replacement art is imported from (<sprite name>.png)")
+                                                  : QDir::toNativeSeparators(m_pDoc->f_ResolvePath(f_Qs(l_pV->m_strReference))));
+    m_bUpdating = false;
 }
 
 // ---- References group ---------------------------------------------------------------------------
 
-QWidget* PropertiesDock::buildReferencesGroup()
+QWidget* PropertiesDock::f_BuildReferencesGroup()
 {
-    auto* group = new QGroupBox(tr("References"));
-    auto* l = new QVBoxLayout(group);
-    auto* hint = new QLabel(tr("Folders to import new or changed art from. Saving never reads them: "
-                               "the images live in the packed atlas."), group);
-    hint->setWordWrap(true);
-    hint->setForegroundRole(QPalette::PlaceholderText);
-    l->addWidget(hint);
+    auto* l_pGroup = new QGroupBox(tr("References"));
+    auto* l_pL = new QVBoxLayout(l_pGroup);
+    auto* l_pHint = new QLabel(tr("Folders to import new or changed art from. Saving never reads them: "
+                               "the images live in the packed atlas."), l_pGroup);
+    l_pHint->setWordWrap(true);
+    l_pHint->setForegroundRole(QPalette::PlaceholderText);
+    l_pL->addWidget(l_pHint);
 
-    m_refList = new QListWidget(group);
-    m_refList->setMaximumHeight(96);
-    m_refList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    m_refList->setTextElideMode(Qt::ElideMiddle);
-    m_refList->setSelectionMode(QAbstractItemView::SingleSelection);
-    l->addWidget(m_refList);
+    m_pRefList = new QListWidget(l_pGroup);
+    m_pRefList->setMaximumHeight(96);
+    m_pRefList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_pRefList->setTextElideMode(Qt::ElideMiddle);
+    m_pRefList->setSelectionMode(QAbstractItemView::SingleSelection);
+    l_pL->addWidget(m_pRefList);
 
-    auto* row = new QHBoxLayout();
-    row->setContentsMargins(0, 0, 0, 0);
-    auto* add = new QToolButton(group);
-    add->setIcon(Icons::icon(Icons::Id::Add));
-    add->setToolTip(tr("Add a reference folder"));
-    m_refRemove = new QToolButton(group);
-    m_refRemove->setIcon(Icons::icon(Icons::Id::Remove));
-    m_refRemove->setToolTip(tr("Remove the selected reference folder (the folder itself stays)"));
-    auto* import = new QPushButton(tr("Import…"), group);
-    import->setToolTip(tr("Import new or changed art from the reference folders"));
-    row->addWidget(add);
-    row->addWidget(m_refRemove);
-    row->addStretch(1);
-    row->addWidget(import);
-    l->addLayout(row);
+    auto* l_pRow = new QHBoxLayout();
+    l_pRow->setContentsMargins(0, 0, 0, 0);
+    auto* l_pAdd = new QToolButton(l_pGroup);
+    l_pAdd->setIcon(Icons::f_Icon(Icons::Id::Add));
+    l_pAdd->setToolTip(tr("Add a reference folder"));
+    m_pRefRemove = new QToolButton(l_pGroup);
+    m_pRefRemove->setIcon(Icons::f_Icon(Icons::Id::Remove));
+    m_pRefRemove->setToolTip(tr("Remove the selected reference folder (the folder itself stays)"));
+    auto* l_pImport = new QPushButton(tr("Import…"), l_pGroup);
+    l_pImport->setToolTip(tr("Import new or changed art from the reference folders"));
+    l_pRow->addWidget(l_pAdd);
+    l_pRow->addWidget(m_pRefRemove);
+    l_pRow->addStretch(1);
+    l_pRow->addWidget(l_pImport);
+    l_pL->addLayout(l_pRow);
 
-    connect(add, &QToolButton::clicked, this, [this] {
-        const QString start = m_doc->filePath().isEmpty() ? QString() : QFileInfo(m_doc->filePath()).absolutePath();
-        const QString dir = QFileDialog::getExistingDirectory(this, tr("Add Reference Folder"), start);
-        if (!dir.isEmpty()) m_doc->addReference(dir);
+    connect(l_pAdd, &QToolButton::clicked, this, [this] {
+        const QString l_oStart = m_pDoc->f_FilePath().isEmpty() ? QString() : QFileInfo(m_pDoc->f_FilePath()).absolutePath();
+        const QString l_oDir = QFileDialog::getExistingDirectory(this, tr("Add Reference Folder"), l_oStart);
+        if (!l_oDir.isEmpty()) m_pDoc->f_AddReference(l_oDir);
     });
-    connect(m_refRemove, &QToolButton::clicked, this, [this] { m_doc->removeReference(m_refList->currentRow()); });
-    connect(m_refList, &QListWidget::currentRowChanged, this, [this](int r) {
-        m_refRemove->setEnabled(r >= 0 && r < int(m_doc->project().references.size()));
+    connect(m_pRefRemove, &QToolButton::clicked, this, [this] { m_pDoc->f_RemoveReference(m_pRefList->currentRow()); });
+    connect(m_pRefList, &QListWidget::currentRowChanged, this, [this](int l_iR) {
+        m_pRefRemove->setEnabled(l_iR >= 0 && l_iR < int(m_pDoc->f_Project().m_vReferences.size()));
     });
-    connect(import, &QPushButton::clicked, this, &PropertiesDock::importReferencesRequested);
-    return group;
+    connect(l_pImport, &QPushButton::clicked, this, &PropertiesDock::f_ImportReferencesRequested);
+    return l_pGroup;
 }
 
-void PropertiesDock::refreshReferences()
+void PropertiesDock::f_RefreshReferences()
 {
-    const int keep = m_refList->currentRow();
-    const int n = int(m_doc->project().references.size());
-    const QSignalBlocker block(m_refList);
-    m_refList->clear();
-    for (const atlas::SourceFolder& f : m_doc->project().references) {
-        const QString abs = m_doc->resolvePath(qs(f.path));
-        auto* item = new QListWidgetItem(Icons::icon(Icons::Id::Folder), QDir::toNativeSeparators(qs(f.path)), m_refList);
-        QString tip = QDir::toNativeSeparators(abs);
-        if (!f.prefix.empty()) tip += QStringLiteral("\n") + tr("names start with \"%1\"").arg(qs(f.prefix));
-        if (!f.recursive) tip += QStringLiteral("\n") + tr("this folder only (no subfolders)");
-        if (!QFileInfo(abs).isDir()) {
-            tip += QStringLiteral("\n") + tr("(missing)");
-            item->setForeground(QColor(0xf0, 0x4a, 0x5a));
+    const int l_iKeep = m_pRefList->currentRow();
+    const int l_iN = int(m_pDoc->f_Project().m_vReferences.size());
+    const QSignalBlocker l_oBlock(m_pRefList);
+    m_pRefList->clear();
+    for (const atlas::SourceFolder& l_oF : m_pDoc->f_Project().m_vReferences) {
+        const QString l_oAbs = m_pDoc->f_ResolvePath(f_Qs(l_oF.m_strPath));
+        auto* l_pItem = new QListWidgetItem(Icons::f_Icon(Icons::Id::Folder), QDir::toNativeSeparators(f_Qs(l_oF.m_strPath)), m_pRefList);
+        QString l_oTip = QDir::toNativeSeparators(l_oAbs);
+        if (!l_oF.m_strPrefix.empty()) l_oTip += QStringLiteral("\n") + tr("names start with \"%1\"").arg(f_Qs(l_oF.m_strPrefix));
+        if (!l_oF.m_bRecursive) l_oTip += QStringLiteral("\n") + tr("this folder only (no subfolders)");
+        if (!QFileInfo(l_oAbs).isDir()) {
+            l_oTip += QStringLiteral("\n") + tr("(missing)");
+            l_pItem->setForeground(QColor(0xf0, 0x4a, 0x5a));
         }
-        item->setToolTip(tip);
+        l_pItem->setToolTip(l_oTip);
     }
-    if (n == 0) {
-        auto* item = new QListWidgetItem(tr("(none — add a folder to import art from)"), m_refList);
-        item->setFlags(Qt::NoItemFlags);
+    if (l_iN == 0) {
+        auto* l_pItem = new QListWidgetItem(tr("(none — add a folder to import art from)"), m_pRefList);
+        l_pItem->setFlags(Qt::NoItemFlags);
     }
-    m_refList->setCurrentRow(n == 0 ? -1 : std::min(std::max(keep, 0), n - 1));
-    m_refRemove->setEnabled(n > 0 && m_refList->currentRow() >= 0);
+    m_pRefList->setCurrentRow(l_iN == 0 ? -1 : std::min(std::max(l_iKeep, 0), l_iN - 1));
+    m_pRefRemove->setEnabled(l_iN > 0 && m_pRefList->currentRow() >= 0);
 }

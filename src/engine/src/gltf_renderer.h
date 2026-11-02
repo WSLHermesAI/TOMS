@@ -40,54 +40,54 @@ namespace toms::next {
 
 class GltfRenderer {
 public:
-    static constexpr int kMaxLights = 4;
-    static constexpr int kMaxShadowTiles = 24;
-    static constexpr uint16_t kViews = kMaxShadowTiles + 2;   // shadow tiles, opaque, blended
+    static constexpr int m_iMaxLights = 4;
+    static constexpr int m_iMaxShadowTiles = 24;
+    static constexpr uint16_t m_u16Views = m_iMaxShadowTiles + 2;   // shadow tiles, opaque, blended
 
     struct Light {
         enum class Type { Directional, Point, Spot };
-        Type type = Type::Directional;
-        glm::vec3 color{1.0f};
-        float intensity = 3.0f;              // directional: as is; point / spot: / distance^2
-        glm::vec3 position{0.0f};            // point, spot
-        glm::vec3 direction{0.0f, -1.0f, 0.0f};   // where it shines (directional, spot)
-        float range = 0.0f;                  // point, spot: 0 = infinite
-        float innerCone = 0.35f, outerCone = 0.6f;   // spot: radians from the axis
-        bool castShadows = true;
+        Type m_eType = Type::Directional;
+        glm::vec3 m_v3Color{1.0f};
+        float m_fIntensity = 3.0f;              // directional: as is; point / spot: / distance^2
+        glm::vec3 m_v3Position{0.0f};            // point, spot
+        glm::vec3 m_v3Direction{0.0f, -1.0f, 0.0f};   // where it shines (directional, spot)
+        float m_fRange = 0.0f;                  // point, spot: 0 = infinite
+        float m_fInnerCone = 0.35f, m_fOuterCone = 0.6f;   // spot: radians from the axis
+        bool m_bCastShadows = true;
     };
 
     // The lighting and output of a frame. Defaults: a key light with shadows and a soft fill.
     struct Frame {
-        glm::mat4 view{1.0f}, proj{1.0f};   // proj from projection() (backend-correct depth range)
-        glm::vec3 eye{0.0f, 0.0f, 5.0f};
-        std::vector<Light> lights = defaultLights();   // up to kMaxLights
-        float ambient = 0.7f;
-        glm::vec3 sky{0.62f, 0.66f, 0.72f}, ground{0.22f, 0.2f, 0.18f};
-        float exposure = 1.0f;
-        bool tonemap = true;                 // ACES
-        bool srgbOut = true;                 // the backbuffer is not sRGB: encode in the shader
-        int debug = 0;                       // 0 lit, 1 normals, 2 base colour, 3 metal/rough, 4 uv
+        glm::mat4 m_mat4View{1.0f}, m_mat4Proj{1.0f};   // proj from projection() (backend-correct depth range)
+        glm::vec3 m_v3Eye{0.0f, 0.0f, 5.0f};
+        std::vector<Light> m_vLights = f_DefaultLights();   // up to kMaxLights
+        float m_fAmbient = 0.7f;
+        glm::vec3 m_v3Sky{0.62f, 0.66f, 0.72f}, m_v3Ground{0.22f, 0.2f, 0.18f};
+        float m_fExposure = 1.0f;
+        bool m_bTonemap = true;                 // ACES
+        bool m_bSrgbOut = true;                 // the backbuffer is not sRGB: encode in the shader
+        int m_iDebug = 0;                       // 0 lit, 1 normals, 2 base colour, 3 metal/rough, 4 uv
         // Shadows.
-        bool shadows = true;
-        int shadowMapSize = 4096;            // the atlas (square)
-        glm::vec3 boundsMin{-1.0f}, boundsMax{1.0f};   // what directional shadows cover; infinite ranges end here
-        float shadowBias = 1.0f;             // x the built-in depth bias / normal offset
+        bool m_bShadows = true;
+        int m_iShadowMapSize = 4096;            // the atlas (square)
+        glm::vec3 m_v3BoundsMin{-1.0f}, m_v3BoundsMax{1.0f};   // what directional shadows cover; infinite ranges end here
+        float m_fShadowBias = 1.0f;             // x the built-in depth bias / normal offset
         // Image-based lighting (setEnvironment): used while one is set.
-        bool environment = true;
-        float environmentIntensity = 1.0f;
-        float environmentYaw = 0.0f;         // radians: turns the picture about +Y
-        bool background = false;             // the picture behind the models (else the clear colour)
-        float backgroundBlur = 0.0f;         // 0 sharp .. 1 as blurred as roughness 1
+        bool m_bEnvironment = true;
+        float m_fEnvironmentIntensity = 1.0f;
+        float m_fEnvironmentYaw = 0.0f;         // radians: turns the picture about +Y
+        bool m_bBackground = false;             // the picture behind the models (else the clear colour)
+        float m_fBackgroundBlur = 0.0f;         // 0 sharp .. 1 as blurred as roughness 1
     };
-    static std::vector<Light> defaultLights();
+    static std::vector<Light> f_DefaultLights();
 
     struct LinePoint {
-        glm::vec3 pos;
-        uint32_t abgr;
+        glm::vec3 m_v3Pos;
+        uint32_t m_uAbgr;
     };
     struct Stats {
-        int drawCalls = 0, instances = 0, skinnedDraws = 0, morphUploads = 0, shadowTiles = 0, shadowDraws = 0;
-        int crowdInstances = 0;              // drawn through drawCrowd (also counted in instances)
+        int m_iDrawCalls = 0, m_iInstances = 0, m_iSkinnedDraws = 0, m_iMorphUploads = 0, m_iShadowTiles = 0, m_iShadowDraws = 0;
+        int m_iCrowdInstances = 0;              // drawn through drawCrowd (also counted in instances)
     };
 
     // Per-model GPU resources (buffers, textures). Made by upload(); free with the renderer alive.
@@ -98,43 +98,43 @@ public:
 
     GltfRenderer();
     ~GltfRenderer();
-    bool init();                             // programs, uniforms, default textures (bgfx must be up)
-    void shutdown();
-    bool ready() const;
-    bool shadowsSupported() const;           // depth textures with compare (every desktop backend)
+    bool f_Init();                             // programs, uniforms, default textures (bgfx must be up)
+    void f_Shutdown();
+    bool f_Ready() const;
+    bool f_ShadowsSupported() const;           // depth textures with compare (every desktop backend)
 
-    std::shared_ptr<GpuModel> upload(const gltf::Model& model);
+    std::shared_ptr<GpuModel> f_Upload(const gltf::Model& l_oModel);
     // Null (and a log line) when this backend cannot sample RGBA32F textures or the texture is too big.
-    std::shared_ptr<AnimTextureGpu> uploadAnimTexture(std::shared_ptr<const gltf::AnimTexture> anim);
-    bool crowdsSupported() const;           // the crowd program exists and RGBA32F textures can be sampled
+    std::shared_ptr<AnimTextureGpu> f_UploadAnimTexture(std::shared_ptr<const gltf::AnimTexture> l_spAnim);
+    bool f_CrowdsSupported() const;           // the crowd program exists and RGBA32F textures can be sampled
     // The environment for image-based lighting (an RGBA16F cubemap and the diffuse terms). False (and why) when the
     // backend cannot sample RGBA16F cubemaps; the plain sky / ground stays then.
-    bool setEnvironment(const gltf::Environment& env, std::string* error = nullptr);
-    void clearEnvironment();
-    bool hasEnvironment() const;
+    bool f_SetEnvironment(const gltf::Environment& l_oEnv, std::string* l_pError = nullptr);
+    void f_ClearEnvironment();
+    bool f_HasEnvironment() const;
 
     // Perspective matrix for this backend (depth 0..1 on D3D/Vulkan, -1..1 on OpenGL).
-    static glm::mat4 projection(float fovYDegrees, float aspect, float zNear, float zFar);
+    static glm::mat4 f_Projection(float l_fFovYDegrees, float l_fAspect, float l_fZNear, float l_fZFar);
 
-    void begin(uint16_t viewId, const Frame& frame, uint32_t width, uint32_t height, uint32_t clearRgba = 0x3a3d42ff);
+    void begin(uint16_t l_u16ViewId, const Frame& l_oFrame, uint32_t l_uWidth, uint32_t l_uHeight, uint32_t l_uClearRgba = 0x3a3d42ff);
     // castShadows = false: drawn and shadowed, but not drawn into the shadow maps (e.g. a floor).
-    void draw(GpuModel& gpu, const gltf::Pose& pose, const glm::mat4& placement = glm::mat4(1.0f), bool castShadows = true);
+    void f_Draw(GpuModel& l_oGpu, const gltf::Pose& l_oPose, const glm::mat4& l_mat4Placement = glm::mat4(1.0f), bool l_bCastShadows = true);
     // Every instance of the model's meshes skinned by the texture's skin, animated from the texture: one
     // instanced draw per primitive (plus its shadow casts). Primitives of other skins / unskinned ones are not
     // drawn (draw those with a Pose). The crowd's texture must be the one `anim` was uploaded from.
-    void drawCrowd(GpuModel& gpu, const AnimTextureGpu& anim, const gltf::Crowd& crowd, bool castShadows = true);
-    void drawCrowd(GpuModel& gpu, const AnimTextureGpu& anim, const std::vector<gltf::CrowdGpuInstance>& instances,
-                   bool castShadows = true);
-    void lines(const std::vector<LinePoint>& points, bool depthTest = true);   // pairs of points
-    const Stats& stats() const { return stats_; }
+    void f_DrawCrowd(GpuModel& l_oGpu, const AnimTextureGpu& l_oAnim, const gltf::Crowd& l_oCrowd, bool l_bCastShadows = true);
+    void f_DrawCrowd(GpuModel& l_oGpu, const AnimTextureGpu& l_oAnim, const std::vector<gltf::CrowdGpuInstance>& l_vInstances,
+                   bool l_bCastShadows = true);
+    void f_Lines(const std::vector<LinePoint>& l_vPoints, bool l_bDepthTest = true);   // pairs of points
+    const Stats& f_Stats() const { return m_oStats; }
 
 private:
-    void submitPrimitive(GpuModel& gpu, const gltf::Primitive& p, const gltf::Material& mat, const std::function<void()>& geometry,
-                         bgfx::ProgramHandle colourProg, bgfx::ProgramHandle shadowProg, const glm::mat4& sortBase, bool mirrored,
-                         bool castShadows, bool skinned);
+    void f_SubmitPrimitive(GpuModel& l_oGpu, const gltf::Primitive& l_oP, const gltf::Material& l_oMat, const std::function<void()>& l_fnGeometry,
+                         bgfx::ProgramHandle l_oColourProg, bgfx::ProgramHandle l_oShadowProg, const glm::mat4& l_mat4SortBase, bool l_bMirrored,
+                         bool l_bCastShadows, bool l_bSkinned);
     struct Impl;
-    std::unique_ptr<Impl> impl_;
-    Stats stats_;
+    std::unique_ptr<Impl> m_upImpl;
+    Stats m_oStats;
 };
 
 }  // namespace toms::next

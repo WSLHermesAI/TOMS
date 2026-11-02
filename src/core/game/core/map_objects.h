@@ -47,14 +47,14 @@ struct Builder;
 
 // Where the floor is on screen this frame (Game::draw's camera).
 struct MapView {
-    float ox = 0, oy = 0;    // pixel of tile (0, 0)
-    float ts = 0;            // tile size
-    float inset = 0;         // objects are inset this much into their tiles
-    float sSize = 0;         // the player's sprite size (ts - 2 * inset)
+    float m_fOx = 0, m_fOy = 0;    // pixel of tile (0, 0)
+    float m_fTs = 0;            // tile size
+    float m_fInset = 0;         // objects are inset this much into their tiles
+    float m_fSSize = 0;         // the player's sprite size (ts - 2 * inset)
 };
 
 struct MapRect {
-    float x = 0, y = 0, w = 0, h = 0;
+    float m_fX = 0, m_fY = 0, m_fW = 0, m_fH = 0;
 };
 
 // One way to draw a status, in the object's rect. False: nothing drawn (the next look of the chain is tried).
@@ -62,19 +62,19 @@ class MapLook {
 public:
     virtual ~MapLook() = default;
     // v: the camera (v.ox, v.oy); r: the object's rect on screen.
-    virtual bool draw(Game& g, const MapView& v, const MapRect& r, int tileX, int tileY, float statusMs) const = 0;
-    virtual float onceSeconds() const { return 0; }   // a one-shot clip: its length (0 = holds)
-    virtual void update(float dt) { (void)dt; }       // seconds: what runs on its own (an effect) moves on
+    virtual bool f_Draw(Game& l_oG, const MapView& l_oV, const MapRect& l_oR, int l_iTileX, int l_iTileY, float l_fStatusMs) const = 0;
+    virtual float f_OnceSeconds() const { return 0; }   // a one-shot clip: its length (0 = holds)
+    virtual void f_Update(float l_fDt) { (void)l_fDt; }       // seconds: what runs on its own (an effect) moves on
 };
 
 // The looks of one status, tried in order.
 struct LookChain {
-    std::vector<std::unique_ptr<MapLook>> looks;
-    std::string next;        // the status after a one-shot clip ends ("" = stays)
-    bool draw(Game& g, const MapView& v, const MapRect& r, int tileX, int tileY, float statusMs) const;
-    float onceSeconds() const;
-    void update(float dt) const { for (const auto& l : looks) l->update(dt); }
-    bool empty() const { return looks.empty(); }
+    std::vector<std::unique_ptr<MapLook>> m_vLooks;
+    std::string m_strNext;        // the status after a one-shot clip ends ("" = stays)
+    bool f_Draw(Game& l_oG, const MapView& l_oV, const MapRect& l_oR, int l_iTileX, int l_iTileY, float l_fStatusMs) const;
+    float f_OnceSeconds() const;
+    void f_Update(float l_fDt) const { for (const auto& l_upL : m_vLooks) l_upL->f_Update(l_fDt); }
+    bool f_Empty() const { return m_vLooks.empty(); }
 };
 
 class MapObject : public toms::Node {
@@ -82,134 +82,134 @@ class MapObject : public toms::Node {
 public:
     enum class Touch { Pass, Stop };   // after touching it: look at the next object on the tile, or the step ends
 
-    MapObject(Game& g, int entityIndex);
+    MapObject(Game& l_oG, int l_iEntityIndex);
     ~MapObject() override = default;
 
-    Entity* entity();                  // null for the player
-    const Entity* entity() const;
-    int entityIndex() const { return index_; }
+    Entity* f_Entity();                  // null for the player
+    const Entity* f_Entity() const;
+    int f_EntityIndex() const { return m_iIndex; }
 
     // "gone" once the entity is used up (defeated, collected, opened) unless a status is still playing out.
-    std::string status() const;
-    void setStatus(const std::string& s);   // from the start of its look
-    bool play(const std::string& s);        // setStatus when that status has something to draw (a clip with art)
-    float statusMs() const { return statusMs_; }
-    const LookChain* look(const std::string& status) const;
-    void setLook(const std::string& status, LookChain chain);
-    std::vector<std::string> lookStatuses() const;
-    const std::vector<std::string>& events() const;   // its linked events (the stage editor's "events")
+    std::string f_Status() const;
+    void f_SetStatus(const std::string& l_strS);   // from the start of its look
+    bool f_Play(const std::string& l_strS);        // setStatus when that status has something to draw (a clip with art)
+    float f_StatusMs() const { return m_fStatusMs; }
+    const LookChain* f_Look(const std::string& l_strStatus) const;
+    void f_SetLook(const std::string& l_strStatus, LookChain l_oChain);
+    std::vector<std::string> f_LookStatuses() const;
+    const std::vector<std::string>& f_Events() const;   // its linked events (the stage editor's "events")
 
     // ---- the frame ----
-    virtual void update(int dtMs);
-    virtual bool sorted() const { return true; }        // drawn in the floor's row-sorted pass
-    virtual MapRect rect(const MapView& v) const;
-    virtual int sortKey() const;                        // the bottom row it covers
-    virtual int tieX() const;
-    virtual void render(const MapView& v);              // its status's look, in the sorted pass
-    virtual void renderUnderlay(const MapView& v) { (void)v; }   // before the sorted pass (a door opening)
+    virtual void f_Update(int l_iDtMs);
+    virtual bool f_Sorted() const { return true; }        // drawn in the floor's row-sorted pass
+    virtual MapRect f_Rect(const MapView& l_oV) const;
+    virtual int f_SortKey() const;                        // the bottom row it covers
+    virtual int f_TieX() const;
+    virtual void f_Render(const MapView& l_oV);              // its status's look, in the sorted pass
+    virtual void f_RenderUnderlay(const MapView& l_oV) { (void)l_oV; }   // before the sorted pass (a door opening)
 
     // ---- what the player does to it ----
-    bool covers(int x, int y) const;
-    virtual bool bumpBeforeStep(int x, int y) { (void)x; (void)y; return false; }   // true: the step ends (a gate)
-    virtual bool bumpBig(int x, int y) { (void)x; (void)y; return false; }          // true: fought from beside it
-    virtual Touch onTouch(int x, int y);                // the player stepped onto it
-    virtual bool onInteract() { return false; }         // Enter on its tile
+    bool f_Covers(int l_iX, int l_iY) const;
+    virtual bool f_BumpBeforeStep(int l_iX, int l_iY) { (void)l_iX; (void)l_iY; return false; }   // true: the step ends (a gate)
+    virtual bool f_BumpBig(int l_iX, int l_iY) { (void)l_iX; (void)l_iY; return false; }          // true: fought from beside it
+    virtual Touch f_OnTouch(int l_iX, int l_iY);                // the player stepped onto it
+    virtual bool f_OnInteract() { return false; }         // Enter on its tile
 
     // For the hierarchy / details view: what it is, in a few fields.
-    virtual nlohmann::json details() const;
+    virtual nlohmann::json f_Details() const;
 
 protected:
-    Game& g_;
-    int index_;
-    std::string status_ = "idle";
-    float statusMs_ = 0;
-    std::map<std::string, LookChain> looks_;
+    Game& m_oG;
+    int m_iIndex;
+    std::string m_strStatus = "idle";
+    float m_fStatusMs = 0;
+    std::map<std::string, LookChain> m_mapLooks;
 };
 
 class MonsterObject : public MapObject {
     TOMS_OBJECT(MonsterObject)
 public:
     using MapObject::MapObject;
-    bool bumpBig(int x, int y) override;
-    Touch onTouch(int x, int y) override;
-    nlohmann::json details() const override;
+    bool f_BumpBig(int l_iX, int l_iY) override;
+    Touch f_OnTouch(int l_iX, int l_iY) override;
+    nlohmann::json f_Details() const override;
 };
 
 class ItemObject : public MapObject {
     TOMS_OBJECT(ItemObject)
 public:
     using MapObject::MapObject;
-    Touch onTouch(int x, int y) override;
+    Touch f_OnTouch(int l_iX, int l_iY) override;
 };
 
 class EventObject : public MapObject {
     TOMS_OBJECT(EventObject)
 public:
     using MapObject::MapObject;
-    Touch onTouch(int x, int y) override;
+    Touch f_OnTouch(int l_iX, int l_iY) override;
 };
 
 class NpcObject : public MapObject {
     TOMS_OBJECT(NpcObject)
 public:
     using MapObject::MapObject;
-    Touch onTouch(int x, int y) override;
-    bool onInteract() override;
+    Touch f_OnTouch(int l_iX, int l_iY) override;
+    bool f_OnInteract() override;
 };
 
 class GateObject : public MapObject {
     TOMS_OBJECT(GateObject)
 public:
     using MapObject::MapObject;
-    MapRect rect(const MapView& v) const override;      // the full tile, like a door
-    bool bumpBeforeStep(int x, int y) override;
-    void renderUnderlay(const MapView& v) override;
+    MapRect f_Rect(const MapView& l_oV) const override;      // the full tile, like a door
+    bool f_BumpBeforeStep(int l_iX, int l_iY) override;
+    void f_RenderUnderlay(const MapView& l_oV) override;
 };
 
 class DoorObject : public MapObject {
     TOMS_OBJECT(DoorObject)
 public:
     using MapObject::MapObject;
-    bool sorted() const override { return false; }      // the tile layer draws a closed door
-    MapRect rect(const MapView& v) const override;
-    void renderUnderlay(const MapView& v) override;
+    bool f_Sorted() const override { return false; }      // the tile layer draws a closed door
+    MapRect f_Rect(const MapView& l_oV) const override;
+    void f_RenderUnderlay(const MapView& l_oV) override;
 };
 
 class StairsObject : public MapObject {
     TOMS_OBJECT(StairsObject)
 public:
     using MapObject::MapObject;
-    bool sorted() const override { return false; }      // a tile
+    bool f_Sorted() const override { return false; }      // a tile
 };
 
 class PlayerObject : public MapObject {
     TOMS_OBJECT(PlayerObject)
 public:
-    explicit PlayerObject(Game& g) : MapObject(g, -1) {}
-    MapRect rect(const MapView& v) const override;
-    int sortKey() const override;
-    int tieX() const override;
-    nlohmann::json details() const override;
+    explicit PlayerObject(Game& l_oG) : MapObject(l_oG, -1) {}
+    MapRect f_Rect(const MapView& l_oV) const override;
+    int f_SortKey() const override;
+    int f_TieX() const override;
+    nlohmann::json f_Details() const override;
 };
 
 // The floor's objects, in the stage file's order, under one root node.
 class MapFloor {
 public:
-    void build(Game& g);               // after Game::loadStage has the entities and their statuses
-    void clear();
-    void update(int dtMs);
-    void render(const MapView& v);     // the underlays, then every sorted object (and the player) by row
+    void f_Build(Game& l_oG);               // after Game::loadStage has the entities and their statuses
+    void f_Clear();
+    void f_Update(int l_iDtMs);
+    void f_Render(const MapView& l_oV);     // the underlays, then every sorted object (and the player) by row
     // The object of an entity whose kind starts with `kindPrefix` at (x, y), or null.
-    MapObject* objectAt(int x, int y, const char* kindPrefix);
-    const std::vector<std::shared_ptr<MapObject>>& objects() const { return objects_; }
-    PlayerObject* player() const { return player_.get(); }
-    toms::Node& root() { return root_; }
-    int generation() const { return generation_; }   // +1 per build: a loop over objects stops if the floor changed
+    MapObject* f_ObjectAt(int l_iX, int l_iY, const char* l_pszKindPrefix);
+    const std::vector<std::shared_ptr<MapObject>>& f_Objects() const { return m_vObjects; }
+    PlayerObject* f_Player() const { return m_spPlayer.get(); }
+    toms::Node& f_Root() { return m_oRoot; }
+    int f_Generation() const { return m_iGeneration; }   // +1 per build: a loop over objects stops if the floor changed
 
 private:
-    toms::Node root_;                  // declared first: the objects unparent from it when they go
-    std::vector<std::shared_ptr<MapObject>> objects_;
-    std::shared_ptr<PlayerObject> player_;
-    std::vector<MapObject*> drawList_; // scratch
-    int generation_ = 0;
+    toms::Node m_oRoot;                  // declared first: the objects unparent from it when they go
+    std::vector<std::shared_ptr<MapObject>> m_vObjects;
+    std::shared_ptr<PlayerObject> m_spPlayer;
+    std::vector<MapObject*> m_vDrawList; // scratch
+    int m_iGeneration = 0;
 };

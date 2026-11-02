@@ -14,31 +14,31 @@
 namespace toms {
 
 struct HubLocationDefinition {
-    std::string id;
-    std::string unlockFlag;   // a run flag name, e.g. "hub.village" -- set by Game::applyChapterGrants
+    std::string m_strId;
+    std::string m_strUnlockFlag;   // a run flag name, e.g. "hub.village" -- set by Game::applyChapterGrants
     // What activating this location does. Only "talk" is implemented so far (opens an NPC's
     // dialogue the same way bumping into them in the world would, via Game::startDialogue) --
     // the field exists as a string, not an enum, so a future kind (e.g. "forge", "shop") can be
     // added by content + a new case in the dispatcher, not a schema change.
-    std::string actionKind;
-    std::string actionNpc;    // valid when actionKind == "talk": an id into data/dialogue/<id>.json
+    std::string m_strActionKind;
+    std::string m_strActionNpc;    // valid when actionKind == "talk": an id into data/dialogue/<id>.json
     // Raw json (plain string or {code:text} multi-language map) -- resolved via Locale::field()
     // at display time, matching every other content file's name/desc convention.
-    nlohmann::json name, desc;
+    nlohmann::json m_jName, m_jDesc;
 };
 
-nlohmann::json toJson(const HubLocationDefinition& d);
-HubLocationDefinition hubLocationFromJson(const nlohmann::json& j);
+nlohmann::json f_ToJson(const HubLocationDefinition& l_oD);
+HubLocationDefinition f_HubLocationFromJson(const nlohmann::json& l_jJ);
 
 // Loads data/hub.json's {id: HubLocationDefinition} map. Missing/malformed file -> empty map
 // (never throws), matching readJsonFileSafe's fail-soft convention used everywhere else.
-std::map<std::string, HubLocationDefinition> loadHubLocations(const std::string& path);
+std::map<std::string, HubLocationDefinition> f_LoadHubLocations(const std::string& l_strPath);
 
 // True if `locationId` names a real hub location and `flags` has its unlockFlag set. Pure
 // predicate -- the UI (dimming a not-yet-reached location) and the actual activation share this
 // one rule instead of re-deriving it.
-bool hubLocationUnlocked(const std::map<std::string, HubLocationDefinition>& defs,
-                          const std::function<bool(const std::string&)>& hasFlag,
-                          const std::string& locationId);
+bool f_HubLocationUnlocked(const std::map<std::string, HubLocationDefinition>& l_mapDefs,
+                          const std::function<bool(const std::string&)>& l_fnHasFlag,
+                          const std::string& l_strLocationId);
 
 } // namespace toms

@@ -16,28 +16,28 @@
 namespace toms {
 
 struct CardRecord {
-    int copies = 0;        // cards of this monster held
-    int defeated = 0;      // times the player defeated it
-    int defeatedBy = 0;    // times it defeated the player
+    int m_iCopies = 0;        // cards of this monster held
+    int m_iDefeated = 0;      // times the player defeated it
+    int m_iDefeatedBy = 0;    // times it defeated the player
 };
 using CardBook = std::map<std::string, CardRecord>;   // monster id -> its record
 
 struct CardChance {
-    float first = 1.0f;    // "chance": the card when the player has none yet
-    float repeat = 0.5f;   // "repeatChance": another copy
+    float m_fFirst = 1.0f;    // "chance": the card when the player has none yet
+    float m_fRepeat = 0.5f;   // "repeatChance": another copy
 };
 
 // The monster's "card" settings from its enemies.json entry (defaults for anything missing; clamped to 0..1).
-CardChance cardChanceFromJson(const nlohmann::json& enemyEntry);
+CardChance f_CardChanceFromJson(const nlohmann::json& l_jEnemyEntry);
 
 // A win against `monster`: counts it, then gives a card when roll01 (a random number in [0, 1)) is under the chance
 // for the copies held. Returns true when a card was given.
-bool recordCardWin(CardBook& book, const std::string& monster, const CardChance& chance, float roll01);
+bool f_RecordCardWin(CardBook& l_mapBook, const std::string& l_strMonster, const CardChance& l_oChance, float l_fRoll01);
 // A loss against `monster`: counted.
-void recordCardLoss(CardBook& book, const std::string& monster);
+void f_RecordCardLoss(CardBook& l_mapBook, const std::string& l_strMonster);
 
-nlohmann::json cardBookToJson(const CardBook& book);
+nlohmann::json f_CardBookToJson(const CardBook& l_mapBook);
 // Unknown or broken entries are skipped; negative numbers read as 0.
-CardBook cardBookFromJson(const nlohmann::json& j);
+CardBook f_CardBookFromJson(const nlohmann::json& l_jJ);
 
 } // namespace toms

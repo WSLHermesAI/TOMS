@@ -18,20 +18,20 @@
 namespace stage {
 
 struct ChangedFile {
-    enum Kind { Stage, Spec, Data, Delete, Text } kind = Data;
-    std::string path, text, before, floorId;
+    enum Kind { Stage, Spec, Data, Delete, Text } m_eKind = Data;
+    std::string m_strPath, m_strText, m_strBefore, m_strFloorId;
 };
-std::vector<ChangedFile> changedFiles(const Project& p);
+std::vector<ChangedFile> f_ChangedFiles(const Project& l_oP);
 
 // A small LCS diff over lines with two lines of context around each change: ('+' | '-' | ' ', line); "…" marks a gap.
-std::vector<std::pair<char, std::string>> lineDiff(const std::string& before, const std::string& after);
+std::vector<std::pair<char, std::string>> f_LineDiff(const std::string& l_strBefore, const std::string& l_strAfter);
 
-std::string timeStamp();   // 2026-10-16_183005
+std::string f_TimeStamp();   // 2026-10-16_183005
 // Writes every changed file; false + err on the first failure. `written` gets the paths written or removed.
-bool writeFiles(Project& p, const std::string& stamp, std::vector<std::string>& written, std::string& err);
+bool f_WriteFiles(Project& l_oP, const std::string& l_strStamp, std::vector<std::string>& l_vWritten, std::string& l_strErr);
 
-Json buildFloorIndex(const std::string& root);
+Json f_BuildFloorIndex(const std::string& l_strRoot);
 // true when the index changed and was written
-bool syncFloorIndex(const std::string& root, std::string* err = nullptr);
+bool f_SyncFloorIndex(const std::string& l_strRoot, std::string* l_pErr = nullptr);
 
 }  // namespace stage

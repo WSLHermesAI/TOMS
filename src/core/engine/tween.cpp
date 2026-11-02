@@ -6,71 +6,71 @@
 
 namespace toms {
 
-float ease(Ease e, float t) {
-    t = std::clamp(t, 0.0f, 1.0f);
-    switch (e) {
-        case Ease::Linear:     return t;
-        case Ease::InQuad:     return t * t;
-        case Ease::OutQuad:    return t * (2.0f - t);
-        case Ease::InOutQuad:  return t < 0.5f ? 2.0f * t * t : 1.0f - std::pow(-2.0f * t + 2.0f, 2.0f) / 2.0f;
-        case Ease::InCubic:    return t * t * t;
-        case Ease::OutCubic:   return 1.0f - std::pow(1.0f - t, 3.0f);
-        case Ease::InOutCubic: return t < 0.5f ? 4.0f * t * t * t : 1.0f - std::pow(-2.0f * t + 2.0f, 3.0f) / 2.0f;
+float f_Ease(Ease l_eE, float l_fT) {
+    l_fT = std::clamp(l_fT, 0.0f, 1.0f);
+    switch (l_eE) {
+        case Ease::Linear:     return l_fT;
+        case Ease::InQuad:     return l_fT * l_fT;
+        case Ease::OutQuad:    return l_fT * (2.0f - l_fT);
+        case Ease::InOutQuad:  return l_fT < 0.5f ? 2.0f * l_fT * l_fT : 1.0f - std::pow(-2.0f * l_fT + 2.0f, 2.0f) / 2.0f;
+        case Ease::InCubic:    return l_fT * l_fT * l_fT;
+        case Ease::OutCubic:   return 1.0f - std::pow(1.0f - l_fT, 3.0f);
+        case Ease::InOutCubic: return l_fT < 0.5f ? 4.0f * l_fT * l_fT * l_fT : 1.0f - std::pow(-2.0f * l_fT + 2.0f, 3.0f) / 2.0f;
         case Ease::OutBack: {
-            const float c1 = 1.70158f, c3 = c1 + 1.0f;
-            return 1.0f + c3 * std::pow(t - 1.0f, 3.0f) + c1 * std::pow(t - 1.0f, 2.0f);
+            const float l_fC1 = 1.70158f, l_fC3 = l_fC1 + 1.0f;
+            return 1.0f + l_fC3 * std::pow(l_fT - 1.0f, 3.0f) + l_fC1 * std::pow(l_fT - 1.0f, 2.0f);
         }
         case Ease::OutBounce: {
-            const float n = 7.5625f, d = 2.75f;
-            if (t < 1.0f / d) return n * t * t;
-            if (t < 2.0f / d) { t -= 1.5f / d; return n * t * t + 0.75f; }
-            if (t < 2.5f / d) { t -= 2.25f / d; return n * t * t + 0.9375f; }
-            t -= 2.625f / d;
-            return n * t * t + 0.984375f;
+            const float l_fN = 7.5625f, l_fD = 2.75f;
+            if (l_fT < 1.0f / l_fD) return l_fN * l_fT * l_fT;
+            if (l_fT < 2.0f / l_fD) { l_fT -= 1.5f / l_fD; return l_fN * l_fT * l_fT + 0.75f; }
+            if (l_fT < 2.5f / l_fD) { l_fT -= 2.25f / l_fD; return l_fN * l_fT * l_fT + 0.9375f; }
+            l_fT -= 2.625f / l_fD;
+            return l_fN * l_fT * l_fT + 0.984375f;
         }
     }
-    return t;
+    return l_fT;
 }
 
-Ease easeFromName(const std::string& n) {
-    static const struct { const char* name; Ease e; } table[] = {
+Ease f_EaseFromName(const std::string& l_strN) {
+    static const struct { const char* m_pszName; Ease m_eE; } l_arrTable[] = {
         {"linear", Ease::Linear}, {"inQuad", Ease::InQuad}, {"outQuad", Ease::OutQuad}, {"inOutQuad", Ease::InOutQuad},
         {"inCubic", Ease::InCubic}, {"outCubic", Ease::OutCubic}, {"inOutCubic", Ease::InOutCubic},
         {"outBack", Ease::OutBack}, {"outBounce", Ease::OutBounce},
     };
-    for (const auto& r : table) if (n == r.name) return r.e;
+    for (const auto& l_oR : l_arrTable) if (l_strN == l_oR.m_pszName) return l_oR.m_eE;
     return Ease::Linear;
 }
 
-void Tween::update(int dtMs) {
-    if (dtMs <= 0) return;
-    elapsedMs_ += dtMs;
-    if (elapsedMs_ < durationMs_) return;
-    switch (loop_) {
-        case Loop::Once:     elapsedMs_ = durationMs_; break;
-        case Loop::Repeat:   elapsedMs_ %= durationMs_; break;
+void Tween::f_Update(int l_iDtMs) {
+    if (l_iDtMs <= 0) return;
+    m_iElapsedMs += l_iDtMs;
+    if (m_iElapsedMs < m_iDurationMs) return;
+    switch (m_eLoop) {
+        case Loop::Once:     m_iElapsedMs = m_iDurationMs; break;
+        case Loop::Repeat:   m_iElapsedMs %= m_iDurationMs; break;
         case Loop::PingPong: {
-            const int passes = elapsedMs_ / durationMs_;   // a long frame can cross more than one end
-            elapsedMs_ %= durationMs_;
-            if (passes % 2 == 1) forward_ = !forward_;
+            const int l_iPasses = m_iElapsedMs / m_iDurationMs;   // a long frame can cross more than one end
+            m_iElapsedMs %= m_iDurationMs;
+            if (l_iPasses % 2 == 1) m_bForward = !m_bForward;
             break;
         }
     }
 }
 
-void Tween::setDuration(int durationMs) {
-    durationMs = std::max(1, durationMs);
-    const float p = progress();
-    durationMs_ = durationMs;
-    elapsedMs_ = (int)std::lround(p * durationMs_);
+void Tween::f_SetDuration(int l_iDurationMs) {
+    l_iDurationMs = std::max(1, l_iDurationMs);
+    const float l_fP = f_Progress();
+    m_iDurationMs = l_iDurationMs;
+    m_iElapsedMs = (int)std::lround(l_fP * m_iDurationMs);
 }
 
-float Tween::progress() const { return std::clamp((float)elapsedMs_ / (float)durationMs_, 0.0f, 1.0f); }
+float Tween::f_Progress() const { return std::clamp((float)m_iElapsedMs / (float)m_iDurationMs, 0.0f, 1.0f); }
 
-float Tween::value() const {
-    const float p = progress();
-    const float k = ease(ease_, forward_ ? p : 1.0f - p);
-    return from_ + (to_ - from_) * k;
+float Tween::f_Value() const {
+    const float l_fP = f_Progress();
+    const float l_fK = f_Ease(m_eEase, m_bForward ? l_fP : 1.0f - l_fP);
+    return m_fFrom + (m_fTo - m_fFrom) * l_fK;
 }
 
 } // namespace toms

@@ -24,49 +24,49 @@ namespace toms::res {
 class TextureRes : public Resource {
     TOMS_OBJECT(TextureRes)
 public:
-    ~TextureRes() override { releaseGpu(); }
+    ~TextureRes() override { f_ReleaseGpu(); }
     // The Quad::texture to draw with: kSpriteAtlasTexture when nothing was uploaded (no renderer, or a failed load).
-    uint16_t texture() const { return tex_; }
-    int width() const { return w_; }
-    int height() const { return h_; }
-    void releaseGpu();
+    uint16_t f_Texture() const { return m_u16Tex; }
+    int f_Width() const { return m_iW; }
+    int f_Height() const { return m_iH; }
+    void f_ReleaseGpu();
 
 protected:
-    bool load(ResourceManager& rm, std::string& error) override;
+    bool f_Load(ResourceManager& l_oRm, std::string& l_strError) override;
 
 private:
-    std::shared_ptr<GpuLink> link_;
-    uint16_t tex_ = kSpriteAtlasTexture;
-    int w_ = 0, h_ = 0;
+    std::shared_ptr<GpuLink> m_spLink;
+    uint16_t m_u16Tex = g_u16SpriteAtlasTexture;
+    int m_iW = 0, m_iH = 0;
 };
 
 // A mesh file (`meshPath` = spriteMeshPath(<atlas>), and the .mesh.bin it may name), through the vfs. No file: true and
 // `out` empty. A broken file: false and `error`.
-bool readMeshFile(const std::string& meshPath, toms::SpriteMeshFile& out, std::string& error);
+bool f_ReadMeshFile(const std::string& l_strMeshPath, toms::SpriteMeshFile& l_oOut, std::string& l_strError);
 
 class AtlasRes : public Resource {
     TOMS_OBJECT(AtlasRes)
 public:
-    const toms::AtlasFile& atlas() const { return atlas_; }
-    const toms::AtlasRegion* find(const std::string& name) const { return atlas_.find(name); }
+    const toms::AtlasFile& f_Atlas() const { return m_oAtlas; }
+    const toms::AtlasRegion* f_Find(const std::string& l_strName) const { return m_oAtlas.f_Find(l_strName); }
     // Per page, the texture it is drawn with; empty = every page is the renderer's sprite atlas (the game's own).
-    const std::vector<uint16_t>& pageTextures() const { return pageTex_; }
-    int contentVersion() const override;   // its own version + its pages'
+    const std::vector<uint16_t>& f_PageTextures() const { return m_vPageTex; }
+    int f_ContentVersion() const override;   // its own version + its pages'
     // Its sprites' meshes (<atlas>.mesh.json beside it, docs/engine/16_MESH_ANIMATION.md); empty when it has none.
-    const toms::SpriteMeshFile& meshes() const { return meshes_; }
+    const toms::SpriteMeshFile& f_Meshes() const { return m_oMeshes; }
     // For provide(): the game's sprite atlas, drawn with the renderer's sprite texture.
-    void setProvided(const toms::AtlasFile& atlas, const toms::SpriteMeshFile& meshes = {}) {
-        atlas_ = atlas; meshes_ = meshes; pages_.clear(); pageTex_.clear();
+    void f_SetProvided(const toms::AtlasFile& l_oAtlas, const toms::SpriteMeshFile& l_oMeshes = {}) {
+        m_oAtlas = l_oAtlas; m_oMeshes = l_oMeshes; m_vPages.clear(); m_vPageTex.clear();
     }
 
 protected:
-    bool load(ResourceManager& rm, std::string& error) override;
+    bool f_Load(ResourceManager& l_oRm, std::string& l_strError) override;
 
 private:
-    toms::AtlasFile atlas_;
-    toms::SpriteMeshFile meshes_;
-    std::vector<std::shared_ptr<TextureRes>> pages_;
-    std::vector<uint16_t> pageTex_;
+    toms::AtlasFile m_oAtlas;
+    toms::SpriteMeshFile m_oMeshes;
+    std::vector<std::shared_ptr<TextureRes>> m_vPages;
+    std::vector<uint16_t> m_vPageTex;
 };
 
 // The atlases a clip or particle file draws from, in lookup order, as an anim::AtlasSet. The set is rebuilt when an
@@ -74,79 +74,79 @@ private:
 class AtlasList {
 public:
     struct Item {
-        std::string id;
-        std::shared_ptr<AtlasRes> atlas;
+        std::string m_strId;
+        std::shared_ptr<AtlasRes> m_spAtlas;
     };
     // `file` is the .anim / .prt the refs are relative to. No refs: the game's sprite atlas, when it was provided.
     // Atlases that fail are left out (the manager has reported them).
-    void resolve(ResourceManager& rm, const std::string& file, const std::vector<toms::anim::AtlasRef>& refs);
-    const toms::anim::AtlasSet& set() const;
-    int contentVersion() const;
-    const std::vector<Item>& items() const { return items_; }
+    void f_Resolve(ResourceManager& l_oRm, const std::string& l_strFile, const std::vector<toms::anim::AtlasRef>& l_vRefs);
+    const toms::anim::AtlasSet& f_Set() const;
+    int f_ContentVersion() const;
+    const std::vector<Item>& f_Items() const { return m_vItems; }
 
 private:
-    std::vector<Item> items_;
-    mutable toms::anim::AtlasSet set_;
-    mutable int builtAt_ = -1;
+    std::vector<Item> m_vItems;
+    mutable toms::anim::AtlasSet m_oSet;
+    mutable int m_iBuiltAt = -1;
 };
 
 class AnimRes : public Resource {
     TOMS_OBJECT(AnimRes)
 public:
-    const toms::anim::AnimFile& file() const { return file_; }
-    const toms::anim::Clip* find(const std::string& clip) const { return file_.find(clip); }
-    const toms::anim::AtlasSet& atlases() const { return atlases_.set(); }
-    int contentVersion() const override { return version() + atlases_.contentVersion(); }
+    const toms::anim::AnimFile& f_File() const { return m_oFile; }
+    const toms::anim::Clip* f_Find(const std::string& l_strClip) const { return m_oFile.f_Find(l_strClip); }
+    const toms::anim::AtlasSet& f_Atlases() const { return m_oAtlases.f_Set(); }
+    int f_ContentVersion() const override { return f_Version() + m_oAtlases.f_ContentVersion(); }
 
 protected:
-    bool load(ResourceManager& rm, std::string& error) override;
+    bool f_Load(ResourceManager& l_oRm, std::string& l_strError) override;
 
 private:
-    toms::anim::AnimFile file_;
-    AtlasList atlases_;
+    toms::anim::AnimFile m_oFile;
+    AtlasList m_oAtlases;
 };
 
 class ParticleRes : public Resource {
     TOMS_OBJECT(ParticleRes)
 public:
-    const toms::fx::ParticleFile& file() const { return file_; }
-    const toms::fx::Effect* find(const std::string& effect) const { return file_.find(effect); }
-    const toms::anim::AtlasSet& atlases() const { return atlases_.set(); }
-    int contentVersion() const override { return version() + atlases_.contentVersion(); }
+    const toms::fx::ParticleFile& f_File() const { return m_oFile; }
+    const toms::fx::Effect* f_Find(const std::string& l_strEffect) const { return m_oFile.f_Find(l_strEffect); }
+    const toms::anim::AtlasSet& f_Atlases() const { return m_oAtlases.f_Set(); }
+    int f_ContentVersion() const override { return f_Version() + m_oAtlases.f_ContentVersion(); }
 
 protected:
-    bool load(ResourceManager& rm, std::string& error) override;
+    bool f_Load(ResourceManager& l_oRm, std::string& l_strError) override;
 
 private:
-    toms::fx::ParticleFile file_;
-    AtlasList atlases_;
+    toms::fx::ParticleFile m_oFile;
+    AtlasList m_oAtlases;
 };
 
 class FontRes : public Resource {
     TOMS_OBJECT(FontRes)
 public:
-    const ::BitmapFont& font() const { return font_; }
-    uint16_t texture() const { return page_ ? page_->texture() : kSpriteAtlasTexture; }
-    int contentVersion() const override { return version() + (page_ ? page_->version() : 0); }
+    const ::BitmapFont& f_Font() const { return m_oFont; }
+    uint16_t f_Texture() const { return m_spPage ? m_spPage->f_Texture() : g_u16SpriteAtlasTexture; }
+    int f_ContentVersion() const override { return f_Version() + (m_spPage ? m_spPage->f_Version() : 0); }
 
 protected:
-    bool load(ResourceManager& rm, std::string& error) override;
+    bool f_Load(ResourceManager& l_oRm, std::string& l_strError) override;
 
 private:
-    ::BitmapFont font_;
-    std::shared_ptr<TextureRes> page_;
+    ::BitmapFont m_oFont;
+    std::shared_ptr<TextureRes> m_spPage;
 };
 
 class JsonRes : public Resource {
     TOMS_OBJECT(JsonRes)
 public:
-    const nlohmann::json& json() const { return json_; }
+    const nlohmann::json& f_Json() const { return m_jJson; }
 
 protected:
-    bool load(ResourceManager& rm, std::string& error) override;
+    bool f_Load(ResourceManager& l_oRm, std::string& l_strError) override;
 
 private:
-    nlohmann::json json_;
+    nlohmann::json m_jJson;
 };
 
 }  // namespace toms::res

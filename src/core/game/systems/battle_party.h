@@ -9,23 +9,23 @@
 
 namespace toms {
 
-constexpr int kMaxFoes = 3;   // monsters in one battle
+constexpr int g_iMaxFoes = 3;   // monsters in one battle
 
 // The foe the target moves to: from `from`, `dir` steps (+1 next, -1 previous; 0 = stay), skipping the fallen, wrapping
 // around. `hp` is each foe's HP (<= 0: fallen). -1 when every foe has fallen.
-int nextStanding(const std::vector<int>& hp, int from, int dir);
-bool allDown(const std::vector<int>& hp);
+int f_NextStanding(const std::vector<int>& l_vHp, int l_iFrom, int l_iDir);
+bool f_AllDown(const std::vector<int>& l_vHp);
 
 // One thing that happened in a battle. `who` / `whom`: -1 the player, 0.. a foe (by its place in the battle).
 struct BattleEvent {
-    int ms = 0;               // battle time
-    std::string type;         // start | combo | hit | guard | down | target | super | active | win | lose
-    int who = -1, whom = -1;
-    int value = 0;            // the damage (hit), the guard's power (guard), the points matched (combo)
-    std::string note;         // free text for the log ("3/4", the monster's id, ...)
+    int m_iMs = 0;               // battle time
+    std::string m_strType;         // start | combo | hit | guard | down | target | super | active | win | lose
+    int m_iWho = -1, m_iWhom = -1;
+    int m_iValue = 0;            // the damage (hit), the guard's power (guard), the points matched (combo)
+    std::string m_strNote;         // free text for the log ("3/4", the monster's id, ...)
 };
 
 // The battle's log as text, one line an event: "  2.40  player -> foe 1 (bat): hit 12".
-std::string battleEventLine(const BattleEvent& e, const std::vector<std::string>& foeIds);
+std::string f_BattleEventLine(const BattleEvent& l_oE, const std::vector<std::string>& l_vFoeIds);
 
 } // namespace toms

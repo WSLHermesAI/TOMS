@@ -10,7 +10,7 @@ namespace {
 // Last-resort table: the title phase must be usable even if data/text.json is missing or
 // half-written (e.g. an interrupted build/deploy). Kept deliberately small — it only covers
 // the strings this file's own UI needs, since content text lives in the JSON.
-const char* const kFallbackKeys[][3] = {
+const char* const g_arrFallbackKeys[][3] = {
     // key,          zh_TW,               en
     {"game.title",          "魔法塔",                    "Tower of the Sorcerer"},
     {"menu.new_game",       "新遊戲",                    "New Game"},
@@ -33,121 +33,121 @@ const char* const kFallbackKeys[][3] = {
 } // namespace
 
 Locale::Locale() {
-    langs_ = { {"zh_TW", "繁體中文"}, {"en", "English"} };
-    idx_ = 1;   // English is the default language
-    for (auto& row : kFallbackKeys) {
-        strings_[row[0]]["zh_TW"] = row[1];
-        strings_[row[0]]["en"]    = row[2];
+    m_vLangs = { {"zh_TW", "繁體中文"}, {"en", "English"} };
+    m_iIdx = 1;   // English is the default language
+    for (auto& l_arrRow : g_arrFallbackKeys) {
+        m_mapStrings[l_arrRow[0]]["zh_TW"] = l_arrRow[1];
+        m_mapStrings[l_arrRow[0]]["en"]    = l_arrRow[2];
     }
 }
 
-bool Locale::loadFromJson(const nlohmann::json& j) {
-    if (!j.is_object()) return false;
-    bool ok = false;
+bool Locale::f_LoadFromJson(const nlohmann::json& l_jJ) {
+    if (!l_jJ.is_object()) return false;
+    bool l_bOk = false;
 
-    if (j.contains("languages") && j["languages"].is_array()) {
-        std::vector<LanguageInfo> langs;
-        for (auto& e : j["languages"]) {
-            if (!e.is_object()) continue;
-            LanguageInfo li;
-            li.code = e.value("code", std::string());
-            li.name = e.value("name", std::string());
-            li.font = e.value("font", std::string());
-            li.webFont = e.value("web_font", std::string());
-            if (!li.code.empty()) langs.push_back(li);
+    if (l_jJ.contains("languages") && l_jJ["languages"].is_array()) {
+        std::vector<LanguageInfo> l_vLangs;
+        for (auto& l_jE : l_jJ["languages"]) {
+            if (!l_jE.is_object()) continue;
+            LanguageInfo l_oLi;
+            l_oLi.m_strCode = l_jE.value("code", std::string());
+            l_oLi.m_strName = l_jE.value("name", std::string());
+            l_oLi.m_strFont = l_jE.value("font", std::string());
+            l_oLi.m_strWebFont = l_jE.value("web_font", std::string());
+            if (!l_oLi.m_strCode.empty()) l_vLangs.push_back(l_oLi);
         }
         // "offered": the languages the player can pick (the owner, 2026-11-02: Traditional Chinese and English for now;
         // the others keep their strings for later). Missing: every language listed.
-        if (j.contains("offered") && j["offered"].is_array()) {
-            std::vector<LanguageInfo> kept;
-            for (const LanguageInfo& li : langs)
-                for (const auto& o : j["offered"])
-                    if (o.is_string() && o.get<std::string>() == li.code) { kept.push_back(li); break; }
-            if (!kept.empty()) langs = kept;
+        if (l_jJ.contains("offered") && l_jJ["offered"].is_array()) {
+            std::vector<LanguageInfo> l_vKept;
+            for (const LanguageInfo& l_oLi : l_vLangs)
+                for (const auto& l_jO : l_jJ["offered"])
+                    if (l_jO.is_string() && l_jO.get<std::string>() == l_oLi.m_strCode) { l_vKept.push_back(l_oLi); break; }
+            if (!l_vKept.empty()) l_vLangs = l_vKept;
         }
-        if (!langs.empty()) {
-            langs_ = langs;
-            idx_ = 0;
+        if (!l_vLangs.empty()) {
+            m_vLangs = l_vLangs;
+            m_iIdx = 0;
             // "default": the language a new player starts in (Traditional Chinese, 2026-11-02); else English
-            const std::string def = j.value("default", std::string("en"));
-            bool found = false;
-            for (size_t i = 0; i < langs_.size() && !found; i++)
-                if (langs_[i].code == def) { idx_ = (int)i; found = true; }
-            for (size_t i = 0; i < langs_.size() && !found; i++)
-                if (langs_[i].code == "en") { idx_ = (int)i; found = true; }
+            const std::string l_strDef = l_jJ.value("default", std::string("en"));
+            bool l_bFound = false;
+            for (size_t l_nI = 0; l_nI < m_vLangs.size() && !l_bFound; l_nI++)
+                if (m_vLangs[l_nI].m_strCode == l_strDef) { m_iIdx = (int)l_nI; l_bFound = true; }
+            for (size_t l_nI = 0; l_nI < m_vLangs.size() && !l_bFound; l_nI++)
+                if (m_vLangs[l_nI].m_strCode == "en") { m_iIdx = (int)l_nI; l_bFound = true; }
         }
     }
 
-    if (j.contains("strings") && j["strings"].is_object()) {
-        for (auto& [key, langs] : j["strings"].items()) {
-            if (!langs.is_object()) continue;
-            for (auto& [code, text] : langs.items()) {
-                if (!text.is_string()) continue;
-                strings_[key][code] = text.get<std::string>();
-                ok = true;
+    if (l_jJ.contains("strings") && l_jJ["strings"].is_object()) {
+        for (auto& [l_strKey, l_jLangs] : l_jJ["strings"].items()) {
+            if (!l_jLangs.is_object()) continue;
+            for (auto& [l_strCode, l_jText] : l_jLangs.items()) {
+                if (!l_jText.is_string()) continue;
+                m_mapStrings[l_strKey][l_strCode] = l_jText.get<std::string>();
+                l_bOk = true;
             }
         }
     }
-    return ok;
+    return l_bOk;
 }
 
-bool Locale::loadFromFile(const std::string& path) {
-    std::string buf;
-    if (!toms::vfsReadAll(path, buf)) { fprintf(stderr, "[locale] cannot open %s (using built-in strings)\n", path.c_str()); return false; }
-    if (buf.empty()) { fprintf(stderr, "[locale] empty %s (using built-in strings)\n", path.c_str()); return false; }
+bool Locale::f_LoadFromFile(const std::string& l_strPath) {
+    std::string l_strBuf;
+    if (!toms::f_VfsReadAll(l_strPath, l_strBuf)) { fprintf(stderr, "[locale] cannot open %s (using built-in strings)\n", l_strPath.c_str()); return false; }
+    if (l_strBuf.empty()) { fprintf(stderr, "[locale] empty %s (using built-in strings)\n", l_strPath.c_str()); return false; }
     try {
-        return loadFromJson(nlohmann::json::parse(buf));
-    } catch (const std::exception& e) {
-        fprintf(stderr, "[locale] parse error in %s: %s (using built-in strings)\n", path.c_str(), e.what());
+        return f_LoadFromJson(nlohmann::json::parse(l_strBuf));
+    } catch (const std::exception& l_oE) {
+        fprintf(stderr, "[locale] parse error in %s: %s (using built-in strings)\n", l_strPath.c_str(), l_oE.what());
         return false;
     }
 }
 
-const std::string& Locale::languageCode() const {
-    static const std::string empty;
-    if (idx_ < 0 || idx_ >= (int)langs_.size()) return empty;
-    return langs_[idx_].code;
+const std::string& Locale::f_LanguageCode() const {
+    static const std::string l_strEmpty;
+    if (m_iIdx < 0 || m_iIdx >= (int)m_vLangs.size()) return l_strEmpty;
+    return m_vLangs[m_iIdx].m_strCode;
 }
 
-std::string Locale::languageName() const {
-    if (idx_ < 0 || idx_ >= (int)langs_.size()) return std::string();
-    return langs_[idx_].name;
+std::string Locale::f_LanguageName() const {
+    if (m_iIdx < 0 || m_iIdx >= (int)m_vLangs.size()) return std::string();
+    return m_vLangs[m_iIdx].m_strName;
 }
 
-bool Locale::setLanguage(const std::string& code) {
-    for (size_t i = 0; i < langs_.size(); i++)
-        if (langs_[i].code == code) { idx_ = (int)i; return true; }
+bool Locale::f_SetLanguage(const std::string& l_strCode) {
+    for (size_t l_nI = 0; l_nI < m_vLangs.size(); l_nI++)
+        if (m_vLangs[l_nI].m_strCode == l_strCode) { m_iIdx = (int)l_nI; return true; }
     return false;
 }
 
-bool Locale::setLanguageIndex(int i) {
-    if (i < 0 || i >= (int)langs_.size()) return false;
-    idx_ = i;
+bool Locale::f_SetLanguageIndex(int l_iI) {
+    if (l_iI < 0 || l_iI >= (int)m_vLangs.size()) return false;
+    m_iIdx = l_iI;
     return true;
 }
 
-bool Locale::has(const std::string& key) const { return strings_.find(key) != strings_.end(); }
+bool Locale::f_Has(const std::string& l_strKey) const { return m_mapStrings.find(l_strKey) != m_mapStrings.end(); }
 
-std::string Locale::tr(const std::string& key) const {
-    auto it = strings_.find(key);
-    if (it == strings_.end()) return key;
-    const std::string& code = languageCode();
-    auto want = it->second.find(code);
-    if (want != it->second.end()) return want->second;
+std::string Locale::f_Tr(const std::string& l_strKey) const {
+    auto l_itIt = m_mapStrings.find(l_strKey);
+    if (l_itIt == m_mapStrings.end()) return l_strKey;
+    const std::string& l_strCode = f_LanguageCode();
+    auto l_itWant = l_itIt->second.find(l_strCode);
+    if (l_itWant != l_itIt->second.end()) return l_itWant->second;
     // Fall back to English, then to any translation at all, then to the key.
-    auto en = it->second.find("en");
-    if (en != it->second.end()) return en->second;
-    if (!it->second.empty()) return it->second.begin()->second;
-    return key;
+    auto l_itEn = l_itIt->second.find("en");
+    if (l_itEn != l_itIt->second.end()) return l_itEn->second;
+    if (!l_itIt->second.empty()) return l_itIt->second.begin()->second;
+    return l_strKey;
 }
 
-std::string Locale::field(const nlohmann::json& j) const {
-    if (j.is_string()) return j.get<std::string>();
-    if (!j.is_object()) return std::string();
-    const std::string& code = languageCode();
-    if (auto it = j.find(code); it != j.end() && it->is_string()) return it->get<std::string>();
-    if (auto it = j.find("en"); it != j.end() && it->is_string()) return it->get<std::string>();
-    for (auto& [k, v] : j.items()) if (v.is_string()) return v.get<std::string>();
+std::string Locale::f_Field(const nlohmann::json& l_jJ) const {
+    if (l_jJ.is_string()) return l_jJ.get<std::string>();
+    if (!l_jJ.is_object()) return std::string();
+    const std::string& l_strCode = f_LanguageCode();
+    if (auto l_oIt = l_jJ.find(l_strCode); l_oIt != l_jJ.end() && l_oIt->is_string()) return l_oIt->get<std::string>();
+    if (auto l_oIt = l_jJ.find("en"); l_oIt != l_jJ.end() && l_oIt->is_string()) return l_oIt->get<std::string>();
+    for (auto& [l_strK, l_jV] : l_jJ.items()) if (l_jV.is_string()) return l_jV.get<std::string>();
     return std::string();
 }
 

@@ -30,15 +30,15 @@ public:
     virtual ~GameObject() {}
 
     // Override to draw this object (using its world transform). Default: nothing.
-    virtual void Render(IRenderer* ren) { (void)ren; }
+    virtual void f_Render(IRenderer* l_pRen) { (void)l_pRen; }
 
     // Walk the tree and render. If this node is not visible, the entire subtree
     // is skipped (parent.visible=false closes everything below it).
-    void RenderTree(IRenderer* ren) {
-        if (!m_visible) return;
-        Render(ren);
-        for (Node* c = GetFirstChild(); c; c = c->GetNextSibling())
-            static_cast<GameObject*>(c)->RenderTree(ren);  // children are GameObjects
+    void f_RenderTree(IRenderer* l_pRen) {
+        if (!m_bVisible) return;
+        f_Render(l_pRen);
+        for (Node* l_pC = f_GetFirstChild(); l_pC; l_pC = l_pC->f_GetNextSibling())
+            static_cast<GameObject*>(l_pC)->f_RenderTree(l_pRen);  // children are GameObjects
     }
 };
 
@@ -47,19 +47,19 @@ public:
 class SpriteNode : public GameObject {
     TOMS_OBJECT(SpriteNode)
 public:
-    float size[2] = {32.0f, 32.0f};
-    float uv[4]   = {0.0f, 0.0f, 1.0f, 1.0f};
-    float tint[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-    bool  solid   = false;   // true => flat color quad (ignore the texture)
+    float m_arrSize[2] = {32.0f, 32.0f};
+    float m_arrUv[4]   = {0.0f, 0.0f, 1.0f, 1.0f};
+    float m_arrTint[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+    bool  m_bSolid   = false;   // true => flat color quad (ignore the texture)
 
-    void Render(IRenderer* ren) override {
-        glm::vec4 r = WorldRect(glm::vec2(size[0], size[1]));
-        Quad q;
-        q.rect[0] = r.x; q.rect[1] = r.y; q.rect[2] = r.z; q.rect[3] = r.w;
-        q.uv[0] = uv[0]; q.uv[1] = uv[1]; q.uv[2] = uv[2]; q.uv[3] = uv[3];
-        q.tint[0] = tint[0]; q.tint[1] = tint[1]; q.tint[2] = tint[2]; q.tint[3] = tint[3];
-        q.solid = solid;
-        ren->drawSprite(q);
+    void f_Render(IRenderer* l_pRen) override {
+        glm::vec4 l_v4R = f_WorldRect(glm::vec2(m_arrSize[0], m_arrSize[1]));
+        Quad l_oQ;
+        l_oQ.m_arrRect[0] = l_v4R.x; l_oQ.m_arrRect[1] = l_v4R.y; l_oQ.m_arrRect[2] = l_v4R.z; l_oQ.m_arrRect[3] = l_v4R.w;
+        l_oQ.m_arrUv[0] = m_arrUv[0]; l_oQ.m_arrUv[1] = m_arrUv[1]; l_oQ.m_arrUv[2] = m_arrUv[2]; l_oQ.m_arrUv[3] = m_arrUv[3];
+        l_oQ.m_arrTint[0] = m_arrTint[0]; l_oQ.m_arrTint[1] = m_arrTint[1]; l_oQ.m_arrTint[2] = m_arrTint[2]; l_oQ.m_arrTint[3] = m_arrTint[3];
+        l_oQ.m_bSolid = m_bSolid;
+        l_pRen->f_DrawSprite(l_oQ);
     }
 };
 
@@ -68,17 +68,17 @@ public:
 class TextNode : public GameObject {
     TOMS_OBJECT(TextNode)
 public:
-    std::string text;
-    float size = 16.0f;
-    float tint[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+    std::string m_strText;
+    float m_fSize = 16.0f;
+    float m_arrTint[4] = {1.0f, 1.0f, 1.0f, 1.0f};
     using DrawFn = void(*)(const std::string&, float, float, float, const float*);
-    static DrawFn Draw;   // set by Game (e.g. &Game::drawTextStatic)
+    static DrawFn m_fnDraw;   // set by Game (e.g. &Game::drawTextStatic)
 
-    void Render(IRenderer* ren) override {
-        (void)ren;
-        if (Draw && !text.empty()) {
-            glm::vec2 p = GetWorldPosition();
-            Draw(text, p.x, p.y, size, tint);
+    void f_Render(IRenderer* l_pRen) override {
+        (void)l_pRen;
+        if (m_fnDraw && !m_strText.empty()) {
+            glm::vec2 l_v2P = f_GetWorldPosition();
+            m_fnDraw(m_strText, l_v2P.x, l_v2P.y, m_fSize, m_arrTint);
         }
     }
 };
@@ -87,13 +87,13 @@ public:
 class FullScreenSplash : public GameObject {
     TOMS_OBJECT(FullScreenSplash)
 public:
-    float w = 1024.0f, h = 768.0f;
-    float tint[4] = {0.0f, 0.0f, 0.0f, 0.8f};
-    void Render(IRenderer* ren) override {
-        Quad q; q.rect[0]=0; q.rect[1]=0; q.rect[2]=w; q.rect[3]=h;
-        q.uv[0]=0; q.uv[1]=0; q.uv[2]=1; q.uv[3]=1; q.solid=true;   // flat color, not texture
-        q.tint[0]=tint[0]; q.tint[1]=tint[1]; q.tint[2]=tint[2]; q.tint[3]=tint[3];
-        ren->drawSprite(q);
+    float m_fW = 1024.0f, m_fH = 768.0f;
+    float m_arrTint[4] = {0.0f, 0.0f, 0.0f, 0.8f};
+    void f_Render(IRenderer* l_pRen) override {
+        Quad l_oQ; l_oQ.m_arrRect[0]=0; l_oQ.m_arrRect[1]=0; l_oQ.m_arrRect[2]=m_fW; l_oQ.m_arrRect[3]=m_fH;
+        l_oQ.m_arrUv[0]=0; l_oQ.m_arrUv[1]=0; l_oQ.m_arrUv[2]=1; l_oQ.m_arrUv[3]=1; l_oQ.m_bSolid=true;   // flat color, not texture
+        l_oQ.m_arrTint[0]=m_arrTint[0]; l_oQ.m_arrTint[1]=m_arrTint[1]; l_oQ.m_arrTint[2]=m_arrTint[2]; l_oQ.m_arrTint[3]=m_arrTint[3];
+        l_pRen->f_DrawSprite(l_oQ);
     }
 };
 

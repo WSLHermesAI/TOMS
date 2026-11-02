@@ -28,7 +28,7 @@ namespace fs = std::filesystem;
 
 namespace {
 
-const char* kUsage =
+const char* g_pszUsage =
     "atlaspack -- packs sprites into texture atlases (TOMS atlas tool)\n"
     "\n"
     "Projects (.atlasproj) normally keep their images inside the packed atlas next to them\n"
@@ -56,432 +56,432 @@ const char* kUsage =
     "exit codes: 0 ok, 1 warnings with --strict, 2 errors, 3 bad command line\n";
 
 struct Args {
-    std::vector<std::string> pos;
-    std::vector<std::pair<std::string, std::string>> opts;   // --key value (value "" for flags)
+    std::vector<std::string> m_vPos;
+    std::vector<std::pair<std::string, std::string>> m_vOpts;   // --key value (value "" for flags)
 
-    bool has(const std::string& k) const {
-        for (const auto& o : opts) if (o.first == k) return true;
+    bool f_Has(const std::string& l_strK) const {
+        for (const auto& l_pairO : m_vOpts) if (l_pairO.first == l_strK) return true;
         return false;
     }
-    std::string get(const std::string& k, const std::string& def = std::string()) const {
-        for (const auto& o : opts) if (o.first == k) return o.second;
-        return def;
+    std::string f_Get(const std::string& l_strK, const std::string& l_strDef = std::string()) const {
+        for (const auto& l_pairO : m_vOpts) if (l_pairO.first == l_strK) return l_pairO.second;
+        return l_strDef;
     }
-    std::vector<std::string> all(const std::string& k) const {
-        std::vector<std::string> v;
-        for (const auto& o : opts) if (o.first == k) v.push_back(o.second);
-        return v;
+    std::vector<std::string> f_All(const std::string& l_strK) const {
+        std::vector<std::string> l_vV;
+        for (const auto& l_pairO : m_vOpts) if (l_pairO.first == l_strK) l_vV.push_back(l_pairO.second);
+        return l_vV;
     }
 };
 
-const std::vector<std::string> kFlags = {"--pot", "--square", "--no-trim", "--no-dedupe", "--strict", "--all-variants",
+const std::vector<std::string> g_vFlags = {"--pot", "--square", "--no-trim", "--no-dedupe", "--strict", "--all-variants",
                                          "--quiet", "--help", "--check", "--replace", "--children", "--keep-output",
                                          "--bin"};
 
-bool parseArgs(const std::vector<std::string>& argv, size_t from, Args& a, std::string& err) {
-    const size_t argc = argv.size();
-    for (size_t i = from; i < argc; i++) {
-        std::string s = argv[i];
-        if (s.rfind("--", 0) == 0) {
-            std::string val;
-            const size_t eq = s.find('=');
-            if (eq != std::string::npos) { val = s.substr(eq + 1); s = s.substr(0, eq); }
-            else if (std::find(kFlags.begin(), kFlags.end(), s) == kFlags.end()) {
-                if (i + 1 >= argc) { err = s + " needs a value"; return false; }
-                val = argv[++i];
+bool f_ParseArgs(const std::vector<std::string>& l_vArgv, size_t l_nFrom, Args& l_oA, std::string& l_strErr) {
+    const size_t l_nArgc = l_vArgv.size();
+    for (size_t l_nI = l_nFrom; l_nI < l_nArgc; l_nI++) {
+        std::string l_strS = l_vArgv[l_nI];
+        if (l_strS.rfind("--", 0) == 0) {
+            std::string l_strVal;
+            const size_t l_nEq = l_strS.find('=');
+            if (l_nEq != std::string::npos) { l_strVal = l_strS.substr(l_nEq + 1); l_strS = l_strS.substr(0, l_nEq); }
+            else if (std::find(g_vFlags.begin(), g_vFlags.end(), l_strS) == g_vFlags.end()) {
+                if (l_nI + 1 >= l_nArgc) { l_strErr = l_strS + " needs a value"; return false; }
+                l_strVal = l_vArgv[++l_nI];
             }
-            a.opts.emplace_back(s, val);
+            l_oA.m_vOpts.emplace_back(l_strS, l_strVal);
         } else {
-            a.pos.push_back(s);
+            l_oA.m_vPos.push_back(l_strS);
         }
     }
     return true;
 }
 
-std::vector<std::string> splitList(const std::string& s) {
-    std::vector<std::string> v;
-    std::string cur;
-    for (char c : s + ",") {
-        if (c == ',') { if (!cur.empty()) v.push_back(cur); cur.clear(); }
-        else if (c != ' ') cur += c;
+std::vector<std::string> f_SplitList(const std::string& l_strS) {
+    std::vector<std::string> l_vV;
+    std::string l_strCur;
+    for (char l_cC : l_strS + ",") {
+        if (l_cC == ',') { if (!l_strCur.empty()) l_vV.push_back(l_strCur); l_strCur.clear(); }
+        else if (l_cC != ' ') l_strCur += l_cC;
     }
-    return v;
+    return l_vV;
 }
 
-bool toInt(const std::string& s, int& out) {
-    char* end = nullptr;
-    const long v = strtol(s.c_str(), &end, 10);
-    if (s.empty() || *end) return false;
-    out = (int)v;
+bool f_ToInt(const std::string& l_strS, int& l_iOut) {
+    char* l_pszEnd = nullptr;
+    const long l_iV = strtol(l_strS.c_str(), &l_pszEnd, 10);
+    if (l_strS.empty() || *l_pszEnd) return false;
+    l_iOut = (int)l_iV;
     return true;
 }
 
 // Applies packing options to settings; false on a bad value.
-bool applyPackOptions(const Args& a, Settings& s, std::string& err) {
-    if (a.has("--max")) {
-        const std::string m = a.get("--max");
-        const size_t x = m.find_first_of("xX");
-        int w = 0, h = 0;
-        if (x == std::string::npos ? !toInt(m, w) : (!toInt(m.substr(0, x), w) || !toInt(m.substr(x + 1), h))) { err = "bad --max " + m; return false; }
-        s.maxWidth = w; s.maxHeight = h ? h : w;
+bool f_ApplyPackOptions(const Args& l_oA, Settings& l_oS, std::string& l_strErr) {
+    if (l_oA.f_Has("--max")) {
+        const std::string l_strM = l_oA.f_Get("--max");
+        const size_t l_nX = l_strM.find_first_of("xX");
+        int l_iW = 0, l_iH = 0;
+        if (l_nX == std::string::npos ? !f_ToInt(l_strM, l_iW) : (!f_ToInt(l_strM.substr(0, l_nX), l_iW) || !f_ToInt(l_strM.substr(l_nX + 1), l_iH))) { l_strErr = "bad --max " + l_strM; return false; }
+        l_oS.m_iMaxWidth = l_iW; l_oS.m_iMaxHeight = l_iH ? l_iH : l_iW;
     }
-    if (a.has("--pot")) s.powerOfTwo = true;
-    if (a.has("--square")) s.square = true;
-    if (a.has("--no-trim")) s.trim = false;
-    if (a.has("--no-dedupe")) s.dedupe = false;
-    for (const char* k : {"--padding", "--border", "--extrude", "--alpha-threshold"}) {
-        if (!a.has(k)) continue;
-        int v;
-        if (!toInt(a.get(k), v) || v < 0) { err = std::string("bad ") + k + " " + a.get(k); return false; }
-        if (!strcmp(k, "--padding")) s.padding = v;
-        else if (!strcmp(k, "--border")) s.border = v;
-        else if (!strcmp(k, "--extrude")) s.extrude = v;
-        else s.alphaThreshold = v;
+    if (l_oA.f_Has("--pot")) l_oS.m_bPowerOfTwo = true;
+    if (l_oA.f_Has("--square")) l_oS.m_bSquare = true;
+    if (l_oA.f_Has("--no-trim")) l_oS.m_bTrim = false;
+    if (l_oA.f_Has("--no-dedupe")) l_oS.m_bDedupe = false;
+    for (const char* l_pszK : {"--padding", "--border", "--extrude", "--alpha-threshold"}) {
+        if (!l_oA.f_Has(l_pszK)) continue;
+        int l_iV;
+        if (!f_ToInt(l_oA.f_Get(l_pszK), l_iV) || l_iV < 0) { l_strErr = std::string("bad ") + l_pszK + " " + l_oA.f_Get(l_pszK); return false; }
+        if (!strcmp(l_pszK, "--padding")) l_oS.m_iPadding = l_iV;
+        else if (!strcmp(l_pszK, "--border")) l_oS.m_iBorder = l_iV;
+        else if (!strcmp(l_pszK, "--extrude")) l_oS.m_iExtrude = l_iV;
+        else l_oS.m_iAlphaThreshold = l_iV;
     }
-    if (a.has("--heuristic") && !parseHeuristic(a.get("--heuristic"), s.heuristic)) { err = "bad --heuristic " + a.get("--heuristic"); return false; }
-    if (a.has("--filter")) s.filter = a.get("--filter");
+    if (l_oA.f_Has("--heuristic") && !f_ParseHeuristic(l_oA.f_Get("--heuristic"), l_oS.m_eHeuristic)) { l_strErr = "bad --heuristic " + l_oA.f_Get("--heuristic"); return false; }
+    if (l_oA.f_Has("--filter")) l_oS.m_strFilter = l_oA.f_Get("--filter");
     return true;
 }
 
-bool checkFormats(const std::vector<std::string>& f, std::string& err) {
-    for (const std::string& x : f)
-        if (!isExportFormat(x)) { err = "unknown format '" + x + "'"; return false; }
+bool f_CheckFormats(const std::vector<std::string>& l_vF, std::string& l_strErr) {
+    for (const std::string& l_strX : l_vF)
+        if (!f_IsExportFormat(l_strX)) { l_strErr = "unknown format '" + l_strX + "'"; return false; }
     return true;
 }
 
 // --check: are the files on disk what a build would write? Lists the ones that are not.
-bool upToDate(const std::string& dir, const std::vector<ExportFile>& files, const std::string& label) {
-    bool ok = true;
-    for (const ExportFile& f : files) {
-        std::ifstream in(u8path(joinPath(dir, f.name)), std::ios::binary);
-        const std::vector<uint8_t> old((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-        if (in.is_open() && old == f.data) continue;
-        std::fprintf(stderr, "%s: error: %s is %s -- run atlaspack build\n", label.c_str(), joinPath(dir, f.name).c_str(),
-                     in.is_open() ? "out of date" : "missing");
-        ok = false;
+bool f_UpToDate(const std::string& l_strDir, const std::vector<ExportFile>& l_vFiles, const std::string& l_strLabel) {
+    bool l_bOk = true;
+    for (const ExportFile& l_oF : l_vFiles) {
+        std::ifstream l_oIn(f_U8path(f_JoinPath(l_strDir, l_oF.m_strName)), std::ios::binary);
+        const std::vector<uint8_t> l_vOld((std::istreambuf_iterator<char>(l_oIn)), std::istreambuf_iterator<char>());
+        if (l_oIn.is_open() && l_vOld == l_oF.m_vData) continue;
+        std::fprintf(stderr, "%s: error: %s is %s -- run atlaspack build\n", l_strLabel.c_str(), f_JoinPath(l_strDir, l_oF.m_strName).c_str(),
+                     l_oIn.is_open() ? "out of date" : "missing");
+        l_bOk = false;
     }
-    return ok;
+    return l_bOk;
 }
 
 // Builds one atlas and writes it (or with `check`, only compares). Returns the exit code.
-int buildAndWrite(const Project& p, const std::string& variant, const std::string& outOverride,
-                  const std::vector<std::string>& formatsOverride, bool strict, bool quiet, bool check = false) {
-    const Variant* v = variant.empty() ? nullptr : p.findVariant(variant);
-    const Output& o = v ? v->output : p.output;
-    const std::string label = p.filePath.empty() ? p.name : p.filePath;
-    BuildResult b = build(p, BuildOptions{variant, true});
-    for (const Diagnostic& d : b.diagnostics)
-        if (d.level != Diagnostic::Info || !quiet) std::fprintf(stderr, "%s: %s\n", label.c_str(), formatDiagnostic(d).c_str());
-    if (!b.ok()) {
-        std::fprintf(stderr, "%s: %d error(s); nothing written\n", label.c_str(), b.errorCount());
+int f_BuildAndWrite(const Project& l_oP, const std::string& l_strVariant, const std::string& l_strOutOverride,
+                  const std::vector<std::string>& l_vFormatsOverride, bool l_bStrict, bool l_bQuiet, bool l_bCheck = false) {
+    const Variant* l_pV = l_strVariant.empty() ? nullptr : l_oP.f_FindVariant(l_strVariant);
+    const Output& l_oO = l_pV ? l_pV->m_oOutput : l_oP.m_oOutput;
+    const std::string l_strLabel = l_oP.m_strFilePath.empty() ? l_oP.m_strName : l_oP.m_strFilePath;
+    BuildResult l_oB = f_Build(l_oP, BuildOptions{l_strVariant, true});
+    for (const Diagnostic& l_oD : l_oB.m_vDiagnostics)
+        if (l_oD.m_eLevel != Diagnostic::Info || !l_bQuiet) std::fprintf(stderr, "%s: %s\n", l_strLabel.c_str(), f_FormatDiagnostic(l_oD).c_str());
+    if (!l_oB.f_Ok()) {
+        std::fprintf(stderr, "%s: %d error(s); nothing written\n", l_strLabel.c_str(), l_oB.f_ErrorCount());
         return 2;
     }
-    std::vector<std::string> formats = formatsOverride.empty() ? o.formats : formatsOverride;
+    std::vector<std::string> l_vFormats = l_vFormatsOverride.empty() ? l_oO.m_vFormats : l_vFormatsOverride;
     // An embedded project's images live in its .atlas: keep writing it to the project's own folder.
-    if (p.embedded && outOverride.empty() && std::find(formats.begin(), formats.end(), "atlas") == formats.end())
-        formats.push_back("atlas");
-    std::vector<ExportFile> files;
-    std::string err;
-    if (!exportFiles(b, formats, files, &err)) { std::fprintf(stderr, "%s: error: %s\n", label.c_str(), err.c_str()); return 2; }
-    const std::string dir = outOverride.empty() ? p.resolve(o.dir) : outOverride;
-    if (check) {
-        if (!upToDate(dir, files, label)) return 1;
-        if (!quiet) std::printf("%s -> %s: up to date%s%s\n", label.c_str(), dir.c_str(), variant.empty() ? "" : ", variant ", variant.c_str());
-        return strict && b.warningCount() > 0 ? 1 : 0;
+    if (l_oP.m_bEmbedded && l_strOutOverride.empty() && std::find(l_vFormats.begin(), l_vFormats.end(), "atlas") == l_vFormats.end())
+        l_vFormats.push_back("atlas");
+    std::vector<ExportFile> l_vFiles;
+    std::string l_strErr;
+    if (!f_ExportFiles(l_oB, l_vFormats, l_vFiles, &l_strErr)) { std::fprintf(stderr, "%s: error: %s\n", l_strLabel.c_str(), l_strErr.c_str()); return 2; }
+    const std::string l_strDir = l_strOutOverride.empty() ? l_oP.f_Resolve(l_oO.m_strDir) : l_strOutOverride;
+    if (l_bCheck) {
+        if (!f_UpToDate(l_strDir, l_vFiles, l_strLabel)) return 1;
+        if (!l_bQuiet) std::printf("%s -> %s: up to date%s%s\n", l_strLabel.c_str(), l_strDir.c_str(), l_strVariant.empty() ? "" : ", variant ", l_strVariant.c_str());
+        return l_bStrict && l_oB.f_WarningCount() > 0 ? 1 : 0;
     }
-    if (!writeFiles(dir, files, &err)) { std::fprintf(stderr, "%s: error: %s\n", label.c_str(), err.c_str()); return 2; }
-    if (!quiet) {
-        std::printf("%s -> %s: %zu sprite(s), %zu page(s)", label.c_str(), dir.c_str(), b.regions.size(), b.pages.size());
-        if (!variant.empty()) std::printf(" (variant %s)", variant.c_str());
-        for (const Page& pg : b.pages) std::printf(" %s %dx%d", pg.file.c_str(), pg.image.w, pg.image.h);
+    if (!f_WriteFiles(l_strDir, l_vFiles, &l_strErr)) { std::fprintf(stderr, "%s: error: %s\n", l_strLabel.c_str(), l_strErr.c_str()); return 2; }
+    if (!l_bQuiet) {
+        std::printf("%s -> %s: %zu sprite(s), %zu page(s)", l_strLabel.c_str(), l_strDir.c_str(), l_oB.m_vRegions.size(), l_oB.m_vPages.size());
+        if (!l_strVariant.empty()) std::printf(" (variant %s)", l_strVariant.c_str());
+        for (const Page& l_oPg : l_oB.m_vPages) std::printf(" %s %dx%d", l_oPg.m_strFile.c_str(), l_oPg.m_oImage.m_iW, l_oPg.m_oImage.m_iH);
         std::printf("\n");
     }
-    return strict && b.warningCount() > 0 ? 1 : 0;
+    return l_bStrict && l_oB.f_WarningCount() > 0 ? 1 : 0;
 }
 
-int cmdBuild(const Args& a) {
-    if (a.pos.size() != 1) { std::fprintf(stderr, "build: give one project file\n"); return 3; }
-    Project p;
-    std::string err;
-    if (!openProject(a.pos[0], p, &err)) { std::fprintf(stderr, "error: %s\n", err.c_str()); return 2; }
-    const std::vector<std::string> formats = splitList(a.get("--format"));
-    if (!checkFormats(formats, err)) { std::fprintf(stderr, "error: %s\n", err.c_str()); return 3; }
-    const bool strict = a.has("--strict"), quiet = a.has("--quiet");
-    const std::string out = a.get("--out");
-    std::vector<std::string> variants;
-    if (a.has("--variant")) variants.push_back(a.get("--variant"));
+int f_CmdBuild(const Args& l_oA) {
+    if (l_oA.m_vPos.size() != 1) { std::fprintf(stderr, "build: give one project file\n"); return 3; }
+    Project l_oP;
+    std::string l_strErr;
+    if (!f_OpenProject(l_oA.m_vPos[0], l_oP, &l_strErr)) { std::fprintf(stderr, "error: %s\n", l_strErr.c_str()); return 2; }
+    const std::vector<std::string> l_vFormats = f_SplitList(l_oA.f_Get("--format"));
+    if (!f_CheckFormats(l_vFormats, l_strErr)) { std::fprintf(stderr, "error: %s\n", l_strErr.c_str()); return 3; }
+    const bool l_bStrict = l_oA.f_Has("--strict"), l_bQuiet = l_oA.f_Has("--quiet");
+    const std::string l_strOut = l_oA.f_Get("--out");
+    std::vector<std::string> l_vVariants;
+    if (l_oA.f_Has("--variant")) l_vVariants.push_back(l_oA.f_Get("--variant"));
     else {
-        variants.push_back("");
-        if (a.has("--all-variants"))
-            for (const Variant& v : p.variants) variants.push_back(v.id);
+        l_vVariants.push_back("");
+        if (l_oA.f_Has("--all-variants"))
+            for (const Variant& l_oV : l_oP.m_vVariants) l_vVariants.push_back(l_oV.m_strId);
     }
-    if (!out.empty() && variants.size() > 1) { std::fprintf(stderr, "build: --out cannot be used with --all-variants\n"); return 3; }
-    int code = 0;
-    for (const std::string& v : variants)
-        code = std::max(code, buildAndWrite(p, v, out, formats, strict, quiet, a.has("--check")));
-    return code;
+    if (!l_strOut.empty() && l_vVariants.size() > 1) { std::fprintf(stderr, "build: --out cannot be used with --all-variants\n"); return 3; }
+    int l_iCode = 0;
+    for (const std::string& l_strV : l_vVariants)
+        l_iCode = std::max(l_iCode, f_BuildAndWrite(l_oP, l_strV, l_strOut, l_vFormats, l_bStrict, l_bQuiet, l_oA.f_Has("--check")));
+    return l_iCode;
 }
 
-int cmdPack(const Args& a) {
-    if (a.pos.empty() || !a.has("--out")) { std::fprintf(stderr, "pack: give at least one folder and --out DIR\n"); return 3; }
-    Project p;
-    std::string err;
-    const std::string outDir = normalizePath(a.get("--out"));
-    p.name = a.get("--name", fileStem(u8str(u8path(a.pos[0]).lexically_normal())));
-    if (p.name.empty() || p.name == ".") p.name = "atlas";
-    if (!applyPackOptions(a, p.settings, err)) { std::fprintf(stderr, "error: %s\n", err.c_str()); return 3; }
-    if (a.has("--format")) p.output.formats = splitList(a.get("--format"));
-    if (!checkFormats(p.output.formats, err)) { std::fprintf(stderr, "error: %s\n", err.c_str()); return 3; }
-    const std::string save = a.get("--save-project");
-    p.filePath = save.empty() ? std::string() : normalizePath(save);
-    for (const std::string& dir : a.pos) {
-        const std::string abs = u8str(fs::absolute(u8path(dir)).lexically_normal());
-        p.sources.push_back({p.filePath.empty() ? abs : p.relativize(abs), true, ""});
+int f_CmdPack(const Args& l_oA) {
+    if (l_oA.m_vPos.empty() || !l_oA.f_Has("--out")) { std::fprintf(stderr, "pack: give at least one folder and --out DIR\n"); return 3; }
+    Project l_oP;
+    std::string l_strErr;
+    const std::string l_strOutDir = f_NormalizePath(l_oA.f_Get("--out"));
+    l_oP.m_strName = l_oA.f_Get("--name", f_FileStem(f_U8str(f_U8path(l_oA.m_vPos[0]).lexically_normal())));
+    if (l_oP.m_strName.empty() || l_oP.m_strName == ".") l_oP.m_strName = "atlas";
+    if (!f_ApplyPackOptions(l_oA, l_oP.m_oSettings, l_strErr)) { std::fprintf(stderr, "error: %s\n", l_strErr.c_str()); return 3; }
+    if (l_oA.f_Has("--format")) l_oP.m_oOutput.m_vFormats = f_SplitList(l_oA.f_Get("--format"));
+    if (!f_CheckFormats(l_oP.m_oOutput.m_vFormats, l_strErr)) { std::fprintf(stderr, "error: %s\n", l_strErr.c_str()); return 3; }
+    const std::string l_strSave = l_oA.f_Get("--save-project");
+    l_oP.m_strFilePath = l_strSave.empty() ? std::string() : f_NormalizePath(l_strSave);
+    for (const std::string& l_strDir : l_oA.m_vPos) {
+        const std::string l_strAbs = f_U8str(fs::absolute(f_U8path(l_strDir)).lexically_normal());
+        l_oP.m_vSources.push_back({l_oP.m_strFilePath.empty() ? l_strAbs : l_oP.f_Relativize(l_strAbs), true, ""});
     }
-    const std::string absOut = u8str(fs::absolute(u8path(outDir)).lexically_normal());
-    p.output.dir = p.filePath.empty() ? absOut : p.relativize(absOut);
-    if (!save.empty() && !saveProject(save, p, &err)) { std::fprintf(stderr, "error: %s\n", err.c_str()); return 2; }
-    return buildAndWrite(p, "", "", {}, a.has("--strict"), a.has("--quiet"));
+    const std::string l_strAbsOut = f_U8str(fs::absolute(f_U8path(l_strOutDir)).lexically_normal());
+    l_oP.m_oOutput.m_strDir = l_oP.m_strFilePath.empty() ? l_strAbsOut : l_oP.f_Relativize(l_strAbsOut);
+    if (!l_strSave.empty() && !f_SaveProject(l_strSave, l_oP, &l_strErr)) { std::fprintf(stderr, "error: %s\n", l_strErr.c_str()); return 2; }
+    return f_BuildAndWrite(l_oP, "", "", {}, l_oA.f_Has("--strict"), l_oA.f_Has("--quiet"));
 }
 
 // Saves an embedded project with its packed atlas and reports it. Returns the exit code.
-int saveAll(const std::string& path, Project& p, bool quiet) {
-    SaveResult r;
-    std::string err;
-    const bool ok = saveProjectAll(path, p, {}, &r, &err);
-    for (const Diagnostic& d : r.diagnostics)
-        if (d.level != Diagnostic::Info || !quiet) std::fprintf(stderr, "%s: %s\n", path.c_str(), formatDiagnostic(d).c_str());
-    if (!ok) { std::fprintf(stderr, "%s: error: %s; nothing written\n", path.c_str(), err.c_str()); return 2; }
-    if (!quiet) for (const std::string& f : r.written) std::printf("  wrote %s\n", f.c_str());
+int f_SaveAll(const std::string& l_strPath, Project& l_oP, bool l_bQuiet) {
+    SaveResult l_oR;
+    std::string l_strErr;
+    const bool l_bOk = f_SaveProjectAll(l_strPath, l_oP, {}, &l_oR, &l_strErr);
+    for (const Diagnostic& l_oD : l_oR.m_vDiagnostics)
+        if (l_oD.m_eLevel != Diagnostic::Info || !l_bQuiet) std::fprintf(stderr, "%s: %s\n", l_strPath.c_str(), f_FormatDiagnostic(l_oD).c_str());
+    if (!l_bOk) { std::fprintf(stderr, "%s: error: %s; nothing written\n", l_strPath.c_str(), l_strErr.c_str()); return 2; }
+    if (!l_bQuiet) for (const std::string& l_strF : l_oR.m_vWritten) std::printf("  wrote %s\n", l_strF.c_str());
     return 0;
 }
 
-int cmdImport(const Args& a) {
-    if (a.pos.size() != 1 || !a.has("--project")) { std::fprintf(stderr, "import: give one atlas file and --project OUT.atlasproj\n"); return 3; }
-    BuildResult in;
-    std::string err;
-    if (!importAtlasFile(a.pos[0], in, &err)) { std::fprintf(stderr, "error: %s\n", err.c_str()); return 2; }
-    for (const Diagnostic& d : in.diagnostics) std::fprintf(stderr, "%s: %s\n", a.pos[0].c_str(), formatDiagnostic(d).c_str());
-    const std::string projPath = a.get("--project");
-    const std::string images = a.get("--images");   // empty: keep the images inside the project
-    Project p;
-    if (!importToProject(in, projPath, images, p, &err)) { std::fprintf(stderr, "error: %s\n", err.c_str()); return 2; }
-    std::string ext = u8str(u8path(a.pos[0]).extension());
-    for (char& c : ext) c = (char)tolower((unsigned char)c);
-    p.output.formats = a.has("--format") ? splitList(a.get("--format"))
-                                         : std::vector<std::string>{ext == ".pi" ? "pi" : ext == ".json" ? "tp-json" : "atlas"};
-    if (!checkFormats(p.output.formats, err)) { std::fprintf(stderr, "error: %s\n", err.c_str()); return 3; }
-    p.output.dir = ".";
-    int children = 0;
-    for (const Region& r : in.regions) children += r.child;
-    std::printf("%s -> %s: %zu sprite(s) (%d child)%s%s\n", a.pos[0].c_str(), projPath.c_str(), in.regions.size(), children,
-                images.empty() ? "" : ", images in ", images.c_str());
-    if (!p.embedded) {
-        if (!saveProject(projPath, p, &err)) { std::fprintf(stderr, "error: %s\n", err.c_str()); return 2; }
+int f_CmdImport(const Args& l_oA) {
+    if (l_oA.m_vPos.size() != 1 || !l_oA.f_Has("--project")) { std::fprintf(stderr, "import: give one atlas file and --project OUT.atlasproj\n"); return 3; }
+    BuildResult l_oIn;
+    std::string l_strErr;
+    if (!f_ImportAtlasFile(l_oA.m_vPos[0], l_oIn, &l_strErr)) { std::fprintf(stderr, "error: %s\n", l_strErr.c_str()); return 2; }
+    for (const Diagnostic& l_oD : l_oIn.m_vDiagnostics) std::fprintf(stderr, "%s: %s\n", l_oA.m_vPos[0].c_str(), f_FormatDiagnostic(l_oD).c_str());
+    const std::string l_strProjPath = l_oA.f_Get("--project");
+    const std::string l_strImages = l_oA.f_Get("--images");   // empty: keep the images inside the project
+    Project l_oP;
+    if (!f_ImportToProject(l_oIn, l_strProjPath, l_strImages, l_oP, &l_strErr)) { std::fprintf(stderr, "error: %s\n", l_strErr.c_str()); return 2; }
+    std::string l_strExt = f_U8str(f_U8path(l_oA.m_vPos[0]).extension());
+    for (char& l_cC : l_strExt) l_cC = (char)tolower((unsigned char)l_cC);
+    l_oP.m_oOutput.m_vFormats = l_oA.f_Has("--format") ? f_SplitList(l_oA.f_Get("--format"))
+                                         : std::vector<std::string>{l_strExt == ".pi" ? "pi" : l_strExt == ".json" ? "tp-json" : "atlas"};
+    if (!f_CheckFormats(l_oP.m_oOutput.m_vFormats, l_strErr)) { std::fprintf(stderr, "error: %s\n", l_strErr.c_str()); return 3; }
+    l_oP.m_oOutput.m_strDir = ".";
+    int l_iChildren = 0;
+    for (const Region& l_oR : l_oIn.m_vRegions) l_iChildren += l_oR.m_bChild;
+    std::printf("%s -> %s: %zu sprite(s) (%d child)%s%s\n", l_oA.m_vPos[0].c_str(), l_strProjPath.c_str(), l_oIn.m_vRegions.size(), l_iChildren,
+                l_strImages.empty() ? "" : ", images in ", l_strImages.c_str());
+    if (!l_oP.m_bEmbedded) {
+        if (!f_SaveProject(l_strProjPath, l_oP, &l_strErr)) { std::fprintf(stderr, "error: %s\n", l_strErr.c_str()); return 2; }
         return 0;
     }
-    return saveAll(projPath, p, a.has("--quiet"));
+    return f_SaveAll(l_strProjPath, l_oP, l_oA.f_Has("--quiet"));
 }
 
-int cmdInfo(const Args& a) {
-    if (a.pos.size() != 1) { std::fprintf(stderr, "info: give one atlas file\n"); return 3; }
-    BuildResult in;
-    std::string err;
-    if (!importAtlasFile(a.pos[0], in, &err)) { std::fprintf(stderr, "error: %s\n", err.c_str()); return 2; }
-    for (size_t i = 0; i < in.pages.size(); i++)
-        std::printf("page %zu: %s %dx%d\n", i, in.pages[i].file.c_str(), in.pages[i].image.w, in.pages[i].image.h);
-    int bad = 0;
-    for (const Region& r : in.regions) {
-        std::printf("  %-32s page %d  frame %d,%d %dx%d  orig %dx%d  offset %d,%d", r.name.c_str(), r.page, r.frame.x,
-                    r.frame.y, r.frame.w, r.frame.h, r.origW, r.origH, r.offsetX, r.offsetY);
-        if (r.child) std::printf("  child of %s @ %d,%d", r.parent.c_str(), r.local.x, r.local.y);
+int f_CmdInfo(const Args& l_oA) {
+    if (l_oA.m_vPos.size() != 1) { std::fprintf(stderr, "info: give one atlas file\n"); return 3; }
+    BuildResult l_oIn;
+    std::string l_strErr;
+    if (!f_ImportAtlasFile(l_oA.m_vPos[0], l_oIn, &l_strErr)) { std::fprintf(stderr, "error: %s\n", l_strErr.c_str()); return 2; }
+    for (size_t l_nI = 0; l_nI < l_oIn.m_vPages.size(); l_nI++)
+        std::printf("page %zu: %s %dx%d\n", l_nI, l_oIn.m_vPages[l_nI].m_strFile.c_str(), l_oIn.m_vPages[l_nI].m_oImage.m_iW, l_oIn.m_vPages[l_nI].m_oImage.m_iH);
+    int l_iBad = 0;
+    for (const Region& l_oR : l_oIn.m_vRegions) {
+        std::printf("  %-32s page %d  frame %d,%d %dx%d  orig %dx%d  offset %d,%d", l_oR.m_strName.c_str(), l_oR.m_iPage, l_oR.m_oFrame.m_iX,
+                    l_oR.m_oFrame.m_iY, l_oR.m_oFrame.m_iW, l_oR.m_oFrame.m_iH, l_oR.m_iOrigW, l_oR.m_iOrigH, l_oR.m_iOffsetX, l_oR.m_iOffsetY);
+        if (l_oR.m_bChild) std::printf("  child of %s @ %d,%d", l_oR.m_strParent.c_str(), l_oR.m_oLocal.m_iX, l_oR.m_oLocal.m_iY);
         std::printf("\n");
-        const Image& pg = in.pages[r.page].image;
-        if (r.frame.x < 0 || r.frame.y < 0 || r.frame.right() > pg.w || r.frame.bottom() > pg.h) {
-            std::fprintf(stderr, "%s: error: %s: frame lies outside its page\n", a.pos[0].c_str(), r.name.c_str());
-            bad++;
+        const Image& l_oPg = l_oIn.m_vPages[l_oR.m_iPage].m_oImage;
+        if (l_oR.m_oFrame.m_iX < 0 || l_oR.m_oFrame.m_iY < 0 || l_oR.m_oFrame.f_Right() > l_oPg.m_iW || l_oR.m_oFrame.f_Bottom() > l_oPg.m_iH) {
+            std::fprintf(stderr, "%s: error: %s: frame lies outside its page\n", l_oA.m_vPos[0].c_str(), l_oR.m_strName.c_str());
+            l_iBad++;
         }
-        if (r.offsetX + r.frame.w > r.origW || r.offsetY + r.frame.h > r.origH) {
-            std::fprintf(stderr, "%s: warning: %s: trimmed rect is larger than the original size\n", a.pos[0].c_str(), r.name.c_str());
+        if (l_oR.m_iOffsetX + l_oR.m_oFrame.m_iW > l_oR.m_iOrigW || l_oR.m_iOffsetY + l_oR.m_oFrame.m_iH > l_oR.m_iOrigH) {
+            std::fprintf(stderr, "%s: warning: %s: trimmed rect is larger than the original size\n", l_oA.m_vPos[0].c_str(), l_oR.m_strName.c_str());
         }
     }
-    for (const Animation& an : in.animations) std::printf("animation %s: %zu frame(s)\n", an.name.c_str(), an.frames.size());
-    for (const Diagnostic& d : in.diagnostics) std::fprintf(stderr, "%s: %s\n", a.pos[0].c_str(), formatDiagnostic(d).c_str());
-    return bad ? 2 : 0;
+    for (const Animation& l_oAn : l_oIn.m_vAnimations) std::printf("animation %s: %zu frame(s)\n", l_oAn.m_strName.c_str(), l_oAn.m_vFrames.size());
+    for (const Diagnostic& l_oD : l_oIn.m_vDiagnostics) std::fprintf(stderr, "%s: %s\n", l_oA.m_vPos[0].c_str(), f_FormatDiagnostic(l_oD).c_str());
+    return l_iBad ? 2 : 0;
 }
 
 // Adds every PNG from `paths` (files, or folders searched below) to the project. Returns how many.
-int addPngs(Project& p, const std::vector<std::string>& paths, const std::string& prefix, const std::string& variant,
-            bool replace, bool quiet, int& errors) {
-    const ImageSource src = fileImageSource();
-    int added = 0;
-    for (const std::string& arg : paths) {
-        std::vector<std::pair<std::string, std::string>> files;   // file, name
-        std::error_code ec;
-        if (fs::is_directory(u8path(arg), ec)) {
-            const std::string dir = u8str(fs::absolute(u8path(arg)).lexically_normal());
-            for (const std::string& f : src.listPngs(dir, true)) files.push_back({f, imageNameFor(f, dir, prefix)});
+int f_AddPngs(Project& l_oP, const std::vector<std::string>& l_vPaths, const std::string& l_strPrefix, const std::string& l_strVariant,
+            bool l_bReplace, bool l_bQuiet, int& l_iErrors) {
+    const ImageSource l_oSrc = f_FileImageSource();
+    int l_iAdded = 0;
+    for (const std::string& l_strArg : l_vPaths) {
+        std::vector<std::pair<std::string, std::string>> l_vFiles;   // file, name
+        std::error_code l_oEc;
+        if (fs::is_directory(f_U8path(l_strArg), l_oEc)) {
+            const std::string l_strDir = f_U8str(fs::absolute(f_U8path(l_strArg)).lexically_normal());
+            for (const std::string& l_strF : l_oSrc.m_fnListPngs(l_strDir, true)) l_vFiles.push_back({l_strF, f_ImageNameFor(l_strF, l_strDir, l_strPrefix)});
         } else {
-            files.push_back({arg, imageNameFor(arg, "", prefix)});
+            l_vFiles.push_back({l_strArg, f_ImageNameFor(l_strArg, "", l_strPrefix)});
         }
-        for (const auto& [file, name] : files) {
-            const bool exists = variant.empty() ? p.images.count(name) > 0
-                                                : (p.findVariant(variant) && p.findVariant(variant)->images.count(name) > 0);
-            if (exists && !replace) {
-                if (!quiet) std::printf("  skipped %s (already in the project; --replace to update)\n", name.c_str());
+        for (const auto& [l_strFile, l_strName] : l_vFiles) {
+            const bool l_bExists = l_strVariant.empty() ? l_oP.m_mapImages.count(l_strName) > 0
+                                                : (l_oP.f_FindVariant(l_strVariant) && l_oP.f_FindVariant(l_strVariant)->m_mapImages.count(l_strName) > 0);
+            if (l_bExists && !l_bReplace) {
+                if (!l_bQuiet) std::printf("  skipped %s (already in the project; --replace to update)\n", l_strName.c_str());
                 continue;
             }
-            Image img;
-            std::string err;
-            if (!loadImage(file, img, &err) || !setImage(p, name, img, variant, &err)) {
-                std::fprintf(stderr, "error: %s\n", err.c_str());
-                errors++;
+            Image l_oImg;
+            std::string l_strErr;
+            if (!f_LoadImage(l_strFile, l_oImg, &l_strErr) || !f_SetImage(l_oP, l_strName, l_oImg, l_strVariant, &l_strErr)) {
+                std::fprintf(stderr, "error: %s\n", l_strErr.c_str());
+                l_iErrors++;
                 continue;
             }
-            if (!quiet) std::printf("  %s %s\n", exists ? "replaced" : "added", name.c_str());
-            added++;
+            if (!l_bQuiet) std::printf("  %s %s\n", l_bExists ? "replaced" : "added", l_strName.c_str());
+            l_iAdded++;
         }
     }
-    return added;
+    return l_iAdded;
 }
 
-int cmdNew(const Args& a) {
-    if (a.pos.size() != 1) { std::fprintf(stderr, "new: give the project file to create\n"); return 3; }
-    const std::string path = a.pos[0];
-    if (fs::exists(u8path(path))) { std::fprintf(stderr, "new: %s already exists\n", path.c_str()); return 2; }
-    Project p;
-    p.filePath = normalizePath(path);
-    p.name = fileStem(path);
-    p.embedded = true;
-    std::string err;
-    if (!applyPackOptions(a, p.settings, err)) { std::fprintf(stderr, "error: %s\n", err.c_str()); return 3; }
-    if (a.has("--format")) p.output.formats = splitList(a.get("--format"));
-    if (!checkFormats(p.output.formats, err)) { std::fprintf(stderr, "error: %s\n", err.c_str()); return 3; }
+int f_CmdNew(const Args& l_oA) {
+    if (l_oA.m_vPos.size() != 1) { std::fprintf(stderr, "new: give the project file to create\n"); return 3; }
+    const std::string l_strPath = l_oA.m_vPos[0];
+    if (fs::exists(f_U8path(l_strPath))) { std::fprintf(stderr, "new: %s already exists\n", l_strPath.c_str()); return 2; }
+    Project l_oP;
+    l_oP.m_strFilePath = f_NormalizePath(l_strPath);
+    l_oP.m_strName = f_FileStem(l_strPath);
+    l_oP.m_bEmbedded = true;
+    std::string l_strErr;
+    if (!f_ApplyPackOptions(l_oA, l_oP.m_oSettings, l_strErr)) { std::fprintf(stderr, "error: %s\n", l_strErr.c_str()); return 3; }
+    if (l_oA.f_Has("--format")) l_oP.m_oOutput.m_vFormats = f_SplitList(l_oA.f_Get("--format"));
+    if (!f_CheckFormats(l_oP.m_oOutput.m_vFormats, l_strErr)) { std::fprintf(stderr, "error: %s\n", l_strErr.c_str()); return 3; }
     // --source folders: their PNGs go in now, and the folders stay as references.
-    int errors = 0;
-    const std::vector<std::string> sources = a.all("--source");
-    addPngs(p, sources, "", "", false, a.has("--quiet"), errors);
-    for (const std::string& s : sources) p.references.push_back({p.relativize(u8str(fs::absolute(u8path(s)))), true, ""});
-    if (errors) return 2;
-    return saveAll(path, p, a.has("--quiet"));
+    int l_iErrors = 0;
+    const std::vector<std::string> l_vSources = l_oA.f_All("--source");
+    f_AddPngs(l_oP, l_vSources, "", "", false, l_oA.f_Has("--quiet"), l_iErrors);
+    for (const std::string& l_strS : l_vSources) l_oP.m_vReferences.push_back({l_oP.f_Relativize(f_U8str(fs::absolute(f_U8path(l_strS)))), true, ""});
+    if (l_iErrors) return 2;
+    return f_SaveAll(l_strPath, l_oP, l_oA.f_Has("--quiet"));
 }
 
-int cmdEmbed(const Args& a) {
-    if (a.pos.size() != 1) { std::fprintf(stderr, "embed: give one project file\n"); return 3; }
-    Project p;
-    std::string err;
-    if (!loadProject(a.pos[0], p, &err)) { std::fprintf(stderr, "error: %s\n", err.c_str()); return 2; }
-    if (p.embedded) { std::fprintf(stderr, "embed: %s is already an embedded project\n", a.pos[0].c_str()); return 2; }
-    std::vector<Diagnostic> diags;
-    const int n = embedSources(p, fileImageSource(), &diags);
-    int errors = 0;
-    for (const Diagnostic& d : diags) {
-        std::fprintf(stderr, "%s: %s\n", a.pos[0].c_str(), formatDiagnostic(d).c_str());
-        errors += d.level == Diagnostic::Error;
+int f_CmdEmbed(const Args& l_oA) {
+    if (l_oA.m_vPos.size() != 1) { std::fprintf(stderr, "embed: give one project file\n"); return 3; }
+    Project l_oP;
+    std::string l_strErr;
+    if (!f_LoadProject(l_oA.m_vPos[0], l_oP, &l_strErr)) { std::fprintf(stderr, "error: %s\n", l_strErr.c_str()); return 2; }
+    if (l_oP.m_bEmbedded) { std::fprintf(stderr, "embed: %s is already an embedded project\n", l_oA.m_vPos[0].c_str()); return 2; }
+    std::vector<Diagnostic> l_vDiags;
+    const int l_iN = f_EmbedSources(l_oP, f_FileImageSource(), &l_vDiags);
+    int l_iErrors = 0;
+    for (const Diagnostic& l_oD : l_vDiags) {
+        std::fprintf(stderr, "%s: %s\n", l_oA.m_vPos[0].c_str(), f_FormatDiagnostic(l_oD).c_str());
+        l_iErrors += l_oD.m_eLevel == Diagnostic::Error;
     }
-    if (errors) { std::fprintf(stderr, "%s: %d error(s); nothing written\n", a.pos[0].c_str(), errors); return 2; }
-    const std::string target = a.get("--save-as", a.pos[0]);
+    if (l_iErrors) { std::fprintf(stderr, "%s: %d error(s); nothing written\n", l_oA.m_vPos[0].c_str(), l_iErrors); return 2; }
+    const std::string l_strTarget = l_oA.f_Get("--save-as", l_oA.m_vPos[0]);
     // The packed atlas (the store) goes next to the project file, unless asked to keep the output folder.
-    if (!a.has("--keep-output")) p.output.dir = p.relativize(u8str(fs::absolute(u8path(parentDir(target)))));
-    std::printf("%s: %d image(s) taken in\n", a.pos[0].c_str(), n);
-    return saveAll(target, p, a.has("--quiet"));
+    if (!l_oA.f_Has("--keep-output")) l_oP.m_oOutput.m_strDir = l_oP.f_Relativize(f_U8str(fs::absolute(f_U8path(f_ParentDir(l_strTarget)))));
+    std::printf("%s: %d image(s) taken in\n", l_oA.m_vPos[0].c_str(), l_iN);
+    return f_SaveAll(l_strTarget, l_oP, l_oA.f_Has("--quiet"));
 }
 
-int cmdAdd(const Args& a) {
-    if (a.pos.size() < 2) { std::fprintf(stderr, "add: give the project and at least one PNG or folder\n"); return 3; }
-    Project p;
-    std::string err;
-    if (!openProject(a.pos[0], p, &err)) { std::fprintf(stderr, "error: %s\n", err.c_str()); return 2; }
-    if (!p.embedded) { std::fprintf(stderr, "add: %s reads its images from folders; put the PNGs there (or run embed first)\n", a.pos[0].c_str()); return 2; }
-    int errors = 0;
-    const std::vector<std::string> paths(a.pos.begin() + 1, a.pos.end());
-    const int n = addPngs(p, paths, a.get("--prefix"), a.get("--variant"), a.has("--replace"), a.has("--quiet"), errors);
-    if (errors) return 2;
-    if (n == 0) { std::printf("nothing to add\n"); return 0; }
-    return saveAll(a.pos[0], p, a.has("--quiet"));
+int f_CmdAdd(const Args& l_oA) {
+    if (l_oA.m_vPos.size() < 2) { std::fprintf(stderr, "add: give the project and at least one PNG or folder\n"); return 3; }
+    Project l_oP;
+    std::string l_strErr;
+    if (!f_OpenProject(l_oA.m_vPos[0], l_oP, &l_strErr)) { std::fprintf(stderr, "error: %s\n", l_strErr.c_str()); return 2; }
+    if (!l_oP.m_bEmbedded) { std::fprintf(stderr, "add: %s reads its images from folders; put the PNGs there (or run embed first)\n", l_oA.m_vPos[0].c_str()); return 2; }
+    int l_iErrors = 0;
+    const std::vector<std::string> l_vPaths(l_oA.m_vPos.begin() + 1, l_oA.m_vPos.end());
+    const int l_iN = f_AddPngs(l_oP, l_vPaths, l_oA.f_Get("--prefix"), l_oA.f_Get("--variant"), l_oA.f_Has("--replace"), l_oA.f_Has("--quiet"), l_iErrors);
+    if (l_iErrors) return 2;
+    if (l_iN == 0) { std::printf("nothing to add\n"); return 0; }
+    return f_SaveAll(l_oA.m_vPos[0], l_oP, l_oA.f_Has("--quiet"));
 }
 
-int cmdRefs(const Args& a) {
-    if (a.pos.size() != 1) { std::fprintf(stderr, "refs: give one project file\n"); return 3; }
-    Project p;
-    std::string err;
-    if (!openProject(a.pos[0], p, &err)) { std::fprintf(stderr, "error: %s\n", err.c_str()); return 2; }
-    const std::string variant = a.get("--variant");
-    if (!variant.empty() && !p.findVariant(variant)) { std::fprintf(stderr, "error: unknown variant '%s'\n", variant.c_str()); return 2; }
-    const std::string mode = a.get("--import");   // new | changed | all
-    if (!mode.empty() && mode != "new" && mode != "changed" && mode != "all") { std::fprintf(stderr, "refs: --import new|changed|all\n"); return 3; }
-    const char* names[] = {"new", "changed", "same"};
-    int taken = 0;
-    for (const ReferenceImage& r : scanReferences(p, fileImageSource(), variant)) {
-        std::printf("  %-8s %-32s %s\n", names[r.status], r.name.c_str(), r.file.c_str());
-        const bool want = (r.status == ReferenceImage::New && (mode == "new" || mode == "all")) ||
-                          (r.status == ReferenceImage::Changed && (mode == "changed" || mode == "all"));
-        if (!want) continue;
-        Image img;
-        if (!loadImage(r.file, img, &err) || !setImage(p, r.name, img, variant, &err)) { std::fprintf(stderr, "error: %s\n", err.c_str()); return 2; }
-        taken++;
+int f_CmdRefs(const Args& l_oA) {
+    if (l_oA.m_vPos.size() != 1) { std::fprintf(stderr, "refs: give one project file\n"); return 3; }
+    Project l_oP;
+    std::string l_strErr;
+    if (!f_OpenProject(l_oA.m_vPos[0], l_oP, &l_strErr)) { std::fprintf(stderr, "error: %s\n", l_strErr.c_str()); return 2; }
+    const std::string l_strVariant = l_oA.f_Get("--variant");
+    if (!l_strVariant.empty() && !l_oP.f_FindVariant(l_strVariant)) { std::fprintf(stderr, "error: unknown variant '%s'\n", l_strVariant.c_str()); return 2; }
+    const std::string l_strMode = l_oA.f_Get("--import");   // new | changed | all
+    if (!l_strMode.empty() && l_strMode != "new" && l_strMode != "changed" && l_strMode != "all") { std::fprintf(stderr, "refs: --import new|changed|all\n"); return 3; }
+    const char* l_arrNames[] = {"new", "changed", "same"};
+    int l_iTaken = 0;
+    for (const ReferenceImage& l_oR : f_ScanReferences(l_oP, f_FileImageSource(), l_strVariant)) {
+        std::printf("  %-8s %-32s %s\n", l_arrNames[l_oR.m_eStatus], l_oR.m_strName.c_str(), l_oR.m_strFile.c_str());
+        const bool l_bWant = (l_oR.m_eStatus == ReferenceImage::New && (l_strMode == "new" || l_strMode == "all")) ||
+                          (l_oR.m_eStatus == ReferenceImage::Changed && (l_strMode == "changed" || l_strMode == "all"));
+        if (!l_bWant) continue;
+        Image l_oImg;
+        if (!f_LoadImage(l_oR.m_strFile, l_oImg, &l_strErr) || !f_SetImage(l_oP, l_oR.m_strName, l_oImg, l_strVariant, &l_strErr)) { std::fprintf(stderr, "error: %s\n", l_strErr.c_str()); return 2; }
+        l_iTaken++;
     }
-    if (!taken) return 0;
-    std::printf("imported %d image(s)\n", taken);
-    return saveAll(a.pos[0], p, a.has("--quiet"));
+    if (!l_iTaken) return 0;
+    std::printf("imported %d image(s)\n", l_iTaken);
+    return f_SaveAll(l_oA.m_vPos[0], l_oP, l_oA.f_Has("--quiet"));
 }
 
-int cmdExtract(const Args& a) {
-    if (a.pos.size() != 1 || !a.has("--out")) { std::fprintf(stderr, "extract: give one project file and --out DIR\n"); return 3; }
-    Project p;
-    std::string err;
-    if (!openProject(a.pos[0], p, &err)) { std::fprintf(stderr, "error: %s\n", err.c_str()); return 2; }
-    std::vector<std::string> written;
-    if (!extractImages(p, a.get("--out"), a.get("--variant"), a.has("--children"), &written, &err)) {
-        std::fprintf(stderr, "error: %s\n", err.c_str());
+int f_CmdExtract(const Args& l_oA) {
+    if (l_oA.m_vPos.size() != 1 || !l_oA.f_Has("--out")) { std::fprintf(stderr, "extract: give one project file and --out DIR\n"); return 3; }
+    Project l_oP;
+    std::string l_strErr;
+    if (!f_OpenProject(l_oA.m_vPos[0], l_oP, &l_strErr)) { std::fprintf(stderr, "error: %s\n", l_strErr.c_str()); return 2; }
+    std::vector<std::string> l_vWritten;
+    if (!f_ExtractImages(l_oP, l_oA.f_Get("--out"), l_oA.f_Get("--variant"), l_oA.f_Has("--children"), &l_vWritten, &l_strErr)) {
+        std::fprintf(stderr, "error: %s\n", l_strErr.c_str());
         return 2;
     }
-    std::printf("%zu image(s) written to %s\n", written.size(), a.get("--out").c_str());
+    std::printf("%zu image(s) written to %s\n", l_vWritten.size(), l_oA.f_Get("--out").c_str());
     return 0;
 }
 
 }  // namespace
 
-std::vector<std::string> utf8CommandLine(int argc, char** argv) {
-    std::vector<std::string> out;
+std::vector<std::string> f_Utf8CommandLine(int l_iArgc, char** l_pArgv) {
+    std::vector<std::string> l_vOut;
 #ifdef _WIN32
     // argv is in the ANSI code page; the wide command line keeps every character.
-    int n = 0;
-    if (LPWSTR* w = CommandLineToArgvW(GetCommandLineW(), &n)) {
-        for (int i = 1; i < n; i++) {
-            const int len = WideCharToMultiByte(CP_UTF8, 0, w[i], -1, nullptr, 0, nullptr, nullptr);
-            std::string s(len > 0 ? (size_t)len - 1 : 0, '\0');
-            if (len > 1) WideCharToMultiByte(CP_UTF8, 0, w[i], -1, &s[0], len, nullptr, nullptr);
-            out.push_back(s);
+    int l_iN = 0;
+    if (LPWSTR* l_pW = CommandLineToArgvW(GetCommandLineW(), &l_iN)) {
+        for (int l_iI = 1; l_iI < l_iN; l_iI++) {
+            const int l_iLen = WideCharToMultiByte(CP_UTF8, 0, l_pW[l_iI], -1, nullptr, 0, nullptr, nullptr);
+            std::string l_strS(l_iLen > 0 ? (size_t)l_iLen - 1 : 0, '\0');
+            if (l_iLen > 1) WideCharToMultiByte(CP_UTF8, 0, l_pW[l_iI], -1, &l_strS[0], l_iLen, nullptr, nullptr);
+            l_vOut.push_back(l_strS);
         }
-        LocalFree(w);
+        LocalFree(l_pW);
         SetConsoleOutputCP(CP_UTF8);
-        return out;
+        return l_vOut;
     }
 #endif
-    for (int i = 1; i < argc; i++) out.push_back(argv[i]);
-    return out;
+    for (int l_iI = 1; l_iI < l_iArgc; l_iI++) l_vOut.push_back(l_pArgv[l_iI]);
+    return l_vOut;
 }
 
-int atlasCliMain(const std::vector<std::string>& args) {
-    if (args.empty() || args[0] == "--help" || args[0] == "-h" || args[0] == "help") {
-        std::fputs(kUsage, args.empty() ? stderr : stdout);
-        return args.empty() ? 3 : 0;
+int f_AtlasCliMain(const std::vector<std::string>& l_vArgs) {
+    if (l_vArgs.empty() || l_vArgs[0] == "--help" || l_vArgs[0] == "-h" || l_vArgs[0] == "help") {
+        std::fputs(g_pszUsage, l_vArgs.empty() ? stderr : stdout);
+        return l_vArgs.empty() ? 3 : 0;
     }
-    const std::string& cmd = args[0];
-    Args a;
-    std::string err;
-    if (!parseArgs(args, 1, a, err)) { std::fprintf(stderr, "error: %s\n%s", err.c_str(), kUsage); return 3; }
-    if (cmd == "build") return cmdBuild(a);
-    if (cmd == "pack") return cmdPack(a);
-    if (cmd == "import") return cmdImport(a);
-    if (cmd == "info") return cmdInfo(a);
-    if (cmd == "new") return cmdNew(a);
-    if (cmd == "embed") return cmdEmbed(a);
-    if (cmd == "add") return cmdAdd(a);
-    if (cmd == "refs") return cmdRefs(a);
-    if (cmd == "extract") return cmdExtract(a);
-    if (cmd == "formats") { for (const std::string& f : exportFormats()) std::printf("%s\n", f.c_str()); return 0; }
-    std::fprintf(stderr, "unknown command '%s'\n%s", cmd.c_str(), kUsage);
+    const std::string& l_strCmd = l_vArgs[0];
+    Args l_oA;
+    std::string l_strErr;
+    if (!f_ParseArgs(l_vArgs, 1, l_oA, l_strErr)) { std::fprintf(stderr, "error: %s\n%s", l_strErr.c_str(), g_pszUsage); return 3; }
+    if (l_strCmd == "build") return f_CmdBuild(l_oA);
+    if (l_strCmd == "pack") return f_CmdPack(l_oA);
+    if (l_strCmd == "import") return f_CmdImport(l_oA);
+    if (l_strCmd == "info") return f_CmdInfo(l_oA);
+    if (l_strCmd == "new") return f_CmdNew(l_oA);
+    if (l_strCmd == "embed") return f_CmdEmbed(l_oA);
+    if (l_strCmd == "add") return f_CmdAdd(l_oA);
+    if (l_strCmd == "refs") return f_CmdRefs(l_oA);
+    if (l_strCmd == "extract") return f_CmdExtract(l_oA);
+    if (l_strCmd == "formats") { for (const std::string& l_strF : f_ExportFormats()) std::printf("%s\n", l_strF.c_str()); return 0; }
+    std::fprintf(stderr, "unknown command '%s'\n%s", l_strCmd.c_str(), g_pszUsage);
     return 3;
 }

@@ -3,36 +3,36 @@
 
 #include <QWidget>
 
-FlowLayout::FlowLayout(QWidget* parent, int spacing) : QLayout(parent), m_spacing(spacing) { setContentsMargins(0, 0, 0, 0); }
+FlowLayout::FlowLayout(QWidget* l_pParent, int l_iSpacing) : QLayout(l_pParent), m_iSpacing(l_iSpacing) { setContentsMargins(0, 0, 0, 0); }
 
 FlowLayout::~FlowLayout() {
-    while (QLayoutItem* item = takeAt(0)) delete item;
+    while (QLayoutItem* l_pItem = takeAt(0)) delete l_pItem;
 }
 
 QSize FlowLayout::minimumSize() const {
-    QSize size;
-    for (const QLayoutItem* item : m_items) size = size.expandedTo(item->minimumSize());
-    const QMargins m = contentsMargins();
-    return size + QSize(m.left() + m.right(), m.top() + m.bottom());
+    QSize l_oSize;
+    for (const QLayoutItem* l_pItem : m_oItems) l_oSize = l_oSize.expandedTo(l_pItem->minimumSize());
+    const QMargins l_oM = contentsMargins();
+    return l_oSize + QSize(l_oM.left() + l_oM.right(), l_oM.top() + l_oM.bottom());
 }
 
-int FlowLayout::doLayout(const QRect& rect, bool testOnly) const {
-    const QMargins m = contentsMargins();
-    const QRect area = rect.adjusted(m.left(), m.top(), -m.right(), -m.bottom());
-    int x = area.x(), y = area.y(), lineHeight = 0;
-    for (QLayoutItem* item : m_items) {
-        if (item->widget() && !item->widget()->isVisibleTo(item->widget()->parentWidget())) continue;
-        const QSize hint = item->sizeHint();
-        int nextX = x + hint.width() + m_spacing;
-        if (nextX - m_spacing > area.right() + 1 && lineHeight > 0) {
-            x = area.x();
-            y += lineHeight + m_spacing;
-            nextX = x + hint.width() + m_spacing;
-            lineHeight = 0;
+int FlowLayout::f_DoLayout(const QRect& l_oRect, bool l_bTestOnly) const {
+    const QMargins l_oM = contentsMargins();
+    const QRect l_oArea = l_oRect.adjusted(l_oM.left(), l_oM.top(), -l_oM.right(), -l_oM.bottom());
+    int l_iX = l_oArea.x(), l_iY = l_oArea.y(), l_iLineHeight = 0;
+    for (QLayoutItem* l_pItem : m_oItems) {
+        if (l_pItem->widget() && !l_pItem->widget()->isVisibleTo(l_pItem->widget()->parentWidget())) continue;
+        const QSize l_oHint = l_pItem->sizeHint();
+        int l_iNextX = l_iX + l_oHint.width() + m_iSpacing;
+        if (l_iNextX - m_iSpacing > l_oArea.right() + 1 && l_iLineHeight > 0) {
+            l_iX = l_oArea.x();
+            l_iY += l_iLineHeight + m_iSpacing;
+            l_iNextX = l_iX + l_oHint.width() + m_iSpacing;
+            l_iLineHeight = 0;
         }
-        if (!testOnly) item->setGeometry(QRect(QPoint(x, y), hint));
-        x = nextX;
-        lineHeight = std::max(lineHeight, hint.height());
+        if (!l_bTestOnly) l_pItem->setGeometry(QRect(QPoint(l_iX, l_iY), l_oHint));
+        l_iX = l_iNextX;
+        l_iLineHeight = std::max(l_iLineHeight, l_oHint.height());
     }
-    return y + lineHeight - rect.y() + m.bottom();
+    return l_iY + l_iLineHeight - l_oRect.y() + l_oM.bottom();
 }

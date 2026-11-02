@@ -36,81 +36,81 @@ public:
     // Game::tryCraft() -- equipment is its own registry, not an inventory item), so `itemHeld`
     // must also recognize the currently equipped weapon/armor/talent or it could never be true for
     // those ids no matter what the player actually has equipped.
-    GameConditionContext(const Player& p, const toms::MetaSaveData& meta,
-                          const std::map<std::string, toms::MissionTracker>& missions,
-                          const toms::RunStoryState& run, const toms::EquippedSet& equipped,
-                          const std::string* stage = nullptr)
-        : p_(p), meta_(meta), missions_(missions), run_(run), eq_(equipped), stage_(stage) {}
-    bool storyFlagSet(const std::string& flag) const override { return toms::hasStoryFlag(meta_, flag); }
-    bool runFlagSet(const std::string& flag) const override { return run_.flag(flag); }
-    int  storyBeat() const override { return meta_.currentBeat; }
-    bool itemHeld(const std::string& itemId, int count) const override {
-        if (itemId == "key_yellow") return p_.key_yellow >= count;
-        if (itemId == "key_blue")   return p_.key_blue   >= count;
-        if (itemId == "key_red")    return p_.key_red    >= count;
+    GameConditionContext(const Player& l_oP, const toms::MetaSaveData& l_oMeta,
+                          const std::map<std::string, toms::MissionTracker>& l_mapMissions,
+                          const toms::RunStoryState& l_oRun, const toms::EquippedSet& l_oEquipped,
+                          const std::string* l_pStage = nullptr)
+        : m_oP(l_oP), m_oMeta(l_oMeta), m_mapMissions(l_mapMissions), m_oRun(l_oRun), m_oEq(l_oEquipped), m_pStage(l_pStage) {}
+    bool f_StoryFlagSet(const std::string& l_strFlag) const override { return toms::f_HasStoryFlag(m_oMeta, l_strFlag); }
+    bool f_RunFlagSet(const std::string& l_strFlag) const override { return m_oRun.f_Flag(l_strFlag); }
+    int  f_StoryBeat() const override { return m_oMeta.m_iCurrentBeat; }
+    bool f_ItemHeld(const std::string& l_strItemId, int l_iCount) const override {
+        if (l_strItemId == "key_yellow") return m_oP.m_iKeyYellow >= l_iCount;
+        if (l_strItemId == "key_blue")   return m_oP.m_iKeyBlue   >= l_iCount;
+        if (l_strItemId == "key_red")    return m_oP.m_iKeyRed    >= l_iCount;
         // M7: an equipped weapon/armor/talent counts as "held" too (see the constructor's comment).
-        if (itemId == eq_.weaponId || itemId == eq_.armorId || itemId == eq_.talentId) return count <= 1;
-        int c = 0; for (auto& s : p_.inv) if (s == itemId) c++;
-        return c >= count;
+        if (l_strItemId == m_oEq.m_strWeaponId || l_strItemId == m_oEq.m_strArmorId || l_strItemId == m_oEq.m_strTalentId) return l_iCount <= 1;
+        int l_iC = 0; for (auto& l_strS : m_oP.m_vInv) if (l_strS == l_strItemId) l_iC++;
+        return l_iC >= l_iCount;
     }
-    int statValue(const std::string& stat) const override {
-        if (stat == "atk")  return p_.atk;
-        if (stat == "def")  return p_.def;
-        if (stat == "hp")   return p_.hp;
-        if (stat == "lv")   return p_.lv;
-        if (stat == "gold") return p_.gold;
-        if (stat == "exp")  return p_.exp;
-        if (stat == "maxhp") return p_.maxhp;
-        if (auto a = p_.attrs.find(stat); a != p_.attrs.end()) return a->second;   // str, dex, ... (data/stats.json)
+    int f_StatValue(const std::string& l_strStat) const override {
+        if (l_strStat == "atk")  return m_oP.m_iAtk;
+        if (l_strStat == "def")  return m_oP.m_iDef;
+        if (l_strStat == "hp")   return m_oP.m_iHp;
+        if (l_strStat == "lv")   return m_oP.m_iLv;
+        if (l_strStat == "gold") return m_oP.m_iGold;
+        if (l_strStat == "exp")  return m_oP.m_iExp;
+        if (l_strStat == "maxhp") return m_oP.m_iMaxhp;
+        if (auto l_itA = m_oP.m_mapAttrs.find(l_strStat); l_itA != m_oP.m_mapAttrs.end()) return l_itA->second;   // str, dex, ... (data/stats.json)
         return 0;
     }
     // Milestone 4: real lookups against Game's live mission trackers (closes the stub these two
     // methods were in Milestone 3 — missionDefs_ may still be empty until Milestone 8 loads
     // content, but tracker *state* is real the moment a mission is started).
-    bool missionComplete(const std::string& missionId) const override {
-        auto it = missions_.find(missionId);
-        return it != missions_.end() &&
-               (it->second.state == toms::MissionState::Completed || it->second.state == toms::MissionState::Claimed);
+    bool f_MissionComplete(const std::string& l_strMissionId) const override {
+        auto l_itIt = m_mapMissions.find(l_strMissionId);
+        return l_itIt != m_mapMissions.end() &&
+               (l_itIt->second.m_eState == toms::MissionState::Completed || l_itIt->second.m_eState == toms::MissionState::Claimed);
     }
-    bool missionActive(const std::string& missionId) const override {
-        auto it = missions_.find(missionId);
-        return it != missions_.end() && it->second.state == toms::MissionState::Active;
+    bool f_MissionActive(const std::string& l_strMissionId) const override {
+        auto l_itIt = m_mapMissions.find(l_strMissionId);
+        return l_itIt != m_mapMissions.end() && l_itIt->second.m_eState == toms::MissionState::Active;
     }
     // Milestone 5: a stage counts as "cleared" once the player has reached it at least once
     // (see Game::loadStage's meta_.unlockedStages tracking) -- the simplest sensible definition
     // for this linear-climb game; whether a *replayed* floor should repopulate enemies is a
     // separate, still-open design question (architecture-doc §5.2, tracked in the roadmap's
     // Milestone 7 balance checklist), not decided here.
-    bool stageCleared(const std::string& stageId) const override {
+    bool f_StageCleared(const std::string& l_strStageId) const override {
         // S3: a floor counts as cleared when the RUN says so (docs/story/STORY_DATA_SCHEMA.md section 9's
         // clearedFloors[]), falling back to the pre-S3 "reached at least once" rule for the eleven
         // hand-authored stages so existing content keeps behaving.
-        if (run_.floorCleared(stageId)) return true;
-        return std::find(meta_.unlockedStages.begin(), meta_.unlockedStages.end(), stageId) != meta_.unlockedStages.end();
+        if (m_oRun.f_FloorCleared(l_strStageId)) return true;
+        return std::find(m_oMeta.m_vUnlockedStages.begin(), m_oMeta.m_vUnlockedStages.end(), l_strStageId) != m_oMeta.m_vUnlockedStages.end();
     }
     // ---- S3 leaves (docs/story/STORY_DATA_SCHEMA.md section 2.2) ----
-    bool choiceMade(const std::string& choiceId, const std::string& optionId) const override {
-        return run_.choiceMade(choiceId, optionId);
+    bool f_ChoiceMade(const std::string& l_strChoiceId, const std::string& l_strOptionId) const override {
+        return m_oRun.f_ChoiceMade(l_strChoiceId, l_strOptionId);
     }
-    std::string sideStoryState(const std::string& sideStoryId) const override {
-        return run_.sideStoryState(sideStoryId);
+    std::string f_SideStoryState(const std::string& l_strSideStoryId) const override {
+        return m_oRun.f_SideStoryState(l_strSideStoryId);
     }
-    int counter(const std::string& name) const override { return run_.counter(name); }
-    int cycleIndex() const override { return meta_.cycleIndex; }
+    int f_Counter(const std::string& l_strName) const override { return m_oRun.f_Counter(l_strName); }
+    int f_CycleIndex() const override { return m_oMeta.m_iCycleIndex; }
     // M7: e_07's condition ("記憶碎片不足").
-    int memoryShardCount() const override { return run_.shardCount(); }
+    int f_MemoryShardCount() const override { return m_oRun.f_ShardCount(); }
     // M7: e_13's condition ("非首領戰死亡累積 ≥12").
-    int deathsNonBoss() const override { return run_.deathsNonBoss(); }
-    int varValue(const std::string& var) const override { return run_.var(var); }
-    int talkCount(const std::string& npc) const override { return run_.npcTalk(npc).count; }
-    std::string currentStage() const override { return stage_ ? *stage_ : std::string(); }
+    int f_DeathsNonBoss() const override { return m_oRun.f_DeathsNonBoss(); }
+    int f_VarValue(const std::string& l_strVar) const override { return m_oRun.f_Var(l_strVar); }
+    int f_TalkCount(const std::string& l_strNpc) const override { return m_oRun.f_NpcTalk(l_strNpc).m_iCount; }
+    std::string f_CurrentStage() const override { return m_pStage ? *m_pStage : std::string(); }
 private:
-    const Player& p_;
-    const toms::MetaSaveData& meta_;
-    const std::map<std::string, toms::MissionTracker>& missions_;
-    const toms::RunStoryState& run_;
-    const toms::EquippedSet& eq_;
-    const std::string* stage_;
+    const Player& m_oP;
+    const toms::MetaSaveData& m_oMeta;
+    const std::map<std::string, toms::MissionTracker>& m_mapMissions;
+    const toms::RunStoryState& m_oRun;
+    const toms::EquippedSet& m_oEq;
+    const std::string* m_pStage;
 };
 
 } // namespace game_detail

@@ -28,47 +28,47 @@ public:
     virtual ~GridQuery() = default;
     // True only if (x,y) is inside the grid and is a walkable tile (the caller also excludes tiles
     // occupied by OTHER entities -- a roamer must not walk into the player or another monster).
-    virtual bool walkable(int x, int y) const = 0;
+    virtual bool f_Walkable(int l_iX, int l_iY) const = 0;
 };
 
 class Roamer {
 public:
     enum class Mode { Wander = 0, Chase = 1 };
 
-    static constexpr int kDetectRadius = 6;   // tiles: inside this, start chasing
-    static constexpr int kLoseRadius   = 9;   // hysteresis, so it doesn't flicker at the edge
+    static constexpr int m_iDetectRadius = 6;   // tiles: inside this, start chasing
+    static constexpr int m_iLoseRadius   = 9;   // hysteresis, so it doesn't flicker at the edge
 
     Roamer() = default;
-    Roamer(int x, int y, Footprint fp, uint32_t seed)
-        : x_(x), y_(y), fp_(fp), rng_(seed ? seed : 1u) {}
+    Roamer(int l_iX, int l_iY, Footprint l_oFp, uint32_t l_uSeed)
+        : m_iX(l_iX), m_iY(l_iY), m_oFp(l_oFp), m_uRng(l_uSeed ? l_uSeed : 1u) {}
 
-    int  x() const { return x_; }
-    int  y() const { return y_; }
-    Mode mode() const { return mode_; }
-    const Footprint& footprint() const { return fp_; }
-    int  turnsTaken() const { return turns_; }
+    int  f_X() const { return m_iX; }
+    int  f_Y() const { return m_iY; }
+    Mode f_Mode() const { return m_eMode; }
+    const Footprint& f_Footprint() const { return m_oFp; }
+    int  f_TurnsTaken() const { return m_iTurns; }
 
     // Advance one turn. Returns true when the roamer actually moved. Call once per player turn
     // (the game is turn-based: one step per player step), which keeps chases deterministic and
     // therefore testable and reproducible from a save.
-    bool step(const GridQuery& grid, int playerX, int playerY, int gridW, int gridH);
+    bool f_Step(const GridQuery& l_oGrid, int l_iPlayerX, int l_iPlayerY, int l_iGridW, int l_iGridH);
 
 private:
-    bool canStand(const GridQuery& g, int nx, int ny, int gw, int gh) const;
-    bool tryMove(const GridQuery& g, int nx, int ny, int gw, int gh);
-    bool chaseStep(const GridQuery& g, int px, int py, int gw, int gh);
-    bool wanderStep(const GridQuery& g, int gw, int gh);
-    int  manhattan(int ax, int ay, int bx, int by) const {
-        return (ax > bx ? ax - bx : bx - ax) + (ay > by ? ay - by : by - ay);
+    bool f_CanStand(const GridQuery& l_oG, int l_iNx, int l_iNy, int l_iGw, int l_iGh) const;
+    bool f_TryMove(const GridQuery& l_oG, int l_iNx, int l_iNy, int l_iGw, int l_iGh);
+    bool f_ChaseStep(const GridQuery& l_oG, int l_iPx, int l_iPy, int l_iGw, int l_iGh);
+    bool f_WanderStep(const GridQuery& l_oG, int l_iGw, int l_iGh);
+    int  f_Manhattan(int l_iAx, int l_iAy, int l_iBx, int l_iBy) const {
+        return (l_iAx > l_iBx ? l_iAx - l_iBx : l_iBx - l_iAx) + (l_iAy > l_iBy ? l_iAy - l_iBy : l_iBy - l_iAy);
     }
-    uint32_t rnd() { rng_ = rng_ * 1664525u + 1013904223u; return rng_ >> 8; }
+    uint32_t f_Rnd() { m_uRng = m_uRng * 1664525u + 1013904223u; return m_uRng >> 8; }
 
-    int        x_ = 0, y_ = 0;
-    Footprint  fp_{};
-    Mode       mode_ = Mode::Wander;
-    uint32_t   rng_ = 1u;
-    int        lastDir_ = -1;   // 0=+x 1=-x 2=+y 3=-y; continues in a straight line while possible
-    int        turns_ = 0;
+    int        m_iX = 0, m_iY = 0;
+    Footprint  m_oFp{};
+    Mode       m_eMode = Mode::Wander;
+    uint32_t   m_uRng = 1u;
+    int        m_iLastDir = -1;   // 0=+x 1=-x 2=+y 3=-y; continues in a straight line while possible
+    int        m_iTurns = 0;
 };
 
 } // namespace toms

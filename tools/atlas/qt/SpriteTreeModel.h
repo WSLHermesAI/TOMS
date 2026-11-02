@@ -25,32 +25,32 @@ public:
         FilterTextRole,                      // what the filter box matches
     };
 
-    explicit SpriteTreeModel(AtlasDocument* doc, QObject* parent = nullptr);
+    explicit SpriteTreeModel(AtlasDocument* l_pDoc, QObject* l_pParent = nullptr);
     ~SpriteTreeModel() override;
 
-    QModelIndex indexForSprite(const QString& name) const;
+    QModelIndex f_IndexForSprite(const QString& l_oName) const;
 
-    QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const override;
-    QModelIndex parent(const QModelIndex& index) const override;
-    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
-    int columnCount(const QModelIndex& parent = QModelIndex()) const override;
-    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
-    bool setData(const QModelIndex& index, const QVariant& value, int role = Qt::EditRole) override;
-    Qt::ItemFlags flags(const QModelIndex& index) const override;
+    QModelIndex index(int l_iRow, int l_iColumn, const QModelIndex& l_oParent = QModelIndex()) const override;
+    QModelIndex parent(const QModelIndex& l_oIndex) const override;
+    int rowCount(const QModelIndex& l_oParent = QModelIndex()) const override;
+    int columnCount(const QModelIndex& l_oParent = QModelIndex()) const override;
+    QVariant data(const QModelIndex& l_oIndex, int l_iRole = Qt::DisplayRole) const override;
+    bool setData(const QModelIndex& l_oIndex, const QVariant& l_oValue, int l_iRole = Qt::EditRole) override;
+    Qt::ItemFlags flags(const QModelIndex& l_oIndex) const override;
 
 signals:
-    void renameRequested(const QString& from, const QString& to);
+    void f_RenameRequested(const QString& l_oFrom, const QString& l_oTo);
 
 private:
     struct Node;
 
-    void refresh();
-    QModelIndex indexOf(const Node* n) const;
-    void emitDataChanged(const Node* n);
+    void f_Refresh();
+    QModelIndex f_IndexOf(const Node* l_pN) const;
+    void f_EmitDataChanged(const Node* l_pN);
 
-    AtlasDocument* m_doc;
-    std::unique_ptr<Node> m_root;
-    QHash<QString, Node*> m_bySprite;
-    QString m_signature;                    // structure of the current tree
-    mutable QHash<QString, QIcon> m_icons;  // per build
+    AtlasDocument* m_pDoc;
+    std::unique_ptr<Node> m_upRoot;
+    QHash<QString, Node*> m_oBySprite;
+    QString m_oSignature;                    // structure of the current tree
+    mutable QHash<QString, QIcon> m_oIcons;  // per build
 };

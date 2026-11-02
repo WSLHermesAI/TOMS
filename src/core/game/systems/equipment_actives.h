@@ -27,69 +27,69 @@ namespace toms {
 // ---------------------------------------------------------------------------
 
 struct ActiveDefinition {
-    std::string id;
-    std::string kind;                 // "guaranteedCrit" | "surviveLethal"
-    float damageMultiplier = 1.0f;
-    int   usesPerBattle    = 1;
-    float cooldownSeconds  = 0.0f;    // 0 = capped only by usesPerBattle
-    int   vfxFrames        = 0;
+    std::string m_strId;
+    std::string m_strKind;                 // "guaranteedCrit" | "surviveLethal"
+    float m_fDamageMultiplier = 1.0f;
+    int   m_iUsesPerBattle    = 1;
+    float m_fCooldownSeconds  = 0.0f;    // 0 = capped only by usesPerBattle
+    int   m_iVfxFrames        = 0;
 };
 
 // Reads data/actives.json. Unknown/missing file -> empty map (never throws).
-std::map<std::string, ActiveDefinition> loadActiveDefinitions(const std::string& path);
+std::map<std::string, ActiveDefinition> f_LoadActiveDefinitions(const std::string& l_strPath);
 
 // Reads the "actives" arrays out of data/items.json: item id -> active ids.
-std::map<std::string, std::vector<std::string>> loadEquipmentActives(const std::string& path);
+std::map<std::string, std::vector<std::string>> f_LoadEquipmentActives(const std::string& l_strPath);
 
 // The actives a currently-equipped set grants: weapon, then armor, then talent, each item's actives
 // in authored order, duplicates removed. Empty slot ids are skipped.
-std::vector<std::string> activesForSet(const std::string& weaponId,
-                                      const std::string& armorId,
-                                      const std::string& talentId,
-                                      const std::map<std::string, std::vector<std::string>>& byItem);
+std::vector<std::string> f_ActivesForSet(const std::string& l_strWeaponId,
+                                      const std::string& l_strArmorId,
+                                      const std::string& l_strTalentId,
+                                      const std::map<std::string, std::vector<std::string>>& l_mapByItem);
 
 // ---------------------------------------------------------------------------
 // Runtime (per battle)
 // ---------------------------------------------------------------------------
 
 struct ActiveRuntime {
-    int   usesLeft     = 0;
-    float cooldownLeft = 0.0f;
+    int   m_iUsesLeft     = 0;
+    float m_fCooldownLeft = 0.0f;
 };
 
 // Status flags that gate actives. st_silence sets silence; st_echo sets echoQueued for one use.
 struct ActiveStatusEffects {
-    bool silence    = false;
-    bool echoQueued = false;
+    bool m_bSilence    = false;
+    bool m_bEchoQueued = false;
 };
 
 // Per-second upkeep: advances cooldowns. Returns how many actives became ready (for a UI ping).
-int tickActives(std::map<std::string, ActiveRuntime>& rt, float dt);
+int f_TickActives(std::map<std::string, ActiveRuntime>& l_mapRt, float l_fDt);
 
 // Fresh state for a battle: every definition gets its full uses, no cooldown.
-std::map<std::string, ActiveRuntime> makeBattleRuntime(const std::map<std::string, ActiveDefinition>& defs);
+std::map<std::string, ActiveRuntime> f_MakeBattleRuntime(const std::map<std::string, ActiveDefinition>& l_mapDefs);
 
 // What firing an active does. The caller (combat) owns applying it to damage/HP.
 struct ActiveEffect {
-    bool  fired            = false;
-    bool  guaranteedCrit   = false;
-    float damageMultiplier = 1.0f;
-    bool  surviveLethal    = false;
-    std::string id;
+    bool  m_bFired            = false;
+    bool  m_bGuaranteedCrit   = false;
+    float m_fDamageMultiplier = 1.0f;
+    bool  m_bSurviveLethal    = false;
+    std::string m_strId;
 };
 
 // Preconditions, in order: it is a real active, the battle gave it uses, uses remain, no silence,
 // cooldown elapsed. Pure -- asks nothing of the caller and changes nothing.
-bool canUseActive(const std::string& id,
-                  const std::map<std::string, ActiveDefinition>& defs,
-                  const std::map<std::string, ActiveRuntime>& rt,
-                  const ActiveStatusEffects& st);
+bool f_CanUseActive(const std::string& l_strId,
+                  const std::map<std::string, ActiveDefinition>& l_mapDefs,
+                  const std::map<std::string, ActiveRuntime>& l_mapRt,
+                  const ActiveStatusEffects& l_oSt);
 
 // Fires it: consumes one use, starts the cooldown (unless st_echo is queued, which is then consumed),
 // and returns the effect for combat to apply. Returns fired=false if canUseActive() said no.
-ActiveEffect useActive(const std::string& id,
-                       const std::map<std::string, ActiveDefinition>& defs,
-                       std::map<std::string, ActiveRuntime>& rt,
-                       ActiveStatusEffects& st);
+ActiveEffect f_UseActive(const std::string& l_strId,
+                       const std::map<std::string, ActiveDefinition>& l_mapDefs,
+                       std::map<std::string, ActiveRuntime>& l_mapRt,
+                       ActiveStatusEffects& l_oSt);
 
 }  // namespace toms

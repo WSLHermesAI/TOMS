@@ -214,6 +214,7 @@ RULES = [
     (['tools/art/*'], None, 'the AI art scripts (reskins, the brawler and hero pictures; docs/engine/20): no test'),
     (['tools/setup_ai_art.*'], None, 'the AI art installer (ComfyUI, models; docs/engine/20): no test, run it by hand'),
     (['tools/frames_to_gif.py'], None, 'merges a --record run\'s frames into a GIF (docs/gameplay/18 §4): no test'),
+    (['tools/naming/*'], None, 'the C++ naming renamer (docs/project/12 §6): no test; the build checks what it renamed'),
     (['art_raw/*'], ATLAS, 'raw art (sprite PNGs): the atlas checks'),
     (['assets/media/atlas/*'], any_of(ATLAS, is_game_smoke_d3d11), 'atlas files: atlas checks + game screenshots'),
     (['docs/examples/ui_tutorial/*', 'docs/gameplay/10_UI_EDITOR.md', 'docs/gameplay/zh_TW/10_UI_EDITOR.md'], named('ui_editor.selftest', 'smoke.ui_editor'),

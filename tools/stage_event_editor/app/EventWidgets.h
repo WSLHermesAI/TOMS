@@ -16,52 +16,52 @@
 // A text box that commits when it loses focus (as an HTML "change"), and grows with its lines.
 class CommitText : public QPlainTextEdit {
 public:
-    CommitText(const QString& text, QWidget* parent = nullptr);
-    std::function<void(const QString&)> onCommit;
-    std::function<void(const QString&)> onEdit;   // every keystroke
+    CommitText(const QString& l_oText, QWidget* l_pParent = nullptr);
+    std::function<void(const QString&)> m_fnOnCommit;
+    std::function<void(const QString&)> m_fnOnEdit;   // every keystroke
 protected:
-    void focusOutEvent(QFocusEvent* e) override;
+    void focusOutEvent(QFocusEvent* l_pE) override;
 private:
-    void fit();
-    QString m_orig;
+    void f_Fit();
+    QString m_oOrig;
 };
 
 // A line edit that commits on Enter or focus loss, only when its text changed.
 class CommitLine : public QLineEdit {
 public:
-    CommitLine(const QString& text, QWidget* parent = nullptr);
-    std::function<void(const QString&)> onCommit;
+    CommitLine(const QString& l_oText, QWidget* l_pParent = nullptr);
+    std::function<void(const QString&)> m_fnOnCommit;
 private:
-    QString m_orig;
+    QString m_oOrig;
 };
 
 namespace EvUi {
-QLabel* rich(const QString& html);
-QLabel* muted(const QString& text);
-QLabel* heading(const QString& text);
-QToolButton* chip(const QString& text, const QColor& border = QColor(), const QString& tip = QString());
-QWidget* banner(const QString& html, bool bad);
-QString esc(const QString& s);
-QString q(const std::string& s);
+QLabel* f_Rich(const QString& l_oHtml);
+QLabel* f_Muted(const QString& l_oText);
+QLabel* f_Heading(const QString& l_oText);
+QToolButton* f_Chip(const QString& l_oText, const QColor& l_oBorder = QColor(), const QString& l_oTip = QString());
+QWidget* f_Banner(const QString& l_oHtml, bool l_bBad);
+QString f_Esc(const QString& l_oS);
+QString f_Q(const std::string& l_strS);
 }  // namespace EvUi
 
 // The floor map: chapters as rows, stairs as arrows; locked stairs gold and dashed with the event name.
 class FloorMapView : public QWidget {
     Q_OBJECT
 public:
-    struct Node { QString id, act; bool boss = false, warn = false, ghost = false, isNew = false; QRectF r; };
-    struct Edge { QString from, to, lock; bool miss = false; };
-    void setGraph(std::vector<Node> nodes, std::vector<Edge> edges, std::vector<std::pair<QString, double>> rows, const QString& sel);
-    QSize sizeHint() const override { return m_size; }
+    struct Node { QString m_oId, m_oAct; bool m_bBoss = false, m_bWarn = false, m_bGhost = false, m_bIsNew = false; QRectF m_oR; };
+    struct Edge { QString m_oFrom, m_oTo, m_oLock; bool m_bMiss = false; };
+    void f_SetGraph(std::vector<Node> l_vNodes, std::vector<Edge> l_vEdges, std::vector<std::pair<QString, double>> l_vRows, const QString& l_oSel);
+    QSize sizeHint() const override { return m_oSize; }
 signals:
-    void clicked(const QString& id);
+    void f_Clicked(const QString& l_oId);
 protected:
-    void paintEvent(QPaintEvent* e) override;
-    void mousePressEvent(QMouseEvent* e) override;
+    void paintEvent(QPaintEvent* l_pE) override;
+    void mousePressEvent(QMouseEvent* l_pE) override;
 private:
-    std::vector<Node> m_nodes;
-    std::vector<Edge> m_edges;
-    std::vector<std::pair<QString, double>> m_rows;
-    QString m_sel;
-    QSize m_size{400, 200};
+    std::vector<Node> m_vNodes;
+    std::vector<Edge> m_vEdges;
+    std::vector<std::pair<QString, double>> m_vRows;
+    QString m_oSel;
+    QSize m_oSize{400, 200};
 };

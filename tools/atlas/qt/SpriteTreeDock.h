@@ -17,31 +17,31 @@ class SpriteTreeDock : public QDockWidget
     Q_OBJECT
 
 public:
-    explicit SpriteTreeDock(AtlasDocument* doc, QWidget* parent = nullptr);
+    explicit SpriteTreeDock(AtlasDocument* l_pDoc, QWidget* l_pParent = nullptr);
 
     // F2: inline rename of the current sprite.
-    void beginRename();
-    void focusFilter();
+    void f_BeginRename();
+    void f_FocusFilter();
 
 signals:
-    void editSpriteRequested(const QString& name);
-    void contextMenuRequested(const QPoint& globalPos);
+    void f_EditSpriteRequested(const QString& l_oName);
+    void f_ContextMenuRequested(const QPoint& l_oGlobalPos);
 
 private:
-    void onTreeSelectionChanged();
-    void onDocSelectionChanged();
-    void onFilterChanged(const QString& text);
-    void onRenameRequested(const QString& from, const QString& to);
-    bool isFiltering() const;
-    void saveExpansion();
-    void restoreExpansion();
+    void f_OnTreeSelectionChanged();
+    void f_OnDocSelectionChanged();
+    void f_OnFilterChanged(const QString& l_oText);
+    void f_OnRenameRequested(const QString& l_oFrom, const QString& l_oTo);
+    bool f_IsFiltering() const;
+    void f_SaveExpansion();
+    void f_RestoreExpansion();
 
-    AtlasDocument* m_doc;
-    SpriteTreeModel* m_model;
-    QSortFilterProxyModel* m_proxy;
-    QLineEdit* m_filter;
-    QTreeView* m_tree;
-    bool m_syncing = false;
-    QSet<QString> m_expanded;   // node keys
-    QSet<QString> m_known;      // node keys seen before (new folders open expanded)
+    AtlasDocument* m_pDoc;
+    SpriteTreeModel* m_pModel;
+    QSortFilterProxyModel* m_pProxy;
+    QLineEdit* m_pFilter;
+    QTreeView* m_pTree;
+    bool m_bSyncing = false;
+    QSet<QString> m_oExpanded;   // node keys
+    QSet<QString> m_oKnown;      // node keys seen before (new folders open expanded)
 };

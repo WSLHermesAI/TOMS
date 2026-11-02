@@ -13,45 +13,45 @@ using toms::fx::Emitter;
 
 namespace {
 
-QString qs(const std::string& s) { return QString::fromStdString(s); }
-std::string u8(const QString& s) { return s.toStdString(); }
+QString f_Qs(const std::string& l_strS) { return QString::fromStdString(l_strS); }
+std::string f_U8(const QString& l_oS) { return l_oS.toStdString(); }
 
-bool sameState(const ParticleState& a, const ParticleState& b)
+bool f_SameState(const ParticleState& l_oA, const ParticleState& l_oB)
 {
-    return a.effect == b.effect && a.emitter == b.emitter && a.atlasesAbs == b.atlasesAbs && a.atlasIds == b.atlasIds &&
-           toms::fx::particlesToJson(a.file) == toms::fx::particlesToJson(b.file);
+    return l_oA.m_iEffect == l_oB.m_iEffect && l_oA.m_iEmitter == l_oB.m_iEmitter && l_oA.m_oAtlasesAbs == l_oB.m_oAtlasesAbs && l_oA.m_oAtlasIds == l_oB.m_oAtlasIds &&
+           toms::fx::f_ParticlesToJson(l_oA.m_oFile) == toms::fx::f_ParticlesToJson(l_oB.m_oFile);
 }
 
-std::shared_ptr<ParticleDocument::LoadedAtlas> loadOne(const QString& path)
+std::shared_ptr<ParticleDocument::LoadedAtlas> f_LoadOne(const QString& l_oPath)
 {
-    auto a = std::make_shared<ParticleDocument::LoadedAtlas>();
-    a->path = path;
-    QFile in(path);
-    if (!in.open(QIODevice::ReadOnly)) {
-        a->error = ParticleDocument::tr("cannot read %1: %2").arg(QDir::toNativeSeparators(path), in.errorString());
-        return a;
+    auto l_spA = std::make_shared<ParticleDocument::LoadedAtlas>();
+    l_spA->m_oPath = l_oPath;
+    QFile l_oIn(l_oPath);
+    if (!l_oIn.open(QIODevice::ReadOnly)) {
+        l_spA->m_oError = ParticleDocument::tr("cannot read %1: %2").arg(QDir::toNativeSeparators(l_oPath), l_oIn.errorString());
+        return l_spA;
     }
-    std::string err;
-    if (!toms::parseAtlas(in.readAll().toStdString(), a->atlas, &err)) {
-        a->error = QStringLiteral("%1: %2").arg(QDir::toNativeSeparators(path), qs(err));
-        return a;
+    std::string l_strErr;
+    if (!toms::f_ParseAtlas(l_oIn.readAll().toStdString(), l_spA->m_oAtlas, &l_strErr)) {
+        l_spA->m_oError = QStringLiteral("%1: %2").arg(QDir::toNativeSeparators(l_oPath), f_Qs(l_strErr));
+        return l_spA;
     }
-    QVector<QImage> pages;
-    const QDir dir = QFileInfo(path).absoluteDir();
-    bool sizes = false;
-    for (toms::AtlasPage& p : a->atlas.pages) {
-        QImage img(dir.filePath(qs(p.file)));
-        if (img.isNull()) a->error = ParticleDocument::tr("cannot load the atlas page %1").arg(QDir::toNativeSeparators(dir.filePath(qs(p.file))));
-        if (!img.isNull() && (p.w <= 0 || p.h <= 0)) { p.w = img.width(); p.h = img.height(); sizes = true; }
-        pages.push_back(img);
+    QVector<QImage> l_oPages;
+    const QDir l_oDir = QFileInfo(l_oPath).absoluteDir();
+    bool l_bSizes = false;
+    for (toms::AtlasPage& l_oP : l_spA->m_oAtlas.m_vPages) {
+        QImage l_oImg(l_oDir.filePath(f_Qs(l_oP.m_strFile)));
+        if (l_oImg.isNull()) l_spA->m_oError = ParticleDocument::tr("cannot load the atlas page %1").arg(QDir::toNativeSeparators(l_oDir.filePath(f_Qs(l_oP.m_strFile))));
+        if (!l_oImg.isNull() && (l_oP.m_iW <= 0 || l_oP.m_iH <= 0)) { l_oP.m_iW = l_oImg.width(); l_oP.m_iH = l_oImg.height(); l_bSizes = true; }
+        l_oPages.push_back(l_oImg);
     }
-    if (sizes) a->atlas.computeUVs();
-    a->images.setPages(pages);
-    for (const toms::AtlasRegion& r : a->atlas.regions) a->spriteNames << qs(r.name);
-    a->spriteNames.removeDuplicates();
-    a->spriteNames.sort(Qt::CaseInsensitive);
-    a->ok = a->error.isEmpty();
-    return a;
+    if (l_bSizes) l_spA->m_oAtlas.f_ComputeUVs();
+    l_spA->m_oImages.f_SetPages(l_oPages);
+    for (const toms::AtlasRegion& l_oR : l_spA->m_oAtlas.m_vRegions) l_spA->m_oSpriteNames << f_Qs(l_oR.m_strName);
+    l_spA->m_oSpriteNames.removeDuplicates();
+    l_spA->m_oSpriteNames.sort(Qt::CaseInsensitive);
+    l_spA->m_bOk = l_spA->m_oError.isEmpty();
+    return l_spA;
 }
 
 }  // namespace
@@ -60,433 +60,433 @@ std::shared_ptr<ParticleDocument::LoadedAtlas> loadOne(const QString& path)
 class ParticleCommand : public QUndoCommand
 {
 public:
-    ParticleCommand(ParticleDocument* doc, const QString& text, ParticleState before, ParticleState after, const QString& mergeKey)
-        : QUndoCommand(text), m_doc(doc), m_before(std::move(before)), m_after(std::move(after)), m_key(mergeKey)
+    ParticleCommand(ParticleDocument* l_pDoc, const QString& l_oText, ParticleState l_oBefore, ParticleState l_oAfter, const QString& l_oMergeKey)
+        : QUndoCommand(l_oText), m_pDoc(l_pDoc), m_oBefore(std::move(l_oBefore)), m_oAfter(std::move(l_oAfter)), m_oKey(l_oMergeKey)
     {
     }
-    void undo() override { m_doc->setState(m_before); }
+    void undo() override { m_pDoc->f_SetState(m_oBefore); }
     void redo() override
     {
-        if (m_first) { m_first = false; return; }   // the edit already applied it
-        m_doc->setState(m_after);
+        if (m_bFirst) { m_bFirst = false; return; }   // the edit already applied it
+        m_pDoc->f_SetState(m_oAfter);
     }
-    int id() const override { return m_key.isEmpty() ? -1 : 1; }
-    bool mergeWith(const QUndoCommand* other) override
+    int id() const override { return m_oKey.isEmpty() ? -1 : 1; }
+    bool mergeWith(const QUndoCommand* l_pOther) override
     {
-        const auto* o = static_cast<const ParticleCommand*>(other);
-        if (o->m_key != m_key) return false;
-        m_after = o->m_after;
+        const auto* l_pO = static_cast<const ParticleCommand*>(l_pOther);
+        if (l_pO->m_oKey != m_oKey) return false;
+        m_oAfter = l_pO->m_oAfter;
         return true;
     }
 
 private:
-    ParticleDocument* m_doc;
-    ParticleState m_before, m_after;
-    QString m_key;
-    bool m_first = true;
+    ParticleDocument* m_pDoc;
+    ParticleState m_oBefore, m_oAfter;
+    QString m_oKey;
+    bool m_bFirst = true;
 };
 
-ParticleDocument::ParticleDocument(QObject* parent)
-    : QObject(parent)
-    , m_undo(new QUndoStack(this))
+ParticleDocument::ParticleDocument(QObject* l_pParent)
+    : QObject(l_pParent)
+    , m_pUndo(new QUndoStack(this))
 {
-    connect(m_undo, &QUndoStack::cleanChanged, this, [this] { emit fileChanged(); });
+    connect(m_pUndo, &QUndoStack::cleanChanged, this, [this] { emit f_FileChanged(); });
 }
 
-QString ParticleDocument::defaultFxAtlas()
+QString ParticleDocument::f_DefaultFxAtlas()
 {
 #ifdef TOMS_FX_ATLAS
-    const QString p = QString::fromUtf8(TOMS_FX_ATLAS);
-    if (QFileInfo::exists(p)) return QFileInfo(p).absoluteFilePath();
+    const QString l_oP = QString::fromUtf8(TOMS_FX_ATLAS);
+    if (QFileInfo::exists(l_oP)) return QFileInfo(l_oP).absoluteFilePath();
 #endif
     // the release in Editor/bin (another PC: the build path above is not there): the repo's own assets
-    const QString rel = QCoreApplication::applicationDirPath() + QStringLiteral("/../../assets/media/atlas/fx.atlas");
-    if (QFileInfo::exists(rel)) return QFileInfo(rel).absoluteFilePath();
+    const QString l_oRel = QCoreApplication::applicationDirPath() + QStringLiteral("/../../assets/media/atlas/fx.atlas");
+    if (QFileInfo::exists(l_oRel)) return QFileInfo(l_oRel).absoluteFilePath();
     return QString();
 }
 
-QString ParticleDocument::displayName() const
+QString ParticleDocument::f_DisplayName() const
 {
-    return m_filePath.isEmpty() ? tr("untitled.particle") : QFileInfo(m_filePath).fileName();
+    return m_oFilePath.isEmpty() ? tr("untitled.particle") : QFileInfo(m_oFilePath).fileName();
 }
 
-bool ParticleDocument::isDirty() const { return !m_undo->isClean(); }
+bool ParticleDocument::f_IsDirty() const { return !m_pUndo->isClean(); }
 
-QString ParticleDocument::toJson() const { return qs(toms::fx::particlesToJson(m_state.file)); }
+QString ParticleDocument::f_ToJson() const { return f_Qs(toms::fx::f_ParticlesToJson(m_oState.m_oFile)); }
 
-void ParticleDocument::syncStoredAtlases(ParticleState& s) const
+void ParticleDocument::f_SyncStoredAtlases(ParticleState& l_oS) const
 {
-    s.file.atlases.clear();
-    const QDir dir = m_filePath.isEmpty() ? QDir() : QFileInfo(m_filePath).absoluteDir();
-    for (int i = 0; i < s.atlasesAbs.size(); i++) {
-        toms::anim::AtlasRef r;
-        r.path = u8(m_filePath.isEmpty() ? s.atlasesAbs[i] : dir.relativeFilePath(s.atlasesAbs[i]));
-        r.id = u8(s.atlasIds.value(i));
-        s.file.atlases.push_back(r);
+    l_oS.m_oFile.m_vAtlases.clear();
+    const QDir l_oDir = m_oFilePath.isEmpty() ? QDir() : QFileInfo(m_oFilePath).absoluteDir();
+    for (int l_iI = 0; l_iI < l_oS.m_oAtlasesAbs.size(); l_iI++) {
+        toms::anim::AtlasRef l_oR;
+        l_oR.m_strPath = f_U8(m_oFilePath.isEmpty() ? l_oS.m_oAtlasesAbs[l_iI] : l_oDir.relativeFilePath(l_oS.m_oAtlasesAbs[l_iI]));
+        l_oR.m_strId = f_U8(l_oS.m_oAtlasIds.value(l_iI));
+        l_oS.m_oFile.m_vAtlases.push_back(l_oR);
     }
 }
 
-void ParticleDocument::newFile()
+void ParticleDocument::f_NewFile()
 {
-    ParticleState s;
-    const QString fx = defaultFxAtlas();
-    if (!fx.isEmpty()) {
-        s.atlasesAbs << fx;
-        s.atlasIds << QStringLiteral("fx");
+    ParticleState l_oS;
+    const QString l_oFx = f_DefaultFxAtlas();
+    if (!l_oFx.isEmpty()) {
+        l_oS.m_oAtlasesAbs << l_oFx;
+        l_oS.m_oAtlasIds << QStringLiteral("fx");
     }
-    Effect e;
-    e.name = "effect";
-    Emitter m;
-    m.name = "emitter";
-    m.sprite = fx.isEmpty() ? std::string() : "fx:dot";
-    m.blend = toms::fx::Blend::add();
-    m.life = toms::fx::Range(0.6f, 1.0f);
-    m.speed = toms::fx::Range(40, 80);
-    m.spread = 20;
-    m.size = toms::fx::Range(6, 10);
-    toms::fx::CurveKey<glm::vec4> a, b;
-    a.t = 0; a.v = glm::vec4(1);
-    b.t = 1; b.v = glm::vec4(1, 1, 1, 0);
-    m.colorOverLife.keys = {a, b};
-    e.emitters.push_back(m);
-    s.file.effects.push_back(e);
-    s.emitter = 0;
-    m_filePath.clear();
-    syncStoredAtlases(s);
-    m_state = s;
-    m_undo->clear();
-    loadAtlases();
-    emit fileChanged();
-    emit selectionChanged();
+    Effect l_oE;
+    l_oE.m_strName = "effect";
+    Emitter l_oM;
+    l_oM.m_strName = "emitter";
+    l_oM.m_strSprite = l_oFx.isEmpty() ? std::string() : "fx:dot";
+    l_oM.m_oBlend = toms::fx::Blend::f_Add();
+    l_oM.m_oLife = toms::fx::Range(0.6f, 1.0f);
+    l_oM.m_oSpeed = toms::fx::Range(40, 80);
+    l_oM.m_fSpread = 20;
+    l_oM.m_oSize = toms::fx::Range(6, 10);
+    toms::fx::CurveKey<glm::vec4> l_oA, l_oB;
+    l_oA.m_fT = 0; l_oA.m_oV = glm::vec4(1);
+    l_oB.m_fT = 1; l_oB.m_oV = glm::vec4(1, 1, 1, 0);
+    l_oM.m_oColorOverLife.m_vKeys = {l_oA, l_oB};
+    l_oE.m_vEmitters.push_back(l_oM);
+    l_oS.m_oFile.m_vEffects.push_back(l_oE);
+    l_oS.m_iEmitter = 0;
+    m_oFilePath.clear();
+    f_SyncStoredAtlases(l_oS);
+    m_oState = l_oS;
+    m_pUndo->clear();
+    f_LoadAtlases();
+    emit f_FileChanged();
+    emit f_SelectionChanged();
 }
 
-bool ParticleDocument::open(const QString& path, QString* error)
+bool ParticleDocument::f_Open(const QString& l_oPath, QString* l_pError)
 {
-    QFile in(path);
-    if (!in.open(QIODevice::ReadOnly)) {
-        if (error) *error = in.errorString();
+    QFile l_oIn(l_oPath);
+    if (!l_oIn.open(QIODevice::ReadOnly)) {
+        if (l_pError) *l_pError = l_oIn.errorString();
         return false;
     }
-    ParticleState s;
-    std::string err;
-    if (!toms::fx::parseParticles(in.readAll().toStdString(), s.file, &err)) {
-        if (error) *error = qs(err);
+    ParticleState l_oS;
+    std::string l_strErr;
+    if (!toms::fx::f_ParseParticles(l_oIn.readAll().toStdString(), l_oS.m_oFile, &l_strErr)) {
+        if (l_pError) *l_pError = f_Qs(l_strErr);
         return false;
     }
-    const QDir dir = QFileInfo(path).absoluteDir();
-    for (const toms::anim::AtlasRef& r : s.file.atlases) {
-        s.atlasesAbs << QDir::cleanPath(dir.absoluteFilePath(qs(r.path)));
-        s.atlasIds << qs(r.id);
+    const QDir l_oDir = QFileInfo(l_oPath).absoluteDir();
+    for (const toms::anim::AtlasRef& l_oR : l_oS.m_oFile.m_vAtlases) {
+        l_oS.m_oAtlasesAbs << QDir::cleanPath(l_oDir.absoluteFilePath(f_Qs(l_oR.m_strPath)));
+        l_oS.m_oAtlasIds << f_Qs(l_oR.m_strId);
     }
-    s.effect = 0;
-    s.emitter = s.file.effects.empty() || s.file.effects[0].emitters.empty() ? -1 : 0;
-    m_filePath = QFileInfo(path).absoluteFilePath();
-    m_state = s;
-    m_undo->clear();
-    loadAtlases();
-    emit fileChanged();
-    emit selectionChanged();
+    l_oS.m_iEffect = 0;
+    l_oS.m_iEmitter = l_oS.m_oFile.m_vEffects.empty() || l_oS.m_oFile.m_vEffects[0].m_vEmitters.empty() ? -1 : 0;
+    m_oFilePath = QFileInfo(l_oPath).absoluteFilePath();
+    m_oState = l_oS;
+    m_pUndo->clear();
+    f_LoadAtlases();
+    emit f_FileChanged();
+    emit f_SelectionChanged();
     return true;
 }
 
-bool ParticleDocument::writeBackup(const QString& path, QString* error) const
+bool ParticleDocument::f_WriteBackup(const QString& l_oPath, QString* l_pError) const
 {
-    toms::fx::ParticleFile f = m_state.file;
-    f.atlases.clear();
-    for (int i = 0; i < m_state.atlasesAbs.size(); i++) {
-        toms::anim::AtlasRef r;
-        r.path = u8(QDir::fromNativeSeparators(m_state.atlasesAbs[i]));
-        r.id = u8(m_state.atlasIds.value(i));
-        f.atlases.push_back(r);
+    toms::fx::ParticleFile l_oF = m_oState.m_oFile;
+    l_oF.m_vAtlases.clear();
+    for (int l_iI = 0; l_iI < m_oState.m_oAtlasesAbs.size(); l_iI++) {
+        toms::anim::AtlasRef l_oR;
+        l_oR.m_strPath = f_U8(QDir::fromNativeSeparators(m_oState.m_oAtlasesAbs[l_iI]));
+        l_oR.m_strId = f_U8(m_oState.m_oAtlasIds.value(l_iI));
+        l_oF.m_vAtlases.push_back(l_oR);
     }
-    QSaveFile out(path);
-    if (!out.open(QIODevice::WriteOnly) || out.write(toms::fx::particlesToJson(f).c_str()) < 0 || !out.commit()) {
-        if (error) *error = out.errorString();
+    QSaveFile l_oOut(l_oPath);
+    if (!l_oOut.open(QIODevice::WriteOnly) || l_oOut.write(toms::fx::f_ParticlesToJson(l_oF).c_str()) < 0 || !l_oOut.commit()) {
+        if (l_pError) *l_pError = l_oOut.errorString();
         return false;
     }
     return true;
 }
 
-bool ParticleDocument::saveTo(const QString& path, QString* error)
+bool ParticleDocument::f_SaveTo(const QString& l_oPath, QString* l_pError)
 {
-    const QDir dir = QFileInfo(path).absoluteDir();
-    for (const QString& a : m_state.atlasesAbs)
-        if (QDir::isAbsolutePath(dir.relativeFilePath(a))) {
-            if (error)
-                *error = tr("The atlas %1 cannot be stored relative to %2: they are on different drives.")
-                             .arg(QDir::toNativeSeparators(a), QDir::toNativeSeparators(path));
+    const QDir l_oDir = QFileInfo(l_oPath).absoluteDir();
+    for (const QString& l_oA : m_oState.m_oAtlasesAbs)
+        if (QDir::isAbsolutePath(l_oDir.relativeFilePath(l_oA))) {
+            if (l_pError)
+                *l_pError = tr("The atlas %1 cannot be stored relative to %2: they are on different drives.")
+                             .arg(QDir::toNativeSeparators(l_oA), QDir::toNativeSeparators(l_oPath));
             return false;
         }
-    const QString old = m_filePath;
-    m_filePath = QFileInfo(path).absoluteFilePath();
-    ParticleState s = m_state;
-    syncStoredAtlases(s);
-    QSaveFile out(path);
-    if (!out.open(QIODevice::WriteOnly) || out.write(toms::fx::particlesToJson(s.file).c_str()) < 0 || !out.commit()) {
-        if (error) *error = out.errorString();
-        m_filePath = old;
+    const QString l_oOld = m_oFilePath;
+    m_oFilePath = QFileInfo(l_oPath).absoluteFilePath();
+    ParticleState l_oS = m_oState;
+    f_SyncStoredAtlases(l_oS);
+    QSaveFile l_oOut(l_oPath);
+    if (!l_oOut.open(QIODevice::WriteOnly) || l_oOut.write(toms::fx::f_ParticlesToJson(l_oS.m_oFile).c_str()) < 0 || !l_oOut.commit()) {
+        if (l_pError) *l_pError = l_oOut.errorString();
+        m_oFilePath = l_oOld;
         return false;
     }
-    m_state = s;
-    m_undo->setClean();
-    emit fileChanged();
+    m_oState = l_oS;
+    m_pUndo->setClean();
+    emit f_FileChanged();
     return true;
 }
 
-const Effect* ParticleDocument::effect() const
+const Effect* ParticleDocument::f_Effect() const
 {
-    const auto& es = m_state.file.effects;
-    return m_state.effect >= 0 && m_state.effect < int(es.size()) ? &es[size_t(m_state.effect)] : nullptr;
+    const auto& l_vEs = m_oState.m_oFile.m_vEffects;
+    return m_oState.m_iEffect >= 0 && m_oState.m_iEffect < int(l_vEs.size()) ? &l_vEs[size_t(m_oState.m_iEffect)] : nullptr;
 }
 
-const Emitter* ParticleDocument::emitter() const
+const Emitter* ParticleDocument::f_Emitter() const
 {
-    const Effect* e = effect();
-    return e && m_state.emitter >= 0 && m_state.emitter < int(e->emitters.size()) ? &e->emitters[size_t(m_state.emitter)] : nullptr;
+    const Effect* l_pE = f_Effect();
+    return l_pE && m_oState.m_iEmitter >= 0 && m_oState.m_iEmitter < int(l_pE->m_vEmitters.size()) ? &l_pE->m_vEmitters[size_t(m_oState.m_iEmitter)] : nullptr;
 }
 
-void ParticleDocument::select(int effect, int emitter)
+void ParticleDocument::f_Select(int l_iEffect, int l_iEmitter)
 {
-    const auto& es = m_state.file.effects;
-    effect = es.empty() ? 0 : std::clamp(effect, 0, int(es.size()) - 1);
-    if (!es.empty()) emitter = std::clamp(emitter, -1, int(es[size_t(effect)].emitters.size()) - 1);
-    else emitter = -1;
-    if (effect == m_state.effect && emitter == m_state.emitter) return;
-    m_state.effect = effect;
-    m_state.emitter = emitter;
-    emit selectionChanged();
+    const auto& l_vEs = m_oState.m_oFile.m_vEffects;
+    l_iEffect = l_vEs.empty() ? 0 : std::clamp(l_iEffect, 0, int(l_vEs.size()) - 1);
+    if (!l_vEs.empty()) l_iEmitter = std::clamp(l_iEmitter, -1, int(l_vEs[size_t(l_iEffect)].m_vEmitters.size()) - 1);
+    else l_iEmitter = -1;
+    if (l_iEffect == m_oState.m_iEffect && l_iEmitter == m_oState.m_iEmitter) return;
+    m_oState.m_iEffect = l_iEffect;
+    m_oState.m_iEmitter = l_iEmitter;
+    emit f_SelectionChanged();
 }
 
-void ParticleDocument::setState(const ParticleState& s)
+void ParticleDocument::f_SetState(const ParticleState& l_oS)
 {
-    const bool atlases = s.atlasesAbs != m_state.atlasesAbs || s.atlasIds != m_state.atlasIds;
-    const bool sel = s.effect != m_state.effect || s.emitter != m_state.emitter;
-    m_state = s;
-    if (atlases) loadAtlases();
-    emit fileChanged();
-    if (sel) emit selectionChanged();
+    const bool l_bAtlases = l_oS.m_oAtlasesAbs != m_oState.m_oAtlasesAbs || l_oS.m_oAtlasIds != m_oState.m_oAtlasIds;
+    const bool l_bSel = l_oS.m_iEffect != m_oState.m_iEffect || l_oS.m_iEmitter != m_oState.m_iEmitter;
+    m_oState = l_oS;
+    if (l_bAtlases) f_LoadAtlases();
+    emit f_FileChanged();
+    if (l_bSel) emit f_SelectionChanged();
 }
 
-bool ParticleDocument::edit(const QString& text, const std::function<bool(ParticleState&)>& change, const QString& mergeKey)
+bool ParticleDocument::f_Edit(const QString& l_oText, const std::function<bool(ParticleState&)>& l_fnChange, const QString& l_oMergeKey)
 {
-    ParticleState after = m_state;
-    if (!change(after)) return false;
-    syncStoredAtlases(after);
-    if (sameState(after, m_state)) return false;
-    const ParticleState before = m_state;
-    setState(after);
-    m_undo->push(new ParticleCommand(this, text, before, after, mergeKey));
+    ParticleState l_oAfter = m_oState;
+    if (!l_fnChange(l_oAfter)) return false;
+    f_SyncStoredAtlases(l_oAfter);
+    if (f_SameState(l_oAfter, m_oState)) return false;
+    const ParticleState l_oBefore = m_oState;
+    f_SetState(l_oAfter);
+    m_pUndo->push(new ParticleCommand(this, l_oText, l_oBefore, l_oAfter, l_oMergeKey));
     return true;
 }
 
-bool ParticleDocument::editEffect(const QString& text, const std::function<void(Effect&)>& change, const QString& mergeKey)
+bool ParticleDocument::f_EditEffect(const QString& l_oText, const std::function<void(Effect&)>& l_fnChange, const QString& l_oMergeKey)
 {
-    if (!effect()) return false;
-    return edit(text, [&](ParticleState& s) {
-        change(s.file.effects[size_t(s.effect)]);
+    if (!f_Effect()) return false;
+    return f_Edit(l_oText, [&](ParticleState& l_oS) {
+        l_fnChange(l_oS.m_oFile.m_vEffects[size_t(l_oS.m_iEffect)]);
         return true;
-    }, mergeKey);
+    }, l_oMergeKey);
 }
 
-bool ParticleDocument::editEmitter(const QString& text, const std::function<void(Emitter&)>& change, const QString& mergeKey)
+bool ParticleDocument::f_EditEmitter(const QString& l_oText, const std::function<void(Emitter&)>& l_fnChange, const QString& l_oMergeKey)
 {
-    if (!emitter()) return false;
-    return edit(text, [&](ParticleState& s) {
-        change(s.file.effects[size_t(s.effect)].emitters[size_t(s.emitter)]);
+    if (!f_Emitter()) return false;
+    return f_Edit(l_oText, [&](ParticleState& l_oS) {
+        l_fnChange(l_oS.m_oFile.m_vEffects[size_t(l_oS.m_iEffect)].m_vEmitters[size_t(l_oS.m_iEmitter)]);
         return true;
-    }, mergeKey);
+    }, l_oMergeKey);
 }
 
-QString ParticleDocument::uniqueEffectName(const QString& base) const
+QString ParticleDocument::f_UniqueEffectName(const QString& l_oBase) const
 {
-    auto taken = [&](const QString& n) { return m_state.file.find(u8(n)) != nullptr; };
-    if (!taken(base)) return base;
-    for (int i = 2;; i++)
-        if (!taken(QStringLiteral("%1 %2").arg(base).arg(i))) return QStringLiteral("%1 %2").arg(base).arg(i);
+    auto l_fnTaken = [&](const QString& l_oN) { return m_oState.m_oFile.f_Find(f_U8(l_oN)) != nullptr; };
+    if (!l_fnTaken(l_oBase)) return l_oBase;
+    for (int l_iI = 2;; l_iI++)
+        if (!l_fnTaken(QStringLiteral("%1 %2").arg(l_oBase).arg(l_iI))) return QStringLiteral("%1 %2").arg(l_oBase).arg(l_iI);
 }
 
-QString ParticleDocument::uniqueEmitterName(const QString& base) const
+QString ParticleDocument::f_UniqueEmitterName(const QString& l_oBase) const
 {
-    const Effect* e = effect();
-    auto taken = [&](const QString& n) {
-        if (!e) return false;
-        for (const Emitter& m : e->emitters)
-            if (qs(m.name) == n) return true;
+    const Effect* l_pE = f_Effect();
+    auto l_fnTaken = [&](const QString& l_oN) {
+        if (!l_pE) return false;
+        for (const Emitter& l_oM : l_pE->m_vEmitters)
+            if (f_Qs(l_oM.m_strName) == l_oN) return true;
         return false;
     };
-    if (!taken(base)) return base;
-    for (int i = 2;; i++)
-        if (!taken(QStringLiteral("%1 %2").arg(base).arg(i))) return QStringLiteral("%1 %2").arg(base).arg(i);
+    if (!l_fnTaken(l_oBase)) return l_oBase;
+    for (int l_iI = 2;; l_iI++)
+        if (!l_fnTaken(QStringLiteral("%1 %2").arg(l_oBase).arg(l_iI))) return QStringLiteral("%1 %2").arg(l_oBase).arg(l_iI);
 }
 
-bool ParticleDocument::addEffect(Effect e)
+bool ParticleDocument::f_AddEffect(Effect l_oE)
 {
-    if (e.name.empty() || m_state.file.find(e.name)) e.name = u8(uniqueEffectName(e.name.empty() ? QStringLiteral("effect") : qs(e.name)));
-    return edit(tr("Add effect"), [&](ParticleState& s) {
-        const int at = s.file.effects.empty() ? 0 : s.effect + 1;
-        s.file.effects.insert(s.file.effects.begin() + at, e);
-        s.effect = at;
-        s.emitter = e.emitters.empty() ? -1 : 0;
+    if (l_oE.m_strName.empty() || m_oState.m_oFile.f_Find(l_oE.m_strName)) l_oE.m_strName = f_U8(f_UniqueEffectName(l_oE.m_strName.empty() ? QStringLiteral("effect") : f_Qs(l_oE.m_strName)));
+    return f_Edit(tr("Add effect"), [&](ParticleState& l_oS) {
+        const int l_iAt = l_oS.m_oFile.m_vEffects.empty() ? 0 : l_oS.m_iEffect + 1;
+        l_oS.m_oFile.m_vEffects.insert(l_oS.m_oFile.m_vEffects.begin() + l_iAt, l_oE);
+        l_oS.m_iEffect = l_iAt;
+        l_oS.m_iEmitter = l_oE.m_vEmitters.empty() ? -1 : 0;
         return true;
     });
 }
 
-bool ParticleDocument::removeEffect(int index)
+bool ParticleDocument::f_RemoveEffect(int l_iIndex)
 {
-    if (index < 0 || index >= int(m_state.file.effects.size())) return false;
-    return edit(tr("Delete effect"), [&](ParticleState& s) {
-        s.file.effects.erase(s.file.effects.begin() + index);
-        s.effect = std::clamp(index, 0, std::max(0, int(s.file.effects.size()) - 1));
-        s.emitter = s.file.effects.empty() || s.file.effects[size_t(s.effect)].emitters.empty() ? -1 : 0;
+    if (l_iIndex < 0 || l_iIndex >= int(m_oState.m_oFile.m_vEffects.size())) return false;
+    return f_Edit(tr("Delete effect"), [&](ParticleState& l_oS) {
+        l_oS.m_oFile.m_vEffects.erase(l_oS.m_oFile.m_vEffects.begin() + l_iIndex);
+        l_oS.m_iEffect = std::clamp(l_iIndex, 0, std::max(0, int(l_oS.m_oFile.m_vEffects.size()) - 1));
+        l_oS.m_iEmitter = l_oS.m_oFile.m_vEffects.empty() || l_oS.m_oFile.m_vEffects[size_t(l_oS.m_iEffect)].m_vEmitters.empty() ? -1 : 0;
         return true;
     });
 }
 
-bool ParticleDocument::addEmitter(Emitter m)
+bool ParticleDocument::f_AddEmitter(Emitter l_oM)
 {
-    if (!effect()) return false;
-    m.name = u8(uniqueEmitterName(m.name.empty() ? QStringLiteral("emitter") : qs(m.name)));
-    return edit(tr("Add emitter"), [&](ParticleState& s) {
-        auto& list = s.file.effects[size_t(s.effect)].emitters;
-        const int at = s.emitter < 0 ? int(list.size()) : s.emitter + 1;
-        list.insert(list.begin() + at, m);
-        s.emitter = at;
+    if (!f_Effect()) return false;
+    l_oM.m_strName = f_U8(f_UniqueEmitterName(l_oM.m_strName.empty() ? QStringLiteral("emitter") : f_Qs(l_oM.m_strName)));
+    return f_Edit(tr("Add emitter"), [&](ParticleState& l_oS) {
+        auto& l_vList = l_oS.m_oFile.m_vEffects[size_t(l_oS.m_iEffect)].m_vEmitters;
+        const int l_iAt = l_oS.m_iEmitter < 0 ? int(l_vList.size()) : l_oS.m_iEmitter + 1;
+        l_vList.insert(l_vList.begin() + l_iAt, l_oM);
+        l_oS.m_iEmitter = l_iAt;
         return true;
     });
 }
 
-bool ParticleDocument::removeEmitter(int index)
+bool ParticleDocument::f_RemoveEmitter(int l_iIndex)
 {
-    const Effect* e = effect();
-    if (!e || index < 0 || index >= int(e->emitters.size())) return false;
-    return edit(tr("Delete emitter"), [&](ParticleState& s) {
-        auto& list = s.file.effects[size_t(s.effect)].emitters;
-        list.erase(list.begin() + index);
-        s.emitter = list.empty() ? -1 : std::min(index, int(list.size()) - 1);
+    const Effect* l_pE = f_Effect();
+    if (!l_pE || l_iIndex < 0 || l_iIndex >= int(l_pE->m_vEmitters.size())) return false;
+    return f_Edit(tr("Delete emitter"), [&](ParticleState& l_oS) {
+        auto& l_vList = l_oS.m_oFile.m_vEffects[size_t(l_oS.m_iEffect)].m_vEmitters;
+        l_vList.erase(l_vList.begin() + l_iIndex);
+        l_oS.m_iEmitter = l_vList.empty() ? -1 : std::min(l_iIndex, int(l_vList.size()) - 1);
         return true;
     });
 }
 
-bool ParticleDocument::duplicateEmitter(int index)
+bool ParticleDocument::f_DuplicateEmitter(int l_iIndex)
 {
-    const Effect* e = effect();
-    if (!e || index < 0 || index >= int(e->emitters.size())) return false;
-    Emitter copy = e->emitters[size_t(index)];
-    copy.name = u8(uniqueEmitterName(qs(copy.name)));
-    return edit(tr("Duplicate emitter"), [&](ParticleState& s) {
-        auto& list = s.file.effects[size_t(s.effect)].emitters;
-        list.insert(list.begin() + index + 1, copy);
-        s.emitter = index + 1;
+    const Effect* l_pE = f_Effect();
+    if (!l_pE || l_iIndex < 0 || l_iIndex >= int(l_pE->m_vEmitters.size())) return false;
+    Emitter l_oCopy = l_pE->m_vEmitters[size_t(l_iIndex)];
+    l_oCopy.m_strName = f_U8(f_UniqueEmitterName(f_Qs(l_oCopy.m_strName)));
+    return f_Edit(tr("Duplicate emitter"), [&](ParticleState& l_oS) {
+        auto& l_vList = l_oS.m_oFile.m_vEffects[size_t(l_oS.m_iEffect)].m_vEmitters;
+        l_vList.insert(l_vList.begin() + l_iIndex + 1, l_oCopy);
+        l_oS.m_iEmitter = l_iIndex + 1;
         return true;
     });
 }
 
-bool ParticleDocument::moveEmitter(int index, int delta)
+bool ParticleDocument::f_MoveEmitter(int l_iIndex, int l_iDelta)
 {
-    const Effect* e = effect();
-    const int to = index + delta;
-    if (!e || index < 0 || index >= int(e->emitters.size()) || to < 0 || to >= int(e->emitters.size())) return false;
-    return edit(tr("Move emitter"), [&](ParticleState& s) {
-        auto& list = s.file.effects[size_t(s.effect)].emitters;
-        std::swap(list[size_t(index)], list[size_t(to)]);
-        s.emitter = to;
+    const Effect* l_pE = f_Effect();
+    const int l_iTo = l_iIndex + l_iDelta;
+    if (!l_pE || l_iIndex < 0 || l_iIndex >= int(l_pE->m_vEmitters.size()) || l_iTo < 0 || l_iTo >= int(l_pE->m_vEmitters.size())) return false;
+    return f_Edit(tr("Move emitter"), [&](ParticleState& l_oS) {
+        auto& l_vList = l_oS.m_oFile.m_vEffects[size_t(l_oS.m_iEffect)].m_vEmitters;
+        std::swap(l_vList[size_t(l_iIndex)], l_vList[size_t(l_iTo)]);
+        l_oS.m_iEmitter = l_iTo;
         return true;
     });
 }
 
 // ---- atlases --------------------------------------------------------------------------------------
 
-void ParticleDocument::loadAtlases()
+void ParticleDocument::f_LoadAtlases()
 {
-    std::vector<std::shared_ptr<LoadedAtlas>> next;
-    for (const QString& path : m_state.atlasesAbs) {
-        std::shared_ptr<LoadedAtlas> a;
-        for (const auto& old : m_atlases)
-            if (old->path == path) a = old;
-        if (!a) {
-            a = loadOne(path);
-            if (!a->error.isEmpty()) emit message(tr("Atlas: %1").arg(a->error));
+    std::vector<std::shared_ptr<LoadedAtlas>> l_vNext;
+    for (const QString& l_oPath : m_oState.m_oAtlasesAbs) {
+        std::shared_ptr<LoadedAtlas> l_spA;
+        for (const auto& l_spOld : m_vAtlases)
+            if (l_spOld->m_oPath == l_oPath) l_spA = l_spOld;
+        if (!l_spA) {
+            l_spA = f_LoadOne(l_oPath);
+            if (!l_spA->m_oError.isEmpty()) emit f_Message(tr("Atlas: %1").arg(l_spA->m_oError));
         }
-        next.push_back(a);
+        l_vNext.push_back(l_spA);
     }
-    m_atlases = std::move(next);
-    m_atlasSet = toms::anim::AtlasSet();
-    m_textures.clear();
-    for (size_t i = 0; i < m_atlases.size(); i++) {
-        const LoadedAtlas& a = *m_atlases[i];
-        if (!a.ok) continue;
-        std::vector<uint16_t> pages;
-        for (size_t p = 0; p < a.atlas.pages.size(); p++) {
-            pages.push_back(uint16_t(m_textures.size()));
-            m_textures.push_back({int(i), int(p)});
+    m_vAtlases = std::move(l_vNext);
+    m_oAtlasSet = toms::anim::AtlasSet();
+    m_vTextures.clear();
+    for (size_t l_nI = 0; l_nI < m_vAtlases.size(); l_nI++) {
+        const LoadedAtlas& l_oA = *m_vAtlases[l_nI];
+        if (!l_oA.m_bOk) continue;
+        std::vector<uint16_t> l_vPages;
+        for (size_t l_nP = 0; l_nP < l_oA.m_oAtlas.m_vPages.size(); l_nP++) {
+            l_vPages.push_back(uint16_t(m_vTextures.size()));
+            m_vTextures.push_back({int(l_nI), int(l_nP)});
         }
-        m_atlasSet.add(a.atlas, u8(atlasId(int(i))), std::move(pages));
+        m_oAtlasSet.f_Add(l_oA.m_oAtlas, f_U8(f_AtlasId(int(l_nI))), std::move(l_vPages));
     }
-    emit atlasChanged();
+    emit f_AtlasChanged();
 }
 
-bool ParticleDocument::addAtlas(const QString& pathIn, QString* error)
+bool ParticleDocument::f_AddAtlas(const QString& l_oPathIn, QString* l_pError)
 {
-    const QString path = QFileInfo(pathIn).absoluteFilePath();
-    if (m_state.atlasesAbs.contains(path, Qt::CaseInsensitive)) {
-        if (error) *error = tr("%1 is in the list already").arg(QDir::toNativeSeparators(path));
+    const QString l_oPath = QFileInfo(l_oPathIn).absoluteFilePath();
+    if (m_oState.m_oAtlasesAbs.contains(l_oPath, Qt::CaseInsensitive)) {
+        if (l_pError) *l_pError = tr("%1 is in the list already").arg(QDir::toNativeSeparators(l_oPath));
         return false;
     }
-    if (!m_filePath.isEmpty() && QDir::isAbsolutePath(QFileInfo(m_filePath).absoluteDir().relativeFilePath(path))) {
-        if (error) *error = tr("%1 is on another drive than the .particle file: it cannot be stored relative to it")
-                                .arg(QDir::toNativeSeparators(path));
+    if (!m_oFilePath.isEmpty() && QDir::isAbsolutePath(QFileInfo(m_oFilePath).absoluteDir().relativeFilePath(l_oPath))) {
+        if (l_pError) *l_pError = tr("%1 is on another drive than the .particle file: it cannot be stored relative to it")
+                                .arg(QDir::toNativeSeparators(l_oPath));
         return false;
     }
-    QString id = qs(toms::anim::defaultAtlasId(u8(QFileInfo(path).fileName())));
-    const QString base = id;
-    for (int n = 2; m_state.atlasIds.contains(id); n++) id = QStringLiteral("%1%2").arg(base).arg(n);
-    return edit(tr("Add atlas"), [&](ParticleState& s) {
-        s.atlasesAbs << path;
-        s.atlasIds << id;
+    QString l_oId = f_Qs(toms::anim::f_DefaultAtlasId(f_U8(QFileInfo(l_oPath).fileName())));
+    const QString l_oBase = l_oId;
+    for (int l_iN = 2; m_oState.m_oAtlasIds.contains(l_oId); l_iN++) l_oId = QStringLiteral("%1%2").arg(l_oBase).arg(l_iN);
+    return f_Edit(tr("Add atlas"), [&](ParticleState& l_oS) {
+        l_oS.m_oAtlasesAbs << l_oPath;
+        l_oS.m_oAtlasIds << l_oId;
         return true;
     });
 }
 
-bool ParticleDocument::removeAtlas(int index)
+bool ParticleDocument::f_RemoveAtlas(int l_iIndex)
 {
-    if (index < 0 || index >= m_state.atlasesAbs.size()) return false;
-    return edit(tr("Remove atlas"), [&](ParticleState& s) {
-        s.atlasesAbs.removeAt(index);
-        s.atlasIds.removeAt(index);
+    if (l_iIndex < 0 || l_iIndex >= m_oState.m_oAtlasesAbs.size()) return false;
+    return f_Edit(tr("Remove atlas"), [&](ParticleState& l_oS) {
+        l_oS.m_oAtlasesAbs.removeAt(l_iIndex);
+        l_oS.m_oAtlasIds.removeAt(l_iIndex);
         return true;
     });
 }
 
-const SpriteImageCache* ParticleDocument::pageImages(uint16_t texture, int* page) const
+const SpriteImageCache* ParticleDocument::f_PageImages(uint16_t l_u16Texture, int* l_pPage) const
 {
-    if (texture >= m_textures.size()) return nullptr;
-    const auto [atlas, p] = m_textures[texture];
-    if (page) *page = p;
-    return &m_atlases[size_t(atlas)]->images;
+    if (l_u16Texture >= m_vTextures.size()) return nullptr;
+    const auto [l_iAtlas, l_iP] = m_vTextures[l_u16Texture];
+    if (l_pPage) *l_pPage = l_iP;
+    return &m_vAtlases[size_t(l_iAtlas)]->m_oImages;
 }
 
-QStringList ParticleDocument::spriteRefs() const
+QStringList ParticleDocument::f_SpriteRefs() const
 {
-    QStringList out;
-    for (int i = 0; i < atlasCount(); i++)
-        if (atlasAt(i).ok)
-            for (const QString& n : atlasAt(i).spriteNames) out << atlasId(i) + QLatin1Char(':') + n;
-    return out;
+    QStringList l_oOut;
+    for (int l_iI = 0; l_iI < f_AtlasCount(); l_iI++)
+        if (f_AtlasAt(l_iI).m_bOk)
+            for (const QString& l_oN : f_AtlasAt(l_iI).m_oSpriteNames) l_oOut << f_AtlasId(l_iI) + QLatin1Char(':') + l_oN;
+    return l_oOut;
 }
 
-QImage ParticleDocument::spriteImage(const QString& ref) const
+QImage ParticleDocument::f_SpriteImage(const QString& l_oRef) const
 {
-    uint16_t tex = 0;
-    const toms::AtlasRegion* r = m_atlasSet.find(u8(ref), &tex);
-    int page = 0;
-    const SpriteImageCache* img = r ? pageImages(tex, &page) : nullptr;
-    return img ? img->cut(page, QRect(r->x, r->y, r->w, r->h)) : QImage();
+    uint16_t l_u16Tex = 0;
+    const toms::AtlasRegion* l_pR = m_oAtlasSet.f_Find(f_U8(l_oRef), &l_u16Tex);
+    int l_iPage = 0;
+    const SpriteImageCache* l_pImg = l_pR ? f_PageImages(l_u16Tex, &l_iPage) : nullptr;
+    return l_pImg ? l_pImg->f_Cut(l_iPage, QRect(l_pR->m_iX, l_pR->m_iY, l_pR->m_iW, l_pR->m_iH)) : QImage();
 }
 
-std::vector<toms::fx::Problem> ParticleDocument::problems() const
+std::vector<toms::fx::Problem> ParticleDocument::f_Problems() const
 {
-    std::vector<toms::fx::Problem> out = toms::fx::checkParticles(m_state.file, &m_atlasSet);
-    for (int i = 0; i < atlasCount(); i++)
-        if (!atlasAt(i).ok) out.insert(out.begin(), {u8(atlasId(i)), u8(atlasAt(i).error), false});
-    return out;
+    std::vector<toms::fx::Problem> l_vOut = toms::fx::f_CheckParticles(m_oState.m_oFile, &m_oAtlasSet);
+    for (int l_iI = 0; l_iI < f_AtlasCount(); l_iI++)
+        if (!f_AtlasAt(l_iI).m_bOk) l_vOut.insert(l_vOut.begin(), {f_U8(f_AtlasId(l_iI)), f_U8(f_AtlasAt(l_iI).m_oError), false});
+    return l_vOut;
 }

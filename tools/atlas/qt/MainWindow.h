@@ -21,91 +21,91 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget* parent = nullptr);
+    explicit MainWindow(QWidget* l_pParent = nullptr);
 
-    AtlasDocument* document() const { return m_doc; }
-    CanvasPanel* canvasPanel() const { return m_panel; }
-    bool openProject(const QString& path);   // with error reporting; adds to recent files
+    AtlasDocument* f_Document() const { return m_pDoc; }
+    CanvasPanel* f_CanvasPanel() const { return m_pPanel; }
+    bool f_OpenProject(const QString& l_oPath);   // with error reporting; adds to recent files
     // Saves to `path` (Save / Save As); logs what was written, reports a refusal.
-    bool saveTo(const QString& path);
+    bool f_SaveTo(const QString& l_oPath);
     // Add Images / dropped files and folders: copies the PNGs into the project as base art,
     // asking before replacing images that exist. Returns how many went in.
-    int addImagePaths(const QStringList& paths);
+    int f_AddImagePaths(const QStringList& l_oPaths);
 
 protected:
-    void closeEvent(QCloseEvent* e) override;
-    void dragEnterEvent(QDragEnterEvent* e) override;
-    void dropEvent(QDropEvent* e) override;
+    void closeEvent(QCloseEvent* l_pE) override;
+    void dragEnterEvent(QDragEnterEvent* l_pE) override;
+    void dropEvent(QDropEvent* l_pE) override;
 
 private:
-    void createActions();
-    void createMenus();
-    void createToolBar();
-    void createStatusBar();
-    void createDocks();
-    void readSettings();
-    void writeSettings() const;
+    void f_CreateActions();
+    void f_CreateMenus();
+    void f_CreateToolBar();
+    void f_CreateStatusBar();
+    void f_CreateDocks();
+    void f_ReadSettings();
+    void f_WriteSettings() const;
 
-    bool maybeSave();
-    bool save();
-    bool saveAs();
-    void addRecentFile(const QString& path);
-    void rebuildRecentMenu();
-    QString lastDir() const;
-    void rememberDir(const QString& pathOrDir);
+    bool f_MaybeSave();
+    bool f_Save();
+    bool f_SaveAs();
+    void f_AddRecentFile(const QString& l_oPath);
+    void f_RebuildRecentMenu();
+    QString f_LastDir() const;
+    void f_RememberDir(const QString& l_oPathOrDir);
 
     // File
-    void onNew();
-    void onOpen();
-    void onImportAtlas();
-    void onAddReferenceFolder();
-    void onAddImages();
-    void onExtractImages();
-    void onExport(bool allVariants);
-    void onExportFinished(bool ok, const QString& summary);
+    void f_OnNew();
+    void f_OnOpen();
+    void f_OnImportAtlas();
+    void f_OnAddReferenceFolder();
+    void f_OnAddImages();
+    void f_OnExtractImages();
+    void f_OnExport(bool l_bAllVariants);
+    void f_OnExportFinished(bool l_bOk, const QString& l_oSummary);
     // Edit / Sprite
-    void onDelete();
-    void onSelectAll();
-    void onNewChild();
-    void onSliceGrid();
-    void onToggleBake();
-    void onTogglePin();
-    void onReplaceImage(bool variantArt);
-    void onRemoveVariantArt();
-    void onSaveImageAs();
-    void onImportReferences();
-    void onEditModeToggled(bool on);
+    void f_OnDelete();
+    void f_OnSelectAll();
+    void f_OnNewChild();
+    void f_OnSliceGrid();
+    void f_OnToggleBake();
+    void f_OnTogglePin();
+    void f_OnReplaceImage(bool l_bVariantArt);
+    void f_OnRemoveVariantArt();
+    void f_OnSaveImageAs();
+    void f_OnImportReferences();
+    void f_OnEditModeToggled(bool l_bOn);
     // View / Help
-    void setDarkTheme(bool dark);
-    void onCommandLineHelp();
-    void onAbout();
+    void f_SetDarkTheme(bool l_bDark);
+    void f_OnCommandLineHelp();
+    void f_OnAbout();
 
-    void updateTitle();
-    void updateActions();
-    void updateStatus();
-    void refreshVariants();
+    void f_UpdateTitle();
+    void f_UpdateActions();
+    void f_UpdateStatus();
+    void f_RefreshVariants();
 
-    AtlasDocument* m_doc;
-    class AutoBackup* m_backup = nullptr;
-    QDockWidget* m_historyDock = nullptr;
-    CanvasPanel* m_panel;
-    SpriteTreeDock* m_spriteDock = nullptr;
-    PropertiesDock* m_propsDock = nullptr;
-    AnimationDock* m_animDock = nullptr;
-    ProblemsDock* m_problemsDock = nullptr;
+    AtlasDocument* m_pDoc;
+    class AutoBackup* m_pBackup = nullptr;
+    QDockWidget* m_pHistoryDock = nullptr;
+    CanvasPanel* m_pPanel;
+    SpriteTreeDock* m_pSpriteDock = nullptr;
+    PropertiesDock* m_pPropsDock = nullptr;
+    AnimationDock* m_pAnimDock = nullptr;
+    ProblemsDock* m_pProblemsDock = nullptr;
 
-    QAction *m_newAct, *m_openAct, *m_saveAct, *m_saveAsAct, *m_importAct, *m_addFolderAct, *m_addImagesAct;
-    QAction *m_exportAct, *m_exportAllAct, *m_extractAct, *m_quitAct;
-    QAction *m_undoAct, *m_redoAct, *m_deleteAct, *m_renameAct, *m_selectAllAct, *m_findAct;
-    QAction *m_newChildAct, *m_sliceAct, *m_bakeAct, *m_pinAct, *m_editModeAct;
-    QAction *m_importRefsAct, *m_replaceImageAct, *m_saveImageAct, *m_replaceVariantAct, *m_removeVariantAct;
-    QAction *m_fitAct, *m_zoomInAct, *m_zoomOutAct, *m_outlinesAct, *m_childrenAct, *m_darkAct, *m_lightAct;
-    QAction *m_helpCliAct, *m_aboutAct;
-    QMenu* m_recentMenu = nullptr;
-    QMenu* m_viewMenu = nullptr;
-    QMenu* m_spriteMenu = nullptr;   // also the context menu of the tree and canvases
+    QAction *m_pNewAct, *m_pOpenAct, *m_pSaveAct, *m_pSaveAsAct, *m_pImportAct, *m_pAddFolderAct, *m_pAddImagesAct;
+    QAction *m_pExportAct, *m_pExportAllAct, *m_pExtractAct, *m_pQuitAct;
+    QAction *m_pUndoAct, *m_pRedoAct, *m_pDeleteAct, *m_pRenameAct, *m_pSelectAllAct, *m_pFindAct;
+    QAction *m_pNewChildAct, *m_pSliceAct, *m_pBakeAct, *m_pPinAct, *m_pEditModeAct;
+    QAction *m_pImportRefsAct, *m_pReplaceImageAct, *m_pSaveImageAct, *m_pReplaceVariantAct, *m_pRemoveVariantAct;
+    QAction *m_pFitAct, *m_pZoomInAct, *m_pZoomOutAct, *m_pOutlinesAct, *m_pChildrenAct, *m_pDarkAct, *m_pLightAct;
+    QAction *m_pHelpCliAct, *m_pAboutAct;
+    QMenu* m_pRecentMenu = nullptr;
+    QMenu* m_pViewMenu = nullptr;
+    QMenu* m_pSpriteMenu = nullptr;   // also the context menu of the tree and canvases
 
-    QComboBox* m_variantCombo = nullptr;
-    QToolButton* m_zoomButton = nullptr;
-    QLabel *m_statusStore, *m_statusBuild, *m_statusPages, *m_statusOccupancy, *m_statusSprites, *m_statusProblems;
+    QComboBox* m_pVariantCombo = nullptr;
+    QToolButton* m_pZoomButton = nullptr;
+    QLabel *m_pStatusStore, *m_pStatusBuild, *m_pStatusPages, *m_pStatusOccupancy, *m_pStatusSprites, *m_pStatusProblems;
 };

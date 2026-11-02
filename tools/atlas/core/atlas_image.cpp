@@ -18,162 +18,162 @@
 
 namespace atlas {
 
-IRect unite(const IRect& a, const IRect& b) {
-    if (a.empty()) return b;
-    if (b.empty()) return a;
-    const int x0 = std::min(a.x, b.x), y0 = std::min(a.y, b.y);
-    const int x1 = std::max(a.right(), b.right()), y1 = std::max(a.bottom(), b.bottom());
-    return {x0, y0, x1 - x0, y1 - y0};
+IRect f_Unite(const IRect& l_oA, const IRect& l_oB) {
+    if (l_oA.f_Empty()) return l_oB;
+    if (l_oB.f_Empty()) return l_oA;
+    const int l_iX0 = std::min(l_oA.m_iX, l_oB.m_iX), l_iY0 = std::min(l_oA.m_iY, l_oB.m_iY);
+    const int l_iX1 = std::max(l_oA.f_Right(), l_oB.f_Right()), l_iY1 = std::max(l_oA.f_Bottom(), l_oB.f_Bottom());
+    return {l_iX0, l_iY0, l_iX1 - l_iX0, l_iY1 - l_iY0};
 }
 
-static bool readFile(const std::string& path, std::vector<uint8_t>& out) {
-    std::ifstream f(u8path(path), std::ios::binary);
-    if (!f) return false;
-    f.seekg(0, std::ios::end);
-    const std::streamoff n = f.tellg();
-    if (n < 0) return false;
-    out.resize((size_t)n);
-    f.seekg(0);
-    if (n > 0) f.read((char*)out.data(), n);
-    return (bool)f;
+static bool f_ReadFile(const std::string& l_strPath, std::vector<uint8_t>& l_vOut) {
+    std::ifstream l_oF(f_U8path(l_strPath), std::ios::binary);
+    if (!l_oF) return false;
+    l_oF.seekg(0, std::ios::end);
+    const std::streamoff l_i64N = l_oF.tellg();
+    if (l_i64N < 0) return false;
+    l_vOut.resize((size_t)l_i64N);
+    l_oF.seekg(0);
+    if (l_i64N > 0) l_oF.read((char*)l_vOut.data(), l_i64N);
+    return (bool)l_oF;
 }
 
-bool loadImageFromMemory(const void* data, size_t size, Image& out, std::string* err) {
-    int w = 0, h = 0, ch = 0;
-    stbi_uc* d = stbi_load_from_memory((const stbi_uc*)data, (int)size, &w, &h, &ch, 4);
-    if (!d) {
-        if (err) *err = stbi_failure_reason() ? stbi_failure_reason() : "decode failed";
+bool f_LoadImageFromMemory(const void* l_pData, size_t l_nSize, Image& l_oOut, std::string* l_pErr) {
+    int l_iW = 0, l_iH = 0, l_iCh = 0;
+    stbi_uc* l_pD = stbi_load_from_memory((const stbi_uc*)l_pData, (int)l_nSize, &l_iW, &l_iH, &l_iCh, 4);
+    if (!l_pD) {
+        if (l_pErr) *l_pErr = stbi_failure_reason() ? stbi_failure_reason() : "decode failed";
         return false;
     }
-    out.w = w; out.h = h;
-    out.px.assign(d, d + (size_t)w * h * 4);
-    stbi_image_free(d);
+    l_oOut.m_iW = l_iW; l_oOut.m_iH = l_iH;
+    l_oOut.m_vPx.assign(l_pD, l_pD + (size_t)l_iW * l_iH * 4);
+    stbi_image_free(l_pD);
     return true;
 }
 
-bool loadImage(const std::string& path, Image& out, std::string* err) {
-    std::vector<uint8_t> bytes;
-    if (!readFile(path, bytes)) {
-        if (err) *err = "cannot read " + path;
+bool f_LoadImage(const std::string& l_strPath, Image& l_oOut, std::string* l_pErr) {
+    std::vector<uint8_t> l_vBytes;
+    if (!f_ReadFile(l_strPath, l_vBytes)) {
+        if (l_pErr) *l_pErr = "cannot read " + l_strPath;
         return false;
     }
-    if (!loadImageFromMemory(bytes.data(), bytes.size(), out, err)) {
-        if (err) *err = path + ": " + *err;
-        return false;
-    }
-    return true;
-}
-
-static void appendBytes(void* ctx, void* data, int size) {
-    auto* v = (std::vector<uint8_t>*)ctx;
-    v->insert(v->end(), (uint8_t*)data, (uint8_t*)data + size);
-}
-
-std::vector<uint8_t> encodePng(const Image& img) {
-    std::vector<uint8_t> out;
-    if (img.valid()) stbi_write_png_to_func(appendBytes, &out, img.w, img.h, 4, img.px.data(), img.w * 4);
-    return out;
-}
-
-bool savePng(const std::string& path, const Image& img, std::string* err) {
-    const std::vector<uint8_t> bytes = encodePng(img);
-    if (bytes.empty()) {
-        if (err) *err = "PNG encode failed for " + path;
-        return false;
-    }
-    std::ofstream f(u8path(path), std::ios::binary);
-    if (!f || !f.write((const char*)bytes.data(), (std::streamsize)bytes.size())) {
-        if (err) *err = "cannot write " + path;
+    if (!f_LoadImageFromMemory(l_vBytes.data(), l_vBytes.size(), l_oOut, l_pErr)) {
+        if (l_pErr) *l_pErr = l_strPath + ": " + *l_pErr;
         return false;
     }
     return true;
 }
 
-IRect opaqueBounds(const Image& img, int alphaThreshold) {
-    int x0 = img.w, y0 = img.h, x1 = -1, y1 = -1;
-    for (int y = 0; y < img.h; y++)
-        for (int x = 0; x < img.w; x++)
-            if (img.at(x, y)[3] > alphaThreshold) {
-                x0 = std::min(x0, x); x1 = std::max(x1, x);
-                y0 = std::min(y0, y); y1 = std::max(y1, y);
+static void f_AppendBytes(void* l_pCtx, void* l_pData, int l_iSize) {
+    auto* l_pV = (std::vector<uint8_t>*)l_pCtx;
+    l_pV->insert(l_pV->end(), (uint8_t*)l_pData, (uint8_t*)l_pData + l_iSize);
+}
+
+std::vector<uint8_t> f_EncodePng(const Image& l_oImg) {
+    std::vector<uint8_t> l_vOut;
+    if (l_oImg.f_Valid()) stbi_write_png_to_func(f_AppendBytes, &l_vOut, l_oImg.m_iW, l_oImg.m_iH, 4, l_oImg.m_vPx.data(), l_oImg.m_iW * 4);
+    return l_vOut;
+}
+
+bool f_SavePng(const std::string& l_strPath, const Image& l_oImg, std::string* l_pErr) {
+    const std::vector<uint8_t> l_vBytes = f_EncodePng(l_oImg);
+    if (l_vBytes.empty()) {
+        if (l_pErr) *l_pErr = "PNG encode failed for " + l_strPath;
+        return false;
+    }
+    std::ofstream l_oF(f_U8path(l_strPath), std::ios::binary);
+    if (!l_oF || !l_oF.write((const char*)l_vBytes.data(), (std::streamsize)l_vBytes.size())) {
+        if (l_pErr) *l_pErr = "cannot write " + l_strPath;
+        return false;
+    }
+    return true;
+}
+
+IRect f_OpaqueBounds(const Image& l_oImg, int l_iAlphaThreshold) {
+    int l_iX0 = l_oImg.m_iW, l_iY0 = l_oImg.m_iH, l_iX1 = -1, l_iY1 = -1;
+    for (int l_iY = 0; l_iY < l_oImg.m_iH; l_iY++)
+        for (int l_iX = 0; l_iX < l_oImg.m_iW; l_iX++)
+            if (l_oImg.f_At(l_iX, l_iY)[3] > l_iAlphaThreshold) {
+                l_iX0 = std::min(l_iX0, l_iX); l_iX1 = std::max(l_iX1, l_iX);
+                l_iY0 = std::min(l_iY0, l_iY); l_iY1 = std::max(l_iY1, l_iY);
             }
-    if (x1 < 0) return {};
-    return {x0, y0, x1 - x0 + 1, y1 - y0 + 1};
+    if (l_iX1 < 0) return {};
+    return {l_iX0, l_iY0, l_iX1 - l_iX0 + 1, l_iY1 - l_iY0 + 1};
 }
 
-Image crop(const Image& src, const IRect& r) {
-    Image out(std::max(r.w, 0), std::max(r.h, 0));
-    blit(out, src, r, 0, 0);
-    return out;
+Image f_Crop(const Image& l_oSrc, const IRect& l_oR) {
+    Image l_oOut(std::max(l_oR.m_iW, 0), std::max(l_oR.m_iH, 0));
+    f_Blit(l_oOut, l_oSrc, l_oR, 0, 0);
+    return l_oOut;
 }
 
-void blit(Image& dst, const Image& src, const IRect& srcRect, int dx, int dy) {
-    for (int y = 0; y < srcRect.h; y++) {
-        const int sy = srcRect.y + y, ty = dy + y;
-        if (sy < 0 || sy >= src.h || ty < 0 || ty >= dst.h) continue;
-        for (int x = 0; x < srcRect.w; x++) {
-            const int sx = srcRect.x + x, tx = dx + x;
-            if (sx < 0 || sx >= src.w || tx < 0 || tx >= dst.w) continue;
-            std::memcpy(dst.at(tx, ty), src.at(sx, sy), 4);
+void f_Blit(Image& l_oDst, const Image& l_oSrc, const IRect& l_oSrcRect, int l_iDx, int l_iDy) {
+    for (int l_iY = 0; l_iY < l_oSrcRect.m_iH; l_iY++) {
+        const int l_iSy = l_oSrcRect.m_iY + l_iY, l_iTy = l_iDy + l_iY;
+        if (l_iSy < 0 || l_iSy >= l_oSrc.m_iH || l_iTy < 0 || l_iTy >= l_oDst.m_iH) continue;
+        for (int l_iX = 0; l_iX < l_oSrcRect.m_iW; l_iX++) {
+            const int l_iSx = l_oSrcRect.m_iX + l_iX, l_iTx = l_iDx + l_iX;
+            if (l_iSx < 0 || l_iSx >= l_oSrc.m_iW || l_iTx < 0 || l_iTx >= l_oDst.m_iW) continue;
+            std::memcpy(l_oDst.f_At(l_iTx, l_iTy), l_oSrc.f_At(l_iSx, l_iSy), 4);
         }
     }
 }
 
-void extrude(Image& dst, const IRect& r, int n) {
-    if (n <= 0 || r.empty()) return;
-    auto clampX = [&](int x) { return std::min(std::max(x, r.x), r.right() - 1); };
-    auto clampY = [&](int y) { return std::min(std::max(y, r.y), r.bottom() - 1); };
-    for (int y = r.y - n; y < r.bottom() + n; y++) {
-        if (y < 0 || y >= dst.h) continue;
-        for (int x = r.x - n; x < r.right() + n; x++) {
-            if (x < 0 || x >= dst.w) continue;
-            if (x >= r.x && x < r.right() && y >= r.y && y < r.bottom()) continue;
-            std::memcpy(dst.at(x, y), dst.at(clampX(x), clampY(y)), 4);
+void f_Extrude(Image& l_oDst, const IRect& l_oR, int l_iN) {
+    if (l_iN <= 0 || l_oR.f_Empty()) return;
+    auto l_fnClampX = [&](int l_iX) { return std::min(std::max(l_iX, l_oR.m_iX), l_oR.f_Right() - 1); };
+    auto l_fnClampY = [&](int l_iY) { return std::min(std::max(l_iY, l_oR.m_iY), l_oR.f_Bottom() - 1); };
+    for (int l_iY = l_oR.m_iY - l_iN; l_iY < l_oR.f_Bottom() + l_iN; l_iY++) {
+        if (l_iY < 0 || l_iY >= l_oDst.m_iH) continue;
+        for (int l_iX = l_oR.m_iX - l_iN; l_iX < l_oR.f_Right() + l_iN; l_iX++) {
+            if (l_iX < 0 || l_iX >= l_oDst.m_iW) continue;
+            if (l_iX >= l_oR.m_iX && l_iX < l_oR.f_Right() && l_iY >= l_oR.m_iY && l_iY < l_oR.f_Bottom()) continue;
+            std::memcpy(l_oDst.f_At(l_iX, l_iY), l_oDst.f_At(l_fnClampX(l_iX), l_fnClampY(l_iY)), 4);
         }
     }
 }
 
-void premultiply(Image& img) {
-    for (size_t i = 0; i + 3 < img.px.size(); i += 4) {
-        const unsigned a = img.px[i + 3];
-        for (int c = 0; c < 3; c++) img.px[i + c] = (uint8_t)((img.px[i + c] * a + 127) / 255);
+void f_Premultiply(Image& l_oImg) {
+    for (size_t l_nI = 0; l_nI + 3 < l_oImg.m_vPx.size(); l_nI += 4) {
+        const unsigned l_uA = l_oImg.m_vPx[l_nI + 3];
+        for (int l_iC = 0; l_iC < 3; l_iC++) l_oImg.m_vPx[l_nI + l_iC] = (uint8_t)((l_oImg.m_vPx[l_nI + l_iC] * l_uA + 127) / 255);
     }
 }
 
-void unpremultiply(Image& img) {
-    for (size_t i = 0; i + 3 < img.px.size(); i += 4) {
-        const unsigned a = img.px[i + 3];
-        if (a == 0 || a == 255) continue;
-        for (int c = 0; c < 3; c++) img.px[i + c] = (uint8_t)std::min(255u, (img.px[i + c] * 255 + a / 2) / a);
+void f_Unpremultiply(Image& l_oImg) {
+    for (size_t l_nI = 0; l_nI + 3 < l_oImg.m_vPx.size(); l_nI += 4) {
+        const unsigned l_uA = l_oImg.m_vPx[l_nI + 3];
+        if (l_uA == 0 || l_uA == 255) continue;
+        for (int l_iC = 0; l_iC < 3; l_iC++) l_oImg.m_vPx[l_nI + l_iC] = (uint8_t)std::min(255u, (l_oImg.m_vPx[l_nI + l_iC] * 255 + l_uA / 2) / l_uA);
     }
 }
 
-Image scaleNearest(const Image& src, int w, int h) {
-    if (w == src.w && h == src.h) return src;
-    Image out(w, h);
-    for (int y = 0; y < h; y++)
-        for (int x = 0; x < w; x++)
-            std::memcpy(out.at(x, y), src.at((int)((int64_t)x * src.w / w), (int)((int64_t)y * src.h / h)), 4);
-    return out;
+Image f_ScaleNearest(const Image& l_oSrc, int l_iW, int l_iH) {
+    if (l_iW == l_oSrc.m_iW && l_iH == l_oSrc.m_iH) return l_oSrc;
+    Image l_oOut(l_iW, l_iH);
+    for (int l_iY = 0; l_iY < l_iH; l_iY++)
+        for (int l_iX = 0; l_iX < l_iW; l_iX++)
+            std::memcpy(l_oOut.f_At(l_iX, l_iY), l_oSrc.f_At((int)((int64_t)l_iX * l_oSrc.m_iW / l_iW), (int)((int64_t)l_iY * l_oSrc.m_iH / l_iH)), 4);
+    return l_oOut;
 }
 
-uint64_t hashPixels(const Image& img, const IRect& r) {
-    uint64_t h = 1469598103934665603ull;
-    auto mix = [&](uint8_t b) { h ^= b; h *= 1099511628211ull; };
-    for (int v : {r.w, r.h})
-        for (int i = 0; i < 4; i++) mix((uint8_t)(v >> (i * 8)));
-    for (int y = r.y; y < r.bottom(); y++)
-        for (int x = r.x; x < r.right(); x++) {
-            const uint8_t* p = img.at(x, y);
-            for (int c = 0; c < 4; c++) mix(p[c]);
+uint64_t f_HashPixels(const Image& l_oImg, const IRect& l_oR) {
+    uint64_t l_u64H = 1469598103934665603ull;
+    auto l_fnMix = [&](uint8_t l_u8B) { l_u64H ^= l_u8B; l_u64H *= 1099511628211ull; };
+    for (int l_iV : {l_oR.m_iW, l_oR.m_iH})
+        for (int l_iI = 0; l_iI < 4; l_iI++) l_fnMix((uint8_t)(l_iV >> (l_iI * 8)));
+    for (int l_iY = l_oR.m_iY; l_iY < l_oR.f_Bottom(); l_iY++)
+        for (int l_iX = l_oR.m_iX; l_iX < l_oR.f_Right(); l_iX++) {
+            const uint8_t* l_pP = l_oImg.f_At(l_iX, l_iY);
+            for (int l_iC = 0; l_iC < 4; l_iC++) l_fnMix(l_pP[l_iC]);
         }
-    return h;
+    return l_u64H;
 }
 
-bool samePixels(const Image& a, const IRect& ra, const Image& b, const IRect& rb) {
-    if (ra.w != rb.w || ra.h != rb.h) return false;
-    for (int y = 0; y < ra.h; y++)
-        if (std::memcmp(a.at(ra.x, ra.y + y), b.at(rb.x, rb.y + y), (size_t)ra.w * 4) != 0) return false;
+bool f_SamePixels(const Image& l_oA, const IRect& l_oRa, const Image& l_oB, const IRect& l_oRb) {
+    if (l_oRa.m_iW != l_oRb.m_iW || l_oRa.m_iH != l_oRb.m_iH) return false;
+    for (int l_iY = 0; l_iY < l_oRa.m_iH; l_iY++)
+        if (std::memcmp(l_oA.f_At(l_oRa.m_iX, l_oRa.m_iY + l_iY), l_oB.f_At(l_oRb.m_iX, l_oRb.m_iY + l_iY), (size_t)l_oRa.m_iW * 4) != 0) return false;
     return true;
 }
 

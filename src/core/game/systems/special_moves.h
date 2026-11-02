@@ -32,46 +32,46 @@
 namespace toms {
 
 struct ShowBeat {
-    int atMs = 0;
-    std::string what;               // "do": pathFx fx dim countdown banner name namePart count camera clip hits shake sound
-    std::string fx, corner, shape, clip, text, on;   // its effect, a pathFx's corner effect, the shape, the clip, a text key, who
-    int ms = 0;                     // how long (pathFx, camera, dim)
-    int count = 0, gapMs = 0;       // hits
-    float value = 0.0f;             // dim strength, shake strength
-    float zoom = 1.0f;              // camera
+    int m_iAtMs = 0;
+    std::string m_strWhat;               // "do": pathFx fx dim countdown banner name namePart count camera clip hits shake sound
+    std::string m_strFx, m_strCorner, m_strShape, m_strClip, m_strText, m_strOn;   // its effect, a pathFx's corner effect, the shape, the clip, a text key, who
+    int m_iMs = 0;                     // how long (pathFx, camera, dim)
+    int m_iCount = 0, m_iGapMs = 0;       // hits
+    float m_fValue = 0.0f;             // dim strength, shake strength
+    float m_fZoom = 1.0f;              // camera
 };
 
 struct SkillPlaySpec {
-    std::string kind = "shape";     // shape slice bow circles mash
-    std::string shape = "pentagram";
-    int points = 5;                 // shape: its corners (set from the shape); others: how many
-    int timeMs = 6000;              // shape / mash: the whole play's time
-    float size = 220.0f;            // shape: on the screen
-    float cornerRadius = 44.0f;
-    std::vector<std::string> cues;  // slice: each prompt, "way" or a shape name
+    std::string m_strKind = "shape";     // shape slice bow circles mash
+    std::string m_strShape = "pentagram";
+    int m_iPoints = 5;                 // shape: its corners (set from the shape); others: how many
+    int m_iTimeMs = 6000;              // shape / mash: the whole play's time
+    float m_fSize = 220.0f;            // shape: on the screen
+    float m_fCornerRadius = 44.0f;
+    std::vector<std::string> m_vCues;  // slice: each prompt, "way" or a shape name
 };
 
 struct SpecialMove {
-    std::string id, name, weapon, use = "ultimate";   // use: ultimate, skill, guard
-    SkillPlaySpec play;
-    std::vector<ShowBeat> demo, step, finish;
-    float damage = 10.0f;           // times a normal attack (the owner: N = 10 to start); a guard skill: unused
-    std::string prompt;             // a text key over the play ("Draw the pentagram!")
+    std::string m_strId, m_strName, m_strWeapon, m_strUse = "ultimate";   // use: ultimate, skill, guard
+    SkillPlaySpec m_oPlay;
+    std::vector<ShowBeat> m_vDemo, m_vStep, m_vFinish;
+    float m_fDamage = 10.0f;           // times a normal attack (the owner: N = 10 to start); a guard skill: unused
+    std::string m_strPrompt;             // a text key over the play ("Draw the pentagram!")
 };
 
 struct SpecialMoveTable {
-    std::map<std::string, SpecialMove> skills;
-    const SpecialMove* find(const std::string& id) const;
-    const SpecialMove* forWeapon(const std::string& weapon, const std::string& use) const;   // the first of that use
+    std::map<std::string, SpecialMove> m_mapSkills;
+    const SpecialMove* f_Find(const std::string& l_strId) const;
+    const SpecialMove* f_ForWeapon(const std::string& l_strWeapon, const std::string& l_strUse) const;   // the first of that use
 };
 
-SpecialMoveTable specialMovesFromJson(const nlohmann::json& j);   // keys starting with "_" are comments
+SpecialMoveTable f_SpecialMovesFromJson(const nlohmann::json& l_jJ);   // keys starting with "_" are comments
 
 // A show's end: its last beat's time plus its length (a hits beat: count x gapMs).
-int showLength(const std::vector<ShowBeat>& beats);
+int f_ShowLength(const std::vector<ShowBeat>& l_vBeats);
 // The beats whose time is in (fromMs, toMs] (fromMs < 0: from the start, the beats at 0 too).
-std::vector<const ShowBeat*> beatsDue(const std::vector<ShowBeat>& beats, int fromMs, int toMs);
+std::vector<const ShowBeat*> f_BeatsDue(const std::vector<ShowBeat>& l_vBeats, int l_iFromMs, int l_iToMs);
 // The move's name as far as a step: the first `done` of `total` shares of its letters (UTF-8 kept whole).
-std::string namePart(const std::string& name, int done, int total);
+std::string f_NamePart(const std::string& l_strName, int l_iDone, int l_iTotal);
 
 } // namespace toms

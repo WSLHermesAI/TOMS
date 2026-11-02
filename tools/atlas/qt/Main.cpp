@@ -41,369 +41,369 @@
 namespace {
 
 // Waits (running the event loop) until the document has no build pending.
-void waitForBuild(AtlasDocument* doc, int timeoutMs = 30000)
+void f_WaitForBuild(AtlasDocument* l_pDoc, int l_iTimeoutMs = 30000)
 {
-    QEventLoop loop;
-    QTimer timeout;
-    timeout.setSingleShot(true);
-    QObject::connect(&timeout, &QTimer::timeout, &loop, &QEventLoop::quit);
-    QObject::connect(doc, &AtlasDocument::buildFinished, &loop, [&] {
-        if (!doc->isBuilding()) loop.quit();
+    QEventLoop l_oLoop;
+    QTimer l_oTimeout;
+    l_oTimeout.setSingleShot(true);
+    QObject::connect(&l_oTimeout, &QTimer::timeout, &l_oLoop, &QEventLoop::quit);
+    QObject::connect(l_pDoc, &AtlasDocument::f_BuildFinished, &l_oLoop, [&] {
+        if (!l_pDoc->f_IsBuilding()) l_oLoop.quit();
     });
-    timeout.start(timeoutMs);
-    if (doc->isBuilding()) loop.exec();
+    l_oTimeout.start(l_iTimeoutMs);
+    if (l_pDoc->f_IsBuilding()) l_oLoop.exec();
     QCoreApplication::processEvents();
 }
 
 // Hidden switch for automated checks (run with -platform offscreen): opens a project, waits for
 // the build, exercises edits / images / undo / Export Copy / Save As (all into outDir, never next
 // to the project) and saves screenshots of the atlas view, sprite edit mode and the light theme.
-int runSelfTest(MainWindow& w, const QString& project, const QString& outDir)
+int f_RunSelfTest(MainWindow& l_oW, const QString& l_oProject, const QString& l_oOutDir)
 {
-    AtlasDocument* doc = w.document();
-    QString err;
-    if (!doc->open(project, &err)) {
-        std::fprintf(stderr, "selftest: %s\n", err.toUtf8().constData());
+    AtlasDocument* l_pDoc = l_oW.f_Document();
+    QString l_oErr;
+    if (!l_pDoc->f_Open(l_oProject, &l_oErr)) {
+        std::fprintf(stderr, "selftest: %s\n", l_oErr.toUtf8().constData());
         return 2;
     }
-    const bool converted = doc->isDirty();   // a folder project is converted on open
-    std::printf("selftest: opened %s (%s, %zu image(s))\n", project.toUtf8().constData(),
-                converted ? "folder project, converted to embedded" : "embedded", doc->project().images.size());
-    waitForBuild(doc);
-    const BuildSnapshotPtr snap = doc->snapshot();
-    if (!snap) return 2;
+    const bool l_bConverted = l_pDoc->f_IsDirty();   // a folder project is converted on open
+    std::printf("selftest: opened %s (%s, %zu image(s))\n", l_oProject.toUtf8().constData(),
+                l_bConverted ? "folder project, converted to embedded" : "embedded", l_pDoc->f_Project().m_mapImages.size());
+    f_WaitForBuild(l_pDoc);
+    const BuildSnapshotPtr l_spSnap = l_pDoc->f_Snapshot();
+    if (!l_spSnap) return 2;
     // Show off a sprite with children when there is one.
-    QString pick = snap->sprites.empty() ? QString() : snap->sprites.front().name;
-    for (const SpriteInfo& s : snap->sprites)
-        if (s.child) {
-            pick = s.parent;
+    QString l_oPick = l_spSnap->m_vSprites.empty() ? QString() : l_spSnap->m_vSprites.front().m_oName;
+    for (const SpriteInfo& l_oS : l_spSnap->m_vSprites)
+        if (l_oS.m_bChild) {
+            l_oPick = l_oS.m_oParent;
             break;
         }
-    doc->setSelection({pick});
-    QDir().mkpath(outDir);
+    l_pDoc->f_SetSelection({l_oPick});
+    QDir().mkpath(l_oOutDir);
     QCoreApplication::processEvents();
-    const bool okMain = w.grab().save(QDir(outDir).filePath(QStringLiteral("main.png")));
+    const bool l_bOkMain = l_oW.grab().save(QDir(l_oOutDir).filePath(QStringLiteral("main.png")));
 
     // An edit goes through the undo stack and the background build, and undoes cleanly.
-    const QString probe = doc->uniqueName(pick + QStringLiteral("_selftest"));
-    doc->addChildren(pick, {{probe, atlas::IRect{0, 0, 2, 2}}}, QStringLiteral("selftest"));
-    waitForBuild(doc);
-    bool okEdits = doc->isDirty() && doc->snapshot()->region(probe);
-    doc->undoStack()->undo();
-    waitForBuild(doc);
-    okEdits = okEdits && doc->isDirty() == converted && !doc->snapshot()->region(probe);
-    doc->setSelection({pick});
+    const QString l_oProbe = l_pDoc->f_UniqueName(l_oPick + QStringLiteral("_selftest"));
+    l_pDoc->f_AddChildren(l_oPick, {{l_oProbe, atlas::IRect{0, 0, 2, 2}}}, QStringLiteral("selftest"));
+    f_WaitForBuild(l_pDoc);
+    bool l_bOkEdits = l_pDoc->f_IsDirty() && l_pDoc->f_Snapshot()->f_Region(l_oProbe);
+    l_pDoc->f_UndoStack()->undo();
+    f_WaitForBuild(l_pDoc);
+    l_bOkEdits = l_bOkEdits && l_pDoc->f_IsDirty() == l_bConverted && !l_pDoc->f_Snapshot()->f_Region(l_oProbe);
+    l_pDoc->f_SetSelection({l_oPick});
 
     // Adding an image (the path Add Images and drops take), undone.
-    const size_t imagesBefore = doc->project().images.size();
-    const QString png = QDir(outDir).filePath(QStringLiteral("selftest_add.png"));
-    QImage red(12, 9, QImage::Format_ARGB32);
-    red.fill(QColor(220, 30, 40));
-    bool okImages = red.save(png);
-    const int added = w.addImagePaths({png});
-    waitForBuild(doc);
-    okImages = okImages && added == 1 && doc->isImage(QStringLiteral("selftest_add")) &&
-               doc->snapshot()->region(QStringLiteral("selftest_add")) && doc->project().images.size() == imagesBefore + 1;
+    const size_t l_nImagesBefore = l_pDoc->f_Project().m_mapImages.size();
+    const QString l_oPng = QDir(l_oOutDir).filePath(QStringLiteral("selftest_add.png"));
+    QImage l_oRed(12, 9, QImage::Format_ARGB32);
+    l_oRed.fill(QColor(220, 30, 40));
+    bool l_bOkImages = l_oRed.save(l_oPng);
+    const int l_iAdded = l_oW.f_AddImagePaths({l_oPng});
+    f_WaitForBuild(l_pDoc);
+    l_bOkImages = l_bOkImages && l_iAdded == 1 && l_pDoc->f_IsImage(QStringLiteral("selftest_add")) &&
+               l_pDoc->f_Snapshot()->f_Region(QStringLiteral("selftest_add")) && l_pDoc->f_Project().m_mapImages.size() == l_nImagesBefore + 1;
     // Rename moves the image (one undo step), and undo brings the old name back.
-    QString renameErr;
-    okImages = okImages && doc->renameSprite(QStringLiteral("selftest_add"), QStringLiteral("selftest_renamed"), &renameErr) &&
-               doc->isImage(QStringLiteral("selftest_renamed")) && !doc->isImage(QStringLiteral("selftest_add"));
-    doc->undoStack()->undo();
-    okImages = okImages && doc->isImage(QStringLiteral("selftest_add"));
-    doc->undoStack()->undo();
-    waitForBuild(doc);
-    okImages = okImages && !doc->isImage(QStringLiteral("selftest_add")) && doc->project().images.size() == imagesBefore &&
-               !doc->snapshot()->region(QStringLiteral("selftest_add")) && doc->isDirty() == converted;
-    std::printf("selftest: add image/rename/undo %s\n", okImages ? "ok" : "FAILED");
+    QString l_oRenameErr;
+    l_bOkImages = l_bOkImages && l_pDoc->f_RenameSprite(QStringLiteral("selftest_add"), QStringLiteral("selftest_renamed"), &l_oRenameErr) &&
+               l_pDoc->f_IsImage(QStringLiteral("selftest_renamed")) && !l_pDoc->f_IsImage(QStringLiteral("selftest_add"));
+    l_pDoc->f_UndoStack()->undo();
+    l_bOkImages = l_bOkImages && l_pDoc->f_IsImage(QStringLiteral("selftest_add"));
+    l_pDoc->f_UndoStack()->undo();
+    f_WaitForBuild(l_pDoc);
+    l_bOkImages = l_bOkImages && !l_pDoc->f_IsImage(QStringLiteral("selftest_add")) && l_pDoc->f_Project().m_mapImages.size() == l_nImagesBefore &&
+               !l_pDoc->f_Snapshot()->f_Region(QStringLiteral("selftest_add")) && l_pDoc->f_IsDirty() == l_bConverted;
+    std::printf("selftest: add image/rename/undo %s\n", l_bOkImages ? "ok" : "FAILED");
 
     // Export Copy writes the .plist even when the project does not list it, into a folder of
     // our choice; the project itself is untouched.
-    const QString exportDir = QDir(outDir).filePath(QStringLiteral("export"));
-    bool exportOk = false;
+    const QString l_oExportDir = QDir(l_oOutDir).filePath(QStringLiteral("export"));
+    bool l_bExportOk = false;
     {
-        QEventLoop loop;
-        QObject::connect(doc, &AtlasDocument::exportFinished, &loop, [&](bool ok, const QString&) { exportOk = ok; loop.quit(); });
-        QTimer::singleShot(30000, &loop, &QEventLoop::quit);
-        doc->exportCopy(exportDir, true);
-        loop.exec();
+        QEventLoop l_oLoop;
+        QObject::connect(l_pDoc, &AtlasDocument::f_ExportFinished, &l_oLoop, [&](bool l_bOk, const QString&) { l_bExportOk = l_bOk; l_oLoop.quit(); });
+        QTimer::singleShot(30000, &l_oLoop, &QEventLoop::quit);
+        l_pDoc->f_ExportCopy(l_oExportDir, true);
+        l_oLoop.exec();
     }
-    const QString base = QString::fromStdString(doc->project().outputName(doc->project().output));
-    bool okExport = exportOk && QFileInfo::exists(QDir(exportDir).filePath(base + QStringLiteral(".plist"))) &&
-                    QFileInfo::exists(QDir(exportDir).filePath(base + QStringLiteral(".png")));
-    for (const atlas::Variant& v : doc->project().variants) {
-        const QString vdir = QDir(exportDir).filePath(QString::fromStdString(v.id));
-        const QString vname = QString::fromStdString(doc->project().outputName(v.output));
-        okExport = okExport && QFileInfo::exists(QDir(vdir).filePath(vname + QStringLiteral(".plist")));
+    const QString l_oBase = QString::fromStdString(l_pDoc->f_Project().f_OutputName(l_pDoc->f_Project().m_oOutput));
+    bool l_bOkExport = l_bExportOk && QFileInfo::exists(QDir(l_oExportDir).filePath(l_oBase + QStringLiteral(".plist"))) &&
+                    QFileInfo::exists(QDir(l_oExportDir).filePath(l_oBase + QStringLiteral(".png")));
+    for (const atlas::Variant& l_oV : l_pDoc->f_Project().m_vVariants) {
+        const QString l_oVdir = QDir(l_oExportDir).filePath(QString::fromStdString(l_oV.m_strId));
+        const QString l_oVname = QString::fromStdString(l_pDoc->f_Project().f_OutputName(l_oV.m_oOutput));
+        l_bOkExport = l_bOkExport && QFileInfo::exists(QDir(l_oVdir).filePath(l_oVname + QStringLiteral(".plist")));
     }
-    okExport = okExport && doc->isDirty() == converted;
+    l_bOkExport = l_bOkExport && l_pDoc->f_IsDirty() == l_bConverted;
 
     // Save As into outDir/saveas. Variant outputs that point elsewhere are moved under outDir
     // first (in memory only), so the test never writes next to the original project.
-    const QString saveDir = QDir(outDir).filePath(QStringLiteral("saveas"));
-    QDir(saveDir).removeRecursively();
-    doc->edit(QStringLiteral("selftest variant outputs"), [&](atlas::Project& p) {
-        for (atlas::Variant& v : p.variants)
-            v.output.dir = QDir(saveDir).filePath(QStringLiteral("variants/") + QString::fromStdString(v.id)).toStdString();
+    const QString l_oSaveDir = QDir(l_oOutDir).filePath(QStringLiteral("saveas"));
+    QDir(l_oSaveDir).removeRecursively();
+    l_pDoc->f_Edit(QStringLiteral("selftest variant outputs"), [&](atlas::Project& l_oP) {
+        for (atlas::Variant& l_oV : l_oP.m_vVariants)
+            l_oV.m_oOutput.m_strDir = QDir(l_oSaveDir).filePath(QStringLiteral("variants/") + QString::fromStdString(l_oV.m_strId)).toStdString();
     });
-    const QString savePath = QDir(saveDir).filePath(QString::fromStdString(doc->project().name) + QStringLiteral(".atlasproj"));
-    const size_t imageCount = doc->project().images.size();
-    std::vector<size_t> variantCounts;
-    for (const atlas::Variant& v : doc->project().variants) variantCounts.push_back(v.images.size());
+    const QString l_oSavePath = QDir(l_oSaveDir).filePath(QString::fromStdString(l_pDoc->f_Project().m_strName) + QStringLiteral(".atlasproj"));
+    const size_t l_nImageCount = l_pDoc->f_Project().m_mapImages.size();
+    std::vector<size_t> l_vVariantCounts;
+    for (const atlas::Variant& l_oV : l_pDoc->f_Project().m_vVariants) l_vVariantCounts.push_back(l_oV.m_mapImages.size());
     // Reference folders must still point at the same places after the move.
-    auto existingRefs = [doc] {
-        QStringList out;
-        for (const atlas::SourceFolder& f : doc->project().references) {
-            const QFileInfo fi(doc->resolvePath(QString::fromStdString(f.path)));
-            if (fi.isDir()) out << fi.canonicalFilePath();
+    auto l_fnExistingRefs = [l_pDoc] {
+        QStringList l_oOut;
+        for (const atlas::SourceFolder& l_oF : l_pDoc->f_Project().m_vReferences) {
+            const QFileInfo l_oFi(l_pDoc->f_ResolvePath(QString::fromStdString(l_oF.m_strPath)));
+            if (l_oFi.isDir()) l_oOut << l_oFi.canonicalFilePath();
         }
-        return out;
+        return l_oOut;
     };
-    const QStringList refsBefore = existingRefs();
-    SaveReport report;
-    QString saveErr;
-    bool okSave = doc->save(savePath, &report, &saveErr);
-    if (!okSave) std::fprintf(stderr, "selftest: save: %s\n", saveErr.toUtf8().constData());
-    std::printf("selftest: save wrote %d file(s)\n", int(report.written.size()));
-    okSave = okSave && !doc->isDirty() && QFileInfo(doc->filePath()) == QFileInfo(savePath);
-    if (existingRefs() != refsBefore) {
+    const QStringList l_oRefsBefore = l_fnExistingRefs();
+    SaveReport l_oReport;
+    QString l_oSaveErr;
+    bool l_bOkSave = l_pDoc->f_Save(l_oSavePath, &l_oReport, &l_oSaveErr);
+    if (!l_bOkSave) std::fprintf(stderr, "selftest: save: %s\n", l_oSaveErr.toUtf8().constData());
+    std::printf("selftest: save wrote %d file(s)\n", int(l_oReport.m_oWritten.size()));
+    l_bOkSave = l_bOkSave && !l_pDoc->f_IsDirty() && QFileInfo(l_pDoc->f_FilePath()) == QFileInfo(l_oSavePath);
+    if (l_fnExistingRefs() != l_oRefsBefore) {
         std::fprintf(stderr, "selftest: reference folders moved on Save As\n");
-        okSave = false;
+        l_bOkSave = false;
     }
-    const QString store = doc->storeFile();
-    const QString storeBase = QFileInfo(store).completeBaseName();
-    okSave = okSave && QFileInfo::exists(savePath) && QFileInfo::exists(store) &&
-             QFileInfo::exists(QDir(QFileInfo(store).absolutePath()).filePath(storeBase + QStringLiteral(".png"))) &&
-             QFileInfo::exists(QDir(QFileInfo(store).absolutePath()).filePath(storeBase + QStringLiteral(".plist"))) &&
-             QFileInfo(store).absolutePath() == QFileInfo(savePath).absolutePath();
-    for (const atlas::Variant& v : doc->project().variants)
-        okSave = okSave && QFileInfo::exists(doc->storeFile(QString::fromStdString(v.id)));
+    const QString l_oStore = l_pDoc->f_StoreFile();
+    const QString l_oStoreBase = QFileInfo(l_oStore).completeBaseName();
+    l_bOkSave = l_bOkSave && QFileInfo::exists(l_oSavePath) && QFileInfo::exists(l_oStore) &&
+             QFileInfo::exists(QDir(QFileInfo(l_oStore).absolutePath()).filePath(l_oStoreBase + QStringLiteral(".png"))) &&
+             QFileInfo::exists(QDir(QFileInfo(l_oStore).absolutePath()).filePath(l_oStoreBase + QStringLiteral(".plist"))) &&
+             QFileInfo(l_oStore).absolutePath() == QFileInfo(l_oSavePath).absolutePath();
+    for (const atlas::Variant& l_oV : l_pDoc->f_Project().m_vVariants)
+        l_bOkSave = l_bOkSave && QFileInfo::exists(l_pDoc->f_StoreFile(QString::fromStdString(l_oV.m_strId)));
     // Reopen what was saved: every image comes back out of the packed atlas.
-    atlas::Project reopened;
-    std::string openErr;
-    okSave = okSave && atlas::openProject(savePath.toStdString(), reopened, &openErr) && reopened.embedded &&
-             reopened.images.size() == imageCount && reopened.variants.size() == variantCounts.size();
-    for (size_t i = 0; okSave && i < variantCounts.size(); i++) okSave = reopened.variants[i].images.size() == variantCounts[i];
-    if (!openErr.empty()) std::fprintf(stderr, "selftest: reopen: %s\n", openErr.c_str());
-    std::printf("selftest: embedded save/reopen %s (%zu image(s) in %s)\n", okSave ? "ok" : "FAILED", reopened.images.size(),
-                QDir::toNativeSeparators(savePath).toUtf8().constData());
+    atlas::Project l_oReopened;
+    std::string l_strOpenErr;
+    l_bOkSave = l_bOkSave && atlas::f_OpenProject(l_oSavePath.toStdString(), l_oReopened, &l_strOpenErr) && l_oReopened.m_bEmbedded &&
+             l_oReopened.m_mapImages.size() == l_nImageCount && l_oReopened.m_vVariants.size() == l_vVariantCounts.size();
+    for (size_t l_nI = 0; l_bOkSave && l_nI < l_vVariantCounts.size(); l_nI++) l_bOkSave = l_oReopened.m_vVariants[l_nI].m_mapImages.size() == l_vVariantCounts[l_nI];
+    if (!l_strOpenErr.empty()) std::fprintf(stderr, "selftest: reopen: %s\n", l_strOpenErr.c_str());
+    std::printf("selftest: embedded save/reopen %s (%zu image(s) in %s)\n", l_bOkSave ? "ok" : "FAILED", l_oReopened.m_mapImages.size(),
+                QDir::toNativeSeparators(l_oSavePath).toUtf8().constData());
 
     // Backup copy: a whole project + packed atlas in its own folder (written in the background);
     // the project's own packed atlas is not touched.
-    bool okBackup = false;
+    bool l_bOkBackup = false;
     {
-        const QDateTime storeTime = QFileInfo(store).lastModified();
-        const QString bdir = QDir(outDir).filePath(QStringLiteral("backup"));
-        QDir(bdir).removeRecursively();
-        QString berr;
-        okBackup = doc->writeBackup(QDir(bdir).filePath(QStringLiteral("proj_1.atlasproj")), &berr);
-        const QString bproj = QDir(QDir(bdir).filePath(QStringLiteral("proj_1"))).filePath(QString::fromStdString(doc->project().name) +
+        const QDateTime l_oStoreTime = QFileInfo(l_oStore).lastModified();
+        const QString l_oBdir = QDir(l_oOutDir).filePath(QStringLiteral("backup"));
+        QDir(l_oBdir).removeRecursively();
+        QString l_oBerr;
+        l_bOkBackup = l_pDoc->f_WriteBackup(QDir(l_oBdir).filePath(QStringLiteral("proj_1.atlasproj")), &l_oBerr);
+        const QString l_oBproj = QDir(QDir(l_oBdir).filePath(QStringLiteral("proj_1"))).filePath(QString::fromStdString(l_pDoc->f_Project().m_strName) +
                                                                                            QStringLiteral(".atlasproj"));
-        atlas::Project back;
-        QElapsedTimer t;
-        t.start();
-        bool loaded = false;
-        while (okBackup && !loaded && t.elapsed() < 30000) {
+        atlas::Project l_oBack;
+        QElapsedTimer l_oT;
+        l_oT.start();
+        bool l_bLoaded = false;
+        while (l_bOkBackup && !l_bLoaded && l_oT.elapsed() < 30000) {
             QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
             QThread::msleep(50);
-            atlas::Project p;
-            std::string e;
-            loaded = QFileInfo::exists(bproj) && atlas::openProject(bproj.toStdString(), p, &e) && p.images.size() == imageCount;
-            if (loaded) back = std::move(p);
+            atlas::Project l_oP;
+            std::string l_strE;
+            l_bLoaded = QFileInfo::exists(l_oBproj) && atlas::f_OpenProject(l_oBproj.toStdString(), l_oP, &l_strE) && l_oP.m_mapImages.size() == l_nImageCount;
+            if (l_bLoaded) l_oBack = std::move(l_oP);
         }
         QThread::msleep(300);   // the rest of the background save
-        okBackup = okBackup && loaded && QFileInfo(store).lastModified() == storeTime;
-        std::printf("selftest: backup copy %s (%zu image(s), the project's own atlas untouched)\n", okBackup ? "ok" : "FAILED",
-                    back.images.size());
+        l_bOkBackup = l_bOkBackup && l_bLoaded && QFileInfo(l_oStore).lastModified() == l_oStoreTime;
+        std::printf("selftest: backup copy %s (%zu image(s), the project's own atlas untouched)\n", l_bOkBackup ? "ok" : "FAILED",
+                    l_oBack.m_mapImages.size());
     }
 
-    w.canvasPanel()->enterEditMode(pick);
-    waitForBuild(doc);
-    for (const SpriteInfo& s : snap->sprites)
-        if (s.child && s.parent == pick) {
-            doc->setSelection({s.name});
+    l_oW.f_CanvasPanel()->f_EnterEditMode(l_oPick);
+    f_WaitForBuild(l_pDoc);
+    for (const SpriteInfo& l_oS : l_spSnap->m_vSprites)
+        if (l_oS.m_bChild && l_oS.m_oParent == l_oPick) {
+            l_pDoc->f_SetSelection({l_oS.m_oName});
             break;
         }
     QCoreApplication::processEvents();
-    const bool okEdit = w.grab().save(QDir(outDir).filePath(QStringLiteral("edit.png")));
-    w.canvasPanel()->exitEditMode();
+    const bool l_bOkEdit = l_oW.grab().save(QDir(l_oOutDir).filePath(QStringLiteral("edit.png")));
+    l_oW.f_CanvasPanel()->f_ExitEditMode();
 
     // A variant shown, with its Properties section.
-    if (!doc->project().variants.empty()) {
-        doc->setVariant(QString::fromStdString(doc->project().variants.front().id));
-        waitForBuild(doc);
-        doc->setSelection({pick});
+    if (!l_pDoc->f_Project().m_vVariants.empty()) {
+        l_pDoc->f_SetVariant(QString::fromStdString(l_pDoc->f_Project().m_vVariants.front().m_strId));
+        f_WaitForBuild(l_pDoc);
+        l_pDoc->f_SetSelection({l_oPick});
         QCoreApplication::processEvents();
-        w.grab().save(QDir(outDir).filePath(QStringLiteral("variant.png")));
-        doc->setVariant(QString());
-        waitForBuild(doc);
+        l_oW.grab().save(QDir(l_oOutDir).filePath(QStringLiteral("variant.png")));
+        l_pDoc->f_SetVariant(QString());
+        f_WaitForBuild(l_pDoc);
     }
 
     // The Properties dock scrolled down to the Atlas output and References sections.
-    if (auto* props = w.findChild<QDockWidget*>(QStringLiteral("PropertiesDock")))
-        if (auto* scroll = props->findChild<QScrollArea*>()) {
-            scroll->verticalScrollBar()->setValue(scroll->verticalScrollBar()->maximum());
+    if (auto* l_pProps = l_oW.findChild<QDockWidget*>(QStringLiteral("PropertiesDock")))
+        if (auto* l_pScroll = l_pProps->findChild<QScrollArea*>()) {
+            l_pScroll->verticalScrollBar()->setValue(l_pScroll->verticalScrollBar()->maximum());
             QCoreApplication::processEvents();
-            props->grab().save(QDir(outDir).filePath(QStringLiteral("properties.png")));
-            scroll->verticalScrollBar()->setValue(0);
+            l_pProps->grab().save(QDir(l_oOutDir).filePath(QStringLiteral("properties.png")));
+            l_pScroll->verticalScrollBar()->setValue(0);
         }
 
     // Light theme, with the Animations dock in front.
-    if (auto* anim = w.findChild<QDockWidget*>(QStringLiteral("AnimationsDock"))) anim->raise();
-    Theme::apply(Theme::Mode::Light);
+    if (auto* l_pAnim = l_oW.findChild<QDockWidget*>(QStringLiteral("AnimationsDock"))) l_pAnim->raise();
+    Theme::f_Apply(Theme::Mode::Light);
     QCoreApplication::processEvents();
-    const bool okLight = w.grab().save(QDir(outDir).filePath(QStringLiteral("light.png")));
-    Theme::apply(Theme::Mode::Dark);
+    const bool l_bOkLight = l_oW.grab().save(QDir(l_oOutDir).filePath(QStringLiteral("light.png")));
+    Theme::f_Apply(Theme::Mode::Dark);
 
     // The Import From References dialog over the window.
     {
-        ReferencesDialog dlg(doc, &w);
-        dlg.show();
+        ReferencesDialog l_oDlg(l_pDoc, &l_oW);
+        l_oDlg.show();
         QCoreApplication::processEvents();
-        dlg.grab().save(QDir(outDir).filePath(QStringLiteral("references.png")));
-        std::printf("selftest: references dialog lists %d image(s) to import\n", int(dlg.chosen().size()));
+        l_oDlg.grab().save(QDir(l_oOutDir).filePath(QStringLiteral("references.png")));
+        std::printf("selftest: references dialog lists %d image(s) to import\n", int(l_oDlg.f_Chosen().size()));
     }
 
     // English / 中文 on the real window: menus, docks and toolbar change in place, and back.
     // TOMS_LANGUAGE set: the switch is not saved (the user's own choice stays).
     qputenv("TOMS_LANGUAGE", "en");
-    auto menuTitle = [&](int i) {
-        const QList<QAction*> acts = w.menuBar()->actions();
-        return i < acts.size() ? acts[i]->text() : QString();
+    auto l_fnMenuTitle = [&](int l_iI) {
+        const QList<QAction*> l_oActs = l_oW.menuBar()->actions();
+        return l_iI < l_oActs.size() ? l_oActs[l_iI]->text() : QString();
     };
-    auto dockTitle = [&](const char* name) {
-        for (QDockWidget* d : w.findChildren<QDockWidget*>())
-            if (d->windowTitle() == QString::fromUtf8(name)) return true;
+    auto l_fnDockTitle = [&](const char* l_pszName) {
+        for (QDockWidget* l_pD : l_oW.findChildren<QDockWidget*>())
+            if (l_pD->windowTitle() == QString::fromUtf8(l_pszName)) return true;
         return false;
     };
-    Language::set(Language::Lang::Chinese);
+    Language::f_Set(Language::Lang::Chinese);
     QCoreApplication::processEvents();
-    const bool okZh = menuTitle(0) == QStringLiteral("檔案(&F)") && menuTitle(1) == QStringLiteral("編輯(&E)") &&
-                      dockTitle("精靈圖") && dockTitle("屬性");
-    w.grab().save(QDir(outDir).filePath(QStringLiteral("chinese.png")));
-    Language::set(Language::Lang::English);
+    const bool l_bOkZh = l_fnMenuTitle(0) == QStringLiteral("檔案(&F)") && l_fnMenuTitle(1) == QStringLiteral("編輯(&E)") &&
+                      l_fnDockTitle("精靈圖") && l_fnDockTitle("屬性");
+    l_oW.grab().save(QDir(l_oOutDir).filePath(QStringLiteral("chinese.png")));
+    Language::f_Set(Language::Lang::English);
     QCoreApplication::processEvents();
-    const bool okEn = menuTitle(0) == QStringLiteral("&File") && dockTitle("Sprites") && dockTitle("Properties");
-    std::printf("selftest: language 中文 %s, back to English %s\n", okZh ? "ok" : "FAILED", okEn ? "ok" : "FAILED");
-    if (!okZh) std::printf("selftest: menus after the switch: '%s' '%s'\n", menuTitle(0).toUtf8().constData(),
-                           menuTitle(1).toUtf8().constData());
+    const bool l_bOkEn = l_fnMenuTitle(0) == QStringLiteral("&File") && l_fnDockTitle("Sprites") && l_fnDockTitle("Properties");
+    std::printf("selftest: language 中文 %s, back to English %s\n", l_bOkZh ? "ok" : "FAILED", l_bOkEn ? "ok" : "FAILED");
+    if (!l_bOkZh) std::printf("selftest: menus after the switch: '%s' '%s'\n", l_fnMenuTitle(0).toUtf8().constData(),
+                           l_fnMenuTitle(1).toUtf8().constData());
 
-    std::printf("selftest: edit/undo %s\n", okEdits ? "ok" : "FAILED");
-    std::printf("selftest: export copy (+plist) %s\n", okExport ? "ok" : "FAILED");
-    std::printf("selftest: %zu sprite(s), %zu page(s), %d error(s), %d warning(s), build %lld ms\n", snap->result.regions.size(),
-                snap->result.pages.size(), snap->result.errorCount(), snap->result.warningCount(), (long long)snap->elapsedMs);
-    return okMain && okEdit && okLight && okEdits && okImages && okExport && okSave && okBackup && okZh && okEn ? 0 : 1;
+    std::printf("selftest: edit/undo %s\n", l_bOkEdits ? "ok" : "FAILED");
+    std::printf("selftest: export copy (+plist) %s\n", l_bOkExport ? "ok" : "FAILED");
+    std::printf("selftest: %zu sprite(s), %zu page(s), %d error(s), %d warning(s), build %lld ms\n", l_spSnap->m_oResult.m_vRegions.size(),
+                l_spSnap->m_oResult.m_vPages.size(), l_spSnap->m_oResult.f_ErrorCount(), l_spSnap->m_oResult.f_WarningCount(), (long long)l_spSnap->m_i64ElapsedMs);
+    return l_bOkMain && l_bOkEdit && l_bOkLight && l_bOkEdits && l_bOkImages && l_bOkExport && l_bOkSave && l_bOkBackup && l_bOkZh && l_bOkEn ? 0 : 1;
 }
 
 }  // namespace
 
 #if TOMS_ATLAS_GAME_RENDERER
 // Right-drag on a canvas: it must pan (the content moves with the mouse), as middle-drag does.
-static bool rightDragPans(CanvasView* view)
+static bool f_RightDragPans(CanvasView* l_pView)
 {
-    const QPointF before = view->contentToWidget(QPointF(0, 0));
-    const QPointF a(view->width() / 2.0, view->height() / 2.0), b = a + QPointF(60, 25);
-    auto send = [&](QEvent::Type type, const QPointF& at, Qt::MouseButton button, Qt::MouseButtons buttons) {
-        QMouseEvent e(type, at, view->mapToGlobal(at), button, buttons, Qt::NoModifier);
-        QApplication::sendEvent(view, &e);
+    const QPointF l_oBefore = l_pView->f_ContentToWidget(QPointF(0, 0));
+    const QPointF l_oA(l_pView->width() / 2.0, l_pView->height() / 2.0), l_oB = l_oA + QPointF(60, 25);
+    auto l_fnSend = [&](QEvent::Type l_eType, const QPointF& l_oAt, Qt::MouseButton l_eButton, Qt::MouseButtons l_oButtons) {
+        QMouseEvent l_oE(l_eType, l_oAt, l_pView->mapToGlobal(l_oAt), l_eButton, l_oButtons, Qt::NoModifier);
+        QApplication::sendEvent(l_pView, &l_oE);
     };
-    send(QEvent::MouseButtonPress, a, Qt::RightButton, Qt::RightButton);
-    for (int i = 1; i <= 4; i++) send(QEvent::MouseMove, a + (b - a) * (i / 4.0), Qt::NoButton, Qt::RightButton);
-    send(QEvent::MouseButtonRelease, b, Qt::RightButton, Qt::NoButton);
+    l_fnSend(QEvent::MouseButtonPress, l_oA, Qt::RightButton, Qt::RightButton);
+    for (int l_iI = 1; l_iI <= 4; l_iI++) l_fnSend(QEvent::MouseMove, l_oA + (l_oB - l_oA) * (l_iI / 4.0), Qt::NoButton, Qt::RightButton);
+    l_fnSend(QEvent::MouseButtonRelease, l_oB, Qt::RightButton, Qt::NoButton);
     QCoreApplication::processEvents();
-    const QPointF moved = view->contentToWidget(QPointF(0, 0)) - before;
-    return std::fabs(moved.x() - 60) < 1 && std::fabs(moved.y() - 25) < 1;
+    const QPointF l_oMoved = l_pView->f_ContentToWidget(QPointF(0, 0)) - l_oBefore;
+    return std::fabs(l_oMoved.x() - 60) < 1 && std::fabs(l_oMoved.y() - 25) < 1;
 }
 
 // The canvases with the game renderer (on screen): the page, then sprite edit mode (bgfx moves to
 // the other canvas of the stack), then the page again; a bgfx screenshot of each.
-int runGpuSelfTest(MainWindow& w, const QString& project, const QString& outDir)
+int f_RunGpuSelfTest(MainWindow& l_oW, const QString& l_oProject, const QString& l_oOutDir)
 {
-    QDir().mkpath(outDir);
-    AtlasDocument* doc = w.document();
-    QString err;
-    if (!doc->open(project, &err)) {
-        std::fprintf(stderr, "selftest: %s\n", err.toUtf8().constData());
+    QDir().mkpath(l_oOutDir);
+    AtlasDocument* l_pDoc = l_oW.f_Document();
+    QString l_oErr;
+    if (!l_pDoc->f_Open(l_oProject, &l_oErr)) {
+        std::fprintf(stderr, "selftest: %s\n", l_oErr.toUtf8().constData());
         return 2;
     }
-    waitForBuild(doc);
-    auto pump = [](int ms) {
-        QElapsedTimer t;
-        t.start();
-        while (t.elapsed() < ms) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
+    f_WaitForBuild(l_pDoc);
+    auto l_fnPump = [](int l_iMs) {
+        QElapsedTimer l_oT;
+        l_oT.start();
+        while (l_oT.elapsed() < l_iMs) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
     };
-    auto shot = [&](GameCanvasView* view, const char* name) {
-        const int before = toms::next::bgfxHostScreenshotsWritten();
-        view->saveGameRendererShot(QDir(outDir).filePath(QString::fromLatin1(name)));
-        QElapsedTimer t;
-        t.start();
-        while (toms::next::bgfxHostScreenshotsWritten() == before && t.elapsed() < 3000) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
-        return toms::next::bgfxHostScreenshotsWritten() > before;
+    auto l_fnShot = [&](GameCanvasView* l_pView, const char* l_pszName) {
+        const int l_iBefore = toms::next::f_BgfxHostScreenshotsWritten();
+        l_pView->f_SaveGameRendererShot(QDir(l_oOutDir).filePath(QString::fromLatin1(l_pszName)));
+        QElapsedTimer l_oT;
+        l_oT.start();
+        while (toms::next::f_BgfxHostScreenshotsWritten() == l_iBefore && l_oT.elapsed() < 3000) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
+        return toms::next::f_BgfxHostScreenshotsWritten() > l_iBefore;
     };
-    bool ok = true;
-    auto check = [&](bool good, const char* what) {
-        std::printf("selftest: %-60s %s\n", what, good ? "ok" : "FAILED");
-        ok &= good;
+    bool l_bOk = true;
+    auto l_fnCheck = [&](bool l_bGood, const char* l_pszWhat) {
+        std::printf("selftest: %-60s %s\n", l_pszWhat, l_bGood ? "ok" : "FAILED");
+        l_bOk &= l_bGood;
     };
-    CanvasPanel* panel = w.canvasPanel();
-    pump(600);
-    check(panel->atlasCanvas()->usingGameRenderer(), "the atlas canvas runs on the game renderer");
-    std::printf("selftest:   %s\n", panel->atlasCanvas()->rendererName().toUtf8().constData());
-    if (!panel->atlasCanvas()->usingGameRenderer()) return 1;
-    check(shot(panel->atlasCanvas(), "atlas_gpu.png"), "atlas_gpu.png (the page, bgfx screenshot)");
-    check(rightDragPans(panel->atlasCanvas()), "right-drag pans the page canvas");
-    const QString sprite = QString::fromStdString(doc->snapshot()->result.regions.front().name);
-    panel->enterEditMode(sprite);
-    pump(600);
-    check(panel->editCanvas()->usingGameRenderer() && panel->editCanvas()->framesDrawn() > 0,
+    CanvasPanel* l_pPanel = l_oW.f_CanvasPanel();
+    l_fnPump(600);
+    l_fnCheck(l_pPanel->f_AtlasCanvas()->f_UsingGameRenderer(), "the atlas canvas runs on the game renderer");
+    std::printf("selftest:   %s\n", l_pPanel->f_AtlasCanvas()->f_RendererName().toUtf8().constData());
+    if (!l_pPanel->f_AtlasCanvas()->f_UsingGameRenderer()) return 1;
+    l_fnCheck(l_fnShot(l_pPanel->f_AtlasCanvas(), "atlas_gpu.png"), "atlas_gpu.png (the page, bgfx screenshot)");
+    l_fnCheck(f_RightDragPans(l_pPanel->f_AtlasCanvas()), "right-drag pans the page canvas");
+    const QString l_oSprite = QString::fromStdString(l_pDoc->f_Snapshot()->m_oResult.m_vRegions.front().m_strName);
+    l_pPanel->f_EnterEditMode(l_oSprite);
+    l_fnPump(600);
+    l_fnCheck(l_pPanel->f_EditCanvas()->f_UsingGameRenderer() && l_pPanel->f_EditCanvas()->f_FramesDrawn() > 0,
           "sprite edit mode: bgfx moved to the edit canvas");
-    check(shot(panel->editCanvas(), "edit_gpu.png"), "edit_gpu.png (the sprite)");
-    check(rightDragPans(panel->editCanvas()), "right-drag pans the sprite edit canvas");
-    panel->exitEditMode();
-    const int before = panel->atlasCanvas()->framesDrawn();
-    pump(600);
-    check(panel->atlasCanvas()->framesDrawn() > before, "back to the page: bgfx draws the atlas canvas again");
-    check(shot(panel->atlasCanvas(), "atlas_back.png"), "atlas_back.png");
-    std::printf("selftest: %s\n", ok ? "ok" : "FAILED");
-    return ok ? 0 : 1;
+    l_fnCheck(l_fnShot(l_pPanel->f_EditCanvas(), "edit_gpu.png"), "edit_gpu.png (the sprite)");
+    l_fnCheck(f_RightDragPans(l_pPanel->f_EditCanvas()), "right-drag pans the sprite edit canvas");
+    l_pPanel->f_ExitEditMode();
+    const int l_iBefore = l_pPanel->f_AtlasCanvas()->f_FramesDrawn();
+    l_fnPump(600);
+    l_fnCheck(l_pPanel->f_AtlasCanvas()->f_FramesDrawn() > l_iBefore, "back to the page: bgfx draws the atlas canvas again");
+    l_fnCheck(l_fnShot(l_pPanel->f_AtlasCanvas(), "atlas_back.png"), "atlas_back.png");
+    std::printf("selftest: %s\n", l_bOk ? "ok" : "FAILED");
+    return l_bOk ? 0 : 1;
 }
 #endif
 
-int main(int argc, char** argv)
+int main(int l_iArgc, char** l_pArgv)
 {
-    const std::vector<std::string> args = utf8CommandLine(argc, argv);
-    if (!args.empty() && args[0] == "--headless") {
-        Console::attachParent();
-        const int code = atlasCliMain(std::vector<std::string>(args.begin() + 1, args.end()));
+    const std::vector<std::string> l_vArgs = f_Utf8CommandLine(l_iArgc, l_pArgv);
+    if (!l_vArgs.empty() && l_vArgs[0] == "--headless") {
+        Console::f_AttachParent();
+        const int l_iCode = f_AtlasCliMain(std::vector<std::string>(l_vArgs.begin() + 1, l_vArgs.end()));
         std::fflush(stdout);
         std::fflush(stderr);
-        return code;
+        return l_iCode;
     }
 
-    QApplication app(argc, argv);
+    QApplication l_oApp(l_iArgc, l_pArgv);
     QApplication::setOrganizationName(QStringLiteral("TOMS"));
     QApplication::setApplicationName(QStringLiteral("AtlasEditor"));
     QApplication::setApplicationDisplayName(QStringLiteral("Atlas Editor"));
-    QApplication::setWindowIcon(Icons::icon(Icons::Id::Grid));
-    Theme::apply(Theme::Mode::Dark);
-    Language::init();   // English / 中文 (tools/studio_common/Language.h), before any window
+    QApplication::setWindowIcon(Icons::f_Icon(Icons::Id::Grid));
+    Theme::f_Apply(Theme::Mode::Dark);
+    Language::f_Init();   // English / 中文 (tools/studio_common/Language.h), before any window
 
-    MainWindow w;
+    MainWindow l_oW;
     // QApplication has removed its own options (-platform ...) from arguments().
-    const QStringList qargs = QCoreApplication::arguments().mid(1);
+    const QStringList l_oQargs = QCoreApplication::arguments().mid(1);
 #if TOMS_ATLAS_GAME_RENDERER
-    if (qargs.size() == 3 && qargs[0] == QLatin1String("--selftest-gpu")) {   // on screen: the game renderer
-        w.resize(1440, 900);
-        w.show();
-        return runGpuSelfTest(w, qargs[1], qargs[2]);
+    if (l_oQargs.size() == 3 && l_oQargs[0] == QLatin1String("--selftest-gpu")) {   // on screen: the game renderer
+        l_oW.resize(1440, 900);
+        l_oW.show();
+        return f_RunGpuSelfTest(l_oW, l_oQargs[1], l_oQargs[2]);
     }
 #endif
-    if (qargs.size() == 3 && qargs[0] == QLatin1String("--selftest")) {
-        w.resize(1440, 900);
-        w.show();
-        Theme::apply(Theme::Mode::Dark);
-        return runSelfTest(w, qargs[1], qargs[2]);
+    if (l_oQargs.size() == 3 && l_oQargs[0] == QLatin1String("--selftest")) {
+        l_oW.resize(1440, 900);
+        l_oW.show();
+        Theme::f_Apply(Theme::Mode::Dark);
+        return f_RunSelfTest(l_oW, l_oQargs[1], l_oQargs[2]);
     }
-    w.show();
-    if (!qargs.isEmpty()) w.openProject(qargs.first());
-    return app.exec();
+    l_oW.show();
+    if (!l_oQargs.isEmpty()) l_oW.f_OpenProject(l_oQargs.first());
+    return l_oApp.exec();
 }

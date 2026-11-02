@@ -6,54 +6,54 @@
 
 namespace toms {
 
-void Camera::viewportTiles(float viewportW, float viewportH,
-                           float& tileSize, int& cols, int& rows) const {
-    const int vc = std::max(kMinViewCols, viewCols_);
+void Camera::f_ViewportTiles(float l_fViewportW, float l_fViewportH,
+                           float& l_fTileSize, int& l_iCols, int& l_iRows) const {
+    const int l_iVc = std::max(m_iMinViewCols, m_iViewCols);
     // The zoom is "viewCols tiles across a 1024-wide canvas": the tile size is the same on every canvas, and the columns
     // and rows are what fits (a 1024-wide canvas: exactly viewCols; wider: more; portrait: fewer, and more rows).
-    tileSize = kZoomWidth / (float)vc;
-    cols = std::max(1, (int)(viewportW / tileSize + 0.001f));
-    const float usableH = viewportH - kTopMarginPx - kBottomMarginPx;
-    rows = std::max(1, (int)(usableH / (tileSize > 0.0f ? tileSize : 1.0f)));
+    l_fTileSize = m_fZoomWidth / (float)l_iVc;
+    l_iCols = std::max(1, (int)(l_fViewportW / l_fTileSize + 0.001f));
+    const float l_fUsableH = l_fViewportH - m_fTopMarginPx - m_fBottomMarginPx;
+    l_iRows = std::max(1, (int)(l_fUsableH / (l_fTileSize > 0.0f ? l_fTileSize : 1.0f)));
 }
 
-void Camera::retarget(int focusTileX, int focusTileY, int gridW, int gridH,
-                      float viewportW, float viewportH) {
-    float ts; int cols, rows;
-    viewportTiles(viewportW, viewportH, ts, cols, rows);
+void Camera::f_Retarget(int l_iFocusTileX, int l_iFocusTileY, int l_iGridW, int l_iGridH,
+                      float l_fViewportW, float l_fViewportH) {
+    float l_fTs; int l_iCols, l_iRows;
+    f_ViewportTiles(l_fViewportW, l_fViewportH, l_fTs, l_iCols, l_iRows);
     // The visible width in tiles: a canvas that is not a whole number of tiles wide shows part of one more, and the view
     // clamps to the grid's real edge (a portrait canvas: 768 / 78.8 = 9.75 tiles). On the 1024 canvas it is viewCols.
-    const float colsF = ts > 0.0f ? std::round(viewportW / ts * 1000.0f) / 1000.0f : (float)cols;
+    const float l_fColsF = l_fTs > 0.0f ? std::round(l_fViewportW / l_fTs * 1000.0f) / 1000.0f : (float)l_iCols;
 
-    float tx, ty;
-    if (mode_ == Mode::Rooms) {
+    float l_fTx, l_fTy;
+    if (m_eMode == Mode::Rooms) {
         // Divide the grid into fixed viewport-sized sections, aligned from the origin; the target
         // is whichever section's top-left corner currently contains the focus tile.
-        tx = (float)(std::max(0, focusTileX / cols) * cols);
-        ty = (float)(std::max(0, focusTileY / rows) * rows);
+        l_fTx = (float)(std::max(0, l_iFocusTileX / l_iCols) * l_iCols);
+        l_fTy = (float)(std::max(0, l_iFocusTileY / l_iRows) * l_iRows);
     } else {
         // Follow: keep the focus tile centred in the viewport.
-        tx = (float)focusTileX - colsF * 0.5f;
-        ty = (float)focusTileY - rows * 0.5f;
+        l_fTx = (float)l_iFocusTileX - l_fColsF * 0.5f;
+        l_fTy = (float)l_iFocusTileY - l_iRows * 0.5f;
     }
     // Clamp so the viewport never scrolls past the grid's edges -- and centre a grid that is
     // smaller than the viewport (small floors are narrower than a 21-tile-wide viewport).
-    const float maxX = std::max(0.0f, (float)gridW - colsF);
-    const float maxY = (float)std::max(0, gridH - rows);
-    if ((float)gridW <= colsF) tx = -(colsF - (float)gridW) * 0.5f;
-    else               tx = std::max(0.0f, std::min(tx, maxX));
-    if (gridH <= rows) ty = -(rows - gridH) * 0.5f;
-    else               ty = std::max(0.0f, std::min(ty, maxY));
-    targetX_ = tx; targetY_ = ty;
+    const float l_fMaxX = std::max(0.0f, (float)l_iGridW - l_fColsF);
+    const float l_fMaxY = (float)std::max(0, l_iGridH - l_iRows);
+    if ((float)l_iGridW <= l_fColsF) l_fTx = -(l_fColsF - (float)l_iGridW) * 0.5f;
+    else               l_fTx = std::max(0.0f, std::min(l_fTx, l_fMaxX));
+    if (l_iGridH <= l_iRows) l_fTy = -(l_iRows - l_iGridH) * 0.5f;
+    else               l_fTy = std::max(0.0f, std::min(l_fTy, l_fMaxY));
+    m_fTargetX = l_fTx; m_fTargetY = l_fTy;
 }
 
-void Camera::update(float dtSeconds) {
-    if (!(dtSeconds > 0.0f)) return;
-    const float decay = std::exp(-(dtSeconds * 1000.0f) / kSmoothingMs);
-    x_ = targetX_ + (x_ - targetX_) * decay;
-    y_ = targetY_ + (y_ - targetY_) * decay;
-    if (std::fabs(x_ - targetX_) < kSettleEps) x_ = targetX_;
-    if (std::fabs(y_ - targetY_) < kSettleEps) y_ = targetY_;
+void Camera::f_Update(float l_fDtSeconds) {
+    if (!(l_fDtSeconds > 0.0f)) return;
+    const float l_fDecay = std::exp(-(l_fDtSeconds * 1000.0f) / m_fSmoothingMs);
+    m_fX = m_fTargetX + (m_fX - m_fTargetX) * l_fDecay;
+    m_fY = m_fTargetY + (m_fY - m_fTargetY) * l_fDecay;
+    if (std::fabs(m_fX - m_fTargetX) < m_fSettleEps) m_fX = m_fTargetX;
+    if (std::fabs(m_fY - m_fTargetY) < m_fSettleEps) m_fY = m_fTargetY;
 }
 
 } // namespace toms

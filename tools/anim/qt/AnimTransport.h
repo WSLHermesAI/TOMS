@@ -20,26 +20,26 @@ class AnimScrubber : public QWidget
 {
     Q_OBJECT
 public:
-    explicit AnimScrubber(AnimDocument* doc, QWidget* parent = nullptr);
+    explicit AnimScrubber(AnimDocument* l_pDoc, QWidget* l_pParent = nullptr);
     QSize sizeHint() const override { return QSize(400, 28); }
     QSize minimumSizeHint() const override { return QSize(120, 24); }
     // The time at x (widget pixels), snapped to a key of the selected node within a few pixels.
-    float timeAt(double x) const;
+    float f_TimeAt(double l_dX) const;
 
 signals:
-    void scrubbed();
+    void f_Scrubbed();
 
 protected:
     void paintEvent(QPaintEvent*) override;
-    void mousePressEvent(QMouseEvent* e) override;
-    void mouseMoveEvent(QMouseEvent* e) override;
+    void mousePressEvent(QMouseEvent* l_pE) override;
+    void mouseMoveEvent(QMouseEvent* l_pE) override;
 
 private:
-    float span() const;
-    QRectF track() const;
-    void seek(double x);
+    float f_Span() const;
+    QRectF f_Track() const;
+    void f_Seek(double l_dX);
 
-    AnimDocument* m_doc;
+    AnimDocument* m_pDoc;
 };
 
 // Playback with AnimPlayer semantics (playCount, stayAtLastFrame, events once each, also across
@@ -50,44 +50,44 @@ class AnimTransport : public QObject
     Q_OBJECT
 
 public:
-    AnimTransport(AnimDocument* doc, QWidget* parentWidget);
+    AnimTransport(AnimDocument* l_pDoc, QWidget* l_pParentWidget);
 
-    QToolBar* toolBar() const { return m_toolBar; }
-    QAction* playAction() const { return m_play; }
-    QAction* stopAction() const { return m_stop; }
-    QAction* loopAction() const { return m_loop; }
-    AnimScrubber* scrubber() const { return m_scrubber; }
-    bool isPlaying() const { return m_playing; }
+    QToolBar* f_ToolBar() const { return m_pToolBar; }
+    QAction* f_PlayAction() const { return m_pPlay; }
+    QAction* f_StopAction() const { return m_pStop; }
+    QAction* f_LoopAction() const { return m_pLoop; }
+    AnimScrubber* f_Scrubber() const { return m_pScrubber; }
+    bool f_IsPlaying() const { return m_bPlaying; }
 
-    void play();     // from the playhead (from the start when it is at the end)
-    void pause();
-    void togglePlay();
-    void stop();     // pause and back to 0
+    void f_Play();     // from the playhead (from the start when it is at the end)
+    void f_Pause();
+    void f_TogglePlay();
+    void f_Stop();     // pause and back to 0
     // Advances playback by ms as a timer tick would (the selftest drives this directly).
-    void advance(int ms);
-    void stepKey(int direction);   // previous / next key time of the selected node
+    void f_Advance(int l_iMs);
+    void f_StepKey(int l_iDirection);   // previous / next key time of the selected node
 
 signals:
-    void eventsFired(const QStringList& names, float time);
-    void playingChanged(bool playing);
+    void f_EventsFired(const QStringList& l_oNames, float l_fTime);
+    void f_PlayingChanged(bool l_bPlaying);
 
 private:
-    void restart(float atTime);
-    void tick();
-    void updateWidgets();
+    void f_Restart(float l_fAtTime);
+    void f_Tick();
+    void f_UpdateWidgets();
 
-    AnimDocument* m_doc;
-    QToolBar* m_toolBar;
-    QAction *m_play, *m_stop, *m_loop;
-    QComboBox* m_speed;
-    QDoubleSpinBox* m_timeSpin;
-    QLabel* m_duration;
-    AnimScrubber* m_scrubber;
-    QTimer* m_timer;
-    QElapsedTimer m_clock;
-    double m_carryMs = 0;
-    bool m_playing = false;
-    bool m_settingTime = false;
-    toms::anim::Clip m_clip;       // the clip being played (a copy: edits restart it)
-    toms::anim::AnimPlayer m_player;
+    AnimDocument* m_pDoc;
+    QToolBar* m_pToolBar;
+    QAction *m_pPlay, *m_pStop, *m_pLoop;
+    QComboBox* m_pSpeed;
+    QDoubleSpinBox* m_pTimeSpin;
+    QLabel* m_pDuration;
+    AnimScrubber* m_pScrubber;
+    QTimer* m_pTimer;
+    QElapsedTimer m_oClock;
+    double m_dCarryMs = 0;
+    bool m_bPlaying = false;
+    bool m_bSettingTime = false;
+    toms::anim::Clip m_oClip;       // the clip being played (a copy: edits restart it)
+    toms::anim::AnimPlayer m_oPlayer;
 };

@@ -5,51 +5,51 @@
 
 namespace toms {
 
-TimerQueue::Id TimerQueue::after(const TimerOwner& owner, int delayMs, std::function<void()> fn) {
-    const Id id = nextId_++;
-    timers_.push_back({id, nowMs_ + std::max(0, delayMs), 0, nextOrder_++, owner.token(), std::move(fn)});
-    return id;
+TimerQueue::Id TimerQueue::f_After(const TimerOwner& l_oOwner, int l_iDelayMs, std::function<void()> l_fnFn) {
+    const Id l_uId = m_uNextId++;
+    m_vTimers.push_back({l_uId, m_i64NowMs + std::max(0, l_iDelayMs), 0, m_u64NextOrder++, l_oOwner.f_Token(), std::move(l_fnFn)});
+    return l_uId;
 }
 
-TimerQueue::Id TimerQueue::every(const TimerOwner& owner, int periodMs, std::function<void()> fn) {
-    const Id id = nextId_++;
-    const int p = std::max(1, periodMs);
-    timers_.push_back({id, nowMs_ + p, p, nextOrder_++, owner.token(), std::move(fn)});
-    return id;
+TimerQueue::Id TimerQueue::f_Every(const TimerOwner& l_oOwner, int l_iPeriodMs, std::function<void()> l_fnFn) {
+    const Id l_uId = m_uNextId++;
+    const int l_iP = std::max(1, l_iPeriodMs);
+    m_vTimers.push_back({l_uId, m_i64NowMs + l_iP, l_iP, m_u64NextOrder++, l_oOwner.f_Token(), std::move(l_fnFn)});
+    return l_uId;
 }
 
-void TimerQueue::cancel(Id id) {
-    timers_.erase(std::remove_if(timers_.begin(), timers_.end(), [id](const Timer& t) { return t.id == id; }),
-                  timers_.end());
+void TimerQueue::f_Cancel(Id l_uId) {
+    m_vTimers.erase(std::remove_if(m_vTimers.begin(), m_vTimers.end(), [l_uId](const Timer& l_oT) { return l_oT.m_uId == l_uId; }),
+                  m_vTimers.end());
 }
 
-void TimerQueue::update(int dtMs) {
-    nowMs_ += std::max(0, dtMs);
-    const uint64_t cutoff = nextOrder_;   // calls scheduled from inside a call wait for the next update
+void TimerQueue::f_Update(int l_iDtMs) {
+    m_i64NowMs += std::max(0, l_iDtMs);
+    const uint64_t l_u64Cutoff = m_u64NextOrder;   // calls scheduled from inside a call wait for the next update
     for (;;) {
         // the earliest due call that existed when this update began, and whose owner is still there
-        timers_.erase(std::remove_if(timers_.begin(), timers_.end(), [](const Timer& t) { return t.owner.expired(); }),
-                      timers_.end());
-        auto it = timers_.end();
-        for (auto i = timers_.begin(); i != timers_.end(); ++i) {
-            if (i->dueMs > nowMs_ || i->order >= cutoff) continue;
-            if (it == timers_.end() || i->dueMs < it->dueMs || (i->dueMs == it->dueMs && i->order < it->order)) it = i;
+        m_vTimers.erase(std::remove_if(m_vTimers.begin(), m_vTimers.end(), [](const Timer& l_oT) { return l_oT.m_wpOwner.expired(); }),
+                      m_vTimers.end());
+        auto l_itIt = m_vTimers.end();
+        for (auto l_itI = m_vTimers.begin(); l_itI != m_vTimers.end(); ++l_itI) {
+            if (l_itI->m_i64DueMs > m_i64NowMs || l_itI->m_u64Order >= l_u64Cutoff) continue;
+            if (l_itIt == m_vTimers.end() || l_itI->m_i64DueMs < l_itIt->m_i64DueMs || (l_itI->m_i64DueMs == l_itIt->m_i64DueMs && l_itI->m_u64Order < l_itIt->m_u64Order)) l_itIt = l_itI;
         }
-        if (it == timers_.end()) return;
-        std::function<void()> fn = it->fn;   // a copy: the call may change timers_
-        if (it->periodMs > 0) {
-            it->dueMs += it->periodMs;
-            if (it->dueMs <= nowMs_) it->dueMs = nowMs_ + it->periodMs;   // a long frame skips the missed periods
-            it->order = nextOrder_++;        // a repeating call runs at most once per update
+        if (l_itIt == m_vTimers.end()) return;
+        std::function<void()> l_fnFn = l_itIt->m_fnFn;   // a copy: the call may change timers_
+        if (l_itIt->m_iPeriodMs > 0) {
+            l_itIt->m_i64DueMs += l_itIt->m_iPeriodMs;
+            if (l_itIt->m_i64DueMs <= m_i64NowMs) l_itIt->m_i64DueMs = m_i64NowMs + l_itIt->m_iPeriodMs;   // a long frame skips the missed periods
+            l_itIt->m_u64Order = m_u64NextOrder++;        // a repeating call runs at most once per update
         } else {
-            timers_.erase(it);
+            m_vTimers.erase(l_itIt);
         }
-        if (fn) fn();
+        if (l_fnFn) l_fnFn();
     }
 }
 
-size_t TimerQueue::pending() const {
-    return (size_t)std::count_if(timers_.begin(), timers_.end(), [](const Timer& t) { return !t.owner.expired(); });
+size_t TimerQueue::f_Pending() const {
+    return (size_t)std::count_if(m_vTimers.begin(), m_vTimers.end(), [](const Timer& l_oT) { return !l_oT.m_wpOwner.expired(); });
 }
 
 } // namespace toms

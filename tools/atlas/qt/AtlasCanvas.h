@@ -27,63 +27,63 @@ class AtlasCanvas : public AtlasCanvasBase
 
 public:
     // Drawn with the game's renderer (GameCanvasView) unless the setting "preview/gameRenderer" is off.
-    explicit AtlasCanvas(AtlasDocument* doc, QWidget* parent = nullptr);
+    explicit AtlasCanvas(AtlasDocument* l_pDoc, QWidget* l_pParent = nullptr);
     ~AtlasCanvas() override;
 
-    int page() const { return m_page; }
-    void setPage(int page);
-    void setShowOutlines(bool show);
-    void setShowChildren(bool show);
+    int f_Page() const { return m_iPage; }
+    void f_SetPage(int l_iPage);
+    void f_SetShowOutlines(bool l_bShow);
+    void f_SetShowChildren(bool l_bShow);
 
 signals:
-    void pageChanged(int page);
-    void editSpriteRequested(const QString& name);
-    void contextMenuRequested(const QPoint& globalPos);
+    void f_PageChanged(int l_iPage);
+    void f_EditSpriteRequested(const QString& l_oName);
+    void f_ContextMenuRequested(const QPoint& l_oGlobalPos);
 
 protected:
-    QSize contentSize() const override;
-    void paintContent(QPainter& p) override;
+    QSize f_ContentSize() const override;
+    void f_PaintContent(QPainter& l_oP) override;
 #if TOMS_ATLAS_GAME_RENDERER
-    void paintGameScene(const GameScene& s) override;   // the image, as the game samples it
-    void gameRendererChanged(toms::next::BgfxRenderer* ren) override { m_tex.attach(ren); }
+    void f_PaintGameScene(const GameScene& l_oS) override;   // the image, as the game samples it
+    void f_GameRendererChanged(toms::next::BgfxRenderer* l_pRen) override { m_oTex.f_Attach(l_pRen); }
 #endif
-    bool event(QEvent* e) override;   // tooltips
-    void mousePressEvent(QMouseEvent* e) override;
-    void mouseMoveEvent(QMouseEvent* e) override;
-    void mouseReleaseEvent(QMouseEvent* e) override;
-    void mouseDoubleClickEvent(QMouseEvent* e) override;
-    void contextMenuEvent(QContextMenuEvent* e) override;
-    void leaveEvent(QEvent* e) override;
+    bool event(QEvent* l_pE) override;   // tooltips
+    void mousePressEvent(QMouseEvent* l_pE) override;
+    void mouseMoveEvent(QMouseEvent* l_pE) override;
+    void mouseReleaseEvent(QMouseEvent* l_pE) override;
+    void mouseDoubleClickEvent(QMouseEvent* l_pE) override;
+    void contextMenuEvent(QContextMenuEvent* l_pE) override;
+    void leaveEvent(QEvent* l_pE) override;
 
 private:
-    void onBuildFinished();
-    void onSelectionChanged();
-    void refreshPinned();
+    void f_OnBuildFinished();
+    void f_OnSelectionChanged();
+    void f_RefreshPinned();
     // The sprite under a content point: aliases resolve to the region that owns the pixels, and
     // the smallest rect wins so children can be picked inside their parent.
-    QString hitTest(const QPointF& content) const;
-    bool isVisible(const atlas::Region& r) const;
-    bool isMovable(const atlas::Region& r) const;   // has its own place in the atlas
-    QString tooltipFor(const QString& name) const;
-    void commitMove();
+    QString f_HitTest(const QPointF& l_oContent) const;
+    bool f_IsVisible(const atlas::Region& l_oR) const;
+    bool f_IsMovable(const atlas::Region& l_oR) const;   // has its own place in the atlas
+    QString f_TooltipFor(const QString& l_oName) const;
+    void f_CommitMove();
 
     enum class Drag { None, Pending, Move, Rubber };
 
-    AtlasDocument* m_doc;
-    int m_page = 0;
-    bool m_showOutlines = true;
-    bool m_showChildren = true;
-    QSet<QString> m_pinned;
-    QString m_hover;
+    AtlasDocument* m_pDoc;
+    int m_iPage = 0;
+    bool m_bShowOutlines = true;
+    bool m_bShowChildren = true;
+    QSet<QString> m_oPinned;
+    QString m_oHover;
 
-    Drag m_drag = Drag::None;
-    QPointF m_pressWidget;          // where the button went down (widget)
-    QPointF m_pressContent;
-    QPoint m_moveDelta;             // whole pixels
-    QStringList m_dragNames;
-    QRectF m_rubber;                // content
-    QStringList m_selectionAtPress;
+    Drag m_eDrag = Drag::None;
+    QPointF m_oPressWidget;          // where the button went down (widget)
+    QPointF m_oPressContent;
+    QPoint m_oMoveDelta;             // whole pixels
+    QStringList m_oDragNames;
+    QRectF m_oRubber;                // content
+    QStringList m_oSelectionAtPress;
 #if TOMS_ATLAS_GAME_RENDERER
-    GameTextures m_tex;   // the image as a game-renderer texture
+    GameTextures m_oTex;   // the image as a game-renderer texture
 #endif
 };

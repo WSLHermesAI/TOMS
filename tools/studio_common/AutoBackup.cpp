@@ -24,165 +24,165 @@
 #include <algorithm>
 
 namespace {
-QList<AutoBackup*>& instances()
+QList<AutoBackup*>& f_Instances()
 {
-    static QList<AutoBackup*> list;
-    return list;
+    static QList<AutoBackup*> l_oList;
+    return l_oList;
 }
 }  // namespace
 
-AutoBackup::Settings AutoBackup::settings()
+AutoBackup::Settings AutoBackup::f_Settings()
 {
-    const QSettings q;
-    Settings s;
-    s.enabled = q.value(QStringLiteral("backup/enabled"), s.enabled).toBool();
-    s.minutes = std::clamp(q.value(QStringLiteral("backup/minutes"), s.minutes).toInt(), 1, 240);
-    s.edits = std::clamp(q.value(QStringLiteral("backup/edits"), s.edits).toInt(), 1, 1000);
-    s.keep = std::clamp(q.value(QStringLiteral("backup/keep"), s.keep).toInt(), 1, 500);
-    return s;
+    const QSettings l_oQ;
+    Settings l_oS;
+    l_oS.m_bEnabled = l_oQ.value(QStringLiteral("backup/enabled"), l_oS.m_bEnabled).toBool();
+    l_oS.m_iMinutes = std::clamp(l_oQ.value(QStringLiteral("backup/minutes"), l_oS.m_iMinutes).toInt(), 1, 240);
+    l_oS.m_iEdits = std::clamp(l_oQ.value(QStringLiteral("backup/edits"), l_oS.m_iEdits).toInt(), 1, 1000);
+    l_oS.m_iKeep = std::clamp(l_oQ.value(QStringLiteral("backup/keep"), l_oS.m_iKeep).toInt(), 1, 500);
+    return l_oS;
 }
 
-void AutoBackup::setSettings(const Settings& s)
+void AutoBackup::f_SetSettings(const Settings& l_oS)
 {
-    QSettings q;
-    q.setValue(QStringLiteral("backup/enabled"), s.enabled);
-    q.setValue(QStringLiteral("backup/minutes"), s.minutes);
-    q.setValue(QStringLiteral("backup/edits"), s.edits);
-    q.setValue(QStringLiteral("backup/keep"), s.keep);
-    for (AutoBackup* b : instances()) b->applySettings();
+    QSettings l_oQ;
+    l_oQ.setValue(QStringLiteral("backup/enabled"), l_oS.m_bEnabled);
+    l_oQ.setValue(QStringLiteral("backup/minutes"), l_oS.m_iMinutes);
+    l_oQ.setValue(QStringLiteral("backup/edits"), l_oS.m_iEdits);
+    l_oQ.setValue(QStringLiteral("backup/keep"), l_oS.m_iKeep);
+    for (AutoBackup* l_pB : f_Instances()) l_pB->f_ApplySettings();
 }
 
-AutoBackup::AutoBackup(QUndoStack* stack, const QString& extension, std::function<QString()> currentFile, Writer write,
-                       QObject* parent)
-    : QObject(parent)
-    , m_stack(stack)
-    , m_ext(extension)
-    , m_file(std::move(currentFile))
-    , m_write(std::move(write))
+AutoBackup::AutoBackup(QUndoStack* l_pStack, const QString& l_oExtension, std::function<QString()> l_fnCurrentFile, Writer l_fnWrite,
+                       QObject* l_pParent)
+    : QObject(l_pParent)
+    , m_pStack(l_pStack)
+    , m_oExt(l_oExtension)
+    , m_fnFile(std::move(l_fnCurrentFile))
+    , m_fnWrite(std::move(l_fnWrite))
 {
-    instances().append(this);
-    connect(stack, &QUndoStack::indexChanged, this, &AutoBackup::edited);
-    connect(stack, &QUndoStack::cleanChanged, this, [this](bool clean) {
-        if (clean) m_pending = 0;   // saved (or opened): the file on disk has it all
+    f_Instances().append(this);
+    connect(l_pStack, &QUndoStack::indexChanged, this, &AutoBackup::f_Edited);
+    connect(l_pStack, &QUndoStack::cleanChanged, this, [this](bool l_bClean) {
+        if (l_bClean) m_iPending = 0;   // saved (or opened): the file on disk has it all
     });
-    connect(&m_timer, &QTimer::timeout, this, [this] {
-        if (m_pending > 0 && settings().enabled) backupNow();
+    connect(&m_oTimer, &QTimer::timeout, this, [this] {
+        if (m_iPending > 0 && f_Settings().m_bEnabled) f_BackupNow();
     });
-    applySettings();
+    f_ApplySettings();
 }
 
-AutoBackup::~AutoBackup() { instances().removeAll(this); }
+AutoBackup::~AutoBackup() { f_Instances().removeAll(this); }
 
-void AutoBackup::applySettings()
+void AutoBackup::f_ApplySettings()
 {
-    const Settings s = settings();
-    m_timer.setInterval(s.minutes * 60 * 1000);
-    if (s.enabled) m_timer.start();
-    else m_timer.stop();
+    const Settings l_oS = f_Settings();
+    m_oTimer.setInterval(l_oS.m_iMinutes * 60 * 1000);
+    if (l_oS.m_bEnabled) m_oTimer.start();
+    else m_oTimer.stop();
 }
 
-void AutoBackup::edited()
+void AutoBackup::f_Edited()
 {
-    if (m_stack->isClean()) {
-        m_pending = 0;
+    if (m_pStack->isClean()) {
+        m_iPending = 0;
         return;
     }
-    m_pending++;
-    const Settings s = settings();
-    if (s.enabled && m_pending >= s.edits) backupNow();
+    m_iPending++;
+    const Settings l_oS = f_Settings();
+    if (l_oS.m_bEnabled && m_iPending >= l_oS.m_iEdits) f_BackupNow();
 }
 
-QString AutoBackup::folder()
+QString AutoBackup::f_Folder()
 {
     return QDir(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)).filePath(QStringLiteral("backups"));
 }
 
-QString AutoBackup::backupNow(QString* error)
+QString AutoBackup::f_BackupNow(QString* l_pError)
 {
-    const QString file = m_file();
-    QString stem = file.isEmpty() ? QStringLiteral("untitled") : QFileInfo(file).completeBaseName();
-    stem.replace(QRegularExpression(QStringLiteral(R"([\\/:*?"<>|])")), QStringLiteral("_"));
-    const QString dir = QDir(folder()).filePath(stem);
-    QDir().mkpath(dir);
-    const QString time = QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd-HHmmss-zzz"));
-    QString path = QDir(dir).filePath(stem + QLatin1Char('_') + time + m_ext);
+    const QString l_oFile = m_fnFile();
+    QString l_oStem = l_oFile.isEmpty() ? QStringLiteral("untitled") : QFileInfo(l_oFile).completeBaseName();
+    l_oStem.replace(QRegularExpression(QStringLiteral(R"([\\/:*?"<>|])")), QStringLiteral("_"));
+    const QString l_oDir = QDir(f_Folder()).filePath(l_oStem);
+    QDir().mkpath(l_oDir);
+    const QString l_oTime = QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd-HHmmss-zzz"));
+    QString l_oPath = QDir(l_oDir).filePath(l_oStem + QLatin1Char('_') + l_oTime + m_oExt);
     // Two backups in the same millisecond: _002, _003 ... after the time. '_' sorts after the '.' of the extension and
     // the number is padded, so the later backup also sorts later (prune keeps the newest by name).
-    for (int i = 2; QFileInfo::exists(path) || QFileInfo::exists(path.left(path.size() - m_ext.size())); i++)
-        path = QDir(dir).filePath(QStringLiteral("%1_%2_%3%4").arg(stem, time).arg(i, 3, 10, QLatin1Char('0')).arg(m_ext));
-    QString err;
-    if (!m_write(path, &err)) {
-        if (error) *error = err;
-        emit message(tr("Backup failed: %1").arg(err));
+    for (int l_iI = 2; QFileInfo::exists(l_oPath) || QFileInfo::exists(l_oPath.left(l_oPath.size() - m_oExt.size())); l_iI++)
+        l_oPath = QDir(l_oDir).filePath(QStringLiteral("%1_%2_%3%4").arg(l_oStem, l_oTime).arg(l_iI, 3, 10, QLatin1Char('0')).arg(m_oExt));
+    QString l_oErr;
+    if (!m_fnWrite(l_oPath, &l_oErr)) {
+        if (l_pError) *l_pError = l_oErr;
+        emit f_Message(tr("Backup failed: %1").arg(l_oErr));
         return QString();
     }
-    m_pending = 0;
-    prune(dir, stem);
-    emit message(tr("Backed up to %1").arg(QDir::toNativeSeparators(path)));
-    return path;
+    m_iPending = 0;
+    f_Prune(l_oDir, l_oStem);
+    emit f_Message(tr("Backed up to %1").arg(QDir::toNativeSeparators(l_oPath)));
+    return l_oPath;
 }
 
-void AutoBackup::prune(const QString& dir, const QString& stem) const
+void AutoBackup::f_Prune(const QString& l_oDir, const QString& l_oStem) const
 {
     // Names end in a sortable time: the oldest come first.
-    QDir d(dir);
-    const QFileInfoList all = d.entryInfoList({stem + QStringLiteral("_*")}, QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
-    const int keep = settings().keep;
-    for (int i = 0; i + keep < all.size(); i++) {
-        if (all[i].isDir()) QDir(all[i].absoluteFilePath()).removeRecursively();
-        else QFile::remove(all[i].absoluteFilePath());
+    QDir l_oD(l_oDir);
+    const QFileInfoList l_oAll = l_oD.entryInfoList({l_oStem + QStringLiteral("_*")}, QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
+    const int l_iKeep = f_Settings().m_iKeep;
+    for (int l_iI = 0; l_iI + l_iKeep < l_oAll.size(); l_iI++) {
+        if (l_oAll[l_iI].isDir()) QDir(l_oAll[l_iI].absoluteFilePath()).removeRecursively();
+        else QFile::remove(l_oAll[l_iI].absoluteFilePath());
     }
 }
 
-QMenu* AutoBackup::addMenu(QMenu* fileMenu, QWidget* dialogParent)
+QMenu* AutoBackup::f_AddMenu(QMenu* l_pFileMenu, QWidget* l_pDialogParent)
 {
-    QMenu* m = fileMenu->addMenu(tr("Back&ups"));
-    m->addAction(Icons::icon(Icons::Id::Save), tr("Back Up &Now"), this, [this] { backupNow(); });
-    m->addAction(Icons::icon(Icons::Id::Folder), tr("&Open Backup Folder"), this, [] {
-        QDir().mkpath(folder());
-        QDesktopServices::openUrl(QUrl::fromLocalFile(folder()));
+    QMenu* l_pM = l_pFileMenu->addMenu(tr("Back&ups"));
+    l_pM->addAction(Icons::f_Icon(Icons::Id::Save), tr("Back Up &Now"), this, [this] { f_BackupNow(); });
+    l_pM->addAction(Icons::f_Icon(Icons::Id::Folder), tr("&Open Backup Folder"), this, [] {
+        QDir().mkpath(f_Folder());
+        QDesktopServices::openUrl(QUrl::fromLocalFile(f_Folder()));
     });
-    m->addAction(tr("&Settings..."), this, [dialogParent] {
-        Settings s = settings();
-        QDialog dlg(dialogParent);
-        dlg.setWindowTitle(tr("Backup Settings"));
-        auto* form = new QFormLayout(&dlg);
-        auto* on = new QCheckBox(tr("Back up automatically"), &dlg);
-        on->setChecked(s.enabled);
-        auto spin = [&dlg](int lo, int hi, int v, const QString& suffix) {
-            auto* b = new QSpinBox(&dlg);
-            b->setRange(lo, hi);
-            b->setValue(v);
-            b->setSuffix(suffix);
-            return b;
+    l_pM->addAction(tr("&Settings..."), this, [l_pDialogParent] {
+        Settings l_oS = f_Settings();
+        QDialog l_oDlg(l_pDialogParent);
+        l_oDlg.setWindowTitle(tr("Backup Settings"));
+        auto* l_pForm = new QFormLayout(&l_oDlg);
+        auto* l_pOn = new QCheckBox(tr("Back up automatically"), &l_oDlg);
+        l_pOn->setChecked(l_oS.m_bEnabled);
+        auto l_fnSpin = [&l_oDlg](int l_iLo, int l_iHi, int l_iV, const QString& l_oSuffix) {
+            auto* l_pB = new QSpinBox(&l_oDlg);
+            l_pB->setRange(l_iLo, l_iHi);
+            l_pB->setValue(l_iV);
+            l_pB->setSuffix(l_oSuffix);
+            return l_pB;
         };
-        QSpinBox* minutes = spin(1, 240, s.minutes, tr(" min"));
-        QSpinBox* edits = spin(1, 1000, s.edits, tr(" edits"));
-        QSpinBox* keep = spin(1, 500, s.keep, tr(" backups per file"));
-        minutes->setToolTip(tr("A backup every this many minutes, when something changed"));
-        edits->setToolTip(tr("Also a backup after this many edits (undo / redo count too)"));
-        form->addRow(on);
-        form->addRow(tr("Every"), minutes);
-        form->addRow(tr("Or after"), edits);
-        form->addRow(tr("Keep"), keep);
-        form->addRow(tr("Folder"), new QLabel(QDir::toNativeSeparators(folder()), &dlg));
-        auto* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dlg);
-        form->addRow(buttons);
-        connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
-        connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
-        if (dlg.exec() != QDialog::Accepted) return;
-        setSettings({on->isChecked(), minutes->value(), edits->value(), keep->value()});
+        QSpinBox* l_pMinutes = l_fnSpin(1, 240, l_oS.m_iMinutes, tr(" min"));
+        QSpinBox* l_pEdits = l_fnSpin(1, 1000, l_oS.m_iEdits, tr(" edits"));
+        QSpinBox* l_pKeep = l_fnSpin(1, 500, l_oS.m_iKeep, tr(" backups per file"));
+        l_pMinutes->setToolTip(tr("A backup every this many minutes, when something changed"));
+        l_pEdits->setToolTip(tr("Also a backup after this many edits (undo / redo count too)"));
+        l_pForm->addRow(l_pOn);
+        l_pForm->addRow(tr("Every"), l_pMinutes);
+        l_pForm->addRow(tr("Or after"), l_pEdits);
+        l_pForm->addRow(tr("Keep"), l_pKeep);
+        l_pForm->addRow(tr("Folder"), new QLabel(QDir::toNativeSeparators(f_Folder()), &l_oDlg));
+        auto* l_pButtons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &l_oDlg);
+        l_pForm->addRow(l_pButtons);
+        connect(l_pButtons, &QDialogButtonBox::accepted, &l_oDlg, &QDialog::accept);
+        connect(l_pButtons, &QDialogButtonBox::rejected, &l_oDlg, &QDialog::reject);
+        if (l_oDlg.exec() != QDialog::Accepted) return;
+        f_SetSettings({l_pOn->isChecked(), l_pMinutes->value(), l_pEdits->value(), l_pKeep->value()});
     });
-    return m;
+    return l_pM;
 }
 
-QDockWidget* createHistoryDock(QUndoStack* stack, QWidget* parent)
+QDockWidget* f_CreateHistoryDock(QUndoStack* l_pStack, QWidget* l_pParent)
 {
-    auto* dock = new QDockWidget(QObject::tr("History"), parent);
-    dock->setObjectName(QStringLiteral("HistoryDock"));
-    auto* view = new QUndoView(stack, dock);
-    view->setEmptyLabel(QObject::tr("<opened>"));
-    view->setToolTip(QObject::tr("Every edit, oldest first: click one to undo or redo up to it"));
-    dock->setWidget(view);
-    return dock;
+    auto* l_pDock = new QDockWidget(QObject::tr("History"), l_pParent);
+    l_pDock->setObjectName(QStringLiteral("HistoryDock"));
+    auto* l_pView = new QUndoView(l_pStack, l_pDock);
+    l_pView->setEmptyLabel(QObject::tr("<opened>"));
+    l_pView->setToolTip(QObject::tr("Every edit, oldest first: click one to undo or redo up to it"));
+    l_pDock->setWidget(l_pView);
+    return l_pDock;
 }

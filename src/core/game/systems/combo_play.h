@@ -22,27 +22,27 @@
 namespace toms {
 
 struct ComboSettings {
-    int points = 3;
-    bool turnBack = true;
-    int sweepMs = 1600;          // one sweep with no charge
-    int maxSweeps = 3;
-    float speedUp = 1.0f;        // a full charge: this much faster
-    float hitWindow = 0.07f;
-    int hitWindowMs = 0;         // the window is at least this long in time (0: hitWindow only)
-    int lateMs = 0;              // a tap this long after passing a point still hits it
-    int missBack = -1;           // points a miss takes back; -1: to the start
-    int missWaitMs = 0;
+    int m_iPoints = 3;
+    bool m_bTurnBack = true;
+    int m_iSweepMs = 1600;          // one sweep with no charge
+    int m_iMaxSweeps = 3;
+    float m_fSpeedUp = 1.0f;        // a full charge: this much faster
+    float m_fHitWindow = 0.07f;
+    int m_iHitWindowMs = 0;         // the window is at least this long in time (0: hitWindow only)
+    int m_iLateMs = 0;              // a tap this long after passing a point still hits it
+    int m_iMissBack = -1;           // points a miss takes back; -1: to the start
+    int m_iMissWaitMs = 0;
 };
 // The settings of a weapon at a level.
-ComboSettings comboSettings(const WeaponPlay& w, int weaponLevel);
+ComboSettings f_ComboSettings(const WeaponPlay& l_oW, int l_iWeaponLevel);
 
 struct ComboResult {
-    int hits = 0, points = 0;
-    float charge = 0;            // 0 .. 1
-    bool failed = false;         // two misses in a row (a plain attack)
-    int perfects = -1;           // a touch play's perfect answers (touch_play.h); -1: not counted (the track)
+    int m_iHits = 0, m_iPoints = 0;
+    float m_fCharge = 0;            // 0 .. 1
+    bool m_bFailed = false;         // two misses in a row (a plain attack)
+    int m_iPerfects = -1;           // a touch play's perfect answers (touch_play.h); -1: not counted (the track)
     // The attack's power for the damage formula, 0 .. 100: the share of points hit (a fail: 0).
-    float power() const { return failed || points <= 0 ? 0.0f : 100.0f * float(hits) / float(points); }
+    float f_Power() const { return m_bFailed || m_iPoints <= 0 ? 0.0f : 100.0f * float(m_iHits) / float(m_iPoints); }
 };
 
 class ComboPlay {
@@ -50,38 +50,38 @@ public:
     enum class Tap { Hit, Miss, Ignored };
 
     // Starts a combo with this much charge (0 .. 1).
-    void start(const ComboSettings& s, float charge);
-    void update(int dtMs);
-    Tap tap();
-    void stop() { running_ = false; }
+    void f_Start(const ComboSettings& l_oS, float l_fCharge);
+    void f_Update(int l_iDtMs);
+    Tap f_Tap();
+    void f_Stop() { m_bRunning = false; }
 
-    bool running() const { return running_; }
-    bool done() const { return done_; }            // ended; result() holds it (cleared by start())
-    const ComboResult& result() const { return result_; }
+    bool f_Running() const { return m_bRunning; }
+    bool f_Done() const { return m_bDone; }            // ended; result() holds it (cleared by start())
+    const ComboResult& f_Result() const { return m_oResult; }
 
-    float marker() const { return pos_; }          // 0 .. 1
-    const std::vector<float>& pointsAt() const { return at_; }
-    const std::vector<bool>& pointsHit() const { return hit_; }
-    int hits() const;
-    int missesInRow() const { return missesInRow_; }
-    bool waiting() const { return waitMs_ > 0; }   // after a miss: taps do not count yet
-    float window() const;                          // a point's window now (each side, a fraction of the track)
-    int nearPoint() const;                         // the point not hit yet whose window the marker is in (-1: none)
-    std::vector<int> takeEntered();                // the points whose window the marker entered since the last call
+    float f_Marker() const { return m_fPos; }          // 0 .. 1
+    const std::vector<float>& f_PointsAt() const { return m_vAt; }
+    const std::vector<bool>& f_PointsHit() const { return m_vHit; }
+    int f_Hits() const;
+    int f_MissesInRow() const { return m_iMissesInRow; }
+    bool f_Waiting() const { return m_iWaitMs > 0; }   // after a miss: taps do not count yet
+    float f_Window() const;                          // a point's window now (each side, a fraction of the track)
+    int f_NearPoint() const;                         // the point not hit yet whose window the marker is in (-1: none)
+    std::vector<int> f_TakeEntered();                // the points whose window the marker entered since the last call
 
 private:
-    void finish(bool failed);
+    void f_Finish(bool l_bFailed);
 
-    ComboSettings s_;
-    float charge_ = 0, pos_ = 0, speed_ = 0;      // speed: track fractions per ms
-    int dir_ = 1, sweeps_ = 0, waitMs_ = 0, missesInRow_ = 0;
-    bool running_ = false, done_ = false;
-    std::vector<float> at_;
-    std::vector<bool> hit_;
-    std::vector<int> order_;                       // the points hit, oldest first (a miss takes back the newest)
-    int lastNear_ = -1;
-    std::vector<int> entered_;
-    ComboResult result_;
+    ComboSettings m_oS;
+    float m_fCharge = 0, m_fPos = 0, m_fSpeed = 0;      // speed: track fractions per ms
+    int m_iDir = 1, m_iSweeps = 0, m_iWaitMs = 0, m_iMissesInRow = 0;
+    bool m_bRunning = false, m_bDone = false;
+    std::vector<float> m_vAt;
+    std::vector<bool> m_vHit;
+    std::vector<int> m_vOrder;                       // the points hit, oldest first (a miss takes back the newest)
+    int m_iLastNear = -1;
+    std::vector<int> m_vEntered;
+    ComboResult m_oResult;
 };
 
 } // namespace toms

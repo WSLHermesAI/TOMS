@@ -21,9 +21,9 @@ namespace toms {
 
 // At the top of main: turn the debug heap's tracking on, remember what is allocated now. breakAlloc > 0: stop in the
 // debugger when that allocation number is made.
-void leakCheckBegin(long breakAlloc = 0, const char* traceList = nullptr);   // traceList: "4558,348307"
+void f_LeakCheckBegin(long l_iBreakAlloc = 0, const char* l_pszTraceList = nullptr);   // traceList: "4558,348307"
 // At the end of main, after releaseSingletons(): where the report goes. It is written once the statics are destroyed
 // (an atexit handler leakCheckBegin registered). Returns 0.
-long leakCheckEnd(const char* reportPath = "toms_leaks.log");
+long f_LeakCheckEnd(const char* l_pszReportPath = "toms_leaks.log");
 
 } // namespace toms

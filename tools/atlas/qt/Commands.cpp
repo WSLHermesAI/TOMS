@@ -7,43 +7,43 @@
 
 #include <climits>
 
-bool sameProjectState(const atlas::Project& a, const atlas::Project& b)
+bool f_SameProjectState(const atlas::Project& l_oA, const atlas::Project& l_oB)
 {
-    if (a.images != b.images || a.variants.size() != b.variants.size()) return false;
-    for (size_t i = 0; i < a.variants.size(); i++)
-        if (a.variants[i].images != b.variants[i].images) return false;
-    return atlas::projectToJson(a) == atlas::projectToJson(b);
+    if (l_oA.m_mapImages != l_oB.m_mapImages || l_oA.m_vVariants.size() != l_oB.m_vVariants.size()) return false;
+    for (size_t l_nI = 0; l_nI < l_oA.m_vVariants.size(); l_nI++)
+        if (l_oA.m_vVariants[l_nI].m_mapImages != l_oB.m_vVariants[l_nI].m_mapImages) return false;
+    return atlas::f_ProjectToJson(l_oA) == atlas::f_ProjectToJson(l_oB);
 }
 
-ProjectCommand::ProjectCommand(AtlasDocument* doc, const QString& text, atlas::Project before, atlas::Project after,
-                               QStringList selectionBefore, QStringList selectionAfter, const QString& mergeKey)
-    : QUndoCommand(text)
-    , m_doc(doc)
-    , m_before(std::move(before))
-    , m_after(std::move(after))
-    , m_selectionBefore(std::move(selectionBefore))
-    , m_selectionAfter(std::move(selectionAfter))
-    , m_mergeKey(mergeKey)
-    , m_id(mergeKey.isEmpty() ? -1 : int(qHash(mergeKey) & INT_MAX))
-    , m_time(QDateTime::currentMSecsSinceEpoch())
+ProjectCommand::ProjectCommand(AtlasDocument* l_pDoc, const QString& l_oText, atlas::Project l_oBefore, atlas::Project l_oAfter,
+                               QStringList l_oSelectionBefore, QStringList l_oSelectionAfter, const QString& l_oMergeKey)
+    : QUndoCommand(l_oText)
+    , m_pDoc(l_pDoc)
+    , m_oBefore(std::move(l_oBefore))
+    , m_oAfter(std::move(l_oAfter))
+    , m_oSelectionBefore(std::move(l_oSelectionBefore))
+    , m_oSelectionAfter(std::move(l_oSelectionAfter))
+    , m_oMergeKey(l_oMergeKey)
+    , m_iId(l_oMergeKey.isEmpty() ? -1 : int(qHash(l_oMergeKey) & INT_MAX))
+    , m_i64Time(QDateTime::currentMSecsSinceEpoch())
 {
 }
 
-void ProjectCommand::undo() { m_doc->restoreState(m_before, m_selectionBefore); }
+void ProjectCommand::undo() { m_pDoc->f_RestoreState(m_oBefore, m_oSelectionBefore); }
 
-void ProjectCommand::redo() { m_doc->restoreState(m_after, m_selectionAfter); }
+void ProjectCommand::redo() { m_pDoc->f_RestoreState(m_oAfter, m_oSelectionAfter); }
 
-bool ProjectCommand::mergeWith(const QUndoCommand* other)
+bool ProjectCommand::mergeWith(const QUndoCommand* l_pOther)
 {
-    const auto* o = static_cast<const ProjectCommand*>(other);   // same id() => same class
+    const auto* l_pO = static_cast<const ProjectCommand*>(l_pOther);   // same id() => same class
     // Two different keys can share a hash; the selection check keeps "padding of A" and
     // "padding of B" apart.
-    if (o->m_mergeKey != m_mergeKey || o->m_selectionBefore != m_selectionAfter || o->m_time - m_time > kMergeWindowMs)
+    if (l_pO->m_oMergeKey != m_oMergeKey || l_pO->m_oSelectionBefore != m_oSelectionAfter || l_pO->m_i64Time - m_i64Time > m_i64MergeWindowMs)
         return false;
-    m_after = o->m_after;
-    m_selectionAfter = o->m_selectionAfter;
-    m_time = o->m_time;
+    m_oAfter = l_pO->m_oAfter;
+    m_oSelectionAfter = l_pO->m_oSelectionAfter;
+    m_i64Time = l_pO->m_i64Time;
     // Dragging a value back to where it started leaves nothing to undo.
-    setObsolete(sameProjectState(m_after, m_before));
+    setObsolete(f_SameProjectState(m_oAfter, m_oBefore));
     return true;
 }

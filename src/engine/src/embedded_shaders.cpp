@@ -133,44 +133,44 @@
 namespace toms::next {
 namespace {
 
-struct Blob { const uint8_t* data; uint32_t size; };
+struct Blob { const uint8_t* m_pData; uint32_t m_uSize; };
 
 #define TOMS_BLOB(name) Blob{ name, (uint32_t)sizeof(name) }
 
-struct ProgramBlobs { Blob vs, fs; };
+struct ProgramBlobs { Blob m_oVs, m_oFs; };
 
 // One profile's programs.
 #define TOMS_PROGRAMS(ext)                                                                          \
-    switch (which) {                                                                                \
-    case ShaderProgram::Sprite: out = { TOMS_BLOB(vs_sprite_##ext), TOMS_BLOB(fs_sprite_##ext) }; break; \
-    case ShaderProgram::SpriteInstanced: out = { TOMS_BLOB(vs_sprite_inst_##ext), TOMS_BLOB(fs_sprite_##ext) }; break; \
-    case ShaderProgram::Layer:  out = { TOMS_BLOB(vs_sprite_##ext),  TOMS_BLOB(fs_layer_##ext) };  break; \
-    case ShaderProgram::ImGui:  out = { TOMS_BLOB(vs_imgui_##ext),  TOMS_BLOB(fs_imgui_##ext) };  break; \
-    case ShaderProgram::RmlUi:  out = { TOMS_BLOB(vs_rml_##ext),    TOMS_BLOB(fs_rml_##ext) };    break;\
-    case ShaderProgram::Mesh:   out = { TOMS_BLOB(vs_mesh_##ext),   TOMS_BLOB(fs_mesh_##ext) };   break;\
-    case ShaderProgram::MeshInstanced: out = { TOMS_BLOB(vs_mesh_inst_##ext), TOMS_BLOB(fs_mesh_##ext) }; break;\
-    case ShaderProgram::Line:   out = { TOMS_BLOB(vs_line_##ext),   TOMS_BLOB(fs_line_##ext) };   break;\
-    case ShaderProgram::MeshShadow: out = { TOMS_BLOB(vs_mesh_##ext), TOMS_BLOB(fs_shadow_##ext) }; break;\
-    case ShaderProgram::MeshShadowInstanced: out = { TOMS_BLOB(vs_mesh_inst_##ext), TOMS_BLOB(fs_shadow_##ext) }; break;\
-    case ShaderProgram::MeshAnimTex: out = { TOMS_BLOB(vs_mesh_animtex_##ext), TOMS_BLOB(fs_mesh_##ext) }; break;\
-    case ShaderProgram::MeshShadowAnimTex: out = { TOMS_BLOB(vs_mesh_animtex_##ext), TOMS_BLOB(fs_shadow_##ext) }; break;\
-    case ShaderProgram::Sky:    out = { TOMS_BLOB(vs_sky_##ext),    TOMS_BLOB(fs_sky_##ext) };    break;\
+    switch (l_eWhich) {                                                                                \
+    case ShaderProgram::Sprite: l_oOut = { TOMS_BLOB(vs_sprite_##ext), TOMS_BLOB(fs_sprite_##ext) }; break; \
+    case ShaderProgram::SpriteInstanced: l_oOut = { TOMS_BLOB(vs_sprite_inst_##ext), TOMS_BLOB(fs_sprite_##ext) }; break; \
+    case ShaderProgram::Layer:  l_oOut = { TOMS_BLOB(vs_sprite_##ext),  TOMS_BLOB(fs_layer_##ext) };  break; \
+    case ShaderProgram::ImGui:  l_oOut = { TOMS_BLOB(vs_imgui_##ext),  TOMS_BLOB(fs_imgui_##ext) };  break; \
+    case ShaderProgram::RmlUi:  l_oOut = { TOMS_BLOB(vs_rml_##ext),    TOMS_BLOB(fs_rml_##ext) };    break;\
+    case ShaderProgram::Mesh:   l_oOut = { TOMS_BLOB(vs_mesh_##ext),   TOMS_BLOB(fs_mesh_##ext) };   break;\
+    case ShaderProgram::MeshInstanced: l_oOut = { TOMS_BLOB(vs_mesh_inst_##ext), TOMS_BLOB(fs_mesh_##ext) }; break;\
+    case ShaderProgram::Line:   l_oOut = { TOMS_BLOB(vs_line_##ext),   TOMS_BLOB(fs_line_##ext) };   break;\
+    case ShaderProgram::MeshShadow: l_oOut = { TOMS_BLOB(vs_mesh_##ext), TOMS_BLOB(fs_shadow_##ext) }; break;\
+    case ShaderProgram::MeshShadowInstanced: l_oOut = { TOMS_BLOB(vs_mesh_inst_##ext), TOMS_BLOB(fs_shadow_##ext) }; break;\
+    case ShaderProgram::MeshAnimTex: l_oOut = { TOMS_BLOB(vs_mesh_animtex_##ext), TOMS_BLOB(fs_mesh_##ext) }; break;\
+    case ShaderProgram::MeshShadowAnimTex: l_oOut = { TOMS_BLOB(vs_mesh_animtex_##ext), TOMS_BLOB(fs_shadow_##ext) }; break;\
+    case ShaderProgram::Sky:    l_oOut = { TOMS_BLOB(vs_sky_##ext),    TOMS_BLOB(fs_sky_##ext) };    break;\
     default: return false;                                                                         \
     }                                                                                               \
     return true
 
 // The compute path's two programs; false = this backend has none (the batch uses instancing).
-bool pickCompute(ShaderProgram which, bgfx::RendererType::Enum type, ProgramBlobs& out) {
+bool f_PickCompute(ShaderProgram l_eWhich, bgfx::RendererType::Enum l_eType, ProgramBlobs& l_oOut) {
 #if defined(TOMS_SHADER_HAS_COMPUTE)
 #define TOMS_COMPUTE(ext)                                                                           \
-    switch (which) {                                                                                \
-    case ShaderProgram::SpriteCompute: out = ProgramBlobs{TOMS_BLOB(cs_sprite_##ext), {}}; break;   \
-    case ShaderProgram::FxSpawn:       out = ProgramBlobs{TOMS_BLOB(cs_fx_spawn_##ext), {}}; break; \
-    case ShaderProgram::FxUpdate:      out = ProgramBlobs{TOMS_BLOB(cs_fx_update_##ext), {}}; break;\
-    default: out = ProgramBlobs{TOMS_BLOB(vs_sprite_cs_##ext), TOMS_BLOB(fs_sprite_##ext)}; break;  \
+    switch (l_eWhich) {                                                                                \
+    case ShaderProgram::SpriteCompute: l_oOut = ProgramBlobs{TOMS_BLOB(cs_sprite_##ext), {}}; break;   \
+    case ShaderProgram::FxSpawn:       l_oOut = ProgramBlobs{TOMS_BLOB(cs_fx_spawn_##ext), {}}; break; \
+    case ShaderProgram::FxUpdate:      l_oOut = ProgramBlobs{TOMS_BLOB(cs_fx_update_##ext), {}}; break;\
+    default: l_oOut = ProgramBlobs{TOMS_BLOB(vs_sprite_cs_##ext), TOMS_BLOB(fs_sprite_##ext)}; break;  \
     }                                                                                               \
     return true
-    switch (type) {
+    switch (l_eType) {
 #if defined(TOMS_SHADERS_DESKTOP) && defined(TOMS_SHADER_HAS_DXBC)
     case bgfx::RendererType::Direct3D11:
     case bgfx::RendererType::Direct3D12: TOMS_COMPUTE(dxbc);
@@ -185,16 +185,16 @@ bool pickCompute(ShaderProgram which, bgfx::RendererType::Enum type, ProgramBlob
     }
 #undef TOMS_COMPUTE
 #else
-    (void)which; (void)type; (void)out;
+    (void)l_eWhich; (void)l_eType; (void)l_oOut;
     return false;
 #endif
 }
 
-bool pick(ShaderProgram which, bgfx::RendererType::Enum type, ProgramBlobs& out) {
-    if (which == ShaderProgram::SpriteCompute || which == ShaderProgram::SpriteFromCompute || which == ShaderProgram::FxSpawn ||
-        which == ShaderProgram::FxUpdate)
-        return pickCompute(which, type, out);
-    switch (type) {
+bool f_Pick(ShaderProgram l_eWhich, bgfx::RendererType::Enum l_eType, ProgramBlobs& l_oOut) {
+    if (l_eWhich == ShaderProgram::SpriteCompute || l_eWhich == ShaderProgram::SpriteFromCompute || l_eWhich == ShaderProgram::FxSpawn ||
+        l_eWhich == ShaderProgram::FxUpdate)
+        return f_PickCompute(l_eWhich, l_eType, l_oOut);
+    switch (l_eType) {
 #ifdef TOMS_SHADERS_DESKTOP
 #if defined(TOMS_SHADER_HAS_DXBC)
     case bgfx::RendererType::Direct3D11:
@@ -217,20 +217,20 @@ bool pick(ShaderProgram which, bgfx::RendererType::Enum type, ProgramBlobs& out)
 
 }  // namespace
 
-bgfx::ProgramHandle createEmbeddedProgram(ShaderProgram which) {
-    ProgramBlobs b{};
-    if (!pick(which, bgfx::getRendererType(), b)) {
-        if (which != ShaderProgram::Sprite && which != ShaderProgram::ImGui && which != ShaderProgram::RmlUi)
+bgfx::ProgramHandle f_CreateEmbeddedProgram(ShaderProgram l_eWhich) {
+    ProgramBlobs l_oB{};
+    if (!f_Pick(l_eWhich, bgfx::getRendererType(), l_oB)) {
+        if (l_eWhich != ShaderProgram::Sprite && l_eWhich != ShaderProgram::ImGui && l_eWhich != ShaderProgram::RmlUi)
             return BGFX_INVALID_HANDLE;   // optional programs: the caller falls back
         std::fprintf(stderr, "[toms] no embedded shaders for renderer '%s'\n",
                      bgfx::getRendererName(bgfx::getRendererType()));
         return BGFX_INVALID_HANDLE;
     }
-    if (!b.fs.data)   // a compute program: one shader
-        return bgfx::createProgram(bgfx::createShader(bgfx::makeRef(b.vs.data, b.vs.size)), true);
-    bgfx::ShaderHandle vs = bgfx::createShader(bgfx::makeRef(b.vs.data, b.vs.size));
-    bgfx::ShaderHandle fs = bgfx::createShader(bgfx::makeRef(b.fs.data, b.fs.size));
-    return bgfx::createProgram(vs, fs, true /* destroy shaders with the program */);
+    if (!l_oB.m_oFs.m_pData)   // a compute program: one shader
+        return bgfx::createProgram(bgfx::createShader(bgfx::makeRef(l_oB.m_oVs.m_pData, l_oB.m_oVs.m_uSize)), true);
+    bgfx::ShaderHandle l_oVs = bgfx::createShader(bgfx::makeRef(l_oB.m_oVs.m_pData, l_oB.m_oVs.m_uSize));
+    bgfx::ShaderHandle l_oFs = bgfx::createShader(bgfx::makeRef(l_oB.m_oFs.m_pData, l_oB.m_oFs.m_uSize));
+    return bgfx::createProgram(l_oVs, l_oFs, true /* destroy shaders with the program */);
 }
 
 }  // namespace toms::next

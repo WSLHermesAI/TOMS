@@ -13,45 +13,45 @@
 namespace toms::next {
 
 struct BgfxHostConfig {
-    void*       nativeWindow  = nullptr;   // HWND on Windows
-    void*       nativeDisplay = nullptr;   // X11 Display* / wl_display* on Linux, else null
+    void*       m_pNativeWindow  = nullptr;   // HWND on Windows
+    void*       m_pNativeDisplay = nullptr;   // X11 Display* / wl_display* on Linux, else null
     // Vulkan needs a SURFACE, not just a window: the Android path creates it with
     // SDL_Vulkan_CreateSurface and stores it here (VkSurfaceKHR), with the instance in nativeInstance
     // (VkInstance). Left null everywhere else -- bgfx uses nwh/ndt on desktop, and a null surface is
     // simply "no Vulkan surface", so nothing changes there.
-    void*       nativeSurface = nullptr;   // VkSurfaceKHR (Android Vulkan)
-    void*       nativeInstance = nullptr;  // VkInstance   (Android Vulkan)
-    uint32_t    width  = 1280;
-    uint32_t    height = 720;
-    std::string renderer = "auto";         // auto | d3d11 | d3d12 | vulkan | opengl | gles
-    bool        vsync = true;
-    bool        debugText = false;         // bgfx's on-screen stats overlay
-    int         msaa = 0;                  // 0, 2, 4, 8, 16: multisampled backbuffer (3D viewers; the 2D game draws with none)
+    void*       m_pNativeSurface = nullptr;   // VkSurfaceKHR (Android Vulkan)
+    void*       m_pNativeInstance = nullptr;  // VkInstance   (Android Vulkan)
+    uint32_t    m_uWidth  = 1280;
+    uint32_t    m_uHeight = 720;
+    std::string m_strRenderer = "auto";         // auto | d3d11 | d3d12 | vulkan | opengl | gles
+    bool        m_bVsync = true;
+    bool        m_bDebugText = false;         // bgfx's on-screen stats overlay
+    int         m_iMsaa = 0;                  // 0, 2, 4, 8, 16: multisampled backbuffer (3D viewers; the 2D game draws with none)
     // Present each frame as soon as it is rendered. bgfx otherwise presents a frame at the start of the
     // next bgfx::frame(): fine for a loop that draws all the time (the game), but a view that only redraws
     // when something changes (the editors' canvases) would show the frame before the last one.
-    bool        flipAfterRender = false;
+    bool        m_bFlipAfterRender = false;
 };
 
 // Initializes bgfx in single-threaded mode (bgfx::renderFrame() before bgfx::init), which is what
 // both the SDL loop and the Qt timer expect. On failure, `error` says why and what to try.
-bool bgfxHostInit(const BgfxHostConfig& cfg, std::string& error);
-void bgfxHostReset(uint32_t width, uint32_t height);
+bool f_BgfxHostInit(const BgfxHostConfig& l_oCfg, std::string& l_strError);
+void f_BgfxHostReset(uint32_t l_uWidth, uint32_t l_uHeight);
 // The window's surface was recreated (Android, back from the background): draw on `nativeWindow` now.
-void bgfxHostSetWindow(void* nativeWindow, uint32_t width, uint32_t height);
-uint32_t bgfxHostFrame();                  // bgfx::frame(): submit everything queued this frame; its frame number
-void bgfxHostShutdown();
-bool bgfxHostReady();
-double bgfxHostGpuMs();                    // the GPU's time for the last frame bgfx measured (ms; 0 = unknown)
-std::string bgfxHostRendererName();       // e.g. "Direct3D 11"; "(not started)" before init
+void f_BgfxHostSetWindow(void* l_pNativeWindow, uint32_t l_uWidth, uint32_t l_uHeight);
+uint32_t f_BgfxHostFrame();                  // bgfx::frame(): submit everything queued this frame; its frame number
+void f_BgfxHostShutdown();
+bool f_BgfxHostReady();
+double f_BgfxHostGpuMs();                    // the GPU's time for the last frame bgfx measured (ms; 0 = unknown)
+std::string f_BgfxHostRendererName();       // e.g. "Direct3D 11"; "(not started)" before init
 
-void bgfxHostSetDebugText(bool on);
+void f_BgfxHostSetDebugText(bool l_bOn);
 // The one-line performance HUD (F3 / --fps): bgfx debug text, top-left. Set it every frame.
-void bgfxHostSetHud(bool on);
-void bgfxHostHudText(const char* text);   // several lines: a newline between them
-bool bgfxHostSupportsCompute();          // BGFX_CAPS_COMPUTE on the active backend
+void f_BgfxHostSetHud(bool l_bOn);
+void f_BgfxHostHudText(const char* l_pszText);   // several lines: a newline between them
+bool f_BgfxHostSupportsCompute();          // BGFX_CAPS_COMPUTE on the active backend
 
 // Number of screenshots written by the bgfx callback (tests wait for this to change).
-int bgfxHostScreenshotsWritten();
+int f_BgfxHostScreenshotsWritten();
 
 }  // namespace toms::next

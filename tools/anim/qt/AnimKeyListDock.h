@@ -23,46 +23,46 @@ class AnimKeyListDock : public QDockWidget
 public:
     enum Column { ColIndex, ColTime, ColPos, ColRot, ColScale, ColColor, ColSprite, ColVisible, ColEvent, ColDeform, ColFx, ColTrail, ColEase, ColCount };
 
-    explicit AnimKeyListDock(AnimDocument* doc, QWidget* parent = nullptr);
+    explicit AnimKeyListDock(AnimDocument* l_pDoc, QWidget* l_pParent = nullptr);
 
     // Where the sprite sequence comes from (the Sprites dock's selection).
-    void setSpriteSource(std::function<QStringList()> f) { m_spriteSource = std::move(f); }
+    void f_SetSpriteSource(std::function<QStringList()> l_fnF) { m_fnSpriteSource = std::move(l_fnF); }
 
-    QTableWidget* table() const { return m_table; }
-    std::vector<float> rowTimes() const { return m_times; }
-    std::vector<float> selectedTimes() const;
-    void selectRows(const std::vector<int>& rows);
+    QTableWidget* f_Table() const { return m_pTable; }
+    std::vector<float> f_RowTimes() const { return m_vTimes; }
+    std::vector<float> f_SelectedTimes() const;
+    void f_SelectRows(const std::vector<int>& l_vRows);
     // The cell edit path (also what the inline editor commits).
-    bool commitCell(int row, int column, const QString& text);
+    bool f_CommitCell(int l_iRow, int l_iColumn, const QString& l_oText);
 
 public slots:
-    void insertKey();               // at the playhead
-    void deleteRows(bool onlyCurrentChannel);
-    void setTimeDialog();
-    void evenSpacing();
-    void rescaleDialog();
-    void rampDialog();
-    void fadeIn() { fade(true); }
-    void fadeOut() { fade(false); }
-    void spriteSequence();
-    void setEaseDialog();
+    void f_InsertKey();               // at the playhead
+    void f_DeleteRows(bool l_bOnlyCurrentChannel);
+    void f_SetTimeDialog();
+    void f_EvenSpacing();
+    void f_RescaleDialog();
+    void f_RampDialog();
+    void f_FadeIn() { f_Fade(true); }
+    void f_FadeOut() { f_Fade(false); }
+    void f_SpriteSequence();
+    void f_SetEaseDialog();
 
 private:
-    void rebuild();
-    void markPlayhead();
-    int currentChannel() const;     // channel of the current column, -1 if none
-    void fade(bool in);
+    void f_Rebuild();
+    void f_MarkPlayhead();
+    int f_CurrentChannel() const;     // channel of the current column, -1 if none
+    void f_Fade(bool l_bIn);
     // Moves rows by delta (from = their times); on a clash offers to shift the keys after them.
-    bool moveWithShift(const std::vector<float>& from, float delta, const QString& text);
-    void warn(const QString& text);
+    bool f_MoveWithShift(const std::vector<float>& l_vFrom, float l_fDelta, const QString& l_oText);
+    void f_Warn(const QString& l_oText);
 
-    AnimDocument* m_doc;
-    QTableWidget* m_table;
-    QToolBar* m_toolBar;
-    QCheckBox* m_together;
-    std::vector<float> m_times;
-    std::function<QStringList()> m_spriteSource;
-    bool m_updating = false;
+    AnimDocument* m_pDoc;
+    QTableWidget* m_pTable;
+    QToolBar* m_pToolBar;
+    QCheckBox* m_pTogether;
+    std::vector<float> m_vTimes;
+    std::function<QStringList()> m_fnSpriteSource;
+    bool m_bUpdating = false;
 };
 
 // Event keys of the selected node: time + name, add / remove / edit inline.
@@ -71,13 +71,13 @@ class AnimEventsDock : public QDockWidget
     Q_OBJECT
 
 public:
-    explicit AnimEventsDock(AnimDocument* doc, QWidget* parent = nullptr);
+    explicit AnimEventsDock(AnimDocument* l_pDoc, QWidget* l_pParent = nullptr);
 
 private:
-    void rebuild();
+    void f_Rebuild();
 
-    AnimDocument* m_doc;
-    QTableWidget* m_table;
-    std::vector<float> m_times;
-    bool m_updating = false;
+    AnimDocument* m_pDoc;
+    QTableWidget* m_pTable;
+    std::vector<float> m_vTimes;
+    bool m_bUpdating = false;
 };

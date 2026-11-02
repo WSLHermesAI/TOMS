@@ -14,24 +14,24 @@ using toms::fx::Effect;
 using toms::fx::Emitter;
 
 namespace {
-constexpr double kNames = 110;   // the lane names column
-constexpr double kRuler = 22;
-constexpr double kLane = 22;
+constexpr double g_dNames = 110;   // the lane names column
+constexpr double g_dRuler = 22;
+constexpr double g_dLane = 22;
 }
 
-TimelineView::TimelineView(ParticleDocument* doc, ParticlePlayback* playback, QWidget* parent)
-    : QWidget(parent)
-    , m_doc(doc)
-    , m_play(playback)
+TimelineView::TimelineView(ParticleDocument* l_pDoc, ParticlePlayback* l_pPlayback, QWidget* l_pParent)
+    : QWidget(l_pParent)
+    , m_pDoc(l_pDoc)
+    , m_pPlay(l_pPlayback)
 {
     setMouseTracking(true);
-    setMinimumHeight(int(kRuler + kLane * 2));
-    connect(playback, &ParticlePlayback::ticked, this, qOverload<>(&QWidget::update));
-    connect(doc, &ParticleDocument::fileChanged, this, [this] {
+    setMinimumHeight(int(g_dRuler + g_dLane * 2));
+    connect(l_pPlayback, &ParticlePlayback::f_Ticked, this, qOverload<>(&QWidget::update));
+    connect(l_pDoc, &ParticleDocument::f_FileChanged, this, [this] {
         updateGeometry();
         update();
     });
-    connect(doc, &ParticleDocument::selectionChanged, this, [this] {
+    connect(l_pDoc, &ParticleDocument::f_SelectionChanged, this, [this] {
         updateGeometry();
         update();
     });
@@ -39,188 +39,188 @@ TimelineView::TimelineView(ParticleDocument* doc, ParticlePlayback* playback, QW
 
 QSize TimelineView::sizeHint() const
 {
-    const Effect* e = m_doc->effect();
-    return QSize(500, int(kRuler + kLane * (e ? std::max<size_t>(1, e->emitters.size()) : 1) + 6));
+    const Effect* l_pE = m_pDoc->f_Effect();
+    return QSize(500, int(g_dRuler + g_dLane * (l_pE ? std::max<size_t>(1, l_pE->m_vEmitters.size()) : 1) + 6));
 }
 
-float TimelineView::span() const
+float TimelineView::f_Span() const
 {
-    const Effect* e = m_doc->effect();
-    if (!e) return 4;
-    if (e->duration > 0) return e->duration;
-    float s = 4;
-    for (const Emitter& m : e->emitters) {
-        s = std::max({s, m.stop + 1, m.start + 2});
-        for (const auto& b : m.bursts) s = std::max(s, m.start + b.t + 1);
+    const Effect* l_pE = m_pDoc->f_Effect();
+    if (!l_pE) return 4;
+    if (l_pE->m_fDuration > 0) return l_pE->m_fDuration;
+    float l_fS = 4;
+    for (const Emitter& l_oM : l_pE->m_vEmitters) {
+        l_fS = std::max({l_fS, l_oM.m_fStop + 1, l_oM.m_fStart + 2});
+        for (const auto& l_oB : l_oM.m_vBursts) l_fS = std::max(l_fS, l_oM.m_fStart + l_oB.m_fT + 1);
     }
-    return std::ceil(s);
+    return std::ceil(l_fS);
 }
 
-double TimelineView::xOf(float t) const { return kNames + t / span() * (width() - kNames - 10); }
+double TimelineView::f_XOf(float l_fT) const { return g_dNames + l_fT / f_Span() * (width() - g_dNames - 10); }
 
-float TimelineView::timeAt(double x) const
+float TimelineView::f_TimeAt(double l_dX) const
 {
-    const float t = float((x - kNames) / (width() - kNames - 10) * span());
-    return std::clamp(std::round(t * 100) / 100, 0.0f, span());
+    const float l_fT = float((l_dX - g_dNames) / (width() - g_dNames - 10) * f_Span());
+    return std::clamp(std::round(l_fT * 100) / 100, 0.0f, f_Span());
 }
 
-QRectF TimelineView::laneRect(int i) const { return QRectF(0, kRuler + i * kLane, width(), kLane); }
+QRectF TimelineView::f_LaneRect(int l_iI) const { return QRectF(0, g_dRuler + l_iI * g_dLane, width(), g_dLane); }
 
-QRectF TimelineView::barRect(int i) const
+QRectF TimelineView::f_BarRect(int l_iI) const
 {
-    const Effect* e = m_doc->effect();
-    if (!e || i < 0 || i >= int(e->emitters.size())) return QRectF();
-    const Emitter& m = e->emitters[size_t(i)];
-    const float end = m.stop > 0 ? m.stop : span();
-    const QRectF lane = laneRect(i);
-    return QRectF(QPointF(xOf(m.start), lane.top() + 4), QPointF(xOf(end), lane.bottom() - 4));
+    const Effect* l_pE = m_pDoc->f_Effect();
+    if (!l_pE || l_iI < 0 || l_iI >= int(l_pE->m_vEmitters.size())) return QRectF();
+    const Emitter& l_oM = l_pE->m_vEmitters[size_t(l_iI)];
+    const float l_fEnd = l_oM.m_fStop > 0 ? l_oM.m_fStop : f_Span();
+    const QRectF l_oLane = f_LaneRect(l_iI);
+    return QRectF(QPointF(f_XOf(l_oM.m_fStart), l_oLane.top() + 4), QPointF(f_XOf(l_fEnd), l_oLane.bottom() - 4));
 }
 
 void TimelineView::paintEvent(QPaintEvent*)
 {
-    QPainter p(this);
-    const Theme::Colors& tc = Theme::colors();
-    p.fillRect(rect(), palette().color(QPalette::Base));
-    const Effect* e = m_doc->effect();
+    QPainter l_oP(this);
+    const Theme::Colors& l_oTc = Theme::f_Colors();
+    l_oP.fillRect(rect(), palette().color(QPalette::Base));
+    const Effect* l_pE = m_pDoc->f_Effect();
     // Ruler.
-    p.fillRect(QRectF(0, 0, width(), kRuler), palette().color(QPalette::AlternateBase));
-    const float s = span();
-    const float step = s <= 2 ? 0.25f : s <= 6 ? 0.5f : s <= 20 ? 1.0f : 5.0f;
-    p.setPen(palette().color(QPalette::Text));
-    for (float t = 0; t <= s + 1e-4f; t += step) {
-        const double x = xOf(t);
-        const bool major = std::fabs(std::fmod(t + 1e-4f, step * 2)) < 1e-3f;
-        p.drawLine(QPointF(x, kRuler - (major ? 9 : 5)), QPointF(x, kRuler));
-        if (major) p.drawText(QRectF(x + 2, 1, 50, 12), Qt::AlignLeft | Qt::AlignTop, QString::number(t, 'g', 3));
+    l_oP.fillRect(QRectF(0, 0, width(), g_dRuler), palette().color(QPalette::AlternateBase));
+    const float l_fS = f_Span();
+    const float l_fStep = l_fS <= 2 ? 0.25f : l_fS <= 6 ? 0.5f : l_fS <= 20 ? 1.0f : 5.0f;
+    l_oP.setPen(palette().color(QPalette::Text));
+    for (float l_fT = 0; l_fT <= l_fS + 1e-4f; l_fT += l_fStep) {
+        const double l_dX = f_XOf(l_fT);
+        const bool l_bMajor = std::fabs(std::fmod(l_fT + 1e-4f, l_fStep * 2)) < 1e-3f;
+        l_oP.drawLine(QPointF(l_dX, g_dRuler - (l_bMajor ? 9 : 5)), QPointF(l_dX, g_dRuler));
+        if (l_bMajor) l_oP.drawText(QRectF(l_dX + 2, 1, 50, 12), Qt::AlignLeft | Qt::AlignTop, QString::number(l_fT, 'g', 3));
     }
-    if (!e) return;
-    if (e->duration <= 0) {
-        p.setPen(palette().color(QPalette::PlaceholderText));
-        p.drawText(QRectF(4, 2, kNames - 6, kRuler - 4), Qt::AlignLeft | Qt::AlignVCenter, tr("endless"));
+    if (!l_pE) return;
+    if (l_pE->m_fDuration <= 0) {
+        l_oP.setPen(palette().color(QPalette::PlaceholderText));
+        l_oP.drawText(QRectF(4, 2, g_dNames - 6, g_dRuler - 4), Qt::AlignLeft | Qt::AlignVCenter, tr("endless"));
     }
     // Lanes.
-    for (int i = 0; i < int(e->emitters.size()); i++) {
-        const Emitter& m = e->emitters[size_t(i)];
-        const QRectF lane = laneRect(i);
-        if (i == m_doc->emitterIndex()) p.fillRect(lane, QColor(tc.selection.red(), tc.selection.green(), tc.selection.blue(), 45));
-        p.setPen(palette().color(QPalette::Text));
-        p.drawText(lane.adjusted(6, 0, -(width() - kNames), 0), Qt::AlignVCenter | Qt::AlignLeft,
-                   fontMetrics().elidedText(QString::fromStdString(m.name), Qt::ElideRight, int(kNames - 10)));
-        const QRectF bar = barRect(i);
-        if (m.rate > 0) {
-            QColor c = m.blend == toms::fx::Blend::add() ? QColor(230, 150, 60) : QColor(110, 150, 220);
-            p.setPen(Qt::NoPen);
-            p.setBrush(c);
-            p.drawRoundedRect(bar, 3, 3);
-            if (m.stop <= 0) {   // open-ended: until the effect ends
-                p.setPen(QPen(Qt::white, 1));
-                p.drawText(bar.adjusted(0, 0, -4, 0), Qt::AlignRight | Qt::AlignVCenter, QStringLiteral("→"));
+    for (int l_iI = 0; l_iI < int(l_pE->m_vEmitters.size()); l_iI++) {
+        const Emitter& l_oM = l_pE->m_vEmitters[size_t(l_iI)];
+        const QRectF l_oLane = f_LaneRect(l_iI);
+        if (l_iI == m_pDoc->f_EmitterIndex()) l_oP.fillRect(l_oLane, QColor(l_oTc.m_oSelection.red(), l_oTc.m_oSelection.green(), l_oTc.m_oSelection.blue(), 45));
+        l_oP.setPen(palette().color(QPalette::Text));
+        l_oP.drawText(l_oLane.adjusted(6, 0, -(width() - g_dNames), 0), Qt::AlignVCenter | Qt::AlignLeft,
+                   fontMetrics().elidedText(QString::fromStdString(l_oM.m_strName), Qt::ElideRight, int(g_dNames - 10)));
+        const QRectF l_oBar = f_BarRect(l_iI);
+        if (l_oM.m_fRate > 0) {
+            QColor l_oC = l_oM.m_oBlend == toms::fx::Blend::f_Add() ? QColor(230, 150, 60) : QColor(110, 150, 220);
+            l_oP.setPen(Qt::NoPen);
+            l_oP.setBrush(l_oC);
+            l_oP.drawRoundedRect(l_oBar, 3, 3);
+            if (l_oM.m_fStop <= 0) {   // open-ended: until the effect ends
+                l_oP.setPen(QPen(Qt::white, 1));
+                l_oP.drawText(l_oBar.adjusted(0, 0, -4, 0), Qt::AlignRight | Qt::AlignVCenter, QStringLiteral("→"));
             }
         } else {
-            p.setPen(QPen(palette().color(QPalette::Mid), 1, Qt::DashLine));
-            p.setBrush(Qt::NoBrush);
-            p.drawRoundedRect(bar, 3, 3);
+            l_oP.setPen(QPen(palette().color(QPalette::Mid), 1, Qt::DashLine));
+            l_oP.setBrush(Qt::NoBrush);
+            l_oP.drawRoundedRect(l_oBar, 3, 3);
         }
         // Bursts.
-        p.setPen(QPen(Qt::black, 1));
-        p.setBrush(tc.key);
-        const float end = std::min(span(), m.stop > 0 ? m.stop : span());
-        for (const toms::fx::Burst& b : m.bursts) {
-            const int times = b.repeat < 0 || b.interval <= 0 ? (b.interval > 0 ? 1000 : 1) : b.repeat + 1;
-            for (int k = 0; k < times; k++) {
-                const float t = m.start + b.t + (b.interval > 0 ? k * b.interval : 0);
-                if (t > end + 1e-4f) break;
-                const QPointF c(xOf(t), lane.center().y());
-                QPolygonF d;
-                d << c + QPointF(0, -6) << c + QPointF(5, 0) << c + QPointF(0, 6) << c + QPointF(-5, 0);
-                p.drawPolygon(d);
+        l_oP.setPen(QPen(Qt::black, 1));
+        l_oP.setBrush(l_oTc.m_oKey);
+        const float l_fEnd = std::min(f_Span(), l_oM.m_fStop > 0 ? l_oM.m_fStop : f_Span());
+        for (const toms::fx::Burst& l_oB : l_oM.m_vBursts) {
+            const int l_iTimes = l_oB.m_iRepeat < 0 || l_oB.m_fInterval <= 0 ? (l_oB.m_fInterval > 0 ? 1000 : 1) : l_oB.m_iRepeat + 1;
+            for (int l_iK = 0; l_iK < l_iTimes; l_iK++) {
+                const float l_fT = l_oM.m_fStart + l_oB.m_fT + (l_oB.m_fInterval > 0 ? l_iK * l_oB.m_fInterval : 0);
+                if (l_fT > l_fEnd + 1e-4f) break;
+                const QPointF l_oC(f_XOf(l_fT), l_oLane.center().y());
+                QPolygonF l_oD;
+                l_oD << l_oC + QPointF(0, -6) << l_oC + QPointF(5, 0) << l_oC + QPointF(0, 6) << l_oC + QPointF(-5, 0);
+                l_oP.drawPolygon(l_oD);
             }
         }
     }
     // Playhead.
-    const double x = xOf(std::min(m_play->time(), s));
-    p.setPen(QPen(QColor(230, 60, 60), 2));
-    p.drawLine(QPointF(x, 0), QPointF(x, height()));
+    const double l_dX = f_XOf(std::min(m_pPlay->f_Time(), l_fS));
+    l_oP.setPen(QPen(QColor(230, 60, 60), 2));
+    l_oP.drawLine(QPointF(l_dX, 0), QPointF(l_dX, height()));
 }
 
-void TimelineView::mousePressEvent(QMouseEvent* e)
+void TimelineView::mousePressEvent(QMouseEvent* l_pE)
 {
-    if (e->button() != Qt::LeftButton) return;
-    m_gesture++;
-    const QPointF pos = e->position();
-    if (pos.y() < kRuler) {
-        m_drag = Drag::Seek;
-        m_play->seek(timeAt(pos.x()));
+    if (l_pE->button() != Qt::LeftButton) return;
+    m_iGesture++;
+    const QPointF l_oPos = l_pE->position();
+    if (l_oPos.y() < g_dRuler) {
+        m_eDrag = Drag::Seek;
+        m_pPlay->f_Seek(f_TimeAt(l_oPos.x()));
         return;
     }
-    const Effect* ef = m_doc->effect();
-    const int lane = int((pos.y() - kRuler) / kLane);
-    if (!ef || lane < 0 || lane >= int(ef->emitters.size())) return;
-    m_doc->select(m_doc->effectIndex(), lane);
-    const QRectF bar = barRect(lane);
-    const Emitter& m = ef->emitters[size_t(lane)];
-    m_lane = lane;
-    m_pressT = timeAt(pos.x());
-    m_startStart = m.start;
-    m_startStop = m.stop;
-    if (std::fabs(pos.x() - bar.left()) <= 5) m_drag = Drag::Start;
-    else if (std::fabs(pos.x() - bar.right()) <= 5) m_drag = Drag::Stop;
-    else if (bar.contains(pos)) m_drag = Drag::Move;
-    else m_drag = Drag::None;
+    const Effect* l_pEf = m_pDoc->f_Effect();
+    const int l_iLane = int((l_oPos.y() - g_dRuler) / g_dLane);
+    if (!l_pEf || l_iLane < 0 || l_iLane >= int(l_pEf->m_vEmitters.size())) return;
+    m_pDoc->f_Select(m_pDoc->f_EffectIndex(), l_iLane);
+    const QRectF l_oBar = f_BarRect(l_iLane);
+    const Emitter& l_oM = l_pEf->m_vEmitters[size_t(l_iLane)];
+    m_iLane = l_iLane;
+    m_fPressT = f_TimeAt(l_oPos.x());
+    m_fStartStart = l_oM.m_fStart;
+    m_fStartStop = l_oM.m_fStop;
+    if (std::fabs(l_oPos.x() - l_oBar.left()) <= 5) m_eDrag = Drag::Start;
+    else if (std::fabs(l_oPos.x() - l_oBar.right()) <= 5) m_eDrag = Drag::Stop;
+    else if (l_oBar.contains(l_oPos)) m_eDrag = Drag::Move;
+    else m_eDrag = Drag::None;
 }
 
-void TimelineView::mouseMoveEvent(QMouseEvent* e)
+void TimelineView::mouseMoveEvent(QMouseEvent* l_pE)
 {
-    const QPointF pos = e->position();
-    if (m_drag == Drag::None) {
-        const Effect* ef = m_doc->effect();
-        const int lane = int((pos.y() - kRuler) / kLane);
-        Qt::CursorShape cur = Qt::ArrowCursor;
-        if (ef && pos.y() >= kRuler && lane >= 0 && lane < int(ef->emitters.size())) {
-            const QRectF bar = barRect(lane);
-            if (std::fabs(pos.x() - bar.left()) <= 5 || std::fabs(pos.x() - bar.right()) <= 5) cur = Qt::SizeHorCursor;
-            else if (bar.contains(pos)) cur = Qt::OpenHandCursor;
+    const QPointF l_oPos = l_pE->position();
+    if (m_eDrag == Drag::None) {
+        const Effect* l_pEf = m_pDoc->f_Effect();
+        const int l_iLane = int((l_oPos.y() - g_dRuler) / g_dLane);
+        Qt::CursorShape l_eCur = Qt::ArrowCursor;
+        if (l_pEf && l_oPos.y() >= g_dRuler && l_iLane >= 0 && l_iLane < int(l_pEf->m_vEmitters.size())) {
+            const QRectF l_oBar = f_BarRect(l_iLane);
+            if (std::fabs(l_oPos.x() - l_oBar.left()) <= 5 || std::fabs(l_oPos.x() - l_oBar.right()) <= 5) l_eCur = Qt::SizeHorCursor;
+            else if (l_oBar.contains(l_oPos)) l_eCur = Qt::OpenHandCursor;
         }
-        setCursor(cur);
+        setCursor(l_eCur);
         return;
     }
-    const float t = timeAt(pos.x());
-    const QString key = QStringLiteral("timeline%1").arg(m_gesture);
-    switch (m_drag) {
-    case Drag::Seek: m_play->seek(t); break;
+    const float l_fT = f_TimeAt(l_oPos.x());
+    const QString l_oKey = QStringLiteral("timeline%1").arg(m_iGesture);
+    switch (m_eDrag) {
+    case Drag::Seek: m_pPlay->f_Seek(l_fT); break;
     case Drag::Start:
-        m_doc->editEmitter(tr("Emitter start"), [&](Emitter& m) {
-            m.start = m.stop > 0 ? std::min(t, m.stop - 0.01f) : t;
-        }, key);
+        m_pDoc->f_EditEmitter(tr("Emitter start"), [&](Emitter& l_oM) {
+            l_oM.m_fStart = l_oM.m_fStop > 0 ? std::min(l_fT, l_oM.m_fStop - 0.01f) : l_fT;
+        }, l_oKey);
         break;
     case Drag::Stop:
-        m_doc->editEmitter(tr("Emitter stop"), [&](Emitter& m) {
-            m.stop = t >= span() - 1e-3f ? 0.0f : std::max(t, m.start + 0.01f);   // to the very end = open-ended
-        }, key);
+        m_pDoc->f_EditEmitter(tr("Emitter stop"), [&](Emitter& l_oM) {
+            l_oM.m_fStop = l_fT >= f_Span() - 1e-3f ? 0.0f : std::max(l_fT, l_oM.m_fStart + 0.01f);   // to the very end = open-ended
+        }, l_oKey);
         break;
     case Drag::Move: {
-        const float d = t - m_pressT;
-        m_doc->editEmitter(tr("Move emitter in time"), [&](Emitter& m) {
-            const float shift = std::max(d, -m_startStart);
-            m.start = m_startStart + shift;
-            if (m_startStop > 0) m.stop = m_startStop + shift;
-        }, key);
+        const float l_fD = l_fT - m_fPressT;
+        m_pDoc->f_EditEmitter(tr("Move emitter in time"), [&](Emitter& l_oM) {
+            const float l_fShift = std::max(l_fD, -m_fStartStart);
+            l_oM.m_fStart = m_fStartStart + l_fShift;
+            if (m_fStartStop > 0) l_oM.m_fStop = m_fStartStop + l_fShift;
+        }, l_oKey);
         break;
     }
     case Drag::None: break;
     }
 }
 
-void TimelineView::mouseReleaseEvent(QMouseEvent*) { m_drag = Drag::None; }
+void TimelineView::mouseReleaseEvent(QMouseEvent*) { m_eDrag = Drag::None; }
 
-TimelineDock::TimelineDock(ParticleDocument* doc, ParticlePlayback* playback, QWidget* parent)
-    : QDockWidget(tr("Timeline"), parent)
-    , m_view(new TimelineView(doc, playback, this))
+TimelineDock::TimelineDock(ParticleDocument* l_pDoc, ParticlePlayback* l_pPlayback, QWidget* l_pParent)
+    : QDockWidget(tr("Timeline"), l_pParent)
+    , m_pView(new TimelineView(l_pDoc, l_pPlayback, this))
 {
     setObjectName(QStringLiteral("ParticleTimelineDock"));
-    auto* scroll = new QScrollArea(this);
-    scroll->setWidgetResizable(true);
-    scroll->setFrameShape(QFrame::NoFrame);
-    scroll->setWidget(m_view);
-    setWidget(scroll);
+    auto* l_pScroll = new QScrollArea(this);
+    l_pScroll->setWidgetResizable(true);
+    l_pScroll->setFrameShape(QFrame::NoFrame);
+    l_pScroll->setWidget(m_pView);
+    setWidget(l_pScroll);
 }

@@ -28,73 +28,73 @@ class PropertiesDock : public QDockWidget
     Q_OBJECT
 
 public:
-    explicit PropertiesDock(AtlasDocument* doc, QWidget* parent = nullptr);
+    explicit PropertiesDock(AtlasDocument* l_pDoc, QWidget* l_pParent = nullptr);
 
 signals:
-    void importReferencesRequested();   // the Import From References dialog
+    void f_ImportReferencesRequested();   // the Import From References dialog
 
 private:
-    QWidget* buildAtlasGroup();
-    QWidget* buildSpriteGroup();
-    QWidget* buildVariantGroup();
-    QWidget* buildReferencesGroup();
-    void refreshAtlas();
-    void refreshVariant();
-    void refreshReferences();
-    void refreshSprite();
-    void refreshInfo();
+    QWidget* f_BuildAtlasGroup();
+    QWidget* f_BuildSpriteGroup();
+    QWidget* f_BuildVariantGroup();
+    QWidget* f_BuildReferencesGroup();
+    void f_RefreshAtlas();
+    void f_RefreshVariant();
+    void f_RefreshReferences();
+    void f_RefreshSprite();
+    void f_RefreshInfo();
 
     // Atlas group: binds a widget to a field of the project.
-    void bindInt(QSpinBox* spin, const QString& key, const QString& text, std::function<void(atlas::Project&, int)> set);
-    void bindBool(QCheckBox* box, const QString& text, std::function<void(atlas::Project&, bool)> set);
+    void f_BindInt(QSpinBox* l_pSpin, const QString& l_oKey, const QString& l_oText, std::function<void(atlas::Project&, int)> l_fnSet);
+    void f_BindBool(QCheckBox* l_pBox, const QString& l_oText, std::function<void(atlas::Project&, bool)> l_fnSet);
     // Sprite group: applies to the selected sprites (children only, when asked).
-    void editSelection(const QString& text, const QString& mergeKey, const std::function<void(atlas::SpriteDef&)>& change,
-                       bool childrenOnly = false);
-    std::vector<atlas::SpriteDef> selectedDefs() const;
+    void f_EditSelection(const QString& l_oText, const QString& l_oMergeKey, const std::function<void(atlas::SpriteDef&)>& l_fnChange,
+                       bool l_bChildrenOnly = false);
+    std::vector<atlas::SpriteDef> f_SelectedDefs() const;
 
-    AtlasDocument* m_doc;
-    bool m_updating = false;
+    AtlasDocument* m_pDoc;
+    bool m_bUpdating = false;
 
     // Atlas
-    QLineEdit* m_projectName;
-    QSpinBox *m_maxW, *m_maxH, *m_minW, *m_minH;
-    QCheckBox *m_pot, *m_square, *m_fixedSize;
-    QSpinBox *m_padding, *m_border, *m_extrude, *m_alphaThreshold;
-    QCheckBox *m_trim, *m_dedupe, *m_premultiply;
-    QComboBox *m_filter, *m_heuristic;
-    QDoubleSpinBox *m_defPivotX, *m_defPivotY;
-    QLineEdit *m_outDir, *m_outName;
-    std::vector<QCheckBox*> m_formats;
+    QLineEdit* m_pProjectName;
+    QSpinBox *m_pMaxW, *m_pMaxH, *m_pMinW, *m_pMinH;
+    QCheckBox *m_pPot, *m_pSquare, *m_pFixedSize;
+    QSpinBox *m_pPadding, *m_pBorder, *m_pExtrude, *m_pAlphaThreshold;
+    QCheckBox *m_pTrim, *m_pDedupe, *m_pPremultiply;
+    QComboBox *m_pFilter, *m_pHeuristic;
+    QDoubleSpinBox *m_pDefPivotX, *m_pDefPivotY;
+    QLineEdit *m_pOutDir, *m_pOutName;
+    std::vector<QCheckBox*> m_vFormats;
 
     // Sprite
-    QGroupBox* m_spriteGroup;
-    QFormLayout* m_spriteForm;
-    QLabel* m_noSelection;
-    QLineEdit* m_name;
-    QLabel* m_kind;
-    QComboBox* m_parent;
-    QWidget* m_rectRow;
-    QSpinBox *m_rectX, *m_rectY, *m_rectW, *m_rectH;
-    QCheckBox* m_bake;
-    QWidget* m_pivotRow;
-    QDoubleSpinBox *m_pivotX, *m_pivotY;
-    QToolButton* m_pivotReset;
-    QWidget* m_splitRow;
-    QCheckBox* m_splitOn;
-    QSpinBox* m_split[4];
-    QComboBox* m_trimOverride;
-    QWidget* m_pinRow;
-    QCheckBox* m_pinned;
-    QSpinBox *m_pinPage, *m_pinX, *m_pinY;
-    QLineEdit* m_tags;
-    QLabel *m_frame, *m_orig, *m_offset, *m_source;
+    QGroupBox* m_pSpriteGroup;
+    QFormLayout* m_pSpriteForm;
+    QLabel* m_pNoSelection;
+    QLineEdit* m_pName;
+    QLabel* m_pKind;
+    QComboBox* m_pParent;
+    QWidget* m_pRectRow;
+    QSpinBox *m_pRectX, *m_pRectY, *m_pRectW, *m_pRectH;
+    QCheckBox* m_pBake;
+    QWidget* m_pPivotRow;
+    QDoubleSpinBox *m_pPivotX, *m_pPivotY;
+    QToolButton* m_pPivotReset;
+    QWidget* m_pSplitRow;
+    QCheckBox* m_pSplitOn;
+    QSpinBox* m_arrSplit[4];
+    QComboBox* m_pTrimOverride;
+    QWidget* m_pPinRow;
+    QCheckBox* m_pPinned;
+    QSpinBox *m_pPinPage, *m_pPinX, *m_pPinY;
+    QLineEdit* m_pTags;
+    QLabel *m_pFrame, *m_pOrig, *m_pOffset, *m_pSource;
 
     // Variant (shown while the canvas shows one)
-    QGroupBox* m_variantGroup;
-    QLineEdit* m_variantRef;
-    QLabel *m_variantArt, *m_variantStore;
+    QGroupBox* m_pVariantGroup;
+    QLineEdit* m_pVariantRef;
+    QLabel *m_pVariantArt, *m_pVariantStore;
 
     // References
-    QListWidget* m_refList;
-    QToolButton* m_refRemove;
+    QListWidget* m_pRefList;
+    QToolButton* m_pRefRemove;
 };

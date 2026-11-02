@@ -9,217 +9,217 @@
 
 namespace toms::anim {
 
-glm::mat3 placement(float x, float y, float scale, float rotationDegrees) {
-    return flatten(compose({x, y, 0}, {0, 0, rotationDegrees}, {scale, scale, 1}));
+glm::mat3 f_Placement(float l_fX, float l_fY, float l_fScale, float l_fRotationDegrees) {
+    return f_Flatten(f_Compose({l_fX, l_fY, 0}, {0, 0, l_fRotationDegrees}, {l_fScale, l_fScale, 1}));
 }
 
-const toms::AtlasRegion* AtlasSet::find(const std::string& ref, uint16_t* texture, int* entry) const {
-    SpriteRef s = parseSpriteRef(ref);
+const toms::AtlasRegion* AtlasSet::f_Find(const std::string& l_strRef, uint16_t* l_pTexture, int* l_pEntry) const {
+    SpriteRef l_oS = f_ParseSpriteRef(l_strRef);
     // An atlas id this set does not have (e.g. the game draws a clip with only its own atlas): look
     // the name up by order instead. The editor's check reports such references.
-    if (!s.atlas.empty() &&
-        std::none_of(entries.begin(), entries.end(), [&](const Entry& e) { return e.id == s.atlas; }))
-        s.atlas.clear();
-    for (size_t i = 0; i < entries.size(); i++) {
-        const Entry& e = entries[i];
-        if (!e.atlas || (!s.atlas.empty() && e.id != s.atlas)) continue;
-        const toms::AtlasRegion* r = e.atlas->find(s.name);
-        if (!r) {
-            if (!s.atlas.empty()) return nullptr;   // the named atlas does not have it: no fallback
+    if (!l_oS.m_strAtlas.empty() &&
+        std::none_of(m_vEntries.begin(), m_vEntries.end(), [&](const Entry& l_oE) { return l_oE.m_strId == l_oS.m_strAtlas; }))
+        l_oS.m_strAtlas.clear();
+    for (size_t l_nI = 0; l_nI < m_vEntries.size(); l_nI++) {
+        const Entry& l_oE = m_vEntries[l_nI];
+        if (!l_oE.m_pAtlas || (!l_oS.m_strAtlas.empty() && l_oE.m_strId != l_oS.m_strAtlas)) continue;
+        const toms::AtlasRegion* l_pR = l_oE.m_pAtlas->f_Find(l_oS.m_strName);
+        if (!l_pR) {
+            if (!l_oS.m_strAtlas.empty()) return nullptr;   // the named atlas does not have it: no fallback
             continue;
         }
-        if (entry) *entry = (int)i;
-        if (texture) {
-            const bool own = r->page >= 0 && r->page < (int)e.pageTextures.size();
-            *texture = own ? e.pageTextures[(size_t)r->page] : kSpriteAtlasTexture;
+        if (l_pEntry) *l_pEntry = (int)l_nI;
+        if (l_pTexture) {
+            const bool l_bOwn = l_pR->m_iPage >= 0 && l_pR->m_iPage < (int)l_oE.m_vPageTextures.size();
+            *l_pTexture = l_bOwn ? l_oE.m_vPageTextures[(size_t)l_pR->m_iPage] : g_u16SpriteAtlasTexture;
         }
-        return r;
+        return l_pR;
     }
     return nullptr;
 }
 
-std::string meshKey(const std::string& sprite, int cols, int rows) {
-    return cols > 0 && rows > 0 ? sprite + "@" + std::to_string(cols) + "x" + std::to_string(rows) : sprite;
+std::string f_MeshKey(const std::string& l_strSprite, int l_iCols, int l_iRows) {
+    return l_iCols > 0 && l_iRows > 0 ? l_strSprite + "@" + std::to_string(l_iCols) + "x" + std::to_string(l_iRows) : l_strSprite;
 }
 
-std::string AtlasSet::meshKeyFor(const std::string& ref, const Node& node, int* entry) const {
-    int e = -1;
-    const toms::AtlasRegion* r = find(ref, nullptr, &e);
-    if (entry) *entry = e;
-    if (!r || e < 0) return std::string();
-    return node.hasMeshGrid() ? meshKey(r->name, node.meshGrid[0], node.meshGrid[1]) : meshKey(r->name);
+std::string AtlasSet::f_MeshKeyFor(const std::string& l_strRef, const Node& l_oNode, int* l_pEntry) const {
+    int l_iE = -1;
+    const toms::AtlasRegion* l_pR = f_Find(l_strRef, nullptr, &l_iE);
+    if (l_pEntry) *l_pEntry = l_iE;
+    if (!l_pR || l_iE < 0) return std::string();
+    return l_oNode.f_HasMeshGrid() ? f_MeshKey(l_pR->m_strName, l_oNode.m_arrMeshGrid[0], l_oNode.m_arrMeshGrid[1]) : f_MeshKey(l_pR->m_strName);
 }
 
-const toms::SpriteMesh* AtlasSet::findMesh(const std::string& ref, const Node& node) const {
-    int entry = -1;
-    const std::string key = meshKeyFor(ref, node, &entry);
-    if (key.empty() || !entries[(size_t)entry].meshes) return nullptr;
-    return entries[(size_t)entry].meshes->find(key);
+const toms::SpriteMesh* AtlasSet::f_FindMesh(const std::string& l_strRef, const Node& l_oNode) const {
+    int l_iEntry = -1;
+    const std::string l_strKey = f_MeshKeyFor(l_strRef, l_oNode, &l_iEntry);
+    if (l_strKey.empty() || !m_vEntries[(size_t)l_iEntry].m_pMeshes) return nullptr;
+    return m_vEntries[(size_t)l_iEntry].m_pMeshes->f_Find(l_strKey);
 }
 
 namespace {
-void collectNeeds(const Node& n, const AtlasSet& atlases, std::map<std::string, MeshNeed>& out) {
-    if (n.usesMesh()) {
-        std::vector<std::string> sprites;
-        if (!n.sprite.empty()) sprites.push_back(n.sprite);
-        for (const auto& k : n.spriteKeys)
-            if (!k.v.empty()) sprites.push_back(k.v);
-        for (const std::string& s : sprites) {
-            MeshNeed need;
-            need.region = atlases.find(s, nullptr, &need.entry);
-            if (!need.region || need.entry < 0) continue;
-            if (n.hasMeshGrid()) { need.cols = n.meshGrid[0]; need.rows = n.meshGrid[1]; }
-            need.key = atlases.meshKeyFor(s, n);
-            char at[16];
-            std::snprintf(at, sizeof at, "%04d|", need.entry);   // by atlas, then key
-            out.emplace(at + need.key, need);
+void f_CollectNeeds(const Node& l_oN, const AtlasSet& l_oAtlases, std::map<std::string, MeshNeed>& l_mapOut) {
+    if (l_oN.f_UsesMesh()) {
+        std::vector<std::string> l_vSprites;
+        if (!l_oN.m_strSprite.empty()) l_vSprites.push_back(l_oN.m_strSprite);
+        for (const auto& l_oK : l_oN.m_vSpriteKeys)
+            if (!l_oK.m_oV.empty()) l_vSprites.push_back(l_oK.m_oV);
+        for (const std::string& l_strS : l_vSprites) {
+            MeshNeed l_oNeed;
+            l_oNeed.m_pRegion = l_oAtlases.f_Find(l_strS, nullptr, &l_oNeed.m_iEntry);
+            if (!l_oNeed.m_pRegion || l_oNeed.m_iEntry < 0) continue;
+            if (l_oN.f_HasMeshGrid()) { l_oNeed.m_iCols = l_oN.m_arrMeshGrid[0]; l_oNeed.m_iRows = l_oN.m_arrMeshGrid[1]; }
+            l_oNeed.m_strKey = l_oAtlases.f_MeshKeyFor(l_strS, l_oN);
+            char l_pszAt[16];
+            std::snprintf(l_pszAt, sizeof l_pszAt, "%04d|", l_oNeed.m_iEntry);   // by atlas, then key
+            l_mapOut.emplace(l_pszAt + l_oNeed.m_strKey, l_oNeed);
         }
     }
-    for (const Node& c : n.children) collectNeeds(c, atlases, out);
+    for (const Node& l_oC : l_oN.m_vChildren) f_CollectNeeds(l_oC, l_oAtlases, l_mapOut);
 }
-std::vector<MeshNeed> sorted(std::map<std::string, MeshNeed>& m) {
-    std::vector<MeshNeed> v;
-    for (auto& kv : m) v.push_back(kv.second);
-    return v;
+std::vector<MeshNeed> f_Sorted(std::map<std::string, MeshNeed>& l_mapM) {
+    std::vector<MeshNeed> l_vV;
+    for (auto& l_pairKv : l_mapM) l_vV.push_back(l_pairKv.second);
+    return l_vV;
 }
 }  // namespace
 
-std::vector<MeshNeed> meshesNeeded(const Clip& clip, const AtlasSet& atlases) {
-    std::map<std::string, MeshNeed> m;
-    collectNeeds(clip.root, atlases, m);
-    return sorted(m);
+std::vector<MeshNeed> f_MeshesNeeded(const Clip& l_oClip, const AtlasSet& l_oAtlases) {
+    std::map<std::string, MeshNeed> l_mapM;
+    f_CollectNeeds(l_oClip.m_oRoot, l_oAtlases, l_mapM);
+    return f_Sorted(l_mapM);
 }
 
-toms::SpriteMesh cutMesh(const MeshNeed& need, const uint8_t* rgba, int stride) {
-    const toms::AtlasRegion* r = need.region;
-    if (!r || !rgba || r->rotated || r->child || r->w <= 0 || r->h <= 0) return toms::SpriteMesh();
-    if (need.cols > 0 && need.rows > 0)
-        return toms::meshFromAlphaGrid(rgba, stride, r->w, r->h, r->offX, r->offY, need.cols, need.rows);
-    return toms::meshFromAlpha(rgba, stride, r->w, r->h, r->offX, r->offY, kMeshCell);
+toms::SpriteMesh f_CutMesh(const MeshNeed& l_oNeed, const uint8_t* l_pRgba, int l_iStride) {
+    const toms::AtlasRegion* l_pR = l_oNeed.m_pRegion;
+    if (!l_pR || !l_pRgba || l_pR->m_bRotated || l_pR->m_bChild || l_pR->m_iW <= 0 || l_pR->m_iH <= 0) return toms::SpriteMesh();
+    if (l_oNeed.m_iCols > 0 && l_oNeed.m_iRows > 0)
+        return toms::f_MeshFromAlphaGrid(l_pRgba, l_iStride, l_pR->m_iW, l_pR->m_iH, l_pR->m_iOffX, l_pR->m_iOffY, l_oNeed.m_iCols, l_oNeed.m_iRows);
+    return toms::f_MeshFromAlpha(l_pRgba, l_iStride, l_pR->m_iW, l_pR->m_iH, l_pR->m_iOffX, l_pR->m_iOffY, g_iMeshCell);
 }
 
-std::vector<MeshNeed> meshesNeeded(const AnimFile& file, const AtlasSet& atlases) {
-    std::map<std::string, MeshNeed> m;
-    for (const Clip& c : file.clips) collectNeeds(c.root, atlases, m);
-    return sorted(m);
+std::vector<MeshNeed> f_MeshesNeeded(const AnimFile& l_oFile, const AtlasSet& l_oAtlases) {
+    std::map<std::string, MeshNeed> l_mapM;
+    for (const Clip& l_oC : l_oFile.m_vClips) f_CollectNeeds(l_oC.m_oRoot, l_oAtlases, l_mapM);
+    return f_Sorted(l_mapM);
 }
 
-void DrawList::submit(IRenderer* ren) const {
-    if (!ren) return;
+void DrawList::f_Submit(IRenderer* l_pRen) const {
+    if (!l_pRen) return;
     // the batched run's vertices, reused from call to call
-    static thread_local std::vector<MeshVertex> runVerts;
-    static thread_local std::vector<float> runColors;
-    static thread_local std::vector<uint16_t> runIdx;
-    auto texOf = [&](const Item& it) { return it.kind == QuadItem ? quads[it.index].texture : meshes[it.index].texture; };
-    auto addOf = [&](const Item& it) { return it.kind == QuadItem ? quads[it.index].additive : meshes[it.index].additive; };
-    auto vertsOf = [&](const Item& it) { return it.kind == QuadItem ? 4u : meshes[it.index].vertexCount; };
-    size_t i = 0;
-    while (i < order.size()) {
-        const Item& it = order[i];
-        if (it.kind == BeginLayer) { ren->beginLayer(layers[it.index]); i++; continue; }
-        if (it.kind == EndLayer) { ren->endLayer(); i++; continue; }
-        if (it.kind == QuadItem && quads[it.index].solid) { ren->drawSprite(quads[it.index]); i++; continue; }
+    static thread_local std::vector<MeshVertex> l_vRunVerts;
+    static thread_local std::vector<float> l_vRunColors;
+    static thread_local std::vector<uint16_t> l_vRunIdx;
+    auto l_fnTexOf = [&](const Item& l_oIt) { return l_oIt.m_eKind == QuadItem ? m_vQuads[l_oIt.m_uIndex].m_u16Texture : m_vMeshes[l_oIt.m_uIndex].m_u16Texture; };
+    auto l_fnAddOf = [&](const Item& l_oIt) { return l_oIt.m_eKind == QuadItem ? m_vQuads[l_oIt.m_uIndex].m_bAdditive : m_vMeshes[l_oIt.m_uIndex].m_bAdditive; };
+    auto l_fnVertsOf = [&](const Item& l_oIt) { return l_oIt.m_eKind == QuadItem ? 4u : m_vMeshes[l_oIt.m_uIndex].m_uVertexCount; };
+    size_t l_nI = 0;
+    while (l_nI < m_vOrder.size()) {
+        const Item& l_oIt = m_vOrder[l_nI];
+        if (l_oIt.m_eKind == BeginLayer) { l_pRen->f_BeginLayer(m_vLayers[l_oIt.m_uIndex]); l_nI++; continue; }
+        if (l_oIt.m_eKind == EndLayer) { l_pRen->f_EndLayer(); l_nI++; continue; }
+        if (l_oIt.m_eKind == QuadItem && m_vQuads[l_oIt.m_uIndex].m_bSolid) { l_pRen->f_DrawSprite(m_vQuads[l_oIt.m_uIndex]); l_nI++; continue; }
         // the run: quads (not solid) and meshes with this texture and blending, at most 65536 vertices (16-bit indices)
-        const uint16_t tex = texOf(it);
-        const bool add = addOf(it);
-        size_t j = i;
-        uint32_t verts = 0;
-        bool mesh = false;
-        while (j < order.size()) {
-            const Item& o = order[j];
-            if (o.kind == BeginLayer || o.kind == EndLayer || (o.kind == QuadItem && quads[o.index].solid)) break;
-            if (texOf(o) != tex || addOf(o) != add || verts + vertsOf(o) > 65536u) break;
-            verts += vertsOf(o);
-            mesh = mesh || o.kind == MeshItemKind;
-            j++;
+        const uint16_t l_u16Tex = l_fnTexOf(l_oIt);
+        const bool l_bAdd = l_fnAddOf(l_oIt);
+        size_t l_nJ = l_nI;
+        uint32_t l_uVerts = 0;
+        bool l_bMesh = false;
+        while (l_nJ < m_vOrder.size()) {
+            const Item& l_oO = m_vOrder[l_nJ];
+            if (l_oO.m_eKind == BeginLayer || l_oO.m_eKind == EndLayer || (l_oO.m_eKind == QuadItem && m_vQuads[l_oO.m_uIndex].m_bSolid)) break;
+            if (l_fnTexOf(l_oO) != l_u16Tex || l_fnAddOf(l_oO) != l_bAdd || l_uVerts + l_fnVertsOf(l_oO) > 65536u) break;
+            l_uVerts += l_fnVertsOf(l_oO);
+            l_bMesh = l_bMesh || l_oO.m_eKind == MeshItemKind;
+            l_nJ++;
         }
-        if (!mesh) {   // quads only: the sprite batch
-            for (; i < j; i++) ren->drawSprite(quads[order[i].index]);
+        if (!l_bMesh) {   // quads only: the sprite batch
+            for (; l_nI < l_nJ; l_nI++) l_pRen->f_DrawSprite(m_vQuads[m_vOrder[l_nI].m_uIndex]);
             continue;
         }
-        runVerts.clear();
-        runColors.clear();
-        runIdx.clear();
-        for (; i < j; i++) {
-            const Item& o = order[i];
-            const uint16_t base = uint16_t(runVerts.size());
-            if (o.kind == QuadItem) {
-                const Quad& q = quads[o.index];
-                const float x0 = q.rect[0], y0 = q.rect[1], x1 = q.rect[0] + q.rect[2], y1 = q.rect[1] + q.rect[3];
-                const float rc[8] = {x0, y0, x1, y0, x1, y1, x0, y1};
-                const float* c = q.hasCorners ? q.corners : rc;
-                runVerts.push_back({c[0], c[1], q.uv[0], q.uv[1]});
-                runVerts.push_back({c[2], c[3], q.uv[2], q.uv[1]});
-                runVerts.push_back({c[4], c[5], q.uv[2], q.uv[3]});
-                runVerts.push_back({c[6], c[7], q.uv[0], q.uv[3]});
-                for (int k = 0; k < 4; k++) runColors.insert(runColors.end(), q.tint, q.tint + 4);
-                for (uint16_t k : {0, 1, 2, 0, 2, 3}) runIdx.push_back(uint16_t(base + k));
+        l_vRunVerts.clear();
+        l_vRunColors.clear();
+        l_vRunIdx.clear();
+        for (; l_nI < l_nJ; l_nI++) {
+            const Item& l_oO = m_vOrder[l_nI];
+            const uint16_t l_u16Base = uint16_t(l_vRunVerts.size());
+            if (l_oO.m_eKind == QuadItem) {
+                const Quad& l_oQ = m_vQuads[l_oO.m_uIndex];
+                const float l_fX0 = l_oQ.m_arrRect[0], l_fY0 = l_oQ.m_arrRect[1], l_fX1 = l_oQ.m_arrRect[0] + l_oQ.m_arrRect[2], l_fY1 = l_oQ.m_arrRect[1] + l_oQ.m_arrRect[3];
+                const float l_arrRc[8] = {l_fX0, l_fY0, l_fX1, l_fY0, l_fX1, l_fY1, l_fX0, l_fY1};
+                const float* l_pC = l_oQ.m_bHasCorners ? l_oQ.m_arrCorners : l_arrRc;
+                l_vRunVerts.push_back({l_pC[0], l_pC[1], l_oQ.m_arrUv[0], l_oQ.m_arrUv[1]});
+                l_vRunVerts.push_back({l_pC[2], l_pC[3], l_oQ.m_arrUv[2], l_oQ.m_arrUv[1]});
+                l_vRunVerts.push_back({l_pC[4], l_pC[5], l_oQ.m_arrUv[2], l_oQ.m_arrUv[3]});
+                l_vRunVerts.push_back({l_pC[6], l_pC[7], l_oQ.m_arrUv[0], l_oQ.m_arrUv[3]});
+                for (int l_iK = 0; l_iK < 4; l_iK++) l_vRunColors.insert(l_vRunColors.end(), l_oQ.m_arrTint, l_oQ.m_arrTint + 4);
+                for (uint16_t l_u16K : {0, 1, 2, 0, 2, 3}) l_vRunIdx.push_back(uint16_t(l_u16Base + l_u16K));
             } else {
-                const MeshItem& m = meshes[o.index];
-                runVerts.insert(runVerts.end(), vertices.begin() + m.firstVertex, vertices.begin() + m.firstVertex + m.vertexCount);
-                for (uint32_t k = 0; k < m.vertexCount; k++) runColors.insert(runColors.end(), m.tint, m.tint + 4);
-                for (uint32_t k = 0; k < m.indexCount; k++) runIdx.push_back(uint16_t(base + indices[m.firstIndex + k]));
+                const MeshItem& l_oM = m_vMeshes[l_oO.m_uIndex];
+                l_vRunVerts.insert(l_vRunVerts.end(), m_vVertices.begin() + l_oM.m_uFirstVertex, m_vVertices.begin() + l_oM.m_uFirstVertex + l_oM.m_uVertexCount);
+                for (uint32_t l_uK = 0; l_uK < l_oM.m_uVertexCount; l_uK++) l_vRunColors.insert(l_vRunColors.end(), l_oM.m_arrTint, l_oM.m_arrTint + 4);
+                for (uint32_t l_uK = 0; l_uK < l_oM.m_uIndexCount; l_uK++) l_vRunIdx.push_back(uint16_t(l_u16Base + m_vIndices[l_oM.m_uFirstIndex + l_uK]));
             }
         }
-        Mesh batch;
-        batch.vertices = runVerts.data();
-        batch.vertexCount = uint32_t(runVerts.size());
-        batch.indices = runIdx.data();
-        batch.indexCount = uint32_t(runIdx.size());
-        batch.colors = runColors.data();
-        batch.additive = add;
-        batch.texture = tex;
-        ren->drawMesh(batch);
+        Mesh l_oBatch;
+        l_oBatch.m_pVertices = l_vRunVerts.data();
+        l_oBatch.m_uVertexCount = uint32_t(l_vRunVerts.size());
+        l_oBatch.m_pIndices = l_vRunIdx.data();
+        l_oBatch.m_uIndexCount = uint32_t(l_vRunIdx.size());
+        l_oBatch.m_pColors = l_vRunColors.data();
+        l_oBatch.m_bAdditive = l_bAdd;
+        l_oBatch.m_u16Texture = l_u16Tex;
+        l_pRen->f_DrawMesh(l_oBatch);
     }
 }
 
 namespace {
-void restWalk(const Node& n, const glm::mat4& parent, std::vector<std::pair<const Node*, glm::mat4>>& out) {
-    const glm::mat4 w = parent * compose(n.pos, n.rot, n.scale);
-    out.push_back({&n, w});
-    for (const Node& c : n.children) restWalk(c, w, out);
+void f_RestWalk(const Node& l_oN, const glm::mat4& l_mat4Parent, std::vector<std::pair<const Node*, glm::mat4>>& l_vOut) {
+    const glm::mat4 l_mat4W = l_mat4Parent * f_Compose(l_oN.m_v3Pos, l_oN.m_v3Rot, l_oN.m_v3Scale);
+    l_vOut.push_back({&l_oN, l_mat4W});
+    for (const Node& l_oC : l_oN.m_vChildren) f_RestWalk(l_oC, l_mat4W, l_vOut);
 }
-const glm::mat4* restOf(const std::vector<std::pair<const Node*, glm::mat4>>& rest, const Node* n) {
-    for (const auto& r : rest) if (r.first == n) return &r.second;
+const glm::mat4* f_RestOf(const std::vector<std::pair<const Node*, glm::mat4>>& l_vRest, const Node* l_pN) {
+    for (const auto& l_pairR : l_vRest) if (l_pairR.first == l_pN) return &l_pairR.second;
     return nullptr;
 }
-const std::pair<const Node*, glm::mat4>* restNamed(const std::vector<std::pair<const Node*, glm::mat4>>& rest, const std::string& name) {
-    for (const auto& r : rest) if (r.first->name == name) return &r;
+const std::pair<const Node*, glm::mat4>* f_RestNamed(const std::vector<std::pair<const Node*, glm::mat4>>& l_vRest, const std::string& l_strName) {
+    for (const auto& l_pairR : l_vRest) if (l_pairR.first->m_strName == l_strName) return &l_pairR;
     return nullptr;
 }
-float segmentDistance(const glm::vec2& p, const glm::vec2& a, const glm::vec2& b) {
-    const glm::vec2 ab = b - a;
-    const float len2 = glm::dot(ab, ab);
-    const float t = len2 > 1e-9f ? std::clamp(glm::dot(p - a, ab) / len2, 0.0f, 1.0f) : 0.0f;
-    return glm::length(p - (a + t * ab));
+float f_SegmentDistance(const glm::vec2& l_v2P, const glm::vec2& l_v2A, const glm::vec2& l_v2B) {
+    const glm::vec2 l_v2Ab = l_v2B - l_v2A;
+    const float l_fLen2 = glm::dot(l_v2Ab, l_v2Ab);
+    const float l_fT = l_fLen2 > 1e-9f ? std::clamp(glm::dot(l_v2P - l_v2A, l_v2Ab) / l_fLen2, 0.0f, 1.0f) : 0.0f;
+    return glm::length(l_v2P - (l_v2A + l_fT * l_v2Ab));
 }
 }  // namespace
 
-void restWorlds(const Clip& clip, std::vector<std::pair<const Node*, glm::mat4>>& out) {
-    out.clear();
-    restWalk(clip.root, glm::mat4(1.0f), out);
+void f_RestWorlds(const Clip& l_oClip, std::vector<std::pair<const Node*, glm::mat4>>& l_vOut) {
+    l_vOut.clear();
+    f_RestWalk(l_oClip.m_oRoot, glm::mat4(1.0f), l_vOut);
 }
 
-void autoSkinWeights(const std::vector<float>& restVerts, const std::vector<glm::mat4>& boneRest,
-                     const std::vector<glm::vec2>& boneEnd, std::vector<float>& out) {
-    const size_t verts = restVerts.size() / 2, bones = boneRest.size();
-    out.assign(verts * 2 * kSkinInfluences, 0.0f);
-    std::vector<std::pair<float, int>> w(bones);
-    for (size_t v = 0; v < verts; v++) {
-        const glm::vec2 p(restVerts[2 * v], restVerts[2 * v + 1]);
-        for (size_t b = 0; b < bones; b++) {
-            const float d = segmentDistance(p, glm::vec2(boneRest[b][3]), boneEnd[b]);
-            w[b] = {1.0f / (d * d + 1.0f), (int)b};   // inverse square: the nearest bone leads, joints blend
+void f_AutoSkinWeights(const std::vector<float>& l_vRestVerts, const std::vector<glm::mat4>& l_vBoneRest,
+                     const std::vector<glm::vec2>& l_vBoneEnd, std::vector<float>& l_vOut) {
+    const size_t l_nVerts = l_vRestVerts.size() / 2, l_nBones = l_vBoneRest.size();
+    l_vOut.assign(l_nVerts * 2 * g_iSkinInfluences, 0.0f);
+    std::vector<std::pair<float, int>> l_vW(l_nBones);
+    for (size_t l_nV = 0; l_nV < l_nVerts; l_nV++) {
+        const glm::vec2 l_v2P(l_vRestVerts[2 * l_nV], l_vRestVerts[2 * l_nV + 1]);
+        for (size_t l_nB = 0; l_nB < l_nBones; l_nB++) {
+            const float l_fD = f_SegmentDistance(l_v2P, glm::vec2(l_vBoneRest[l_nB][3]), l_vBoneEnd[l_nB]);
+            l_vW[l_nB] = {1.0f / (l_fD * l_fD + 1.0f), (int)l_nB};   // inverse square: the nearest bone leads, joints blend
         }
-        std::sort(w.begin(), w.end(), [](const std::pair<float, int>& x, const std::pair<float, int>& y) {
-            return x.first > y.first || (x.first == y.first && x.second < y.second);
+        std::sort(l_vW.begin(), l_vW.end(), [](const std::pair<float, int>& l_pairX, const std::pair<float, int>& l_pairY) {
+            return l_pairX.first > l_pairY.first || (l_pairX.first == l_pairY.first && l_pairX.second < l_pairY.second);
         });
-        const size_t k = std::min<size_t>(bones, kSkinInfluences);
-        float sum = 0;
-        for (size_t i = 0; i < k; i++) sum += w[i].first;
-        for (size_t i = 0; i < k; i++) {
-            out[v * 2 * kSkinInfluences + 2 * i] = (float)w[i].second;
-            out[v * 2 * kSkinInfluences + 2 * i + 1] = sum > 0 ? w[i].first / sum : 0.0f;
+        const size_t l_nK = std::min<size_t>(l_nBones, g_iSkinInfluences);
+        float l_fSum = 0;
+        for (size_t l_nI = 0; l_nI < l_nK; l_nI++) l_fSum += l_vW[l_nI].first;
+        for (size_t l_nI = 0; l_nI < l_nK; l_nI++) {
+            l_vOut[l_nV * 2 * g_iSkinInfluences + 2 * l_nI] = (float)l_vW[l_nI].second;
+            l_vOut[l_nV * 2 * g_iSkinInfluences + 2 * l_nI + 1] = l_fSum > 0 ? l_vW[l_nI].first / l_fSum : 0.0f;
         }
     }
 }
@@ -227,42 +227,42 @@ void autoSkinWeights(const std::vector<float>& restVerts, const std::vector<glm:
 namespace {
 // A skinned pose's mesh bent for this frame, and how (what makeSkinnedMesh draws and skinView shows).
 struct Bent {
-    const toms::AtlasRegion* region = nullptr;
-    uint16_t texture = kSpriteAtlasTexture;
-    const toms::SpriteMesh* mesh = nullptr;
-    toms::SpriteMesh own;              // a deformed sprite without a mesh file: a plain grid over it
-    SkinView view;                     // placed vertices, weights, bones
+    const toms::AtlasRegion* m_pRegion = nullptr;
+    uint16_t m_u16Texture = g_u16SpriteAtlasTexture;
+    const toms::SpriteMesh* m_pMesh = nullptr;
+    toms::SpriteMesh m_oOwn;              // a deformed sprite without a mesh file: a plain grid over it
+    SkinView m_oView;                     // placed vertices, weights, bones
     // what a SkinRig keeps (a skinned node): the mesh at rest in clip space, each bone's rest transform and pose (-1: none)
-    std::vector<float> restV;
-    std::vector<glm::mat4> boneRest;
-    std::vector<int> bonePose;
-    std::vector<const Node*> boneNode;
+    std::vector<float> m_vRestV;
+    std::vector<glm::mat4> m_vBoneRest;
+    std::vector<int> m_vBonePose;
+    std::vector<const Node*> m_vBoneNode;
 };
 
 // A plain grid of cols x rows cells over a region's packed pixels (every cell, transparent or not), in original pixels.
-toms::SpriteMesh gridMesh(const toms::AtlasRegion& r, int cols, int rows) {
-    toms::SpriteMesh m;
-    for (int y = 0; y <= rows; y++)
-        for (int x = 0; x <= cols; x++) {
-            m.vertices.push_back((float)r.offX + (float)r.w * x / cols);
-            m.vertices.push_back((float)r.offY + (float)r.h * y / rows);
+toms::SpriteMesh f_GridMesh(const toms::AtlasRegion& l_oR, int l_iCols, int l_iRows) {
+    toms::SpriteMesh l_oM;
+    for (int l_iY = 0; l_iY <= l_iRows; l_iY++)
+        for (int l_iX = 0; l_iX <= l_iCols; l_iX++) {
+            l_oM.m_vVertices.push_back((float)l_oR.m_iOffX + (float)l_oR.m_iW * l_iX / l_iCols);
+            l_oM.m_vVertices.push_back((float)l_oR.m_iOffY + (float)l_oR.m_iH * l_iY / l_iRows);
         }
-    for (int y = 0; y < rows; y++)
-        for (int x = 0; x < cols; x++) {
-            const uint16_t a = (uint16_t)(y * (cols + 1) + x), b = (uint16_t)(a + 1), c = (uint16_t)(a + cols + 2), d = (uint16_t)(a + cols + 1);
-            m.triangles.insert(m.triangles.end(), {a, b, c, a, c, d});
+    for (int l_iY = 0; l_iY < l_iRows; l_iY++)
+        for (int l_iX = 0; l_iX < l_iCols; l_iX++) {
+            const uint16_t l_u16A = (uint16_t)(l_iY * (l_iCols + 1) + l_iX), l_u16B = (uint16_t)(l_u16A + 1), l_u16C = (uint16_t)(l_u16A + l_iCols + 2), l_u16D = (uint16_t)(l_u16A + l_iCols + 1);
+            l_oM.m_vTriangles.insert(l_oM.m_vTriangles.end(), {l_u16A, l_u16B, l_u16C, l_u16A, l_u16C, l_u16D});
         }
-    return m;
+    return l_oM;
 }
 }  // namespace
 
-glm::vec2 latticeOffset(const std::vector<glm::vec2>& offsets, int cols, int rows, float x, float y, float origW, float origH) {
-    if (cols < 2 || rows < 2 || offsets.size() < (size_t)cols * rows || origW <= 0 || origH <= 0) return glm::vec2(0.0f);
-    const float u = std::clamp(x / origW, 0.0f, 1.0f) * (cols - 1), v = std::clamp(y / origH, 0.0f, 1.0f) * (rows - 1);
-    const int c0 = std::min((int)u, cols - 2), r0 = std::min((int)v, rows - 2);
-    const float fu = u - c0, fv = v - r0;
-    auto at = [&](int c, int r) { return offsets[(size_t)r * cols + c]; };
-    return (at(c0, r0) * (1 - fu) + at(c0 + 1, r0) * fu) * (1 - fv) + (at(c0, r0 + 1) * (1 - fu) + at(c0 + 1, r0 + 1) * fu) * fv;
+glm::vec2 f_LatticeOffset(const std::vector<glm::vec2>& l_vOffsets, int l_iCols, int l_iRows, float l_fX, float l_fY, float l_fOrigW, float l_fOrigH) {
+    if (l_iCols < 2 || l_iRows < 2 || l_vOffsets.size() < (size_t)l_iCols * l_iRows || l_fOrigW <= 0 || l_fOrigH <= 0) return glm::vec2(0.0f);
+    const float l_fU = std::clamp(l_fX / l_fOrigW, 0.0f, 1.0f) * (l_iCols - 1), l_fV = std::clamp(l_fY / l_fOrigH, 0.0f, 1.0f) * (l_iRows - 1);
+    const int l_iC0 = std::min((int)l_fU, l_iCols - 2), l_iR0 = std::min((int)l_fV, l_iRows - 2);
+    const float l_fFu = l_fU - l_iC0, l_fFv = l_fV - l_iR0;
+    auto l_fnAt = [&](int l_iC, int l_iR) { return l_vOffsets[(size_t)l_iR * l_iCols + l_iC]; };
+    return (l_fnAt(l_iC0, l_iR0) * (1 - l_fFu) + l_fnAt(l_iC0 + 1, l_iR0) * l_fFu) * (1 - l_fFv) + (l_fnAt(l_iC0, l_iR0 + 1) * (1 - l_fFu) + l_fnAt(l_iC0 + 1, l_iR0 + 1) * l_fFu) * l_fFv;
 }
 
 namespace {
@@ -270,697 +270,697 @@ namespace {
 // Automatic weights depend only on what they are made from -- the mesh at rest and the bones' rest segments -- so they
 // are made once and kept by a hash of exactly that (an edit of the rest pose, another mesh: other weights). Without
 // this, every skinned node made them again every frame.
-const std::vector<float>& cachedAutoWeights(const std::vector<float>& restV, const std::vector<glm::mat4>& boneRest,
-                                            const std::vector<glm::vec2>& boneEnd) {
-    uint64_t h = 1469598103934665603ull;
-    auto mix = [&](const void* p, size_t n) {
-        const auto* b = static_cast<const unsigned char*>(p);
-        for (size_t i = 0; i < n; i++) h = (h ^ b[i]) * 1099511628211ull;
+const std::vector<float>& f_CachedAutoWeights(const std::vector<float>& l_vRestV, const std::vector<glm::mat4>& l_vBoneRest,
+                                            const std::vector<glm::vec2>& l_vBoneEnd) {
+    uint64_t l_u64H = 1469598103934665603ull;
+    auto l_fnMix = [&](const void* l_pP, size_t l_nN) {
+        const auto* l_pB = static_cast<const unsigned char*>(l_pP);
+        for (size_t l_nI = 0; l_nI < l_nN; l_nI++) l_u64H = (l_u64H ^ l_pB[l_nI]) * 1099511628211ull;
     };
-    mix(restV.data(), restV.size() * sizeof(float));
-    for (const glm::mat4& m : boneRest) mix(&m[3][0], 2 * sizeof(float));
-    mix(boneEnd.data(), boneEnd.size() * sizeof(glm::vec2));
-    const size_t n = boneRest.size();
-    mix(&n, sizeof n);
-    static thread_local std::unordered_map<uint64_t, std::vector<float>> cache;
-    auto it = cache.find(h);
-    if (it != cache.end()) return it->second;
-    if (cache.size() > 512) cache.clear();   // an editor dragging bones at rest makes new ones: keep it bounded
-    std::vector<float>& w = cache[h];
-    autoSkinWeights(restV, boneRest, boneEnd, w);
-    return w;
+    l_fnMix(l_vRestV.data(), l_vRestV.size() * sizeof(float));
+    for (const glm::mat4& l_mat4M : l_vBoneRest) l_fnMix(&l_mat4M[3][0], 2 * sizeof(float));
+    l_fnMix(l_vBoneEnd.data(), l_vBoneEnd.size() * sizeof(glm::vec2));
+    const size_t l_nN = l_vBoneRest.size();
+    l_fnMix(&l_nN, sizeof l_nN);
+    static thread_local std::unordered_map<uint64_t, std::vector<float>> l_mapCache;
+    auto l_itIt = l_mapCache.find(l_u64H);
+    if (l_itIt != l_mapCache.end()) return l_itIt->second;
+    if (l_mapCache.size() > 512) l_mapCache.clear();   // an editor dragging bones at rest makes new ones: keep it bounded
+    std::vector<float>& l_vW = l_mapCache[l_u64H];
+    f_AutoSkinWeights(l_vRestV, l_vBoneRest, l_vBoneEnd, l_vW);
+    return l_vW;
 }
 
-SkinState bend(const std::vector<NodePose>& poses, size_t i, const std::vector<std::pair<const Node*, glm::mat4>>& rest,
-               const AtlasSet& atlases, const glm::mat3& place, Bent& out) {
-    const NodePose& p = poses[i];
-    if (!p.node || !p.node->usesMesh()) return SkinState::NotSkinned;
-    const Node& n = *p.node;
-    const toms::AtlasRegion* r = p.sprite.empty() ? nullptr : atlases.find(p.sprite, &out.texture);
-    if (!r || r->w <= 0 || r->h <= 0) return SkinState::NoSprite;
-    if (r->rotated) return SkinState::Rotated;   // meshes are cut from unrotated pixels: drawn as a quad
-    const toms::SpriteMesh* mesh = atlases.findMesh(p.sprite, n);
-    if ((!mesh || mesh->triangles.empty()) && !n.skinned()) {   // a deform only: a plain grid, twice the lattice
-        out.own = gridMesh(*r, (n.latticeCols() - 1) * 2, (n.latticeRows() - 1) * 2);
-        mesh = &out.own;
+SkinState f_Bend(const std::vector<NodePose>& l_vPoses, size_t l_nI, const std::vector<std::pair<const Node*, glm::mat4>>& l_vRest,
+               const AtlasSet& l_oAtlases, const glm::mat3& l_mat3Place, Bent& l_oOut) {
+    const NodePose& l_oP = l_vPoses[l_nI];
+    if (!l_oP.m_pNode || !l_oP.m_pNode->f_UsesMesh()) return SkinState::NotSkinned;
+    const Node& l_oN = *l_oP.m_pNode;
+    const toms::AtlasRegion* l_pR = l_oP.m_strSprite.empty() ? nullptr : l_oAtlases.f_Find(l_oP.m_strSprite, &l_oOut.m_u16Texture);
+    if (!l_pR || l_pR->m_iW <= 0 || l_pR->m_iH <= 0) return SkinState::NoSprite;
+    if (l_pR->m_bRotated) return SkinState::Rotated;   // meshes are cut from unrotated pixels: drawn as a quad
+    const toms::SpriteMesh* l_pMesh = l_oAtlases.f_FindMesh(l_oP.m_strSprite, l_oN);
+    if ((!l_pMesh || l_pMesh->m_vTriangles.empty()) && !l_oN.f_Skinned()) {   // a deform only: a plain grid, twice the lattice
+        l_oOut.m_oOwn = f_GridMesh(*l_pR, (l_oN.f_LatticeCols() - 1) * 2, (l_oN.f_LatticeRows() - 1) * 2);
+        l_pMesh = &l_oOut.m_oOwn;
     }
-    const glm::mat4* nodeRest = restOf(rest, &n);
-    if (!mesh || mesh->triangles.empty() || (n.skinned() && !nodeRest)) return SkinState::NoMesh;
-    out.region = r;
-    out.mesh = mesh;
-    SkinView& v = out.view;
-    auto placed = [&](const glm::vec2& c) { const glm::vec3 s = place * glm::vec3(c, 1.0f); return glm::vec2(s); };
+    const glm::mat4* l_pNodeRest = f_RestOf(l_vRest, &l_oN);
+    if (!l_pMesh || l_pMesh->m_vTriangles.empty() || (l_oN.f_Skinned() && !l_pNodeRest)) return SkinState::NoMesh;
+    l_oOut.m_pRegion = l_pR;
+    l_oOut.m_pMesh = l_pMesh;
+    SkinView& l_oV = l_oOut.m_oView;
+    auto l_fnPlaced = [&](const glm::vec2& l_v2C) { const glm::vec3 l_v3S = l_mat3Place * glm::vec3(l_v2C, 1.0f); return glm::vec2(l_v3S); };
     // Each vertex around the pivot, moved by the lattice (at the node's own time): the shape the rest works on.
-    const glm::vec2 pivot = n.hasPivot ? n.pivot : glm::vec2(r->pivot[0], r->pivot[1]);
-    const uint32_t verts = mesh->vertexCount();
-    const std::vector<glm::vec2> lattice = n.deformed() ? deformAt(n, p.time) : std::vector<glm::vec2>();
-    auto local = [&](uint32_t k) {
-        const float x = mesh->vertices[2 * k], y = mesh->vertices[2 * k + 1];
-        glm::vec2 l(x - pivot.x * r->origW, y - pivot.y * r->origH);
-        if (!lattice.empty()) l += latticeOffset(lattice, n.latticeCols(), n.latticeRows(), x, y, (float)r->origW, (float)r->origH);
-        return l;
+    const glm::vec2 l_v2Pivot = l_oN.m_bHasPivot ? l_oN.m_v2Pivot : glm::vec2(l_pR->m_arrPivot[0], l_pR->m_arrPivot[1]);
+    const uint32_t l_uVerts = l_pMesh->f_VertexCount();
+    const std::vector<glm::vec2> l_vLattice = l_oN.f_Deformed() ? f_DeformAt(l_oN, l_oP.m_fTime) : std::vector<glm::vec2>();
+    auto l_fnLocal = [&](uint32_t l_uK) {
+        const float l_fX = l_pMesh->m_vVertices[2 * l_uK], l_fY = l_pMesh->m_vVertices[2 * l_uK + 1];
+        glm::vec2 l_v2L(l_fX - l_v2Pivot.x * l_pR->m_iOrigW, l_fY - l_v2Pivot.y * l_pR->m_iOrigH);
+        if (!l_vLattice.empty()) l_v2L += f_LatticeOffset(l_vLattice, l_oN.f_LatticeCols(), l_oN.f_LatticeRows(), l_fX, l_fY, (float)l_pR->m_iOrigW, (float)l_pR->m_iOrigH);
+        return l_v2L;
     };
-    if (!n.skinned()) {   // a deform only: the bent shape, carried by the node itself
-        v.vertices.resize(verts);
-        for (uint32_t k = 0; k < verts; k++) v.vertices[k] = placed(glm::vec2(p.world * glm::vec4(local(k), 0, 1)));
-        v.triangles = mesh->triangles;
+    if (!l_oN.f_Skinned()) {   // a deform only: the bent shape, carried by the node itself
+        l_oV.m_vVertices.resize(l_uVerts);
+        for (uint32_t l_uK = 0; l_uK < l_uVerts; l_uK++) l_oV.m_vVertices[l_uK] = l_fnPlaced(glm::vec2(l_oP.m_mat4World * glm::vec4(l_fnLocal(l_uK), 0, 1)));
+        l_oV.m_vTriangles = l_pMesh->m_vTriangles;
         return SkinState::Ok;
     }
 
     // The bones: rest transform, where they are now (a bone left out of the poses, e.g. by an editor's solo,
     // stays at rest), and the segment the automatic weights measure against. A bone name no node has is the
     // skinned node itself.
-    const size_t bones = n.skinBones.size();
-    std::vector<glm::mat4> boneRest(bones), boneSkin(bones);
-    std::vector<glm::vec2> boneEnd(bones);
-    v.bones = n.skinBones;
-    v.boneFound.assign(bones, false);
-    for (size_t b = 0; b < bones; b++) {
-        const auto* named = restNamed(rest, n.skinBones[b]);
-        v.boneFound[b] = named != nullptr;
-        const Node* bn = named ? named->first : &n;
-        boneRest[b] = named ? named->second : *nodeRest;
-        glm::mat4 now = boneRest[b];
-        int at = -1;
-        for (size_t qi = 0; qi < poses.size(); qi++)
-            if (poses[qi].node == bn) { now = poses[qi].world; at = (int)qi; break; }
-        out.bonePose.push_back(at);
-        out.boneNode.push_back(bn);
-        boneSkin[b] = std::fabs(glm::determinant(boneRest[b])) > 1e-12f ? now * glm::inverse(boneRest[b]) : glm::mat4(1.0f);
+    const size_t l_nBones = l_oN.m_vSkinBones.size();
+    std::vector<glm::mat4> l_vBoneRest(l_nBones), l_vBoneSkin(l_nBones);
+    std::vector<glm::vec2> l_vBoneEnd(l_nBones);
+    l_oV.m_vBones = l_oN.m_vSkinBones;
+    l_oV.m_vBoneFound.assign(l_nBones, false);
+    for (size_t l_nB = 0; l_nB < l_nBones; l_nB++) {
+        const auto* l_pNamed = f_RestNamed(l_vRest, l_oN.m_vSkinBones[l_nB]);
+        l_oV.m_vBoneFound[l_nB] = l_pNamed != nullptr;
+        const Node* l_pBn = l_pNamed ? l_pNamed->first : &l_oN;
+        l_vBoneRest[l_nB] = l_pNamed ? l_pNamed->second : *l_pNodeRest;
+        glm::mat4 l_mat4Now = l_vBoneRest[l_nB];
+        int l_iAt = -1;
+        for (size_t l_nQi = 0; l_nQi < l_vPoses.size(); l_nQi++)
+            if (l_vPoses[l_nQi].m_pNode == l_pBn) { l_mat4Now = l_vPoses[l_nQi].m_mat4World; l_iAt = (int)l_nQi; break; }
+        l_oOut.m_vBonePose.push_back(l_iAt);
+        l_oOut.m_vBoneNode.push_back(l_pBn);
+        l_vBoneSkin[l_nB] = std::fabs(glm::determinant(l_vBoneRest[l_nB])) > 1e-12f ? l_mat4Now * glm::inverse(l_vBoneRest[l_nB]) : glm::mat4(1.0f);
         // A bone reaches to its first child that is a bone; a last bone (a head, a hand) reaches on past its origin as
         // far as from its parent bone to it, so what lies beyond it follows it.
-        boneEnd[b] = glm::vec2(boneRest[b][3]);
-        bool reaches = false;
-        for (const Node& c : bn->children)
-            if (std::find(n.skinBones.begin(), n.skinBones.end(), c.name) != n.skinBones.end())
-                if (const glm::mat4* cr = restOf(rest, &c)) { boneEnd[b] = glm::vec2((*cr)[3]); reaches = true; break; }
-        if (!reaches)
-            for (const auto& rr : rest)
-                if (std::find(n.skinBones.begin(), n.skinBones.end(), rr.first->name) != n.skinBones.end() &&
-                    std::any_of(rr.first->children.begin(), rr.first->children.end(), [&](const Node& c) { return &c == bn; })) {
-                    boneEnd[b] = 2.0f * glm::vec2(boneRest[b][3]) - glm::vec2(rr.second[3]);
+        l_vBoneEnd[l_nB] = glm::vec2(l_vBoneRest[l_nB][3]);
+        bool l_bReaches = false;
+        for (const Node& l_oC : l_pBn->m_vChildren)
+            if (std::find(l_oN.m_vSkinBones.begin(), l_oN.m_vSkinBones.end(), l_oC.m_strName) != l_oN.m_vSkinBones.end())
+                if (const glm::mat4* l_pCr = f_RestOf(l_vRest, &l_oC)) { l_vBoneEnd[l_nB] = glm::vec2((*l_pCr)[3]); l_bReaches = true; break; }
+        if (!l_bReaches)
+            for (const auto& l_pairRr : l_vRest)
+                if (std::find(l_oN.m_vSkinBones.begin(), l_oN.m_vSkinBones.end(), l_pairRr.first->m_strName) != l_oN.m_vSkinBones.end() &&
+                    std::any_of(l_pairRr.first->m_vChildren.begin(), l_pairRr.first->m_vChildren.end(), [&](const Node& l_oC) { return &l_oC == l_pBn; })) {
+                    l_vBoneEnd[l_nB] = 2.0f * glm::vec2(l_vBoneRest[l_nB][3]) - glm::vec2(l_pairRr.second[3]);
                     break;
                 }
         // The segment as it is now: carried by its own bone.
-        v.boneStart.push_back(placed(glm::vec2(boneSkin[b] * glm::vec4(glm::vec2(boneRest[b][3]), 0, 1))));
-        v.boneEnd.push_back(placed(glm::vec2(boneSkin[b] * glm::vec4(boneEnd[b], 0, 1))));
+        l_oV.m_vBoneStart.push_back(l_fnPlaced(glm::vec2(l_vBoneSkin[l_nB] * glm::vec4(glm::vec2(l_vBoneRest[l_nB][3]), 0, 1))));
+        l_oV.m_vBoneEnd.push_back(l_fnPlaced(glm::vec2(l_vBoneSkin[l_nB] * glm::vec4(l_vBoneEnd[l_nB], 0, 1))));
     }
 
     // The mesh at rest in clip space: its (deformed) vertices through the node's rest transform; the bones carry it.
-    std::vector<float> restV((size_t)verts * 2);
-    for (uint32_t k = 0; k < verts; k++) {
-        const glm::vec4 c = *nodeRest * glm::vec4(local(k), 0, 1);
-        restV[2 * k] = c.x;
-        restV[2 * k + 1] = c.y;
+    std::vector<float> l_vRestV((size_t)l_uVerts * 2);
+    for (uint32_t l_uK = 0; l_uK < l_uVerts; l_uK++) {
+        const glm::vec4 l_v4C = *l_pNodeRest * glm::vec4(l_fnLocal(l_uK), 0, 1);
+        l_vRestV[2 * l_uK] = l_v4C.x;
+        l_vRestV[2 * l_uK + 1] = l_v4C.y;
     }
-    out.boneRest = boneRest;
-    v.autoWeights = n.skinWeights.size() != (size_t)verts * 2 * kSkinInfluences;   // automatic, or painted for another mesh
-    if (v.autoWeights) v.weights = cachedAutoWeights(restV, boneRest, boneEnd);
-    else v.weights = n.skinWeights;
+    l_oOut.m_vBoneRest = l_vBoneRest;
+    l_oV.m_bAutoWeights = l_oN.m_vSkinWeights.size() != (size_t)l_uVerts * 2 * g_iSkinInfluences;   // automatic, or painted for another mesh
+    if (l_oV.m_bAutoWeights) l_oV.m_vWeights = f_CachedAutoWeights(l_vRestV, l_vBoneRest, l_vBoneEnd);
+    else l_oV.m_vWeights = l_oN.m_vSkinWeights;
 
-    v.vertices.resize(verts);
-    for (uint32_t k = 0; k < verts; k++) {
-        const glm::vec4 restPos(restV[2 * k], restV[2 * k + 1], 0, 1);
-        glm::vec4 acc(0.0f);
-        float sum = 0;
-        for (int j = 0; j < kSkinInfluences; j++) {
-            const float w = v.weights[(size_t)k * 2 * kSkinInfluences + 2 * j + 1];
-            const int b = (int)v.weights[(size_t)k * 2 * kSkinInfluences + 2 * j];
-            if (w == 0.0f || b < 0 || b >= (int)bones) continue;
-            acc += w * (boneSkin[(size_t)b] * restPos);
-            sum += w;
+    l_oV.m_vVertices.resize(l_uVerts);
+    for (uint32_t l_uK = 0; l_uK < l_uVerts; l_uK++) {
+        const glm::vec4 l_v4RestPos(l_vRestV[2 * l_uK], l_vRestV[2 * l_uK + 1], 0, 1);
+        glm::vec4 l_v4Acc(0.0f);
+        float l_fSum = 0;
+        for (int l_iJ = 0; l_iJ < g_iSkinInfluences; l_iJ++) {
+            const float l_fW = l_oV.m_vWeights[(size_t)l_uK * 2 * g_iSkinInfluences + 2 * l_iJ + 1];
+            const int l_iB = (int)l_oV.m_vWeights[(size_t)l_uK * 2 * g_iSkinInfluences + 2 * l_iJ];
+            if (l_fW == 0.0f || l_iB < 0 || l_iB >= (int)l_nBones) continue;
+            l_v4Acc += l_fW * (l_vBoneSkin[(size_t)l_iB] * l_v4RestPos);
+            l_fSum += l_fW;
         }
-        acc = sum > 0 ? acc / sum : restPos;
-        v.vertices[k] = placed(glm::vec2(acc));
+        l_v4Acc = l_fSum > 0 ? l_v4Acc / l_fSum : l_v4RestPos;
+        l_oV.m_vVertices[l_uK] = l_fnPlaced(glm::vec2(l_v4Acc));
     }
-    v.triangles = mesh->triangles;
-    out.restV = std::move(restV);
+    l_oV.m_vTriangles = l_pMesh->m_vTriangles;
+    l_oOut.m_vRestV = std::move(l_vRestV);
     return SkinState::Ok;
 }
 }  // namespace
 
 struct SkinRigCache {
     struct Rig {
-        std::string sprite;                       // the sprite it was made for (sprite keys switch meshes)
-        const toms::SpriteMesh* mesh = nullptr;
-        uint16_t texture = kSpriteAtlasTexture;
-        std::vector<float> restV, uv, weights;    // per vertex: at rest (clip space), texture, kSkinInfluences pairs
-        std::vector<int> bonePose;                // per bone: its pose, -1 = stays at rest
-        std::vector<const Node*> boneNode;
-        std::vector<glm::mat4> restInv;           // per bone: its rest transform inverted (identity when degenerate)
+        std::string m_strSprite;                       // the sprite it was made for (sprite keys switch meshes)
+        const toms::SpriteMesh* m_pMesh = nullptr;
+        uint16_t m_u16Texture = g_u16SpriteAtlasTexture;
+        std::vector<float> m_vRestV, m_vUv, m_vWeights;    // per vertex: at rest (clip space), texture, kSkinInfluences pairs
+        std::vector<int> m_vBonePose;                // per bone: its pose, -1 = stays at rest
+        std::vector<const Node*> m_vBoneNode;
+        std::vector<glm::mat4> m_vRestInv;           // per bone: its rest transform inverted (identity when degenerate)
     };
-    std::unordered_map<const Node*, std::vector<Rig>> rigs;
+    std::unordered_map<const Node*, std::vector<Rig>> m_mapRigs;
 };
 
 namespace {
 // The shared caches, by clip and atlas set, held weakly: the players keep them alive. fresh: a new one replaces the
 // shared one (the atlases were reloaded under the same AtlasSet; players still on the old one keep it until they ask
 // again).
-std::shared_ptr<SkinRigCache> sharedRigs(const Clip* clip, const AtlasSet* atlases, bool fresh) {
-    static std::map<std::pair<const Clip*, const AtlasSet*>, std::weak_ptr<SkinRigCache>> shared;
-    static int calls = 0;
-    if (++calls % 256 == 0)   // now and then: forget the ones nobody plays any more
-        for (auto it = shared.begin(); it != shared.end();) it = it->second.expired() ? shared.erase(it) : std::next(it);
-    std::weak_ptr<SkinRigCache>& slot = shared[{clip, atlases}];
-    std::shared_ptr<SkinRigCache> c = fresh ? nullptr : slot.lock();
-    if (!c) {
-        c = std::make_shared<SkinRigCache>();
-        slot = c;
+std::shared_ptr<SkinRigCache> f_SharedRigs(const Clip* l_pClip, const AtlasSet* l_pAtlases, bool l_bFresh) {
+    static std::map<std::pair<const Clip*, const AtlasSet*>, std::weak_ptr<SkinRigCache>> l_mapShared;
+    static int l_iCalls = 0;
+    if (++l_iCalls % 256 == 0)   // now and then: forget the ones nobody plays any more
+        for (auto l_itIt = l_mapShared.begin(); l_itIt != l_mapShared.end();) l_itIt = l_itIt->second.expired() ? l_mapShared.erase(l_itIt) : std::next(l_itIt);
+    std::weak_ptr<SkinRigCache>& l_wpSlot = l_mapShared[{l_pClip, l_pAtlases}];
+    std::shared_ptr<SkinRigCache> l_spC = l_bFresh ? nullptr : l_wpSlot.lock();
+    if (!l_spC) {
+        l_spC = std::make_shared<SkinRigCache>();
+        l_wpSlot = l_spC;
     }
-    return c;
+    return l_spC;
 }
 }  // namespace
 
-bool makeSkinnedMesh(const std::vector<NodePose>& poses, size_t i, const std::vector<std::pair<const Node*, glm::mat4>>& rest,
-                     const AtlasSet& atlases, const glm::mat3& place, const glm::vec4& t, DrawList& out, SkinRigCache* rigs) {
-    const NodePose& p = poses[i];
-    if (!p.visible || p.color.a <= 0.0f) return false;
+bool f_MakeSkinnedMesh(const std::vector<NodePose>& l_vPoses, size_t l_nI, const std::vector<std::pair<const Node*, glm::mat4>>& l_vRest,
+                     const AtlasSet& l_oAtlases, const glm::mat3& l_mat3Place, const glm::vec4& l_v4T, DrawList& l_oOut, SkinRigCache* l_pRigs) {
+    const NodePose& l_oP = l_vPoses[l_nI];
+    if (!l_oP.m_bVisible || l_oP.m_v4Color.a <= 0.0f) return false;
     // A skinned node without a lattice, its rig made: only its bones are new this frame.
-    const bool cachable = rigs && p.node->skinned() && !p.node->deformed();
-    if (cachable) {
-        for (const SkinRigCache::Rig& g : rigs->rigs[p.node]) {
-            if (g.sprite != p.sprite) continue;
-            const size_t bones = g.bonePose.size();
-            glm::mat4 skin[16];
-            for (size_t b = 0; b < bones && b < 16; b++) {
-                const int at = g.bonePose[b];
-                skin[b] = at >= 0 && (size_t)at < poses.size() && poses[(size_t)at].node == g.boneNode[b] ? poses[(size_t)at].world * g.restInv[b]
+    const bool l_bCachable = l_pRigs && l_oP.m_pNode->f_Skinned() && !l_oP.m_pNode->f_Deformed();
+    if (l_bCachable) {
+        for (const SkinRigCache::Rig& l_oG : l_pRigs->m_mapRigs[l_oP.m_pNode]) {
+            if (l_oG.m_strSprite != l_oP.m_strSprite) continue;
+            const size_t l_nBones = l_oG.m_vBonePose.size();
+            glm::mat4 l_arrSkin[16];
+            for (size_t l_nB = 0; l_nB < l_nBones && l_nB < 16; l_nB++) {
+                const int l_iAt = l_oG.m_vBonePose[l_nB];
+                l_arrSkin[l_nB] = l_iAt >= 0 && (size_t)l_iAt < l_vPoses.size() && l_vPoses[(size_t)l_iAt].m_pNode == l_oG.m_vBoneNode[l_nB] ? l_vPoses[(size_t)l_iAt].m_mat4World * l_oG.m_vRestInv[l_nB]
                                                                                                           : glm::mat4(1.0f);
             }
-            DrawList::MeshItem item;
-            item.firstVertex = (uint32_t)out.vertices.size();
-            item.vertexCount = g.mesh->vertexCount();
-            item.firstIndex = (uint32_t)out.indices.size();
-            item.indexCount = (uint32_t)g.mesh->triangles.size();
-            for (uint32_t v = 0; v < item.vertexCount; v++) {
-                const glm::vec4 restPos(g.restV[2 * v], g.restV[2 * v + 1], 0, 1);
-                glm::vec4 acc(0.0f);
-                float sum = 0;
-                for (int j = 0; j < kSkinInfluences; j++) {
-                    const float w = g.weights[(size_t)v * 2 * kSkinInfluences + 2 * j + 1];
-                    const int b = (int)g.weights[(size_t)v * 2 * kSkinInfluences + 2 * j];
-                    if (w == 0.0f || b < 0 || b >= (int)bones || b >= 16) continue;
-                    acc += w * (skin[b] * restPos);
-                    sum += w;
+            DrawList::MeshItem l_oItem;
+            l_oItem.m_uFirstVertex = (uint32_t)l_oOut.m_vVertices.size();
+            l_oItem.m_uVertexCount = l_oG.m_pMesh->f_VertexCount();
+            l_oItem.m_uFirstIndex = (uint32_t)l_oOut.m_vIndices.size();
+            l_oItem.m_uIndexCount = (uint32_t)l_oG.m_pMesh->m_vTriangles.size();
+            for (uint32_t l_uV = 0; l_uV < l_oItem.m_uVertexCount; l_uV++) {
+                const glm::vec4 l_v4RestPos(l_oG.m_vRestV[2 * l_uV], l_oG.m_vRestV[2 * l_uV + 1], 0, 1);
+                glm::vec4 l_v4Acc(0.0f);
+                float l_fSum = 0;
+                for (int l_iJ = 0; l_iJ < g_iSkinInfluences; l_iJ++) {
+                    const float l_fW = l_oG.m_vWeights[(size_t)l_uV * 2 * g_iSkinInfluences + 2 * l_iJ + 1];
+                    const int l_iB = (int)l_oG.m_vWeights[(size_t)l_uV * 2 * g_iSkinInfluences + 2 * l_iJ];
+                    if (l_fW == 0.0f || l_iB < 0 || l_iB >= (int)l_nBones || l_iB >= 16) continue;
+                    l_v4Acc += l_fW * (l_arrSkin[l_iB] * l_v4RestPos);
+                    l_fSum += l_fW;
                 }
-                acc = sum > 0 ? acc / sum : restPos;
-                const glm::vec3 s = place * glm::vec3(acc.x, acc.y, 1.0f);
-                out.vertices.push_back({s.x, s.y, g.uv[2 * v], g.uv[2 * v + 1]});
+                l_v4Acc = l_fSum > 0 ? l_v4Acc / l_fSum : l_v4RestPos;
+                const glm::vec3 l_v3S = l_mat3Place * glm::vec3(l_v4Acc.x, l_v4Acc.y, 1.0f);
+                l_oOut.m_vVertices.push_back({l_v3S.x, l_v3S.y, l_oG.m_vUv[2 * l_uV], l_oG.m_vUv[2 * l_uV + 1]});
             }
-            out.indices.insert(out.indices.end(), g.mesh->triangles.begin(), g.mesh->triangles.end());
-            const glm::vec4 col = p.color * t;
-            item.tint[0] = col.r; item.tint[1] = col.g; item.tint[2] = col.b; item.tint[3] = col.a;
-            item.additive = p.node->blend == Blend::Add;
-            item.texture = g.texture;
-            out.order.push_back({DrawList::MeshItemKind, (uint32_t)out.meshes.size()});
-            out.meshes.push_back(item);
+            l_oOut.m_vIndices.insert(l_oOut.m_vIndices.end(), l_oG.m_pMesh->m_vTriangles.begin(), l_oG.m_pMesh->m_vTriangles.end());
+            const glm::vec4 l_v4Col = l_oP.m_v4Color * l_v4T;
+            l_oItem.m_arrTint[0] = l_v4Col.r; l_oItem.m_arrTint[1] = l_v4Col.g; l_oItem.m_arrTint[2] = l_v4Col.b; l_oItem.m_arrTint[3] = l_v4Col.a;
+            l_oItem.m_bAdditive = l_oP.m_pNode->m_eBlend == Blend::Add;
+            l_oItem.m_u16Texture = l_oG.m_u16Texture;
+            l_oOut.m_vOrder.push_back({DrawList::MeshItemKind, (uint32_t)l_oOut.m_vMeshes.size()});
+            l_oOut.m_vMeshes.push_back(l_oItem);
             return true;
         }
     }
-    Bent b;
-    if (bend(poses, i, rest, atlases, place, b) != SkinState::Ok) return false;
-    const toms::AtlasRegion* r = b.region;
-    const toms::SpriteMesh* mesh = b.mesh;
-    DrawList::MeshItem item;
-    item.firstVertex = (uint32_t)out.vertices.size();
-    item.vertexCount = mesh->vertexCount();
-    item.firstIndex = (uint32_t)out.indices.size();
-    item.indexCount = (uint32_t)mesh->triangles.size();
+    Bent l_oB;
+    if (f_Bend(l_vPoses, l_nI, l_vRest, l_oAtlases, l_mat3Place, l_oB) != SkinState::Ok) return false;
+    const toms::AtlasRegion* l_pR = l_oB.m_pRegion;
+    const toms::SpriteMesh* l_pMesh = l_oB.m_pMesh;
+    DrawList::MeshItem l_oItem;
+    l_oItem.m_uFirstVertex = (uint32_t)l_oOut.m_vVertices.size();
+    l_oItem.m_uVertexCount = l_pMesh->f_VertexCount();
+    l_oItem.m_uFirstIndex = (uint32_t)l_oOut.m_vIndices.size();
+    l_oItem.m_uIndexCount = (uint32_t)l_pMesh->m_vTriangles.size();
     // The UVs stay inside the region: a mesh cut from another packing or art style (the game's sprite atlas follows the
     // chosen style, a clip file has one mesh file) must not sample the neighbouring sprites.
-    const float du = (r->uv[2] - r->uv[0]) / r->w, dv = (r->uv[3] - r->uv[1]) / r->h;
-    SkinRigCache::Rig* rig = nullptr;
-    if (cachable && b.boneRest.size() <= 16) {   // keep what the next frames need
-        rigs->rigs[p.node].push_back(SkinRigCache::Rig());
-        rig = &rigs->rigs[p.node].back();
-        rig->sprite = p.sprite;
-        rig->mesh = mesh;
-        rig->texture = b.texture;
-        rig->restV = b.restV;
-        rig->weights = b.view.weights;
-        rig->bonePose = b.bonePose;
-        rig->boneNode = b.boneNode;
-        for (const glm::mat4& m : b.boneRest)
-            rig->restInv.push_back(std::fabs(glm::determinant(m)) > 1e-12f ? glm::inverse(m) : glm::mat4(1.0f));
+    const float l_fDu = (l_pR->m_arrUv[2] - l_pR->m_arrUv[0]) / l_pR->m_iW, l_fDv = (l_pR->m_arrUv[3] - l_pR->m_arrUv[1]) / l_pR->m_iH;
+    SkinRigCache::Rig* l_pRig = nullptr;
+    if (l_bCachable && l_oB.m_vBoneRest.size() <= 16) {   // keep what the next frames need
+        l_pRigs->m_mapRigs[l_oP.m_pNode].push_back(SkinRigCache::Rig());
+        l_pRig = &l_pRigs->m_mapRigs[l_oP.m_pNode].back();
+        l_pRig->m_strSprite = l_oP.m_strSprite;
+        l_pRig->m_pMesh = l_pMesh;
+        l_pRig->m_u16Texture = l_oB.m_u16Texture;
+        l_pRig->m_vRestV = l_oB.m_vRestV;
+        l_pRig->m_vWeights = l_oB.m_oView.m_vWeights;
+        l_pRig->m_vBonePose = l_oB.m_vBonePose;
+        l_pRig->m_vBoneNode = l_oB.m_vBoneNode;
+        for (const glm::mat4& l_mat4M : l_oB.m_vBoneRest)
+            l_pRig->m_vRestInv.push_back(std::fabs(glm::determinant(l_mat4M)) > 1e-12f ? glm::inverse(l_mat4M) : glm::mat4(1.0f));
     }
-    for (uint32_t v = 0; v < item.vertexCount; v++) {
-        const float px = std::clamp(mesh->vertices[2 * v] - r->offX, 0.0f, (float)r->w);
-        const float py = std::clamp(mesh->vertices[2 * v + 1] - r->offY, 0.0f, (float)r->h);
-        out.vertices.push_back({b.view.vertices[v].x, b.view.vertices[v].y, r->uv[0] + px * du, r->uv[1] + py * dv});
-        if (rig) { rig->uv.push_back(r->uv[0] + px * du); rig->uv.push_back(r->uv[1] + py * dv); }
+    for (uint32_t l_uV = 0; l_uV < l_oItem.m_uVertexCount; l_uV++) {
+        const float l_fPx = std::clamp(l_pMesh->m_vVertices[2 * l_uV] - l_pR->m_iOffX, 0.0f, (float)l_pR->m_iW);
+        const float l_fPy = std::clamp(l_pMesh->m_vVertices[2 * l_uV + 1] - l_pR->m_iOffY, 0.0f, (float)l_pR->m_iH);
+        l_oOut.m_vVertices.push_back({l_oB.m_oView.m_vVertices[l_uV].x, l_oB.m_oView.m_vVertices[l_uV].y, l_pR->m_arrUv[0] + l_fPx * l_fDu, l_pR->m_arrUv[1] + l_fPy * l_fDv});
+        if (l_pRig) { l_pRig->m_vUv.push_back(l_pR->m_arrUv[0] + l_fPx * l_fDu); l_pRig->m_vUv.push_back(l_pR->m_arrUv[1] + l_fPy * l_fDv); }
     }
-    out.indices.insert(out.indices.end(), mesh->triangles.begin(), mesh->triangles.end());
-    const glm::vec4 col = p.color * t;
-    item.tint[0] = col.r; item.tint[1] = col.g; item.tint[2] = col.b; item.tint[3] = col.a;
-    item.additive = p.node->blend == Blend::Add;
-    item.texture = b.texture;
-    out.order.push_back({DrawList::MeshItemKind, (uint32_t)out.meshes.size()});
-    out.meshes.push_back(item);
+    l_oOut.m_vIndices.insert(l_oOut.m_vIndices.end(), l_pMesh->m_vTriangles.begin(), l_pMesh->m_vTriangles.end());
+    const glm::vec4 l_v4Col = l_oP.m_v4Color * l_v4T;
+    l_oItem.m_arrTint[0] = l_v4Col.r; l_oItem.m_arrTint[1] = l_v4Col.g; l_oItem.m_arrTint[2] = l_v4Col.b; l_oItem.m_arrTint[3] = l_v4Col.a;
+    l_oItem.m_bAdditive = l_oP.m_pNode->m_eBlend == Blend::Add;
+    l_oItem.m_u16Texture = l_oB.m_u16Texture;
+    l_oOut.m_vOrder.push_back({DrawList::MeshItemKind, (uint32_t)l_oOut.m_vMeshes.size()});
+    l_oOut.m_vMeshes.push_back(l_oItem);
     return true;
 }
 
-SkinState skinView(const Clip& clip, const std::vector<NodePose>& poses, size_t i, const AtlasSet& atlases,
-                   const glm::mat3& place, SkinView* out) {
-    if (i >= poses.size()) return SkinState::NotSkinned;
-    std::vector<std::pair<const Node*, glm::mat4>> rest;
-    restWorlds(clip, rest);
-    Bent b;
-    const SkinState s = bend(poses, i, rest, atlases, place, b);
-    if (out) *out = s == SkinState::Ok ? std::move(b.view) : SkinView();
-    return s;
+SkinState f_SkinView(const Clip& l_oClip, const std::vector<NodePose>& l_vPoses, size_t l_nI, const AtlasSet& l_oAtlases,
+                   const glm::mat3& l_mat3Place, SkinView* l_pOut) {
+    if (l_nI >= l_vPoses.size()) return SkinState::NotSkinned;
+    std::vector<std::pair<const Node*, glm::mat4>> l_vRest;
+    f_RestWorlds(l_oClip, l_vRest);
+    Bent l_oB;
+    const SkinState l_eS = f_Bend(l_vPoses, l_nI, l_vRest, l_oAtlases, l_mat3Place, l_oB);
+    if (l_pOut) *l_pOut = l_eS == SkinState::Ok ? std::move(l_oB.m_oView) : SkinView();
+    return l_eS;
 }
 
 namespace {
-void findMissingMeshes(const Node& n, const std::string& parent, const AtlasSet& atlases, std::vector<MissingMesh>& out) {
-    const std::string path = parent.empty() ? n.name : parent + "/" + n.name;
-    if (n.skinned()) {
-        std::vector<std::string> sprites;
-        if (!n.sprite.empty()) sprites.push_back(n.sprite);
-        for (const auto& k : n.spriteKeys)
-            if (!k.v.empty()) sprites.push_back(k.v);
-        std::sort(sprites.begin(), sprites.end());
-        sprites.erase(std::unique(sprites.begin(), sprites.end()), sprites.end());
-        for (const std::string& s : sprites) {
-            if (!atlases.find(s)) continue;
-            const toms::SpriteMesh* m = atlases.findMesh(s, n);
-            if (!m || m->triangles.empty()) out.push_back({path, s});
+void f_FindMissingMeshes(const Node& l_oN, const std::string& l_strParent, const AtlasSet& l_oAtlases, std::vector<MissingMesh>& l_vOut) {
+    const std::string l_strPath = l_strParent.empty() ? l_oN.m_strName : l_strParent + "/" + l_oN.m_strName;
+    if (l_oN.f_Skinned()) {
+        std::vector<std::string> l_vSprites;
+        if (!l_oN.m_strSprite.empty()) l_vSprites.push_back(l_oN.m_strSprite);
+        for (const auto& l_oK : l_oN.m_vSpriteKeys)
+            if (!l_oK.m_oV.empty()) l_vSprites.push_back(l_oK.m_oV);
+        std::sort(l_vSprites.begin(), l_vSprites.end());
+        l_vSprites.erase(std::unique(l_vSprites.begin(), l_vSprites.end()), l_vSprites.end());
+        for (const std::string& l_strS : l_vSprites) {
+            if (!l_oAtlases.f_Find(l_strS)) continue;
+            const toms::SpriteMesh* l_pM = l_oAtlases.f_FindMesh(l_strS, l_oN);
+            if (!l_pM || l_pM->m_vTriangles.empty()) l_vOut.push_back({l_strPath, l_strS});
         }
     }
-    for (const Node& c : n.children) findMissingMeshes(c, path, atlases, out);
+    for (const Node& l_oC : l_oN.m_vChildren) f_FindMissingMeshes(l_oC, l_strPath, l_oAtlases, l_vOut);
 }
 }  // namespace
 
-std::vector<MissingMesh> skinnedWithoutMesh(const Clip& clip, const AtlasSet& atlases) {
-    std::vector<MissingMesh> out;
-    findMissingMeshes(clip.root, std::string(), atlases, out);
-    return out;
+std::vector<MissingMesh> f_SkinnedWithoutMesh(const Clip& l_oClip, const AtlasSet& l_oAtlases) {
+    std::vector<MissingMesh> l_vOut;
+    f_FindMissingMeshes(l_oClip.m_oRoot, std::string(), l_oAtlases, l_vOut);
+    return l_vOut;
 }
 
 // ---- effects (docs/engine/18_NODE_EFFECTS.md) ---------------------------------------------------
 
 namespace {
-void drawPose(const Clip& clip, const std::vector<NodePose>& poses, size_t i, const AtlasSet& atlases, const glm::mat3& place,
-              const glm::vec4& t, std::vector<std::pair<const Node*, glm::mat4>>& rest, bool& restMade, DrawList& out,
-              std::vector<std::string>* missing);
+void f_DrawPose(const Clip& l_oClip, const std::vector<NodePose>& l_vPoses, size_t l_nI, const AtlasSet& l_oAtlases, const glm::mat3& l_mat3Place,
+              const glm::vec4& l_v4T, std::vector<std::pair<const Node*, glm::mat4>>& l_vRest, bool& l_bRestMade, DrawList& l_oOut,
+              std::vector<std::string>* l_pMissing);
 
-float placementScale(const glm::mat3& m) { return std::sqrt(std::fabs(m[0][0] * m[1][1] - m[1][0] * m[0][1])); }
+float f_PlacementScale(const glm::mat3& l_mat3M) { return std::sqrt(std::fabs(l_mat3M[0][0] * l_mat3M[1][1] - l_mat3M[1][0] * l_mat3M[0][1])); }
 
 // Effects around subtrees: before pose j, the afterimages and layers of every node whose subtree starts at j (outer
 // nodes first); after pose j, the layers whose subtree ends there (inner first). A subtree's poses are contiguous
 // (NodePose::first / end), so its layer holds exactly it.
 struct EffectWalk {
-    const Clip& clip;
-    const std::vector<NodePose>& poses;
-    bool any = false;
-    std::vector<size_t> nodes;      // poses with an effect or a trail that shows, by first pose, outer first
-    size_t next = 0;
-    std::vector<uint32_t> open;     // the open layers' ends
+    const Clip& m_oClip;
+    const std::vector<NodePose>& m_vPoses;
+    bool m_bAny = false;
+    std::vector<size_t> m_vNodes;      // poses with an effect or a trail that shows, by first pose, outer first
+    size_t m_nNext = 0;
+    std::vector<uint32_t> m_vOpen;     // the open layers' ends
 
-    EffectWalk(const Clip& c, const std::vector<NodePose>& p, bool effects) : clip(c), poses(p) {
-        if (!effects) return;
-        for (size_t i = 0; i < p.size(); i++) {
-            const NodePose& q = p[i];
-            if (!q.node || !q.visible || q.color.a <= 0.0f) continue;   // hidden: so is its subtree
-            if (q.node->hasFx() || (q.node->hasTrail() && trailAt(*q.node, q.time) > 0.0f)) nodes.push_back(i);
+    EffectWalk(const Clip& l_oC, const std::vector<NodePose>& l_vP, bool l_bEffects) : m_oClip(l_oC), m_vPoses(l_vP) {
+        if (!l_bEffects) return;
+        for (size_t l_nI = 0; l_nI < l_vP.size(); l_nI++) {
+            const NodePose& l_oQ = l_vP[l_nI];
+            if (!l_oQ.m_pNode || !l_oQ.m_bVisible || l_oQ.m_v4Color.a <= 0.0f) continue;   // hidden: so is its subtree
+            if (l_oQ.m_pNode->f_HasFx() || (l_oQ.m_pNode->f_HasTrail() && f_TrailAt(*l_oQ.m_pNode, l_oQ.m_fTime) > 0.0f)) m_vNodes.push_back(l_nI);
         }
-        std::stable_sort(nodes.begin(), nodes.end(), [&](size_t a, size_t b) {
-            return p[a].first != p[b].first ? p[a].first < p[b].first : p[a].depth < p[b].depth;
+        std::stable_sort(m_vNodes.begin(), m_vNodes.end(), [&](size_t l_nA, size_t l_nB) {
+            return l_vP[l_nA].m_uFirst != l_vP[l_nB].m_uFirst ? l_vP[l_nA].m_uFirst < l_vP[l_nB].m_uFirst : l_vP[l_nA].m_iDepth < l_vP[l_nB].m_iDepth;
         });
-        any = !nodes.empty();
+        m_bAny = !m_vNodes.empty();
     }
-    void before(size_t j, const AtlasSet& atlases, const std::vector<std::pair<const Node*, glm::mat4>>& rest,
-                const glm::mat3& place, const glm::vec4& t, DrawList& out) {
-        for (; next < nodes.size() && poses[nodes[next]].first == j; next++) {
-            const size_t i = nodes[next];
-            const Node& n = *poses[i].node;
-            if (n.hasTrail()) appendTrail(clip, poses, i, atlases, rest, place, t, out);   // behind it, outside its layer
-            LayerEffect fx;
-            if (n.hasFx() && nodeLayerEffect(clip, poses, i, place, fx)) {
-                out.beginLayer(fx);
-                open.push_back(poses[i].end);
+    void f_Before(size_t l_nJ, const AtlasSet& l_oAtlases, const std::vector<std::pair<const Node*, glm::mat4>>& l_vRest,
+                const glm::mat3& l_mat3Place, const glm::vec4& l_v4T, DrawList& l_oOut) {
+        for (; m_nNext < m_vNodes.size() && m_vPoses[m_vNodes[m_nNext]].m_uFirst == l_nJ; m_nNext++) {
+            const size_t l_nI = m_vNodes[m_nNext];
+            const Node& l_oN = *m_vPoses[l_nI].m_pNode;
+            if (l_oN.f_HasTrail()) f_AppendTrail(m_oClip, m_vPoses, l_nI, l_oAtlases, l_vRest, l_mat3Place, l_v4T, l_oOut);   // behind it, outside its layer
+            LayerEffect l_oFx;
+            if (l_oN.f_HasFx() && f_NodeLayerEffect(m_oClip, m_vPoses, l_nI, l_mat3Place, l_oFx)) {
+                l_oOut.f_BeginLayer(l_oFx);
+                m_vOpen.push_back(m_vPoses[l_nI].m_uEnd);
             }
         }
     }
-    void after(size_t j, DrawList& out) {
-        while (!open.empty() && open.back() <= j + 1) {
-            out.endLayer();
-            open.pop_back();
+    void f_After(size_t l_nJ, DrawList& l_oOut) {
+        while (!m_vOpen.empty() && m_vOpen.back() <= l_nJ + 1) {
+            l_oOut.f_EndLayer();
+            m_vOpen.pop_back();
         }
     }
 };
 }  // namespace
 
-bool nodeLayerEffect(const Clip& clip, const std::vector<NodePose>& poses, size_t i, const glm::mat3& place, LayerEffect& out) {
-    if (i >= poses.size() || !poses[i].node || !poses[i].node->hasFx()) return false;
-    const NodePose& p = poses[i];
-    if (!p.visible || p.color.a <= 0.0f) return false;
-    const Node& n = *p.node;
-    const glm::vec4 v = fxParamsAt(n, p.time);
-    const float scale = placementScale(place);
-    out = LayerEffect();
-    for (int k = 0; k < 4; k++) out.color[k] = n.fx.color[k];
-    switch (n.fx.shader) {
+bool f_NodeLayerEffect(const Clip& l_oClip, const std::vector<NodePose>& l_vPoses, size_t l_nI, const glm::mat3& l_mat3Place, LayerEffect& l_oOut) {
+    if (l_nI >= l_vPoses.size() || !l_vPoses[l_nI].m_pNode || !l_vPoses[l_nI].m_pNode->f_HasFx()) return false;
+    const NodePose& l_oP = l_vPoses[l_nI];
+    if (!l_oP.m_bVisible || l_oP.m_v4Color.a <= 0.0f) return false;
+    const Node& l_oN = *l_oP.m_pNode;
+    const glm::vec4 l_v4V = f_FxParamsAt(l_oN, l_oP.m_fTime);
+    const float l_fScale = f_PlacementScale(l_mat3Place);
+    l_oOut = LayerEffect();
+    for (int l_iK = 0; l_iK < 4; l_iK++) l_oOut.m_arrColor[l_iK] = l_oN.m_oFx.m_v4Color[l_iK];
+    switch (l_oN.m_oFx.m_eShader) {
     case FxShader::None: return false;
-    case FxShader::Group: out.kind = LayerEffect::None; break;
+    case FxShader::Group: l_oOut.m_eKind = LayerEffect::None; break;
     case FxShader::MotionBlur: {
-        out.kind = LayerEffect::MotionBlur;
-        glm::vec2 d(place * glm::vec3(v.x, v.y, 0.0f));   // a vector: the placement's turn and scale, not its move
-        if (v.z > 0.0f) {   // + its own movement over the last 1/30 s
-            static thread_local std::vector<NodePose> was;   // reused: no allocation a frame
-            evaluate(clip, std::max(0.0f, p.clipTime - 1.0f / 30.0f), was);
-            if (i < was.size() && was[i].node == p.node) {
-                const glm::vec2 a(place * flatten(was[i].world) * glm::vec3(0, 0, 1)), b(place * flatten(p.world) * glm::vec3(0, 0, 1));
-                d += v.z * (b - a);
+        l_oOut.m_eKind = LayerEffect::MotionBlur;
+        glm::vec2 l_v2D(l_mat3Place * glm::vec3(l_v4V.x, l_v4V.y, 0.0f));   // a vector: the placement's turn and scale, not its move
+        if (l_v4V.z > 0.0f) {   // + its own movement over the last 1/30 s
+            static thread_local std::vector<NodePose> l_vWas;   // reused: no allocation a frame
+            f_Evaluate(l_oClip, std::max(0.0f, l_oP.m_fClipTime - 1.0f / 30.0f), l_vWas);
+            if (l_nI < l_vWas.size() && l_vWas[l_nI].m_pNode == l_oP.m_pNode) {
+                const glm::vec2 l_v2A(l_mat3Place * f_Flatten(l_vWas[l_nI].m_mat4World) * glm::vec3(0, 0, 1)), l_v2B(l_mat3Place * f_Flatten(l_oP.m_mat4World) * glm::vec3(0, 0, 1));
+                l_v2D += l_v4V.z * (l_v2B - l_v2A);
             }
         }
-        if (glm::length(d) < 0.5f) return false;   // nothing to smear: drawn as it is
-        out.params[0] = d.x;
-        out.params[1] = d.y;
+        if (glm::length(l_v2D) < 0.5f) return false;   // nothing to smear: drawn as it is
+        l_oOut.m_arrParams[0] = l_v2D.x;
+        l_oOut.m_arrParams[1] = l_v2D.y;
         break;
     }
     case FxShader::Glow:
-        out.kind = LayerEffect::Glow;
-        out.params[0] = v.x;
-        out.params[1] = v.y * scale;
-        out.params[2] = v.z;
-        out.params[3] = v.w;
+        l_oOut.m_eKind = LayerEffect::Glow;
+        l_oOut.m_arrParams[0] = l_v4V.x;
+        l_oOut.m_arrParams[1] = l_v4V.y * l_fScale;
+        l_oOut.m_arrParams[2] = l_v4V.z;
+        l_oOut.m_arrParams[3] = l_v4V.w;
         break;
     case FxShader::Flash:
-        if (v.x <= 0.0f) return false;
-        out.kind = LayerEffect::Flash;
-        out.params[0] = v.x;
+        if (l_v4V.x <= 0.0f) return false;
+        l_oOut.m_eKind = LayerEffect::Flash;
+        l_oOut.m_arrParams[0] = l_v4V.x;
         break;
     case FxShader::Outline:
-        if (v.x <= 0.0f || n.fx.color.a <= 0.0f) return false;
-        out.kind = LayerEffect::Outline;
-        out.params[0] = v.x * scale;
-        out.params[1] = v.y;
+        if (l_v4V.x <= 0.0f || l_oN.m_oFx.m_v4Color.a <= 0.0f) return false;
+        l_oOut.m_eKind = LayerEffect::Outline;
+        l_oOut.m_arrParams[0] = l_v4V.x * l_fScale;
+        l_oOut.m_arrParams[1] = l_v4V.y;
         break;
     }
     return true;
 }
 
-void appendTrail(const Clip& clip, const std::vector<NodePose>& poses, size_t i, const AtlasSet& atlases,
-                 const std::vector<std::pair<const Node*, glm::mat4>>& rest, const glm::mat3& place, const glm::vec4& t,
-                 DrawList& out) {
-    if (i >= poses.size() || !poses[i].node) return;
-    const NodePose& p = poses[i];
-    const NodeTrail& tr = p.node->trail;
-    const float strength = trailAt(*p.node, p.time);
-    if (tr.count <= 0 || tr.gap <= 0.0f || strength <= 0.0f) return;
-    static thread_local std::vector<NodePose> ghost;   // reused for every afterimage: no allocation a frame
-    for (int k = std::min(tr.count, kMaxTrail); k >= 1; k--) {   // the oldest first: the newer ones over it
-        const float when = p.clipTime - (float)k * tr.gap;
-        if (when < 0.0f) continue;
-        evaluate(clip, when, ghost);
-        if (i >= ghost.size() || ghost[i].node != p.node) continue;
-        const float fade = (float)(tr.count - k + 1) / (float)tr.count;
-        const glm::vec4 tint = t * glm::vec4(tr.color.r, tr.color.g, tr.color.b, tr.color.a * strength * fade);
-        for (uint32_t g = ghost[i].first; g < ghost[i].end && g < ghost.size(); g++) {
-            const size_t quads = out.quads.size(), meshes = out.meshes.size();
-            if (!(ghost[g].node && ghost[g].node->usesMesh() && makeSkinnedMesh(ghost, g, rest, atlases, place, tint, out))) {
-                Quad q;
-                if (makeQuad(ghost[g], atlases, place, tint, q)) out.addQuad(q);
+void f_AppendTrail(const Clip& l_oClip, const std::vector<NodePose>& l_vPoses, size_t l_nI, const AtlasSet& l_oAtlases,
+                 const std::vector<std::pair<const Node*, glm::mat4>>& l_vRest, const glm::mat3& l_mat3Place, const glm::vec4& l_v4T,
+                 DrawList& l_oOut) {
+    if (l_nI >= l_vPoses.size() || !l_vPoses[l_nI].m_pNode) return;
+    const NodePose& l_oP = l_vPoses[l_nI];
+    const NodeTrail& l_oTr = l_oP.m_pNode->m_oTrail;
+    const float l_fStrength = f_TrailAt(*l_oP.m_pNode, l_oP.m_fTime);
+    if (l_oTr.m_iCount <= 0 || l_oTr.m_fGap <= 0.0f || l_fStrength <= 0.0f) return;
+    static thread_local std::vector<NodePose> l_vGhost;   // reused for every afterimage: no allocation a frame
+    for (int l_iK = std::min(l_oTr.m_iCount, g_iMaxTrail); l_iK >= 1; l_iK--) {   // the oldest first: the newer ones over it
+        const float l_fWhen = l_oP.m_fClipTime - (float)l_iK * l_oTr.m_fGap;
+        if (l_fWhen < 0.0f) continue;
+        f_Evaluate(l_oClip, l_fWhen, l_vGhost);
+        if (l_nI >= l_vGhost.size() || l_vGhost[l_nI].m_pNode != l_oP.m_pNode) continue;
+        const float l_fFade = (float)(l_oTr.m_iCount - l_iK + 1) / (float)l_oTr.m_iCount;
+        const glm::vec4 l_v4Tint = l_v4T * glm::vec4(l_oTr.m_v4Color.r, l_oTr.m_v4Color.g, l_oTr.m_v4Color.b, l_oTr.m_v4Color.a * l_fStrength * l_fFade);
+        for (uint32_t l_uG = l_vGhost[l_nI].m_uFirst; l_uG < l_vGhost[l_nI].m_uEnd && l_uG < l_vGhost.size(); l_uG++) {
+            const size_t l_nQuads = l_oOut.m_vQuads.size(), l_nMeshes = l_oOut.m_vMeshes.size();
+            if (!(l_vGhost[l_uG].m_pNode && l_vGhost[l_uG].m_pNode->f_UsesMesh() && f_MakeSkinnedMesh(l_vGhost, l_uG, l_vRest, l_oAtlases, l_mat3Place, l_v4Tint, l_oOut))) {
+                Quad l_oQ;
+                if (f_MakeQuad(l_vGhost[l_uG], l_oAtlases, l_mat3Place, l_v4Tint, l_oQ)) l_oOut.f_AddQuad(l_oQ);
             }
-            if (tr.additive) {
-                for (size_t k2 = quads; k2 < out.quads.size(); k2++) out.quads[k2].additive = true;
-                for (size_t k2 = meshes; k2 < out.meshes.size(); k2++) out.meshes[k2].additive = true;
+            if (l_oTr.m_bAdditive) {
+                for (size_t l_n2 = l_nQuads; l_n2 < l_oOut.m_vQuads.size(); l_n2++) l_oOut.m_vQuads[l_n2].m_bAdditive = true;
+                for (size_t l_n2 = l_nMeshes; l_n2 < l_oOut.m_vMeshes.size(); l_n2++) l_oOut.m_vMeshes[l_n2].m_bAdditive = true;
             }
         }
     }
 }
 
-void appendDraws(const Clip& clip, const std::vector<NodePose>& poses, const AtlasSet& atlases, const glm::mat3& place,
-                 const float tint[4], DrawList& out, std::vector<std::string>* missing) {
-    const glm::vec4 t = tint ? glm::vec4(tint[0], tint[1], tint[2], tint[3]) : glm::vec4(1.0f);
-    std::vector<std::pair<const Node*, glm::mat4>> rest;
-    bool restMade = false;
-    EffectWalk fx(clip, poses, hasEffects(clip));
-    for (size_t i = 0; i < poses.size(); i++) {
-        if (fx.any) {
-            if (!restMade) { restWorlds(clip, rest); restMade = true; }
-            fx.before(i, atlases, rest, place, t, out);
+void f_AppendDraws(const Clip& l_oClip, const std::vector<NodePose>& l_vPoses, const AtlasSet& l_oAtlases, const glm::mat3& l_mat3Place,
+                 const float l_arrTint[4], DrawList& l_oOut, std::vector<std::string>* l_pMissing) {
+    const glm::vec4 l_v4T = l_arrTint ? glm::vec4(l_arrTint[0], l_arrTint[1], l_arrTint[2], l_arrTint[3]) : glm::vec4(1.0f);
+    std::vector<std::pair<const Node*, glm::mat4>> l_vRest;
+    bool l_bRestMade = false;
+    EffectWalk l_oFx(l_oClip, l_vPoses, f_HasEffects(l_oClip));
+    for (size_t l_nI = 0; l_nI < l_vPoses.size(); l_nI++) {
+        if (l_oFx.m_bAny) {
+            if (!l_bRestMade) { f_RestWorlds(l_oClip, l_vRest); l_bRestMade = true; }
+            l_oFx.f_Before(l_nI, l_oAtlases, l_vRest, l_mat3Place, l_v4T, l_oOut);
         }
-        drawPose(clip, poses, i, atlases, place, t, rest, restMade, out, missing);
-        if (fx.any) fx.after(i, out);
+        f_DrawPose(l_oClip, l_vPoses, l_nI, l_oAtlases, l_mat3Place, l_v4T, l_vRest, l_bRestMade, l_oOut, l_pMissing);
+        if (l_oFx.m_bAny) l_oFx.f_After(l_nI, l_oOut);
     }
 }
 
 namespace {
-void drawPose(const Clip& clip, const std::vector<NodePose>& poses, size_t i, const AtlasSet& atlases, const glm::mat3& place,
-              const glm::vec4& t, std::vector<std::pair<const Node*, glm::mat4>>& rest, bool& restMade, DrawList& out,
-              std::vector<std::string>* missing) {
-    Quad q;
+void f_DrawPose(const Clip& l_oClip, const std::vector<NodePose>& l_vPoses, size_t l_nI, const AtlasSet& l_oAtlases, const glm::mat3& l_mat3Place,
+              const glm::vec4& l_v4T, std::vector<std::pair<const Node*, glm::mat4>>& l_vRest, bool& l_bRestMade, DrawList& l_oOut,
+              std::vector<std::string>* l_pMissing) {
+    Quad l_oQ;
     {
-        const NodePose& p = poses[i];
-        if (p.node && p.node->usesMesh()) {
-            if (!restMade) { restWorlds(clip, rest); restMade = true; }
-            if (makeSkinnedMesh(poses, i, rest, atlases, place, t, out)) return;
+        const NodePose& l_oP = l_vPoses[l_nI];
+        if (l_oP.m_pNode && l_oP.m_pNode->f_UsesMesh()) {
+            if (!l_bRestMade) { f_RestWorlds(l_oClip, l_vRest); l_bRestMade = true; }
+            if (f_MakeSkinnedMesh(l_vPoses, l_nI, l_vRest, l_oAtlases, l_mat3Place, l_v4T, l_oOut)) return;
         }
-        const toms::AtlasRegion* r = nullptr;
-        if (makeQuad(p, atlases, place, t, q, &r)) {
-            out.addQuad(q);
-        } else if (!r && missing && p.visible && !p.sprite.empty() && p.color.a > 0.0f &&
-                   std::find(missing->begin(), missing->end(), p.sprite) == missing->end()) {
-            missing->push_back(p.sprite);
+        const toms::AtlasRegion* l_pR = nullptr;
+        if (f_MakeQuad(l_oP, l_oAtlases, l_mat3Place, l_v4T, l_oQ, &l_pR)) {
+            l_oOut.f_AddQuad(l_oQ);
+        } else if (!l_pR && l_pMissing && l_oP.m_bVisible && !l_oP.m_strSprite.empty() && l_oP.m_v4Color.a > 0.0f &&
+                   std::find(l_pMissing->begin(), l_pMissing->end(), l_oP.m_strSprite) == l_pMissing->end()) {
+            l_pMissing->push_back(l_oP.m_strSprite);
         }
     }
 }
 }  // namespace
 
-bool makeQuad(const NodePose& p, const AtlasSet& atlases, const glm::mat3& place, const glm::vec4& t, Quad& q,
-              const toms::AtlasRegion** region) {
-    if (region) *region = nullptr;
-    if (!p.visible || p.sprite.empty() || p.color.a <= 0.0f) return false;
-    uint16_t texture = kSpriteAtlasTexture;
-    const toms::AtlasRegion* r = atlases.find(p.sprite, &texture);
-    if (region) *region = r;
-    if (!r) return false;
+bool f_MakeQuad(const NodePose& l_oP, const AtlasSet& l_oAtlases, const glm::mat3& l_mat3Place, const glm::vec4& l_v4T, Quad& l_oQ,
+              const toms::AtlasRegion** l_pRegion) {
+    if (l_pRegion) *l_pRegion = nullptr;
+    if (!l_oP.m_bVisible || l_oP.m_strSprite.empty() || l_oP.m_v4Color.a <= 0.0f) return false;
+    uint16_t l_u16Texture = g_u16SpriteAtlasTexture;
+    const toms::AtlasRegion* l_pR = l_oAtlases.f_Find(l_oP.m_strSprite, &l_u16Texture);
+    if (l_pRegion) *l_pRegion = l_pR;
+    if (!l_pR) return false;
     // The packed (trimmed) pixels, placed inside the original image, relative to the pivot.
-    const glm::vec2 pivot = p.node->hasPivot ? p.node->pivot : glm::vec2(r->pivot[0], r->pivot[1]);
-    const float x0 = r->offX - pivot.x * r->origW, y0 = r->offY - pivot.y * r->origH;
-    const float x1 = x0 + r->w, y1 = y0 + r->h;
-    const glm::mat3 m = place * flatten(p.world);   // the orthographic screen camera
-    const glm::vec3 c[4] = {m * glm::vec3(x0, y0, 1), m * glm::vec3(x1, y0, 1), m * glm::vec3(x1, y1, 1),
-                            m * glm::vec3(x0, y1, 1)};
-    q = Quad();
-    q.hasCorners = true;
-    float minX = c[0].x, minY = c[0].y, maxX = c[0].x, maxY = c[0].y;
-    for (int i = 0; i < 4; i++) {
-        q.corners[i * 2] = c[i].x;
-        q.corners[i * 2 + 1] = c[i].y;
-        minX = std::min(minX, c[i].x); maxX = std::max(maxX, c[i].x);
-        minY = std::min(minY, c[i].y); maxY = std::max(maxY, c[i].y);
+    const glm::vec2 l_v2Pivot = l_oP.m_pNode->m_bHasPivot ? l_oP.m_pNode->m_v2Pivot : glm::vec2(l_pR->m_arrPivot[0], l_pR->m_arrPivot[1]);
+    const float l_fX0 = l_pR->m_iOffX - l_v2Pivot.x * l_pR->m_iOrigW, l_fY0 = l_pR->m_iOffY - l_v2Pivot.y * l_pR->m_iOrigH;
+    const float l_fX1 = l_fX0 + l_pR->m_iW, l_fY1 = l_fY0 + l_pR->m_iH;
+    const glm::mat3 l_mat3M = l_mat3Place * f_Flatten(l_oP.m_mat4World);   // the orthographic screen camera
+    const glm::vec3 l_arrC[4] = {l_mat3M * glm::vec3(l_fX0, l_fY0, 1), l_mat3M * glm::vec3(l_fX1, l_fY0, 1), l_mat3M * glm::vec3(l_fX1, l_fY1, 1),
+                            l_mat3M * glm::vec3(l_fX0, l_fY1, 1)};
+    l_oQ = Quad();
+    l_oQ.m_bHasCorners = true;
+    float l_fMinX = l_arrC[0].x, l_fMinY = l_arrC[0].y, l_fMaxX = l_arrC[0].x, l_fMaxY = l_arrC[0].y;
+    for (int l_iI = 0; l_iI < 4; l_iI++) {
+        l_oQ.m_arrCorners[l_iI * 2] = l_arrC[l_iI].x;
+        l_oQ.m_arrCorners[l_iI * 2 + 1] = l_arrC[l_iI].y;
+        l_fMinX = std::min(l_fMinX, l_arrC[l_iI].x); l_fMaxX = std::max(l_fMaxX, l_arrC[l_iI].x);
+        l_fMinY = std::min(l_fMinY, l_arrC[l_iI].y); l_fMaxY = std::max(l_fMaxY, l_arrC[l_iI].y);
     }
-    q.rect[0] = minX; q.rect[1] = minY; q.rect[2] = maxX - minX; q.rect[3] = maxY - minY;   // bounds
-    std::copy(r->uv, r->uv + 4, q.uv);
-    const glm::vec4 col = p.color * t;
-    q.tint[0] = col.r; q.tint[1] = col.g; q.tint[2] = col.b; q.tint[3] = col.a;
-    q.additive = p.node->blend == Blend::Add;
-    q.texture = texture;
+    l_oQ.m_arrRect[0] = l_fMinX; l_oQ.m_arrRect[1] = l_fMinY; l_oQ.m_arrRect[2] = l_fMaxX - l_fMinX; l_oQ.m_arrRect[3] = l_fMaxY - l_fMinY;   // bounds
+    std::copy(l_pR->m_arrUv, l_pR->m_arrUv + 4, l_oQ.m_arrUv);
+    const glm::vec4 l_v4Col = l_oP.m_v4Color * l_v4T;
+    l_oQ.m_arrTint[0] = l_v4Col.r; l_oQ.m_arrTint[1] = l_v4Col.g; l_oQ.m_arrTint[2] = l_v4Col.b; l_oQ.m_arrTint[3] = l_v4Col.a;
+    l_oQ.m_bAdditive = l_oP.m_pNode->m_eBlend == Blend::Add;
+    l_oQ.m_u16Texture = l_u16Texture;
     return true;
 }
 
-void appendQuads(const std::vector<NodePose>& poses, const AtlasSet& atlases, const glm::mat3& place,
-                 const float tint[4], std::vector<Quad>& out, std::vector<std::string>* missing) {
-    const glm::vec4 t = tint ? glm::vec4(tint[0], tint[1], tint[2], tint[3]) : glm::vec4(1.0f);
-    Quad q;
-    for (const NodePose& p : poses) {
-        const toms::AtlasRegion* r = nullptr;
-        if (makeQuad(p, atlases, place, t, q, &r)) {
-            out.push_back(q);
-        } else if (!r && missing && p.visible && !p.sprite.empty() && p.color.a > 0.0f &&
-                   std::find(missing->begin(), missing->end(), p.sprite) == missing->end()) {
-            missing->push_back(p.sprite);
+void f_AppendQuads(const std::vector<NodePose>& l_vPoses, const AtlasSet& l_oAtlases, const glm::mat3& l_mat3Place,
+                 const float l_arrTint[4], std::vector<Quad>& l_vOut, std::vector<std::string>* l_pMissing) {
+    const glm::vec4 l_v4T = l_arrTint ? glm::vec4(l_arrTint[0], l_arrTint[1], l_arrTint[2], l_arrTint[3]) : glm::vec4(1.0f);
+    Quad l_oQ;
+    for (const NodePose& l_oP : l_vPoses) {
+        const toms::AtlasRegion* l_pR = nullptr;
+        if (f_MakeQuad(l_oP, l_oAtlases, l_mat3Place, l_v4T, l_oQ, &l_pR)) {
+            l_vOut.push_back(l_oQ);
+        } else if (!l_pR && l_pMissing && l_oP.m_bVisible && !l_oP.m_strSprite.empty() && l_oP.m_v4Color.a > 0.0f &&
+                   std::find(l_pMissing->begin(), l_pMissing->end(), l_oP.m_strSprite) == l_pMissing->end()) {
+            l_pMissing->push_back(l_oP.m_strSprite);
         }
     }
 }
 
 // ---- AnimPlayer --------------------------------------------------------------------------------
 
-void AnimPlayer::play(const Clip* clip) {
-    clip_ = clip;
-    cache_.bind(clip);
-    rest_.clear();
-    if (clip) restWorlds(*clip, rest_);
-    loops_ = clip && hasLoopingNodes(*clip);
-    effects_ = clip && hasEffects(*clip);
-    rigs_.reset();   // the shared one is asked for at the first draw (it needs the atlas set)
-    rigAtlases_ = nullptr;
-    rigsStale_ = false;
-    quadAtlases_ = nullptr;
-    elapsed_ = 0;
-    started_ = false;
-    events_.clear();
+void AnimPlayer::f_Play(const Clip* l_pClip) {
+    m_pClip = l_pClip;
+    m_oCache.f_Bind(l_pClip);
+    m_vRest.clear();
+    if (l_pClip) f_RestWorlds(*l_pClip, m_vRest);
+    m_bLoops = l_pClip && f_HasLoopingNodes(*l_pClip);
+    m_bEffects = l_pClip && f_HasEffects(*l_pClip);
+    m_spRigs.reset();   // the shared one is asked for at the first draw (it needs the atlas set)
+    m_pRigAtlases = nullptr;
+    m_bRigsStale = false;
+    m_pQuadAtlases = nullptr;
+    m_dElapsed = 0;
+    m_bStarted = false;
+    m_vEvents.clear();
 }
 
-double AnimPlayer::total() const {
-    if (!clip_ || clip_->playCount < 0) return -1;
-    return (double)clip_->playCount * clip_->duration();
+double AnimPlayer::f_Total() const {
+    if (!m_pClip || m_pClip->m_iPlayCount < 0) return -1;
+    return (double)m_pClip->m_iPlayCount * m_pClip->f_Duration();
 }
 
-bool AnimPlayer::finished() const {
-    const double tot = total();
-    return clip_ && tot >= 0 && elapsed_ >= tot;
+bool AnimPlayer::f_Finished() const {
+    const double l_dTot = f_Total();
+    return m_pClip && l_dTot >= 0 && m_dElapsed >= l_dTot;
 }
 
-bool AnimPlayer::showing() const { return clip_ && (!finished() || clip_->stayAtLastFrame); }
+bool AnimPlayer::f_Showing() const { return m_pClip && (!f_Finished() || m_pClip->m_bStayAtLastFrame); }
 
-float AnimPlayer::time() const {
-    if (!clip_) return 0;
-    const double d = clip_->duration();
-    if (d <= 0) return 0;
-    if (finished()) return (float)d;
-    return (float)std::fmod(elapsed_, d);
+float AnimPlayer::f_Time() const {
+    if (!m_pClip) return 0;
+    const double l_dD = m_pClip->f_Duration();
+    if (l_dD <= 0) return 0;
+    if (f_Finished()) return (float)l_dD;
+    return (float)std::fmod(m_dElapsed, l_dD);
 }
 
-float AnimPlayer::poseTime() const {
-    if (!clip_ || !finished() || !loops_) return time();
-    const double d = clip_->duration();
-    return (float)(elapsed_ - (double)(clip_->playCount - 1) * d);   // into the last play, past its end
+float AnimPlayer::f_PoseTime() const {
+    if (!m_pClip || !f_Finished() || !m_bLoops) return f_Time();
+    const double l_dD = m_pClip->f_Duration();
+    return (float)(m_dElapsed - (double)(m_pClip->m_iPlayCount - 1) * l_dD);   // into the last play, past its end
 }
 
-void AnimPlayer::seek(double seconds) {
-    if (!clip_) return;
-    elapsed_ = std::max(0.0, seconds);
-    started_ = true;
-    events_.clear();
+void AnimPlayer::f_Seek(double l_dSeconds) {
+    if (!m_pClip) return;
+    m_dElapsed = std::max(0.0, l_dSeconds);
+    m_bStarted = true;
+    m_vEvents.clear();
 }
 
-void AnimPlayer::update(int dtMs) {
-    if (!clip_) return;
-    const double d = clip_->duration();
-    const double tot = total();
-    if (!started_) {   // keys at time 0 belong to the first update
-        eventsBetween(*clip_, -1.0f, 0.0f, events_);
-        started_ = true;
+void AnimPlayer::f_Update(int l_iDtMs) {
+    if (!m_pClip) return;
+    const double l_dD = m_pClip->f_Duration();
+    const double l_dTot = f_Total();
+    if (!m_bStarted) {   // keys at time 0 belong to the first update
+        f_EventsBetween(*m_pClip, -1.0f, 0.0f, m_vEvents);
+        m_bStarted = true;
     }
-    double a = elapsed_;
-    elapsed_ += std::max(0, dtMs) / 1000.0;
-    const double b = tot >= 0 ? std::min(elapsed_, tot) : elapsed_;
-    if (d <= 0) return;
+    double l_dA = m_dElapsed;
+    m_dElapsed += std::max(0, l_iDtMs) / 1000.0;
+    const double l_dB = l_dTot >= 0 ? std::min(m_dElapsed, l_dTot) : m_dElapsed;
+    if (l_dD <= 0) return;
     // Walk the passed time one play at a time, so every event in it is sent once, in order.
-    while (a < b) {
-        double loopStart = std::floor(a / d) * d;
-        if (loopStart + d <= a) loopStart += d;   // rounding put `a` on a boundary: that is the next play
-        const double end = std::min(b, loopStart + d);
-        const float t0 = a == loopStart && a > 0 ? -1.0f : (float)(a - loopStart);   // a new play: include time 0
-        eventsBetween(*clip_, t0, (float)(end - loopStart), events_);
-        a = end;
+    while (l_dA < l_dB) {
+        double l_dLoopStart = std::floor(l_dA / l_dD) * l_dD;
+        if (l_dLoopStart + l_dD <= l_dA) l_dLoopStart += l_dD;   // rounding put `a` on a boundary: that is the next play
+        const double l_dEnd = std::min(l_dB, l_dLoopStart + l_dD);
+        const float l_fT0 = l_dA == l_dLoopStart && l_dA > 0 ? -1.0f : (float)(l_dA - l_dLoopStart);   // a new play: include time 0
+        f_EventsBetween(*m_pClip, l_fT0, (float)(l_dEnd - l_dLoopStart), m_vEvents);
+        l_dA = l_dEnd;
     }
 }
 
-std::vector<std::string> AnimPlayer::takeEvents() {
-    std::vector<std::string> out;
-    out.swap(events_);
-    return out;
+std::vector<std::string> AnimPlayer::f_TakeEvents() {
+    std::vector<std::string> l_vOut;
+    l_vOut.swap(m_vEvents);
+    return l_vOut;
 }
 
-void AnimPlayer::draw(IRenderer* ren, const AtlasSet& atlases, const glm::mat3& place, const float tint[4]) const {
-    if (!ren || !showing()) return;
-    cache_.seek(poseTime());
-    const std::vector<NodePose>& poses = cache_.poses();
-    const glm::vec4 t = tint ? glm::vec4(tint[0], tint[1], tint[2], tint[3]) : glm::vec4(1.0f);
-    const bool all = quads_.size() != poses.size() || quadAtlases_ != &atlases || quadPlace_ != place || quadTint_ != t;
-    if (all) {
-        quads_.assign(poses.size(), Quad());
-        hasQuad_.assign(poses.size(), 0);
-        quadAtlases_ = &atlases;
-        quadPlace_ = place;
-        quadTint_ = t;
+void AnimPlayer::f_Draw(IRenderer* l_pRen, const AtlasSet& l_oAtlases, const glm::mat3& l_mat3Place, const float l_arrTint[4]) const {
+    if (!l_pRen || !f_Showing()) return;
+    m_oCache.f_Seek(f_PoseTime());
+    const std::vector<NodePose>& l_vPoses = m_oCache.f_Poses();
+    const glm::vec4 l_v4T = l_arrTint ? glm::vec4(l_arrTint[0], l_arrTint[1], l_arrTint[2], l_arrTint[3]) : glm::vec4(1.0f);
+    const bool l_bAll = m_vQuads.size() != l_vPoses.size() || m_pQuadAtlases != &l_oAtlases || m_mat3QuadPlace != l_mat3Place || m_v4QuadTint != l_v4T;
+    if (l_bAll) {
+        m_vQuads.assign(l_vPoses.size(), Quad());
+        m_vHasQuad.assign(l_vPoses.size(), 0);
+        m_pQuadAtlases = &l_oAtlases;
+        m_mat3QuadPlace = l_mat3Place;
+        m_v4QuadTint = l_v4T;
     }
     // The frame's draws in order -- the cached quads, the bent meshes, effect layers and afterimages -- then submitted
     // together, so the parts of one texture go as one batch.
-    DrawList& frame = meshScratch_;
-    frame.clear();
-    if (rigAtlases_ != &atlases || !rigs_) {   // the clip's shared cache for these atlases (a reload: a new one)
-        rigs_ = sharedRigs(clip_, &atlases, rigsStale_);
-        rigAtlases_ = &atlases;
-        rigsStale_ = false;
+    DrawList& l_oFrame = m_oMeshScratch;
+    l_oFrame.f_Clear();
+    if (m_pRigAtlases != &l_oAtlases || !m_spRigs) {   // the clip's shared cache for these atlases (a reload: a new one)
+        m_spRigs = f_SharedRigs(m_pClip, &l_oAtlases, m_bRigsStale);
+        m_pRigAtlases = &l_oAtlases;
+        m_bRigsStale = false;
     }
-    EffectWalk fx(*clip_, poses, effects_);
-    for (size_t i = 0; i < poses.size(); i++) {
-        if (fx.any) fx.before(i, atlases, rest_, place, t, frame);   // afterimages and effect layers that start here
-        bool drawn = false;
-        if (poses[i].node && poses[i].node->usesMesh())   // bent again every frame: its bones / lattice may move
-            drawn = makeSkinnedMesh(poses, i, rest_, atlases, place, t, frame, rigs_.get());
-        if (!drawn) {
-            if (all || cache_.changed(i)) hasQuad_[i] = makeQuad(poses[i], atlases, place, t, quads_[i]);
-            if (hasQuad_[i]) frame.addQuad(quads_[i]);
+    EffectWalk l_oFx(*m_pClip, l_vPoses, m_bEffects);
+    for (size_t l_nI = 0; l_nI < l_vPoses.size(); l_nI++) {
+        if (l_oFx.m_bAny) l_oFx.f_Before(l_nI, l_oAtlases, m_vRest, l_mat3Place, l_v4T, l_oFrame);   // afterimages and effect layers that start here
+        bool l_bDrawn = false;
+        if (l_vPoses[l_nI].m_pNode && l_vPoses[l_nI].m_pNode->f_UsesMesh())   // bent again every frame: its bones / lattice may move
+            l_bDrawn = f_MakeSkinnedMesh(l_vPoses, l_nI, m_vRest, l_oAtlases, l_mat3Place, l_v4T, l_oFrame, m_spRigs.get());
+        if (!l_bDrawn) {
+            if (l_bAll || m_oCache.f_Changed(l_nI)) m_vHasQuad[l_nI] = f_MakeQuad(l_vPoses[l_nI], l_oAtlases, l_mat3Place, l_v4T, m_vQuads[l_nI]);
+            if (m_vHasQuad[l_nI]) l_oFrame.f_AddQuad(m_vQuads[l_nI]);
         }
-        if (fx.any) fx.after(i, frame);
+        if (l_oFx.m_bAny) l_oFx.f_After(l_nI, l_oFrame);
     }
-    frame.submit(ren);
+    l_oFrame.f_Submit(l_pRen);
 }
 
 // ---- the lattice --------------------------------------------------------------------------------
 
-bool latticeView(const std::vector<NodePose>& poses, size_t i, const AtlasSet& atlases, const glm::mat3& place, LatticeView& out) {
-    if (i >= poses.size() || !poses[i].node || poses[i].sprite.empty()) return false;
-    const NodePose& p = poses[i];
-    const Node& n = *p.node;
-    const toms::AtlasRegion* r = atlases.find(p.sprite);
-    if (!r || r->origW <= 0 || r->origH <= 0) return false;
-    out.cols = n.latticeCols();
-    out.rows = n.latticeRows();
-    const glm::vec2 pivot = n.hasPivot ? n.pivot : glm::vec2(r->pivot[0], r->pivot[1]);
+bool f_LatticeView(const std::vector<NodePose>& l_vPoses, size_t l_nI, const AtlasSet& l_oAtlases, const glm::mat3& l_mat3Place, LatticeView& l_oOut) {
+    if (l_nI >= l_vPoses.size() || !l_vPoses[l_nI].m_pNode || l_vPoses[l_nI].m_strSprite.empty()) return false;
+    const NodePose& l_oP = l_vPoses[l_nI];
+    const Node& l_oN = *l_oP.m_pNode;
+    const toms::AtlasRegion* l_pR = l_oAtlases.f_Find(l_oP.m_strSprite);
+    if (!l_pR || l_pR->m_iOrigW <= 0 || l_pR->m_iOrigH <= 0) return false;
+    l_oOut.m_iCols = l_oN.f_LatticeCols();
+    l_oOut.m_iRows = l_oN.f_LatticeRows();
+    const glm::vec2 l_v2Pivot = l_oN.m_bHasPivot ? l_oN.m_v2Pivot : glm::vec2(l_pR->m_arrPivot[0], l_pR->m_arrPivot[1]);
     // sprite pixels -> placed: around the pivot, through the node's world transform, placed
-    glm::mat3 toLocal(1.0f);
-    toLocal[2] = glm::vec3(-pivot.x * r->origW, -pivot.y * r->origH, 1.0f);
-    out.spriteToPlaced = place * flatten(p.world) * toLocal;
-    const std::vector<glm::vec2> offsets = deformAt(n, p.time);
-    out.rest.clear();
-    out.points.clear();
-    for (int row = 0; row < out.rows; row++)
-        for (int col = 0; col < out.cols; col++) {
-            const glm::vec2 at((float)r->origW * col / (out.cols - 1), (float)r->origH * row / (out.rows - 1));
-            out.rest.push_back(at);
-            out.points.push_back(glm::vec2(out.spriteToPlaced * glm::vec3(at + offsets[(size_t)row * out.cols + col], 1.0f)));
+    glm::mat3 l_mat3ToLocal(1.0f);
+    l_mat3ToLocal[2] = glm::vec3(-l_v2Pivot.x * l_pR->m_iOrigW, -l_v2Pivot.y * l_pR->m_iOrigH, 1.0f);
+    l_oOut.m_mat3SpriteToPlaced = l_mat3Place * f_Flatten(l_oP.m_mat4World) * l_mat3ToLocal;
+    const std::vector<glm::vec2> l_vOffsets = f_DeformAt(l_oN, l_oP.m_fTime);
+    l_oOut.m_vRest.clear();
+    l_oOut.m_vPoints.clear();
+    for (int l_iRow = 0; l_iRow < l_oOut.m_iRows; l_iRow++)
+        for (int l_iCol = 0; l_iCol < l_oOut.m_iCols; l_iCol++) {
+            const glm::vec2 l_v2At((float)l_pR->m_iOrigW * l_iCol / (l_oOut.m_iCols - 1), (float)l_pR->m_iOrigH * l_iRow / (l_oOut.m_iRows - 1));
+            l_oOut.m_vRest.push_back(l_v2At);
+            l_oOut.m_vPoints.push_back(glm::vec2(l_oOut.m_mat3SpriteToPlaced * glm::vec3(l_v2At + l_vOffsets[(size_t)l_iRow * l_oOut.m_iCols + l_iCol], 1.0f)));
         }
-    out.offsets = offsets;
+    l_oOut.m_vOffsets = l_vOffsets;
     return true;
 }
 
 // ---- CharacterRig ------------------------------------------------------------------------------
 
-bool attachPlacement(const std::vector<NodePose>& poses, const std::string& node, const glm::mat3& place, glm::mat3& out) {
-    for (const NodePose& p : poses)
-        if (p.node && p.node->name == node) {
-            out = place * flatten(p.world);
+bool f_AttachPlacement(const std::vector<NodePose>& l_vPoses, const std::string& l_strNode, const glm::mat3& l_mat3Place, glm::mat3& l_mat3Out) {
+    for (const NodePose& l_oP : l_vPoses)
+        if (l_oP.m_pNode && l_oP.m_pNode->m_strName == l_strNode) {
+            l_mat3Out = l_mat3Place * f_Flatten(l_oP.m_mat4World);
             return true;
         }
     return false;
 }
 
-void CharacterRig::play(const Clip* character, const Clip* held) {
-    body_.play(character);
-    held_.play(held);
+void CharacterRig::f_Play(const Clip* l_pCharacter, const Clip* l_pHeld) {
+    m_oBody.f_Play(l_pCharacter);
+    m_oHeld.f_Play(l_pHeld);
 }
 
-void CharacterRig::update(int dtMs) {
-    body_.update(dtMs);
-    held_.update(dtMs);
+void CharacterRig::f_Update(int l_iDtMs) {
+    m_oBody.f_Update(l_iDtMs);
+    m_oHeld.f_Update(l_iDtMs);
 }
 
-std::vector<std::string> CharacterRig::takeEvents() {
-    std::vector<std::string> out = body_.takeEvents();
-    for (std::string& e : held_.takeEvents()) out.push_back(std::move(e));
-    return out;
+std::vector<std::string> CharacterRig::f_TakeEvents() {
+    std::vector<std::string> l_vOut = m_oBody.f_TakeEvents();
+    for (std::string& l_strE : m_oHeld.f_TakeEvents()) l_vOut.push_back(std::move(l_strE));
+    return l_vOut;
 }
 
-bool CharacterRig::finished() const {
-    return (!body_.clip() || body_.finished()) && (!held_.clip() || held_.finished());
+bool CharacterRig::f_Finished() const {
+    return (!m_oBody.f_Clip() || m_oBody.f_Finished()) && (!m_oHeld.f_Clip() || m_oHeld.f_Finished());
 }
 
-void CharacterRig::draw(IRenderer* ren, const AtlasSet& characterAtlases, const AtlasSet& heldAtlases, const glm::mat3& place,
-                        const float tint[4]) const {
-    if (!ren) return;
-    glm::mat3 hand = place;
-    if (body_.clip()) {
-        body_.draw(ren, characterAtlases, place, tint);   // also brings its poses to this frame
-        if (!attachPlacement(body_.poses().poses(), "hand", place, hand)) hand = place;
+void CharacterRig::f_Draw(IRenderer* l_pRen, const AtlasSet& l_oCharacterAtlases, const AtlasSet& l_oHeldAtlases, const glm::mat3& l_mat3Place,
+                        const float l_arrTint[4]) const {
+    if (!l_pRen) return;
+    glm::mat3 l_mat3Hand = l_mat3Place;
+    if (m_oBody.f_Clip()) {
+        m_oBody.f_Draw(l_pRen, l_oCharacterAtlases, l_mat3Place, l_arrTint);   // also brings its poses to this frame
+        if (!f_AttachPlacement(m_oBody.f_Poses().f_Poses(), "hand", l_mat3Place, l_mat3Hand)) l_mat3Hand = l_mat3Place;
     }
-    if (held_.clip()) held_.draw(ren, heldAtlases, hand, tint);
+    if (m_oHeld.f_Clip()) m_oHeld.f_Draw(l_pRen, l_oHeldAtlases, l_mat3Hand, l_arrTint);
 }
 
 }  // namespace toms::anim

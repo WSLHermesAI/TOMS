@@ -9,23 +9,23 @@
 namespace atlas {
 
 struct XmlNode {
-    std::string name;
-    std::vector<std::pair<std::string, std::string>> attrs;
-    std::vector<std::unique_ptr<XmlNode>> children;
-    std::string text;
+    std::string m_strName;
+    std::vector<std::pair<std::string, std::string>> m_vAttrs;
+    std::vector<std::unique_ptr<XmlNode>> m_vChildren;
+    std::string m_strText;
 
-    const std::string* attr(const std::string& key) const {
-        for (const auto& a : attrs) if (a.first == key) return &a.second;
+    const std::string* f_Attr(const std::string& l_strKey) const {
+        for (const auto& l_pairA : m_vAttrs) if (l_pairA.first == l_strKey) return &l_pairA.second;
         return nullptr;
     }
-    std::string attrOr(const std::string& key, const std::string& def = std::string()) const {
-        const std::string* v = attr(key);
-        return v ? *v : def;
+    std::string f_AttrOr(const std::string& l_strKey, const std::string& l_strDef = std::string()) const {
+        const std::string* l_pV = f_Attr(l_strKey);
+        return l_pV ? *l_pV : l_strDef;
     }
 };
 
 // Returns the root element, or null with *err set.
-std::unique_ptr<XmlNode> parseXml(const std::string& bytes, std::string* err = nullptr);
-std::string xmlEscape(const std::string& s);
+std::unique_ptr<XmlNode> f_ParseXml(const std::string& l_strBytes, std::string* l_pErr = nullptr);
+std::string f_XmlEscape(const std::string& l_strS);
 
 }  // namespace atlas

@@ -76,36 +76,36 @@ namespace {
 
 // The image a window presents (the game renderer's swap chain included), also behind other windows: PrintWindow
 // with PW_RENDERFULLCONTENT reads it from the compositor. A null image where that is not available.
-QImage presentedImage(QWidget* w)
+QImage f_PresentedImage(QWidget* l_pW)
 {
 #ifdef _WIN32
     // PrintWindow asks the window to paint, and a new frame would hide what was on the screen before it.
-    auto* canvas = qobject_cast<GameCanvasView*>(w);
-    if (canvas) canvas->holdFrames(true);
-    struct Release { GameCanvasView* c; ~Release() { if (c) c->holdFrames(false); } } release{canvas};
-    const HWND hwnd = reinterpret_cast<HWND>(w->winId());
-    RECT rc{};
-    if (!GetClientRect(hwnd, &rc) || rc.right <= 0 || rc.bottom <= 0) return QImage();
-    const int width = rc.right, height = rc.bottom;
-    HDC screenDc = GetDC(nullptr);
-    HDC dc = CreateCompatibleDC(screenDc);
-    HBITMAP bmp = CreateCompatibleBitmap(screenDc, width, height);
-    HGDIOBJ old = SelectObject(dc, bmp);
-    const bool printed = PrintWindow(hwnd, dc, PW_CLIENTONLY | PW_RENDERFULLCONTENT) != 0;
-    QImage img(width, height, QImage::Format_RGB32);
-    BITMAPINFO bi{};
-    bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
-    bi.bmiHeader.biWidth = width;
-    bi.bmiHeader.biHeight = -height;   // top-down
-    bi.bmiHeader.biPlanes = 1;
-    bi.bmiHeader.biBitCount = 32;
-    bi.bmiHeader.biCompression = BI_RGB;
-    SelectObject(dc, old);
-    const bool read = GetDIBits(dc, bmp, 0, UINT(height), img.bits(), &bi, DIB_RGB_COLORS) == height;
-    DeleteObject(bmp);
-    DeleteDC(dc);
-    ReleaseDC(nullptr, screenDc);
-    return printed && read ? img : QImage();
+    auto* l_pCanvas = qobject_cast<GameCanvasView*>(l_pW);
+    if (l_pCanvas) l_pCanvas->f_HoldFrames(true);
+    struct Release { GameCanvasView* m_pC; ~Release() { if (m_pC) m_pC->f_HoldFrames(false); } } l_oRelease{l_pCanvas};
+    const HWND l_pHwnd = reinterpret_cast<HWND>(l_pW->winId());
+    RECT l_oRc{};
+    if (!GetClientRect(l_pHwnd, &l_oRc) || l_oRc.right <= 0 || l_oRc.bottom <= 0) return QImage();
+    const int l_iWidth = l_oRc.right, l_iHeight = l_oRc.bottom;
+    HDC l_pScreenDc = GetDC(nullptr);
+    HDC l_pDc = CreateCompatibleDC(l_pScreenDc);
+    HBITMAP l_pBmp = CreateCompatibleBitmap(l_pScreenDc, l_iWidth, l_iHeight);
+    HGDIOBJ l_pOld = SelectObject(l_pDc, l_pBmp);
+    const bool l_bPrinted = PrintWindow(l_pHwnd, l_pDc, PW_CLIENTONLY | PW_RENDERFULLCONTENT) != 0;
+    QImage l_oImg(l_iWidth, l_iHeight, QImage::Format_RGB32);
+    BITMAPINFO l_oBi{};
+    l_oBi.bmiHeader.biSize = sizeof(l_oBi.bmiHeader);
+    l_oBi.bmiHeader.biWidth = l_iWidth;
+    l_oBi.bmiHeader.biHeight = -l_iHeight;   // top-down
+    l_oBi.bmiHeader.biPlanes = 1;
+    l_oBi.bmiHeader.biBitCount = 32;
+    l_oBi.bmiHeader.biCompression = BI_RGB;
+    SelectObject(l_pDc, l_pOld);
+    const bool l_bRead = GetDIBits(l_pDc, l_pBmp, 0, UINT(l_iHeight), l_oImg.bits(), &l_oBi, DIB_RGB_COLORS) == l_iHeight;
+    DeleteObject(l_pBmp);
+    DeleteDC(l_pDc);
+    ReleaseDC(nullptr, l_pScreenDc);
+    return l_bPrinted && l_bRead ? l_oImg : QImage();
 #else
     (void)w;
     return QImage();
@@ -113,92 +113,92 @@ QImage presentedImage(QWidget* w)
 }
 
 // The game atlas's coin as packed (trimmed: smaller than its 32 x 32 image).
-QSize gameCoinSize(const AnimDocument* doc)
+QSize f_GameCoinSize(const AnimDocument* l_pDoc)
 {
-    const toms::AtlasRegion* r = doc->atlasCount() > 0 ? doc->atlasAt(0).atlas.find("coin") : nullptr;
-    return r ? QSize(r->w, r->h) : QSize();
+    const toms::AtlasRegion* l_pR = l_pDoc->f_AtlasCount() > 0 ? l_pDoc->f_AtlasAt(0).m_oAtlas.f_Find("coin") : nullptr;
+    return l_pR ? QSize(l_pR->m_iW, l_pR->m_iH) : QSize();
 }
 
-void processEvents()
+void f_ProcessEvents()
 {
-    for (int i = 0; i < 3; i++) QCoreApplication::processEvents();
+    for (int l_iI = 0; l_iI < 3; l_iI++) QCoreApplication::processEvents();
 }
 
-bool check(bool ok, const char* what)
+bool f_Check(bool l_bOk, const char* l_pszWhat)
 {
-    std::printf("selftest: %-58s %s\n", what, ok ? "ok" : "FAILED");
-    return ok;
+    std::printf("selftest: %-58s %s\n", l_pszWhat, l_bOk ? "ok" : "FAILED");
+    return l_bOk;
 }
 
-int rowOf(const AnimKeyListDock* keys, float t)
+int f_RowOf(const AnimKeyListDock* l_pKeys, float l_fT)
 {
-    const std::vector<float> times = keys->rowTimes();
-    for (size_t i = 0; i < times.size(); i++)
-        if (sameTime(times[i], t)) return int(i);
+    const std::vector<float> l_vTimes = l_pKeys->f_RowTimes();
+    for (size_t l_nI = 0; l_nI < l_vTimes.size(); l_nI++)
+        if (f_SameTime(l_vTimes[l_nI], l_fT)) return int(l_nI);
     return -1;
 }
 
 // The viewport's quads vs one appendQuads() call over the same poses, and the QPainter transform
 // of each quad vs its corners: the editor draws exactly what the game would.
-bool checkDrawing(AnimEditor* ed, float t)
+bool f_CheckDrawing(AnimEditor* l_pEd, float l_fT)
 {
-    AnimDocument* doc = ed->document();
-    std::vector<toms::anim::NodePose> poses;
-    std::vector<AnimViewport::DrawItem> items;
-    ed->viewport()->buildFrame(t, poses, items, nullptr);
-    std::vector<toms::anim::NodePose> ref;
-    toms::anim::evaluate(*doc->clip(), t, ref);
-    std::vector<Quad> quads;
-    toms::anim::appendQuads(ref, doc->atlasSet(), toms::anim::placement(0, 0), nullptr, quads);
-    bool ok = items.size() == quads.size() && !quads.empty();
-    double maxCorner = 0, maxMap = 0;
-    for (size_t i = 0; ok && i < items.size(); i++) {
-        const Quad& a = items[i].quad;
-        const Quad& b = quads[i];
-        for (int k = 0; k < 8; k++) maxCorner = std::max(maxCorner, double(std::fabs(a.corners[k] - b.corners[k])));
-        for (int k = 0; k < 4; k++) maxCorner = std::max(maxCorner, double(std::fabs(a.tint[k] - b.tint[k]) + std::fabs(a.uv[k] - b.uv[k])));
-        ok = ok && a.additive == b.additive && a.texture == b.texture;
+    AnimDocument* l_pDoc = l_pEd->f_Document();
+    std::vector<toms::anim::NodePose> l_vPoses;
+    std::vector<AnimViewport::DrawItem> l_vItems;
+    l_pEd->f_Viewport()->f_BuildFrame(l_fT, l_vPoses, l_vItems, nullptr);
+    std::vector<toms::anim::NodePose> l_vRef;
+    toms::anim::f_Evaluate(*l_pDoc->f_Clip(), l_fT, l_vRef);
+    std::vector<Quad> l_vQuads;
+    toms::anim::f_AppendQuads(l_vRef, l_pDoc->f_AtlasSet(), toms::anim::f_Placement(0, 0), nullptr, l_vQuads);
+    bool l_bOk = l_vItems.size() == l_vQuads.size() && !l_vQuads.empty();
+    double l_dMaxCorner = 0, l_dMaxMap = 0;
+    for (size_t l_nI = 0; l_bOk && l_nI < l_vItems.size(); l_nI++) {
+        const Quad& l_oA = l_vItems[l_nI].m_oQuad;
+        const Quad& l_oB = l_vQuads[l_nI];
+        for (int l_iK = 0; l_iK < 8; l_iK++) l_dMaxCorner = std::max(l_dMaxCorner, double(std::fabs(l_oA.m_arrCorners[l_iK] - l_oB.m_arrCorners[l_iK])));
+        for (int l_iK = 0; l_iK < 4; l_iK++) l_dMaxCorner = std::max(l_dMaxCorner, double(std::fabs(l_oA.m_arrTint[l_iK] - l_oB.m_arrTint[l_iK]) + std::fabs(l_oA.m_arrUv[l_iK] - l_oB.m_arrUv[l_iK])));
+        l_bOk = l_bOk && l_oA.m_bAdditive == l_oB.m_bAdditive && l_oA.m_u16Texture == l_oB.m_u16Texture;
         // The page image the viewport cuts the sprite from is the one the quad's texture names.
-        int page = -1;
-        ok = ok && items[i].images && items[i].images == doc->pageImages(a.texture, &page) && items[i].page == page;
+        int l_iPage = -1;
+        l_bOk = l_bOk && l_vItems[l_nI].m_pImages && l_vItems[l_nI].m_pImages == l_pDoc->f_PageImages(l_oA.m_u16Texture, &l_iPage) && l_vItems[l_nI].m_iPage == l_iPage;
         // The transform QPainter draws the sprite's pixel rect with must land on the 4 corners.
-        const QTransform tr = AnimViewport::quadTransform(a, items[i].src.size());
-        const QSizeF s = items[i].src.size();
-        const QPointF src[4] = {QPointF(0, 0), QPointF(s.width(), 0), QPointF(s.width(), s.height()), QPointF(0, s.height())};
-        for (int k = 0; k < 4; k++) {
-            const QPointF m = tr.map(src[k]);
-            maxMap = std::max(maxMap, std::hypot(m.x() - a.corners[k * 2], m.y() - a.corners[k * 2 + 1]));
+        const QTransform l_oTr = AnimViewport::f_QuadTransform(l_oA, l_vItems[l_nI].m_oSrc.size());
+        const QSizeF l_oS = l_vItems[l_nI].m_oSrc.size();
+        const QPointF l_arrSrc[4] = {QPointF(0, 0), QPointF(l_oS.width(), 0), QPointF(l_oS.width(), l_oS.height()), QPointF(0, l_oS.height())};
+        for (int l_iK = 0; l_iK < 4; l_iK++) {
+            const QPointF l_oM = l_oTr.map(l_arrSrc[l_iK]);
+            l_dMaxMap = std::max(l_dMaxMap, std::hypot(l_oM.x() - l_oA.m_arrCorners[l_iK * 2], l_oM.y() - l_oA.m_arrCorners[l_iK * 2 + 1]));
         }
-        const toms::anim::Clip* clip = doc->clip();
-        const Node* n = nodeAt(clip->root, items[i].path);
-        std::printf("selftest:   t=%.2f %-8s %s corners (%.2f,%.2f) (%.2f,%.2f) (%.2f,%.2f) (%.2f,%.2f) tint a=%.2f\n", t,
-                    n ? n->name.c_str() : "?", a.additive ? "add " : "norm", a.corners[0], a.corners[1], a.corners[2], a.corners[3],
-                    a.corners[4], a.corners[5], a.corners[6], a.corners[7], a.tint[3]);
+        const toms::anim::Clip* l_pClip = l_pDoc->f_Clip();
+        const Node* l_pN = f_NodeAt(l_pClip->m_oRoot, l_vItems[l_nI].m_vPath);
+        std::printf("selftest:   t=%.2f %-8s %s corners (%.2f,%.2f) (%.2f,%.2f) (%.2f,%.2f) (%.2f,%.2f) tint a=%.2f\n", l_fT,
+                    l_pN ? l_pN->m_strName.c_str() : "?", l_oA.m_bAdditive ? "add " : "norm", l_oA.m_arrCorners[0], l_oA.m_arrCorners[1], l_oA.m_arrCorners[2], l_oA.m_arrCorners[3],
+                    l_oA.m_arrCorners[4], l_oA.m_arrCorners[5], l_oA.m_arrCorners[6], l_oA.m_arrCorners[7], l_oA.m_arrTint[3]);
     }
-    std::printf("selftest:   %zu quads, max corner/uv/tint difference %.6f, max transform error %.6f px\n", items.size(), maxCorner, maxMap);
-    return ok && maxCorner < 1e-4 && maxMap < 1e-3;
+    std::printf("selftest:   %zu quads, max corner/uv/tint difference %.6f, max transform error %.6f px\n", l_vItems.size(), l_dMaxCorner, l_dMaxMap);
+    return l_bOk && l_dMaxCorner < 1e-4 && l_dMaxMap < 1e-3;
 }
 
 // The page and pixels the viewport draws the node `name` with at time t (nullptr: not drawn).
-const SpriteImageCache* drawnFrom(AnimEditor* ed, const char* name, float t, QRect* src)
+const SpriteImageCache* f_DrawnFrom(AnimEditor* l_pEd, const char* l_pszName, float l_fT, QRect* l_pSrc)
 {
-    AnimDocument* doc = ed->document();
-    std::vector<toms::anim::NodePose> poses;
-    std::vector<AnimViewport::DrawItem> items;
-    ed->viewport()->buildFrame(t, poses, items, nullptr);
-    for (const AnimViewport::DrawItem& it : items)
-        if (const Node* n = nodeAt(doc->clip()->root, it.path); n && n->name == name) {
-            if (src) *src = it.src;
-            return it.images;
+    AnimDocument* l_pDoc = l_pEd->f_Document();
+    std::vector<toms::anim::NodePose> l_vPoses;
+    std::vector<AnimViewport::DrawItem> l_vItems;
+    l_pEd->f_Viewport()->f_BuildFrame(l_fT, l_vPoses, l_vItems, nullptr);
+    for (const AnimViewport::DrawItem& l_oIt : l_vItems)
+        if (const Node* l_pN = f_NodeAt(l_pDoc->f_Clip()->m_oRoot, l_oIt.m_vPath); l_pN && l_pN->m_strName == l_pszName) {
+            if (l_pSrc) *l_pSrc = l_oIt.m_oSrc;
+            return l_oIt.m_pImages;
         }
     return nullptr;
 }
 
-bool hasProblemIn(AnimDocument* doc, Problem::Level level, const QString& a, const QString& b)
+bool f_HasProblemIn(AnimDocument* l_pDoc, Problem::Level l_eLevel, const QString& l_oA, const QString& l_oB)
 {
-    for (const Problem& p : checkAnim(doc->file(), doc->checkAtlases())) {
-        const QString m = QString::fromStdString(p.message);
-        if (p.level == level && m.contains(a) && m.contains(b)) return true;
+    for (const Problem& l_oP : f_CheckAnim(l_pDoc->f_File(), l_pDoc->f_CheckAtlases())) {
+        const QString l_oM = QString::fromStdString(l_oP.m_strMessage);
+        if (l_oP.m_eLevel == l_eLevel && l_oM.contains(l_oA) && l_oM.contains(l_oB)) return true;
     }
     return false;
 }
@@ -207,570 +207,570 @@ bool hasProblemIn(AnimDocument* doc, Problem::Level level, const QString& a, con
 // coin): every pick stores "id:name" -- the exact copy picked, also the duplicate coin of the
 // later atlas -- the viewport draws that atlas's page, sprite keys can switch atlases, ids can be
 // renamed (rewriting the references), bare names qualified, broken references are errors.
-bool atlasReferences(AnimEditor* ed, const QString& workDir, const QString& outDir, AnimMainWindow& w)
+bool f_AtlasReferences(AnimEditor* l_pEd, const QString& l_oWorkDir, const QString& l_oOutDir, AnimMainWindow& l_oW)
 {
-    AnimDocument* doc = ed->document();
-    AnimSpritesDock* sprites = ed->spritesDock();
-    AnimKeyListDock* keys = ed->keyListDock();
-    bool ok = true;
-    const QString start = doc->toJson();
-    const SpriteImageCache* gamePage = &doc->atlasAt(0).images;
-    const SpriteImageCache* extraPage = &doc->atlasAt(1).images;
-    const int base = doc->undoStack()->index();
-    auto steps = [&] { return doc->undoStack()->index() - base; };
-    auto undoAll = [&] {
-        while (doc->undoStack()->index() > base) doc->undoStack()->undo();
-        processEvents();
-        return doc->toJson() == start;
+    AnimDocument* l_pDoc = l_pEd->f_Document();
+    AnimSpritesDock* l_pSprites = l_pEd->f_SpritesDock();
+    AnimKeyListDock* l_pKeys = l_pEd->f_KeyListDock();
+    bool l_bOk = true;
+    const QString l_oStart = l_pDoc->f_ToJson();
+    const SpriteImageCache* l_pGamePage = &l_pDoc->f_AtlasAt(0).m_oImages;
+    const SpriteImageCache* l_pExtraPage = &l_pDoc->f_AtlasAt(1).m_oImages;
+    const int l_iBase = l_pDoc->f_UndoStack()->index();
+    auto l_fnSteps = [&] { return l_pDoc->f_UndoStack()->index() - l_iBase; };
+    auto l_fnUndoAll = [&] {
+        while (l_pDoc->f_UndoStack()->index() > l_iBase) l_pDoc->f_UndoStack()->undo();
+        f_ProcessEvents();
+        return l_pDoc->f_ToJson() == l_oStart;
     };
-    const Node* gem = nullptr;
-    auto selectGem = [&] {
-        doc->selectNodeByName(QStringLiteral("gem"));
-        processEvents();
-        gem = doc->selectedNode();
-        return gem && gem->name == "gem";
+    const Node* l_pGem = nullptr;
+    auto l_fnSelectGem = [&] {
+        l_pDoc->f_SelectNodeByName(QStringLiteral("gem"));
+        f_ProcessEvents();
+        l_pGem = l_pDoc->f_SelectedNode();
+        return l_pGem && l_pGem->m_strName == "gem";
     };
-    QRect src;
+    QRect l_oSrc;
 
     // The dock: both coins are listed and pickable; the later copy is not greyed.
-    QListWidgetItem* gameCoin = sprites->spriteItem(0, QStringLiteral("coin"));
-    QListWidgetItem* extraCoin = sprites->spriteItem(1, QStringLiteral("coin"));
-    QListWidgetItem* extraSpark = sprites->spriteItem(1, QStringLiteral("spark"));
-    ok &= check(gameCoin && extraCoin && extraSpark && (extraCoin->flags() & Qt::ItemIsEnabled) &&
-                    extraCoin->foreground() == gameCoin->foreground() && extraCoin->toolTip().contains(QStringLiteral("usable")),
+    QListWidgetItem* l_pGameCoin = l_pSprites->f_SpriteItem(0, QStringLiteral("coin"));
+    QListWidgetItem* l_pExtraCoin = l_pSprites->f_SpriteItem(1, QStringLiteral("coin"));
+    QListWidgetItem* l_pExtraSpark = l_pSprites->f_SpriteItem(1, QStringLiteral("spark"));
+    l_bOk &= f_Check(l_pGameCoin && l_pExtraCoin && l_pExtraSpark && (l_pExtraCoin->flags() & Qt::ItemIsEnabled) &&
+                    l_pExtraCoin->foreground() == l_pGameCoin->foreground() && l_pExtraCoin->toolTip().contains(QStringLiteral("usable")),
                 "(d) Sprites dock: extra's duplicate coin is listed, enabled, not greyed");
-    if (!gameCoin || !extraCoin || !extraSpark || !selectGem()) return false;
-    std::unique_ptr<QMimeData> mime(sprites->listFor(1)->mimeData({extraCoin}));
-    ok &= check(mime && mime->text() == QLatin1String("extra:coin"), "(d) dragging extra's coin carries \"extra:coin\"");
+    if (!l_pGameCoin || !l_pExtraCoin || !l_pExtraSpark || !l_fnSelectGem()) return false;
+    std::unique_ptr<QMimeData> l_upMime(l_pSprites->f_ListFor(1)->mimeData({l_pExtraCoin}));
+    l_bOk &= f_Check(l_upMime && l_upMime->text() == QLatin1String("extra:coin"), "(d) dragging extra's coin carries \"extra:coin\"");
 
     // 1. Double-click extra's coin (auto-key off: the rest sprite).
-    doc->setAutoKey(false);
-    emit sprites->listFor(1)->itemDoubleClicked(extraCoin);
-    processEvents();
-    selectGem();
-    ok &= check(gem->sprite == "extra:coin" && steps() == 1, "(d) double-click extra's coin: gem.sprite = \"extra:coin\" (1 step)");
-    ok &= check(drawnFrom(ed, "gem", 0.0f, &src) == extraPage && src == QRect(16, 0, 16, 16),
+    l_pDoc->f_SetAutoKey(false);
+    emit l_pSprites->f_ListFor(1)->itemDoubleClicked(l_pExtraCoin);
+    f_ProcessEvents();
+    l_fnSelectGem();
+    l_bOk &= f_Check(l_pGem->m_strSprite == "extra:coin" && l_fnSteps() == 1, "(d) double-click extra's coin: gem.sprite = \"extra:coin\" (1 step)");
+    l_bOk &= f_Check(f_DrawnFrom(l_pEd, "gem", 0.0f, &l_oSrc) == l_pExtraPage && l_oSrc == QRect(16, 0, 16, 16),
                 "(d) viewport: gem drawn from extra's page (16,0 16x16)");
-    ok &= check(checkDrawing(ed, 0.0f), "(d) viewport quads == appendQuads");
-    ok &= check(doc->spriteDisplay(gem->sprite) == QLatin1String("coin (extra)") &&
-                    doc->spriteDisplay("coin") == QLatin1String("coin (auto: game)") && doc->spriteDisplay("") == QLatin1String("(none)"),
+    l_bOk &= f_Check(f_CheckDrawing(l_pEd, 0.0f), "(d) viewport quads == appendQuads");
+    l_bOk &= f_Check(l_pDoc->f_SpriteDisplay(l_pGem->m_strSprite) == QLatin1String("coin (extra)") &&
+                    l_pDoc->f_SpriteDisplay("coin") == QLatin1String("coin (auto: game)") && l_pDoc->f_SpriteDisplay("") == QLatin1String("(none)"),
                 "(d) shown as 'coin (extra)'; a bare name as 'coin (auto: game)'");
     // The Nodes dock's Sprite column.
-    bool nodesShow = false;
-    if (auto* tree = ed->nodesDock()->findChild<QTreeWidget*>())
-        for (QTreeWidgetItemIterator it(tree); *it; ++it)
-            if ((*it)->text(0) == QLatin1String("gem")) nodesShow = (*it)->text(1) == QLatin1String("coin (extra)");
-    ok &= check(nodesShow, "(d) Nodes dock: gem's sprite column shows 'coin (extra)'");
-    ok &= check(doc->addSpriteNode(NodePath(), mime->text(), glm::vec2(40, 0)) && doc->selectedNode()->sprite == "extra:coin",
+    bool l_bNodesShow = false;
+    if (auto* l_pTree = l_pEd->f_NodesDock()->findChild<QTreeWidget*>())
+        for (QTreeWidgetItemIterator l_oIt(l_pTree); *l_oIt; ++l_oIt)
+            if ((*l_oIt)->text(0) == QLatin1String("gem")) l_bNodesShow = (*l_oIt)->text(1) == QLatin1String("coin (extra)");
+    l_bOk &= f_Check(l_bNodesShow, "(d) Nodes dock: gem's sprite column shows 'coin (extra)'");
+    l_bOk &= f_Check(l_pDoc->f_AddSpriteNode(NodePath(), l_upMime->text(), glm::vec2(40, 0)) && l_pDoc->f_SelectedNode()->m_strSprite == "extra:coin",
                 "(d) dropping it adds a node with \"extra:coin\"");
-    ok &= check(undoAll(), "(d) undone");
+    l_bOk &= f_Check(l_fnUndoAll(), "(d) undone");
 
     // 1b. Several sprites dropped on the scrubber (MPDI-style sequence): one sprite key each,
     // 0.1 s apart from the time under the cursor, in one undo step; the same on the key list.
-    if (!selectGem()) return false;
+    if (!l_fnSelectGem()) return false;
     {
-        auto seq = std::make_unique<QMimeData>();
-        seq->setData(QLatin1String(AnimSpriteList::kMime), QByteArrayLiteral("game:coin\nextra:spark\nextra:coin"));
-        AnimScrubber* scrubber = ed->transport()->scrubber();
-        const QPointF at(8, scrubber->height() / 2);   // the track's left end: t = 0
-        QDragEnterEvent enter(at.toPoint(), Qt::CopyAction, seq.get(), Qt::LeftButton, Qt::NoModifier);
-        QApplication::sendEvent(scrubber, &enter);
-        QDropEvent drop(at, Qt::CopyAction, seq.get(), Qt::LeftButton, Qt::NoModifier);
-        QApplication::sendEvent(scrubber, &drop);
-        processEvents();   // the drop is handled after the drag's event loop
-        gem = doc->selectedNode();
-        auto keyAt = [&](size_t i, float t, const char* v) {
-            return gem->spriteKeys.size() > i && std::fabs(gem->spriteKeys[i].t - t) < 1e-4f && gem->spriteKeys[i].v == v;
+        auto l_upSeq = std::make_unique<QMimeData>();
+        l_upSeq->setData(QLatin1String(AnimSpriteList::m_pszMime), QByteArrayLiteral("game:coin\nextra:spark\nextra:coin"));
+        AnimScrubber* l_pScrubber = l_pEd->f_Transport()->f_Scrubber();
+        const QPointF l_oAt(8, l_pScrubber->height() / 2);   // the track's left end: t = 0
+        QDragEnterEvent l_oEnter(l_oAt.toPoint(), Qt::CopyAction, l_upSeq.get(), Qt::LeftButton, Qt::NoModifier);
+        QApplication::sendEvent(l_pScrubber, &l_oEnter);
+        QDropEvent l_oDrop(l_oAt, Qt::CopyAction, l_upSeq.get(), Qt::LeftButton, Qt::NoModifier);
+        QApplication::sendEvent(l_pScrubber, &l_oDrop);
+        f_ProcessEvents();   // the drop is handled after the drag's event loop
+        l_pGem = l_pDoc->f_SelectedNode();
+        auto l_fnKeyAt = [&](size_t l_nI, float l_fT, const char* l_pszV) {
+            return l_pGem->m_vSpriteKeys.size() > l_nI && std::fabs(l_pGem->m_vSpriteKeys[l_nI].m_fT - l_fT) < 1e-4f && l_pGem->m_vSpriteKeys[l_nI].m_oV == l_pszV;
         };
-        ok &= check(enter.isAccepted() && drop.isAccepted() && gem->spriteKeys.size() == 3 && keyAt(0, 0.0f, "game:coin") &&
-                        keyAt(1, 0.1f, "extra:spark") && keyAt(2, 0.2f, "extra:coin") && steps() == 1,
+        l_bOk &= f_Check(l_oEnter.isAccepted() && l_oDrop.isAccepted() && l_pGem->m_vSpriteKeys.size() == 3 && l_fnKeyAt(0, 0.0f, "game:coin") &&
+                        l_fnKeyAt(1, 0.1f, "extra:spark") && l_fnKeyAt(2, 0.2f, "extra:coin") && l_fnSteps() == 1,
                     "(d) 3 sprites dropped on the scrubber: keys at 0 / 0.1 / 0.2 (1 step)");
-        ok &= check(drawnFrom(ed, "gem", 0.15f, &src) == extraPage && src == QRect(0, 0, 16, 16), "(d) t=0.15: extra's spark");
+        l_bOk &= f_Check(f_DrawnFrom(l_pEd, "gem", 0.15f, &l_oSrc) == l_pExtraPage && l_oSrc == QRect(0, 0, 16, 16), "(d) t=0.15: extra's spark");
         // On the key list: the row under the cursor gives the start time (the 0.1 s row).
-        QTableWidget* table = keys->table();
-        processEvents();
-        const int r = rowOf(keys, 0.1f);
-        if (r < 0) return check(false, "(d) key list has a 0.1 s row");
-        table->scrollToItem(table->item(r, 0));
-        const QRect rowRect = table->visualItemRect(table->item(r, 0));
-        QDragEnterEvent enter2(rowRect.center(), Qt::CopyAction, seq.get(), Qt::LeftButton, Qt::NoModifier);
-        QApplication::sendEvent(table->viewport(), &enter2);   // a drop goes to the widget that took the enter
-        QDropEvent drop2(QPointF(rowRect.center()), Qt::CopyAction, seq.get(), Qt::LeftButton, Qt::NoModifier);
-        QApplication::sendEvent(table->viewport(), &drop2);
-        processEvents();
-        gem = doc->selectedNode();
-        std::printf("selftest:   key list drop at row %d (%d,%d %dx%d), accepted %d, steps %d, sprite keys:", r, rowRect.x(),
-                    rowRect.y(), rowRect.width(), rowRect.height(), int(drop2.isAccepted()), steps());
-        for (const auto& k : gem->spriteKeys) std::printf(" %.3f=%s", k.t, k.v.c_str());
+        QTableWidget* l_pTable = l_pKeys->f_Table();
+        f_ProcessEvents();
+        const int l_iR = f_RowOf(l_pKeys, 0.1f);
+        if (l_iR < 0) return f_Check(false, "(d) key list has a 0.1 s row");
+        l_pTable->scrollToItem(l_pTable->item(l_iR, 0));
+        const QRect l_oRowRect = l_pTable->visualItemRect(l_pTable->item(l_iR, 0));
+        QDragEnterEvent l_oEnter2(l_oRowRect.center(), Qt::CopyAction, l_upSeq.get(), Qt::LeftButton, Qt::NoModifier);
+        QApplication::sendEvent(l_pTable->viewport(), &l_oEnter2);   // a drop goes to the widget that took the enter
+        QDropEvent l_oDrop2(QPointF(l_oRowRect.center()), Qt::CopyAction, l_upSeq.get(), Qt::LeftButton, Qt::NoModifier);
+        QApplication::sendEvent(l_pTable->viewport(), &l_oDrop2);
+        f_ProcessEvents();
+        l_pGem = l_pDoc->f_SelectedNode();
+        std::printf("selftest:   key list drop at row %d (%d,%d %dx%d), accepted %d, steps %d, sprite keys:", l_iR, l_oRowRect.x(),
+                    l_oRowRect.y(), l_oRowRect.width(), l_oRowRect.height(), int(l_oDrop2.isAccepted()), l_fnSteps());
+        for (const auto& l_oK : l_pGem->m_vSpriteKeys) std::printf(" %.3f=%s", l_oK.m_fT, l_oK.m_oV.c_str());
         std::printf("\n");
-        ok &= check(drop2.isAccepted() && gem->spriteKeys.size() == 4 && keyAt(1, 0.1f, "game:coin") &&
-                        keyAt(2, 0.2f, "extra:spark") && keyAt(3, 0.3f, "extra:coin") && steps() == 2,
+        l_bOk &= f_Check(l_oDrop2.isAccepted() && l_pGem->m_vSpriteKeys.size() == 4 && l_fnKeyAt(1, 0.1f, "game:coin") &&
+                        l_fnKeyAt(2, 0.2f, "extra:spark") && l_fnKeyAt(3, 0.3f, "extra:coin") && l_fnSteps() == 2,
                     "(d) dropped on key list row 0.1: keys replaced from 0.1, one more at 0.3 (1 step)");
         // Other drags are not taken.
-        QMimeData plain;
-        plain.setText(QStringLiteral("coin"));
-        QDragEnterEvent other(at.toPoint(), Qt::CopyAction, &plain, Qt::LeftButton, Qt::NoModifier);
-        other.ignore();
-        QApplication::sendEvent(scrubber, &other);
-        ok &= check(!other.isAccepted(), "(d) a plain text drag is not taken by the scrubber");
+        QMimeData l_oPlain;
+        l_oPlain.setText(QStringLiteral("coin"));
+        QDragEnterEvent l_oOther(l_oAt.toPoint(), Qt::CopyAction, &l_oPlain, Qt::LeftButton, Qt::NoModifier);
+        l_oOther.ignore();
+        QApplication::sendEvent(l_pScrubber, &l_oOther);
+        l_bOk &= f_Check(!l_oOther.isAccepted(), "(d) a plain text drag is not taken by the scrubber");
     }
-    ok &= check(undoAll(), "(d) undone");
+    l_bOk &= f_Check(l_fnUndoAll(), "(d) undone");
 
     // 2. The Properties sprite picker: "coin (extra)" from the list; a typed bare name gets the
     // atlas the lookup picks; a bare legacy name shown as "(auto: ...)" is left alone untouched.
-    selectGem();
-    QComboBox* combo = ed->propertiesDock()->spriteCombo();
-    const int idx = combo->findText(QStringLiteral("coin (extra)"));
-    ok &= check(idx > 0 && combo->findText(QStringLiteral("coin (game)")) > 0, "(d) Properties: both coins in the sprite list");
-    combo->setCurrentIndex(idx);
-    emit combo->activated(idx);
-    processEvents();
-    selectGem();
-    ok &= check(gem->sprite == "extra:coin" && combo->currentText() == QLatin1String("coin (extra)"),
+    l_fnSelectGem();
+    QComboBox* l_pCombo = l_pEd->f_PropertiesDock()->f_SpriteCombo();
+    const int l_iIdx = l_pCombo->findText(QStringLiteral("coin (extra)"));
+    l_bOk &= f_Check(l_iIdx > 0 && l_pCombo->findText(QStringLiteral("coin (game)")) > 0, "(d) Properties: both coins in the sprite list");
+    l_pCombo->setCurrentIndex(l_iIdx);
+    emit l_pCombo->activated(l_iIdx);
+    f_ProcessEvents();
+    l_fnSelectGem();
+    l_bOk &= f_Check(l_pGem->m_strSprite == "extra:coin" && l_pCombo->currentText() == QLatin1String("coin (extra)"),
                 "(d) Properties: picking 'coin (extra)' stores \"extra:coin\"");
-    combo->setEditText(QStringLiteral("spark"));
-    emit combo->lineEdit()->editingFinished();
-    processEvents();
-    selectGem();
-    ok &= check(gem->sprite == "extra:spark", "(d) Properties: typing 'spark' stores \"extra:spark\"");
-    ok &= check(undoAll(), "(d) undone");
-    doc->selectNodeByName(QStringLiteral("coin"));
-    processEvents();
-    const int before = doc->undoStack()->index();
-    emit combo->lineEdit()->editingFinished();   // untouched "coin (auto: game)": nothing written
-    ok &= check(combo->currentText() == QLatin1String("coin (auto: game)") && doc->undoStack()->index() == before,
+    l_pCombo->setEditText(QStringLiteral("spark"));
+    emit l_pCombo->lineEdit()->editingFinished();
+    f_ProcessEvents();
+    l_fnSelectGem();
+    l_bOk &= f_Check(l_pGem->m_strSprite == "extra:spark", "(d) Properties: typing 'spark' stores \"extra:spark\"");
+    l_bOk &= f_Check(l_fnUndoAll(), "(d) undone");
+    l_pDoc->f_SelectNodeByName(QStringLiteral("coin"));
+    f_ProcessEvents();
+    const int l_iBefore = l_pDoc->f_UndoStack()->index();
+    emit l_pCombo->lineEdit()->editingFinished();   // untouched "coin (auto: game)": nothing written
+    l_bOk &= f_Check(l_pCombo->currentText() == QLatin1String("coin (auto: game)") && l_pDoc->f_UndoStack()->index() == l_iBefore,
                 "(d) Properties: a bare name shows 'coin (auto: game)', left alone");
 
     // 3. Sprite keys alternating atlases (auto-key on: a key at the playhead per double-click).
-    selectGem();
-    doc->setAutoKey(true);
-    const float times[3] = {0.0f, 0.2f, 0.4f};
-    QListWidgetItem* picks[3] = {gameCoin, extraSpark, extraCoin};
-    for (int i = 0; i < 3; i++) {
-        doc->setTime(times[i]);
-        emit picks[i]->listWidget()->itemDoubleClicked(picks[i]);
-        processEvents();
+    l_fnSelectGem();
+    l_pDoc->f_SetAutoKey(true);
+    const float l_arrTimes[3] = {0.0f, 0.2f, 0.4f};
+    QListWidgetItem* l_arrPicks[3] = {l_pGameCoin, l_pExtraSpark, l_pExtraCoin};
+    for (int l_iI = 0; l_iI < 3; l_iI++) {
+        l_pDoc->f_SetTime(l_arrTimes[l_iI]);
+        emit l_arrPicks[l_iI]->listWidget()->itemDoubleClicked(l_arrPicks[l_iI]);
+        f_ProcessEvents();
     }
-    selectGem();
-    ok &= check(gem->spriteKeys.size() == 3 && gem->spriteKeys[0].v == "game:coin" && gem->spriteKeys[1].v == "extra:spark" &&
-                    gem->spriteKeys[2].v == "extra:coin" && steps() == 3,
+    l_fnSelectGem();
+    l_bOk &= f_Check(l_pGem->m_vSpriteKeys.size() == 3 && l_pGem->m_vSpriteKeys[0].m_oV == "game:coin" && l_pGem->m_vSpriteKeys[1].m_oV == "extra:spark" &&
+                    l_pGem->m_vSpriteKeys[2].m_oV == "extra:coin" && l_fnSteps() == 3,
                 "(d) sprite keys 0 game:coin, 0.2 extra:spark, 0.4 extra:coin");
-    ok &= check(drawnFrom(ed, "gem", 0.1f, &src) == gamePage && src.size() == gameCoinSize(doc), "(d) t=0.1: game's coin (its packed pixels)");
-    ok &= check(drawnFrom(ed, "gem", 0.3f, &src) == extraPage && src == QRect(0, 0, 16, 16), "(d) t=0.3: extra's spark");
-    ok &= check(drawnFrom(ed, "gem", 0.5f, &src) == extraPage && src == QRect(16, 0, 16, 16), "(d) t=0.5: extra's coin");
-    for (float t : {0.1f, 0.3f, 0.5f}) ok &= check(checkDrawing(ed, t), "(d) viewport quads == appendQuads");
-    const int r1 = rowOf(keys, 0.2f), r2 = rowOf(keys, 0.4f);
-    ok &= check(r1 >= 0 && r2 >= 0 && keys->table()->item(r1, AnimKeyListDock::ColSprite)->text() == QLatin1String("spark (extra)") &&
-                    keys->table()->item(r2, AnimKeyListDock::ColSprite)->text() == QLatin1String("coin (extra)"),
+    l_bOk &= f_Check(f_DrawnFrom(l_pEd, "gem", 0.1f, &l_oSrc) == l_pGamePage && l_oSrc.size() == f_GameCoinSize(l_pDoc), "(d) t=0.1: game's coin (its packed pixels)");
+    l_bOk &= f_Check(f_DrawnFrom(l_pEd, "gem", 0.3f, &l_oSrc) == l_pExtraPage && l_oSrc == QRect(0, 0, 16, 16), "(d) t=0.3: extra's spark");
+    l_bOk &= f_Check(f_DrawnFrom(l_pEd, "gem", 0.5f, &l_oSrc) == l_pExtraPage && l_oSrc == QRect(16, 0, 16, 16), "(d) t=0.5: extra's coin");
+    for (float l_fT : {0.1f, 0.3f, 0.5f}) l_bOk &= f_Check(f_CheckDrawing(l_pEd, l_fT), "(d) viewport quads == appendQuads");
+    const int l_iR1 = f_RowOf(l_pKeys, 0.2f), l_iR2 = f_RowOf(l_pKeys, 0.4f);
+    l_bOk &= f_Check(l_iR1 >= 0 && l_iR2 >= 0 && l_pKeys->f_Table()->item(l_iR1, AnimKeyListDock::ColSprite)->text() == QLatin1String("spark (extra)") &&
+                    l_pKeys->f_Table()->item(l_iR2, AnimKeyListDock::ColSprite)->text() == QLatin1String("coin (extra)"),
                 "(d) key list shows 'spark (extra)', 'coin (extra)'");
-    ok &= check(keys->commitCell(r2, AnimKeyListDock::ColSprite, QStringLiteral("coin (game)")) && doc->selectedNode()->spriteKeys[2].v == "game:coin" &&
-                    keys->commitCell(r2, AnimKeyListDock::ColSprite, QStringLiteral("spark")) && doc->selectedNode()->spriteKeys[2].v == "extra:spark",
+    l_bOk &= f_Check(l_pKeys->f_CommitCell(l_iR2, AnimKeyListDock::ColSprite, QStringLiteral("coin (game)")) && l_pDoc->f_SelectedNode()->m_vSpriteKeys[2].m_oV == "game:coin" &&
+                    l_pKeys->f_CommitCell(l_iR2, AnimKeyListDock::ColSprite, QStringLiteral("spark")) && l_pDoc->f_SelectedNode()->m_vSpriteKeys[2].m_oV == "extra:spark",
                 "(d) key list cell: 'coin (game)' -> game:coin, typed 'spark' -> extra:spark");
-    doc->undoStack()->undo();
-    doc->undoStack()->undo();
-    processEvents();
-    selectGem();
-    keys->raise();
-    keys->selectRows({r1});
-    processEvents();
-    ok &= check(w.grab().save(QDir(outDir).filePath(QStringLiteral("keylist_atlases.png"))), "keylist_atlases.png");
-    ok &= check(keys->grab().save(QDir(outDir).filePath(QStringLiteral("keylist_sprites.png"))), "keylist_sprites.png");
+    l_pDoc->f_UndoStack()->undo();
+    l_pDoc->f_UndoStack()->undo();
+    f_ProcessEvents();
+    l_fnSelectGem();
+    l_pKeys->raise();
+    l_pKeys->f_SelectRows({l_iR1});
+    f_ProcessEvents();
+    l_bOk &= f_Check(l_oW.grab().save(QDir(l_oOutDir).filePath(QStringLiteral("keylist_atlases.png"))), "keylist_atlases.png");
+    l_bOk &= f_Check(l_pKeys->grab().save(QDir(l_oOutDir).filePath(QStringLiteral("keylist_sprites.png"))), "keylist_sprites.png");
 
     // 4. Rename extra's id through the Atlases list's cell: every "extra:" reference follows, one step.
-    AnimAtlasesPanel* panel = ed->propertiesDock()->atlasesPanel();
-    const int beforeRename = doc->undoStack()->index();
-    if (QTreeWidgetItem* it = panel->list()->topLevelItem(1)) it->setText(AnimAtlasesPanel::ColId, QStringLiteral("fx"));
-    processEvents();
-    selectGem();
-    ok &= check(doc->atlasId(1) == QLatin1String("fx") && gem->spriteKeys[1].v == "fx:spark" && gem->spriteKeys[2].v == "fx:coin" &&
-                    gem->spriteKeys[0].v == "game:coin" && doc->undoStack()->index() == beforeRename + 1 &&
-                    drawnFrom(ed, "gem", 0.5f, &src) == extraPage &&
-                    countLevel(checkAnim(doc->file(), doc->checkAtlases()), Problem::Error) == 0,
+    AnimAtlasesPanel* l_pPanel = l_pEd->f_PropertiesDock()->f_AtlasesPanel();
+    const int l_iBeforeRename = l_pDoc->f_UndoStack()->index();
+    if (QTreeWidgetItem* l_pIt = l_pPanel->f_List()->topLevelItem(1)) l_pIt->setText(AnimAtlasesPanel::ColId, QStringLiteral("fx"));
+    f_ProcessEvents();
+    l_fnSelectGem();
+    l_bOk &= f_Check(l_pDoc->f_AtlasId(1) == QLatin1String("fx") && l_pGem->m_vSpriteKeys[1].m_oV == "fx:spark" && l_pGem->m_vSpriteKeys[2].m_oV == "fx:coin" &&
+                    l_pGem->m_vSpriteKeys[0].m_oV == "game:coin" && l_pDoc->f_UndoStack()->index() == l_iBeforeRename + 1 &&
+                    f_DrawnFrom(l_pEd, "gem", 0.5f, &l_oSrc) == l_pExtraPage &&
+                    f_CountLevel(f_CheckAnim(l_pDoc->f_File(), l_pDoc->f_CheckAtlases()), Problem::Error) == 0,
                 "(d) rename id extra -> fx: references rewritten (1 step), still drawn, no errors");
-    QString why;
-    ok &= check(!doc->renameAtlasId(1, QStringLiteral("a:b"), &why) && why.contains(QLatin1Char(':')) &&
-                    !doc->renameAtlasId(1, QStringLiteral("game"), &why) && why.contains(QStringLiteral("unique")) &&
-                    !doc->renameAtlasId(1, QString(), &why) && doc->atlasId(1) == QLatin1String("fx"),
+    QString l_oWhy;
+    l_bOk &= f_Check(!l_pDoc->f_RenameAtlasId(1, QStringLiteral("a:b"), &l_oWhy) && l_oWhy.contains(QLatin1Char(':')) &&
+                    !l_pDoc->f_RenameAtlasId(1, QStringLiteral("game"), &l_oWhy) && l_oWhy.contains(QStringLiteral("unique")) &&
+                    !l_pDoc->f_RenameAtlasId(1, QString(), &l_oWhy) && l_pDoc->f_AtlasId(1) == QLatin1String("fx"),
                 "(d) ids: ':' / taken / empty refused");
-    doc->undoStack()->undo();
-    processEvents();
-    selectGem();
-    ok &= check(doc->atlasId(1) == QLatin1String("extra") && gem->spriteKeys[1].v == "extra:spark" &&
-                    panel->list()->topLevelItem(1)->text(AnimAtlasesPanel::ColId) == QLatin1String("extra"),
+    l_pDoc->f_UndoStack()->undo();
+    f_ProcessEvents();
+    l_fnSelectGem();
+    l_bOk &= f_Check(l_pDoc->f_AtlasId(1) == QLatin1String("extra") && l_pGem->m_vSpriteKeys[1].m_oV == "extra:spark" &&
+                    l_pPanel->f_List()->topLevelItem(1)->text(AnimAtlasesPanel::ColId) == QLatin1String("extra"),
                 "(d) rename undone");
 
     // 5. Removing extra: its references would break -- counted, and errors after.
-    const int refs = doc->atlasReferenceCount(1);
-    ok &= check(refs == 3, "(d) extra is used by 3 references (spark node, 2 gem keys)");
-    std::printf("selftest:   atlasReferenceCount(extra) = %d\n", refs);
-    ok &= check(panel->removeAtlas(1) && hasProblemIn(doc, Problem::Error, QStringLiteral("'extra:coin'"), QStringLiteral("no atlas has the id")),
+    const int l_iRefs = l_pDoc->f_AtlasReferenceCount(1);
+    l_bOk &= f_Check(l_iRefs == 3, "(d) extra is used by 3 references (spark node, 2 gem keys)");
+    std::printf("selftest:   atlasReferenceCount(extra) = %d\n", l_iRefs);
+    l_bOk &= f_Check(l_pPanel->f_RemoveAtlas(1) && f_HasProblemIn(l_pDoc, Problem::Error, QStringLiteral("'extra:coin'"), QStringLiteral("no atlas has the id")),
                 "(d) remove extra: 'extra:coin' is an error");
-    doc->undoStack()->undo();
-    processEvents();
+    l_pDoc->f_UndoStack()->undo();
+    f_ProcessEvents();
 
     // 6. Broken references are errors: an unknown id, a name the atlas lacks.
-    selectGem();
-    doc->editSelected(QStringLiteral("test"), [](Node& n) { n.sprite = "nope:coin"; });
-    doc->editSelected(QStringLiteral("test"), [](Node& n) { n.spriteKeys[0].v = "extra:slime"; });
-    ok &= check(hasProblemIn(doc, Problem::Error, QStringLiteral("'nope:coin'"), QStringLiteral("no atlas has the id 'nope'")) &&
-                    hasProblemIn(doc, Problem::Error, QStringLiteral("'extra:slime'"), QStringLiteral("has no sprite 'slime'")),
+    l_fnSelectGem();
+    l_pDoc->f_EditSelected(QStringLiteral("test"), [](Node& l_oN) { l_oN.m_strSprite = "nope:coin"; });
+    l_pDoc->f_EditSelected(QStringLiteral("test"), [](Node& l_oN) { l_oN.m_vSpriteKeys[0].m_oV = "extra:slime"; });
+    l_bOk &= f_Check(f_HasProblemIn(l_pDoc, Problem::Error, QStringLiteral("'nope:coin'"), QStringLiteral("no atlas has the id 'nope'")) &&
+                    f_HasProblemIn(l_pDoc, Problem::Error, QStringLiteral("'extra:slime'"), QStringLiteral("has no sprite 'slime'")),
                 "(d) check: unknown id and missing name are errors");
-    for (const Problem& p : checkAnim(doc->file(), doc->checkAtlases()))
-        if (p.level == Problem::Error) std::printf("selftest:   error: %s: %s\n", p.where.c_str(), p.message.c_str());
-    doc->undoStack()->undo();
-    doc->undoStack()->undo();
-    processEvents();
+    for (const Problem& l_oP : f_CheckAnim(l_pDoc->f_File(), l_pDoc->f_CheckAtlases()))
+        if (l_oP.m_eLevel == Problem::Error) std::printf("selftest:   error: %s: %s\n", l_oP.m_strWhere.c_str(), l_oP.m_strMessage.c_str());
+    l_pDoc->f_UndoStack()->undo();
+    l_pDoc->f_UndoStack()->undo();
+    f_ProcessEvents();
 
     // 7. Qualify: every bare name gets the atlas the lookup picks now (coin -> game:coin), one step.
-    const int bare = doc->bareSpriteReferenceCount();
-    const int beforeQualify = doc->undoStack()->index();
-    ok &= check(bare > 0 && hasProblemIn(doc, Problem::Warning, QStringLiteral("'coin'"), QStringLiteral("does not name one")),
+    const int l_iBare = l_pDoc->f_BareSpriteReferenceCount();
+    const int l_iBeforeQualify = l_pDoc->f_UndoStack()->index();
+    l_bOk &= f_Check(l_iBare > 0 && f_HasProblemIn(l_pDoc, Problem::Warning, QStringLiteral("'coin'"), QStringLiteral("does not name one")),
                 "(d) bare names in the file; bare 'coin' warns");
-    const int qualified = doc->qualifySpriteReferences();
-    std::vector<std::string> all;
-    for (const toms::anim::Clip& c : doc->file().clips) collectSpriteRefs(c.root, all);
-    bool allQualified = !all.empty();
-    for (const std::string& r : all) allQualified = allQualified && !toms::anim::parseSpriteRef(r).atlas.empty();
-    doc->selectNodeByName(QStringLiteral("coin"));
-    ok &= check(qualified == bare && allQualified && doc->selectedNode()->sprite == "game:coin" &&
-                    doc->undoStack()->index() == beforeQualify + 1 && doc->bareSpriteReferenceCount() == 0 &&
-                    !hasProblemIn(doc, Problem::Warning, QStringLiteral("coin"), QStringLiteral("several atlases")),
+    const int l_iQualified = l_pDoc->f_QualifySpriteReferences();
+    std::vector<std::string> l_vAll;
+    for (const toms::anim::Clip& l_oC : l_pDoc->f_File().m_vClips) f_CollectSpriteRefs(l_oC.m_oRoot, l_vAll);
+    bool l_bAllQualified = !l_vAll.empty();
+    for (const std::string& l_strR : l_vAll) l_bAllQualified = l_bAllQualified && !toms::anim::f_ParseSpriteRef(l_strR).m_strAtlas.empty();
+    l_pDoc->f_SelectNodeByName(QStringLiteral("coin"));
+    l_bOk &= f_Check(l_iQualified == l_iBare && l_bAllQualified && l_pDoc->f_SelectedNode()->m_strSprite == "game:coin" &&
+                    l_pDoc->f_UndoStack()->index() == l_iBeforeQualify + 1 && l_pDoc->f_BareSpriteReferenceCount() == 0 &&
+                    !f_HasProblemIn(l_pDoc, Problem::Warning, QStringLiteral("coin"), QStringLiteral("several atlases")),
                 "(d) qualify: every reference names its atlas, coin -> game:coin, warning gone (1 step)");
-    std::printf("selftest:   qualified %d bare reference(s)\n", qualified);
-    doc->undoStack()->undo();
-    processEvents();
-    ok &= check(doc->bareSpriteReferenceCount() == bare, "(d) qualify undone");
+    std::printf("selftest:   qualified %d bare reference(s)\n", l_iQualified);
+    l_pDoc->f_UndoStack()->undo();
+    f_ProcessEvents();
+    l_bOk &= f_Check(l_pDoc->f_BareSpriteReferenceCount() == l_iBare, "(d) qualify undone");
 
     // 8. A second game.atlas (a style's): its default id is taken, so it gets the style folder's.
     {
-        const QString styleDir = QDir(workDir).filePath(QStringLiteral("styles/dark16/atlas"));
-        QDir().mkpath(styleDir);
-        QFile::remove(QDir(styleDir).filePath(QStringLiteral("game.atlas")));
-        QFile::copy(QDir(workDir).filePath(QStringLiteral("extra/extra.png")), QDir(styleDir).filePath(QStringLiteral("extra.png")));
-        QFile::copy(QDir(workDir).filePath(QStringLiteral("extra/extra.atlas")), QDir(styleDir).filePath(QStringLiteral("game.atlas")));
-        const QString style = QDir(styleDir).filePath(QStringLiteral("game.atlas"));
-        ok &= check(doc->suggestAtlasId(style) == QLatin1String("dark16") && ed->addAtlasFile(style) && doc->atlasCount() == 3 &&
-                        doc->atlasId(2) == QLatin1String("dark16"),
+        const QString l_oStyleDir = QDir(l_oWorkDir).filePath(QStringLiteral("styles/dark16/atlas"));
+        QDir().mkpath(l_oStyleDir);
+        QFile::remove(QDir(l_oStyleDir).filePath(QStringLiteral("game.atlas")));
+        QFile::copy(QDir(l_oWorkDir).filePath(QStringLiteral("extra/extra.png")), QDir(l_oStyleDir).filePath(QStringLiteral("extra.png")));
+        QFile::copy(QDir(l_oWorkDir).filePath(QStringLiteral("extra/extra.atlas")), QDir(l_oStyleDir).filePath(QStringLiteral("game.atlas")));
+        const QString l_oStyle = QDir(l_oStyleDir).filePath(QStringLiteral("game.atlas"));
+        l_bOk &= f_Check(l_pDoc->f_SuggestAtlasId(l_oStyle) == QLatin1String("dark16") && l_pEd->f_AddAtlasFile(l_oStyle) && l_pDoc->f_AtlasCount() == 3 &&
+                        l_pDoc->f_AtlasId(2) == QLatin1String("dark16"),
                     "(d) a second game.atlas gets the id 'dark16'");
-        QString err;
-        ok &= check(!doc->addAtlas(style, QStringLiteral("x"), &err), "(d) the same file twice is refused");
-        const toms::anim::AnimFile f = doc->file();
-        ok &= check(f.atlases.size() == 3 && f.atlases[2].id == "dark16" &&
-                        doc->toJson().contains(QStringLiteral("\"id\": \"dark16\"")),
+        QString l_oErr;
+        l_bOk &= f_Check(!l_pDoc->f_AddAtlas(l_oStyle, QStringLiteral("x"), &l_oErr), "(d) the same file twice is refused");
+        const toms::anim::AnimFile l_oF = l_pDoc->f_File();
+        l_bOk &= f_Check(l_oF.m_vAtlases.size() == 3 && l_oF.m_vAtlases[2].m_strId == "dark16" &&
+                        l_pDoc->f_ToJson().contains(QStringLiteral("\"id\": \"dark16\"")),
                     "(d) stored as {\"id\": \"dark16\", \"path\": ...}");
-        doc->undoStack()->undo();
-        processEvents();
+        l_pDoc->f_UndoStack()->undo();
+        f_ProcessEvents();
     }
 
     // 9. Save with the alternating keys, reopen: the same file.
-    const QString saved = doc->filePath();
-    const QString json = doc->toJson();
-    ok &= check(ed->saveTo(saved), "(d) save");
-    std::string text;
-    ok &= check(readTextFile(saved.toStdString(), text) && text.find("\"extra:coin\"") != std::string::npos &&
-                    text.find("\"extra:spark\"") != std::string::npos,
+    const QString l_oSaved = l_pDoc->f_FilePath();
+    const QString l_oJson = l_pDoc->f_ToJson();
+    l_bOk &= f_Check(l_pEd->f_SaveTo(l_oSaved), "(d) save");
+    std::string l_strText;
+    l_bOk &= f_Check(f_ReadTextFile(l_oSaved.toStdString(), l_strText) && l_strText.find("\"extra:coin\"") != std::string::npos &&
+                    l_strText.find("\"extra:spark\"") != std::string::npos,
                 "(d) the file stores \"extra:coin\", \"extra:spark\"");
-    ok &= check(ed->openFile(saved, false) && doc->toJson() == json && doc->atlasId(1) == QLatin1String("extra"),
+    l_bOk &= f_Check(l_pEd->f_OpenFile(l_oSaved, false) && l_pDoc->f_ToJson() == l_oJson && l_pDoc->f_AtlasId(1) == QLatin1String("extra"),
                 "(d) reopen: animToJson equal");
-    ok &= check(selectGem() && drawnFrom(ed, "gem", 0.5f, &src) == &doc->atlasAt(1).images && src == QRect(16, 0, 16, 16),
+    l_bOk &= f_Check(l_fnSelectGem() && f_DrawnFrom(l_pEd, "gem", 0.5f, &l_oSrc) == &l_pDoc->f_AtlasAt(1).m_oImages && l_oSrc == QRect(16, 0, 16, 16),
                 "(d) reopened: t=0.5 draws extra's coin");
     std::fflush(stdout);
-    ok &= check(headlessMain({"check", saved.toStdString()}) == 0, "(d) --headless check on it: exit 0");
-    return ok;
+    l_bOk &= f_Check(f_HeadlessMain({"check", l_oSaved.toStdString()}) == 0, "(d) --headless check on it: exit 0");
+    return l_bOk;
 }
 
-int runSelfTest(AnimMainWindow& w, const QString& file, const QString& outDir)
+int f_RunSelfTest(AnimMainWindow& l_oW, const QString& l_oFile, const QString& l_oOutDir)
 {
     qApp->setProperty("toms.selftest", true);
     std::setvbuf(stdout, nullptr, _IONBF, 0);   // a crash still leaves the lines before it
-    AnimEditor* ed = w.editor();
-    AnimDocument* doc = ed->document();
-    QDir().mkpath(outDir);
-    bool ok = true;
-    if (!ed->openFile(file, false)) {
-        std::fprintf(stderr, "selftest: cannot open %s\n", file.toUtf8().constData());
+    AnimEditor* l_pEd = l_oW.f_Editor();
+    AnimDocument* l_pDoc = l_pEd->f_Document();
+    QDir().mkpath(l_oOutDir);
+    bool l_bOk = true;
+    if (!l_pEd->f_OpenFile(l_oFile, false)) {
+        std::fprintf(stderr, "selftest: cannot open %s\n", l_oFile.toUtf8().constData());
         return 2;
     }
     // Work on a copy in outDir (it must be on the atlases' drive: atlas paths are stored relative).
-    const QString workDir = QDir(outDir).filePath(QStringLiteral("work"));
-    QDir(workDir).removeRecursively();
-    QDir().mkpath(workDir);
-    const QString work = QDir(workDir).filePath(QFileInfo(file).fileName());
-    if (!ed->saveTo(work) || !ed->openFile(work, false)) {
+    const QString l_oWorkDir = QDir(l_oOutDir).filePath(QStringLiteral("work"));
+    QDir(l_oWorkDir).removeRecursively();
+    QDir().mkpath(l_oWorkDir);
+    const QString l_oWork = QDir(l_oWorkDir).filePath(QFileInfo(l_oFile).fileName());
+    if (!l_pEd->f_SaveTo(l_oWork) || !l_pEd->f_OpenFile(l_oWork, false)) {
         std::fprintf(stderr, "selftest: cannot copy %s to %s (outdir must be on the same drive as the atlas)\n",
-                     file.toUtf8().constData(), work.toUtf8().constData());
+                     l_oFile.toUtf8().constData(), l_oWork.toUtf8().constData());
         return 2;
     }
-    doc->setAutoKey(true);
-    doc->setKeyTogether(true);
-    processEvents();
-    ok &= check(doc->atlasLoaded() && doc->atlasCount() == 1, "atlas loaded (the scratch copy finds it)");
-    ok &= check(!doc->spriteNames().isEmpty(), "sprites listed");
-    const QString original = doc->toJson();
+    l_pDoc->f_SetAutoKey(true);
+    l_pDoc->f_SetKeyTogether(true);
+    f_ProcessEvents();
+    l_bOk &= f_Check(l_pDoc->f_AtlasLoaded() && l_pDoc->f_AtlasCount() == 1, "atlas loaded (the scratch copy finds it)");
+    l_bOk &= f_Check(!l_pDoc->f_SpriteNames().isEmpty(), "sprites listed");
+    const QString l_oOriginal = l_pDoc->f_ToJson();
 
     // 1. The viewport draws what the game draws.
-    ok &= check(checkDrawing(ed, 0.76f), "viewport quads == appendQuads at t=0.76");
-    ok &= check(checkDrawing(ed, 0.0f), "viewport quads == appendQuads at t=0");
+    l_bOk &= f_Check(f_CheckDrawing(l_pEd, 0.76f), "viewport quads == appendQuads at t=0.76");
+    l_bOk &= f_Check(f_CheckDrawing(l_pEd, 0.0f), "viewport quads == appendQuads at t=0");
 
     // 2. Select a node, add keys through the UI's own paths, undo them.
-    ok &= check(doc->selectNodeByName(QStringLiteral("slime")), "select node 'slime'");
-    processEvents();
-    AnimKeyListDock* keys = ed->keyListDock();
-    const int rowsBefore = keys->table()->rowCount();
-    std::vector<int> tracksBefore;   // key count per interpolated channel
-    for (Channel c : kInterpolated) tracksBefore.push_back(keyCount(*doc->selectedNode(), c));
-    doc->setTime(0.25f);
-    keys->insertKey();   // the Insert button / K
-    processEvents();
-    const Node* slime = doc->selectedNode();
-    bool onlyAnimated = slime != nullptr;
-    for (size_t i = 0; slime && i < 4; i++) {
-        const Channel c = kInterpolated[i];
-        const bool animated = tracksBefore[i] > 0;
-        onlyAnimated &= animated ? hasKeyAt(*slime, c, 0.25f) && keyCount(*slime, c) == tracksBefore[i] + 1
-                                 : keyCount(*slime, c) == 0;
+    l_bOk &= f_Check(l_pDoc->f_SelectNodeByName(QStringLiteral("slime")), "select node 'slime'");
+    f_ProcessEvents();
+    AnimKeyListDock* l_pKeys = l_pEd->f_KeyListDock();
+    const int l_iRowsBefore = l_pKeys->f_Table()->rowCount();
+    std::vector<int> l_vTracksBefore;   // key count per interpolated channel
+    for (Channel l_eC : g_arrInterpolated) l_vTracksBefore.push_back(f_KeyCount(*l_pDoc->f_SelectedNode(), l_eC));
+    l_pDoc->f_SetTime(0.25f);
+    l_pKeys->f_InsertKey();   // the Insert button / K
+    f_ProcessEvents();
+    const Node* l_pSlime = l_pDoc->f_SelectedNode();
+    bool l_bOnlyAnimated = l_pSlime != nullptr;
+    for (size_t l_nI = 0; l_pSlime && l_nI < 4; l_nI++) {
+        const Channel l_eC = g_arrInterpolated[l_nI];
+        const bool l_bAnimated = l_vTracksBefore[l_nI] > 0;
+        l_bOnlyAnimated &= l_bAnimated ? f_HasKeyAt(*l_pSlime, l_eC, 0.25f) && f_KeyCount(*l_pSlime, l_eC) == l_vTracksBefore[l_nI] + 1
+                                 : f_KeyCount(*l_pSlime, l_eC) == 0;
     }
-    ok &= check(onlyAnimated && keys->table()->rowCount() == rowsBefore + 1,
+    l_bOk &= f_Check(l_bOnlyAnimated && l_pKeys->f_Table()->rowCount() == l_iRowsBefore + 1,
                 "insert key at 0.25: keys slime's animated channels only (no new tracks)");
-    const int row = rowOf(keys, 0.25f);
-    ok &= check(row >= 0 && keys->commitCell(row, AnimKeyListDock::ColPos, QStringLiteral("5, -20")) &&
-                    toms::anim::positionAt(*doc->selectedNode(), 0.25f) == glm::vec3(5, -20, 0),
+    const int l_iRow = f_RowOf(l_pKeys, 0.25f);
+    l_bOk &= f_Check(l_iRow >= 0 && l_pKeys->f_CommitCell(l_iRow, AnimKeyListDock::ColPos, QStringLiteral("5, -20")) &&
+                    toms::anim::f_PositionAt(*l_pDoc->f_SelectedNode(), 0.25f) == glm::vec3(5, -20, 0),
                 "edit a key list cell (pos = 5, -20)");
-    ed->propertiesDock()->posXSpin()->setValue(7.0);   // a Properties edit with auto-key
-    processEvents();
-    ok &= check(toms::anim::positionAt(*doc->selectedNode(), 0.25f).x == 7.0f, "properties edit writes the key (pos.x = 7)");
-    int undos = 0;
-    while (doc->undoStack()->canUndo() && doc->toJson() != original && undos < 10) {
-        doc->undoStack()->undo();
-        undos++;
+    l_pEd->f_PropertiesDock()->f_PosXSpin()->setValue(7.0);   // a Properties edit with auto-key
+    f_ProcessEvents();
+    l_bOk &= f_Check(toms::anim::f_PositionAt(*l_pDoc->f_SelectedNode(), 0.25f).x == 7.0f, "properties edit writes the key (pos.x = 7)");
+    int l_iUndos = 0;
+    while (l_pDoc->f_UndoStack()->canUndo() && l_pDoc->f_ToJson() != l_oOriginal && l_iUndos < 10) {
+        l_pDoc->f_UndoStack()->undo();
+        l_iUndos++;
     }
-    processEvents();
-    ok &= check(doc->toJson() == original && !doc->isDirty() && undos == 3, "undo restores the file (3 steps)");
+    f_ProcessEvents();
+    l_bOk &= f_Check(l_pDoc->f_ToJson() == l_oOriginal && !l_pDoc->f_IsDirty() && l_iUndos == 3, "undo restores the file (3 steps)");
 
     // A viewport drag (Move tool, auto-key): click the gem, drag it in three steps = one undo step.
     {
-        AnimViewport* vp = ed->viewport();
-        doc->setTime(0.5f);
-        processEvents();
-        std::vector<toms::anim::NodePose> poses;
-        std::vector<AnimViewport::DrawItem> items;
-        vp->buildFrame(0.5f, poses, items, nullptr);
-        QPointF gem;
-        for (const AnimViewport::DrawItem& it : items)
-            if (const Node* n = nodeAt(doc->clip()->root, it.path); n && n->name == "gem")
-                gem = QPointF((it.quad.corners[0] + it.quad.corners[4]) / 2, (it.quad.corners[1] + it.quad.corners[5]) / 2);
-        const QPointF at = vp->widgetPos(gem);
-        const int stackBefore = doc->undoStack()->index();
-        auto send = [&](QEvent::Type type, const QPointF& p, Qt::MouseButtons buttons) {
-            QMouseEvent e(type, p, vp->mapToGlobal(p), Qt::LeftButton, buttons, Qt::NoModifier);
-            QCoreApplication::sendEvent(vp, &e);
+        AnimViewport* l_pVp = l_pEd->f_Viewport();
+        l_pDoc->f_SetTime(0.5f);
+        f_ProcessEvents();
+        std::vector<toms::anim::NodePose> l_vPoses;
+        std::vector<AnimViewport::DrawItem> l_vItems;
+        l_pVp->f_BuildFrame(0.5f, l_vPoses, l_vItems, nullptr);
+        QPointF l_oGem;
+        for (const AnimViewport::DrawItem& l_oIt : l_vItems)
+            if (const Node* l_pN = f_NodeAt(l_pDoc->f_Clip()->m_oRoot, l_oIt.m_vPath); l_pN && l_pN->m_strName == "gem")
+                l_oGem = QPointF((l_oIt.m_oQuad.m_arrCorners[0] + l_oIt.m_oQuad.m_arrCorners[4]) / 2, (l_oIt.m_oQuad.m_arrCorners[1] + l_oIt.m_oQuad.m_arrCorners[5]) / 2);
+        const QPointF l_oAt = l_pVp->f_WidgetPos(l_oGem);
+        const int l_iStackBefore = l_pDoc->f_UndoStack()->index();
+        auto l_fnSend = [&](QEvent::Type l_eType, const QPointF& l_oP, Qt::MouseButtons l_oButtons) {
+            QMouseEvent l_oE(l_eType, l_oP, l_pVp->mapToGlobal(l_oP), Qt::LeftButton, l_oButtons, Qt::NoModifier);
+            QCoreApplication::sendEvent(l_pVp, &l_oE);
         };
-        send(QEvent::MouseButtonPress, at, Qt::LeftButton);
-        for (int i = 1; i <= 3; i++) send(QEvent::MouseMove, at + QPointF(10 * i, 0), Qt::LeftButton);
-        send(QEvent::MouseButtonRelease, at + QPointF(30, 0), Qt::NoButton);
-        const Node* g = doc->selectedNode();
-        ok &= check(g && g->name == "gem" && hasKeyAt(*g, Channel::Pos, 0.5f) && doc->undoStack()->index() == stackBefore + 1,
+        l_fnSend(QEvent::MouseButtonPress, l_oAt, Qt::LeftButton);
+        for (int l_iI = 1; l_iI <= 3; l_iI++) l_fnSend(QEvent::MouseMove, l_oAt + QPointF(10 * l_iI, 0), Qt::LeftButton);
+        l_fnSend(QEvent::MouseButtonRelease, l_oAt + QPointF(30, 0), Qt::NoButton);
+        const Node* l_pG = l_pDoc->f_SelectedNode();
+        l_bOk &= f_Check(l_pG && l_pG->m_strName == "gem" && f_HasKeyAt(*l_pG, Channel::Pos, 0.5f) && l_pDoc->f_UndoStack()->index() == l_iStackBefore + 1,
                     "viewport: click selects gem, drag keys pos (1 undo step)");
-        if (g) std::printf("selftest:   gem pos key at 0.5: %.3f, %.3f\n", toms::anim::positionAt(*g, 0.5f).x, toms::anim::positionAt(*g, 0.5f).y);
-        doc->undoStack()->undo();
-        ok &= check(doc->toJson() == original, "drag undone");
-        doc->selectNodeByName(QStringLiteral("slime"));
-        processEvents();
+        if (l_pG) std::printf("selftest:   gem pos key at 0.5: %.3f, %.3f\n", toms::anim::f_PositionAt(*l_pG, 0.5f).x, toms::anim::f_PositionAt(*l_pG, 0.5f).y);
+        l_pDoc->f_UndoStack()->undo();
+        l_bOk &= f_Check(l_pDoc->f_ToJson() == l_oOriginal, "drag undone");
+        l_pDoc->f_SelectNodeByName(QStringLiteral("slime"));
+        f_ProcessEvents();
     }
 
     // 3. Key list tools, each undone.
-    keys->selectRows({0, 1, 2});
-    keys->fadeIn();
-    slime = doc->selectedNode();
-    ok &= check(slime && slime->colorKeys.size() == 3 && slime->colorKeys[0].v.a == 0.0f && std::fabs(slime->colorKeys[1].v.a - 0.5f) < 1e-6f &&
-                    slime->colorKeys[2].v.a == 1.0f,
+    l_pKeys->f_SelectRows({0, 1, 2});
+    l_pKeys->f_FadeIn();
+    l_pSlime = l_pDoc->f_SelectedNode();
+    l_bOk &= f_Check(l_pSlime && l_pSlime->m_vColorKeys.size() == 3 && l_pSlime->m_vColorKeys[0].m_oV.a == 0.0f && std::fabs(l_pSlime->m_vColorKeys[1].m_oV.a - 0.5f) < 1e-6f &&
+                    l_pSlime->m_vColorKeys[2].m_oV.a == 1.0f,
                 "fade in over 3 rows (alpha 0, 0.5, 1)");
-    doc->undoStack()->undo();
-    ed->spritesDock()->selectSprites({QStringLiteral("bat"), QStringLiteral("slime")});
-    keys->selectRows({0, 1, 2});
-    keys->spriteSequence();
-    slime = doc->selectedNode();
-    ok &= check(slime && slime->spriteKeys.size() == 3 && slime->spriteKeys[0].v == "game:bat" && slime->spriteKeys[1].v == "game:slime",
+    l_pDoc->f_UndoStack()->undo();
+    l_pEd->f_SpritesDock()->f_SelectSprites({QStringLiteral("bat"), QStringLiteral("slime")});
+    l_pKeys->f_SelectRows({0, 1, 2});
+    l_pKeys->f_SpriteSequence();
+    l_pSlime = l_pDoc->f_SelectedNode();
+    l_bOk &= f_Check(l_pSlime && l_pSlime->m_vSpriteKeys.size() == 3 && l_pSlime->m_vSpriteKeys[0].m_oV == "game:bat" && l_pSlime->m_vSpriteKeys[1].m_oV == "game:slime",
                 "sprite sequence (bat, slime, bat), stored with the atlas");
-    doc->undoStack()->undo();
-    QString conflict;
-    ok &= check(!doc->moveRows({0.5f}, {1.0f}, &conflict) && !conflict.isEmpty(), "set time refuses a clash");
-    ok &= check(doc->moveRows({0.5f}, {0.4f}, &conflict), "set time 0.5 -> 0.4");
-    doc->undoStack()->undo();
-    ok &= check(doc->toJson() == original, "tools undone");
+    l_pDoc->f_UndoStack()->undo();
+    QString l_oConflict;
+    l_bOk &= f_Check(!l_pDoc->f_MoveRows({0.5f}, {1.0f}, &l_oConflict) && !l_oConflict.isEmpty(), "set time refuses a clash");
+    l_bOk &= f_Check(l_pDoc->f_MoveRows({0.5f}, {0.4f}, &l_oConflict), "set time 0.5 -> 0.4");
+    l_pDoc->f_UndoStack()->undo();
+    l_bOk &= f_Check(l_pDoc->f_ToJson() == l_oOriginal, "tools undone");
 
     // 4. Play from 0 to 0.5 (AnimPlayer semantics; the 'hit' event at 0.5 fires).
-    QStringList fired;
-    QObject::connect(ed->transport(), &AnimTransport::eventsFired, ed, [&](const QStringList& n, float) { fired << n; });
-    doc->setTime(0);
-    ed->transport()->play();
-    ed->transport()->advance(500);
-    ed->transport()->pause();
-    processEvents();
-    ok &= check(std::fabs(doc->time() - 0.5f) < 1e-4f && fired.contains(QStringLiteral("hit")), "play to t=0.5 fires 'hit'");
+    QStringList l_oFired;
+    QObject::connect(l_pEd->f_Transport(), &AnimTransport::f_EventsFired, l_pEd, [&](const QStringList& l_oN, float) { l_oFired << l_oN; });
+    l_pDoc->f_SetTime(0);
+    l_pEd->f_Transport()->f_Play();
+    l_pEd->f_Transport()->f_Advance(500);
+    l_pEd->f_Transport()->f_Pause();
+    f_ProcessEvents();
+    l_bOk &= f_Check(std::fabs(l_pDoc->f_Time() - 0.5f) < 1e-4f && l_oFired.contains(QStringLiteral("hit")), "play to t=0.5 fires 'hit'");
 
     // 4b. A looping node keeps playing after the clip's end: the playhead stays at the end (edits go
     // there), the viewport draws a later time; pausing goes back to the playhead.
     {
-        const QString before = doc->toJson();
-        doc->editClip(QStringLiteral("loop root"), [](toms::anim::Clip& c) { c.root.loop = true; c.playCount = 1; });
-        const bool clipLoop = ed->transport()->loopAction()->isChecked();
-        ed->transport()->loopAction()->setChecked(false);   // the clip plays once, its node loops
-        const float d = doc->duration();
-        doc->setTime(0);
-        ed->transport()->play();
-        ed->transport()->advance(int(d * 1000) + 700);
-        processEvents();
-        ok &= check(ed->transport()->isPlaying() && std::fabs(doc->time() - d) < 1e-4f && doc->previewTime() > d + 0.6f,
+        const QString l_oBefore = l_pDoc->f_ToJson();
+        l_pDoc->f_EditClip(QStringLiteral("loop root"), [](toms::anim::Clip& l_oC) { l_oC.m_oRoot.m_bLoop = true; l_oC.m_iPlayCount = 1; });
+        const bool l_bClipLoop = l_pEd->f_Transport()->f_LoopAction()->isChecked();
+        l_pEd->f_Transport()->f_LoopAction()->setChecked(false);   // the clip plays once, its node loops
+        const float l_fD = l_pDoc->f_Duration();
+        l_pDoc->f_SetTime(0);
+        l_pEd->f_Transport()->f_Play();
+        l_pEd->f_Transport()->f_Advance(int(l_fD * 1000) + 700);
+        f_ProcessEvents();
+        l_bOk &= f_Check(l_pEd->f_Transport()->f_IsPlaying() && std::fabs(l_pDoc->f_Time() - l_fD) < 1e-4f && l_pDoc->f_PreviewTime() > l_fD + 0.6f,
                     "loop node: playback runs on past the end (playhead at the end, preview later)");
-        ed->transport()->pause();
-        ok &= check(doc->previewTime() == doc->time(), "pause: the preview is the playhead again");
-        doc->undoStack()->undo();
-        ok &= check(doc->toJson() == before, "loop undone");
-        ed->transport()->loopAction()->setChecked(clipLoop);
+        l_pEd->f_Transport()->f_Pause();
+        l_bOk &= f_Check(l_pDoc->f_PreviewTime() == l_pDoc->f_Time(), "pause: the preview is the playhead again");
+        l_pDoc->f_UndoStack()->undo();
+        l_bOk &= f_Check(l_pDoc->f_ToJson() == l_oBefore, "loop undone");
+        l_pEd->f_Transport()->f_LoopAction()->setChecked(l_bClipLoop);
     }
 
     // 4c. Clips dock: double-click opens a clip; a changed clip asks to discard its changes first.
     {
-        AnimClipsDock* clips = ed->clipsDock();
-        const int start = doc->undoStack()->index();
-        const int home = doc->clipIndex();
-        const size_t clipCount = doc->file().clips.size();
-        doc->addClip(QStringLiteral("other"));
-        const int other = doc->clipIndex();
-        ok &= check(!doc->clipModified() && clips->openClip(home) && doc->clipIndex() == home,
+        AnimClipsDock* l_pClips = l_pEd->f_ClipsDock();
+        const int l_iStart = l_pDoc->f_UndoStack()->index();
+        const int l_iHome = l_pDoc->f_ClipIndex();
+        const size_t l_nClipCount = l_pDoc->f_File().m_vClips.size();
+        l_pDoc->f_AddClip(QStringLiteral("other"));
+        const int l_iOther = l_pDoc->f_ClipIndex();
+        l_bOk &= f_Check(!l_pDoc->f_ClipModified() && l_pClips->f_OpenClip(l_iHome) && l_pDoc->f_ClipIndex() == l_iHome,
                     "open a clip: an unchanged clip switches without asking");
-        doc->editClip(QStringLiteral("len"), [](toms::anim::Clip& c) { c.length = 2.5f; });
-        ok &= check(doc->clipModified(), "an edit marks the clip changed");
-        ok &= check(!clips->openClip(other, 0) && doc->clipIndex() == home && doc->clipModified(),
+        l_pDoc->f_EditClip(QStringLiteral("len"), [](toms::anim::Clip& l_oC) { l_oC.m_fLength = 2.5f; });
+        l_bOk &= f_Check(l_pDoc->f_ClipModified(), "an edit marks the clip changed");
+        l_bOk &= f_Check(!l_pClips->f_OpenClip(l_iOther, 0) && l_pDoc->f_ClipIndex() == l_iHome && l_pDoc->f_ClipModified(),
                     "No: stays on the changed clip, changes kept");
-        ok &= check(clips->openClip(other, 1) && doc->clipIndex() == other, "Yes: opens the other clip");
-        ok &= check(doc->file().clips[size_t(home)].length != 2.5f, "Yes: the changes to the first clip are discarded");
-        doc->undoStack()->undo();
-        ok &= check(doc->file().clips[size_t(home)].length == 2.5f, "undo brings the discarded changes back");
-        doc->setClipIndex(home);
-        doc->deleteClip(other);
-        ok &= check(doc->clipIndex() == home, "deleting another clip keeps the open one");
-        doc->undoStack()->setIndex(start);
-        doc->setClipIndex(home);
-        ok &= check(doc->file().clips.size() == clipCount && doc->clipIndex() == home, "clips test undone");
+        l_bOk &= f_Check(l_pClips->f_OpenClip(l_iOther, 1) && l_pDoc->f_ClipIndex() == l_iOther, "Yes: opens the other clip");
+        l_bOk &= f_Check(l_pDoc->f_File().m_vClips[size_t(l_iHome)].m_fLength != 2.5f, "Yes: the changes to the first clip are discarded");
+        l_pDoc->f_UndoStack()->undo();
+        l_bOk &= f_Check(l_pDoc->f_File().m_vClips[size_t(l_iHome)].m_fLength == 2.5f, "undo brings the discarded changes back");
+        l_pDoc->f_SetClipIndex(l_iHome);
+        l_pDoc->f_DeleteClip(l_iOther);
+        l_bOk &= f_Check(l_pDoc->f_ClipIndex() == l_iHome, "deleting another clip keeps the open one");
+        l_pDoc->f_UndoStack()->setIndex(l_iStart);
+        l_pDoc->f_SetClipIndex(l_iHome);
+        l_bOk &= f_Check(l_pDoc->f_File().m_vClips.size() == l_nClipCount && l_pDoc->f_ClipIndex() == l_iHome, "clips test undone");
     }
 
     // 4d. Automatic backups: after `edits` edits a copy goes to the backups folder; only `keep` stay;
     // the copy opens (absolute atlas paths). The user's settings are put back afterwards.
     {
-        const AutoBackup::Settings saved = AutoBackup::settings();
-        AutoBackup::setSettings({true, 60, 3, 2});
-        const QString dir = QDir(AutoBackup::folder()).filePath(QFileInfo(doc->filePath()).completeBaseName());
-        QDir(dir).removeRecursively();
-        auto count = [&] { return int(QDir(dir).entryList({QStringLiteral("*.anim")}, QDir::Files).size()); };
-        const int start = doc->undoStack()->index();
-        for (int i = 1; i <= 2; i++) doc->editClip(QStringLiteral("b"), [i](toms::anim::Clip& c) { c.length = 1.0f + 0.1f * float(i); });
-        ok &= check(count() == 0, "backup: not before 3 edits");
-        doc->editClip(QStringLiteral("b"), [](toms::anim::Clip& c) { c.length = 1.3f; });
-        ok &= check(count() == 1, "backup: written after 3 edits");
-        for (int i = 4; i <= 9; i++) doc->editClip(QStringLiteral("b"), [i](toms::anim::Clip& c) { c.length = 1.0f + 0.1f * float(i); });
-        ok &= check(count() == 2, "backup: only the newest 2 are kept");
-        const QStringList files = QDir(dir).entryList({QStringLiteral("*.anim")}, QDir::Files, QDir::Name);
-        toms::anim::AnimFile back;
-        std::string err;
-        QFile f(QDir(dir).filePath(files.isEmpty() ? QString() : files.last()));
-        ok &= check(f.open(QIODevice::ReadOnly) && toms::anim::parseAnim(f.readAll().toStdString(), back, &err) &&
-                        !back.atlases.empty() && QDir::isAbsolutePath(QString::fromStdString(back.atlases[0].path)) &&
-                        std::fabs(back.clips[size_t(doc->clipIndex())].length - 1.9f) < 1e-4f,
+        const AutoBackup::Settings l_oSaved = AutoBackup::f_Settings();
+        AutoBackup::f_SetSettings({true, 60, 3, 2});
+        const QString l_oDir = QDir(AutoBackup::f_Folder()).filePath(QFileInfo(l_pDoc->f_FilePath()).completeBaseName());
+        QDir(l_oDir).removeRecursively();
+        auto l_fnCount = [&] { return int(QDir(l_oDir).entryList({QStringLiteral("*.anim")}, QDir::Files).size()); };
+        const int l_iStart = l_pDoc->f_UndoStack()->index();
+        for (int l_iI = 1; l_iI <= 2; l_iI++) l_pDoc->f_EditClip(QStringLiteral("b"), [l_iI](toms::anim::Clip& l_oC) { l_oC.m_fLength = 1.0f + 0.1f * float(l_iI); });
+        l_bOk &= f_Check(l_fnCount() == 0, "backup: not before 3 edits");
+        l_pDoc->f_EditClip(QStringLiteral("b"), [](toms::anim::Clip& l_oC) { l_oC.m_fLength = 1.3f; });
+        l_bOk &= f_Check(l_fnCount() == 1, "backup: written after 3 edits");
+        for (int l_iI = 4; l_iI <= 9; l_iI++) l_pDoc->f_EditClip(QStringLiteral("b"), [l_iI](toms::anim::Clip& l_oC) { l_oC.m_fLength = 1.0f + 0.1f * float(l_iI); });
+        l_bOk &= f_Check(l_fnCount() == 2, "backup: only the newest 2 are kept");
+        const QStringList l_oFiles = QDir(l_oDir).entryList({QStringLiteral("*.anim")}, QDir::Files, QDir::Name);
+        toms::anim::AnimFile l_oBack;
+        std::string l_strErr;
+        QFile l_oF(QDir(l_oDir).filePath(l_oFiles.isEmpty() ? QString() : l_oFiles.last()));
+        l_bOk &= f_Check(l_oF.open(QIODevice::ReadOnly) && toms::anim::f_ParseAnim(l_oF.readAll().toStdString(), l_oBack, &l_strErr) &&
+                        !l_oBack.m_vAtlases.empty() && QDir::isAbsolutePath(QString::fromStdString(l_oBack.m_vAtlases[0].m_strPath)) &&
+                        std::fabs(l_oBack.m_vClips[size_t(l_pDoc->f_ClipIndex())].m_fLength - 1.9f) < 1e-4f,
                     "backup: the newest copy has the last edit and absolute atlas paths");
-        f.close();
-        doc->undoStack()->setIndex(start);
-        QDir(dir).removeRecursively();
-        AutoBackup::setSettings(saved);
+        l_oF.close();
+        l_pDoc->f_UndoStack()->setIndex(l_iStart);
+        QDir(l_oDir).removeRecursively();
+        AutoBackup::f_SetSettings(l_oSaved);
     }
 
     // 5. Screenshots.
-    processEvents();
-    ok &= check(w.grab().save(QDir(outDir).filePath(QStringLiteral("main.png"))), "main.png");
-    keys->raise();
-    keys->selectRows({1});
-    processEvents();
-    ok &= check(w.grab().save(QDir(outDir).filePath(QStringLiteral("keylist.png"))), "keylist.png");
-    if (auto* problems = w.findChild<QDockWidget*>(QStringLiteral("AnimProblemsDock"))) {
-        problems->raise();
-        processEvents();
-        ok &= check(problems->grab().save(QDir(outDir).filePath(QStringLiteral("problems.png"))), "problems.png");
-        keys->raise();
+    f_ProcessEvents();
+    l_bOk &= f_Check(l_oW.grab().save(QDir(l_oOutDir).filePath(QStringLiteral("main.png"))), "main.png");
+    l_pKeys->raise();
+    l_pKeys->f_SelectRows({1});
+    f_ProcessEvents();
+    l_bOk &= f_Check(l_oW.grab().save(QDir(l_oOutDir).filePath(QStringLiteral("keylist.png"))), "keylist.png");
+    if (auto* l_pProblems = l_oW.findChild<QDockWidget*>(QStringLiteral("AnimProblemsDock"))) {
+        l_pProblems->raise();
+        f_ProcessEvents();
+        l_bOk &= f_Check(l_pProblems->grab().save(QDir(l_oOutDir).filePath(QStringLiteral("problems.png"))), "problems.png");
+        l_pKeys->raise();
     }
     {
-        toms::anim::Ease e;
-        e.kind = toms::anim::Ease::kBezier;
-        const float b[4] = {0.34f, 1.56f, 0.64f, 1.0f};
-        std::copy(b, b + 4, e.bezier);
-        BezierDialog dlg(e, &w);
-        dlg.show();
-        processEvents();
-        ok &= check(dlg.grab().save(QDir(outDir).filePath(QStringLiteral("bezier.png"))), "bezier.png");
+        toms::anim::Ease l_oE;
+        l_oE.m_iKind = toms::anim::Ease::m_iBezier;
+        const float l_arrB[4] = {0.34f, 1.56f, 0.64f, 1.0f};
+        std::copy(l_arrB, l_arrB + 4, l_oE.m_arrBezier);
+        BezierDialog l_oDlg(l_oE, &l_oW);
+        l_oDlg.show();
+        f_ProcessEvents();
+        l_bOk &= f_Check(l_oDlg.grab().save(QDir(l_oOutDir).filePath(QStringLiteral("bezier.png"))), "bezier.png");
     }
-    w.setDarkTheme(false);
-    processEvents();
-    ok &= check(w.grab().save(QDir(outDir).filePath(QStringLiteral("light.png"))), "light.png");
-    w.setDarkTheme(true);
+    l_oW.f_SetDarkTheme(false);
+    f_ProcessEvents();
+    l_bOk &= f_Check(l_oW.grab().save(QDir(l_oOutDir).filePath(QStringLiteral("light.png"))), "light.png");
+    l_oW.f_SetDarkTheme(true);
 
     // 6. Save As into outDir and reopen: the same file (the atlas paths are rebased).
-    const QString saveDir = QDir(outDir).filePath(QStringLiteral("saveas"));
-    QDir(saveDir).removeRecursively();
-    QDir().mkpath(saveDir);
-    const QString saved = QDir(saveDir).filePath(QFileInfo(file).fileName());
-    ok &= check(ed->saveTo(saved) && !doc->isDirty(), "save as");
-    const QString before = doc->toJson();
-    const QStringList atlasesBefore = doc->atlasPaths();
-    ok &= check(ed->openFile(saved, false) && doc->toJson() == before && doc->atlasLoaded() && doc->atlasPaths() == atlasesBefore,
+    const QString l_oSaveDir = QDir(l_oOutDir).filePath(QStringLiteral("saveas"));
+    QDir(l_oSaveDir).removeRecursively();
+    QDir().mkpath(l_oSaveDir);
+    const QString l_oSaved = QDir(l_oSaveDir).filePath(QFileInfo(l_oFile).fileName());
+    l_bOk &= f_Check(l_pEd->f_SaveTo(l_oSaved) && !l_pDoc->f_IsDirty(), "save as");
+    const QString l_oBefore = l_pDoc->f_ToJson();
+    const QStringList l_oAtlasesBefore = l_pDoc->f_AtlasPaths();
+    l_bOk &= f_Check(l_pEd->f_OpenFile(l_oSaved, false) && l_pDoc->f_ToJson() == l_oBefore && l_pDoc->f_AtlasLoaded() && l_pDoc->f_AtlasPaths() == l_oAtlasesBefore,
                 "reopen: animToJson equal, atlas found");
-    std::string text;
-    toms::anim::AnimFile reparsed;
-    ok &= check(readTextFile(saved.toStdString(), text) && toms::anim::parseAnim(text, reparsed) &&
-                    QString::fromStdString(toms::anim::animToJson(reparsed)) == before,
+    std::string l_strText;
+    toms::anim::AnimFile l_oReparsed;
+    l_bOk &= f_Check(f_ReadTextFile(l_oSaved.toStdString(), l_strText) && toms::anim::f_ParseAnim(l_strText, l_oReparsed) &&
+                    QString::fromStdString(toms::anim::f_AnimToJson(l_oReparsed)) == l_oBefore,
                 "saved file parses back to the same JSON");
-    std::printf("selftest: saved %s (atlases %s)\n", QDir::toNativeSeparators(saved).toUtf8().constData(),
-                reparsed.atlases.empty() ? "none" : reparsed.atlases.front().path.c_str());
+    std::printf("selftest: saved %s (atlases %s)\n", QDir::toNativeSeparators(l_oSaved).toUtf8().constData(),
+                l_oReparsed.m_vAtlases.empty() ? "none" : l_oReparsed.m_vAtlases.front().m_strPath.c_str());
 
     // The file on disk: an "atlases" array of `expected` relative paths that exist, no "atlas".
-    auto storedRelative = [](const QString& path, int expected) {
-        QFile f(path);
-        if (!f.open(QIODevice::ReadOnly)) return false;
-        const QJsonObject o = QJsonDocument::fromJson(f.readAll()).object();
-        const QJsonArray a = o.value(QStringLiteral("atlases")).toArray();
-        if (o.contains(QStringLiteral("atlas")) || a.size() != expected) return false;
-        for (const QJsonValue& v : a) {
-            const QString p = v.toString();
-            if (p.isEmpty() || QDir::isAbsolutePath(p) || isAbsoluteAtlasPath(p.toStdString()) ||
-                !QFileInfo::exists(QFileInfo(path).absoluteDir().filePath(p)))
+    auto l_fnStoredRelative = [](const QString& l_oPath, int l_iExpected) {
+        QFile l_oF(l_oPath);
+        if (!l_oF.open(QIODevice::ReadOnly)) return false;
+        const QJsonObject l_oO = QJsonDocument::fromJson(l_oF.readAll()).object();
+        const QJsonArray l_oA = l_oO.value(QStringLiteral("atlases")).toArray();
+        if (l_oO.contains(QStringLiteral("atlas")) || l_oA.size() != l_iExpected) return false;
+        for (const QJsonValue& l_oV : l_oA) {
+            const QString l_oP = l_oV.toString();
+            if (l_oP.isEmpty() || QDir::isAbsolutePath(l_oP) || f_IsAbsoluteAtlasPath(l_oP.toStdString()) ||
+                !QFileInfo::exists(QFileInfo(l_oPath).absoluteDir().filePath(l_oP)))
                 return false;
         }
         return true;
     };
-    auto writeFile = [](const QString& path, const QByteArray& bytes) {
-        QFile f(path);
-        return f.open(QIODevice::WriteOnly | QIODevice::Truncate) && f.write(bytes) == bytes.size();
+    auto l_fnWriteFile = [](const QString& l_oPath, const QByteArray& l_oBytes) {
+        QFile l_oF(l_oPath);
+        return l_oF.open(QIODevice::WriteOnly | QIODevice::Truncate) && l_oF.write(l_oBytes) == l_oBytes.size();
     };
-    auto hasProblem = [&](Problem::Level level, const QString& a, const QString& b) {
-        for (const Problem& p : checkAnim(doc->file(), doc->checkAtlases())) {
-            const QString m = QString::fromStdString(p.message);
-            if (p.level == level && m.contains(a) && m.contains(b)) return true;
+    auto l_fnHasProblem = [&](Problem::Level l_eLevel, const QString& l_oA, const QString& l_oB) {
+        for (const Problem& l_oP : f_CheckAnim(l_pDoc->f_File(), l_pDoc->f_CheckAtlases())) {
+            const QString l_oM = QString::fromStdString(l_oP.m_strMessage);
+            if (l_oP.m_eLevel == l_eLevel && l_oM.contains(l_oA) && l_oM.contains(l_oB)) return true;
         }
         return false;
     };
-    const QString gameAtlas = doc->atlasPaths().value(0);
-    ok &= check(storedRelative(saved, 1), "(a) saved file: \"atlases\" with relative paths only");
+    const QString l_oGameAtlas = l_pDoc->f_AtlasPaths().value(0);
+    l_bOk &= f_Check(l_fnStoredRelative(l_oSaved, 1), "(a) saved file: \"atlases\" with relative paths only");
 
     // (b) Save As onto another drive than the atlas: refused, nothing written.
     {
-        const QString other = QDir(QDir::tempPath()).filePath(QStringLiteral("toms_anim_selftest_other_drive.anim"));
-        QFile::remove(other);
-        if (QDir::isAbsolutePath(QDir(QDir::tempPath()).relativeFilePath(gameAtlas))) {
-            QString err;
-            ok &= check(!doc->save(other, &err) && !QFileInfo::exists(other) && doc->filePath() == QFileInfo(saved).absoluteFilePath() &&
-                            err.contains(QStringLiteral("game.atlas")),
+        const QString l_oOther = QDir(QDir::tempPath()).filePath(QStringLiteral("toms_anim_selftest_other_drive.anim"));
+        QFile::remove(l_oOther);
+        if (QDir::isAbsolutePath(QDir(QDir::tempPath()).relativeFilePath(l_oGameAtlas))) {
+            QString l_oErr;
+            l_bOk &= f_Check(!l_pDoc->f_Save(l_oOther, &l_oErr) && !QFileInfo::exists(l_oOther) && l_pDoc->f_FilePath() == QFileInfo(l_oSaved).absoluteFilePath() &&
+                            l_oErr.contains(QStringLiteral("game.atlas")),
                         "(b) Save As to another drive is refused");
-            std::printf("selftest:   \"%s\"\n", err.section(QLatin1Char('\n'), 0, 0).toUtf8().constData());
-            ok &= check(!ed->saveTo(other) && !QFileInfo::exists(other), "(b) ... through the editor too");
+            std::printf("selftest:   \"%s\"\n", l_oErr.section(QLatin1Char('\n'), 0, 0).toUtf8().constData());
+            l_bOk &= f_Check(!l_pEd->f_SaveTo(l_oOther) && !QFileInfo::exists(l_oOther), "(b) ... through the editor too");
         } else {
             std::printf("selftest: (b) skipped: the temp folder is on the atlas's drive\n");
         }
@@ -779,898 +779,898 @@ int runSelfTest(AnimMainWindow& w, const QString& file, const QString& outDir)
     // An older file's single "atlas" opens and saves as "atlases"; an absolute path is warned
     // about and stored relative on save.
     {
-        QFile in(saved);
-        in.open(QIODevice::ReadOnly);
-        QJsonObject o = QJsonDocument::fromJson(in.readAll()).object();
-        in.close();
-        const QString rel = o.value(QStringLiteral("atlases")).toArray().at(0).toString();
-        o.remove(QStringLiteral("atlases"));
-        o.insert(QStringLiteral("atlas"), rel);
-        const QString legacy = QDir(workDir).filePath(QStringLiteral("legacy.anim"));
-        writeFile(legacy, QJsonDocument(o).toJson());
-        ok &= check(ed->openFile(legacy, false) && doc->atlasCount() == 1 && doc->atlasLoaded(), "old file (\"atlas\": \"...\") opens");
-        ok &= check(ed->saveTo(legacy) && storedRelative(legacy, 1), "... and saves \"atlases\"");
-        o.remove(QStringLiteral("atlas"));
-        o.insert(QStringLiteral("atlases"), QJsonArray{gameAtlas});
-        const QString absFile = QDir(workDir).filePath(QStringLiteral("absolute.anim"));
-        writeFile(absFile, QJsonDocument(o).toJson());
-        ok &= check(ed->openFile(absFile, false) && doc->atlasLoaded() && doc->atlasPathIsAbsoluteInFile(0),
+        QFile l_oIn(l_oSaved);
+        l_oIn.open(QIODevice::ReadOnly);
+        QJsonObject l_oO = QJsonDocument::fromJson(l_oIn.readAll()).object();
+        l_oIn.close();
+        const QString l_oRel = l_oO.value(QStringLiteral("atlases")).toArray().at(0).toString();
+        l_oO.remove(QStringLiteral("atlases"));
+        l_oO.insert(QStringLiteral("atlas"), l_oRel);
+        const QString l_oLegacy = QDir(l_oWorkDir).filePath(QStringLiteral("legacy.anim"));
+        l_fnWriteFile(l_oLegacy, QJsonDocument(l_oO).toJson());
+        l_bOk &= f_Check(l_pEd->f_OpenFile(l_oLegacy, false) && l_pDoc->f_AtlasCount() == 1 && l_pDoc->f_AtlasLoaded(), "old file (\"atlas\": \"...\") opens");
+        l_bOk &= f_Check(l_pEd->f_SaveTo(l_oLegacy) && l_fnStoredRelative(l_oLegacy, 1), "... and saves \"atlases\"");
+        l_oO.remove(QStringLiteral("atlas"));
+        l_oO.insert(QStringLiteral("atlases"), QJsonArray{l_oGameAtlas});
+        const QString l_oAbsFile = QDir(l_oWorkDir).filePath(QStringLiteral("absolute.anim"));
+        l_fnWriteFile(l_oAbsFile, QJsonDocument(l_oO).toJson());
+        l_bOk &= f_Check(l_pEd->f_OpenFile(l_oAbsFile, false) && l_pDoc->f_AtlasLoaded() && l_pDoc->f_AtlasPathIsAbsoluteInFile(0),
                     "absolute atlas path: the file opens, the atlas loads");
-        ok &= check(hasProblem(Problem::Warning, QStringLiteral("absolute atlas path"), QStringLiteral("relative")),
+        l_bOk &= f_Check(l_fnHasProblem(Problem::Warning, QStringLiteral("absolute atlas path"), QStringLiteral("relative")),
                     "... Problems: 'absolute atlas path' warning");
-        ok &= check(ed->saveTo(absFile) && storedRelative(absFile, 1) && !doc->atlasPathIsAbsoluteInFile(0) &&
-                        !hasProblem(Problem::Warning, QStringLiteral("absolute atlas path"), QString()),
+        l_bOk &= f_Check(l_pEd->f_SaveTo(l_oAbsFile) && l_fnStoredRelative(l_oAbsFile, 1) && !l_pDoc->f_AtlasPathIsAbsoluteInFile(0) &&
+                        !l_fnHasProblem(Problem::Warning, QStringLiteral("absolute atlas path"), QString()),
                     "... stored relative on save, warning gone");
     }
 
     // (c) Two atlases: a small second one with a sprite game.atlas lacks (spark) and a name it
     // has too (coin).
     {
-        ok &= check(ed->openFile(work, false) && doc->atlasCount() == 1, "reopen the scratch copy");
-        const QString extraDir = QDir(workDir).filePath(QStringLiteral("extra"));
-        QDir().mkpath(extraDir);
-        QImage page(32, 16, QImage::Format_ARGB32);
-        page.fill(Qt::transparent);
+        l_bOk &= f_Check(l_pEd->f_OpenFile(l_oWork, false) && l_pDoc->f_AtlasCount() == 1, "reopen the scratch copy");
+        const QString l_oExtraDir = QDir(l_oWorkDir).filePath(QStringLiteral("extra"));
+        QDir().mkpath(l_oExtraDir);
+        QImage l_oPage(32, 16, QImage::Format_ARGB32);
+        l_oPage.fill(Qt::transparent);
         {
-            QPainter p(&page);
-            p.setRenderHint(QPainter::Antialiasing);
-            p.setBrush(QColor(90, 210, 255));
-            p.setPen(Qt::NoPen);
-            p.drawPolygon(QPolygonF({QPointF(8, 0), QPointF(10, 6), QPointF(16, 8), QPointF(10, 10), QPointF(8, 16), QPointF(6, 10),
+            QPainter l_oP(&l_oPage);
+            l_oP.setRenderHint(QPainter::Antialiasing);
+            l_oP.setBrush(QColor(90, 210, 255));
+            l_oP.setPen(Qt::NoPen);
+            l_oP.drawPolygon(QPolygonF({QPointF(8, 0), QPointF(10, 6), QPointF(16, 8), QPointF(10, 10), QPointF(8, 16), QPointF(6, 10),
                                      QPointF(0, 8), QPointF(6, 6)}));
-            p.fillRect(QRect(18, 2, 12, 12), QColor(255, 60, 200));
+            l_oP.fillRect(QRect(18, 2, 12, 12), QColor(255, 60, 200));
         }
-        const QString extra = QDir(extraDir).filePath(QStringLiteral("extra.atlas"));
-        ok &= check(page.save(QDir(extraDir).filePath(QStringLiteral("extra.png"))) &&
-                        writeFile(extra, "extra.png\nsize: 32, 16\nformat: RGBA8888\nfilter: Nearest, Nearest\nrepeat: none\n"
+        const QString l_oExtra = QDir(l_oExtraDir).filePath(QStringLiteral("extra.atlas"));
+        l_bOk &= f_Check(l_oPage.save(QDir(l_oExtraDir).filePath(QStringLiteral("extra.png"))) &&
+                        l_fnWriteFile(l_oExtra, "extra.png\nsize: 32, 16\nformat: RGBA8888\nfilter: Nearest, Nearest\nrepeat: none\n"
                                          "spark\n  bounds: 0, 0, 16, 16\ncoin\n  bounds: 16, 0, 16, 16\n"),
                     "(c) write extra.atlas + extra.png");
-        const int stack = doc->undoStack()->index();
-        ok &= check(ed->addAtlasFile(extra) && doc->atlasCount() == 2 && doc->atlasLoaded() && doc->undoStack()->index() == stack + 1,
+        const int l_iStack = l_pDoc->f_UndoStack()->index();
+        l_bOk &= f_Check(l_pEd->f_AddAtlasFile(l_oExtra) && l_pDoc->f_AtlasCount() == 2 && l_pDoc->f_AtlasLoaded() && l_pDoc->f_UndoStack()->index() == l_iStack + 1,
                     "(c) add it as the second atlas (1 undo step)");
-        int ai = -1, bi = -1;
-        ok &= check(doc->findSprite("coin", &ai) && ai == 0 && doc->findSprite("spark", &bi) && bi == 1,
+        int l_iAi = -1, l_iBi = -1;
+        l_bOk &= f_Check(l_pDoc->f_FindSprite("coin", &l_iAi) && l_iAi == 0 && l_pDoc->f_FindSprite("spark", &l_iBi) && l_iBi == 1,
                     "(c) lookup order: coin from game.atlas, spark from extra.atlas");
-        ok &= check(doc->spriteNames().contains(QStringLiteral("spark")) && doc->spriteNames().count(QStringLiteral("coin")) == 1,
+        l_bOk &= f_Check(l_pDoc->f_SpriteNames().contains(QStringLiteral("spark")) && l_pDoc->f_SpriteNames().count(QStringLiteral("coin")) == 1,
                     "(c) Sprites: names of both atlases");
-        ok &= check(doc->atlasId(0) == QLatin1String("game") && doc->atlasId(1) == QLatin1String("extra"), "(c) atlas ids: game, extra");
-        ok &= check(doc->addSpriteNode(NodePath(), QStringLiteral("extra:spark"), glm::vec2(0, 72)) && doc->selectedNode() &&
-                        doc->selectedNode()->name == "spark",
+        l_bOk &= f_Check(l_pDoc->f_AtlasId(0) == QLatin1String("game") && l_pDoc->f_AtlasId(1) == QLatin1String("extra"), "(c) atlas ids: game, extra");
+        l_bOk &= f_Check(l_pDoc->f_AddSpriteNode(NodePath(), QStringLiteral("extra:spark"), glm::vec2(0, 72)) && l_pDoc->f_SelectedNode() &&
+                        l_pDoc->f_SelectedNode()->m_strName == "spark",
                     "(c) add a node with 'extra:spark' (named spark)");
-        std::vector<toms::anim::NodePose> poses;
-        std::vector<AnimViewport::DrawItem> items;
-        ed->viewport()->buildFrame(0.0f, poses, items, nullptr);
-        bool spark = false, coin = false;
-        for (const AnimViewport::DrawItem& it : items) {
-            const Node* n = nodeAt(doc->clip()->root, it.path);
-            if (n && n->name == "spark") spark = it.images == &doc->atlasAt(1).images && it.src == QRect(0, 0, 16, 16);
-            if (n && n->name == "coin") coin = it.images == &doc->atlasAt(0).images && it.src.size() == gameCoinSize(doc);
+        std::vector<toms::anim::NodePose> l_vPoses;
+        std::vector<AnimViewport::DrawItem> l_vItems;
+        l_pEd->f_Viewport()->f_BuildFrame(0.0f, l_vPoses, l_vItems, nullptr);
+        bool l_bSpark = false, l_bCoin = false;
+        for (const AnimViewport::DrawItem& l_oIt : l_vItems) {
+            const Node* l_pN = f_NodeAt(l_pDoc->f_Clip()->m_oRoot, l_oIt.m_vPath);
+            if (l_pN && l_pN->m_strName == "spark") l_bSpark = l_oIt.m_pImages == &l_pDoc->f_AtlasAt(1).m_oImages && l_oIt.m_oSrc == QRect(0, 0, 16, 16);
+            if (l_pN && l_pN->m_strName == "coin") l_bCoin = l_oIt.m_pImages == &l_pDoc->f_AtlasAt(0).m_oImages && l_oIt.m_oSrc.size() == f_GameCoinSize(l_pDoc);
         }
-        ok &= check(spark && coin, "(c) viewport: spark from extra.atlas's page, coin from game.atlas's");
-        ok &= check(checkDrawing(ed, 0.0f), "(c) viewport quads == appendQuads over both atlases");
-        ok &= check(hasProblem(Problem::Warning, QStringLiteral("'coin'"), QStringLiteral("several atlases")) &&
-                        countLevel(checkAnim(doc->file(), doc->checkAtlases()), Problem::Error) == 0,
+        l_bOk &= f_Check(l_bSpark && l_bCoin, "(c) viewport: spark from extra.atlas's page, coin from game.atlas's");
+        l_bOk &= f_Check(f_CheckDrawing(l_pEd, 0.0f), "(c) viewport quads == appendQuads over both atlases");
+        l_bOk &= f_Check(l_fnHasProblem(Problem::Warning, QStringLiteral("'coin'"), QStringLiteral("several atlases")) &&
+                        f_CountLevel(f_CheckAnim(l_pDoc->f_File(), l_pDoc->f_CheckAtlases()), Problem::Error) == 0,
                     "(c) check: 'coin' in two atlases is a warning, no errors");
-        ok &= check(ed->saveTo(work) && storedRelative(work, 2), "(c) saved: two relative atlas paths");
+        l_bOk &= f_Check(l_pEd->f_SaveTo(l_oWork) && l_fnStoredRelative(l_oWork, 2), "(c) saved: two relative atlas paths");
         std::fflush(stdout);
-        ok &= check(headlessMain({"check", work.toStdString()}) == 0, "(c) --headless check on it: exit 0 (warnings only)");
-        ok &= check(doc->moveAtlas(1, -1) && doc->findSprite("coin", &ai) && ai == 0 &&
-                        QFileInfo(doc->atlasAt(0).path).fileName() == QLatin1String("extra.atlas"),
+        l_bOk &= f_Check(f_HeadlessMain({"check", l_oWork.toStdString()}) == 0, "(c) --headless check on it: exit 0 (warnings only)");
+        l_bOk &= f_Check(l_pDoc->f_MoveAtlas(1, -1) && l_pDoc->f_FindSprite("coin", &l_iAi) && l_iAi == 0 &&
+                        QFileInfo(l_pDoc->f_AtlasAt(0).m_oPath).fileName() == QLatin1String("extra.atlas"),
                     "(c) move extra.atlas up: coin now comes from it");
-        doc->undoStack()->undo();
-        ok &= check(QFileInfo(doc->atlasAt(0).path).fileName() == QLatin1String("game.atlas") && doc->atlasAt(1).ok, "(c) undo the move");
+        l_pDoc->f_UndoStack()->undo();
+        l_bOk &= f_Check(QFileInfo(l_pDoc->f_AtlasAt(0).m_oPath).fileName() == QLatin1String("game.atlas") && l_pDoc->f_AtlasAt(1).m_bOk, "(c) undo the move");
 
-        ok &= check(atlasReferences(ed, workDir, outDir, w), "(d) sprite references store their atlas");
+        l_bOk &= f_Check(f_AtlasReferences(l_pEd, l_oWorkDir, l_oOutDir, l_oW), "(d) sprite references store their atlas");
 
         // Screenshots: the Atlases list, the Sprites dock grouped by atlas.
-        ed->propertiesDock()->raise();
-        ed->propertiesDock()->atlasesPanel()->setCurrentIndex(1);
-        ed->spritesDock()->selectSprites({QStringLiteral("spark")});
-        if (QListWidget* list = ed->spritesDock()->list()) list->scrollToBottom();
-        processEvents();
-        ok &= check(w.grab().save(QDir(outDir).filePath(QStringLiteral("atlases.png"))), "atlases.png");
-        ok &= check(ed->propertiesDock()->grab().save(QDir(outDir).filePath(QStringLiteral("properties.png"))), "properties.png");
-        ok &= check(ed->spritesDock()->grab().save(QDir(outDir).filePath(QStringLiteral("sprites.png"))), "sprites.png");
-        if (auto* filter = ed->spritesDock()->findChild<QLineEdit*>()) {
-            filter->setText(QStringLiteral("coin"));
-            if (QListWidget* list = ed->spritesDock()->list()) list->scrollToTop();
-            processEvents();
+        l_pEd->f_PropertiesDock()->raise();
+        l_pEd->f_PropertiesDock()->f_AtlasesPanel()->f_SetCurrentIndex(1);
+        l_pEd->f_SpritesDock()->f_SelectSprites({QStringLiteral("spark")});
+        if (QListWidget* l_pList = l_pEd->f_SpritesDock()->f_List()) l_pList->scrollToBottom();
+        f_ProcessEvents();
+        l_bOk &= f_Check(l_oW.grab().save(QDir(l_oOutDir).filePath(QStringLiteral("atlases.png"))), "atlases.png");
+        l_bOk &= f_Check(l_pEd->f_PropertiesDock()->grab().save(QDir(l_oOutDir).filePath(QStringLiteral("properties.png"))), "properties.png");
+        l_bOk &= f_Check(l_pEd->f_SpritesDock()->grab().save(QDir(l_oOutDir).filePath(QStringLiteral("sprites.png"))), "sprites.png");
+        if (auto* l_pFilter = l_pEd->f_SpritesDock()->findChild<QLineEdit*>()) {
+            l_pFilter->setText(QStringLiteral("coin"));
+            if (QListWidget* l_pList = l_pEd->f_SpritesDock()->f_List()) l_pList->scrollToTop();
+            f_ProcessEvents();
             // Floating and taller, so both coins (game's and extra's) show with their badges.
-            QDockWidget* dock = ed->spritesDock();
-            dock->setFloating(true);
-            dock->resize(340, 240);
-            processEvents();
-            ok &= check(dock->grab().save(QDir(outDir).filePath(QStringLiteral("sprites_dup.png"))), "sprites_dup.png");
-            dock->setFloating(false);
-            processEvents();
-            filter->clear();
+            QDockWidget* l_pDock = l_pEd->f_SpritesDock();
+            l_pDock->setFloating(true);
+            l_pDock->resize(340, 240);
+            f_ProcessEvents();
+            l_bOk &= f_Check(l_pDock->grab().save(QDir(l_oOutDir).filePath(QStringLiteral("sprites_dup.png"))), "sprites_dup.png");
+            l_pDock->setFloating(false);
+            f_ProcessEvents();
+            l_pFilter->clear();
         }
         {   // One tab per atlas: the second tab (extra) in front.
-            AnimSpritesDock* sd = ed->spritesDock();
-            ok &= check(sd->tabs()->count() == doc->atlasCount() && sd->tabs()->tabText(0).startsWith(doc->atlasId(0)) &&
-                            sd->tabs()->tabText(1).startsWith(doc->atlasId(1)),
+            AnimSpritesDock* l_pSd = l_pEd->f_SpritesDock();
+            l_bOk &= f_Check(l_pSd->f_Tabs()->count() == l_pDoc->f_AtlasCount() && l_pSd->f_Tabs()->tabText(0).startsWith(l_pDoc->f_AtlasId(0)) &&
+                            l_pSd->f_Tabs()->tabText(1).startsWith(l_pDoc->f_AtlasId(1)),
                         "(c) Sprites dock: one tab per atlas, titled with its id");
-            sd->tabs()->setCurrentIndex(1);
-            processEvents();
-            ok &= check(sd->list() == sd->listFor(1) && sd->list()->count() == 2, "(c) the extra tab lists its 2 sprites");
-            ok &= check(sd->grab().save(QDir(outDir).filePath(QStringLiteral("sprites_tabs.png"))), "sprites_tabs.png");
-            sd->tabs()->setCurrentIndex(0);
+            l_pSd->f_Tabs()->setCurrentIndex(1);
+            f_ProcessEvents();
+            l_bOk &= f_Check(l_pSd->f_List() == l_pSd->f_ListFor(1) && l_pSd->f_List()->count() == 2, "(c) the extra tab lists its 2 sprites");
+            l_bOk &= f_Check(l_pSd->grab().save(QDir(l_oOutDir).filePath(QStringLiteral("sprites_tabs.png"))), "sprites_tabs.png");
+            l_pSd->f_Tabs()->setCurrentIndex(0);
         }
-        if (auto* problems = w.findChild<QDockWidget*>(QStringLiteral("AnimProblemsDock"))) {
-            problems->raise();
-            processEvents();
-            ok &= check(problems->grab().save(QDir(outDir).filePath(QStringLiteral("problems_atlases.png"))), "problems_atlases.png");
+        if (auto* l_pProblems = l_oW.findChild<QDockWidget*>(QStringLiteral("AnimProblemsDock"))) {
+            l_pProblems->raise();
+            f_ProcessEvents();
+            l_bOk &= f_Check(l_pProblems->grab().save(QDir(l_oOutDir).filePath(QStringLiteral("problems_atlases.png"))), "problems_atlases.png");
         }
 
-        ok &= check(doc->removeAtlas(1) && doc->atlasCount() == 1 && !doc->findSprite("spark") &&
-                        hasProblem(Problem::Error, QStringLiteral("'extra:spark'"), QStringLiteral("no atlas has the id 'extra'")),
+        l_bOk &= f_Check(l_pDoc->f_RemoveAtlas(1) && l_pDoc->f_AtlasCount() == 1 && !l_pDoc->f_FindSprite("spark") &&
+                        l_fnHasProblem(Problem::Error, QStringLiteral("'extra:spark'"), QStringLiteral("no atlas has the id 'extra'")),
                     "(c) remove it: 'extra:spark' names an unknown atlas (error)");
-        doc->undoStack()->undo();
-        ok &= check(doc->atlasCount() == 2 && doc->findSprite("spark"), "(c) undo the remove");
+        l_pDoc->f_UndoStack()->undo();
+        l_bOk &= f_Check(l_pDoc->f_AtlasCount() == 2 && l_pDoc->f_FindSprite("spark"), "(c) undo the remove");
 
         // An untitled file may hold atlases only in memory: adding one asks to save first.
-        doc->newFile();
-        processEvents();
-        ok &= check(doc->filePath().isEmpty() && doc->atlasCount() == 2 && !ed->addAtlasFile(extra) &&
-                        ed->problemsDock()->logText().contains(QStringLiteral("save the animation first")),
+        l_pDoc->f_NewFile();
+        f_ProcessEvents();
+        l_bOk &= f_Check(l_pDoc->f_FilePath().isEmpty() && l_pDoc->f_AtlasCount() == 2 && !l_pEd->f_AddAtlasFile(l_oExtra) &&
+                        l_pEd->f_ProblemsDock()->f_LogText().contains(QStringLiteral("save the animation first")),
                     "untitled: adding an atlas asks to save the .anim first");
     }
     {   // The mouse wheel changes a number only in a field that has focus (Theme.cpp WheelNeedsFocus).
-        QDoubleSpinBox* box = nullptr;
-        for (QDoubleSpinBox* b : ed->propertiesDock()->findChildren<QDoubleSpinBox*>())
-            if (b->isEnabled() && b->isVisibleTo(ed->propertiesDock()) && b->value() < b->maximum() - 1) { box = b; break; }
-        if (!box) {
-            ok &= check(false, "wheel: a number field in Properties");
+        QDoubleSpinBox* l_pBox = nullptr;
+        for (QDoubleSpinBox* l_pB : l_pEd->f_PropertiesDock()->findChildren<QDoubleSpinBox*>())
+            if (l_pB->isEnabled() && l_pB->isVisibleTo(l_pEd->f_PropertiesDock()) && l_pB->value() < l_pB->maximum() - 1) { l_pBox = l_pB; break; }
+        if (!l_pBox) {
+            l_bOk &= f_Check(false, "wheel: a number field in Properties");
         } else {
-            auto wheel = [&](int delta) {
-                const QPointF at(box->width() / 2.0, box->height() / 2.0);
-                QWheelEvent e(at, box->mapToGlobal(at), QPoint(), QPoint(0, delta), Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase, false);
-                QApplication::sendEvent(box, &e);
-                processEvents();
+            auto l_fnWheel = [&](int l_iDelta) {
+                const QPointF l_oAt(l_pBox->width() / 2.0, l_pBox->height() / 2.0);
+                QWheelEvent l_oE(l_oAt, l_pBox->mapToGlobal(l_oAt), QPoint(), QPoint(0, l_iDelta), Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase, false);
+                QApplication::sendEvent(l_pBox, &l_oE);
+                f_ProcessEvents();
             };
-            ok &= check(box->focusPolicy() == Qt::StrongFocus, "wheel: number fields take focus by click or Tab, not by the wheel");
-            w.setFocus();
-            processEvents();
+            l_bOk &= f_Check(l_pBox->focusPolicy() == Qt::StrongFocus, "wheel: number fields take focus by click or Tab, not by the wheel");
+            l_oW.setFocus();
+            f_ProcessEvents();
             // A short Properties panel, so it has something to scroll.
-            QScrollArea* area = ed->propertiesDock()->findChild<QScrollArea*>();
-            if (area) { area->setMaximumHeight(160); processEvents(); area->verticalScrollBar()->setValue(0); processEvents(); }
-            const double before = box->value();
-            const int scrolledFrom = area ? area->verticalScrollBar()->value() : 0;
-            wheel(-120);
-            ok &= check(box->value() == before && !box->hasFocus(), "wheel: over an unfocused field the value stays");
-            ok &= check(area && area->verticalScrollBar()->maximum() > 0 && area->verticalScrollBar()->value() > scrolledFrom,
+            QScrollArea* l_pArea = l_pEd->f_PropertiesDock()->findChild<QScrollArea*>();
+            if (l_pArea) { l_pArea->setMaximumHeight(160); f_ProcessEvents(); l_pArea->verticalScrollBar()->setValue(0); f_ProcessEvents(); }
+            const double l_dBefore = l_pBox->value();
+            const int l_iScrolledFrom = l_pArea ? l_pArea->verticalScrollBar()->value() : 0;
+            l_fnWheel(-120);
+            l_bOk &= f_Check(l_pBox->value() == l_dBefore && !l_pBox->hasFocus(), "wheel: over an unfocused field the value stays");
+            l_bOk &= f_Check(l_pArea && l_pArea->verticalScrollBar()->maximum() > 0 && l_pArea->verticalScrollBar()->value() > l_iScrolledFrom,
                         "wheel: over an unfocused field the Properties panel scrolls");
-            if (area) { area->setMaximumHeight(QWIDGETSIZE_MAX); processEvents(); }
-            box->setFocus();
-            processEvents();
-            if (box->hasFocus()) {   // the offscreen platform may not focus a window
-                wheel(120);
-                ok &= check(box->value() != before, "wheel: in a focused field it changes the value");
-                doc->undoStack()->undo();
+            if (l_pArea) { l_pArea->setMaximumHeight(QWIDGETSIZE_MAX); f_ProcessEvents(); }
+            l_pBox->setFocus();
+            f_ProcessEvents();
+            if (l_pBox->hasFocus()) {   // the offscreen platform may not focus a window
+                l_fnWheel(120);
+                l_bOk &= f_Check(l_pBox->value() != l_dBefore, "wheel: in a focused field it changes the value");
+                l_pDoc->f_UndoStack()->undo();
             }
         }
     }
     {   // The skin view (docs/engine/16_MESH_ANIMATION.md) on tests/smoke/anim_skin.anim, next to the file under test.
-        const QString skinFile = QFileInfo(file).dir().filePath(QStringLiteral("anim_skin.anim"));
-        AnimViewport* view = ed->viewport();
-        if (!QFileInfo::exists(skinFile)) {
-            ok &= check(false, "skin: tests/smoke/anim_skin.anim is next to the file under test");
-        } else if (ed->openFile(skinFile, false)) {
-            view->resize(640, 480);
-            processEvents();
-            ed->viewport()->frameClip();
-            doc->setTime(0.25f);   // the chest and head turned their furthest
-            ok &= check(doc->selectNodeByName(QStringLiteral("golem")), "skin: select the skinned golem");
-            processEvents();
-            const QString info = ed->propertiesDock()->skinInfoText();
-            ok &= check(info.contains(QStringLiteral("3 bone(s)")) && info.contains(QStringLiteral("automatic")),
+        const QString l_oSkinFile = QFileInfo(l_oFile).dir().filePath(QStringLiteral("anim_skin.anim"));
+        AnimViewport* l_pView = l_pEd->f_Viewport();
+        if (!QFileInfo::exists(l_oSkinFile)) {
+            l_bOk &= f_Check(false, "skin: tests/smoke/anim_skin.anim is next to the file under test");
+        } else if (l_pEd->f_OpenFile(l_oSkinFile, false)) {
+            l_pView->resize(640, 480);
+            f_ProcessEvents();
+            l_pEd->f_Viewport()->f_FrameClip();
+            l_pDoc->f_SetTime(0.25f);   // the chest and head turned their furthest
+            l_bOk &= f_Check(l_pDoc->f_SelectNodeByName(QStringLiteral("golem")), "skin: select the skinned golem");
+            f_ProcessEvents();
+            const QString l_oInfo = l_pEd->f_PropertiesDock()->f_SkinInfoText();
+            l_bOk &= f_Check(l_oInfo.contains(QStringLiteral("3 bone(s)")) && l_oInfo.contains(QStringLiteral("automatic")),
                         "skin: Properties says its mesh, 3 bones, automatic weights");
             // Bone 2's colour (head, yellow; the hip's red sits under the Move arrow): none with Show Skin off, its segment and joint with it on.
-            auto boneColoured = [&](int bone) {
-                const QImage img = view->usingGameRenderer() ? presentedImage(view) : view->grab().toImage();
-                const QColor c = AnimViewport::boneColor(bone);
-                int n = 0;
-                for (int y = 0; y < img.height(); y++)
-                    for (int x = 0; x < img.width(); x++) {
-                        const QColor p = img.pixelColor(x, y);
-                        if (std::abs(p.red() - c.red()) < 6 && std::abs(p.green() - c.green()) < 6 && std::abs(p.blue() - c.blue()) < 6) n++;
+            auto l_fnBoneColoured = [&](int l_iBone) {
+                const QImage l_oImg = l_pView->f_UsingGameRenderer() ? f_PresentedImage(l_pView) : l_pView->grab().toImage();
+                const QColor l_oC = AnimViewport::f_BoneColor(l_iBone);
+                int l_iN = 0;
+                for (int l_iY = 0; l_iY < l_oImg.height(); l_iY++)
+                    for (int l_iX = 0; l_iX < l_oImg.width(); l_iX++) {
+                        const QColor l_oP = l_oImg.pixelColor(l_iX, l_iY);
+                        if (std::abs(l_oP.red() - l_oC.red()) < 6 && std::abs(l_oP.green() - l_oC.green()) < 6 && std::abs(l_oP.blue() - l_oC.blue()) < 6) l_iN++;
                     }
-                return n;
+                return l_iN;
             };
-            ed->showSkinAction()->setChecked(false);
-            processEvents();
-            const int off = boneColoured(2);
-            ed->showSkinAction()->setChecked(true);
-            processEvents();
-            const int on = boneColoured(2);
-            ok &= check(view->showSkin() && on > off + 50, "skin: View > Show Skin draws the bones over the sprite");
-            ok &= check(view->grab().save(QDir(outDir).filePath(QStringLiteral("skin_view.png"))), "skin_view.png");
-            ok &= check(doc->selectNodeByName(QStringLiteral("chest")), "skin: select the chest bone");
-            processEvents();
-            ok &= check(view->grab().save(QDir(outDir).filePath(QStringLiteral("skin_bone.png"))), "skin_bone.png (shaded by the chest's weights)");
-            ok &= check(ed->propertiesDock()->skinInfoText().isEmpty(), "skin: a bone has no skin note");
-            ed->showSkinAction()->setChecked(false);
+            l_pEd->f_ShowSkinAction()->setChecked(false);
+            f_ProcessEvents();
+            const int l_iOff = l_fnBoneColoured(2);
+            l_pEd->f_ShowSkinAction()->setChecked(true);
+            f_ProcessEvents();
+            const int l_iOn = l_fnBoneColoured(2);
+            l_bOk &= f_Check(l_pView->f_ShowSkin() && l_iOn > l_iOff + 50, "skin: View > Show Skin draws the bones over the sprite");
+            l_bOk &= f_Check(l_pView->grab().save(QDir(l_oOutDir).filePath(QStringLiteral("skin_view.png"))), "skin_view.png");
+            l_bOk &= f_Check(l_pDoc->f_SelectNodeByName(QStringLiteral("chest")), "skin: select the chest bone");
+            f_ProcessEvents();
+            l_bOk &= f_Check(l_pView->grab().save(QDir(l_oOutDir).filePath(QStringLiteral("skin_bone.png"))), "skin_bone.png (shaded by the chest's weights)");
+            l_bOk &= f_Check(l_pEd->f_PropertiesDock()->f_SkinInfoText().isEmpty(), "skin: a bone has no skin note");
+            l_pEd->f_ShowSkinAction()->setChecked(false);
 
             // Copy / paste nodes (Edit menu): the whole rig, pasted into the same clip, becomes a second rig.
-            const QList<QAction*> clip = ed->nodeClipboardActions();   // cut, copy, paste, paste as sibling
-            const toms::anim::Clip* c = doc->clip();
-            const int undoAt = doc->undoStack()->index();
-            const size_t children = c->root.children.size();
-            doc->selectNode({});   // the root, "stage"
-            clip[1]->trigger();
-            ok &= check(QGuiApplication::clipboard()->text().contains(QStringLiteral("\"anim-node\"")),
+            const QList<QAction*> l_oClip = l_pEd->f_NodeClipboardActions();   // cut, copy, paste, paste as sibling
+            const toms::anim::Clip* l_pC = l_pDoc->f_Clip();
+            const int l_iUndoAt = l_pDoc->f_UndoStack()->index();
+            const size_t l_nChildren = l_pC->m_oRoot.m_vChildren.size();
+            l_pDoc->f_SelectNode({});   // the root, "stage"
+            l_oClip[1]->trigger();
+            l_bOk &= f_Check(QGuiApplication::clipboard()->text().contains(QStringLiteral("\"anim-node\"")),
                         "copy: the node is on the clipboard as text");
-            clip[2]->trigger();   // under the root
-            c = doc->clip();
-            const Node* pasted = c->root.children.size() == children + 1 ? &c->root.children.back() : nullptr;
-            ok &= check(pasted && pasted->name == "stage_2" && doc->selectedNode() == pasted,
+            l_oClip[2]->trigger();   // under the root
+            l_pC = l_pDoc->f_Clip();
+            const Node* l_pPasted = l_pC->m_oRoot.m_vChildren.size() == l_nChildren + 1 ? &l_pC->m_oRoot.m_vChildren.back() : nullptr;
+            l_bOk &= f_Check(l_pPasted && l_pPasted->m_strName == "stage_2" && l_pDoc->f_SelectedNode() == l_pPasted,
                         "paste: under the selected node, renamed stage_2, selected");
-            const Node* golem2 = pasted ? animed::nodeAt(*pasted, {0}) : nullptr;
-            ok &= check(golem2 && golem2->name == "golem_2" &&
-                            golem2->skinBones == std::vector<std::string>({"hip_2", "chest_2", "head_2"}),
+            const Node* l_pGolem2 = l_pPasted ? animed::f_NodeAt(*l_pPasted, {0}) : nullptr;
+            l_bOk &= f_Check(l_pGolem2 && l_pGolem2->m_strName == "golem_2" &&
+                            l_pGolem2->m_vSkinBones == std::vector<std::string>({"hip_2", "chest_2", "head_2"}),
                         "paste: the pasted skin follows the pasted bones (hip_2, chest_2, head_2)");
-            const Node* chest2 = golem2 ? animed::nodeAt(*golem2, {0, 0}) : nullptr;   // golem_2 > hip_2 > chest_2
-            ok &= check(chest2 && chest2->name == "chest_2" && chest2->rotKeys.size() == 4, "paste: children and keys come along");
-            ok &= check(doc->selectNodeByName(QStringLiteral("hip_2")), "select hip_2");
-            clip[0]->trigger();   // cut
-            ok &= check(!doc->selectNodeByName(QStringLiteral("hip_2")) && !doc->selectNodeByName(QStringLiteral("chest_2")),
+            const Node* l_pChest2 = l_pGolem2 ? animed::f_NodeAt(*l_pGolem2, {0, 0}) : nullptr;   // golem_2 > hip_2 > chest_2
+            l_bOk &= f_Check(l_pChest2 && l_pChest2->m_strName == "chest_2" && l_pChest2->m_vRotKeys.size() == 4, "paste: children and keys come along");
+            l_bOk &= f_Check(l_pDoc->f_SelectNodeByName(QStringLiteral("hip_2")), "select hip_2");
+            l_oClip[0]->trigger();   // cut
+            l_bOk &= f_Check(!l_pDoc->f_SelectNodeByName(QStringLiteral("hip_2")) && !l_pDoc->f_SelectNodeByName(QStringLiteral("chest_2")),
                         "cut: the node and its children are gone");
-            ok &= check(doc->selectNodeByName(QStringLiteral("golem_2")), "select golem_2");
-            clip[3]->trigger();   // paste as sibling: right after golem_2
-            c = doc->clip();
-            pasted = &c->root.children.back();
-            ok &= check(pasted->children.size() == 2 && pasted->children[1].name == "hip_2",
+            l_bOk &= f_Check(l_pDoc->f_SelectNodeByName(QStringLiteral("golem_2")), "select golem_2");
+            l_oClip[3]->trigger();   // paste as sibling: right after golem_2
+            l_pC = l_pDoc->f_Clip();
+            l_pPasted = &l_pC->m_oRoot.m_vChildren.back();
+            l_bOk &= f_Check(l_pPasted->m_vChildren.size() == 2 && l_pPasted->m_vChildren[1].m_strName == "hip_2",
                         "paste as sibling: after the selected node, the name free again (hip_2)");
             QGuiApplication::clipboard()->setText(QStringLiteral("just some text"));
-            const int before = doc->undoStack()->index();
-            clip[2]->trigger();
-            ok &= check(doc->undoStack()->index() == before, "paste: other text on the clipboard changes nothing");
-            while (doc->undoStack()->index() > undoAt) doc->undoStack()->undo();
-            ok &= check(doc->clip()->root.children.size() == children, "undo: the clip is as it was");
+            const int l_iBefore = l_pDoc->f_UndoStack()->index();
+            l_oClip[2]->trigger();
+            l_bOk &= f_Check(l_pDoc->f_UndoStack()->index() == l_iBefore, "paste: other text on the clipboard changes nothing");
+            while (l_pDoc->f_UndoStack()->index() > l_iUndoAt) l_pDoc->f_UndoStack()->undo();
+            l_bOk &= f_Check(l_pDoc->f_Clip()->m_oRoot.m_vChildren.size() == l_nChildren, "undo: the clip is as it was");
 
             // Bones mode: a click picks a bone (here the chest's joint), never the sprite under it.
-            ed->boneModeAction()->setChecked(true);
-            processEvents();
-            ok &= check(view->editMode() == AnimViewport::EditMode::Bones, "bones mode: B / the toolbar switch");
-            doc->selectNodeByName(QStringLiteral("golem"));
-            processEvents();
-            auto bonePoint = [&](const char* name) {   // where a bone's joint is drawn, in widget pixels
-                std::vector<toms::anim::NodePose> poses;
-                toms::anim::evaluate(*doc->clip(), doc->previewTime(), poses);
-                for (size_t i = 0; i < poses.size(); i++) {
-                    toms::anim::SkinView sv;
-                    if (toms::anim::skinView(*doc->clip(), poses, i, doc->atlasSet(), toms::anim::placement(0, 0), &sv) != toms::anim::SkinState::Ok)
+            l_pEd->f_BoneModeAction()->setChecked(true);
+            f_ProcessEvents();
+            l_bOk &= f_Check(l_pView->f_EditMode() == AnimViewport::EditMode::Bones, "bones mode: B / the toolbar switch");
+            l_pDoc->f_SelectNodeByName(QStringLiteral("golem"));
+            f_ProcessEvents();
+            auto l_fnBonePoint = [&](const char* l_pszName) {   // where a bone's joint is drawn, in widget pixels
+                std::vector<toms::anim::NodePose> l_vPoses;
+                toms::anim::f_Evaluate(*l_pDoc->f_Clip(), l_pDoc->f_PreviewTime(), l_vPoses);
+                for (size_t l_nI = 0; l_nI < l_vPoses.size(); l_nI++) {
+                    toms::anim::SkinView l_oSv;
+                    if (toms::anim::f_SkinView(*l_pDoc->f_Clip(), l_vPoses, l_nI, l_pDoc->f_AtlasSet(), toms::anim::f_Placement(0, 0), &l_oSv) != toms::anim::SkinState::Ok)
                         continue;
-                    for (size_t b = 0; b < sv.bones.size(); b++)
-                        if (sv.bones[b] == name) return view->widgetPos(QPointF(sv.boneStart[b].x, sv.boneStart[b].y));
+                    for (size_t l_nB = 0; l_nB < l_oSv.m_vBones.size(); l_nB++)
+                        if (l_oSv.m_vBones[l_nB] == l_pszName) return l_pView->f_WidgetPos(QPointF(l_oSv.m_vBoneStart[l_nB].x, l_oSv.m_vBoneStart[l_nB].y));
                 }
                 return QPointF(-1, -1);
             };
-            auto click = [&](const QPointF& at) {
-                for (QEvent::Type type : {QEvent::MouseButtonPress, QEvent::MouseButtonRelease}) {
-                    QMouseEvent e(type, at, view->mapToGlobal(at), Qt::LeftButton,
-                                  type == QEvent::MouseButtonPress ? Qt::LeftButton : Qt::NoButton, Qt::NoModifier);
-                    QApplication::sendEvent(view, &e);
+            auto l_fnClick = [&](const QPointF& l_oAt) {
+                for (QEvent::Type l_eType : {QEvent::MouseButtonPress, QEvent::MouseButtonRelease}) {
+                    QMouseEvent l_oE(l_eType, l_oAt, l_pView->mapToGlobal(l_oAt), Qt::LeftButton,
+                                  l_eType == QEvent::MouseButtonPress ? Qt::LeftButton : Qt::NoButton, Qt::NoModifier);
+                    QApplication::sendEvent(l_pView, &l_oE);
                 }
-                processEvents();
+                f_ProcessEvents();
             };
-            const QPointF chestAt = bonePoint("chest");
-            ok &= check(view->boneAt(chestAt) == QStringLiteral("chest"), "bones mode: the chest's joint is found under its point");
-            click(chestAt);
-            ok &= check(doc->selectedNode() && doc->selectedNode()->name == "chest", "bones mode: a click on the joint selects the chest");
+            const QPointF l_oChestAt = l_fnBonePoint("chest");
+            l_bOk &= f_Check(l_pView->f_BoneAt(l_oChestAt) == QStringLiteral("chest"), "bones mode: the chest's joint is found under its point");
+            l_fnClick(l_oChestAt);
+            l_bOk &= f_Check(l_pDoc->f_SelectedNode() && l_pDoc->f_SelectedNode()->m_strName == "chest", "bones mode: a click on the joint selects the chest");
             {   // Editing while the clip plays pauses it: a drag (Auto-Key on) keys the frame on screen once.
-                auto pump = [](int ms) {   // let the playback timer run
-                    QElapsedTimer t;
-                    t.start();
-                    while (t.elapsed() < ms) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
+                auto l_fnPump = [](int l_iMs) {   // let the playback timer run
+                    QElapsedTimer l_oT;
+                    l_oT.start();
+                    while (l_oT.elapsed() < l_iMs) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
                 };
-                const bool autoKey = doc->autoKey();
-                doc->setAutoKey(true);
-                const int playAt = doc->undoStack()->index();
-                const size_t keysBefore = doc->selectedNode()->posKeys.size();
-                ed->transport()->play();
-                pump(150);
-                ok &= check(ed->transport()->isPlaying(), "playing");
-                const QPointF from = bonePoint("chest");
-                QMouseEvent press(QEvent::MouseButtonPress, from, view->mapToGlobal(from), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
-                QApplication::sendEvent(view, &press);
-                ok &= check(!ed->transport()->isPlaying(), "a drag starting pauses playback");
-                for (int i = 1; i <= 6; i++) {   // the drag goes on over several frames
-                    const QPointF to = from + QPointF(3.0 * i, 0);
-                    QMouseEvent move(QEvent::MouseMove, to, view->mapToGlobal(to), Qt::NoButton, Qt::LeftButton, Qt::NoModifier);
-                    QApplication::sendEvent(view, &move);
-                    pump(40);
+                const bool l_bAutoKey = l_pDoc->f_AutoKey();
+                l_pDoc->f_SetAutoKey(true);
+                const int l_iPlayAt = l_pDoc->f_UndoStack()->index();
+                const size_t l_nKeysBefore = l_pDoc->f_SelectedNode()->m_vPosKeys.size();
+                l_pEd->f_Transport()->f_Play();
+                l_fnPump(150);
+                l_bOk &= f_Check(l_pEd->f_Transport()->f_IsPlaying(), "playing");
+                const QPointF l_oFrom = l_fnBonePoint("chest");
+                QMouseEvent l_oPress(QEvent::MouseButtonPress, l_oFrom, l_pView->mapToGlobal(l_oFrom), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+                QApplication::sendEvent(l_pView, &l_oPress);
+                l_bOk &= f_Check(!l_pEd->f_Transport()->f_IsPlaying(), "a drag starting pauses playback");
+                for (int l_iI = 1; l_iI <= 6; l_iI++) {   // the drag goes on over several frames
+                    const QPointF l_oTo = l_oFrom + QPointF(3.0 * l_iI, 0);
+                    QMouseEvent l_oMove(QEvent::MouseMove, l_oTo, l_pView->mapToGlobal(l_oTo), Qt::NoButton, Qt::LeftButton, Qt::NoModifier);
+                    QApplication::sendEvent(l_pView, &l_oMove);
+                    l_fnPump(40);
                 }
-                QMouseEvent release(QEvent::MouseButtonRelease, from + QPointF(18, 0), view->mapToGlobal(from + QPointF(18, 0)),
+                QMouseEvent l_oRelease(QEvent::MouseButtonRelease, l_oFrom + QPointF(18, 0), l_pView->mapToGlobal(l_oFrom + QPointF(18, 0)),
                                     Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
-                QApplication::sendEvent(view, &release);
-                processEvents();
-                ok &= check(doc->selectedNode()->posKeys.size() == keysBefore + 1, "the whole drag added one key, not one per frame");
-                ed->transport()->play();
-                pump(150);
-                doc->setChannel(animed::Channel::Pos, animed::Value{glm::vec4(1, -12, 0, 0)});
-                ok &= check(!ed->transport()->isPlaying(), "a typed value pauses playback too");
-                while (doc->undoStack()->index() > playAt) doc->undoStack()->undo();
-                doc->setAutoKey(autoKey);
+                QApplication::sendEvent(l_pView, &l_oRelease);
+                f_ProcessEvents();
+                l_bOk &= f_Check(l_pDoc->f_SelectedNode()->m_vPosKeys.size() == l_nKeysBefore + 1, "the whole drag added one key, not one per frame");
+                l_pEd->f_Transport()->f_Play();
+                l_fnPump(150);
+                l_pDoc->f_SetChannel(animed::Channel::Pos, animed::Value{glm::vec4(1, -12, 0, 0)});
+                l_bOk &= f_Check(!l_pEd->f_Transport()->f_IsPlaying(), "a typed value pauses playback too");
+                while (l_pDoc->f_UndoStack()->index() > l_iPlayAt) l_pDoc->f_UndoStack()->undo();
+                l_pDoc->f_SetAutoKey(l_bAutoKey);
             }
             // Hidden: the golem off, its bones are neither drawn nor picked.
-            doc->editNode(NodePath{0}, QStringLiteral("hide"), [](Node& n) { n.visible = false; });
-            processEvents();
-            ok &= check(view->boneAt(chestAt).isEmpty(), "a hidden skinned node: no bones to pick (and no overlay)");
-            doc->undoStack()->undo();
-            ed->objectModeAction()->setChecked(true);
-            processEvents();
-            ok &= check(view->editMode() == AnimViewport::EditMode::Object, "object mode: O");
+            l_pDoc->f_EditNode(NodePath{0}, QStringLiteral("hide"), [](Node& l_oN) { l_oN.m_bVisible = false; });
+            f_ProcessEvents();
+            l_bOk &= f_Check(l_pView->f_BoneAt(l_oChestAt).isEmpty(), "a hidden skinned node: no bones to pick (and no overlay)");
+            l_pDoc->f_UndoStack()->undo();
+            l_pEd->f_ObjectModeAction()->setChecked(true);
+            f_ProcessEvents();
+            l_bOk &= f_Check(l_pView->f_EditMode() == AnimViewport::EditMode::Object, "object mode: O");
 
             // Bones outside the sprite: the warning, and Move Bones Under This Sprite (nothing moves on screen).
-            const int fixAt = doc->undoStack()->index();
-            doc->editClip(QStringLiteral("rig"), [](toms::anim::Clip& c) {
-                Node g;
-                g.name = "lamp";
-                g.sprite = "golem";
-                g.pos = {40, 0, 0};
-                g.skinBones = {"lampbone"};
-                Node b;
-                b.name = "lampbone";
-                b.pos = {45, -8, 0};
-                toms::anim::Key<glm::vec3> k;
-                k.t = 0.5f;
-                k.v = {47, -8, 0};
-                b.posKeys.push_back(k);
-                c.root.children.push_back(g);
-                c.root.children.push_back(b);
+            const int l_iFixAt = l_pDoc->f_UndoStack()->index();
+            l_pDoc->f_EditClip(QStringLiteral("rig"), [](toms::anim::Clip& l_oC) {
+                Node l_oG;
+                l_oG.m_strName = "lamp";
+                l_oG.m_strSprite = "golem";
+                l_oG.m_v3Pos = {40, 0, 0};
+                l_oG.m_vSkinBones = {"lampbone"};
+                Node l_oB;
+                l_oB.m_strName = "lampbone";
+                l_oB.m_v3Pos = {45, -8, 0};
+                toms::anim::Key<glm::vec3> l_oK;
+                l_oK.m_fT = 0.5f;
+                l_oK.m_oV = {47, -8, 0};
+                l_oB.m_vPosKeys.push_back(l_oK);
+                l_oC.m_oRoot.m_vChildren.push_back(l_oG);
+                l_oC.m_oRoot.m_vChildren.push_back(l_oB);
             });
-            ok &= check(doc->selectNodeByName(QStringLiteral("lamp")), "select a sprite whose bone is its sibling");
-            processEvents();
-            ok &= check(ed->propertiesDock()->bonesOutsideShown(), "bones outside: Properties warns");
-            ok &= check(doc->parentBonesUnder(doc->selectedPath()), "Move Bones Under This Sprite");
-            const Node* lamp = doc->selectedNode();
-            ok &= check(lamp && lamp->name == "lamp" && lamp->children.size() == 1 && lamp->children[0].name == "lampbone" &&
-                            lamp->children[0].pos == glm::vec3(5, -8, 0) && lamp->children[0].posKeys[0].v == glm::vec3(7, -8, 0),
+            l_bOk &= f_Check(l_pDoc->f_SelectNodeByName(QStringLiteral("lamp")), "select a sprite whose bone is its sibling");
+            f_ProcessEvents();
+            l_bOk &= f_Check(l_pEd->f_PropertiesDock()->f_BonesOutsideShown(), "bones outside: Properties warns");
+            l_bOk &= f_Check(l_pDoc->f_ParentBonesUnder(l_pDoc->f_SelectedPath()), "Move Bones Under This Sprite");
+            const Node* l_pLamp = l_pDoc->f_SelectedNode();
+            l_bOk &= f_Check(l_pLamp && l_pLamp->m_strName == "lamp" && l_pLamp->m_vChildren.size() == 1 && l_pLamp->m_vChildren[0].m_strName == "lampbone" &&
+                            l_pLamp->m_vChildren[0].m_v3Pos == glm::vec3(5, -8, 0) && l_pLamp->m_vChildren[0].m_vPosKeys[0].m_oV == glm::vec3(7, -8, 0),
                         "the bone is under the sprite, its rest and keys shifted: it stays where it was");
-            processEvents();
-            ok &= check(!ed->propertiesDock()->bonesOutsideShown(), "bones inside: no warning");
-            while (doc->undoStack()->index() > fixAt) doc->undoStack()->undo();
+            f_ProcessEvents();
+            l_bOk &= f_Check(!l_pEd->f_PropertiesDock()->f_BonesOutsideShown(), "bones inside: no warning");
+            while (l_pDoc->f_UndoStack()->index() > l_iFixAt) l_pDoc->f_UndoStack()->undo();
 
             // Mesh grid: the golem's node asks for 8 x 8 cells; its mesh is cut again at once (one undo step).
-            doc->selectNodeByName(QStringLiteral("golem"));
-            processEvents();
-            int gc = 0, gr = 0;
-            ok &= check(ed->propertiesDock()->meshGridBox()->isVisibleTo(ed->propertiesDock()) &&
-                            doc->meshGridOf(*doc->selectedNode(), gc, gr) && gc == 4 && gr == 4,
+            l_pDoc->f_SelectNodeByName(QStringLiteral("golem"));
+            f_ProcessEvents();
+            int l_iGc = 0, l_iGr = 0;
+            l_bOk &= f_Check(l_pEd->f_PropertiesDock()->f_MeshGridBox()->isVisibleTo(l_pEd->f_PropertiesDock()) &&
+                            l_pDoc->f_MeshGridOf(*l_pDoc->f_SelectedNode(), l_iGc, l_iGr) && l_iGc == 4 && l_iGr == 4,
                         "mesh grid: shown for the skinned golem, 4 x 4 (8-pixel cells of a 32-pixel sprite)");
-            ok &= check(doc->atlasMeshes(0).find(doc->atlasSet().meshKeyFor("golem", *doc->selectedNode())) != nullptr,
+            l_bOk &= f_Check(l_pDoc->f_AtlasMeshes(0).f_Find(l_pDoc->f_AtlasSet().f_MeshKeyFor("golem", *l_pDoc->f_SelectedNode())) != nullptr,
                         "mesh grid: the golem's mesh is in the atlas's mesh file (key \"golem\")");
-            const int gridAt = doc->undoStack()->index();
-            ok &= check(doc->setMeshGrid(8, 8) && doc->meshGridOf(*doc->selectedNode(), gc, gr) && gc == 8 && gr == 8 &&
-                            doc->selectedNode()->meshGrid[0] == 8 && doc->undoStack()->index() == gridAt + 1,
+            const int l_iGridAt = l_pDoc->f_UndoStack()->index();
+            l_bOk &= f_Check(l_pDoc->f_SetMeshGrid(8, 8) && l_pDoc->f_MeshGridOf(*l_pDoc->f_SelectedNode(), l_iGc, l_iGr) && l_iGc == 8 && l_iGr == 8 &&
+                            l_pDoc->f_SelectedNode()->m_arrMeshGrid[0] == 8 && l_pDoc->f_UndoStack()->index() == l_iGridAt + 1,
                         "mesh grid: 8 x 8, kept in the node, one undo step");
-            ok &= check(doc->atlasSet().meshKeyFor("golem", *doc->selectedNode()) == "golem@8x8" &&
-                            doc->atlasMeshes(0).find("golem@8x8") != nullptr && doc->atlasMeshes(0).find("golem") != nullptr,
+            l_bOk &= f_Check(l_pDoc->f_AtlasSet().f_MeshKeyFor("golem", *l_pDoc->f_SelectedNode()) == "golem@8x8" &&
+                            l_pDoc->f_AtlasMeshes(0).f_Find("golem@8x8") != nullptr && l_pDoc->f_AtlasMeshes(0).f_Find("golem") != nullptr,
                         "mesh grid: the 8 x 8 mesh is added beside the 8-pixel one (other clips may use that)");
-            processEvents();
-            ok &= check(ed->propertiesDock()->skinInfoText().contains(QStringLiteral("Mesh: ")) &&
-                            !ed->propertiesDock()->skinInfoText().contains(QStringLiteral(" 25 points")),
+            f_ProcessEvents();
+            l_bOk &= f_Check(l_pEd->f_PropertiesDock()->f_SkinInfoText().contains(QStringLiteral("Mesh: ")) &&
+                            !l_pEd->f_PropertiesDock()->f_SkinInfoText().contains(QStringLiteral(" 25 points")),
                         "mesh grid: the skin uses the new mesh at once");
-            ed->showSkinAction()->setChecked(true);
-            processEvents();
-            ok &= check(view->grab().save(QDir(outDir).filePath(QStringLiteral("skin_grid8.png"))), "skin_grid8.png");
-            ed->showSkinAction()->setChecked(false);
-            while (doc->undoStack()->index() > gridAt) doc->undoStack()->undo();
+            l_pEd->f_ShowSkinAction()->setChecked(true);
+            f_ProcessEvents();
+            l_bOk &= f_Check(l_pView->grab().save(QDir(l_oOutDir).filePath(QStringLiteral("skin_grid8.png"))), "skin_grid8.png");
+            l_pEd->f_ShowSkinAction()->setChecked(false);
+            while (l_pDoc->f_UndoStack()->index() > l_iGridAt) l_pDoc->f_UndoStack()->undo();
 
             // Motion recipes (docs/engine/06 section 7): on the golem, one undo step each; a bone recipe needs a skin.
-            doc->selectNodeByName(QStringLiteral("golem"));
-            const int recipeAt = doc->undoStack()->index();
-            ok &= check(doc->applyMotionRecipe("breathe", 0.0f, 1.0f, 1.0f) && doc->selectedNode()->deformKeys.size() >= 3 &&
-                            doc->undoStack()->index() == recipeAt + 1,
+            l_pDoc->f_SelectNodeByName(QStringLiteral("golem"));
+            const int l_iRecipeAt = l_pDoc->f_UndoStack()->index();
+            l_bOk &= f_Check(l_pDoc->f_ApplyMotionRecipe("breathe", 0.0f, 1.0f, 1.0f) && l_pDoc->f_SelectedNode()->m_vDeformKeys.size() >= 3 &&
+                            l_pDoc->f_UndoStack()->index() == l_iRecipeAt + 1,
                         "recipe: breathe keys the golem's lattice, one undo step");
-            const toms::anim::Node* headBefore = toms::anim::findNode(doc->clip()->root, "head");
-            const size_t headKeys = headBefore ? headBefore->rotKeys.size() : 0;
-            ok &= check(doc->applyMotionRecipe("nod", 2.0f, 0.8f, 1.0f) && doc->undoStack()->index() == recipeAt + 2 &&
-                            toms::anim::findNode(doc->clip()->root, "head")->rotKeys.size() > headKeys,
+            const toms::anim::Node* l_pHeadBefore = toms::anim::f_FindNode(l_pDoc->f_Clip()->m_oRoot, "head");
+            const size_t l_nHeadKeys = l_pHeadBefore ? l_pHeadBefore->m_vRotKeys.size() : 0;
+            l_bOk &= f_Check(l_pDoc->f_ApplyMotionRecipe("nod", 2.0f, 0.8f, 1.0f) && l_pDoc->f_UndoStack()->index() == l_iRecipeAt + 2 &&
+                            toms::anim::f_FindNode(l_pDoc->f_Clip()->m_oRoot, "head")->m_vRotKeys.size() > l_nHeadKeys,
                         "recipe: nod keys the skin's last bone");
-            doc->selectNodeByName(QStringLiteral("hip"));
-            ok &= check(!doc->applyMotionRecipe("swing", 0.0f, 0.0f, 1.0f) && doc->undoStack()->index() == recipeAt + 2,
+            l_pDoc->f_SelectNodeByName(QStringLiteral("hip"));
+            l_bOk &= f_Check(!l_pDoc->f_ApplyMotionRecipe("swing", 0.0f, 0.0f, 1.0f) && l_pDoc->f_UndoStack()->index() == l_iRecipeAt + 2,
                         "recipe: a bone recipe on a node without a skin is refused");
-            while (doc->undoStack()->index() > recipeAt) doc->undoStack()->undo();
+            while (l_pDoc->f_UndoStack()->index() > l_iRecipeAt) l_pDoc->f_UndoStack()->undo();
 
             // Weights mode (docs/engine/16 step 5 part 3): a click on a joint picks the bone; a stroke paints its weights (one
             // undo step); Ctrl+stroke takes them off; Reset to Automatic Weights drops them.
-            ed->weightModeAction()->setChecked(true);
-            processEvents();
-            ok &= check(view->editMode() == AnimViewport::EditMode::Weights, "weights mode: P / the toolbar switch");
-            doc->selectNodeByName(QStringLiteral("golem"));
-            processEvents();
-            click(bonePoint("chest"));
-            ok &= check(doc->selectedNode() && doc->selectedNode()->name == "chest", "weights mode: a click on a joint picks that bone");
+            l_pEd->f_WeightModeAction()->setChecked(true);
+            f_ProcessEvents();
+            l_bOk &= f_Check(l_pView->f_EditMode() == AnimViewport::EditMode::Weights, "weights mode: P / the toolbar switch");
+            l_pDoc->f_SelectNodeByName(QStringLiteral("golem"));
+            f_ProcessEvents();
+            l_fnClick(l_fnBonePoint("chest"));
+            l_bOk &= f_Check(l_pDoc->f_SelectedNode() && l_pDoc->f_SelectedNode()->m_strName == "chest", "weights mode: a click on a joint picks that bone");
             // The chest's weight on the point nearest widget point w, and every point's weights summing to 1.
-            auto chestWeight = [&](const QPointF& w, bool* sumsOk) {
-                std::vector<toms::anim::NodePose> poses;
-                toms::anim::evaluate(*doc->clip(), doc->previewTime(), poses);
-                for (size_t i = 0; i < poses.size(); i++) {
-                    toms::anim::SkinView sv;
-                    if (toms::anim::skinView(*doc->clip(), poses, i, doc->atlasSet(), toms::anim::placement(0, 0), &sv) != toms::anim::SkinState::Ok)
+            auto l_fnChestWeight = [&](const QPointF& l_oW, bool* l_pSumsOk) {
+                std::vector<toms::anim::NodePose> l_vPoses;
+                toms::anim::f_Evaluate(*l_pDoc->f_Clip(), l_pDoc->f_PreviewTime(), l_vPoses);
+                for (size_t l_nI = 0; l_nI < l_vPoses.size(); l_nI++) {
+                    toms::anim::SkinView l_oSv;
+                    if (toms::anim::f_SkinView(*l_pDoc->f_Clip(), l_vPoses, l_nI, l_pDoc->f_AtlasSet(), toms::anim::f_Placement(0, 0), &l_oSv) != toms::anim::SkinState::Ok)
                         continue;
-                    const int chest = int(std::find(sv.bones.begin(), sv.bones.end(), "chest") - sv.bones.begin());
-                    size_t best = 0;
-                    double bestD = 1e30;
-                    for (size_t v = 0; v < sv.vertices.size(); v++) {
-                        const QPointF p = view->widgetPos(QPointF(sv.vertices[v].x, sv.vertices[v].y));
-                        const double d = std::hypot(p.x() - w.x(), p.y() - w.y());
-                        if (d < bestD) { bestD = d; best = v; }
-                        float sum = 0;
-                        for (int k = 0; k < toms::anim::kSkinInfluences; k++) sum += sv.weights[v * 2 * toms::anim::kSkinInfluences + 2 * size_t(k) + 1];
-                        if (sumsOk && std::fabs(sum - 1.0f) > 1e-3f) *sumsOk = false;
+                    const int l_iChest = int(std::find(l_oSv.m_vBones.begin(), l_oSv.m_vBones.end(), "chest") - l_oSv.m_vBones.begin());
+                    size_t l_nBest = 0;
+                    double l_dBestD = 1e30;
+                    for (size_t l_nV = 0; l_nV < l_oSv.m_vVertices.size(); l_nV++) {
+                        const QPointF l_oP = l_pView->f_WidgetPos(QPointF(l_oSv.m_vVertices[l_nV].x, l_oSv.m_vVertices[l_nV].y));
+                        const double l_dD = std::hypot(l_oP.x() - l_oW.x(), l_oP.y() - l_oW.y());
+                        if (l_dD < l_dBestD) { l_dBestD = l_dD; l_nBest = l_nV; }
+                        float l_fSum = 0;
+                        for (int l_iK = 0; l_iK < toms::anim::g_iSkinInfluences; l_iK++) l_fSum += l_oSv.m_vWeights[l_nV * 2 * toms::anim::g_iSkinInfluences + 2 * size_t(l_iK) + 1];
+                        if (l_pSumsOk && std::fabs(l_fSum - 1.0f) > 1e-3f) *l_pSumsOk = false;
                     }
-                    return animed::boneWeight(sv.weights, best, chest);
+                    return animed::f_BoneWeight(l_oSv.m_vWeights, l_nBest, l_iChest);
                 }
                 return -1.0f;
             };
-            auto stroke = [&](const QPointF& from, Qt::KeyboardModifiers mods) {   // press, three moves, release
-                QMouseEvent press(QEvent::MouseButtonPress, from, view->mapToGlobal(from), Qt::LeftButton, Qt::LeftButton, mods);
-                QApplication::sendEvent(view, &press);
-                for (int i = 1; i <= 3; i++) {
-                    const QPointF to = from + QPointF(0, 4.0 * i);
-                    QMouseEvent move(QEvent::MouseMove, to, view->mapToGlobal(to), Qt::NoButton, Qt::LeftButton, mods);
-                    QApplication::sendEvent(view, &move);
+            auto l_fnStroke = [&](const QPointF& l_oFrom, Qt::KeyboardModifiers l_oMods) {   // press, three moves, release
+                QMouseEvent l_oPress(QEvent::MouseButtonPress, l_oFrom, l_pView->mapToGlobal(l_oFrom), Qt::LeftButton, Qt::LeftButton, l_oMods);
+                QApplication::sendEvent(l_pView, &l_oPress);
+                for (int l_iI = 1; l_iI <= 3; l_iI++) {
+                    const QPointF l_oTo = l_oFrom + QPointF(0, 4.0 * l_iI);
+                    QMouseEvent l_oMove(QEvent::MouseMove, l_oTo, l_pView->mapToGlobal(l_oTo), Qt::NoButton, Qt::LeftButton, l_oMods);
+                    QApplication::sendEvent(l_pView, &l_oMove);
                 }
-                const QPointF end = from + QPointF(0, 12);
-                QMouseEvent release(QEvent::MouseButtonRelease, end, view->mapToGlobal(end), Qt::LeftButton, Qt::NoButton, mods);
-                QApplication::sendEvent(view, &release);
-                processEvents();
+                const QPointF l_oEnd = l_oFrom + QPointF(0, 12);
+                QMouseEvent l_oRelease(QEvent::MouseButtonRelease, l_oEnd, l_pView->mapToGlobal(l_oEnd), Qt::LeftButton, Qt::NoButton, l_oMods);
+                QApplication::sendEvent(l_pView, &l_oRelease);
+                f_ProcessEvents();
             };
             // Paint beside the hip, away from every joint: the chest's share there grows.
-            const QPointF paintAt = bonePoint("hip") + QPointF(14, 0);
-            const float chestBefore = chestWeight(paintAt, nullptr);
-            const int weightsAt = doc->undoStack()->index();
-            view->setBrushStrength(0.8);
-            stroke(paintAt, Qt::NoModifier);
-            const Node* golem = toms::anim::findNode(doc->clip()->root, "golem");
-            bool sums = true;
-            const float chestAfter = chestWeight(paintAt, &sums);
-            ok &= check(golem && !golem->skinWeights.empty() && golem->skinWeights.size() % (2 * toms::anim::kSkinInfluences) == 0,
+            const QPointF l_oPaintAt = l_fnBonePoint("hip") + QPointF(14, 0);
+            const float l_fChestBefore = l_fnChestWeight(l_oPaintAt, nullptr);
+            const int l_iWeightsAt = l_pDoc->f_UndoStack()->index();
+            l_pView->f_SetBrushStrength(0.8);
+            l_fnStroke(l_oPaintAt, Qt::NoModifier);
+            const Node* l_pGolem = toms::anim::f_FindNode(l_pDoc->f_Clip()->m_oRoot, "golem");
+            bool l_bSums = true;
+            const float l_fChestAfter = l_fnChestWeight(l_oPaintAt, &l_bSums);
+            l_bOk &= f_Check(l_pGolem && !l_pGolem->m_vSkinWeights.empty() && l_pGolem->m_vSkinWeights.size() % (2 * toms::anim::g_iSkinInfluences) == 0,
                         "weights: the stroke wrote the golem's weights (no longer automatic)");
-            ok &= check(chestAfter > chestBefore + 0.1f, "weights: the chest's share grew under the brush");
-            ok &= check(sums, "weights: every point still sums to 1");
-            ok &= check(doc->undoStack()->index() == weightsAt + 1, "weights: the whole stroke is one undo step");
-            ok &= check(view->grab().save(QDir(outDir).filePath(QStringLiteral("skin_weights.png"))), "skin_weights.png (the chest's weights)");
-            stroke(paintAt, Qt::ControlModifier);
-            ok &= check(chestWeight(paintAt, nullptr) < chestAfter - 0.1f && doc->undoStack()->index() == weightsAt + 2,
+            l_bOk &= f_Check(l_fChestAfter > l_fChestBefore + 0.1f, "weights: the chest's share grew under the brush");
+            l_bOk &= f_Check(l_bSums, "weights: every point still sums to 1");
+            l_bOk &= f_Check(l_pDoc->f_UndoStack()->index() == l_iWeightsAt + 1, "weights: the whole stroke is one undo step");
+            l_bOk &= f_Check(l_pView->grab().save(QDir(l_oOutDir).filePath(QStringLiteral("skin_weights.png"))), "skin_weights.png (the chest's weights)");
+            l_fnStroke(l_oPaintAt, Qt::ControlModifier);
+            l_bOk &= f_Check(l_fnChestWeight(l_oPaintAt, nullptr) < l_fChestAfter - 0.1f && l_pDoc->f_UndoStack()->index() == l_iWeightsAt + 2,
                         "weights: Ctrl+stroke takes the chest's share off");
-            ed->autoWeightsAction()->trigger();   // the chest is selected: the skin it is in
-            golem = toms::anim::findNode(doc->clip()->root, "golem");
-            ok &= check(golem && golem->skinWeights.empty() && doc->undoStack()->index() == weightsAt + 3,
+            l_pEd->f_AutoWeightsAction()->trigger();   // the chest is selected: the skin it is in
+            l_pGolem = toms::anim::f_FindNode(l_pDoc->f_Clip()->m_oRoot, "golem");
+            l_bOk &= f_Check(l_pGolem && l_pGolem->m_vSkinWeights.empty() && l_pDoc->f_UndoStack()->index() == l_iWeightsAt + 3,
                         "weights: Reset to Automatic Weights drops them (one undo step)");
-            while (doc->undoStack()->index() > weightsAt) doc->undoStack()->undo();
-            view->setBrushStrength(0.5);
-            ed->objectModeAction()->setChecked(true);
-            processEvents();
+            while (l_pDoc->f_UndoStack()->index() > l_iWeightsAt) l_pDoc->f_UndoStack()->undo();
+            l_pView->f_SetBrushStrength(0.5);
+            l_pEd->f_ObjectModeAction()->setChecked(true);
+            f_ProcessEvents();
         } else {
-            ok &= check(false, "skin: open tests/smoke/anim_skin.anim");
+            l_bOk &= f_Check(false, "skin: open tests/smoke/anim_skin.anim");
         }
     }
     {   // Help > Skinning Tutorial (docs/engine/17): the tutorial and its two files are found from the editor's folder and open.
-        ok &= check(!AnimEditor::repoFile(QStringLiteral("docs/engine/17_SKINNING_TUTORIAL.md")).isEmpty() &&
-                        !AnimEditor::repoFile(QStringLiteral("docs/engine/zh_TW/17_SKINNING_TUTORIAL.md")).isEmpty(),
+        l_bOk &= f_Check(!AnimEditor::f_RepoFile(QStringLiteral("docs/engine/17_SKINNING_TUTORIAL.md")).isEmpty() &&
+                        !AnimEditor::f_RepoFile(QStringLiteral("docs/engine/zh_TW/17_SKINNING_TUTORIAL.md")).isEmpty(),
                     "tutorial: docs/engine/17 (both languages) found from the editor's folder");
-        ed->tutorialActions()[1]->trigger();   // the start file: the golem only
-        processEvents();
-        const Node* g = doc->clip() ? toms::anim::findNode(doc->clip()->root, "golem") : nullptr;
-        ok &= check(doc->filePath().endsWith(QStringLiteral("golem_start.anim")) && g && !g->skinned() && g->children.empty(),
+        l_pEd->f_TutorialActions()[1]->trigger();   // the start file: the golem only
+        f_ProcessEvents();
+        const Node* l_pG = l_pDoc->f_Clip() ? toms::anim::f_FindNode(l_pDoc->f_Clip()->m_oRoot, "golem") : nullptr;
+        l_bOk &= f_Check(l_pDoc->f_FilePath().endsWith(QStringLiteral("golem_start.anim")) && l_pG && !l_pG->f_Skinned() && l_pG->m_vChildren.empty(),
                     "tutorial: Open Tutorial Start File opens the golem with no bones");
-        ed->tutorialActions()[2]->trigger();   // the finished file: bones, painted weights, keys, lattice
-        processEvents();
-        g = doc->clip() ? toms::anim::findNode(doc->clip()->root, "golem") : nullptr;
-        bool painted = false;
-        if (g && doc->clip()) {
-            std::vector<toms::anim::NodePose> poses;
-            toms::anim::evaluate(*doc->clip(), 0.0f, poses);
-            for (size_t i = 0; i < poses.size(); i++) {
-                toms::anim::SkinView sv;
-                if (poses[i].node == g &&
-                    toms::anim::skinView(*doc->clip(), poses, i, doc->atlasSet(), toms::anim::placement(0, 0), &sv) == toms::anim::SkinState::Ok)
-                    painted = !sv.autoWeights;
+        l_pEd->f_TutorialActions()[2]->trigger();   // the finished file: bones, painted weights, keys, lattice
+        f_ProcessEvents();
+        l_pG = l_pDoc->f_Clip() ? toms::anim::f_FindNode(l_pDoc->f_Clip()->m_oRoot, "golem") : nullptr;
+        bool l_bPainted = false;
+        if (l_pG && l_pDoc->f_Clip()) {
+            std::vector<toms::anim::NodePose> l_vPoses;
+            toms::anim::f_Evaluate(*l_pDoc->f_Clip(), 0.0f, l_vPoses);
+            for (size_t l_nI = 0; l_nI < l_vPoses.size(); l_nI++) {
+                toms::anim::SkinView l_oSv;
+                if (l_vPoses[l_nI].m_pNode == l_pG &&
+                    toms::anim::f_SkinView(*l_pDoc->f_Clip(), l_vPoses, l_nI, l_pDoc->f_AtlasSet(), toms::anim::f_Placement(0, 0), &l_oSv) == toms::anim::SkinState::Ok)
+                    l_bPainted = !l_oSv.m_bAutoWeights;
             }
         }
-        ok &= check(doc->filePath().endsWith(QStringLiteral("golem_done.anim")) && g && g->skinBones.size() == 3 && painted &&
-                        !g->deformKeys.empty() && toms::anim::findNode(doc->clip()->root, "chest")->rotKeys.size() == 3,
+        l_bOk &= f_Check(l_pDoc->f_FilePath().endsWith(QStringLiteral("golem_done.anim")) && l_pG && l_pG->m_vSkinBones.size() == 3 && l_bPainted &&
+                        !l_pG->m_vDeformKeys.empty() && toms::anim::f_FindNode(l_pDoc->f_Clip()->m_oRoot, "chest")->m_vRotKeys.size() == 3,
                     "tutorial: Open Tutorial Finished File: 3 bones, painted weights that fit the mesh, a breath, a sway");
     }
     {   // Preview as Character (docs/engine/05 "Characters"): assets/media/anim/archer_bow.anim shown as other characters.
-        const QString archerFile = QFileInfo(file).dir().filePath(QStringLiteral("../../assets/media/anim/archer_bow.anim"));
-        if (!QFileInfo::exists(archerFile)) {
-            ok &= check(false, "character: assets/media/anim/archer_bow.anim");
-        } else if (ed->openFile(archerFile, false)) {
-            processEvents();
-            const QStringList who = doc->characterChoices();
-            ok &= check(who.contains(QStringLiteral("player")) && who.contains(QStringLiteral("player_knight_girl")) && who.size() >= 11,
+        const QString l_oArcherFile = QFileInfo(l_oFile).dir().filePath(QStringLiteral("../../assets/media/anim/archer_bow.anim"));
+        if (!QFileInfo::exists(l_oArcherFile)) {
+            l_bOk &= f_Check(false, "character: assets/media/anim/archer_bow.anim");
+        } else if (l_pEd->f_OpenFile(l_oArcherFile, false)) {
+            f_ProcessEvents();
+            const QStringList l_oWho = l_pDoc->f_CharacterChoices();
+            l_bOk &= f_Check(l_oWho.contains(QStringLiteral("player")) && l_oWho.contains(QStringLiteral("player_knight_girl")) && l_oWho.size() >= 11,
                         "character: every player_* sprite is offered");
-            ok &= check(doc->drawClip() == doc->clip(), "character: as made, the view draws the clip itself");
-            const glm::vec3 handMade = toms::anim::findNode(doc->clip()->root, "hand")->pos;
-            doc->setPreviewCharacter(QStringLiteral("player_knight_girl"));
-            processEvents();
-            const toms::anim::Clip* shown = doc->drawClip();
-            const toms::anim::Node* body = shown ? toms::anim::findNode(shown->root, "body") : nullptr;
-            const toms::anim::Node* hand = shown ? toms::anim::findNode(shown->root, "hand") : nullptr;
-            ok &= check(shown != doc->clip() && body && body->sprite == "game:player_knight_girl" && hand && hand->pos.x > handMade.x,
+            l_bOk &= f_Check(l_pDoc->f_DrawClip() == l_pDoc->f_Clip(), "character: as made, the view draws the clip itself");
+            const glm::vec3 l_v3HandMade = toms::anim::f_FindNode(l_pDoc->f_Clip()->m_oRoot, "hand")->m_v3Pos;
+            l_pDoc->f_SetPreviewCharacter(QStringLiteral("player_knight_girl"));
+            f_ProcessEvents();
+            const toms::anim::Clip* l_pShown = l_pDoc->f_DrawClip();
+            const toms::anim::Node* l_pBody = l_pShown ? toms::anim::f_FindNode(l_pShown->m_oRoot, "body") : nullptr;
+            const toms::anim::Node* l_pHand = l_pShown ? toms::anim::f_FindNode(l_pShown->m_oRoot, "hand") : nullptr;
+            l_bOk &= f_Check(l_pShown != l_pDoc->f_Clip() && l_pBody && l_pBody->m_strSprite == "game:player_knight_girl" && l_pHand && l_pHand->m_v3Pos.x > l_v3HandMade.x,
                         "character: the view draws the knight girl, the bow further out (a wider body)");
-            ok &= check(doc->drawClip() == shown, "character: the fitted copy is kept (poses stay valid)");
-            ok &= check(toms::anim::findNode(doc->clip()->root, "body")->sprite == "game:player", "character: the clip itself is unchanged");
-            ok &= check(doc->selectNodeByName(QStringLiteral("hand")) && doc->drawNode(doc->selectedNode()) == hand,
+            l_bOk &= f_Check(l_pDoc->f_DrawClip() == l_pShown, "character: the fitted copy is kept (poses stay valid)");
+            l_bOk &= f_Check(toms::anim::f_FindNode(l_pDoc->f_Clip()->m_oRoot, "body")->m_strSprite == "game:player", "character: the clip itself is unchanged");
+            l_bOk &= f_Check(l_pDoc->f_SelectNodeByName(QStringLiteral("hand")) && l_pDoc->f_DrawNode(l_pDoc->f_SelectedNode()) == l_pHand,
                         "character: the selected node is found in the drawn copy (gizmo, outline)");
-            ok &= check(ed->viewport()->grab().save(QDir(outDir).filePath(QStringLiteral("character_knight.png"))), "character_knight.png");
-            doc->setPreviewCharacter(QString());
-            processEvents();
-            ok &= check(doc->drawClip() == doc->clip(), "character: back to as made");
+            l_bOk &= f_Check(l_pEd->f_Viewport()->grab().save(QDir(l_oOutDir).filePath(QStringLiteral("character_knight.png"))), "character_knight.png");
+            l_pDoc->f_SetPreviewCharacter(QString());
+            f_ProcessEvents();
+            l_bOk &= f_Check(l_pDoc->f_DrawClip() == l_pDoc->f_Clip(), "character: back to as made");
         } else {
-            ok &= check(false, "character: open archer_bow.anim");
+            l_bOk &= f_Check(false, "character: open archer_bow.anim");
         }
     }
     {   // Lattice mode (docs/engine/16 step 4): drag a lattice point of a sprite with no deform yet -> a deform key at the playhead.
-        const QString deformFile = QFileInfo(file).dir().filePath(QStringLiteral("anim_deform.anim"));
-        AnimViewport* view = ed->viewport();
-        if (!QFileInfo::exists(deformFile) || !ed->openFile(deformFile, false)) {
-            ok &= check(false, "lattice: open tests/smoke/anim_deform.anim");
+        const QString l_oDeformFile = QFileInfo(l_oFile).dir().filePath(QStringLiteral("anim_deform.anim"));
+        AnimViewport* l_pView = l_pEd->f_Viewport();
+        if (!QFileInfo::exists(l_oDeformFile) || !l_pEd->f_OpenFile(l_oDeformFile, false)) {
+            l_bOk &= f_Check(false, "lattice: open tests/smoke/anim_deform.anim");
         } else {
-            view->resize(640, 480);
-            processEvents();
-            view->frameClip();
-            doc->setTime(0.25f);
-            ed->latticeModeAction()->setChecked(true);
-            ok &= check(view->editMode() == AnimViewport::EditMode::Lattice && doc->selectNodeByName(QStringLiteral("plain")),
+            l_pView->resize(640, 480);
+            f_ProcessEvents();
+            l_pView->f_FrameClip();
+            l_pDoc->f_SetTime(0.25f);
+            l_pEd->f_LatticeModeAction()->setChecked(true);
+            l_bOk &= f_Check(l_pView->f_EditMode() == AnimViewport::EditMode::Lattice && l_pDoc->f_SelectNodeByName(QStringLiteral("plain")),
                         "lattice: L mode, the plain slime selected");
-            processEvents();
-            const toms::anim::Node* plain = doc->selectedNode();
-            ok &= check(plain && plain->deformKeys.empty() && plain->latticeCols() == 4, "lattice: no deform yet, 4 x 4");
+            f_ProcessEvents();
+            const toms::anim::Node* l_pPlain = l_pDoc->f_SelectedNode();
+            l_bOk &= f_Check(l_pPlain && l_pPlain->m_vDeformKeys.empty() && l_pPlain->f_LatticeCols() == 4, "lattice: no deform yet, 4 x 4");
             // where point 5 (second row, second column) is drawn
-            std::vector<toms::anim::NodePose> poses;
-            toms::anim::evaluate(*doc->clip(), doc->previewTime(), poses);
-            toms::anim::LatticeView lv;
-            QPointF at(-1, -1);
-            for (size_t i = 0; i < poses.size(); i++)
-                if (poses[i].node == plain && toms::anim::latticeView(poses, i, doc->atlasSet(), toms::anim::placement(0, 0), lv))
-                    at = view->widgetPos(QPointF(lv.points[5].x, lv.points[5].y));
-            ok &= check(view->latticePointAt(at) == 5, "lattice: point 5 is found under its square");
-            const int undoAt = doc->undoStack()->index();
-            auto send = [&](QEvent::Type type, const QPointF& pt, Qt::MouseButtons held) {
-                QMouseEvent e(type, pt, view->mapToGlobal(pt), type == QEvent::MouseMove ? Qt::NoButton : Qt::LeftButton, held, Qt::NoModifier);
-                QApplication::sendEvent(view, &e);
-                processEvents();
+            std::vector<toms::anim::NodePose> l_vPoses;
+            toms::anim::f_Evaluate(*l_pDoc->f_Clip(), l_pDoc->f_PreviewTime(), l_vPoses);
+            toms::anim::LatticeView l_oLv;
+            QPointF l_oAt(-1, -1);
+            for (size_t l_nI = 0; l_nI < l_vPoses.size(); l_nI++)
+                if (l_vPoses[l_nI].m_pNode == l_pPlain && toms::anim::f_LatticeView(l_vPoses, l_nI, l_pDoc->f_AtlasSet(), toms::anim::f_Placement(0, 0), l_oLv))
+                    l_oAt = l_pView->f_WidgetPos(QPointF(l_oLv.m_vPoints[5].x, l_oLv.m_vPoints[5].y));
+            l_bOk &= f_Check(l_pView->f_LatticePointAt(l_oAt) == 5, "lattice: point 5 is found under its square");
+            const int l_iUndoAt = l_pDoc->f_UndoStack()->index();
+            auto l_fnSend = [&](QEvent::Type l_eType, const QPointF& l_oPt, Qt::MouseButtons l_oHeld) {
+                QMouseEvent l_oE(l_eType, l_oPt, l_pView->mapToGlobal(l_oPt), l_eType == QEvent::MouseMove ? Qt::NoButton : Qt::LeftButton, l_oHeld, Qt::NoModifier);
+                QApplication::sendEvent(l_pView, &l_oE);
+                f_ProcessEvents();
             };
-            send(QEvent::MouseButtonPress, at, Qt::LeftButton);
-            for (int i = 1; i <= 4; i++) send(QEvent::MouseMove, at + QPointF(0, 5.0 * i), Qt::LeftButton);
-            send(QEvent::MouseButtonRelease, at + QPointF(0, 20), Qt::NoButton);
-            plain = doc->selectedNode();
-            ok &= check(plain && plain->deformKeys.size() == 1 && std::fabs(plain->deformKeys[0].t - 0.25f) < 1e-3f &&
-                            plain->deformKeys[0].v.count(5) && plain->deformKeys[0].v.at(5).y > 0.5f && plain->deformKeys[0].v.size() == 1,
+            l_fnSend(QEvent::MouseButtonPress, l_oAt, Qt::LeftButton);
+            for (int l_iI = 1; l_iI <= 4; l_iI++) l_fnSend(QEvent::MouseMove, l_oAt + QPointF(0, 5.0 * l_iI), Qt::LeftButton);
+            l_fnSend(QEvent::MouseButtonRelease, l_oAt + QPointF(0, 20), Qt::NoButton);
+            l_pPlain = l_pDoc->f_SelectedNode();
+            l_bOk &= f_Check(l_pPlain && l_pPlain->m_vDeformKeys.size() == 1 && std::fabs(l_pPlain->m_vDeformKeys[0].m_fT - 0.25f) < 1e-3f &&
+                            l_pPlain->m_vDeformKeys[0].m_oV.count(5) && l_pPlain->m_vDeformKeys[0].m_oV.at(5).y > 0.5f && l_pPlain->m_vDeformKeys[0].m_oV.size() == 1,
                         "lattice: one deform key at the playhead, point 5 moved down");
-            ok &= check(doc->undoStack()->index() == undoAt + 1, "lattice: the whole drag is one undo step");
-            ok &= check(view->grab().save(QDir(outDir).filePath(QStringLiteral("lattice_drag.png"))), "lattice_drag.png");
+            l_bOk &= f_Check(l_pDoc->f_UndoStack()->index() == l_iUndoAt + 1, "lattice: the whole drag is one undo step");
+            l_bOk &= f_Check(l_pView->grab().save(QDir(l_oOutDir).filePath(QStringLiteral("lattice_drag.png"))), "lattice_drag.png");
             // a smaller lattice keeps the key: point 5 (col 1, row 1 of 4 x 4) -> point 4 (col 1, row 1 of 3 x 3)
-            ok &= check(doc->setLatticeSize(3, 3) && doc->selectedNode()->latticeCols() == 3 &&
-                            doc->selectedNode()->deformKeys[0].v.count(4) == 1,
+            l_bOk &= f_Check(l_pDoc->f_SetLatticeSize(3, 3) && l_pDoc->f_SelectedNode()->f_LatticeCols() == 3 &&
+                            l_pDoc->f_SelectedNode()->m_vDeformKeys[0].m_oV.count(4) == 1,
                         "lattice: resized to 3 x 3, the moved point remapped");
-            while (doc->undoStack()->index() > undoAt) doc->undoStack()->undo();
-            ok &= check(doc->selectedNode() && doc->selectedNode()->deformKeys.empty(), "lattice: undo");
+            while (l_pDoc->f_UndoStack()->index() > l_iUndoAt) l_pDoc->f_UndoStack()->undo();
+            l_bOk &= f_Check(l_pDoc->f_SelectedNode() && l_pDoc->f_SelectedNode()->m_vDeformKeys.empty(), "lattice: undo");
             // A key row shows its time: the slime's empty deform key at t = 1 draws it at rest, also clicked during
             // playback, and also when the playhead already is at 1 with a preview run on past it (looping nodes).
-            ok &= check(doc->selectNodeByName(QStringLiteral("slime")), "lattice: the deformed slime selected");
-            QTableWidget* keys = ed->keyListDock()->table();
-            auto wait = [&](int ms) { QElapsedTimer w; w.start(); while (w.elapsed() < ms) processEvents(); };
-            auto rowAt = [&](const QString& t) {
-                for (int r = 0; r < keys->rowCount(); r++)
-                    if (keys->item(r, 1) && keys->item(r, 1)->text() == t) return r;
+            l_bOk &= f_Check(l_pDoc->f_SelectNodeByName(QStringLiteral("slime")), "lattice: the deformed slime selected");
+            QTableWidget* l_pKeys = l_pEd->f_KeyListDock()->f_Table();
+            auto l_fnWait = [&](int l_iMs) { QElapsedTimer l_oW; l_oW.start(); while (l_oW.elapsed() < l_iMs) f_ProcessEvents(); };
+            auto l_fnRowAt = [&](const QString& l_oT) {
+                for (int l_iR = 0; l_iR < l_pKeys->rowCount(); l_iR++)
+                    if (l_pKeys->item(l_iR, 1) && l_pKeys->item(l_iR, 1)->text() == l_oT) return l_iR;
                 return -1;
             };
-            auto click = [&](int row) {
-                const QRect rc = keys->visualRect(keys->model()->index(row, 1));
-                for (QEvent::Type type : {QEvent::MouseButtonPress, QEvent::MouseButtonRelease}) {
-                    QMouseEvent e(type, QPointF(rc.center()), keys->viewport()->mapToGlobal(QPointF(rc.center())), Qt::LeftButton,
-                                  type == QEvent::MouseButtonPress ? Qt::LeftButton : Qt::NoButton, Qt::NoModifier);
-                    QApplication::sendEvent(keys->viewport(), &e);
+            auto l_fnClick = [&](int l_iRow) {
+                const QRect l_oRc = l_pKeys->visualRect(l_pKeys->model()->index(l_iRow, 1));
+                for (QEvent::Type l_eType : {QEvent::MouseButtonPress, QEvent::MouseButtonRelease}) {
+                    QMouseEvent l_oE(l_eType, QPointF(l_oRc.center()), l_pKeys->viewport()->mapToGlobal(QPointF(l_oRc.center())), Qt::LeftButton,
+                                  l_eType == QEvent::MouseButtonPress ? Qt::LeftButton : Qt::NoButton, Qt::NoModifier);
+                    QApplication::sendEvent(l_pKeys->viewport(), &l_oE);
                 }
             };
-            auto mostShown = [&] {   // the largest offset of the slime's lattice on screen
-                std::vector<toms::anim::NodePose> ps;
-                toms::anim::evaluate(*doc->clip(), doc->previewTime(), ps);
-                float most = 0;
-                for (const auto& p : ps)
-                    if (p.node == doc->selectedNode())
-                        for (const glm::vec2& o : toms::anim::deformAt(*p.node, p.time)) most = std::max(most, glm::length(o));
-                return most;
+            auto l_fnMostShown = [&] {   // the largest offset of the slime's lattice on screen
+                std::vector<toms::anim::NodePose> l_vPs;
+                toms::anim::f_Evaluate(*l_pDoc->f_Clip(), l_pDoc->f_PreviewTime(), l_vPs);
+                float l_fMost = 0;
+                for (const auto& l_oP : l_vPs)
+                    if (l_oP.m_pNode == l_pDoc->f_SelectedNode())
+                        for (const glm::vec2& l_v2O : toms::anim::f_DeformAt(*l_oP.m_pNode, l_oP.m_fTime)) l_fMost = std::max(l_fMost, glm::length(l_v2O));
+                return l_fMost;
             };
-            const int halfRow = rowAt(QStringLiteral("0.500")), lastRow = rowAt(QStringLiteral("1.000"));
-            ed->transport()->play();
-            wait(200);
-            if (halfRow >= 0) click(halfRow);
-            wait(100);
-            ok &= check(halfRow >= 0 && !ed->transport()->isPlaying() && doc->previewTime() == 0.5f && mostShown() > 5,
+            const int l_iHalfRow = l_fnRowAt(QStringLiteral("0.500")), l_iLastRow = l_fnRowAt(QStringLiteral("1.000"));
+            l_pEd->f_Transport()->f_Play();
+            l_fnWait(200);
+            if (l_iHalfRow >= 0) l_fnClick(l_iHalfRow);
+            l_fnWait(100);
+            l_bOk &= f_Check(l_iHalfRow >= 0 && !l_pEd->f_Transport()->f_IsPlaying() && l_pDoc->f_PreviewTime() == 0.5f && l_fnMostShown() > 5,
                         "lattice: the t = 0.5 row clicked during playback: paused there, deformed");
-            if (lastRow >= 0) click(lastRow);
-            wait(100);
-            ok &= check(lastRow >= 0 && doc->previewTime() == 1.0f && mostShown() < 1e-4f,
+            if (l_iLastRow >= 0) l_fnClick(l_iLastRow);
+            l_fnWait(100);
+            l_bOk &= f_Check(l_iLastRow >= 0 && l_pDoc->f_PreviewTime() == 1.0f && l_fnMostShown() < 1e-4f,
                         "lattice: the t = 1 row (an empty deform key): the slime at rest");
             // What is on the screen (not the widget's own grab: the game renderer presents to the window): one click
             // = one repaint, and that frame must be the one shown, not the frame before it (bgfx presents a frame at
             // the next bgfx::frame() unless flip-after-render is on).
-            if (view->usingGameRenderer()) {
+            if (l_pView->f_UsingGameRenderer()) {
                 // One repaint, captured before anything else can paint again: a click can bring two (the press
                 // moves the row, the release clicks it), which would hide a frame shown one late.
-                auto settle = [&] { for (int i = 0; i < 3; i++) { view->repaint(); wait(50); } };
-                doc->setTime(0.5f);
-                settle();
-                const QImage half = presentedImage(view);
-                doc->setTime(1.0f);
-                view->repaint();
-                const QImage once = presentedImage(view);
-                settle();
-                const QImage settled = presentedImage(view);
-                ok &= check(!once.isNull() && once != half && once == settled,
+                auto l_fnSettle = [&] { for (int l_iI = 0; l_iI < 3; l_iI++) { l_pView->repaint(); l_fnWait(50); } };
+                l_pDoc->f_SetTime(0.5f);
+                l_fnSettle();
+                const QImage l_oHalf = f_PresentedImage(l_pView);
+                l_pDoc->f_SetTime(1.0f);
+                l_pView->repaint();
+                const QImage l_oOnce = f_PresentedImage(l_pView);
+                l_fnSettle();
+                const QImage l_oSettled = f_PresentedImage(l_pView);
+                l_bOk &= f_Check(!l_oOnce.isNull() && l_oOnce != l_oHalf && l_oOnce == l_oSettled,
                             "lattice: one repaint puts the new time on the screen (not the frame before)");
             }
-            doc->setPreviewTime(1.5f);   // as playback leaves it when looping nodes run on past the end
-            if (lastRow >= 0) click(lastRow);
-            ok &= check(doc->previewTime() == 1.0f && mostShown() < 1e-4f, "lattice: clicking the playhead's own row ends a run-on preview");
-            while (doc->undoStack()->index() > undoAt) doc->undoStack()->undo();
-            ed->objectModeAction()->setChecked(true);
+            l_pDoc->f_SetPreviewTime(1.5f);   // as playback leaves it when looping nodes run on past the end
+            if (l_iLastRow >= 0) l_fnClick(l_iLastRow);
+            l_bOk &= f_Check(l_pDoc->f_PreviewTime() == 1.0f && l_fnMostShown() < 1e-4f, "lattice: clicking the playhead's own row ends a run-on preview");
+            while (l_pDoc->f_UndoStack()->index() > l_iUndoAt) l_pDoc->f_UndoStack()->undo();
+            l_pEd->f_ObjectModeAction()->setChecked(true);
         }
     }
-    std::printf("selftest: %s\n", ok ? "ok" : "FAILED");
-    return ok ? 0 : 1;
+    std::printf("selftest: %s\n", l_bOk ? "ok" : "FAILED");
+    return l_bOk ? 0 : 1;
 }
 
 // Right-drag on a canvas: it must pan (the content moves with the mouse), as middle-drag does.
-static bool rightDragPans(CanvasView* view)
+static bool f_RightDragPans(CanvasView* l_pView)
 {
-    const QPointF before = view->contentToWidget(QPointF(0, 0));
-    const QPointF a(view->width() / 2.0, view->height() / 2.0), b = a + QPointF(60, 25);
-    auto send = [&](QEvent::Type type, const QPointF& at, Qt::MouseButton button, Qt::MouseButtons buttons) {
-        QMouseEvent e(type, at, view->mapToGlobal(at), button, buttons, Qt::NoModifier);
-        QApplication::sendEvent(view, &e);
+    const QPointF l_oBefore = l_pView->f_ContentToWidget(QPointF(0, 0));
+    const QPointF l_oA(l_pView->width() / 2.0, l_pView->height() / 2.0), l_oB = l_oA + QPointF(60, 25);
+    auto l_fnSend = [&](QEvent::Type l_eType, const QPointF& l_oAt, Qt::MouseButton l_eButton, Qt::MouseButtons l_oButtons) {
+        QMouseEvent l_oE(l_eType, l_oAt, l_pView->mapToGlobal(l_oAt), l_eButton, l_oButtons, Qt::NoModifier);
+        QApplication::sendEvent(l_pView, &l_oE);
     };
-    send(QEvent::MouseButtonPress, a, Qt::RightButton, Qt::RightButton);
-    for (int i = 1; i <= 4; i++) send(QEvent::MouseMove, a + (b - a) * (i / 4.0), Qt::NoButton, Qt::RightButton);
-    send(QEvent::MouseButtonRelease, b, Qt::RightButton, Qt::NoButton);
+    l_fnSend(QEvent::MouseButtonPress, l_oA, Qt::RightButton, Qt::RightButton);
+    for (int l_iI = 1; l_iI <= 4; l_iI++) l_fnSend(QEvent::MouseMove, l_oA + (l_oB - l_oA) * (l_iI / 4.0), Qt::NoButton, Qt::RightButton);
+    l_fnSend(QEvent::MouseButtonRelease, l_oB, Qt::RightButton, Qt::NoButton);
     QCoreApplication::processEvents();
-    const QPointF moved = view->contentToWidget(QPointF(0, 0)) - before;
-    return std::fabs(moved.x() - 60) < 1 && std::fabs(moved.y() - 25) < 1;
+    const QPointF l_oMoved = l_pView->f_ContentToWidget(QPointF(0, 0)) - l_oBefore;
+    return std::fabs(l_oMoved.x() - 60) < 1 && std::fabs(l_oMoved.y() - 25) < 1;
 }
 
 // The viewport with the game renderer (on screen): it starts, draws, and a bgfx screenshot of the
 // clip at a fixed time is saved for comparing with toms_game --anim.
-int runGpuSelfTest(AnimMainWindow& w, const QString& file, const QString& outDir)
+int f_RunGpuSelfTest(AnimMainWindow& l_oW, const QString& l_oFile, const QString& l_oOutDir)
 {
     qApp->setProperty("toms.selftest", true);
-    QDir().mkpath(outDir);
-    AnimEditor* ed = w.editor();
-    auto pump = [](int ms) {
-        QElapsedTimer t;
-        t.start();
-        while (t.elapsed() < ms) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
+    QDir().mkpath(l_oOutDir);
+    AnimEditor* l_pEd = l_oW.f_Editor();
+    auto l_fnPump = [](int l_iMs) {
+        QElapsedTimer l_oT;
+        l_oT.start();
+        while (l_oT.elapsed() < l_iMs) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
     };
-    bool ok = check(ed->openFile(file, false), "open the clip");
-    pump(500);
-    AnimViewport* view = ed->viewport();
-    ok &= check(view->usingGameRenderer(), "the viewport runs on the game renderer");
-    std::printf("selftest:   %s\n", view->rendererName().toUtf8().constData());
-    if (!view->usingGameRenderer()) return 1;
-    ed->document()->setTime(0.5f);
-    const int f0 = view->framesDrawn();
-    pump(600);
-    ok &= check(view->framesDrawn() > f0, "frames are drawn");
-    ok &= check(rightDragPans(view), "right-drag pans the viewport (game renderer window)");
-    const int before = toms::next::bgfxHostScreenshotsWritten();
-    view->saveGameRendererShot(QDir(outDir).filePath(QStringLiteral("anim_gpu.png")));
-    QElapsedTimer t;
-    t.start();
-    while (toms::next::bgfxHostScreenshotsWritten() == before && t.elapsed() < 3000) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
-    ok &= check(toms::next::bgfxHostScreenshotsWritten() > before, "anim_gpu.png (bgfx screenshot)");
-    auto shot = [&](const char* name) {
-        const int n = toms::next::bgfxHostScreenshotsWritten();
-        view->saveGameRendererShot(QDir(outDir).filePath(QString::fromLatin1(name)));
-        QElapsedTimer st;
-        st.start();
-        while (toms::next::bgfxHostScreenshotsWritten() == n && st.elapsed() < 3000) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
-        return toms::next::bgfxHostScreenshotsWritten() > n;
+    bool l_bOk = f_Check(l_pEd->f_OpenFile(l_oFile, false), "open the clip");
+    l_fnPump(500);
+    AnimViewport* l_pView = l_pEd->f_Viewport();
+    l_bOk &= f_Check(l_pView->f_UsingGameRenderer(), "the viewport runs on the game renderer");
+    std::printf("selftest:   %s\n", l_pView->f_RendererName().toUtf8().constData());
+    if (!l_pView->f_UsingGameRenderer()) return 1;
+    l_pEd->f_Document()->f_SetTime(0.5f);
+    const int l_iF0 = l_pView->f_FramesDrawn();
+    l_fnPump(600);
+    l_bOk &= f_Check(l_pView->f_FramesDrawn() > l_iF0, "frames are drawn");
+    l_bOk &= f_Check(f_RightDragPans(l_pView), "right-drag pans the viewport (game renderer window)");
+    const int l_iBefore = toms::next::f_BgfxHostScreenshotsWritten();
+    l_pView->f_SaveGameRendererShot(QDir(l_oOutDir).filePath(QStringLiteral("anim_gpu.png")));
+    QElapsedTimer l_oT;
+    l_oT.start();
+    while (toms::next::f_BgfxHostScreenshotsWritten() == l_iBefore && l_oT.elapsed() < 3000) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
+    l_bOk &= f_Check(toms::next::f_BgfxHostScreenshotsWritten() > l_iBefore, "anim_gpu.png (bgfx screenshot)");
+    auto l_fnShot = [&](const char* l_pszName) {
+        const int l_iN = toms::next::f_BgfxHostScreenshotsWritten();
+        l_pView->f_SaveGameRendererShot(QDir(l_oOutDir).filePath(QString::fromLatin1(l_pszName)));
+        QElapsedTimer l_oSt;
+        l_oSt.start();
+        while (toms::next::f_BgfxHostScreenshotsWritten() == l_iN && l_oSt.elapsed() < 3000) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
+        return toms::next::f_BgfxHostScreenshotsWritten() > l_iN;
     };
     // Double-click another clip in the Clips dock (real mouse events): the viewport shows that clip.
-    if (ed->document()->file().clips.size() > 1) {
-        auto* list = ed->clipsDock()->findChild<QListWidget*>();
-        ed->clipsDock()->show();
-        ed->clipsDock()->raise();
-        pump(200);
-        const QPoint at = list->visualItemRect(list->item(1)).center();
-        for (QEvent::Type type : {QEvent::MouseButtonPress, QEvent::MouseButtonRelease, QEvent::MouseButtonDblClick, QEvent::MouseButtonRelease}) {
-            QMouseEvent e(type, QPointF(at), list->viewport()->mapToGlobal(QPointF(at)), Qt::LeftButton,
-                          type == QEvent::MouseButtonRelease ? Qt::NoButton : Qt::LeftButton, Qt::NoModifier);
-            QApplication::sendEvent(list->viewport(), &e);
+    if (l_pEd->f_Document()->f_File().m_vClips.size() > 1) {
+        auto* l_pList = l_pEd->f_ClipsDock()->findChild<QListWidget*>();
+        l_pEd->f_ClipsDock()->show();
+        l_pEd->f_ClipsDock()->raise();
+        l_fnPump(200);
+        const QPoint l_oAt = l_pList->visualItemRect(l_pList->item(1)).center();
+        for (QEvent::Type l_eType : {QEvent::MouseButtonPress, QEvent::MouseButtonRelease, QEvent::MouseButtonDblClick, QEvent::MouseButtonRelease}) {
+            QMouseEvent l_oE(l_eType, QPointF(l_oAt), l_pList->viewport()->mapToGlobal(QPointF(l_oAt)), Qt::LeftButton,
+                          l_eType == QEvent::MouseButtonRelease ? Qt::NoButton : Qt::LeftButton, Qt::NoModifier);
+            QApplication::sendEvent(l_pList->viewport(), &l_oE);
         }
-        const int f1 = view->framesDrawn();
-        pump(600);
-        ok &= check(ed->document()->clipIndex() == 1, "double-click opens clip 2");
-        ok &= check(view->framesDrawn() > f1, "the viewport redraws after the switch");
-        ok &= check(shot("anim_clip2.png"), "anim_clip2.png (the second clip)");
+        const int l_iF1 = l_pView->f_FramesDrawn();
+        l_fnPump(600);
+        l_bOk &= f_Check(l_pEd->f_Document()->f_ClipIndex() == 1, "double-click opens clip 2");
+        l_bOk &= f_Check(l_pView->f_FramesDrawn() > l_iF1, "the viewport redraws after the switch");
+        l_bOk &= f_Check(l_fnShot("anim_clip2.png"), "anim_clip2.png (the second clip)");
     }
     // Solo the first child of the root's first child (in anim_child_timing's second clip: the coin
     // and the gem it carries): the player is not drawn, the coin and gem are, in their place.
     {
-        AnimDocument* doc = ed->document();
-        const toms::anim::Clip* c = doc->clip();
-        if (c && !c->root.children.empty() && !c->root.children[0].children.empty()) {
-            const NodePath solo{0, 0};
-            doc->setSolo(solo);
-            const toms::anim::Node& parent = c->root.children[0];
-            const toms::anim::Node& kid = parent.children[0];
-            ok &= check(doc->soloShows(&kid) && !doc->soloShows(&parent) && !doc->soloShows(&c->root) &&
-                            (kid.children.empty() || doc->soloShows(&kid.children[0])),
+        AnimDocument* l_pDoc = l_pEd->f_Document();
+        const toms::anim::Clip* l_pC = l_pDoc->f_Clip();
+        if (l_pC && !l_pC->m_oRoot.m_vChildren.empty() && !l_pC->m_oRoot.m_vChildren[0].m_vChildren.empty()) {
+            const NodePath l_vSolo{0, 0};
+            l_pDoc->f_SetSolo(l_vSolo);
+            const toms::anim::Node& l_oParent = l_pC->m_oRoot.m_vChildren[0];
+            const toms::anim::Node& l_oKid = l_oParent.m_vChildren[0];
+            l_bOk &= f_Check(l_pDoc->f_SoloShows(&l_oKid) && !l_pDoc->f_SoloShows(&l_oParent) && !l_pDoc->f_SoloShows(&l_pC->m_oRoot) &&
+                            (l_oKid.m_vChildren.empty() || l_pDoc->f_SoloShows(&l_oKid.m_vChildren[0])),
                         "solo: the node and its children are drawn, its parents not");
-            pump(300);
-            ok &= check(shot("anim_solo.png"), "anim_solo.png (solo)");
-            doc->setClipIndex(0);
-            ok &= check(!doc->solo(), "another clip ends the solo");
+            l_fnPump(300);
+            l_bOk &= f_Check(l_fnShot("anim_solo.png"), "anim_solo.png (solo)");
+            l_pDoc->f_SetClipIndex(0);
+            l_bOk &= f_Check(!l_pDoc->f_Solo(), "another clip ends the solo");
         }
     }
-    std::printf("selftest: %s\n", ok ? "ok" : "FAILED");
-    return ok ? 0 : 1;
+    std::printf("selftest: %s\n", l_bOk ? "ok" : "FAILED");
+    return l_bOk ? 0 : 1;
 }
 
 // anim_editor --render file.anim clip outdir t1,t2,... [held.anim]: the clip at those times through the game renderer,
 // framed once for the whole clip, as outdir/<clip>_<ms>.png (a held file: its clip of the same name at `hand`).
-int runRender(AnimMainWindow& w, const QStringList& a)
+int f_RunRender(AnimMainWindow& l_oW, const QStringList& l_oA)
 {
     qApp->setProperty("toms.selftest", true);
-    QDir().mkpath(a[2]);
-    AnimEditor* ed = w.editor();
-    auto pump = [](int ms) {
-        QElapsedTimer t;
-        t.start();
-        while (t.elapsed() < ms) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
+    QDir().mkpath(l_oA[2]);
+    AnimEditor* l_pEd = l_oW.f_Editor();
+    auto l_fnPump = [](int l_iMs) {
+        QElapsedTimer l_oT;
+        l_oT.start();
+        while (l_oT.elapsed() < l_iMs) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
     };
-    if (!ed->openFile(a[0], false)) { std::fprintf(stderr, "render: cannot open %s\n", qPrintable(a[0])); return 2; }
-    AnimDocument* doc = ed->document();
-    int index = -1;
-    for (size_t i = 0; i < doc->file().clips.size(); i++)
-        if (QString::fromStdString(doc->file().clips[i].name) == a[1]) index = int(i);
-    if (index < 0) { std::fprintf(stderr, "render: no clip %s\n", qPrintable(a[1])); return 2; }
-    doc->setClipIndex(index);
-    QString err;
-    if (a.size() > 4 && !doc->setHeldFile(a[4], &err)) { std::fprintf(stderr, "render: %s\n", qPrintable(err)); return 2; }
-    for (QDockWidget* d : w.findChildren<QDockWidget*>()) d->hide();   // the viewport alone
-    pump(500);
-    AnimViewport* view = ed->viewport();
-    if (!view->usingGameRenderer()) { std::fprintf(stderr, "render: no game renderer\n"); return 1; }
-    view->frameClip();
+    if (!l_pEd->f_OpenFile(l_oA[0], false)) { std::fprintf(stderr, "render: cannot open %s\n", qPrintable(l_oA[0])); return 2; }
+    AnimDocument* l_pDoc = l_pEd->f_Document();
+    int l_iIndex = -1;
+    for (size_t l_nI = 0; l_nI < l_pDoc->f_File().m_vClips.size(); l_nI++)
+        if (QString::fromStdString(l_pDoc->f_File().m_vClips[l_nI].m_strName) == l_oA[1]) l_iIndex = int(l_nI);
+    if (l_iIndex < 0) { std::fprintf(stderr, "render: no clip %s\n", qPrintable(l_oA[1])); return 2; }
+    l_pDoc->f_SetClipIndex(l_iIndex);
+    QString l_oErr;
+    if (l_oA.size() > 4 && !l_pDoc->f_SetHeldFile(l_oA[4], &l_oErr)) { std::fprintf(stderr, "render: %s\n", qPrintable(l_oErr)); return 2; }
+    for (QDockWidget* l_pD : l_oW.findChildren<QDockWidget*>()) l_pD->hide();   // the viewport alone
+    l_fnPump(500);
+    AnimViewport* l_pView = l_pEd->f_Viewport();
+    if (!l_pView->f_UsingGameRenderer()) { std::fprintf(stderr, "render: no game renderer\n"); return 1; }
+    l_pView->f_FrameClip();
     // TOMS_RENDER_ZOOM: times the framed zoom, around the view's centre (a clip with a screen-sized node frames far out)
-    if (const double z = qEnvironmentVariable("TOMS_RENDER_ZOOM").toDouble(); z > 0) view->setZoom(view->zoom() * z);
-    int failed = 0;
-    for (const QString& ts : a[3].split(QLatin1Char(','))) {
-        const float t = ts.toFloat();
-        doc->setTime(t);
-        pump(250);
-        const int n = toms::next::bgfxHostScreenshotsWritten();
-        const QString png = QDir(a[2]).filePath(QStringLiteral("%1_%2.png").arg(a[1]).arg(int(std::lround(t * 1000)), 5, 10, QLatin1Char('0')));
-        view->saveGameRendererShot(png);
-        QElapsedTimer st;
-        st.start();
-        while (toms::next::bgfxHostScreenshotsWritten() == n && st.elapsed() < 3000) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
-        if (toms::next::bgfxHostScreenshotsWritten() == n) failed++;
-        else std::printf("%s\n", qPrintable(png));
+    if (const double l_dZ = qEnvironmentVariable("TOMS_RENDER_ZOOM").toDouble(); l_dZ > 0) l_pView->f_SetZoom(l_pView->f_Zoom() * l_dZ);
+    int l_iFailed = 0;
+    for (const QString& l_oTs : l_oA[3].split(QLatin1Char(','))) {
+        const float l_fT = l_oTs.toFloat();
+        l_pDoc->f_SetTime(l_fT);
+        l_fnPump(250);
+        const int l_iN = toms::next::f_BgfxHostScreenshotsWritten();
+        const QString l_oPng = QDir(l_oA[2]).filePath(QStringLiteral("%1_%2.png").arg(l_oA[1]).arg(int(std::lround(l_fT * 1000)), 5, 10, QLatin1Char('0')));
+        l_pView->f_SaveGameRendererShot(l_oPng);
+        QElapsedTimer l_oSt;
+        l_oSt.start();
+        while (toms::next::f_BgfxHostScreenshotsWritten() == l_iN && l_oSt.elapsed() < 3000) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
+        if (toms::next::f_BgfxHostScreenshotsWritten() == l_iN) l_iFailed++;
+        else std::printf("%s\n", qPrintable(l_oPng));
     }
-    return failed ? 1 : 0;
+    return l_iFailed ? 1 : 0;
 }
 
 // anim_editor --export file.anim outdir [gif|apng|png] [clip,clip,...] [held.anim]: those clips (default: all) as
 // animated pictures through the game renderer (File > Export Clips as Animation), 30 fps, half size, transparent. Each
 // GIF is read back with Qt's GIF reader: it must decode with one picture per frame.
-int runExport(AnimMainWindow& w, const QStringList& a)
+int f_RunExport(AnimMainWindow& l_oW, const QStringList& l_oA)
 {
     qApp->setProperty("toms.selftest", true);
-    AnimEditor* ed = w.editor();
-    auto pump = [](int ms) {
-        QElapsedTimer t;
-        t.start();
-        while (t.elapsed() < ms) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
+    AnimEditor* l_pEd = l_oW.f_Editor();
+    auto l_fnPump = [](int l_iMs) {
+        QElapsedTimer l_oT;
+        l_oT.start();
+        while (l_oT.elapsed() < l_iMs) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
     };
-    if (!ed->openFile(a[0], false)) { std::fprintf(stderr, "export: cannot open %s\n", qPrintable(a[0])); return 2; }
-    AnimDocument* doc = ed->document();
-    animexport::Options opt;
-    const QString format = a.size() > 2 ? a[2] : QStringLiteral("gif");
-    opt.format = format == QLatin1String("apng") ? animexport::Format::Apng
-               : format == QLatin1String("png")  ? animexport::Format::PngFrames : animexport::Format::Gif;
-    QString err;
-    if (a.size() > 4 && !doc->setHeldFile(a[4], &err)) { std::fprintf(stderr, "export: %s\n", qPrintable(err)); return 2; }
-    pump(500);
-    AnimViewport* view = ed->viewport();
-    if (!view->usingGameRenderer()) { std::fprintf(stderr, "export: no game renderer\n"); return 1; }
-    const QStringList only = a.size() > 3 && !a[3].isEmpty() ? a[3].split(QLatin1Char(',')) : QStringList();
-    int failed = 0;
-    for (const toms::anim::Clip& c : doc->file().clips) {
-        if (!only.isEmpty() && !only.contains(QString::fromStdString(c.name))) continue;
-        const QString p = animexport::exportClip(view, *doc, c, opt, a[1], &err);
-        if (p.isEmpty()) { std::fprintf(stderr, "export: %s: %s\n", c.name.c_str(), qPrintable(err)); failed++; continue; }
-        if (opt.format == animexport::Format::Gif) {   // it must read back: as many pictures as frames
-            QImageReader r(p);
-            int frames = 0;
-            while (r.canRead() && !r.read().isNull()) frames++;
-            const int want = int(std::lround(c.duration() * opt.fps)) + (c.playCount >= 0 ? 1 : 0);
-            if (frames != std::max(1, want)) {
-                std::fprintf(stderr, "export: %s: %d picture(s) read back, %d expected\n", qPrintable(p), frames, want);
-                failed++;
+    if (!l_pEd->f_OpenFile(l_oA[0], false)) { std::fprintf(stderr, "export: cannot open %s\n", qPrintable(l_oA[0])); return 2; }
+    AnimDocument* l_pDoc = l_pEd->f_Document();
+    animexport::Options l_oOpt;
+    const QString l_oFormat = l_oA.size() > 2 ? l_oA[2] : QStringLiteral("gif");
+    l_oOpt.m_eFormat = l_oFormat == QLatin1String("apng") ? animexport::Format::Apng
+               : l_oFormat == QLatin1String("png")  ? animexport::Format::PngFrames : animexport::Format::Gif;
+    QString l_oErr;
+    if (l_oA.size() > 4 && !l_pDoc->f_SetHeldFile(l_oA[4], &l_oErr)) { std::fprintf(stderr, "export: %s\n", qPrintable(l_oErr)); return 2; }
+    l_fnPump(500);
+    AnimViewport* l_pView = l_pEd->f_Viewport();
+    if (!l_pView->f_UsingGameRenderer()) { std::fprintf(stderr, "export: no game renderer\n"); return 1; }
+    const QStringList l_oOnly = l_oA.size() > 3 && !l_oA[3].isEmpty() ? l_oA[3].split(QLatin1Char(',')) : QStringList();
+    int l_iFailed = 0;
+    for (const toms::anim::Clip& l_oC : l_pDoc->f_File().m_vClips) {
+        if (!l_oOnly.isEmpty() && !l_oOnly.contains(QString::fromStdString(l_oC.m_strName))) continue;
+        const QString l_oP = animexport::f_ExportClip(l_pView, *l_pDoc, l_oC, l_oOpt, l_oA[1], &l_oErr);
+        if (l_oP.isEmpty()) { std::fprintf(stderr, "export: %s: %s\n", l_oC.m_strName.c_str(), qPrintable(l_oErr)); l_iFailed++; continue; }
+        if (l_oOpt.m_eFormat == animexport::Format::Gif) {   // it must read back: as many pictures as frames
+            QImageReader l_oR(l_oP);
+            int l_iFrames = 0;
+            while (l_oR.canRead() && !l_oR.read().isNull()) l_iFrames++;
+            const int l_iWant = int(std::lround(l_oC.f_Duration() * l_oOpt.m_iFps)) + (l_oC.m_iPlayCount >= 0 ? 1 : 0);
+            if (l_iFrames != std::max(1, l_iWant)) {
+                std::fprintf(stderr, "export: %s: %d picture(s) read back, %d expected\n", qPrintable(l_oP), l_iFrames, l_iWant);
+                l_iFailed++;
                 continue;
             }
         }
-        std::printf("%s\n", qPrintable(QDir::toNativeSeparators(p)));
+        std::printf("%s\n", qPrintable(QDir::toNativeSeparators(l_oP)));
     }
-    return failed ? 1 : 0;
+    return l_iFailed ? 1 : 0;
 }
 
 }  // namespace
 
-int main(int argc, char** argv)
+int main(int l_iArgc, char** l_pArgv)
 {
-    const std::vector<std::string> args = Console::utf8Args(argc, argv);
-    if (!args.empty() && args[0] == "--headless") {
-        Console::attachParent();
-        const int code = animed::headlessMain(std::vector<std::string>(args.begin() + 1, args.end()));
+    const std::vector<std::string> l_vArgs = Console::f_Utf8Args(l_iArgc, l_pArgv);
+    if (!l_vArgs.empty() && l_vArgs[0] == "--headless") {
+        Console::f_AttachParent();
+        const int l_iCode = animed::f_HeadlessMain(std::vector<std::string>(l_vArgs.begin() + 1, l_vArgs.end()));
         std::fflush(stdout);
         std::fflush(stderr);
-        return code;
+        return l_iCode;
     }
 
-    QApplication app(argc, argv);
+    QApplication l_oApp(l_iArgc, l_pArgv);
     QApplication::setOrganizationName(QStringLiteral("TOMS"));
     QApplication::setApplicationName(QStringLiteral("AnimEditor"));
     QApplication::setApplicationDisplayName(QStringLiteral("Anim Editor"));
-    QApplication::setWindowIcon(Icons::icon(Icons::Id::Rotate));
-    Theme::apply(Theme::Mode::Dark);
-    Language::init();   // English / 中文 (tools/studio_common/Language.h), before any window
+    QApplication::setWindowIcon(Icons::f_Icon(Icons::Id::Rotate));
+    Theme::f_Apply(Theme::Mode::Dark);
+    Language::f_Init();   // English / 中文 (tools/studio_common/Language.h), before any window
 
-    const QStringList qargs = QCoreApplication::arguments().mid(1);
-    if (qargs.size() == 3 && qargs[0] == QLatin1String("--selftest")) {
-        Console::attachParent();
-        AnimMainWindow w;
-        w.setDarkTheme(true);
-        w.resize(1440, 900);
-        w.show();
-        const int code = runSelfTest(w, qargs[1], qargs[2]);
+    const QStringList l_oQargs = QCoreApplication::arguments().mid(1);
+    if (l_oQargs.size() == 3 && l_oQargs[0] == QLatin1String("--selftest")) {
+        Console::f_AttachParent();
+        AnimMainWindow l_oW;
+        l_oW.f_SetDarkTheme(true);
+        l_oW.resize(1440, 900);
+        l_oW.show();
+        const int l_iCode = f_RunSelfTest(l_oW, l_oQargs[1], l_oQargs[2]);
         std::fflush(stdout);
-        return code;
+        return l_iCode;
     }
-    if (qargs.size() == 3 && qargs[0] == QLatin1String("--selftest-gpu")) {   // on screen: the game renderer
-        Console::attachParent();
+    if (l_oQargs.size() == 3 && l_oQargs[0] == QLatin1String("--selftest-gpu")) {   // on screen: the game renderer
+        Console::f_AttachParent();
         qApp->setProperty("toms.selftest", true);
-        AnimMainWindow w;
-        w.setDarkTheme(true);
-        w.resize(1440, 900);
-        w.show();
-        const int code = runGpuSelfTest(w, qargs[1], qargs[2]);
+        AnimMainWindow l_oW;
+        l_oW.f_SetDarkTheme(true);
+        l_oW.resize(1440, 900);
+        l_oW.show();
+        const int l_iCode = f_RunGpuSelfTest(l_oW, l_oQargs[1], l_oQargs[2]);
         std::fflush(stdout);
-        return code;
+        return l_iCode;
     }
-    if (qargs.size() >= 3 && qargs[0] == QLatin1String("--export")) {   // on screen: the game renderer
-        Console::attachParent();
+    if (l_oQargs.size() >= 3 && l_oQargs[0] == QLatin1String("--export")) {   // on screen: the game renderer
+        Console::f_AttachParent();
         qApp->setProperty("toms.selftest", true);
-        AnimMainWindow w;
-        w.setDarkTheme(true);
-        w.resize(900, 700);
-        w.show();
-        const int code = runExport(w, qargs.mid(1));
+        AnimMainWindow l_oW;
+        l_oW.f_SetDarkTheme(true);
+        l_oW.resize(900, 700);
+        l_oW.show();
+        const int l_iCode = f_RunExport(l_oW, l_oQargs.mid(1));
         std::fflush(stdout);
-        return code;
+        return l_iCode;
     }
-    if (qargs.size() >= 5 && qargs[0] == QLatin1String("--render")) {   // on screen: the game renderer
-        Console::attachParent();
+    if (l_oQargs.size() >= 5 && l_oQargs[0] == QLatin1String("--render")) {   // on screen: the game renderer
+        Console::f_AttachParent();
         qApp->setProperty("toms.selftest", true);
-        AnimMainWindow w;
-        w.setDarkTheme(true);
-        w.resize(1100, 1000);
-        w.show();
-        const int code = runRender(w, qargs.mid(1));
+        AnimMainWindow l_oW;
+        l_oW.f_SetDarkTheme(true);
+        l_oW.resize(1100, 1000);
+        l_oW.show();
+        const int l_iCode = f_RunRender(l_oW, l_oQargs.mid(1));
         std::fflush(stdout);
-        return code;
+        return l_iCode;
     }
-    AnimMainWindow w;
-    w.show();
-    if (!qargs.isEmpty()) w.editor()->openFile(qargs.first());
-    return app.exec();
+    AnimMainWindow l_oW;
+    l_oW.show();
+    if (!l_oQargs.isEmpty()) l_oW.f_Editor()->f_OpenFile(l_oQargs.first());
+    return l_oApp.exec();
 }

@@ -8,29 +8,29 @@
 namespace toms {
 namespace {
 
-struct Entry { const char* name; std::function<void()> release; };
+struct Entry { const char* m_pszName; std::function<void()> m_fnRelease; };
 
-std::mutex& lock() { static std::mutex m; return m; }
-std::vector<Entry>& entries() { static std::vector<Entry> e; return e; }
+std::mutex& f_Lock() { static std::mutex l_oM; return l_oM; }
+std::vector<Entry>& f_Entries() { static std::vector<Entry> l_vE; return l_vE; }
 
 } // namespace
 
-void onReleaseSingletons(const char* name, std::function<void()> release) {
-    std::lock_guard<std::mutex> g(lock());
-    entries().push_back({name, std::move(release)});
+void f_OnReleaseSingletons(const char* l_pszName, std::function<void()> l_fnRelease) {
+    std::lock_guard<std::mutex> l_oG(f_Lock());
+    f_Entries().push_back({l_pszName, std::move(l_fnRelease)});
 }
 
-void releaseSingletons() {
-    std::vector<Entry> list;
+void f_ReleaseSingletons() {
+    std::vector<Entry> l_vList;
     {
-        std::lock_guard<std::mutex> g(lock());
-        list.swap(entries());           // a release that registers again goes to a fresh list
+        std::lock_guard<std::mutex> l_oG(f_Lock());
+        l_vList.swap(f_Entries());           // a release that registers again goes to a fresh list
     }
-    for (auto it = list.rbegin(); it != list.rend(); ++it)   // newest first
-        if (it->release) it->release();
-    std::vector<Entry>().swap(list);    // and the list's own memory
-    std::lock_guard<std::mutex> g(lock());
-    std::vector<Entry>().swap(entries());
+    for (auto l_itIt = l_vList.rbegin(); l_itIt != l_vList.rend(); ++l_itIt)   // newest first
+        if (l_itIt->m_fnRelease) l_itIt->m_fnRelease();
+    std::vector<Entry>().swap(l_vList);    // and the list's own memory
+    std::lock_guard<std::mutex> l_oG(f_Lock());
+    std::vector<Entry>().swap(f_Entries());
 }
 
 } // namespace toms

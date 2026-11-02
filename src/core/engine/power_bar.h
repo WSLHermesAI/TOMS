@@ -17,8 +17,8 @@ namespace toms {
 // zone radii from the bar's center, and redOuter also defines the bar's own edge/length
 // (the marker bounces within [0, 2*redOuter]).
 struct PowerBarParams {
-    float v0 = 15.0f, vmax = 200.0f, rampTime = 1.8f;
-    float greenHalf = 15.0f, blueOuter = 35.0f, redOuter = 60.0f;
+    float m_fV0 = 15.0f, m_fVmax = 200.0f, m_fRampTime = 1.8f;
+    float m_fGreenHalf = 15.0f, m_fBlueOuter = 35.0f, m_fRedOuter = 60.0f;
 };
 
 enum class PowerZone { Red, Blue, Green };
@@ -28,14 +28,14 @@ enum class PowerZone { Red, Blue, Green };
 // integration step (not the caller's frame dt) -- smaller is more precise but slower; the
 // default (1ms) is precise enough that visually-relevant rounding never differs from a much
 // smaller step.
-float simulatePosition(const PowerBarParams& p, float heldSeconds, float stepSeconds = 0.001f);
+float f_SimulatePosition(const PowerBarParams& l_oP, float l_fHeldSeconds, float l_fStepSeconds = 0.001f);
 
 // Distance-from-center -> power 0..100, piecewise-linear so that whatever the three radii are,
 // green always means power 71-100, blue always 31-70, red always 0-30 (docs/design/FIGHT_SCENE_DESIGN.md §2).
-float powerFromPosition(const PowerBarParams& p, float position);
+float f_PowerFromPosition(const PowerBarParams& l_oP, float l_fPosition);
 
 // Which of the three bands `position` falls in.
-PowerZone zoneFromPosition(const PowerBarParams& p, float position);
+PowerZone f_ZoneFromPosition(const PowerBarParams& l_oP, float l_fPosition);
 
 // Attack Bar -> damage dealt (docs/design/FIGHT_SCENE_DESIGN.md §4). `baseHit` is the unchanged
 // max(1, attacker.atk - target.def) formula, computed by the caller. `maxMult` is the power
@@ -43,13 +43,13 @@ PowerZone zoneFromPosition(const PowerBarParams& p, float position);
 // (docs/design/MAIN_BATTLE_SCENE_DESIGN.md §4.3, e.g. Twin Daggers 2.2, War Hammer 2.6); the multiplier
 // curve is power_mult = 0.2 + (maxMult-0.2) * (P/100), which reduces to the original
 // 0.2 + 1.8*(P/100) at the baseline maxMult=2.0.
-int computeAttackDamage(int baseHit, float powerPercent, float maxMult = 2.0f);
+int f_ComputeAttackDamage(int l_iBaseHit, float l_fPowerPercent, float l_fMaxMult = 2.0f);
 
 // Defense Bar -> damage taken. `incoming` is the unchanged max(1, enemy.atk - player.def)
 // formula, computed by the caller. Perfect Guard (power >= 99) zeroes it entirely, regardless
 // of `mitigationFloor`. `mitigationFloor` is a minimum mitigation percentage (0.0-1.0) a talent
 // can guarantee even on a whiffed bar (docs/design/MAIN_BATTLE_SCENE_DESIGN.md §4.2's Guardian talent: a
 // flat +10% floor) -- 0.0 (the default) reproduces the original no-floor behavior exactly.
-int computeDefenseDamage(int incoming, float powerPercent, float mitigationFloor = 0.0f);
+int f_ComputeDefenseDamage(int l_iIncoming, float l_fPowerPercent, float l_fMitigationFloor = 0.0f);
 
 } // namespace toms

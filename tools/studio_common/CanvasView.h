@@ -19,11 +19,11 @@ class CanvasView : public QWidget
     Q_OBJECT
 
 public:
-    explicit CanvasView(QWidget* parent = nullptr);
+    explicit CanvasView(QWidget* l_pParent = nullptr);
 
-    double zoom() const { return m_zoom; }
-    QPointF contentToWidget(const QPointF& c) const { return toWidget(c); }   // (tests: did the view pan?)
-    void setZoom(double zoom);   // around the widget centre
+    double f_Zoom() const { return m_dZoom; }
+    QPointF f_ContentToWidget(const QPointF& l_oC) const { return f_ToWidget(l_oC); }   // (tests: did the view pan?)
+    void f_SetZoom(double l_dZoom);   // around the widget centre
 
     // Coordinate hints, as in Cocos Creator's scene view: faint lines every "step" content pixels,
     // with the x values along the bottom edge and the y values along the left edge. The step follows
@@ -31,69 +31,69 @@ public:
     // 500 pixels zoomed out, every 10 or every pixel zoomed in. One switch for every canvas of the
     // editor (View > Show Coordinates, remembered in the editor's settings). With it on, the cursor's position is
     // shown too: its x / y next to it, and marked on the two edges among the values.
-    static constexpr double kCoordinateSpacing = 90;   // screen pixels between two hints, at least
-    static double coordinateStep(double zoom);          // content pixels between two hints
-    static bool coordinatesShown();
-    static void setCoordinatesShown(bool on);           // repaints every canvas
-    static QAction* addCoordinatesAction(QMenu* menu);  // the View menu's checkable toggle
+    static constexpr double m_dCoordinateSpacing = 90;   // screen pixels between two hints, at least
+    static double f_CoordinateStep(double l_dZoom);          // content pixels between two hints
+    static bool f_CoordinatesShown();
+    static void f_SetCoordinatesShown(bool l_bOn);           // repaints every canvas
+    static QAction* f_AddCoordinatesAction(QMenu* l_pMenu);  // the View menu's checkable toggle
 
 public slots:
-    void zoomIn();
-    void zoomOut();
-    void fitToView();
-    void centerOn(const QRectF& area);   // scrolls (no zoom change) when it is out of view
+    void f_ZoomIn();
+    void f_ZoomOut();
+    void f_FitToView();
+    void f_CenterOn(const QRectF& l_oArea);   // scrolls (no zoom change) when it is out of view
 
 signals:
-    void zoomChanged(double zoom);
+    void f_ZoomChanged(double l_dZoom);
 
 protected:
-    virtual QSize contentSize() const = 0;
+    virtual QSize f_ContentSize() const = 0;
     // The content area (fit, checkerboard): (0,0)..contentSize() unless a subclass says otherwise.
-    virtual QRectF contentRect() const { return QRectF(QPointF(0, 0), QSizeF(contentSize())); }
+    virtual QRectF f_ContentRect() const { return QRectF(QPointF(0, 0), QSizeF(f_ContentSize())); }
     // Content -> widget, for painting content with QPainter::setTransform.
-    QTransform viewTransform() const;
+    QTransform f_ViewTransform() const;
 
-    QPointF toContent(const QPointF& w) const { return (w - m_offset) / m_zoom; }
-    QPointF toWidget(const QPointF& c) const { return c * m_zoom + m_offset; }
-    QRectF toWidget(const QRectF& c) const { return QRectF(toWidget(c.topLeft()), c.size() * m_zoom); }
-    QPoint pixelAt(const QPointF& widgetPos) const;   // content pixel under a widget point (floor)
+    QPointF f_ToContent(const QPointF& l_oW) const { return (l_oW - m_oOffset) / m_dZoom; }
+    QPointF f_ToWidget(const QPointF& l_oC) const { return l_oC * m_dZoom + m_oOffset; }
+    QRectF f_ToWidget(const QRectF& l_oC) const { return QRectF(f_ToWidget(l_oC.topLeft()), l_oC.size() * m_dZoom); }
+    QPoint f_PixelAt(const QPointF& l_oWidgetPos) const;   // content pixel under a widget point (floor)
     // Fit the next time the content is shown (after loading a new image or entering a mode).
-    void requestFit() { m_fitPending = true; update(); }
+    void f_RequestFit() { m_bFitPending = true; update(); }
     // For subclasses that paint without QPainter (a bgfx viewport): runs a pending fit, as paintEvent does.
-    void preparePaint() { if (m_fitPending && !contentRect().isEmpty()) fitToView(); }
+    void f_PreparePaint() { if (m_bFitPending && !f_ContentRect().isEmpty()) f_FitToView(); }
 
     // Fills the widget, then the checkerboard where the content is.
-    void paintBackground(QPainter& p);
+    void f_PaintBackground(QPainter& l_oP);
     // Pan handling for subclasses: call first from the mouse handlers; true = consumed.
-    bool panPress(QMouseEvent* e);
-    bool panMove(QMouseEvent* e);
-    bool panRelease(QMouseEvent* e);
-    bool isPanning() const { return m_panning; }
+    bool f_PanPress(QMouseEvent* l_pE);
+    bool f_PanMove(QMouseEvent* l_pE);
+    bool f_PanRelease(QMouseEvent* l_pE);
+    bool f_IsPanning() const { return m_bPanning; }
     // The coordinate hints over everything else (paintEvent and the game renderer's overlay call it).
-    void paintCoordinates(QPainter& p);
+    void f_PaintCoordinates(QPainter& l_oP);
     // Draws a small text box (sizes, coordinates) at a widget position.
-    static void drawLabel(QPainter& p, const QPointF& at, const QString& text);
+    static void f_DrawLabel(QPainter& l_oP, const QPointF& l_oAt, const QString& l_oText);
 
-    bool event(QEvent* e) override;   // drops the context menu that ends a right-button pan
-    void wheelEvent(QWheelEvent* e) override;
-    void keyPressEvent(QKeyEvent* e) override;
-    void keyReleaseEvent(QKeyEvent* e) override;
-    void resizeEvent(QResizeEvent* e) override;
-    void paintEvent(QPaintEvent* e) override;   // runs a pending fit, then calls paintContent()
-    virtual void paintContent(QPainter& p) = 0;
+    bool event(QEvent* l_pE) override;   // drops the context menu that ends a right-button pan
+    void wheelEvent(QWheelEvent* l_pE) override;
+    void keyPressEvent(QKeyEvent* l_pE) override;
+    void keyReleaseEvent(QKeyEvent* l_pE) override;
+    void resizeEvent(QResizeEvent* l_pE) override;
+    void paintEvent(QPaintEvent* l_pE) override;   // runs a pending fit, then calls paintContent()
+    virtual void f_PaintContent(QPainter& l_oP) = 0;
 
 private:
-    void zoomAround(double zoom, const QPointF& anchor);
+    void f_ZoomAround(double l_dZoom, const QPointF& l_oAnchor);
 
-    double m_zoom = 1.0;
-    QPointF m_offset{20, 20};
-    QPointF m_cursor;                // the mouse over the canvas (widget pixels), for the coordinate readout
-    bool m_cursorIn = false;
-    bool m_fitPending = true;
-    bool m_spaceDown = false;
-    bool m_panning = false;
-    QPointF m_panLast;
-    bool m_rightDown = false;        // right button held: becomes a pan once it moves a few pixels
-    QPointF m_rightStart;
-    bool m_eatContextMenu = false;   // the right button panned: its release is not a click
+    double m_dZoom = 1.0;
+    QPointF m_oOffset{20, 20};
+    QPointF m_oCursor;                // the mouse over the canvas (widget pixels), for the coordinate readout
+    bool m_bCursorIn = false;
+    bool m_bFitPending = true;
+    bool m_bSpaceDown = false;
+    bool m_bPanning = false;
+    QPointF m_oPanLast;
+    bool m_bRightDown = false;        // right button held: becomes a pan once it moves a few pixels
+    QPointF m_oRightStart;
+    bool m_bEatContextMenu = false;   // the right button panned: its release is not a click
 };

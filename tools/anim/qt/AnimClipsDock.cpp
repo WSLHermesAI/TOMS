@@ -15,158 +15,158 @@
 
 using toms::anim::Clip;
 
-ClipFields ClipFields::create(AnimDocument* doc, QWidget* parent, bool* updating)
+ClipFields ClipFields::f_Create(AnimDocument* l_pDoc, QWidget* l_pParent, bool* l_pUpdating)
 {
-    ClipFields f;
-    f.length = new QDoubleSpinBox(parent);
-    f.length->setRange(0, 3600);
-    f.length->setDecimals(3);
-    f.length->setSingleStep(0.05);
-    f.length->setSuffix(QStringLiteral(" s"));
-    f.length->setSpecialValueText(QObject::tr("auto (last key)"));
-    f.length->setKeyboardTracking(false);
-    f.length->setToolTip(QObject::tr("Clip length in seconds; 0 = up to the last key"));
-    f.playCount = new QSpinBox(parent);
-    f.playCount->setRange(-1, 9999);
-    f.playCount->setSpecialValueText(QObject::tr("loop forever"));
-    f.playCount->setKeyboardTracking(false);
-    f.playCount->setToolTip(QObject::tr("Times to play; -1 = loop forever"));
-    f.stay = new QCheckBox(QObject::tr("Stay at last frame"), parent);
-    f.stay->setToolTip(QObject::tr("After the last play keep showing the end (else the clip disappears)"));
-    QObject::connect(f.length, &QDoubleSpinBox::valueChanged, parent, [doc, updating](double v) {
-        if (*updating) return;
-        doc->editClip(QObject::tr("Clip length"), [v](Clip& c) { c.length = float(v); }, QStringLiteral("clip.length"));
+    ClipFields l_oF;
+    l_oF.m_pLength = new QDoubleSpinBox(l_pParent);
+    l_oF.m_pLength->setRange(0, 3600);
+    l_oF.m_pLength->setDecimals(3);
+    l_oF.m_pLength->setSingleStep(0.05);
+    l_oF.m_pLength->setSuffix(QStringLiteral(" s"));
+    l_oF.m_pLength->setSpecialValueText(QObject::tr("auto (last key)"));
+    l_oF.m_pLength->setKeyboardTracking(false);
+    l_oF.m_pLength->setToolTip(QObject::tr("Clip length in seconds; 0 = up to the last key"));
+    l_oF.m_pPlayCount = new QSpinBox(l_pParent);
+    l_oF.m_pPlayCount->setRange(-1, 9999);
+    l_oF.m_pPlayCount->setSpecialValueText(QObject::tr("loop forever"));
+    l_oF.m_pPlayCount->setKeyboardTracking(false);
+    l_oF.m_pPlayCount->setToolTip(QObject::tr("Times to play; -1 = loop forever"));
+    l_oF.m_pStay = new QCheckBox(QObject::tr("Stay at last frame"), l_pParent);
+    l_oF.m_pStay->setToolTip(QObject::tr("After the last play keep showing the end (else the clip disappears)"));
+    QObject::connect(l_oF.m_pLength, &QDoubleSpinBox::valueChanged, l_pParent, [l_pDoc, l_pUpdating](double l_dV) {
+        if (*l_pUpdating) return;
+        l_pDoc->f_EditClip(QObject::tr("Clip length"), [l_dV](Clip& l_oC) { l_oC.m_fLength = float(l_dV); }, QStringLiteral("clip.length"));
     });
-    QObject::connect(f.playCount, &QSpinBox::valueChanged, parent, [doc, updating](int v) {
-        if (*updating) return;
-        doc->editClip(QObject::tr("Play count"), [v](Clip& c) { c.playCount = v; }, QStringLiteral("clip.playCount"));
+    QObject::connect(l_oF.m_pPlayCount, &QSpinBox::valueChanged, l_pParent, [l_pDoc, l_pUpdating](int l_iV) {
+        if (*l_pUpdating) return;
+        l_pDoc->f_EditClip(QObject::tr("Play count"), [l_iV](Clip& l_oC) { l_oC.m_iPlayCount = l_iV; }, QStringLiteral("clip.playCount"));
     });
-    QObject::connect(f.stay, &QCheckBox::toggled, parent, [doc, updating](bool on) {
-        if (*updating) return;
-        doc->editClip(QObject::tr("Stay at last frame"), [on](Clip& c) { c.stayAtLastFrame = on; });
+    QObject::connect(l_oF.m_pStay, &QCheckBox::toggled, l_pParent, [l_pDoc, l_pUpdating](bool l_bOn) {
+        if (*l_pUpdating) return;
+        l_pDoc->f_EditClip(QObject::tr("Stay at last frame"), [l_bOn](Clip& l_oC) { l_oC.m_bStayAtLastFrame = l_bOn; });
     });
-    return f;
+    return l_oF;
 }
 
-void ClipFields::refresh(const AnimDocument* doc) const
+void ClipFields::f_Refresh(const AnimDocument* l_pDoc) const
 {
-    const Clip* c = doc->clip();
-    for (QWidget* w : std::initializer_list<QWidget*>{length, playCount, stay}) w->setEnabled(c != nullptr);
-    if (!c) return;
-    const QSignalBlocker b1(length), b2(playCount), b3(stay);
-    length->setValue(c->length);
-    playCount->setValue(c->playCount);
-    stay->setChecked(c->stayAtLastFrame);
+    const Clip* l_pC = l_pDoc->f_Clip();
+    for (QWidget* l_pW : std::initializer_list<QWidget*>{m_pLength, m_pPlayCount, m_pStay}) l_pW->setEnabled(l_pC != nullptr);
+    if (!l_pC) return;
+    const QSignalBlocker l_oB1(m_pLength), l_oB2(m_pPlayCount), l_oB3(m_pStay);
+    m_pLength->setValue(l_pC->m_fLength);
+    m_pPlayCount->setValue(l_pC->m_iPlayCount);
+    m_pStay->setChecked(l_pC->m_bStayAtLastFrame);
 }
 
-AnimClipsDock::AnimClipsDock(AnimDocument* doc, QWidget* parent)
-    : QDockWidget(tr("Clips"), parent)
-    , m_doc(doc)
-    , m_list(new QListWidget(this))
+AnimClipsDock::AnimClipsDock(AnimDocument* l_pDoc, QWidget* l_pParent)
+    : QDockWidget(tr("Clips"), l_pParent)
+    , m_pDoc(l_pDoc)
+    , m_pList(new QListWidget(this))
 {
     setObjectName(QStringLiteral("AnimClipsDock"));
-    auto* body = new QWidget(this);
-    auto* tb = new QToolBar(body);
-    tb->setIconSize(QSize(16, 16));
-    QAction* add = tb->addAction(Icons::icon(Icons::Id::Add), tr("Add clip"));
-    QAction* dup = tb->addAction(Icons::icon(Icons::Id::Duplicate), tr("Duplicate clip"));
-    QAction* ren = tb->addAction(Icons::icon(Icons::Id::Rename), tr("Rename clip"));
-    QAction* del = tb->addAction(Icons::icon(Icons::Id::Remove), tr("Delete clip"));
-    connect(add, &QAction::triggered, this, [this] { m_doc->addClip(QStringLiteral("clip")); });
+    auto* l_pBody = new QWidget(this);
+    auto* l_pTb = new QToolBar(l_pBody);
+    l_pTb->setIconSize(QSize(16, 16));
+    QAction* l_pAdd = l_pTb->addAction(Icons::f_Icon(Icons::Id::Add), tr("Add clip"));
+    QAction* l_pDup = l_pTb->addAction(Icons::f_Icon(Icons::Id::Duplicate), tr("Duplicate clip"));
+    QAction* l_pRen = l_pTb->addAction(Icons::f_Icon(Icons::Id::Rename), tr("Rename clip"));
+    QAction* l_pDel = l_pTb->addAction(Icons::f_Icon(Icons::Id::Remove), tr("Delete clip"));
+    connect(l_pAdd, &QAction::triggered, this, [this] { m_pDoc->f_AddClip(QStringLiteral("clip")); });
     // The toolbar acts on the highlighted row (a single click), which need not be the open clip.
-    auto row = [this] { return m_list->currentRow() >= 0 ? m_list->currentRow() : m_doc->clipIndex(); };
-    connect(dup, &QAction::triggered, this, [this, row] { m_doc->duplicateClip(row()); });
-    connect(ren, &QAction::triggered, this, &AnimClipsDock::beginRename);
-    connect(del, &QAction::triggered, this, [this, row] { m_doc->deleteClip(row()); });
-    ren->setToolTip(tr("Rename clip (F2)"));
+    auto l_fnRow = [this] { return m_pList->currentRow() >= 0 ? m_pList->currentRow() : m_pDoc->f_ClipIndex(); };
+    connect(l_pDup, &QAction::triggered, this, [this, l_fnRow] { m_pDoc->f_DuplicateClip(l_fnRow()); });
+    connect(l_pRen, &QAction::triggered, this, &AnimClipsDock::f_BeginRename);
+    connect(l_pDel, &QAction::triggered, this, [this, l_fnRow] { m_pDoc->f_DeleteClip(l_fnRow()); });
+    l_pRen->setToolTip(tr("Rename clip (F2)"));
 
-    const ClipFields f = ClipFields::create(doc, body, &m_updating);
-    m_length = f.length;
-    m_playCount = f.playCount;
-    m_stay = f.stay;
-    auto* form = new QFormLayout();
-    form->setContentsMargins(2, 2, 2, 2);
-    form->addRow(tr("Length"), m_length);
-    form->addRow(tr("Plays"), m_playCount);
-    form->addRow(QString(), m_stay);
+    const ClipFields l_oF = ClipFields::f_Create(l_pDoc, l_pBody, &m_bUpdating);
+    m_pLength = l_oF.m_pLength;
+    m_pPlayCount = l_oF.m_pPlayCount;
+    m_pStay = l_oF.m_pStay;
+    auto* l_pForm = new QFormLayout();
+    l_pForm->setContentsMargins(2, 2, 2, 2);
+    l_pForm->addRow(tr("Length"), m_pLength);
+    l_pForm->addRow(tr("Plays"), m_pPlayCount);
+    l_pForm->addRow(QString(), m_pStay);
 
     // Double-click (or Enter) opens a clip; F2 or the Rename button renames it.
-    m_list->setEditTriggers(QAbstractItemView::EditKeyPressed);
-    m_list->setToolTip(tr("Double-click a clip to open it (F2 renames)"));
-    auto* l = new QVBoxLayout(body);
-    l->setContentsMargins(4, 2, 4, 4);
-    l->setSpacing(2);
-    l->addWidget(tb);
-    l->addWidget(m_list, 1);
-    l->addLayout(form);
-    setWidget(body);
+    m_pList->setEditTriggers(QAbstractItemView::EditKeyPressed);
+    m_pList->setToolTip(tr("Double-click a clip to open it (F2 renames)"));
+    auto* l_pL = new QVBoxLayout(l_pBody);
+    l_pL->setContentsMargins(4, 2, 4, 4);
+    l_pL->setSpacing(2);
+    l_pL->addWidget(l_pTb);
+    l_pL->addWidget(m_pList, 1);
+    l_pL->addLayout(l_pForm);
+    setWidget(l_pBody);
 
-    connect(doc, &AnimDocument::fileChanged, this, &AnimClipsDock::rebuild);
-    connect(doc, &AnimDocument::clipChanged, this, &AnimClipsDock::rebuild);
-    connect(m_list, &QListWidget::itemActivated, this, [this](QListWidgetItem* it) {
-        const int row = m_list->row(it);
-        if (openClip(row)) emit clipActivated(row);
+    connect(l_pDoc, &AnimDocument::f_FileChanged, this, &AnimClipsDock::f_Rebuild);
+    connect(l_pDoc, &AnimDocument::f_ClipChanged, this, &AnimClipsDock::f_Rebuild);
+    connect(m_pList, &QListWidget::itemActivated, this, [this](QListWidgetItem* l_pIt) {
+        const int l_iRow = m_pList->row(l_pIt);
+        if (f_OpenClip(l_iRow)) emit f_ClipActivated(l_iRow);
     });
-    connect(m_list, &QListWidget::itemClicked, this, [this](QListWidgetItem* it) {
-        if (m_list->row(it) != m_doc->clipIndex())
-            emit m_doc->message(tr("Double-click “%1” to open and play it (the viewport shows the bold clip).").arg(it->text()));
+    connect(m_pList, &QListWidget::itemClicked, this, [this](QListWidgetItem* l_pIt) {
+        if (m_pList->row(l_pIt) != m_pDoc->f_ClipIndex())
+            emit m_pDoc->f_Message(tr("Double-click “%1” to open and play it (the viewport shows the bold clip).").arg(l_pIt->text()));
     });
-    connect(m_list, &QListWidget::itemChanged, this, [this](QListWidgetItem* it) {
-        if (m_updating) return;
-        if (!m_doc->renameClip(m_list->row(it), it->text())) rebuild();
+    connect(m_pList, &QListWidget::itemChanged, this, [this](QListWidgetItem* l_pIt) {
+        if (m_bUpdating) return;
+        if (!m_pDoc->f_RenameClip(m_pList->row(l_pIt), l_pIt->text())) f_Rebuild();
     });
-    rebuild();
+    f_Rebuild();
 }
 
-bool AnimClipsDock::openClip(int row, int discard)
+bool AnimClipsDock::f_OpenClip(int l_iRow, int l_iDiscard)
 {
-    const auto& clips = m_doc->file().clips;
-    if (row < 0 || row >= int(clips.size())) return false;
-    if (row == m_doc->clipIndex()) return true;
-    if (m_doc->clipModified()) {
-        const QString cur = QString::fromStdString(clips[size_t(m_doc->clipIndex())].name);
-        const QString next = QString::fromStdString(clips[size_t(row)].name);
-        bool yes = discard == 1;
-        if (discard < 0)
-            yes = QMessageBox::question(this, tr("Open Clip"),
+    const auto& l_vClips = m_pDoc->f_File().m_vClips;
+    if (l_iRow < 0 || l_iRow >= int(l_vClips.size())) return false;
+    if (l_iRow == m_pDoc->f_ClipIndex()) return true;
+    if (m_pDoc->f_ClipModified()) {
+        const QString l_oCur = QString::fromStdString(l_vClips[size_t(m_pDoc->f_ClipIndex())].m_strName);
+        const QString l_oNext = QString::fromStdString(l_vClips[size_t(l_iRow)].m_strName);
+        bool l_bYes = l_iDiscard == 1;
+        if (l_iDiscard < 0)
+            l_bYes = QMessageBox::question(this, tr("Open Clip"),
                                         tr("The clip \u201c%1\u201d has changes.\n\nDiscard all changes to \u201c%1\u201d and open \u201c%2\u201d?\n"
-                                           "(Edit > Undo brings them back.)").arg(cur, next),
+                                           "(Edit > Undo brings them back.)").arg(l_oCur, l_oNext),
                                         QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes;
-        if (!yes) {
-            rebuild();   // the highlight goes back to the open clip
+        if (!l_bYes) {
+            f_Rebuild();   // the highlight goes back to the open clip
             return false;
         }
-        m_doc->discardClipChanges();
+        m_pDoc->f_DiscardClipChanges();
     }
-    m_doc->setClipIndex(row);
+    m_pDoc->f_SetClipIndex(l_iRow);
     return true;
 }
 
-void AnimClipsDock::beginRename()
+void AnimClipsDock::f_BeginRename()
 {
-    if (QListWidgetItem* it = m_list->currentItem()) m_list->editItem(it);
+    if (QListWidgetItem* l_pIt = m_pList->currentItem()) m_pList->editItem(l_pIt);
 }
 
-void AnimClipsDock::rebuild()
+void AnimClipsDock::f_Rebuild()
 {
-    m_updating = true;
-    const auto& clips = m_doc->file().clips;
-    if (m_list->count() != int(clips.size())) {
-        m_list->clear();
-        for (size_t i = 0; i < clips.size(); i++) m_list->addItem(QString());
+    m_bUpdating = true;
+    const auto& l_vClips = m_pDoc->f_File().m_vClips;
+    if (m_pList->count() != int(l_vClips.size())) {
+        m_pList->clear();
+        for (size_t l_nI = 0; l_nI < l_vClips.size(); l_nI++) m_pList->addItem(QString());
     }
-    for (size_t i = 0; i < clips.size(); i++) {
-        QListWidgetItem* it = m_list->item(int(i));
-        it->setText(QString::fromStdString(clips[i].name));
-        it->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
-        const Clip& c = clips[i];
-        it->setToolTip(tr("%1 s, %2").arg(c.duration(), 0, 'f', 3).arg(c.playCount < 0 ? tr("loops") : tr("plays %1×").arg(c.playCount)));
-        it->setIcon(Icons::icon(c.playCount < 0 ? Icons::Id::Loop : Icons::Id::Play));
-        QFont font = m_list->font();
-        font.setBold(int(i) == m_doc->clipIndex());   // the open clip
-        it->setFont(font);
+    for (size_t l_nI = 0; l_nI < l_vClips.size(); l_nI++) {
+        QListWidgetItem* l_pIt = m_pList->item(int(l_nI));
+        l_pIt->setText(QString::fromStdString(l_vClips[l_nI].m_strName));
+        l_pIt->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable);
+        const Clip& l_oC = l_vClips[l_nI];
+        l_pIt->setToolTip(tr("%1 s, %2").arg(l_oC.f_Duration(), 0, 'f', 3).arg(l_oC.m_iPlayCount < 0 ? tr("loops") : tr("plays %1×").arg(l_oC.m_iPlayCount)));
+        l_pIt->setIcon(Icons::f_Icon(l_oC.m_iPlayCount < 0 ? Icons::Id::Loop : Icons::Id::Play));
+        QFont l_oFont = m_pList->font();
+        l_oFont.setBold(int(l_nI) == m_pDoc->f_ClipIndex());   // the open clip
+        l_pIt->setFont(l_oFont);
     }
-    m_list->setCurrentRow(m_doc->clipIndex());
-    ClipFields{m_length, m_playCount, m_stay}.refresh(m_doc);
-    m_updating = false;
+    m_pList->setCurrentRow(m_pDoc->f_ClipIndex());
+    ClipFields{m_pLength, m_pPlayCount, m_pStay}.f_Refresh(m_pDoc);
+    m_bUpdating = false;
 }

@@ -32,198 +32,198 @@ namespace toms::next {
 class BgfxRenderer : public IRenderer {
 public:
     // bgfx views this renderer uses. The host may use views after kViewOverlay (e.g. ImGui).
-    static constexpr uint16_t kViewClear   = 0;   // full backbuffer, clears to the background colour
-    static constexpr uint16_t kViewGame    = 1;   // letterboxed design-space view (the world's sprites)
-    static constexpr uint16_t kViewUi      = 2;   // RmlUi documents (letterboxed like the game view)
-    static constexpr uint16_t kViewTop     = 3;   // sprites over the UI (setLayer(1)), letterboxed like the game view
-    static constexpr uint16_t kViewOverlay = 4;   // first free view for the host (ImGui dev windows)
+    static constexpr uint16_t m_u16ViewClear   = 0;   // full backbuffer, clears to the background colour
+    static constexpr uint16_t m_u16ViewGame    = 1;   // letterboxed design-space view (the world's sprites)
+    static constexpr uint16_t m_u16ViewUi      = 2;   // RmlUi documents (letterboxed like the game view)
+    static constexpr uint16_t m_u16ViewTop     = 3;   // sprites over the UI (setLayer(1)), letterboxed like the game view
+    static constexpr uint16_t m_u16ViewOverlay = 4;   // first free view for the host (ImGui dev windows)
 
     // A 3D scene behind everything (GltfRenderer, e.g. the title's TitleScene) in views
     // first .. first + count - 1: from the next end() on they run after kViewClear and before
     // kViewGame / kViewUi / kViewOverlay (bgfx::setViewOrder). count 0 = none (plain id order).
-    void setSceneViews(uint16_t first, uint16_t count) { sceneFirst_ = first; sceneCount_ = count; }
+    void f_SetSceneViews(uint16_t l_u16First, uint16_t l_u16Count) { m_u16SceneFirst = l_u16First; m_u16SceneCount = l_u16Count; }
 
     BgfxRenderer() = default;
     ~BgfxRenderer() override;
 
     // ---- IRenderer ----
-    void init(uint32_t w, uint32_t h) override;   // w/h ignored: the host owns the backbuffer size
-    void loadSprites(const std::vector<std::vector<uint8_t>>& layers, uint32_t sw, uint32_t sh) override;
-    void loadSpriteAtlas(const std::vector<uint8_t>& rgba, uint32_t w, uint32_t h, const std::string& file) override;
-    uint16_t loadTexture(const std::vector<uint8_t>& rgba, uint32_t w, uint32_t h) override;
-    void releaseTexture(uint16_t texture) override;
-    void setTextureFilter(uint16_t texture, bool linear) override;
+    void f_Init(uint32_t l_uW, uint32_t l_uH) override;   // w/h ignored: the host owns the backbuffer size
+    void f_LoadSprites(const std::vector<std::vector<uint8_t>>& l_vLayers, uint32_t l_uSw, uint32_t l_uSh) override;
+    void f_LoadSpriteAtlas(const std::vector<uint8_t>& l_vRgba, uint32_t l_uW, uint32_t l_uH, const std::string& l_strFile) override;
+    uint16_t f_LoadTexture(const std::vector<uint8_t>& l_vRgba, uint32_t l_uW, uint32_t l_uH) override;
+    void f_ReleaseTexture(uint16_t l_u16Texture) override;
+    void f_SetTextureFilter(uint16_t l_u16Texture, bool l_bLinear) override;
     // Layers (render_iface.h LayerEffect, docs/engine/18_NODE_EFFECTS.md): each layer is drawn into an RGBA16F picture
     // of the game view's size in a view of its own (kViewLayerFirst + n, run after the clear and before kViewGame, inner
     // layers before the layers around them), then drawn with fs_layer.sc where beginLayer was called. Pictures are
     // premultiplied: the sprites inside a layer blend into it keeping its alpha, and the picture is drawn with
     // (ONE, 1 - alpha). Not available: everything is drawn straight through.
-    void beginLayer(const LayerEffect& fx) override;
-    void endLayer() override;
-    bool supportsLayers() const;
+    void f_BeginLayer(const LayerEffect& l_oFx) override;
+    void f_EndLayer() override;
+    bool f_SupportsLayers() const;
     // Offscreen capture (an editor's "export as GIF"): from the next end() on, the game view draws into a w x h picture
     // of its own instead of the window -- cleared transparent, design space 0..w x 0..h, blended premultiplied so the
     // alpha is right -- and that picture is read back. 0 x 0 = off (the window again). After end(), the pixels are in
     // capturePixels() once bgfx::frame() has returned captureFrame() or later: RGBA8, premultiplied alpha, the colours
     // as the screen shows them (sRGB on desktop).
-    void setCapture(uint16_t w, uint16_t h);
-    uint32_t captureFrame() const { return captureFrame_; }
-    const std::vector<uint8_t>& capturePixels() const { return capturePx_; }
-    static constexpr uint16_t kViewCapture = 199;   // the read back: after the game view, before the layers' views (200+)
-    size_t lastLayerCount() const { return lastLayerCount_; }    // layers drawn last frame
-    static constexpr uint16_t kViewLayerFirst = 200;
-    static constexpr uint32_t kMaxLayers = 48;                    // per frame; more are drawn straight through
+    void f_SetCapture(uint16_t l_u16W, uint16_t l_u16H);
+    uint32_t f_CaptureFrame() const { return m_uCaptureFrame; }
+    const std::vector<uint8_t>& f_CapturePixels() const { return m_vCapturePx; }
+    static constexpr uint16_t m_u16ViewCapture = 199;   // the read back: after the game view, before the layers' views (200+)
+    size_t f_LastLayerCount() const { return m_nLastLayerCount; }    // layers drawn last frame
+    static constexpr uint16_t m_u16ViewLayerFirst = 200;
+    static constexpr uint32_t m_uMaxLayers = 48;                    // per frame; more are drawn straight through
     void begin() override;
-    void drawSprite(const Quad& q) override;
-    void drawMesh(const Mesh& m) override;     // the CPU path's program, from one vertex / index buffer per frame
-    void setNode(uint8_t n) override;
-    void setLayer(int layer) override { layer_ = layer; }
-    void setNodeFilter(uint8_t n) override;
+    void f_DrawSprite(const Quad& l_oQ) override;
+    void f_DrawMesh(const Mesh& l_oM) override;     // the CPU path's program, from one vertex / index buffer per frame
+    void f_SetNode(uint8_t l_u8N) override;
+    void f_SetLayer(int l_iLayer) override { m_iLayer = l_iLayer; }
+    void f_SetNodeFilter(uint8_t l_u8N) override;
     void end() override;                          // submits to kViewClear/kViewGame; host calls bgfx::frame()
-    uint32_t width()  const override { return kDesignW; }
-    uint32_t height() const override { return kDesignH; }
-    void savePNG(const std::string& path) override;   // bgfx screenshot of the next frame
+    uint32_t f_Width()  const override { return m_uDesignW; }
+    uint32_t f_Height() const override { return m_uDesignH; }
+    void f_SavePNG(const std::string& l_strPath) override;   // bgfx screenshot of the next frame
     // GPU-simulated particles (cs_fx_spawn.sc, cs_fx_update.sc; drawn with vs_sprite_cs.sc).
-    bool supportsGpuParticles() const override;
-    uint32_t createGpuParticles(uint32_t capacity) override;
-    void releaseGpuParticles(uint32_t emitter) override;
-    void drawGpuParticles(const GpuParticleFrame& f) override;
-    uint32_t lastGpuEmitters() const { return lastGpuEmitters_; }   // GPU particle emitters drawn last frame
+    bool f_SupportsGpuParticles() const override;
+    uint32_t f_CreateGpuParticles(uint32_t l_uCapacity) override;
+    void f_ReleaseGpuParticles(uint32_t l_uEmitter) override;
+    void f_DrawGpuParticles(const GpuParticleFrame& l_oF) override;
+    uint32_t f_LastGpuEmitters() const { return m_uLastGpuEmitters; }   // GPU particle emitters drawn last frame
 
     // ---- host interface ----
-    void destroy();                                // free GPU handles (must run before bgfx::shutdown)
-    void setDeviceSize(uint32_t w, uint32_t h) { devW_ = w; devH_ = h; }
-    uint32_t deviceWidth()  const { return devW_; }
-    uint32_t deviceHeight() const { return devH_; }
-    uint32_t lastDrawCalls() const { return lastDrawCalls_; }
+    void f_Destroy();                                // free GPU handles (must run before bgfx::shutdown)
+    void f_SetDeviceSize(uint32_t l_uW, uint32_t l_uH) { m_uDevW = l_uW; m_uDevH = l_uH; }
+    uint32_t f_DeviceWidth()  const { return m_uDevW; }
+    uint32_t f_DeviceHeight() const { return m_uDevH; }
+    uint32_t f_LastDrawCalls() const { return m_uLastDrawCalls; }
     enum class SpritePath { Auto, Compute, Instancing, Cpu };
     // The preferred path; a path the backend does not have falls back to the next one (after init()).
-    void setSpritePath(SpritePath p) { wantPath_ = p; }
-    SpritePath spritePath() const;                   // the one in use
-    static const char* spritePathName(SpritePath p);  // "GPU compute", "GPU instancing", "CPU vertices"
-    bool hasComputePath() const { return csProgram_ != kInvalid && csDrawProgram_ != kInvalid; }
-    bool hasInstancingPath() const { return instProgram_ != kInvalid; }
-    size_t   lastQuadCount() const { return lastQuadCount_; }   // quads asked for last frame
-    size_t   lastDrawnQuads() const { return lastDrawnQuads_; } // quads actually submitted to the GPU
-    size_t   lastMeshCount() const { return lastMeshCount_; }   // meshes drawn last frame
+    void f_SetSpritePath(SpritePath l_eP) { m_eWantPath = l_eP; }
+    SpritePath f_SpritePath() const;                   // the one in use
+    static const char* f_SpritePathName(SpritePath l_eP);  // "GPU compute", "GPU instancing", "CPU vertices"
+    bool f_HasComputePath() const { return m_u16CsProgram != m_u16Invalid && m_u16CsDrawProgram != m_u16Invalid; }
+    bool f_HasInstancingPath() const { return m_u16InstProgram != m_u16Invalid; }
+    size_t   f_LastQuadCount() const { return m_nLastQuadCount; }   // quads asked for last frame
+    size_t   f_LastDrawnQuads() const { return m_nLastDrawnQuads; } // quads actually submitted to the GPU
+    size_t   f_LastMeshCount() const { return m_nLastMeshCount; }   // meshes drawn last frame
 
     // Same API the old Vulkan Renderer had, so callers ported 1:1.
-    static inline uint32_t kDesignW = 1024, kDesignH = 768;
-    static void setDesignSize(uint32_t w, uint32_t h) {
-        if (w >= 480 && w <= 2048 && h >= 360 && h <= 1536) { kDesignW = w; kDesignH = h; }
+    static inline uint32_t m_uDesignW = 1024, m_uDesignH = 768;
+    static void f_SetDesignSize(uint32_t l_uW, uint32_t l_uH) {
+        if (l_uW >= 480 && l_uW <= 2048 && l_uH >= 360 && l_uH <= 1536) { m_uDesignW = l_uW; m_uDesignH = l_uH; }
     }
     // The editors (tools/studio_common/GameCanvasView): the design space is the widget, any size.
-    static void setDesignSizeExact(uint32_t w, uint32_t h) { kDesignW = w ? w : 1; kDesignH = h ? h : 1; }
+    static void f_SetDesignSizeExact(uint32_t l_uW, uint32_t l_uH) { m_uDesignW = l_uW ? l_uW : 1; m_uDesignH = l_uH ? l_uH : 1; }
     // A texture whose pixels change (an editor's overlay): RGBA8 straight alpha, sampled like the
     // atlases. Freed by releaseTexture.
-    uint16_t createDynamicTexture(uint32_t w, uint32_t h);
-    void updateTexture(uint16_t texture, const uint8_t* rgba, uint32_t w, uint32_t h);
-    struct ViewportRect { float x, y, width, height; };
-    static ViewportRect computeAspectFitViewport(uint32_t deviceW, uint32_t deviceH,
-                                                 uint32_t targetW, uint32_t targetH);
+    uint16_t f_CreateDynamicTexture(uint32_t l_uW, uint32_t l_uH);
+    void f_UpdateTexture(uint16_t l_u16Texture, const uint8_t* l_pRgba, uint32_t l_uW, uint32_t l_uH);
+    struct ViewportRect { float m_fX, m_fY, m_fWidth, m_fHeight; };
+    static ViewportRect f_ComputeAspectFitViewport(uint32_t l_uDeviceW, uint32_t l_uDeviceH,
+                                                 uint32_t l_uTargetW, uint32_t l_uTargetH);
     // Device (backbuffer) pixel -> design space; false if the point is in a letterbox bar.
-    bool deviceToDesign(double deviceX, double deviceY, float& outX, float& outY) const;
+    bool f_DeviceToDesign(double l_dDeviceX, double l_dDeviceY, float& l_fOutX, float& l_fOutY) const;
 
 private:
-    uint16_t sceneFirst_ = 0, sceneCount_ = 0;     // setSceneViews()
-    bool orderApplied_ = false;                     // a view order is set (applyViewOrder)
-    void submitQuads(const std::vector<Quad>& quads, uint16_t texture);
+    uint16_t m_u16SceneFirst = 0, m_u16SceneCount = 0;     // setSceneViews()
+    bool m_bOrderApplied = false;                     // a view order is set (applyViewOrder)
+    void f_SubmitQuads(const std::vector<Quad>& l_vQuads, uint16_t l_u16Texture);
     // The GPU paths; false = they could not take these quads (no buffer space): use the next path.
-    bool submitQuadsInstanced(const std::vector<Quad>& quads, uint16_t texture);
-    bool submitQuadsCompute(const std::vector<Quad>& quads, uint16_t texture);
-    uint64_t blendState(bool additive) const;
-    uint64_t layerBlendState(bool additive) const;   // into a layer's premultiplied picture
+    bool f_SubmitQuadsInstanced(const std::vector<Quad>& l_vQuads, uint16_t l_u16Texture);
+    bool f_SubmitQuadsCompute(const std::vector<Quad>& l_vQuads, uint16_t l_u16Texture);
+    uint64_t f_BlendState(bool l_bAdditive) const;
+    uint64_t f_LayerBlendState(bool l_bAdditive) const;   // into a layer's premultiplied picture
     // GPU particle and mesh draws are placed among the sprites: before quad `at` (sprites_ index).
     // emitter 0 = a mesh: its vertices and indices in meshVerts_ / meshIdx_ (indices local to its first vertex).
     struct GpuDraw {
-        size_t at; uint32_t emitter; uint16_t texture; bool additive;
-        uint32_t firstVertex = 0, vertexCount = 0, firstIndex = 0, indexCount = 0;
-        int layer = -1;   // >= 0: not a mesh or emitter but layer `layer`'s picture, drawn with its effect
+        size_t m_nAt; uint32_t m_uEmitter; uint16_t m_u16Texture; bool m_bAdditive;
+        uint32_t m_uFirstVertex = 0, m_uVertexCount = 0, m_uFirstIndex = 0, m_uIndexCount = 0;
+        int m_iLayer = -1;   // >= 0: not a mesh or emitter but layer `layer`'s picture, drawn with its effect
     };
     // Draws the GPU emitters, meshes and layer pictures placed at quad index `at` (markers from `next` on) into the game
     // view; returns where the next marker is (the quads up to it can go in one run).
-    size_t drawGpuAt(size_t at, size_t& next, uint16_t texture) { return drawMarkers(kViewGame, gpuDraws_, false, at, next, texture); }
-    size_t nextGpuAt(size_t next) const { return next < gpuDraws_.size() ? gpuDraws_[next].at : SIZE_MAX; }
+    size_t f_DrawGpuAt(size_t l_nAt, size_t& l_nNext, uint16_t l_u16Texture) { return f_DrawMarkers(m_u16ViewGame, m_vGpuDraws, false, l_nAt, l_nNext, l_u16Texture); }
+    size_t f_NextGpuAt(size_t l_nNext) const { return l_nNext < m_vGpuDraws.size() ? m_vGpuDraws[l_nNext].m_nAt : SIZE_MAX; }
     // The same for any view and marker list; inLayer: blend into a layer's premultiplied picture.
-    size_t drawMarkers(uint16_t view, const std::vector<GpuDraw>& draws, bool inLayer, size_t at, size_t& next, uint16_t texture);
-    void bindTexture(uint16_t texture);   // stage 0, with its filter (setTextureFilter)
-    std::vector<uint16_t> linearTex_;
+    size_t f_DrawMarkers(uint16_t l_u16View, const std::vector<GpuDraw>& l_vDraws, bool l_bInLayer, size_t l_nAt, size_t& l_nNext, uint16_t l_u16Texture);
+    void f_BindTexture(uint16_t l_u16Texture);   // stage 0, with its filter (setTextureFilter)
+    std::vector<uint16_t> m_vLinearTex;
     // Layers: this frame's, by beginLayer order; each its own quads and markers.
     struct LayerDraw {
-        LayerEffect fx;
-        std::vector<Quad> quads;
-        std::vector<GpuDraw> draws;
-        int slot = -1;    // its picture: layerFb_[slot], drawn in view kViewLayerFirst + slot
+        LayerEffect m_oFx;
+        std::vector<Quad> m_vQuads;
+        std::vector<GpuDraw> m_vDraws;
+        int m_iSlot = -1;    // its picture: layerFb_[slot], drawn in view kViewLayerFirst + slot
         // What it draws, design space (prepareLayers), and how far its effect reaches past that: only the content plus
         // twice the reach is cleared and drawn into, only the content plus the reach composited -- a small arm's blur
         // costs its size in pixels, not the screen's.
-        bool any = false;
-        float x0 = 0, y0 = 0, x1 = 0, y1 = 0, reach = 0;
+        bool m_bAny = false;
+        float m_fX0 = 0, m_fY0 = 0, m_fX1 = 0, m_fY1 = 0, m_fReach = 0;
     };
-    std::vector<LayerDraw> layers_;
-    std::vector<int> layerStack_;     // the open layers (innermost last); -1 = one drawn straight through
-    std::vector<int> layerClosed_;    // in the order they closed: inner layers first (their views run in this order)
-    std::vector<uint16_t> layerFb_;   // the pictures (frame buffers, RGBA16F), reused from frame to frame
-    uint16_t layerW_ = 0, layerH_ = 0;
-    uint16_t layerProgram_ = kInvalid, uLayerMode_ = kInvalid, uLayerParams_ = kInvalid, uLayerColor_ = kInvalid,
-             uLayerTexel_ = kInvalid;
-    size_t lastLayerCount_ = 0;
-    std::vector<Quad>& currentQuads() { return layerStack_.empty() || layerStack_.back() < 0 ? sprites_ : layers_[(size_t)layerStack_.back()].quads; }
-    std::vector<GpuDraw>& currentDraws() { return layerStack_.empty() || layerStack_.back() < 0 ? gpuDraws_ : layers_[(size_t)layerStack_.back()].draws; }
-    void prepareLayers();                                 // end(): pictures, views and the view order
-    void submitLayer(const LayerDraw& l, uint16_t view);  // a layer's contents into its picture
-    void submitComposite(int layer, uint16_t view);       // a layer's picture, with its effect, into `view`
-    void applyViewOrder();
-    uint16_t captureW_ = 0, captureH_ = 0;          // setCapture
-    uint16_t captureFb_ = kInvalid, captureRead_ = kInvalid, captureFbW_ = 0, captureFbH_ = 0;
-    uint32_t captureFrame_ = 0;
-    std::vector<uint8_t> capturePx_;
-    void prepareCapture();                          // end(): the game view into the capture picture, its read back
-    uint16_t createAtlas(const std::vector<uint8_t>& px, uint32_t w, uint32_t h);
-    static void destroyTexture(uint16_t& handle);
+    std::vector<LayerDraw> m_vLayers;
+    std::vector<int> m_vLayerStack;     // the open layers (innermost last); -1 = one drawn straight through
+    std::vector<int> m_vLayerClosed;    // in the order they closed: inner layers first (their views run in this order)
+    std::vector<uint16_t> m_vLayerFb;   // the pictures (frame buffers, RGBA16F), reused from frame to frame
+    uint16_t m_u16LayerW = 0, m_u16LayerH = 0;
+    uint16_t m_u16LayerProgram = m_u16Invalid, m_u16ULayerMode = m_u16Invalid, m_u16ULayerParams = m_u16Invalid, m_u16ULayerColor = m_u16Invalid,
+             m_u16ULayerTexel = m_u16Invalid;
+    size_t m_nLastLayerCount = 0;
+    std::vector<Quad>& f_CurrentQuads() { return m_vLayerStack.empty() || m_vLayerStack.back() < 0 ? m_vSprites : m_vLayers[(size_t)m_vLayerStack.back()].m_vQuads; }
+    std::vector<GpuDraw>& f_CurrentDraws() { return m_vLayerStack.empty() || m_vLayerStack.back() < 0 ? m_vGpuDraws : m_vLayers[(size_t)m_vLayerStack.back()].m_vDraws; }
+    void f_PrepareLayers();                                 // end(): pictures, views and the view order
+    void f_SubmitLayer(const LayerDraw& l_oL, uint16_t l_u16View);  // a layer's contents into its picture
+    void f_SubmitComposite(int l_iLayer, uint16_t l_u16View);       // a layer's picture, with its effect, into `view`
+    void f_ApplyViewOrder();
+    uint16_t m_u16CaptureW = 0, m_u16CaptureH = 0;          // setCapture
+    uint16_t m_u16CaptureFb = m_u16Invalid, m_u16CaptureRead = m_u16Invalid, m_u16CaptureFbW = 0, m_u16CaptureFbH = 0;
+    uint32_t m_uCaptureFrame = 0;
+    std::vector<uint8_t> m_vCapturePx;
+    void f_PrepareCapture();                          // end(): the game view into the capture picture, its read back
+    uint16_t f_CreateAtlas(const std::vector<uint8_t>& l_vPx, uint32_t l_uW, uint32_t l_uH);
+    static void f_DestroyTexture(uint16_t& l_u16Handle);
 
-    static constexpr uint16_t kInvalid = UINT16_MAX;
-    uint16_t program_  = kInvalid;
-    uint16_t sampler_  = kInvalid;   // uniform s_tex
-    uint16_t instProgram_ = kInvalid;   // ShaderProgram::SpriteInstanced
-    uint16_t quadVb_ = kInvalid, quadIb_ = kInvalid;   // the shared unit quad the instances draw
+    static constexpr uint16_t m_u16Invalid = UINT16_MAX;
+    uint16_t m_u16Program  = m_u16Invalid;
+    uint16_t m_u16Sampler  = m_u16Invalid;   // uniform s_tex
+    uint16_t m_u16InstProgram = m_u16Invalid;   // ShaderProgram::SpriteInstanced
+    uint16_t m_u16QuadVb = m_u16Invalid, m_u16QuadIb = m_u16Invalid;   // the shared unit quad the instances draw
     // Compute path: the quads in (read by cs_sprite.sc), their vertices out (drawn by vs_sprite_cs.sc),
     // a static index buffer for up to kComputeChunk quads per draw, and the quad count uniform.
-    uint16_t csProgram_ = kInvalid, csDrawProgram_ = kInvalid, csParams_ = kInvalid;
-    uint16_t csIn_ = kInvalid, csOut_ = kInvalid;
-    uint32_t csCapacity_ = 0, csOutCap_ = 0;   // vertices / elements the buffers hold
+    uint16_t m_u16CsProgram = m_u16Invalid, m_u16CsDrawProgram = m_u16Invalid, m_u16CsParams = m_u16Invalid;
+    uint16_t m_u16CsIn = m_u16Invalid, m_u16CsOut = m_u16Invalid;
+    uint32_t m_uCsCapacity = 0, m_uCsOutCap = 0;   // vertices / elements the buffers hold
     // Persistent, growing buffers of the CPU and instancing paths, and the CPU / compute index buffer.
-    uint16_t cpuVb_ = kInvalid, instVb_ = kInvalid, chunkIb_ = kInvalid;
-    uint32_t cpuCap_ = 0, instCap_ = 0;
-    std::vector<float> csScratch_;      // this frame's quads, packed (compute path)
-    std::vector<float> cpuScratch_, instScratch_;   // the same for the CPU / instancing paths
-    SpritePath wantPath_ = SpritePath::Auto;
+    uint16_t m_u16CpuVb = m_u16Invalid, m_u16InstVb = m_u16Invalid, m_u16ChunkIb = m_u16Invalid;
+    uint32_t m_uCpuCap = 0, m_uInstCap = 0;
+    std::vector<float> m_vCsScratch;      // this frame's quads, packed (compute path)
+    std::vector<float> m_vCpuScratch, m_vInstScratch;   // the same for the CPU / instancing paths
+    SpritePath m_eWantPath = SpritePath::Auto;
     // GPU particles: per emitter its state (4 vec4 per slot), its quads' vertices, and its newborns.
-    struct GpuEmitterBuffers { uint16_t state = kInvalid, out = kInvalid, spawn = kInvalid; uint32_t capacity = 0, spawnCap = 0; };
-    std::vector<GpuEmitterBuffers> gpuEmitters_;   // id - 1
-    std::vector<GpuDraw> gpuDraws_;                // this frame's, in order
-    uint16_t fxSpawn_ = kInvalid, fxUpdate_ = kInvalid;
-    uint16_t uFxSim_ = kInvalid, uFxForce_ = kInvalid, uFxOrigin_ = kInvalid, uFxXform_ = kInvalid, uFxTint_ = kInvalid;
-    uint16_t uFxColorLut_ = kInvalid, uFxScalarLut_ = kInvalid, uFxFrameUv_ = kInvalid, uFxFrameRect_ = kInvalid;
-    uint32_t lastGpuEmitters_ = 0;
+    struct GpuEmitterBuffers { uint16_t m_u16State = m_u16Invalid, m_u16Out = m_u16Invalid, m_u16Spawn = m_u16Invalid; uint32_t m_uCapacity = 0, m_uSpawnCap = 0; };
+    std::vector<GpuEmitterBuffers> m_vGpuEmitters;   // id - 1
+    std::vector<GpuDraw> m_vGpuDraws;                // this frame's, in order
+    uint16_t m_u16FxSpawn = m_u16Invalid, m_u16FxUpdate = m_u16Invalid;
+    uint16_t m_u16UFxSim = m_u16Invalid, m_u16UFxForce = m_u16Invalid, m_u16UFxOrigin = m_u16Invalid, m_u16UFxXform = m_u16Invalid, m_u16UFxTint = m_u16Invalid;
+    uint16_t m_u16UFxColorLut = m_u16Invalid, m_u16UFxScalarLut = m_u16Invalid, m_u16UFxFrameUv = m_u16Invalid, m_u16UFxFrameRect = m_u16Invalid;
+    uint32_t m_uLastGpuEmitters = 0;
     // drawMesh: this frame's mesh vertices (SpriteVertex, 9 floats each) and indices, uploaded in end().
-    std::vector<float> meshVerts_;
-    std::vector<uint16_t> meshIdx_;
-    uint16_t meshVb_ = kInvalid, meshIb_ = kInvalid;   // dynamic buffers, grown as needed
-    uint32_t meshVbCap_ = 0, meshIbCap_ = 0;
-    size_t lastMeshCount_ = 0;
-    void uploadMeshes();
-    uint16_t spriteTex_ = kInvalid;
-    std::vector<uint16_t> extraTex_;   // loadTexture (freed by releaseTexture or destroy)
-    uint32_t devW_ = 1280, devH_ = 720;
-    uint8_t  node_ = 0, nodeFilter_ = 0;
-    uint32_t lastDrawCalls_ = 0;
-    size_t   lastQuadCount_ = 0;
-    size_t   lastDrawnQuads_ = 0;
-    std::vector<Quad> sprites_;
-    std::vector<Quad> topSprites_;   // setLayer(1): drawn in kViewTop, over the UI
-    int layer_ = 0;
-    void submitTop();                // topSprites_ in transient buffers (the shared CPU buffer holds sprites_)
+    std::vector<float> m_vMeshVerts;
+    std::vector<uint16_t> m_vMeshIdx;
+    uint16_t m_u16MeshVb = m_u16Invalid, m_u16MeshIb = m_u16Invalid;   // dynamic buffers, grown as needed
+    uint32_t m_uMeshVbCap = 0, m_uMeshIbCap = 0;
+    size_t m_nLastMeshCount = 0;
+    void f_UploadMeshes();
+    uint16_t m_u16SpriteTex = m_u16Invalid;
+    std::vector<uint16_t> m_vExtraTex;   // loadTexture (freed by releaseTexture or destroy)
+    uint32_t m_uDevW = 1280, m_uDevH = 720;
+    uint8_t  m_u8Node = 0, m_u8NodeFilter = 0;
+    uint32_t m_uLastDrawCalls = 0;
+    size_t   m_nLastQuadCount = 0;
+    size_t   m_nLastDrawnQuads = 0;
+    std::vector<Quad> m_vSprites;
+    std::vector<Quad> m_vTopSprites;   // setLayer(1): drawn in kViewTop, over the UI
+    int m_iLayer = 0;
+    void f_SubmitTop();                // topSprites_ in transient buffers (the shared CPU buffer holds sprites_)
 };
 
 }  // namespace toms::next

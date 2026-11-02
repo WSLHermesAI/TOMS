@@ -9,146 +9,146 @@ using namespace toms::game_detail;
 
 namespace {
 
-int clampSel(int sel, int n) { return n <= 0 ? 0 : std::max(0, std::min(sel, n - 1)); }
+int f_ClampSel(int l_iSel, int l_iN) { return l_iN <= 0 ? 0 : std::max(0, std::min(l_iSel, l_iN - 1)); }
 
 }  // namespace
-using toms::gridMove;
+using toms::f_GridMove;
 
 // ---------- opening, closing, tabs ----------
 
-void Game::openPlayerMenu(int tab) {
-    if (!inGameMenuOpen_) {
-        inGameMenuOpen_ = true;
-        inGameMenuPage_ = InGameMenuPage::Main;
-        inGameMenuSel_ = 0;
-        inGameLangConfirmOpen_ = false;
-        dropConfirmOpen_ = false;
-        audio.play("confirm_click");
+void Game::f_OpenPlayerMenu(int l_iTab) {
+    if (!m_bInGameMenuOpen) {
+        m_bInGameMenuOpen = true;
+        m_eInGameMenuPage = InGameMenuPage::Main;
+        m_iInGameMenuSel = 0;
+        m_bInGameLangConfirmOpen = false;
+        m_bDropConfirmOpen = false;
+        m_oAudio.f_Play("confirm_click");
     }
-    if (tab >= 0 && tab < kMenuTabs) { menuTab_ = (MenuTab)tab; saveLoadOpen_ = saveLoadConfirm_ = false; }
-    playerMenuTab(0);   // marks the tab's news as seen
+    if (l_iTab >= 0 && l_iTab < m_iMenuTabs) { m_eMenuTab = (MenuTab)l_iTab; m_bSaveLoadOpen = m_bSaveLoadConfirm = false; }
+    f_PlayerMenuTab(0);   // marks the tab's news as seen
 }
 
-void Game::closePlayerMenu() {
-    if (!inGameMenuOpen_) return;
-    inGameMenuOpen_ = false;
-    saveLoadOpen_ = saveLoadConfirm_ = false;
-    inGameMenuPage_ = InGameMenuPage::Main;
-    inGameLangConfirmOpen_ = false;
-    dropConfirmOpen_ = false;
-    attrDraft_.clear();   // points not confirmed are not kept
-    audio.play("close_ui");
+void Game::f_ClosePlayerMenu() {
+    if (!m_bInGameMenuOpen) return;
+    m_bInGameMenuOpen = false;
+    m_bSaveLoadOpen = m_bSaveLoadConfirm = false;
+    m_eInGameMenuPage = InGameMenuPage::Main;
+    m_bInGameLangConfirmOpen = false;
+    m_bDropConfirmOpen = false;
+    m_mapAttrDraft.clear();   // points not confirmed are not kept
+    m_oAudio.f_Play("close_ui");
 }
 
-void Game::toggleInventory() {
-    if (inGameMenuOpen_ && menuTab_ == MenuTab::Items) { closePlayerMenu(); return; }
-    if (inGameMenuOpen_) { menuTab_ = MenuTab::Items; saveLoadOpen_ = saveLoadConfirm_ = false; playerMenuTab(0); return; }
-    if (modalActive()) return;
-    cancelWalk();
-    openPlayerMenu((int)MenuTab::Items);
+void Game::f_ToggleInventory() {
+    if (m_bInGameMenuOpen && m_eMenuTab == MenuTab::Items) { f_ClosePlayerMenu(); return; }
+    if (m_bInGameMenuOpen) { m_eMenuTab = MenuTab::Items; m_bSaveLoadOpen = m_bSaveLoadConfirm = false; f_PlayerMenuTab(0); return; }
+    if (f_ModalActive()) return;
+    f_CancelWalk();
+    f_OpenPlayerMenu((int)MenuTab::Items);
 }
 
-void Game::playerMenuTab(int delta) {
-    if (!inGameMenuOpen_) return;
-    if (saveLoadOpen_) {   // Q / E / Tab: Save <-> Load
-        if (delta != 0 && !saveLoadConfirm_) { saveLoadMode_ = 1 - saveLoadMode_; audio.play("confirm_click"); }
+void Game::f_PlayerMenuTab(int l_iDelta) {
+    if (!m_bInGameMenuOpen) return;
+    if (m_bSaveLoadOpen) {   // Q / E / Tab: Save <-> Load
+        if (l_iDelta != 0 && !m_bSaveLoadConfirm) { m_iSaveLoadMode = 1 - m_iSaveLoadMode; m_oAudio.f_Play("confirm_click"); }
         return;
     }
-    if (delta != 0) {
-        menuTab_ = (MenuTab)((((int)menuTab_ + delta) % kMenuTabs + kMenuTabs) % kMenuTabs);
-        dropConfirmOpen_ = false;
-        inGameLangConfirmOpen_ = false;
-        audio.play("confirm_click");
+    if (l_iDelta != 0) {
+        m_eMenuTab = (MenuTab)((((int)m_eMenuTab + l_iDelta) % m_iMenuTabs + m_iMenuTabs) % m_iMenuTabs);
+        m_bDropConfirmOpen = false;
+        m_bInGameLangConfirmOpen = false;
+        m_oAudio.f_Play("confirm_click");
     }
-    if (menuTab_ == MenuTab::Gear) newsGear_ = false;
-    if (menuTab_ == MenuTab::Events) newsEvents_ = false;
-    if (menuTab_ == MenuTab::Cards) newsCards_ = false;
+    if (m_eMenuTab == MenuTab::Gear) m_bNewsGear = false;
+    if (m_eMenuTab == MenuTab::Events) m_bNewsEvents = false;
+    if (m_eMenuTab == MenuTab::Cards) m_bNewsCards = false;
 }
 
 // ---------- the Items and Equipment grids ----------
 
-std::vector<Game::ItemCell> Game::itemCells() const {
-    std::vector<ItemCell> out;
-    const bool all = itemFilter_ == 0;
-    if (all || itemFilter_ == 1)                       // the backpack, copies stacked
-        for (const toms::StackedItem& s : toms::stackItems(pl.inv)) out.push_back({ItemCell::Inv, s.id, s.count});
-    if (all || itemFilter_ == 3) {                     // keys are counters on the player, not backpack items
-        const std::pair<const char*, int> keys[] = {{"key_yellow", pl.key_yellow}, {"key_blue", pl.key_blue}, {"key_red", pl.key_red}};
-        for (const auto& k : keys)
-            if (k.second > 0) out.push_back({ItemCell::Key, k.first, k.second});
+std::vector<Game::ItemCell> Game::f_ItemCells() const {
+    std::vector<ItemCell> l_vOut;
+    const bool l_bAll = m_iItemFilter == 0;
+    if (l_bAll || m_iItemFilter == 1)                       // the backpack, copies stacked
+        for (const toms::StackedItem& l_oS : toms::f_StackItems(m_oPl.m_vInv)) l_vOut.push_back({ItemCell::Inv, l_oS.m_strId, l_oS.m_iCount});
+    if (l_bAll || m_iItemFilter == 3) {                     // keys are counters on the player, not backpack items
+        const std::pair<const char*, int> l_arrKeys[] = {{"key_yellow", m_oPl.m_iKeyYellow}, {"key_blue", m_oPl.m_iKeyBlue}, {"key_red", m_oPl.m_iKeyRed}};
+        for (const auto& l_pairK : l_arrKeys)
+            if (l_pairK.second > 0) l_vOut.push_back({ItemCell::Key, l_pairK.first, l_pairK.second});
     }
-    if (all || itemFilter_ == 2)                       // owned weapons, armor, talents
-        for (const std::string& id : gearOwned_) out.push_back({ItemCell::Gear, id, 1});
-    return out;
+    if (l_bAll || m_iItemFilter == 2)                       // owned weapons, armor, talents
+        for (const std::string& l_strId : m_vGearOwned) l_vOut.push_back({ItemCell::Gear, l_strId, 1});
+    return l_vOut;
 }
 
-std::vector<std::string> Game::gearCells() const {
-    const toms::EquipmentSlot want = gearSlot_ == 0 ? toms::EquipmentSlot::Weapon : toms::EquipmentSlot::Armor;
-    std::vector<std::string> out;
-    for (const std::string& id : gearOwned_) {
-        auto it = equipmentDefs_.find(id);
-        if (it != equipmentDefs_.end() && it->second.slot == want) out.push_back(id);
+std::vector<std::string> Game::f_GearCells() const {
+    const toms::EquipmentSlot l_eWant = m_iGearSlot == 0 ? toms::EquipmentSlot::Weapon : toms::EquipmentSlot::Armor;
+    std::vector<std::string> l_vOut;
+    for (const std::string& l_strId : m_vGearOwned) {
+        auto l_itIt = m_mapEquipmentDefs.find(l_strId);
+        if (l_itIt != m_mapEquipmentDefs.end() && l_itIt->second.m_eSlot == l_eWant) l_vOut.push_back(l_strId);
     }
-    return out;
+    return l_vOut;
 }
 
-static bool worn(const toms::EquippedSet& eq, const std::string& id) {
-    return !id.empty() && (id == eq.weaponId || id == eq.armorId || id == eq.talentId);
+static bool f_Worn(const toms::EquippedSet& l_oEq, const std::string& l_strId) {
+    return !l_strId.empty() && (l_strId == l_oEq.m_strWeaponId || l_strId == l_oEq.m_strArmorId || l_strId == l_oEq.m_strTalentId);
 }
 
-std::vector<Game::ItemButton> Game::itemButtons(const ItemCell& c) const {
-    std::vector<ItemButton> out;
-    const bool important = itemImportant(c.id) || c.kind == ItemCell::Key;
-    if (c.kind == ItemCell::Inv) {
+std::vector<Game::ItemButton> Game::f_ItemButtons(const ItemCell& l_oC) const {
+    std::vector<ItemButton> l_vOut;
+    const bool l_bImportant = f_ItemImportant(l_oC.m_strId) || l_oC.m_eKind == ItemCell::Key;
+    if (l_oC.m_eKind == ItemCell::Inv) {
         // a story item (a gate's key) has nothing to use: using it would only lose it
-        out.push_back({ItemAction::Use, itemType(c.id) != "story"});
-        out.push_back({ItemAction::Drop, toms::canDrop(important, false)});
-    } else if (c.kind == ItemCell::Key) {
-        out.push_back({ItemAction::Drop, false});
+        l_vOut.push_back({ItemAction::Use, f_ItemType(l_oC.m_strId) != "story"});
+        l_vOut.push_back({ItemAction::Drop, toms::f_CanDrop(l_bImportant, false)});
+    } else if (l_oC.m_eKind == ItemCell::Key) {
+        l_vOut.push_back({ItemAction::Drop, false});
     } else {
-        const bool isWorn = worn(equipped_, c.id);
-        auto it = equipmentDefs_.find(c.id);
-        const bool weapon = it != equipmentDefs_.end() && it->second.slot == toms::EquipmentSlot::Weapon;
-        if (!isWorn) out.push_back({ItemAction::Equip, true});
-        else if (!weapon) out.push_back({ItemAction::Unequip, true});   // a weapon is swapped, never taken off
-        out.push_back({ItemAction::Drop, toms::canDrop(important, isWorn)});
+        const bool l_bIsWorn = f_Worn(m_oEquipped, l_oC.m_strId);
+        auto l_itIt = m_mapEquipmentDefs.find(l_oC.m_strId);
+        const bool l_bWeapon = l_itIt != m_mapEquipmentDefs.end() && l_itIt->second.m_eSlot == toms::EquipmentSlot::Weapon;
+        if (!l_bIsWorn) l_vOut.push_back({ItemAction::Equip, true});
+        else if (!l_bWeapon) l_vOut.push_back({ItemAction::Unequip, true});   // a weapon is swapped, never taken off
+        l_vOut.push_back({ItemAction::Drop, toms::f_CanDrop(l_bImportant, l_bIsWorn)});
     }
-    return out;
+    return l_vOut;
 }
 
-void Game::runItemAction(const ItemCell& c, ItemAction a) {
-    switch (a) {
+void Game::f_RunItemAction(const ItemCell& l_oC, ItemAction l_eA) {
+    switch (l_eA) {
         case ItemAction::Use: {
             // The last copy goes, so the stack keeps its place in the grid (cells follow first pickups).
-            auto it = std::find(pl.inv.rbegin(), pl.inv.rend(), c.id);
-            if (it == pl.inv.rend()) return;
-            pl.inv.erase(std::next(it).base());
-            const std::string stage = curStage;
-            applyItem(c.id);
-            markProgressDirty();
-            if (curStage != stage) closePlayerMenu();   // a scroll took the player to another floor
+            auto l_itIt = std::find(m_oPl.m_vInv.rbegin(), m_oPl.m_vInv.rend(), l_oC.m_strId);
+            if (l_itIt == m_oPl.m_vInv.rend()) return;
+            m_oPl.m_vInv.erase(std::next(l_itIt).base());
+            const std::string l_strStage = m_strCurStage;
+            f_ApplyItem(l_oC.m_strId);
+            f_MarkProgressDirty();
+            if (m_strCurStage != l_strStage) f_ClosePlayerMenu();   // a scroll took the player to another floor
             break;
         }
         case ItemAction::Equip:
-            equipGear(c.id);
-            audio.play("confirm_click");
+            f_EquipGear(l_oC.m_strId);
+            m_oAudio.f_Play("confirm_click");
             break;
         case ItemAction::Unequip: {
-            if (equipped_.armorId == c.id) equipped_.armorId.clear();
-            if (equipped_.talentId == c.id) equipped_.talentId.clear();
-            markProgressDirty();
-            audio.play("close_ui");
+            if (m_oEquipped.m_strArmorId == l_oC.m_strId) m_oEquipped.m_strArmorId.clear();
+            if (m_oEquipped.m_strTalentId == l_oC.m_strId) m_oEquipped.m_strTalentId.clear();
+            f_MarkProgressDirty();
+            m_oAudio.f_Play("close_ui");
             break;
         }
         case ItemAction::Drop: {
-            if (c.kind == ItemCell::Inv) {
-                auto it = std::find(pl.inv.rbegin(), pl.inv.rend(), c.id);
-                if (it != pl.inv.rend()) pl.inv.erase(std::next(it).base());
-            } else if (c.kind == ItemCell::Gear && !worn(equipped_, c.id)) {
-                gearOwned_.erase(std::remove(gearOwned_.begin(), gearOwned_.end(), c.id), gearOwned_.end());
+            if (l_oC.m_eKind == ItemCell::Inv) {
+                auto l_itIt = std::find(m_oPl.m_vInv.rbegin(), m_oPl.m_vInv.rend(), l_oC.m_strId);
+                if (l_itIt != m_oPl.m_vInv.rend()) m_oPl.m_vInv.erase(std::next(l_itIt).base());
+            } else if (l_oC.m_eKind == ItemCell::Gear && !f_Worn(m_oEquipped, l_oC.m_strId)) {
+                m_vGearOwned.erase(std::remove(m_vGearOwned.begin(), m_vGearOwned.end(), l_oC.m_strId), m_vGearOwned.end());
             }
-            markProgressDirty();
-            audio.play("close_ui");
+            f_MarkProgressDirty();
+            m_oAudio.f_Play("close_ui");
             break;
         }
     }
@@ -156,691 +156,691 @@ void Game::runItemAction(const ItemCell& c, ItemAction a) {
 
 // ---------- the Events tab ----------
 
-std::vector<Game::LogEntry> Game::eventLog(bool all) const {
-    std::vector<LogEntry> open, done;
-    auto text = [&](const std::string& key) {
-        const std::string t = locale_.tr(key);
-        return t == key ? std::string() : t;
+std::vector<Game::LogEntry> Game::f_EventLog(bool l_bAll) const {
+    std::vector<LogEntry> l_vOpen, l_vDone;
+    auto l_fnText = [&](const std::string& l_strKey) {
+        const std::string l_strT = m_oLocale.f_Tr(l_strKey);
+        return l_strT == l_strKey ? std::string() : l_strT;
     };
     // Chapters: listed once the player has set foot in one of their floors; finished when their last
     // floor (the boss floor) is cleared -- the chapters' exitConditions, `stageCleared <boss floor>`.
-    if (floorMode()) {
-        const std::string here = curFloorId_.empty() ? run_.floor() : curFloorId_;
-        std::vector<std::string> acts;
-        for (const toms::FloorInfo& f : floors_.all())
-            if (std::find(acts.begin(), acts.end(), f.act) == acts.end()) acts.push_back(f.act);
-        for (const std::string& act : acts) {
-            bool reached = false;
-            std::string last, key;
-            for (const toms::FloorInfo& f : floors_.all()) {
-                if (f.act != act) continue;
-                last = f.id; key = f.actKey;
-                if (f.id == here || run_.floorCleared(f.id)) reached = true;
+    if (f_FloorMode()) {
+        const std::string l_strHere = m_strCurFloorId.empty() ? m_oRun.f_Floor() : m_strCurFloorId;
+        std::vector<std::string> l_vActs;
+        for (const toms::FloorInfo& l_oF : m_oFloors.f_All())
+            if (std::find(l_vActs.begin(), l_vActs.end(), l_oF.m_strAct) == l_vActs.end()) l_vActs.push_back(l_oF.m_strAct);
+        for (const std::string& l_strAct : l_vActs) {
+            bool l_bReached = false;
+            std::string l_strLast, l_strKey;
+            for (const toms::FloorInfo& l_oF : m_oFloors.f_All()) {
+                if (l_oF.m_strAct != l_strAct) continue;
+                l_strLast = l_oF.m_strId; l_strKey = l_oF.m_strActKey;
+                if (l_oF.m_strId == l_strHere || m_oRun.f_FloorCleared(l_oF.m_strId)) l_bReached = true;
             }
-            if (!reached) continue;
-            LogEntry e;
-            e.kind = 0;
-            e.id = act;
-            e.title = text("story." + key + ".title");
-            if (e.title.empty()) e.title = act;
-            e.desc = text("story." + key + ".desc");
-            e.done = run_.floorCleared(last);
-            (e.done ? done : open).push_back(e);
+            if (!l_bReached) continue;
+            LogEntry l_oE;
+            l_oE.m_iKind = 0;
+            l_oE.m_strId = l_strAct;
+            l_oE.m_strTitle = l_fnText("story." + l_strKey + ".title");
+            if (l_oE.m_strTitle.empty()) l_oE.m_strTitle = l_strAct;
+            l_oE.m_strDesc = l_fnText("story." + l_strKey + ".desc");
+            l_oE.m_bDone = m_oRun.f_FloorCleared(l_strLast);
+            (l_oE.m_bDone ? l_vDone : l_vOpen).push_back(l_oE);
         }
-        std::reverse(done.begin(), done.end());   // the newest finished chapter first
+        std::reverse(l_vDone.begin(), l_vDone.end());   // the newest finished chapter first
     }
     // Story events: listed once started (met), finished once fired; only those whose kind (or own record)
     // is "inLog" and that have a pool record.
-    auto eventName = [&](const std::string& id) {
-        auto d = eventDefs_.find(id);
-        if (d != eventDefs_.end() && !d->second.stairsFrom.empty())   // Q7: "Go to the stairs on floor 3"
-            return toms::fillText(locale_.tr("stairs.go.title"), {{"from", toms::floorLabel(d->second.stairsFrom)},
-                                                                  {"to", toms::floorLabel(d->second.stairsTo)}});
-        std::string t = d == eventDefs_.end() ? std::string() : text(d->second.titleKey);
-        return t.empty() ? id : t;
+    auto l_fnEventName = [&](const std::string& l_strId) {
+        auto l_itD = m_mapEventDefs.find(l_strId);
+        if (l_itD != m_mapEventDefs.end() && !l_itD->second.m_strStairsFrom.empty())   // Q7: "Go to the stairs on floor 3"
+            return toms::f_FillText(m_oLocale.f_Tr("stairs.go.title"), {{"from", toms::f_FloorLabel(l_itD->second.m_strStairsFrom)},
+                                                                  {"to", toms::f_FloorLabel(l_itD->second.m_strStairsTo)}});
+        std::string l_strT = l_itD == m_mapEventDefs.end() ? std::string() : l_fnText(l_itD->second.m_strTitleKey);
+        return l_strT.empty() ? l_strId : l_strT;
     };
-    auto connectedNames = [&](const std::vector<std::string>& ids) {
-        std::vector<std::string> out;
-        for (const std::string& c : ids) {
-            if (!run_.eventStarted(c)) out.push_back(locale_.tr("events.unknown"));   // not met yet: no spoilers
-            else out.push_back(eventName(c) + (run_.eventFinished(c) ? "  ✓" : ""));
+    auto l_fnConnectedNames = [&](const std::vector<std::string>& l_vIds) {
+        std::vector<std::string> l_vOut;
+        for (const std::string& l_strC : l_vIds) {
+            if (!m_oRun.f_EventStarted(l_strC)) l_vOut.push_back(m_oLocale.f_Tr("events.unknown"));   // not met yet: no spoilers
+            else l_vOut.push_back(l_fnEventName(l_strC) + (m_oRun.f_EventFinished(l_strC) ? "  ✓" : ""));
         }
-        return out;
+        return l_vOut;
     };
-    for (LogEntry& e : open) if (e.kind == 0) e.connected = connectedNames(chapterEvents_.count(e.id) ? chapterEvents_.at(e.id) : std::vector<std::string>{});
-    for (LogEntry& e : done) if (e.kind == 0) e.connected = connectedNames(chapterEvents_.count(e.id) ? chapterEvents_.at(e.id) : std::vector<std::string>{});
-    std::vector<LogEntry> eventsDone;
-    auto eventEntry = [&](const std::string& id, bool isDone) {
-        LogEntry e;
-        e.kind = 2;
-        e.id = id;
-        e.title = eventName(id);
-        const EventDef& def = eventDefs_.at(id);
-        if (!def.stairsFrom.empty()) {
-            e.desc = toms::fillText(locale_.tr("stairs.go.desc"), {{"from", toms::floorLabel(def.stairsFrom)},
-                                                                   {"to", toms::floorLabel(def.stairsTo)}});
+    for (LogEntry& l_oE : l_vOpen) if (l_oE.m_iKind == 0) l_oE.m_vConnected = l_fnConnectedNames(m_mapChapterEvents.count(l_oE.m_strId) ? m_mapChapterEvents.at(l_oE.m_strId) : std::vector<std::string>{});
+    for (LogEntry& l_oE : l_vDone) if (l_oE.m_iKind == 0) l_oE.m_vConnected = l_fnConnectedNames(m_mapChapterEvents.count(l_oE.m_strId) ? m_mapChapterEvents.at(l_oE.m_strId) : std::vector<std::string>{});
+    std::vector<LogEntry> l_vEventsDone;
+    auto l_fnEventEntry = [&](const std::string& l_strId, bool l_bIsDone) {
+        LogEntry l_oE;
+        l_oE.m_iKind = 2;
+        l_oE.m_strId = l_strId;
+        l_oE.m_strTitle = l_fnEventName(l_strId);
+        const EventDef& l_oDef = m_mapEventDefs.at(l_strId);
+        if (!l_oDef.m_strStairsFrom.empty()) {
+            l_oE.m_strDesc = toms::f_FillText(m_oLocale.f_Tr("stairs.go.desc"), {{"from", toms::f_FloorLabel(l_oDef.m_strStairsFrom)},
+                                                                   {"to", toms::f_FloorLabel(l_oDef.m_strStairsTo)}});
             // W38: where they are -- on this floor the arrow marks them; elsewhere, the floor and the spot
-            if (!isDone) {
-                const auto spot = stairSpots_.find(def.stairsFrom + ">" + def.stairsTo);
-                if (def.stairsFrom == st.id) e.desc += " " + locale_.tr("stairs.go.here");
-                else if (spot != stairSpots_.end())
-                    e.desc += " " + toms::fillText(locale_.tr("stairs.go.where"), {{"from", toms::floorLabel(def.stairsFrom)},
-                                                                                {"x", std::to_string(spot->second.first)},
-                                                                                {"y", std::to_string(spot->second.second)}});
+            if (!l_bIsDone) {
+                const auto l_itSpot = m_mapStairSpots.find(l_oDef.m_strStairsFrom + ">" + l_oDef.m_strStairsTo);
+                if (l_oDef.m_strStairsFrom == m_oSt.m_strId) l_oE.m_strDesc += " " + m_oLocale.f_Tr("stairs.go.here");
+                else if (l_itSpot != m_mapStairSpots.end())
+                    l_oE.m_strDesc += " " + toms::f_FillText(m_oLocale.f_Tr("stairs.go.where"), {{"from", toms::f_FloorLabel(l_oDef.m_strStairsFrom)},
+                                                                                {"x", std::to_string(l_itSpot->second.first)},
+                                                                                {"y", std::to_string(l_itSpot->second.second)}});
                 else
-                    e.desc += " " + toms::fillText(locale_.tr("stairs.go.floor"), {{"from", toms::floorLabel(def.stairsFrom)}});
+                    l_oE.m_strDesc += " " + toms::f_FillText(m_oLocale.f_Tr("stairs.go.floor"), {{"from", toms::f_FloorLabel(l_oDef.m_strStairsFrom)}});
             }
         } else
-            e.desc = text(def.descKey);
+            l_oE.m_strDesc = l_fnText(l_oDef.m_strDescKey);
         // Q7: an event that opens stairs says so in its description.
-        if (auto u = stairUnlocks_.find(id); u != stairUnlocks_.end())
-            for (const StairUnlock& s : u->second)
+        if (auto l_itU = m_mapStairUnlocks.find(l_strId); l_itU != m_mapStairUnlocks.end())
+            for (const StairUnlock& l_oS : l_itU->second)
             {
-                e.desc += (e.desc.empty() ? "" : " ") +
-                          toms::fillText(locale_.tr("stairs.unlocks"), {{"from", toms::floorLabel(s.floor)}, {"to", toms::floorLabel(s.to)}});
+                l_oE.m_strDesc += (l_oE.m_strDesc.empty() ? "" : " ") +
+                          toms::f_FillText(m_oLocale.f_Tr("stairs.unlocks"), {{"from", toms::f_FloorLabel(l_oS.m_strFloor)}, {"to", toms::f_FloorLabel(l_oS.m_strTo)}});
                 // W38: a stair that waits for several events says how many are done
-                if (const toms::StairLink* link = findStair(s.floor, s.to); link && link->unlockEvents.size() > 1) {
-                    int done = 0;
-                    for (const std::string& ev : link->unlockEvents) if (run_.eventFinished(ev)) done++;
-                    e.desc += " " + toms::fillText(locale_.tr("stairs.unlocks.count"), {{"done", std::to_string(done)},
-                                                                                       {"all", std::to_string(link->unlockEvents.size())}});
+                if (const toms::StairLink* l_pLink = f_FindStair(l_oS.m_strFloor, l_oS.m_strTo); l_pLink && l_pLink->m_vUnlockEvents.size() > 1) {
+                    int l_iDone = 0;
+                    for (const std::string& l_strEv : l_pLink->m_vUnlockEvents) if (m_oRun.f_EventFinished(l_strEv)) l_iDone++;
+                    l_oE.m_strDesc += " " + toms::f_FillText(m_oLocale.f_Tr("stairs.unlocks.count"), {{"done", std::to_string(l_iDone)},
+                                                                                       {"all", std::to_string(l_pLink->m_vUnlockEvents.size())}});
                 }
             }
-        e.done = isDone;
-        e.connected = connectedNames(connectedEvents(id));
-        return e;
+        l_oE.m_bDone = l_bIsDone;
+        l_oE.m_vConnected = l_fnConnectedNames(f_ConnectedEvents(l_strId));
+        return l_oE;
     };
-    for (const std::string& id : run_.eventsStarted()) {
-        auto d = eventDefs_.find(id);
-        if (d == eventDefs_.end() || !d->second.inLog || run_.eventFinished(id)) continue;
-        open.push_back(eventEntry(id, false));
+    for (const std::string& l_strId : m_oRun.f_EventsStarted()) {
+        auto l_itD = m_mapEventDefs.find(l_strId);
+        if (l_itD == m_mapEventDefs.end() || !l_itD->second.m_bInLog || m_oRun.f_EventFinished(l_strId)) continue;
+        l_vOpen.push_back(l_fnEventEntry(l_strId, false));
     }
-    const auto& fin = run_.eventsFinished();
-    for (auto it = fin.rbegin(); it != fin.rend(); ++it) {   // the newest first
-        auto d = eventDefs_.find(*it);
-        if (d != eventDefs_.end() && d->second.inLog) eventsDone.push_back(eventEntry(*it, true));
+    const auto& l_vFin = m_oRun.f_EventsFinished();
+    for (auto l_itIt = l_vFin.rbegin(); l_itIt != l_vFin.rend(); ++l_itIt) {   // the newest first
+        auto l_itD = m_mapEventDefs.find(*l_itIt);
+        if (l_itD != m_mapEventDefs.end() && l_itD->second.m_bInLog) l_vEventsDone.push_back(l_fnEventEntry(*l_itIt, true));
     }
     // Missions: listed once accepted; finished once the reward is claimed.
-    for (const auto& [id, t] : missionTrackers_) {
-        if (t.state != toms::MissionState::Active && t.state != toms::MissionState::Completed &&
-            t.state != toms::MissionState::Claimed) continue;
-        LogEntry e;
-        e.kind = 1;
-        e.id = id;
-        e.title = text("mission." + id + ".title");
-        if (e.title.empty()) e.title = id;
-        e.desc = text("mission." + id + ".desc");
-        e.done = t.state == toms::MissionState::Claimed;
-        (e.done ? done : open).push_back(e);
+    for (const auto& [l_strId, l_oT] : m_mapMissionTrackers) {
+        if (l_oT.m_eState != toms::MissionState::Active && l_oT.m_eState != toms::MissionState::Completed &&
+            l_oT.m_eState != toms::MissionState::Claimed) continue;
+        LogEntry l_oE;
+        l_oE.m_iKind = 1;
+        l_oE.m_strId = l_strId;
+        l_oE.m_strTitle = l_fnText("mission." + l_strId + ".title");
+        if (l_oE.m_strTitle.empty()) l_oE.m_strTitle = l_strId;
+        l_oE.m_strDesc = l_fnText("mission." + l_strId + ".desc");
+        l_oE.m_bDone = l_oT.m_eState == toms::MissionState::Claimed;
+        (l_oE.m_bDone ? l_vDone : l_vOpen).push_back(l_oE);
     }
-    done.insert(done.end(), eventsDone.begin(), eventsDone.end());
-    if (all) open.insert(open.end(), done.begin(), done.end());
-    return open;
+    l_vDone.insert(l_vDone.end(), l_vEventsDone.begin(), l_vEventsDone.end());
+    if (l_bAll) l_vOpen.insert(l_vOpen.end(), l_vDone.begin(), l_vDone.end());
+    return l_vOpen;
 }
 
 // The event ids a `requires` waits for: runFlagSet "event_<id>" (set when an event fires) or eventDone "<id>".
-static void eventsWaitedFor(const nlohmann::json& j, std::vector<std::string>& out) {
-    if (j.is_array()) { for (const auto& x : j) eventsWaitedFor(x, out); return; }
-    if (!j.is_object()) return;
-    for (const char* group : {"all", "any", "not"})
-        if (j.contains(group)) eventsWaitedFor(j[group], out);
-    const std::string flag = j.value("flag", std::string());
-    if (j.value("type", std::string()) == "runFlagSet" && flag.rfind("event_", 0) == 0) out.push_back(flag.substr(6));
-    if (j.contains("eventDone") && j["eventDone"].is_string()) out.push_back(j["eventDone"].get<std::string>());
+static void f_EventsWaitedFor(const nlohmann::json& l_jJ, std::vector<std::string>& l_vOut) {
+    if (l_jJ.is_array()) { for (const auto& l_jX : l_jJ) f_EventsWaitedFor(l_jX, l_vOut); return; }
+    if (!l_jJ.is_object()) return;
+    for (const char* l_pszGroup : {"all", "any", "not"})
+        if (l_jJ.contains(l_pszGroup)) f_EventsWaitedFor(l_jJ[l_pszGroup], l_vOut);
+    const std::string l_strFlag = l_jJ.value("flag", std::string());
+    if (l_jJ.value("type", std::string()) == "runFlagSet" && l_strFlag.rfind("event_", 0) == 0) l_vOut.push_back(l_strFlag.substr(6));
+    if (l_jJ.contains("eventDone") && l_jJ["eventDone"].is_string()) l_vOut.push_back(l_jJ["eventDone"].get<std::string>());
 }
 
-std::vector<std::string> Game::connectedEvents(const std::string& eventId) const {
-    std::vector<std::string> out;
-    auto add = [&](const std::string& id) {
-        if (!id.empty() && id != eventId && eventDefs_.count(id) && std::find(out.begin(), out.end(), id) == out.end()) out.push_back(id);
+std::vector<std::string> Game::f_ConnectedEvents(const std::string& l_strEventId) const {
+    std::vector<std::string> l_vOut;
+    auto l_fnAdd = [&](const std::string& l_strId) {
+        if (!l_strId.empty() && l_strId != l_strEventId && m_mapEventDefs.count(l_strId) && std::find(l_vOut.begin(), l_vOut.end(), l_strId) == l_vOut.end()) l_vOut.push_back(l_strId);
     };
-    auto self = eventDefs_.find(eventId);
-    if (self != eventDefs_.end()) {
-        for (const std::string& n : self->second.next) add(n);              // what it leads to
-        std::vector<std::string> waits;
-        eventsWaitedFor(self->second.requires, waits);                      // what it waits for
-        for (const std::string& w : waits) add(w);
+    auto l_itSelf = m_mapEventDefs.find(l_strEventId);
+    if (l_itSelf != m_mapEventDefs.end()) {
+        for (const std::string& l_strN : l_itSelf->second.m_vNext) l_fnAdd(l_strN);              // what it leads to
+        std::vector<std::string> l_vWaits;
+        f_EventsWaitedFor(l_itSelf->second.m_jRequires, l_vWaits);                      // what it waits for
+        for (const std::string& l_strW : l_vWaits) l_fnAdd(l_strW);
     }
-    for (const auto& [ev, list] : stairUnlocks_)                            // Q7: the stairs an event opens
-        for (const StairUnlock& s : list) {
-            const std::string go = toms::goStairsEventId(s.floor, s.to);
-            if (ev == eventId) add(go);
-            if (go == eventId) add(ev);
+    for (const auto& [l_strEv, l_vList] : m_mapStairUnlocks)                            // Q7: the stairs an event opens
+        for (const StairUnlock& l_oS : l_vList) {
+            const std::string l_strGo = toms::f_GoStairsEventId(l_oS.m_strFloor, l_oS.m_strTo);
+            if (l_strEv == l_strEventId) l_fnAdd(l_strGo);
+            if (l_strGo == l_strEventId) l_fnAdd(l_strEv);
         }
-    for (const auto& [id, d] : eventDefs_) {                                // what leads here, or waits for it
-        if (std::find(d.next.begin(), d.next.end(), eventId) != d.next.end()) add(id);
-        std::vector<std::string> waits;
-        eventsWaitedFor(d.requires, waits);
-        if (std::find(waits.begin(), waits.end(), eventId) != waits.end()) add(id);
+    for (const auto& [l_strId, l_oD] : m_mapEventDefs) {                                // what leads here, or waits for it
+        if (std::find(l_oD.m_vNext.begin(), l_oD.m_vNext.end(), l_strEventId) != l_oD.m_vNext.end()) l_fnAdd(l_strId);
+        std::vector<std::string> l_vWaits;
+        f_EventsWaitedFor(l_oD.m_jRequires, l_vWaits);
+        if (std::find(l_vWaits.begin(), l_vWaits.end(), l_strEventId) != l_vWaits.end()) l_fnAdd(l_strId);
     }
-    return out;
+    return l_vOut;
 }
 
-void Game::loadEventDefs() {
-    const std::string dir = pathOf(toms::key::kFolderEvents) + "/";
+void Game::f_LoadEventDefs() {
+    const std::string l_strDir = f_PathOf(toms::key::g_pszFolderEvents) + "/";
     // kinds.json (written by the event editor's Kinds tab): "inLog": false keeps a kind out of the log.
-    std::map<std::string, bool> kindInLog;
-    nlohmann::json kinds = readJsonFile(pathOf(toms::key::kDataEventKinds));
-    if (kinds.is_object())
-        for (auto& [k, v] : kinds.items())
-            if (v.is_object() && v.contains("inLog")) kindInLog[k] = v.value("inLog", true);
-    std::vector<std::string> poolNames = toms::vfsListDir(dir);
-    std::sort(poolNames.begin(), poolNames.end());   // pool order = file-name order (the NPC topic menu's order)
-    std::vector<nlohmann::json> poolEvents;
-    for (const std::string& name : poolNames) {
-        if (name.rfind("pool_", 0) != 0 || name.size() < 5 || name.compare(name.size() - 5, 5, ".json") != 0) continue;
-        nlohmann::json pool = readJsonFile(dir + name);
-        if (!pool.contains("events") || !pool["events"].is_array()) continue;
-        poolEvents.push_back(pool["events"]);
-        for (const auto& e : pool["events"]) {
-            const std::string id = e.value("eventId", std::string());
-            if (id.empty()) continue;
-            EventDef d;
-            d.kind = e.value("kind", std::string());
-            d.titleKey = e.value("title", id + ".title");
-            d.descKey = e.value("desc", id + ".desc");
-            if (e.contains("next") && e["next"].is_array())
-                for (const auto& n : e["next"]) if (n.is_string()) d.next.push_back(n.get<std::string>());
-            if (e.contains("requires")) d.requires = e["requires"];
-            if (e.contains("actions") && e["actions"].is_array()) d.actions = e["actions"];
-            if (e.contains("trigger") && e["trigger"].is_object()) {
-                d.trigger = e["trigger"].value("on", std::string("step"));
-                d.triggerVar = e["trigger"].value("var", std::string());
+    std::map<std::string, bool> l_mapKindInLog;
+    nlohmann::json l_jKinds = f_ReadJsonFile(f_PathOf(toms::key::g_pszDataEventKinds));
+    if (l_jKinds.is_object())
+        for (auto& [l_strK, l_jV] : l_jKinds.items())
+            if (l_jV.is_object() && l_jV.contains("inLog")) l_mapKindInLog[l_strK] = l_jV.value("inLog", true);
+    std::vector<std::string> l_vPoolNames = toms::f_VfsListDir(l_strDir);
+    std::sort(l_vPoolNames.begin(), l_vPoolNames.end());   // pool order = file-name order (the NPC topic menu's order)
+    std::vector<nlohmann::json> l_vPoolEvents;
+    for (const std::string& l_strName : l_vPoolNames) {
+        if (l_strName.rfind("pool_", 0) != 0 || l_strName.size() < 5 || l_strName.compare(l_strName.size() - 5, 5, ".json") != 0) continue;
+        nlohmann::json l_jPool = f_ReadJsonFile(l_strDir + l_strName);
+        if (!l_jPool.contains("events") || !l_jPool["events"].is_array()) continue;
+        l_vPoolEvents.push_back(l_jPool["events"]);
+        for (const auto& l_jE : l_jPool["events"]) {
+            const std::string l_strId = l_jE.value("eventId", std::string());
+            if (l_strId.empty()) continue;
+            EventDef l_oD;
+            l_oD.m_strKind = l_jE.value("kind", std::string());
+            l_oD.m_strTitleKey = l_jE.value("title", l_strId + ".title");
+            l_oD.m_strDescKey = l_jE.value("desc", l_strId + ".desc");
+            if (l_jE.contains("next") && l_jE["next"].is_array())
+                for (const auto& l_jN : l_jE["next"]) if (l_jN.is_string()) l_oD.m_vNext.push_back(l_jN.get<std::string>());
+            if (l_jE.contains("requires")) l_oD.m_jRequires = l_jE["requires"];
+            if (l_jE.contains("actions") && l_jE["actions"].is_array()) l_oD.m_jActions = l_jE["actions"];
+            if (l_jE.contains("trigger") && l_jE["trigger"].is_object()) {
+                l_oD.m_strTrigger = l_jE["trigger"].value("on", std::string("step"));
+                l_oD.m_strTriggerVar = l_jE["trigger"].value("var", std::string());
             }
-            d.once = e.value("once", true);
-            d.maxTimes = std::max(0, e.value("maxTimes", 0));
-            d.textKey = e.value("text", id + ".text");
-            auto k = kindInLog.find(d.kind);
-            d.inLog = e.value("inLog", k == kindInLog.end() ? true : k->second);
-            eventDefs_[id] = d;
+            l_oD.m_bOnce = l_jE.value("once", true);
+            l_oD.m_iMaxTimes = std::max(0, l_jE.value("maxTimes", 0));
+            l_oD.m_strTextKey = l_jE.value("text", l_strId + ".text");
+            auto l_itK = l_mapKindInLog.find(l_oD.m_strKind);
+            l_oD.m_bInLog = l_jE.value("inLog", l_itK == l_mapKindInLog.end() ? true : l_itK->second);
+            m_mapEventDefs[l_strId] = l_oD;
         }
     }
     // The events bound to NPCs (trigger "talk"), in menu order (docs/gameplay/event_editor/08_NPC_DIALOGUE.md).
-    npcTopics_ = toms::talk::collectTopics(poolEvents);
+    m_mapNpcTopics = toms::talk::f_CollectTopics(l_vPoolEvents);
     // The chapters' story events (beats of kind "event"): a chapter's connected events in the log.
-    const std::string chDir = pathOf(toms::key::kFolderChapters) + "/";
-    for (const std::string& name : toms::vfsListDir(chDir)) {
-        if (name.size() < 5 || name.compare(name.size() - 5, 5, ".json") != 0) continue;
-        nlohmann::json ch = readJsonFile(chDir + name);
-        const std::string id = ch.value("id", std::string());
-        if (id.empty() || !ch.contains("beats") || !ch["beats"].is_array()) continue;
-        for (const auto& b : ch["beats"])
-            if (b.value("kind", std::string()) == "event" && b.contains("eventId")) chapterEvents_[id].push_back(b.value("eventId", std::string()));
+    const std::string l_strChDir = f_PathOf(toms::key::g_pszFolderChapters) + "/";
+    for (const std::string& l_strName : toms::f_VfsListDir(l_strChDir)) {
+        if (l_strName.size() < 5 || l_strName.compare(l_strName.size() - 5, 5, ".json") != 0) continue;
+        nlohmann::json l_jCh = f_ReadJsonFile(l_strChDir + l_strName);
+        const std::string l_strId = l_jCh.value("id", std::string());
+        if (l_strId.empty() || !l_jCh.contains("beats") || !l_jCh["beats"].is_array()) continue;
+        for (const auto& l_jB : l_jCh["beats"])
+            if (l_jB.value("kind", std::string()) == "event" && l_jB.contains("eventId")) m_mapChapterEvents[l_strId].push_back(l_jB.value("eventId", std::string()));
     }
-    fprintf(stderr, "[assets] events: %zu in the pools, %zu chapters with story events\n", eventDefs_.size(), chapterEvents_.size());
+    fprintf(stderr, "[assets] events: %zu in the pools, %zu chapters with story events\n", m_mapEventDefs.size(), m_mapChapterEvents.size());
 }
 
 // ---------- keyboard ----------
 
-void Game::playerMenuMove(int dx, int dy) {
-    if (!inGameMenuOpen_) return;
-    if (saveLoadOpen_) {
-        if (saveLoadConfirm_) { if (dx != 0 || dy != 0) saveLoadConfirmYes_ = !saveLoadConfirmYes_; return; }
-        const int n = (int)saveLoadSlots_.size();
-        if (dy != 0 && n > 0) saveLoadSel_ = ((saveLoadSel_ + dy) % n + n) % n;
-        if (dx != 0) playerMenuTab(dx);
+void Game::f_PlayerMenuMove(int l_iDx, int l_iDy) {
+    if (!m_bInGameMenuOpen) return;
+    if (m_bSaveLoadOpen) {
+        if (m_bSaveLoadConfirm) { if (l_iDx != 0 || l_iDy != 0) m_bSaveLoadConfirmYes = !m_bSaveLoadConfirmYes; return; }
+        const int l_iN = (int)m_vSaveLoadSlots.size();
+        if (l_iDy != 0 && l_iN > 0) m_iSaveLoadSel = ((m_iSaveLoadSel + l_iDy) % l_iN + l_iN) % l_iN;
+        if (l_iDx != 0) f_PlayerMenuTab(l_iDx);
         return;
     }
-    if (dropConfirmOpen_) { if (dx != 0 || dy != 0) dropConfirmYes_ = !dropConfirmYes_; return; }
-    switch (menuTab_) {
+    if (m_bDropConfirmOpen) { if (l_iDx != 0 || l_iDy != 0) m_bDropConfirmYes = !m_bDropConfirmYes; return; }
+    switch (m_eMenuTab) {
         case MenuTab::Status: {
             // the attributes, then (with a draft) Confirm and Reset as two more stops, so a keyboard can reach them
-            const int n = (int)attrDefs_.size() + (attrDraft_.empty() ? 0 : 2);
-            if (dy != 0 && n > 0) attrSel_ = attrSel_ < 0 ? 0 : ((attrSel_ + dy) % n + n) % n;
+            const int l_iN = (int)m_vAttrDefs.size() + (m_mapAttrDraft.empty() ? 0 : 2);
+            if (l_iDy != 0 && l_iN > 0) m_iAttrSel = m_iAttrSel < 0 ? 0 : ((m_iAttrSel + l_iDy) % l_iN + l_iN) % l_iN;
             break;
         }
         case MenuTab::Gear: {
-            const int n = (int)gearCells().size();
-            gearSel_ = clampSel(gearSel_, n);
-            if (!gridMove(gearSel_, n, dx, dy)) { gearSlot_ = 1 - gearSlot_; gearSel_ = 0; }
+            const int l_iN = (int)f_GearCells().size();
+            m_iGearSel = f_ClampSel(m_iGearSel, l_iN);
+            if (!f_GridMove(m_iGearSel, l_iN, l_iDx, l_iDy)) { m_iGearSlot = 1 - m_iGearSlot; m_iGearSel = 0; }
             break;
         }
         case MenuTab::Items: {
-            const int n = (int)itemCells().size();
-            itemSel_ = clampSel(itemSel_, n);
-            if (!gridMove(itemSel_, n, dx, dy)) { itemFilter_ = ((itemFilter_ + (dx > 0 ? 1 : -1)) % 4 + 4) % 4; itemSel_ = 0; }
+            const int l_iN = (int)f_ItemCells().size();
+            m_iItemSel = f_ClampSel(m_iItemSel, l_iN);
+            if (!f_GridMove(m_iItemSel, l_iN, l_iDx, l_iDy)) { m_iItemFilter = ((m_iItemFilter + (l_iDx > 0 ? 1 : -1)) % 4 + 4) % 4; m_iItemSel = 0; }
             break;
         }
         case MenuTab::Cards: {
-            const int n = (int)cardCells().size();
-            cardSel_ = clampSel(cardSel_, n);
-            gridMove(cardSel_, n, dx, dy);
+            const int l_iN = (int)f_CardCells().size();
+            m_iCardSel = f_ClampSel(m_iCardSel, l_iN);
+            f_GridMove(m_iCardSel, l_iN, l_iDx, l_iDy);
             break;
         }
         case MenuTab::Events: {
-            if (dx != 0) { eventFilter_ = 1 - eventFilter_; eventSel_ = 0; break; }
-            const int n = (int)eventLog(eventFilter_ == 1).size();
-            if (n > 0) eventSel_ = ((clampSel(eventSel_, n) + dy) % n + n) % n;
+            if (l_iDx != 0) { m_iEventFilter = 1 - m_iEventFilter; m_iEventSel = 0; break; }
+            const int l_iN = (int)f_EventLog(m_iEventFilter == 1).size();
+            if (l_iN > 0) m_iEventSel = ((f_ClampSel(m_iEventSel, l_iN) + l_iDy) % l_iN + l_iN) % l_iN;
             break;
         }
         case MenuTab::System:
-            if (dy != 0) inGameMenuMove(dy);
-            else if (dx != 0 && inGameLangConfirmOpen_) inGameMenuMove(dx);
+            if (l_iDy != 0) f_InGameMenuMove(l_iDy);
+            else if (l_iDx != 0 && m_bInGameLangConfirmOpen) f_InGameMenuMove(l_iDx);
             break;
     }
 }
 
-void Game::playerMenuActivate() {
-    if (!inGameMenuOpen_) return;
-    if (saveLoadOpen_) { if (saveLoadConfirm_) saveLoadAnswer(saveLoadConfirmYes_); else saveLoadAsk(saveLoadSel_); return; }
-    if (dropConfirmOpen_) { playerMenuEvent("pm_confirm", dropConfirmYes_ ? 1 : 0); return; }
-    switch (menuTab_) {
+void Game::f_PlayerMenuActivate() {
+    if (!m_bInGameMenuOpen) return;
+    if (m_bSaveLoadOpen) { if (m_bSaveLoadConfirm) f_SaveLoadAnswer(m_bSaveLoadConfirmYes); else f_SaveLoadAsk(m_iSaveLoadSel); return; }
+    if (m_bDropConfirmOpen) { f_PlayerMenuEvent("pm_confirm", m_bDropConfirmYes ? 1 : 0); return; }
+    switch (m_eMenuTab) {
         case MenuTab::Status:   // Enter places a point on the selected attribute (in the draft: Confirm keeps it)
-            if (attrSel_ == (int)attrDefs_.size() && !attrDraft_.empty()) confirmAttrPoints();
-            else if (attrSel_ == (int)attrDefs_.size() + 1 && !attrDraft_.empty()) resetAttrDraft();
-            else if (pl.attrPoints - attrDraftTotal() > 0 && attrSel_ >= 0) spendAttrPoint(attrSel_);
-            if (attrSel_ >= (int)attrDefs_.size() && attrDraft_.empty()) attrSel_ = (int)attrDefs_.size() - 1;   // the stops went
+            if (m_iAttrSel == (int)m_vAttrDefs.size() && !m_mapAttrDraft.empty()) f_ConfirmAttrPoints();
+            else if (m_iAttrSel == (int)m_vAttrDefs.size() + 1 && !m_mapAttrDraft.empty()) f_ResetAttrDraft();
+            else if (m_oPl.m_iAttrPoints - f_AttrDraftTotal() > 0 && m_iAttrSel >= 0) f_SpendAttrPoint(m_iAttrSel);
+            if (m_iAttrSel >= (int)m_vAttrDefs.size() && m_mapAttrDraft.empty()) m_iAttrSel = (int)m_vAttrDefs.size() - 1;   // the stops went
             return;
         case MenuTab::Gear: {
-            const auto cells = gearCells();
-            if (cells.empty()) return;
-            const ItemCell c{ItemCell::Gear, cells[clampSel(gearSel_, (int)cells.size())], 1};
-            for (const ItemButton& b : itemButtons(c))
-                if (b.enabled && b.action != ItemAction::Drop) { runItemAction(c, b.action); return; }
+            const auto l_vCells = f_GearCells();
+            if (l_vCells.empty()) return;
+            const ItemCell l_oC{ItemCell::Gear, l_vCells[f_ClampSel(m_iGearSel, (int)l_vCells.size())], 1};
+            for (const ItemButton& l_oB : f_ItemButtons(l_oC))
+                if (l_oB.m_bEnabled && l_oB.m_eAction != ItemAction::Drop) { f_RunItemAction(l_oC, l_oB.m_eAction); return; }
             return;
         }
         case MenuTab::Items: {
-            const auto cells = itemCells();
-            if (cells.empty()) return;
-            const ItemCell c = cells[clampSel(itemSel_, (int)cells.size())];
-            const auto buttons = itemButtons(c);
-            for (size_t i = 0; i < buttons.size(); i++)
-                if (buttons[i].enabled) { playerMenuEvent("pm_btn", (int)i); return; }
+            const auto l_vCells = f_ItemCells();
+            if (l_vCells.empty()) return;
+            const ItemCell l_oC = l_vCells[f_ClampSel(m_iItemSel, (int)l_vCells.size())];
+            const auto l_vButtons = f_ItemButtons(l_oC);
+            for (size_t l_nI = 0; l_nI < l_vButtons.size(); l_nI++)
+                if (l_vButtons[l_nI].m_bEnabled) { f_PlayerMenuEvent("pm_btn", (int)l_nI); return; }
             return;
         }
         case MenuTab::Cards:   // Enter: Train with the selected card (docs/gameplay/16 §5)
-            playerMenuEvent("pm_btn", 0);
+            f_PlayerMenuEvent("pm_btn", 0);
             return;
         case MenuTab::System:
-            inGameMenuActivate();
+            f_InGameMenuActivate();
             return;
         default:
             return;
     }
 }
 
-void Game::playerMenuBack() {
-    if (!inGameMenuOpen_) return;
-    if (saveLoadOpen_) {
-        if (saveLoadConfirm_) saveLoadConfirm_ = false;
-        else saveLoadOpen_ = false;
-        audio.play("close_ui");
+void Game::f_PlayerMenuBack() {
+    if (!m_bInGameMenuOpen) return;
+    if (m_bSaveLoadOpen) {
+        if (m_bSaveLoadConfirm) m_bSaveLoadConfirm = false;
+        else m_bSaveLoadOpen = false;
+        m_oAudio.f_Play("close_ui");
         return;
     }
-    if (dropConfirmOpen_) { dropConfirmOpen_ = false; audio.play("close_ui"); return; }
-    if (menuTab_ == MenuTab::System) { inGameMenuBack(); return; }   // confirm -> page -> close
-    closePlayerMenu();
+    if (m_bDropConfirmOpen) { m_bDropConfirmOpen = false; m_oAudio.f_Play("close_ui"); return; }
+    if (m_eMenuTab == MenuTab::System) { f_InGameMenuBack(); return; }   // confirm -> page -> close
+    f_ClosePlayerMenu();
 }
 
 // ---------- mouse / touch (the pm_* buttons of player.rml) ----------
 
-void Game::playerMenuEvent(const std::string& name, int arg) {
-    if (!inGameMenuOpen_) return;
-    if (name == "pm_close") { closePlayerMenu(); return; }
+void Game::f_PlayerMenuEvent(const std::string& l_strName, int l_iArg) {
+    if (!m_bInGameMenuOpen) return;
+    if (l_strName == "pm_close") { f_ClosePlayerMenu(); return; }
     // ---- Save / Load ----
-    if (name == "pm_sl_close") { if (saveLoadOpen_) { saveLoadOpen_ = saveLoadConfirm_ = false; audio.play("close_ui"); } return; }
-    if (name == "pm_sl_confirm") { saveLoadAnswer(arg != 0); return; }
-    if (saveLoadOpen_) {   // the screen is modal over the menu
-        if (saveLoadConfirm_) return;
-        if (name == "pm_sl_mode" && (arg == 0 || arg == 1) && arg != saveLoadMode_) { saveLoadMode_ = arg; audio.play("confirm_click"); }
-        if (name == "pm_sl_slot") saveLoadAsk(arg);
-        if (name == "pm_sl_hover" && arg >= 0 && arg < (int)saveLoadSlots_.size()) saveLoadSel_ = arg;
+    if (l_strName == "pm_sl_close") { if (m_bSaveLoadOpen) { m_bSaveLoadOpen = m_bSaveLoadConfirm = false; m_oAudio.f_Play("close_ui"); } return; }
+    if (l_strName == "pm_sl_confirm") { f_SaveLoadAnswer(l_iArg != 0); return; }
+    if (m_bSaveLoadOpen) {   // the screen is modal over the menu
+        if (m_bSaveLoadConfirm) return;
+        if (l_strName == "pm_sl_mode" && (l_iArg == 0 || l_iArg == 1) && l_iArg != m_iSaveLoadMode) { m_iSaveLoadMode = l_iArg; m_oAudio.f_Play("confirm_click"); }
+        if (l_strName == "pm_sl_slot") f_SaveLoadAsk(l_iArg);
+        if (l_strName == "pm_sl_hover" && l_iArg >= 0 && l_iArg < (int)m_vSaveLoadSlots.size()) m_iSaveLoadSel = l_iArg;
         return;
     }
-    if (name == "pm_confirm") {
-        if (!dropConfirmOpen_) return;
-        dropConfirmOpen_ = false;
-        if (arg && menuTab_ == MenuTab::Items) {
-            const auto cells = itemCells();
-            if (!cells.empty()) {
-                const ItemCell c = cells[clampSel(itemSel_, (int)cells.size())];
-                for (const ItemButton& b : itemButtons(c))
-                    if (b.action == ItemAction::Drop && b.enabled) { runItemAction(c, ItemAction::Drop); break; }
-                itemSel_ = clampSel(itemSel_, (int)itemCells().size());
+    if (l_strName == "pm_confirm") {
+        if (!m_bDropConfirmOpen) return;
+        m_bDropConfirmOpen = false;
+        if (l_iArg && m_eMenuTab == MenuTab::Items) {
+            const auto l_vCells = f_ItemCells();
+            if (!l_vCells.empty()) {
+                const ItemCell l_oC = l_vCells[f_ClampSel(m_iItemSel, (int)l_vCells.size())];
+                for (const ItemButton& l_oB : f_ItemButtons(l_oC))
+                    if (l_oB.m_eAction == ItemAction::Drop && l_oB.m_bEnabled) { f_RunItemAction(l_oC, ItemAction::Drop); break; }
+                m_iItemSel = f_ClampSel(m_iItemSel, (int)f_ItemCells().size());
             }
         } else {
-            audio.play("close_ui");
+            m_oAudio.f_Play("close_ui");
         }
         return;
     }
-    if (dropConfirmOpen_) return;   // the dialog is modal
-    if (name == "pm_tab") {
-        if (arg >= 0 && arg < kMenuTabs && arg != (int)menuTab_) { menuTab_ = (MenuTab)arg; playerMenuTab(0); audio.play("confirm_click"); }
+    if (m_bDropConfirmOpen) return;   // the dialog is modal
+    if (l_strName == "pm_tab") {
+        if (l_iArg >= 0 && l_iArg < m_iMenuTabs && l_iArg != (int)m_eMenuTab) { m_eMenuTab = (MenuTab)l_iArg; f_PlayerMenuTab(0); m_oAudio.f_Play("confirm_click"); }
         return;
     }
-    if (name == "pm_attr") { if (arg >= 0 && arg < (int)attrDefs_.size()) attrSel_ = arg; return; }
-    if (name == "pm_attr_add") { if (arg >= 0 && arg < (int)attrDefs_.size()) { attrSel_ = arg; spendAttrPoint(arg); } return; }
-    if (name == "pm_attr_sub") { if (arg >= 0 && arg < (int)attrDefs_.size()) { attrSel_ = arg; unspendAttrPoint(arg); } return; }
-    if (name == "pm_attr_confirm") { confirmAttrPoints(); return; }
-    if (name == "pm_attr_reset") { resetAttrDraft(); return; }
-    if (name == "pm_slot") { if ((arg == 0 || arg == 1) && arg != gearSlot_) { gearSlot_ = arg; gearSel_ = 0; } return; }
-    if (name == "pm_filter") {
-        if (menuTab_ == MenuTab::Items && arg >= 0 && arg < 4 && arg != itemFilter_) { itemFilter_ = arg; itemSel_ = 0; }
-        if (menuTab_ == MenuTab::Gear && (arg == 0 || arg == 1) && arg != gearSlot_) { gearSlot_ = arg; gearSel_ = 0; }
-        if (menuTab_ == MenuTab::Events && (arg == 0 || arg == 1) && arg != eventFilter_) { eventFilter_ = arg; eventSel_ = 0; }
+    if (l_strName == "pm_attr") { if (l_iArg >= 0 && l_iArg < (int)m_vAttrDefs.size()) m_iAttrSel = l_iArg; return; }
+    if (l_strName == "pm_attr_add") { if (l_iArg >= 0 && l_iArg < (int)m_vAttrDefs.size()) { m_iAttrSel = l_iArg; f_SpendAttrPoint(l_iArg); } return; }
+    if (l_strName == "pm_attr_sub") { if (l_iArg >= 0 && l_iArg < (int)m_vAttrDefs.size()) { m_iAttrSel = l_iArg; f_UnspendAttrPoint(l_iArg); } return; }
+    if (l_strName == "pm_attr_confirm") { f_ConfirmAttrPoints(); return; }
+    if (l_strName == "pm_attr_reset") { f_ResetAttrDraft(); return; }
+    if (l_strName == "pm_slot") { if ((l_iArg == 0 || l_iArg == 1) && l_iArg != m_iGearSlot) { m_iGearSlot = l_iArg; m_iGearSel = 0; } return; }
+    if (l_strName == "pm_filter") {
+        if (m_eMenuTab == MenuTab::Items && l_iArg >= 0 && l_iArg < 4 && l_iArg != m_iItemFilter) { m_iItemFilter = l_iArg; m_iItemSel = 0; }
+        if (m_eMenuTab == MenuTab::Gear && (l_iArg == 0 || l_iArg == 1) && l_iArg != m_iGearSlot) { m_iGearSlot = l_iArg; m_iGearSel = 0; }
+        if (m_eMenuTab == MenuTab::Events && (l_iArg == 0 || l_iArg == 1) && l_iArg != m_iEventFilter) { m_iEventFilter = l_iArg; m_iEventSel = 0; }
         return;
     }
-    if (name == "pm_cell") {
-        if (menuTab_ == MenuTab::Items) itemSel_ = clampSel(arg, (int)itemCells().size());
-        if (menuTab_ == MenuTab::Gear) gearSel_ = clampSel(arg, (int)gearCells().size());
-        if (menuTab_ == MenuTab::Cards) cardSel_ = clampSel(arg, (int)cardCells().size());
+    if (l_strName == "pm_cell") {
+        if (m_eMenuTab == MenuTab::Items) m_iItemSel = f_ClampSel(l_iArg, (int)f_ItemCells().size());
+        if (m_eMenuTab == MenuTab::Gear) m_iGearSel = f_ClampSel(l_iArg, (int)f_GearCells().size());
+        if (m_eMenuTab == MenuTab::Cards) m_iCardSel = f_ClampSel(l_iArg, (int)f_CardCells().size());
         return;
     }
-    if (name == "pm_btn") {
-        ItemCell c;
-        if (menuTab_ == MenuTab::Items) {
-            const auto cells = itemCells();
-            if (cells.empty()) return;
-            c = cells[clampSel(itemSel_, (int)cells.size())];
-        } else if (menuTab_ == MenuTab::Gear) {
-            const auto cells = gearCells();
-            if (cells.empty()) return;
-            c = {ItemCell::Gear, cells[clampSel(gearSel_, (int)cells.size())], 1};
-        } else if (menuTab_ == MenuTab::Cards) {   // Train: the training ground with the selected monster (16 §5)
-            const auto cells = cardCells();
-            if (!cells.empty() && arg == 0) startTraining(cells[(size_t)clampSel(cardSel_, (int)cells.size())]);
+    if (l_strName == "pm_btn") {
+        ItemCell l_oC;
+        if (m_eMenuTab == MenuTab::Items) {
+            const auto l_vCells = f_ItemCells();
+            if (l_vCells.empty()) return;
+            l_oC = l_vCells[f_ClampSel(m_iItemSel, (int)l_vCells.size())];
+        } else if (m_eMenuTab == MenuTab::Gear) {
+            const auto l_vCells = f_GearCells();
+            if (l_vCells.empty()) return;
+            l_oC = {ItemCell::Gear, l_vCells[f_ClampSel(m_iGearSel, (int)l_vCells.size())], 1};
+        } else if (m_eMenuTab == MenuTab::Cards) {   // Train: the training ground with the selected monster (16 §5)
+            const auto l_vCells = f_CardCells();
+            if (!l_vCells.empty() && l_iArg == 0) f_StartTraining(l_vCells[(size_t)f_ClampSel(m_iCardSel, (int)l_vCells.size())]);
             return;
         } else {
             return;
         }
-        const auto buttons = itemButtons(c);
-        if (arg < 0 || arg >= (int)buttons.size() || !buttons[arg].enabled) { audio.play("deny"); return; }
-        if (buttons[arg].action == ItemAction::Drop) { dropConfirmOpen_ = true; dropConfirmYes_ = false; return; }
-        runItemAction(c, buttons[arg].action);
-        if (menuTab_ == MenuTab::Items) itemSel_ = clampSel(itemSel_, (int)itemCells().size());
+        const auto l_vButtons = f_ItemButtons(l_oC);
+        if (l_iArg < 0 || l_iArg >= (int)l_vButtons.size() || !l_vButtons[l_iArg].m_bEnabled) { m_oAudio.f_Play("deny"); return; }
+        if (l_vButtons[l_iArg].m_eAction == ItemAction::Drop) { m_bDropConfirmOpen = true; m_bDropConfirmYes = false; return; }
+        f_RunItemAction(l_oC, l_vButtons[l_iArg].m_eAction);
+        if (m_eMenuTab == MenuTab::Items) m_iItemSel = f_ClampSel(m_iItemSel, (int)f_ItemCells().size());
         return;
     }
-    if (name == "pm_event") { eventSel_ = clampSel(arg, (int)eventLog(eventFilter_ == 1).size()); return; }
-    if (name == "pm_sys") {   // a row of the System tab's left list (a page may be open on the right)
-        if (inGameLangConfirmOpen_) return;
-        inGameMenuPage_ = InGameMenuPage::Main;
-        inGameMenuSel_ = arg;
-        inGameMenuActivate();
+    if (l_strName == "pm_event") { m_iEventSel = f_ClampSel(l_iArg, (int)f_EventLog(m_iEventFilter == 1).size()); return; }
+    if (l_strName == "pm_sys") {   // a row of the System tab's left list (a page may be open on the right)
+        if (m_bInGameLangConfirmOpen) return;
+        m_eInGameMenuPage = InGameMenuPage::Main;
+        m_iInGameMenuSel = l_iArg;
+        f_InGameMenuActivate();
         return;
     }
-    if (name == "pm_sys_hover") { if (inGameMenuPage_ == InGameMenuPage::Main && !inGameLangConfirmOpen_) inGameMenuSel_ = arg; return; }
+    if (l_strName == "pm_sys_hover") { if (m_eInGameMenuPage == InGameMenuPage::Main && !m_bInGameLangConfirmOpen) m_iInGameMenuSel = l_iArg; return; }
 }
 
 // ---------- the UI ----------
 
-void Game::buildPlayerUi(toms::UiState& u) const {
-    const toms::Locale& L = locale_;
-    toms::UiPlayer& p = u.player;
-    p.visible = true;
-    p.tab = (int)menuTab_;
-    p.hint = L.tr("player.hint");
-    p.close_label = L.tr("inventory.close");
-    static const char* kTabKeys[kMenuTabs] = {"player.tab.status", "player.tab.gear", "player.tab.items", "player.tab.events",
+void Game::f_BuildPlayerUi(toms::UiState& l_oU) const {
+    const toms::Locale& l_oL = m_oLocale;
+    toms::UiPlayer& l_oP = l_oU.m_oPlayer;
+    l_oP.m_bVisible = true;
+    l_oP.m_iTab = (int)m_eMenuTab;
+    l_oP.m_strHint = l_oL.f_Tr("player.hint");
+    l_oP.m_strCloseLabel = l_oL.f_Tr("inventory.close");
+    static const char* l_arrTabKeys[m_iMenuTabs] = {"player.tab.status", "player.tab.gear", "player.tab.items", "player.tab.events",
                                               "player.tab.cards", "player.tab.system"};
-    const bool tabNews[kMenuTabs] = {false, newsGear_, false, newsEvents_, newsCards_, newsStore_ || run_.skillPoints() > 0};
-    for (int i = 0; i < kMenuTabs; i++) p.tabs.push_back({L.tr(kTabKeys[i]), i == (int)menuTab_, tabNews[i] && i != (int)menuTab_});
-    const std::string none = L.tr("gear.none");
-    auto signedNum = [](int v) { return (v >= 0 ? "+" : "") + std::to_string(v); };
+    const bool l_arrTabNews[m_iMenuTabs] = {false, m_bNewsGear, false, m_bNewsEvents, m_bNewsCards, m_bNewsStore || m_oRun.f_SkillPoints() > 0};
+    for (int l_iI = 0; l_iI < m_iMenuTabs; l_iI++) l_oP.m_vTabs.push_back({l_oL.f_Tr(l_arrTabKeys[l_iI]), l_iI == (int)m_eMenuTab, l_arrTabNews[l_iI] && l_iI != (int)m_eMenuTab});
+    const std::string l_strNone = l_oL.f_Tr("gear.none");
+    auto l_fnSignedNum = [](int l_iV) { return (l_iV >= 0 ? "+" : "") + std::to_string(l_iV); };
 
     // The gear comparison: a piece against what its slot wears now.
-    auto compare = [&](const std::string& id) {
-        auto it = equipmentDefs_.find(id);
-        if (it == equipmentDefs_.end() || it->second.slot == toms::EquipmentSlot::Talent) return;
-        const toms::EquipmentDefinition& d = it->second;
-        const bool weapon = d.slot == toms::EquipmentSlot::Weapon;
-        const std::string& wornId = weapon ? equipped_.weaponId : equipped_.armorId;
-        const toms::EquipmentDefinition* cur = nullptr;
-        if (auto w = equipmentDefs_.find(wornId); w != equipmentDefs_.end()) cur = &w->second;
-        p.d_compare = true;
-        p.d_now_label = L.tr("gear.now");
-        p.d_with_label = L.tr("gear.with");
-        auto line = [&](const std::string& label, double now, double with, bool higherBetter, int decimals, const std::string& unit) {
-            char a[32], b[32];
-            std::snprintf(a, sizeof a, "%.*f%s", decimals, now, unit.c_str());
-            std::snprintf(b, sizeof b, "%.*f%s", decimals, with, unit.c_str());
-            int tone = 0;
-            if (with > now + 1e-6) tone = higherBetter ? 1 : -1;
-            if (with < now - 1e-6) tone = higherBetter ? -1 : 1;
-            p.d_compare_lines.push_back({label, a, b, tone});
+    auto l_fnCompare = [&](const std::string& l_strId) {
+        auto l_itIt = m_mapEquipmentDefs.find(l_strId);
+        if (l_itIt == m_mapEquipmentDefs.end() || l_itIt->second.m_eSlot == toms::EquipmentSlot::Talent) return;
+        const toms::EquipmentDefinition& l_oD = l_itIt->second;
+        const bool l_bWeapon = l_oD.m_eSlot == toms::EquipmentSlot::Weapon;
+        const std::string& l_strWornId = l_bWeapon ? m_oEquipped.m_strWeaponId : m_oEquipped.m_strArmorId;
+        const toms::EquipmentDefinition* l_pCur = nullptr;
+        if (auto l_itW = m_mapEquipmentDefs.find(l_strWornId); l_itW != m_mapEquipmentDefs.end()) l_pCur = &l_itW->second;
+        l_oP.m_bDCompare = true;
+        l_oP.m_strDNowLabel = l_oL.f_Tr("gear.now");
+        l_oP.m_strDWithLabel = l_oL.f_Tr("gear.with");
+        auto l_fnLine = [&](const std::string& l_strLabel, double l_dNow, double l_dWith, bool l_bHigherBetter, int l_iDecimals, const std::string& l_strUnit) {
+            char l_pszA[32], l_pszB[32];
+            std::snprintf(l_pszA, sizeof l_pszA, "%.*f%s", l_iDecimals, l_dNow, l_strUnit.c_str());
+            std::snprintf(l_pszB, sizeof l_pszB, "%.*f%s", l_iDecimals, l_dWith, l_strUnit.c_str());
+            int l_iTone = 0;
+            if (l_dWith > l_dNow + 1e-6) l_iTone = l_bHigherBetter ? 1 : -1;
+            if (l_dWith < l_dNow - 1e-6) l_iTone = l_bHigherBetter ? -1 : 1;
+            l_oP.m_vDCompareLines.push_back({l_strLabel, l_pszA, l_pszB, l_iTone});
         };
-        if (weapon) {
-            const int base = effectiveAtk() - (cur ? cur->statAtk : 0);
-            line("ATK", effectiveAtk(), base + d.statAtk, true, 0, "");
+        if (l_bWeapon) {
+            const int l_iBase = f_EffectiveAtk() - (l_pCur ? l_pCur->m_iStatAtk : 0);
+            l_fnLine("ATK", f_EffectiveAtk(), l_iBase + l_oD.m_iStatAtk, true, 0, "");
         } else {
-            const int base = effectiveDef() - (cur ? cur->statDef : 0);
-            line("DEF", effectiveDef(), base + d.statDef, true, 0, "");
+            const int l_iBase = f_EffectiveDef() - (l_pCur ? l_pCur->m_iStatDef : 0);
+            l_fnLine("DEF", f_EffectiveDef(), l_iBase + l_oD.m_iStatDef, true, 0, "");
         }
-        const toms::PowerBarParams nowBar = cur ? cur->bar : toms::PowerBarParams{};
-        line(L.tr("gear.ramp"), nowBar.rampTime, d.bar.rampTime, false, 1, "s");
-        line(L.tr("gear.zone"), nowBar.greenHalf, d.bar.greenHalf, true, 0, "");
-        if (weapon) line(L.tr("gear.mult"), cur ? cur->maxMult : 2.0f, d.maxMult, true, 1, "x");
-        for (const AttrDef& a : attrDefs_) {
-            const int nowBonus = cur && cur->stats.count(a.id) ? cur->stats.at(a.id) : 0;
-            const int newBonus = d.stats.count(a.id) ? d.stats.at(a.id) : 0;
-            if (nowBonus == 0 && newBonus == 0) continue;
-            const int v = attrValue(a.id);
-            line(a.shortName, v, v - nowBonus + newBonus, true, 0, "");
+        const toms::PowerBarParams l_oNowBar = l_pCur ? l_pCur->m_oBar : toms::PowerBarParams{};
+        l_fnLine(l_oL.f_Tr("gear.ramp"), l_oNowBar.m_fRampTime, l_oD.m_oBar.m_fRampTime, false, 1, "s");
+        l_fnLine(l_oL.f_Tr("gear.zone"), l_oNowBar.m_fGreenHalf, l_oD.m_oBar.m_fGreenHalf, true, 0, "");
+        if (l_bWeapon) l_fnLine(l_oL.f_Tr("gear.mult"), l_pCur ? l_pCur->m_fMaxMult : 2.0f, l_oD.m_fMaxMult, true, 1, "x");
+        for (const AttrDef& l_oA : m_vAttrDefs) {
+            const int l_iNowBonus = l_pCur && l_pCur->m_mapStats.count(l_oA.m_strId) ? l_pCur->m_mapStats.at(l_oA.m_strId) : 0;
+            const int l_iNewBonus = l_oD.m_mapStats.count(l_oA.m_strId) ? l_oD.m_mapStats.at(l_oA.m_strId) : 0;
+            if (l_iNowBonus == 0 && l_iNewBonus == 0) continue;
+            const int l_iV = f_AttrValue(l_oA.m_strId);
+            l_fnLine(l_oA.m_strShortName, l_iV, l_iV - l_iNowBonus + l_iNewBonus, true, 0, "");
         }
-        auto activeNames = [&](const toms::EquipmentDefinition* e) {
-            std::string s;
-            if (e) for (const std::string& a : e->actives) s += (s.empty() ? "" : ", ") + a;
-            return s.empty() ? none : s;
+        auto l_fnActiveNames = [&](const toms::EquipmentDefinition* l_pE) {
+            std::string l_strS;
+            if (l_pE) for (const std::string& l_strA : l_pE->m_vActives) l_strS += (l_strS.empty() ? "" : ", ") + l_strA;
+            return l_strS.empty() ? l_strNone : l_strS;
         };
-        const std::string na = activeNames(cur), nb = activeNames(&d);
-        if (na != none || nb != none) p.d_compare_lines.push_back({L.tr("gear.skill"), na, nb, 0});
+        const std::string l_strNa = l_fnActiveNames(l_pCur), l_strNb = l_fnActiveNames(&l_oD);
+        if (l_strNa != l_strNone || l_strNb != l_strNone) l_oP.m_vDCompareLines.push_back({l_oL.f_Tr("gear.skill"), l_strNa, l_strNb, 0});
     };
-    auto buttonsUi = [&](const std::vector<ItemButton>& bs) {
-        for (const ItemButton& b : bs) {
-            const char* key = b.action == ItemAction::Use ? "inventory.use" : b.action == ItemAction::Equip ? "gear.equip"
-                            : b.action == ItemAction::Unequip ? "gear.unequip" : "inventory.drop";
-            p.d_buttons.push_back({L.tr(key), b.enabled});
+    auto l_fnButtonsUi = [&](const std::vector<ItemButton>& l_vBs) {
+        for (const ItemButton& l_oB : l_vBs) {
+            const char* l_pszKey = l_oB.m_eAction == ItemAction::Use ? "inventory.use" : l_oB.m_eAction == ItemAction::Equip ? "gear.equip"
+                            : l_oB.m_eAction == ItemAction::Unequip ? "gear.unequip" : "inventory.drop";
+            l_oP.m_vDButtons.push_back({l_oL.f_Tr(l_pszKey), l_oB.m_bEnabled});
         }
     };
-    auto itemDetail = [&](const ItemCell& c) {
-        p.detail = true;
-        p.d_icon = itemSprite(c.id);
-        p.d_name = itemName(c.id);
-        p.d_desc = itemDesc(c.id);
-        p.d_lines.push_back({L.tr("store.effect_label"), itemEffectSummary(c.id), "", 0});
-        const int price = itemPrice(c.id);
-        p.d_lines.push_back({L.tr("store.price_label"),
-                             price >= 0 ? trParam(L.tr("items.price_value"), "n", std::to_string(price)) : L.tr("items.not_sold"), "", 0});
-        p.d_lines.push_back({L.tr("items.have"), std::to_string(c.count), "", 0});
-        if (c.kind == ItemCell::Gear && !worn(equipped_, c.id)) compare(c.id);
-        buttonsUi(itemButtons(c));
-        if (c.kind == ItemCell::Key || itemImportant(c.id)) p.d_note = L.tr("items.important");
-        else if (c.kind == ItemCell::Gear && worn(equipped_, c.id)) p.d_note = L.tr("items.worn");
+    auto l_fnItemDetail = [&](const ItemCell& l_oC) {
+        l_oP.m_bDetail = true;
+        l_oP.m_strDIcon = f_ItemSprite(l_oC.m_strId);
+        l_oP.m_strDName = f_ItemName(l_oC.m_strId);
+        l_oP.m_strDDesc = f_ItemDesc(l_oC.m_strId);
+        l_oP.m_vDLines.push_back({l_oL.f_Tr("store.effect_label"), f_ItemEffectSummary(l_oC.m_strId), "", 0});
+        const int l_iPrice = f_ItemPrice(l_oC.m_strId);
+        l_oP.m_vDLines.push_back({l_oL.f_Tr("store.price_label"),
+                             l_iPrice >= 0 ? f_TrParam(l_oL.f_Tr("items.price_value"), "n", std::to_string(l_iPrice)) : l_oL.f_Tr("items.not_sold"), "", 0});
+        l_oP.m_vDLines.push_back({l_oL.f_Tr("items.have"), std::to_string(l_oC.m_iCount), "", 0});
+        if (l_oC.m_eKind == ItemCell::Gear && !f_Worn(m_oEquipped, l_oC.m_strId)) l_fnCompare(l_oC.m_strId);
+        l_fnButtonsUi(f_ItemButtons(l_oC));
+        if (l_oC.m_eKind == ItemCell::Key || f_ItemImportant(l_oC.m_strId)) l_oP.m_strDNote = l_oL.f_Tr("items.important");
+        else if (l_oC.m_eKind == ItemCell::Gear && f_Worn(m_oEquipped, l_oC.m_strId)) l_oP.m_strDNote = l_oL.f_Tr("items.worn");
     };
 
     // Status, Events and System are filled every frame whichever tab shows: their lists sit in
     // documents that stay bound while hidden. Equipment and Items share one block, filled for the tab shown.
     {
         {
-            const int need = pl.lv * std::max(1, levelUp_.expPerLevel);
-            p.level = "Lv " + std::to_string(pl.lv);
-            const int maxHp = effectiveMaxHp();
-            p.hp_text = "HP " + std::to_string(pl.hp) + " / " + std::to_string(maxHp);
-            p.hp_pct = std::max(0.0f, std::min(100.0f, 100.0f * pl.hp / maxHp));
-            p.exp_text = "EXP " + std::to_string(pl.exp) + " / " + std::to_string(need);
-            p.exp_pct = std::max(0.0f, std::min(100.0f, 100.0f * pl.exp / need));
-            p.combat_title = L.tr("status.combat");
-            auto withBonus = [&](int eff, int base) { return std::to_string(eff) + (eff != base ? "  (" + signedNum(eff - base) + ")" : ""); };
-            p.combat.push_back({"ATK", withBonus(effectiveAtk(), pl.atk), "", 0});
-            p.combat.push_back({"DEF", withBonus(effectiveDef(), pl.def), "", 0});
-            p.combat.push_back({L.tr("status.gold"), std::to_string(pl.gold), "", 0});
-            p.combat.push_back({L.tr("hud.keys"), "Y " + std::to_string(pl.key_yellow) + "   B " + std::to_string(pl.key_blue) +
-                                "   R " + std::to_string(pl.key_red), "", 0});
-            p.combat.push_back({L.tr("status.floor"), st.name + " (" + std::to_string(st.index) + "/" + std::to_string(totalStages) + ")", "", 0});
-            for (const LogEntry& e : eventLog(false))
-                if (e.kind == 0) { p.combat.push_back({L.tr("status.chapter"), e.title, "", 0}); break; }
-            auto gearName = [&](const std::string& id) { return id.empty() ? none : itemName(id); };
-            p.more.push_back({L.tr("status.weapon"), gearName(equipped_.weaponId), "", 0});
-            p.more.push_back({L.tr("status.armor"), gearName(equipped_.armorId), "", 0});
-            std::string skills;
-            for (const std::string& id : run_.skillsOwned()) {
-                auto it = skillDefs_.find(id);
-                skills += (skills.empty() ? "" : " · ") + (it == skillDefs_.end() ? id : L.field(it->second.name));
+            const int l_iNeed = m_oPl.m_iLv * std::max(1, m_oLevelUp.m_iExpPerLevel);
+            l_oP.m_strLevel = "Lv " + std::to_string(m_oPl.m_iLv);
+            const int l_iMaxHp = f_EffectiveMaxHp();
+            l_oP.m_strHpText = "HP " + std::to_string(m_oPl.m_iHp) + " / " + std::to_string(l_iMaxHp);
+            l_oP.m_fHpPct = std::max(0.0f, std::min(100.0f, 100.0f * m_oPl.m_iHp / l_iMaxHp));
+            l_oP.m_strExpText = "EXP " + std::to_string(m_oPl.m_iExp) + " / " + std::to_string(l_iNeed);
+            l_oP.m_fExpPct = std::max(0.0f, std::min(100.0f, 100.0f * m_oPl.m_iExp / l_iNeed));
+            l_oP.m_strCombatTitle = l_oL.f_Tr("status.combat");
+            auto l_fnWithBonus = [&](int l_iEff, int l_iBase) { return std::to_string(l_iEff) + (l_iEff != l_iBase ? "  (" + l_fnSignedNum(l_iEff - l_iBase) + ")" : ""); };
+            l_oP.m_vCombat.push_back({"ATK", l_fnWithBonus(f_EffectiveAtk(), m_oPl.m_iAtk), "", 0});
+            l_oP.m_vCombat.push_back({"DEF", l_fnWithBonus(f_EffectiveDef(), m_oPl.m_iDef), "", 0});
+            l_oP.m_vCombat.push_back({l_oL.f_Tr("status.gold"), std::to_string(m_oPl.m_iGold), "", 0});
+            l_oP.m_vCombat.push_back({l_oL.f_Tr("hud.keys"), "Y " + std::to_string(m_oPl.m_iKeyYellow) + "   B " + std::to_string(m_oPl.m_iKeyBlue) +
+                                "   R " + std::to_string(m_oPl.m_iKeyRed), "", 0});
+            l_oP.m_vCombat.push_back({l_oL.f_Tr("status.floor"), m_oSt.m_strName + " (" + std::to_string(m_oSt.m_iIndex) + "/" + std::to_string(m_iTotalStages) + ")", "", 0});
+            for (const LogEntry& l_oE : f_EventLog(false))
+                if (l_oE.m_iKind == 0) { l_oP.m_vCombat.push_back({l_oL.f_Tr("status.chapter"), l_oE.m_strTitle, "", 0}); break; }
+            auto l_fnGearName = [&](const std::string& l_strId) { return l_strId.empty() ? l_strNone : f_ItemName(l_strId); };
+            l_oP.m_vMore.push_back({l_oL.f_Tr("status.weapon"), l_fnGearName(m_oEquipped.m_strWeaponId), "", 0});
+            l_oP.m_vMore.push_back({l_oL.f_Tr("status.armor"), l_fnGearName(m_oEquipped.m_strArmorId), "", 0});
+            std::string l_strSkills;
+            for (const std::string& l_strId : m_oRun.f_SkillsOwned()) {
+                auto l_itIt = m_mapSkillDefs.find(l_strId);
+                l_strSkills += (l_strSkills.empty() ? "" : " · ") + (l_itIt == m_mapSkillDefs.end() ? l_strId : l_oL.f_Field(l_itIt->second.m_jName));
             }
-            p.more.push_back({L.tr("ingame_menu.skills"), skills.empty() ? none : skills, "", 0});
-            p.more.push_back({L.tr("status.shards"), std::to_string(run_.shardCount()), "", 0});
-            std::string mind;
-            for (const auto& [name, label] : counterLabels_)
-                if (run_.counterVisible(name)) mind += (mind.empty() ? "" : " · ") + L.field(label);
-            if (!mind.empty()) p.more.push_back({L.tr("status.story"), mind, "", 0});
-            p.attr_title = L.tr("status.attributes");
-            for (size_t i = 0; i < attrDefs_.size(); i++) {
-                const AttrDef& a = attrDefs_[i];
-                const int base = pl.attrs.count(a.id) ? pl.attrs.at(a.id) : 0, v = attrValue(a.id);
-                const int draft = attrDraft_.count(a.id) ? attrDraft_.at(a.id) : 0;
-                toms::UiRow r;
-                r.label = a.shortName + "   " + L.tr(a.nameKey);
-                r.sub = std::to_string(v) + (v != base ? "  (" + signedNum(v - base) + ")" : "") +
-                        (draft > 0 ? "  → " + std::to_string(v + draft) : "");   // what Confirm makes it
-                r.extra = draft > 0;   // its - button
-                r.selected = (int)i == attrSel_;
-                p.attrs.push_back(r);
+            l_oP.m_vMore.push_back({l_oL.f_Tr("ingame_menu.skills"), l_strSkills.empty() ? l_strNone : l_strSkills, "", 0});
+            l_oP.m_vMore.push_back({l_oL.f_Tr("status.shards"), std::to_string(m_oRun.f_ShardCount()), "", 0});
+            std::string l_strMind;
+            for (const auto& [l_strName, l_jLabel] : m_mapCounterLabels)
+                if (m_oRun.f_CounterVisible(l_strName)) l_strMind += (l_strMind.empty() ? "" : " · ") + l_oL.f_Field(l_jLabel);
+            if (!l_strMind.empty()) l_oP.m_vMore.push_back({l_oL.f_Tr("status.story"), l_strMind, "", 0});
+            l_oP.m_strAttrTitle = l_oL.f_Tr("status.attributes");
+            for (size_t l_nI = 0; l_nI < m_vAttrDefs.size(); l_nI++) {
+                const AttrDef& l_oA = m_vAttrDefs[l_nI];
+                const int l_iBase = m_oPl.m_mapAttrs.count(l_oA.m_strId) ? m_oPl.m_mapAttrs.at(l_oA.m_strId) : 0, l_iV = f_AttrValue(l_oA.m_strId);
+                const int l_iDraft = m_mapAttrDraft.count(l_oA.m_strId) ? m_mapAttrDraft.at(l_oA.m_strId) : 0;
+                toms::UiRow l_oR;
+                l_oR.m_strLabel = l_oA.m_strShortName + "   " + l_oL.f_Tr(l_oA.m_strNameKey);
+                l_oR.m_strSub = std::to_string(l_iV) + (l_iV != l_iBase ? "  (" + l_fnSignedNum(l_iV - l_iBase) + ")" : "") +
+                        (l_iDraft > 0 ? "  → " + std::to_string(l_iV + l_iDraft) : "");   // what Confirm makes it
+                l_oR.m_bExtra = l_iDraft > 0;   // its - button
+                l_oR.m_bSelected = (int)l_nI == m_iAttrSel;
+                l_oP.m_vAttrs.push_back(l_oR);
             }
-            p.attr_desc = (attrSel_ >= 0 && attrSel_ < (int)attrDefs_.size()) ? L.tr(attrDefs_[attrSel_].descKey) : L.tr("status.attr_hint");
-            if (attrSel_ >= 0 && attrSel_ < (int)attrDefs_.size()) {   // what it does: per point, and in total now
-                const AttrDef& a = attrDefs_[attrSel_];
-                auto fmt = [&](const std::string& stat, float v, bool total) {
-                    char b[32];
-                    const bool pct = stat == "skillPower" || stat == "goldGain";
-                    if (total && (stat == "atk" || stat == "def" || stat == "maxhp")) v = std::floor(v);
-                    if (std::fabs(v - std::round(v)) < 0.001f) std::snprintf(b, sizeof b, "%+d", (int)std::lround(v));
-                    else std::snprintf(b, sizeof b, "%+.1f", v);
-                    return std::string(b) + (pct ? "% " : " ") + L.tr("stat.effect." + stat);
+            l_oP.m_strAttrDesc = (m_iAttrSel >= 0 && m_iAttrSel < (int)m_vAttrDefs.size()) ? l_oL.f_Tr(m_vAttrDefs[m_iAttrSel].m_strDescKey) : l_oL.f_Tr("status.attr_hint");
+            if (m_iAttrSel >= 0 && m_iAttrSel < (int)m_vAttrDefs.size()) {   // what it does: per point, and in total now
+                const AttrDef& l_oA = m_vAttrDefs[m_iAttrSel];
+                auto l_fnFmt = [&](const std::string& l_strStat, float l_fV, bool l_bTotal) {
+                    char l_pszB[32];
+                    const bool l_bPct = l_strStat == "skillPower" || l_strStat == "goldGain";
+                    if (l_bTotal && (l_strStat == "atk" || l_strStat == "def" || l_strStat == "maxhp")) l_fV = std::floor(l_fV);
+                    if (std::fabs(l_fV - std::round(l_fV)) < 0.001f) std::snprintf(l_pszB, sizeof l_pszB, "%+d", (int)std::lround(l_fV));
+                    else std::snprintf(l_pszB, sizeof l_pszB, "%+.1f", l_fV);
+                    return std::string(l_pszB) + (l_bPct ? "% " : " ") + l_oL.f_Tr("stat.effect." + l_strStat);
                 };
-                std::string per, now;
-                for (const auto& [stat, k] : a.effects) {
-                    if (k == 0.0f) continue;
-                    per += (per.empty() ? "" : " · ") + fmt(stat, k, false);
-                    const int draft = attrDraft_.count(a.id) ? attrDraft_.at(a.id) : 0;   // as it will be after Confirm
-                    now += (now.empty() ? "" : " · ") + fmt(stat, (float)(attrValue(a.id) + draft - a.base) * k, true);
+                std::string l_strPer, l_strNow;
+                for (const auto& [l_strStat, l_fK] : l_oA.m_vEffects) {
+                    if (l_fK == 0.0f) continue;
+                    l_strPer += (l_strPer.empty() ? "" : " · ") + l_fnFmt(l_strStat, l_fK, false);
+                    const int l_iDraft = m_mapAttrDraft.count(l_oA.m_strId) ? m_mapAttrDraft.at(l_oA.m_strId) : 0;   // as it will be after Confirm
+                    l_strNow += (l_strNow.empty() ? "" : " · ") + l_fnFmt(l_strStat, (float)(f_AttrValue(l_oA.m_strId) + l_iDraft - l_oA.m_iBase) * l_fK, true);
                 }
-                p.attr_per = per.empty() ? L.tr("status.attr_none") : trParam(L.tr("status.attr_per"), "x", per);
-                p.attr_now = per.empty() ? "" : trParam(L.tr("status.attr_now"), "x", now);
+                l_oP.m_strAttrPer = l_strPer.empty() ? l_oL.f_Tr("status.attr_none") : f_TrParam(l_oL.f_Tr("status.attr_per"), "x", l_strPer);
+                l_oP.m_strAttrNow = l_strPer.empty() ? "" : f_TrParam(l_oL.f_Tr("status.attr_now"), "x", l_strNow);
             }
-            const int left = pl.attrPoints - attrDraftTotal();
-            if (pl.attrPoints > 0) {
-                p.attr_can_add = left > 0;
-                p.attr_points = trParam(L.tr("status.points"), "n", std::to_string(left));
-                p.attr_points_hint = L.tr(attrDraft_.empty() ? "status.points_hint" : "status.points_confirm_hint");
+            const int l_iLeft = m_oPl.m_iAttrPoints - f_AttrDraftTotal();
+            if (m_oPl.m_iAttrPoints > 0) {
+                l_oP.m_bAttrCanAdd = l_iLeft > 0;
+                l_oP.m_strAttrPoints = f_TrParam(l_oL.f_Tr("status.points"), "n", std::to_string(l_iLeft));
+                l_oP.m_strAttrPointsHint = l_oL.f_Tr(m_mapAttrDraft.empty() ? "status.points_hint" : "status.points_confirm_hint");
             }
-            p.attr_draft = !attrDraft_.empty();
-            p.attr_confirm_sel = p.attr_draft && attrSel_ == (int)attrDefs_.size();
-            p.attr_reset_sel = p.attr_draft && attrSel_ == (int)attrDefs_.size() + 1;
-            p.attr_confirm = L.tr("status.confirm");
-            p.attr_reset = L.tr("status.reset");
+            l_oP.m_bAttrDraft = !m_mapAttrDraft.empty();
+            l_oP.m_bAttrConfirmSel = l_oP.m_bAttrDraft && m_iAttrSel == (int)m_vAttrDefs.size();
+            l_oP.m_bAttrResetSel = l_oP.m_bAttrDraft && m_iAttrSel == (int)m_vAttrDefs.size() + 1;
+            l_oP.m_strAttrConfirm = l_oL.f_Tr("status.confirm");
+            l_oP.m_strAttrReset = l_oL.f_Tr("status.reset");
         }
         {
-            auto kindKey = [](int k) { return k == 0 ? "events.kind.chapter" : k == 1 ? "events.kind.mission" : "events.kind.event"; };
-            const auto unfinished = eventLog(false), all = eventLog(true);
-            p.ev_filters.push_back({L.tr("events.unfinished") + " (" + std::to_string(unfinished.size()) + ")", eventFilter_ == 0, false});
-            p.ev_filters.push_back({L.tr("events.all") + " (" + std::to_string(all.size()) + ")", eventFilter_ == 1, false});
-            const auto& log = eventFilter_ == 1 ? all : unfinished;
-            const int sel = clampSel(eventSel_, (int)log.size());
-            for (size_t i = 0; i < log.size(); i++) {
-                const LogEntry& e = log[i];
-                toms::UiRow r;
-                r.label = std::string(e.done ? "✓ " : (e.kind == 0 ? "★ " : e.kind == 1 ? "◆ " : "● ")) + e.title;
-                r.sub = e.done ? L.tr("events.done") : L.tr(kindKey(e.kind));
-                r.enabled = !e.done;
-                r.selected = (int)i == sel;
-                p.ev_rows.push_back(r);
+            auto l_fnKindKey = [](int l_iK) { return l_iK == 0 ? "events.kind.chapter" : l_iK == 1 ? "events.kind.mission" : "events.kind.event"; };
+            const auto l_vUnfinished = f_EventLog(false), l_vAll = f_EventLog(true);
+            l_oP.m_vEvFilters.push_back({l_oL.f_Tr("events.unfinished") + " (" + std::to_string(l_vUnfinished.size()) + ")", m_iEventFilter == 0, false});
+            l_oP.m_vEvFilters.push_back({l_oL.f_Tr("events.all") + " (" + std::to_string(l_vAll.size()) + ")", m_iEventFilter == 1, false});
+            const auto& l_vLog = m_iEventFilter == 1 ? l_vAll : l_vUnfinished;
+            const int l_iSel = f_ClampSel(m_iEventSel, (int)l_vLog.size());
+            for (size_t l_nI = 0; l_nI < l_vLog.size(); l_nI++) {
+                const LogEntry& l_oE = l_vLog[l_nI];
+                toms::UiRow l_oR;
+                l_oR.m_strLabel = std::string(l_oE.m_bDone ? "✓ " : (l_oE.m_iKind == 0 ? "★ " : l_oE.m_iKind == 1 ? "◆ " : "● ")) + l_oE.m_strTitle;
+                l_oR.m_strSub = l_oE.m_bDone ? l_oL.f_Tr("events.done") : l_oL.f_Tr(l_fnKindKey(l_oE.m_iKind));
+                l_oR.m_bEnabled = !l_oE.m_bDone;
+                l_oR.m_bSelected = (int)l_nI == l_iSel;
+                l_oP.m_vEvRows.push_back(l_oR);
             }
-            p.ev_empty = L.tr(eventFilter_ == 1 ? "events.empty_all" : "events.empty_unfinished");
-            p.ev_hint = L.tr("events.select");
-            if (!log.empty()) {
-                const LogEntry& e = log[sel];
-                p.ev_detail = true;
-                p.ev_kind = L.tr(kindKey(e.kind)) + (e.done ? "  ·  " + L.tr("events.done") : "");
-                p.ev_title = e.title;
-                p.ev_desc = e.desc;
-                p.ev_connected_title = L.tr("events.connected");   // shown only when there are connected events
-                p.ev_connected = e.connected;
+            l_oP.m_strEvEmpty = l_oL.f_Tr(m_iEventFilter == 1 ? "events.empty_all" : "events.empty_unfinished");
+            l_oP.m_strEvHint = l_oL.f_Tr("events.select");
+            if (!l_vLog.empty()) {
+                const LogEntry& l_oE = l_vLog[l_iSel];
+                l_oP.m_bEvDetail = true;
+                l_oP.m_strEvKind = l_oL.f_Tr(l_fnKindKey(l_oE.m_iKind)) + (l_oE.m_bDone ? "  ·  " + l_oL.f_Tr("events.done") : "");
+                l_oP.m_strEvTitle = l_oE.m_strTitle;
+                l_oP.m_strEvDesc = l_oE.m_strDesc;
+                l_oP.m_strEvConnectedTitle = l_oL.f_Tr("events.connected");   // shown only when there are connected events
+                l_oP.m_vEvConnected = l_oE.m_vConnected;
             }
         }
-        buildMenuUi(u.menu);
-        p.sys_hint = L.tr("system.select");
-        if (saveLoadOpen_) buildSaveLoadUi(u.saveload);
+        f_BuildMenuUi(l_oU.m_oMenu);
+        l_oP.m_strSysHint = l_oL.f_Tr("system.select");
+        if (m_bSaveLoadOpen) f_BuildSaveLoadUi(l_oU.m_oSaveload);
     }
-    switch (menuTab_) {
+    switch (m_eMenuTab) {
         case MenuTab::Gear: {
-            p.filters.push_back({L.tr("status.weapon"), gearSlot_ == 0, false});
-            p.filters.push_back({L.tr("status.armor"), gearSlot_ == 1, false});
-            p.worn_title = L.tr("gear.worn");
-            p.worn.push_back({L.tr("status.weapon"), equipped_.weaponId.empty() ? none : itemName(equipped_.weaponId), "", gearSlot_ == 0 ? 1 : 0});
-            p.worn.push_back({L.tr("status.armor"), equipped_.armorId.empty() ? none : itemName(equipped_.armorId), "", gearSlot_ == 1 ? 1 : 0});
-            const auto cells = gearCells();
-            const int sel = clampSel(gearSel_, (int)cells.size());
-            for (size_t i = 0; i < cells.size(); i++)
-                p.cells.push_back({itemSprite(cells[i]), itemName(cells[i]), "", (int)i == sel, worn(equipped_, cells[i]), false});
-            if (cells.empty()) p.empty_text = trParam(L.tr("gear.empty"), "slot", L.tr(gearSlot_ == 0 ? "status.weapon" : "status.armor"));
-            p.select_hint = L.tr("gear.select");
-            if (!cells.empty()) {
-                const ItemCell c{ItemCell::Gear, cells[sel], 1};
-                p.detail = true;
-                p.d_icon = itemSprite(c.id);
-                p.d_name = itemName(c.id);
-                p.d_desc = itemDesc(c.id);
-                if (!worn(equipped_, c.id)) compare(c.id);
-                else p.d_note = L.tr("gear.worn");
-                std::vector<ItemButton> bs;
-                for (const ItemButton& b : itemButtons(c)) if (b.action != ItemAction::Drop) bs.push_back(b);
-                buttonsUi(bs);
+            l_oP.m_vFilters.push_back({l_oL.f_Tr("status.weapon"), m_iGearSlot == 0, false});
+            l_oP.m_vFilters.push_back({l_oL.f_Tr("status.armor"), m_iGearSlot == 1, false});
+            l_oP.m_strWornTitle = l_oL.f_Tr("gear.worn");
+            l_oP.m_vWorn.push_back({l_oL.f_Tr("status.weapon"), m_oEquipped.m_strWeaponId.empty() ? l_strNone : f_ItemName(m_oEquipped.m_strWeaponId), "", m_iGearSlot == 0 ? 1 : 0});
+            l_oP.m_vWorn.push_back({l_oL.f_Tr("status.armor"), m_oEquipped.m_strArmorId.empty() ? l_strNone : f_ItemName(m_oEquipped.m_strArmorId), "", m_iGearSlot == 1 ? 1 : 0});
+            const auto l_vCells = f_GearCells();
+            const int l_iSel = f_ClampSel(m_iGearSel, (int)l_vCells.size());
+            for (size_t l_nI = 0; l_nI < l_vCells.size(); l_nI++)
+                l_oP.m_vCells.push_back({f_ItemSprite(l_vCells[l_nI]), f_ItemName(l_vCells[l_nI]), "", (int)l_nI == l_iSel, f_Worn(m_oEquipped, l_vCells[l_nI]), false});
+            if (l_vCells.empty()) l_oP.m_strEmptyText = f_TrParam(l_oL.f_Tr("gear.empty"), "slot", l_oL.f_Tr(m_iGearSlot == 0 ? "status.weapon" : "status.armor"));
+            l_oP.m_strSelectHint = l_oL.f_Tr("gear.select");
+            if (!l_vCells.empty()) {
+                const ItemCell l_oC{ItemCell::Gear, l_vCells[l_iSel], 1};
+                l_oP.m_bDetail = true;
+                l_oP.m_strDIcon = f_ItemSprite(l_oC.m_strId);
+                l_oP.m_strDName = f_ItemName(l_oC.m_strId);
+                l_oP.m_strDDesc = f_ItemDesc(l_oC.m_strId);
+                if (!f_Worn(m_oEquipped, l_oC.m_strId)) l_fnCompare(l_oC.m_strId);
+                else l_oP.m_strDNote = l_oL.f_Tr("gear.worn");
+                std::vector<ItemButton> l_vBs;
+                for (const ItemButton& l_oB : f_ItemButtons(l_oC)) if (l_oB.m_eAction != ItemAction::Drop) l_vBs.push_back(l_oB);
+                l_fnButtonsUi(l_vBs);
             }
             break;
         }
         case MenuTab::Items: {
-            static const char* kFilters[4] = {"items.all", "items.use", "player.tab.gear", "hud.keys"};
-            for (int i = 0; i < 4; i++) p.filters.push_back({L.tr(kFilters[i]), i == itemFilter_, false});
-            const auto cells = itemCells();
-            const int sel = clampSel(itemSel_, (int)cells.size());
-            for (size_t i = 0; i < cells.size(); i++) {
-                const ItemCell& c = cells[i];
-                p.cells.push_back({itemSprite(c.id), itemName(c.id), c.count > 1 ? "x" + std::to_string(c.count) : "", (int)i == sel,
-                                   c.kind == ItemCell::Gear && worn(equipped_, c.id), c.kind == ItemCell::Key || itemImportant(c.id)});
+            static const char* l_arrFilters[4] = {"items.all", "items.use", "player.tab.gear", "hud.keys"};
+            for (int l_iI = 0; l_iI < 4; l_iI++) l_oP.m_vFilters.push_back({l_oL.f_Tr(l_arrFilters[l_iI]), l_iI == m_iItemFilter, false});
+            const auto l_vCells = f_ItemCells();
+            const int l_iSel = f_ClampSel(m_iItemSel, (int)l_vCells.size());
+            for (size_t l_nI = 0; l_nI < l_vCells.size(); l_nI++) {
+                const ItemCell& l_oC = l_vCells[l_nI];
+                l_oP.m_vCells.push_back({f_ItemSprite(l_oC.m_strId), f_ItemName(l_oC.m_strId), l_oC.m_iCount > 1 ? "x" + std::to_string(l_oC.m_iCount) : "", (int)l_nI == l_iSel,
+                                   l_oC.m_eKind == ItemCell::Gear && f_Worn(m_oEquipped, l_oC.m_strId), l_oC.m_eKind == ItemCell::Key || f_ItemImportant(l_oC.m_strId)});
             }
-            if (cells.empty()) p.empty_text = L.tr("inventory.empty_title");
-            p.select_hint = L.tr("items.select");
-            if (!cells.empty()) itemDetail(cells[sel]);
-            if (dropConfirmOpen_ && !cells.empty()) {
-                p.confirm_open = true;
-                p.confirm_question = trParam(L.tr("items.drop_confirm"), "name", itemName(cells[sel].id));
-                p.yes_label = L.tr("inventory.drop");
-                p.no_label = L.tr("menu.back");
-                p.confirm_yes = dropConfirmYes_;
+            if (l_vCells.empty()) l_oP.m_strEmptyText = l_oL.f_Tr("inventory.empty_title");
+            l_oP.m_strSelectHint = l_oL.f_Tr("items.select");
+            if (!l_vCells.empty()) l_fnItemDetail(l_vCells[l_iSel]);
+            if (m_bDropConfirmOpen && !l_vCells.empty()) {
+                l_oP.m_bConfirmOpen = true;
+                l_oP.m_strConfirmQuestion = f_TrParam(l_oL.f_Tr("items.drop_confirm"), "name", f_ItemName(l_vCells[l_iSel].m_strId));
+                l_oP.m_strYesLabel = l_oL.f_Tr("inventory.drop");
+                l_oP.m_strNoLabel = l_oL.f_Tr("menu.back");
+                l_oP.m_bConfirmYes = m_bDropConfirmYes;
             }
             break;
         }
         case MenuTab::Cards: {   // monster cards (docs/gameplay/07_GAMEPLAY_PLAN.md §3): a grid of the monsters met | the record
-            const auto cells = cardCells();
-            const int sel = clampSel(cardSel_, (int)cells.size());
-            int held = 0;
-            for (const auto& [id, r] : meta_.cards) if (r.copies > 0 && enemyTpl.count(id)) held++;
-            p.worn_title = trParam(trParam(L.tr("cards.count"), "n", std::to_string(held)), "all", std::to_string(enemyTpl.size()));
-            for (size_t i = 0; i < cells.size(); i++) {
-                const toms::CardRecord& r = meta_.cards.at(cells[i]);
-                const auto& t = enemyTpl.at(cells[i]);
-                p.cells.push_back({uiSprite(typeSprite("monster", cells[i])), locale_.field(t["name"]),
-                                   r.copies > 1 ? "x" + std::to_string(r.copies) : "", (int)i == sel, false, r.copies == 0});
+            const auto l_vCells = f_CardCells();
+            const int l_iSel = f_ClampSel(m_iCardSel, (int)l_vCells.size());
+            int l_iHeld = 0;
+            for (const auto& [l_strId, l_oR] : m_oMeta.m_mapCards) if (l_oR.m_iCopies > 0 && m_mapEnemyTpl.count(l_strId)) l_iHeld++;
+            l_oP.m_strWornTitle = f_TrParam(f_TrParam(l_oL.f_Tr("cards.count"), "n", std::to_string(l_iHeld)), "all", std::to_string(m_mapEnemyTpl.size()));
+            for (size_t l_nI = 0; l_nI < l_vCells.size(); l_nI++) {
+                const toms::CardRecord& l_oR = m_oMeta.m_mapCards.at(l_vCells[l_nI]);
+                const auto& l_jT = m_mapEnemyTpl.at(l_vCells[l_nI]);
+                l_oP.m_vCells.push_back({f_UiSprite(f_TypeSprite("monster", l_vCells[l_nI])), m_oLocale.f_Field(l_jT["name"]),
+                                   l_oR.m_iCopies > 1 ? "x" + std::to_string(l_oR.m_iCopies) : "", (int)l_nI == l_iSel, false, l_oR.m_iCopies == 0});
             }
-            if (cells.empty()) p.empty_text = L.tr("cards.empty");
-            p.select_hint = L.tr("cards.select");
-            if (!cells.empty()) {
-                const std::string& id = cells[sel];
-                const toms::CardRecord& r = meta_.cards.at(id);
-                const auto& t = enemyTpl.at(id);
-                p.detail = true;
-                p.d_icon = uiSprite(typeSprite("monster", id));
-                p.d_name = locale_.field(t["name"]);
-                p.d_desc = r.copies > 0 ? L.tr("cards.have") : L.tr("cards.not_yet");
-                p.d_lines.push_back({L.tr("cards.copies"), std::to_string(r.copies), "", 0});
-                p.d_lines.push_back({L.tr("cards.defeated"), std::to_string(r.defeated), "", 0});
-                p.d_lines.push_back({L.tr("cards.defeated_by"), std::to_string(r.defeatedBy), "", 0});
-                p.d_lines.push_back({"HP", std::to_string(t.value("hp", 0)), "", 0});
-                p.d_lines.push_back({"ATK", std::to_string(t.value("atk", 0)), "", 0});
-                p.d_lines.push_back({"DEF", std::to_string(t.value("def", 0)), "", 0});
+            if (l_vCells.empty()) l_oP.m_strEmptyText = l_oL.f_Tr("cards.empty");
+            l_oP.m_strSelectHint = l_oL.f_Tr("cards.select");
+            if (!l_vCells.empty()) {
+                const std::string& l_strId = l_vCells[l_iSel];
+                const toms::CardRecord& l_oR = m_oMeta.m_mapCards.at(l_strId);
+                const auto& l_jT = m_mapEnemyTpl.at(l_strId);
+                l_oP.m_bDetail = true;
+                l_oP.m_strDIcon = f_UiSprite(f_TypeSprite("monster", l_strId));
+                l_oP.m_strDName = m_oLocale.f_Field(l_jT["name"]);
+                l_oP.m_strDDesc = l_oR.m_iCopies > 0 ? l_oL.f_Tr("cards.have") : l_oL.f_Tr("cards.not_yet");
+                l_oP.m_vDLines.push_back({l_oL.f_Tr("cards.copies"), std::to_string(l_oR.m_iCopies), "", 0});
+                l_oP.m_vDLines.push_back({l_oL.f_Tr("cards.defeated"), std::to_string(l_oR.m_iDefeated), "", 0});
+                l_oP.m_vDLines.push_back({l_oL.f_Tr("cards.defeated_by"), std::to_string(l_oR.m_iDefeatedBy), "", 0});
+                l_oP.m_vDLines.push_back({"HP", std::to_string(l_jT.value("hp", 0)), "", 0});
+                l_oP.m_vDLines.push_back({"ATK", std::to_string(l_jT.value("atk", 0)), "", 0});
+                l_oP.m_vDLines.push_back({"DEF", std::to_string(l_jT.value("def", 0)), "", 0});
                 // the training ground (docs/gameplay/16 §5): spend its card for fights in a row, a few runs a day
-                const int left = trainingRunsLeft();
-                p.d_buttons.push_back({trParam(L.tr(left > 0 ? "cards.train" : "cards.train_none"), "n", std::to_string(left)),
-                                       r.copies > 0 && left > 0});
+                const int l_iLeft = f_TrainingRunsLeft();
+                l_oP.m_vDButtons.push_back({f_TrParam(l_oL.f_Tr(l_iLeft > 0 ? "cards.train" : "cards.train_none"), "n", std::to_string(l_iLeft)),
+                                       l_oR.m_iCopies > 0 && l_iLeft > 0});
             }
             break;
         }
@@ -850,15 +850,15 @@ void Game::buildPlayerUi(toms::UiState& u) const {
 }
 
 // The Cards tab's monsters: those with a record (met in a battle), the easiest first (HP, then attack, then id).
-std::vector<std::string> Game::cardCells() const {
-    std::vector<std::string> out;
-    for (const auto& [id, r] : meta_.cards) if (enemyTpl.count(id)) out.push_back(id);
-    auto key = [&](const std::string& id) {
-        const auto& t = enemyTpl.at(id);
-        return std::make_tuple(t.value("hp", 0), t.value("atk", 0), id);
+std::vector<std::string> Game::f_CardCells() const {
+    std::vector<std::string> l_vOut;
+    for (const auto& [l_strId, l_oR] : m_oMeta.m_mapCards) if (m_mapEnemyTpl.count(l_strId)) l_vOut.push_back(l_strId);
+    auto l_fnKey = [&](const std::string& l_strId) {
+        const auto& l_jT = m_mapEnemyTpl.at(l_strId);
+        return std::make_tuple(l_jT.value("hp", 0), l_jT.value("atk", 0), l_strId);
     };
-    std::sort(out.begin(), out.end(), [&](const std::string& a, const std::string& b) { return key(a) < key(b); });
-    return out;
+    std::sort(l_vOut.begin(), l_vOut.end(), [&](const std::string& l_strA, const std::string& l_strB) { return l_fnKey(l_strA) < l_fnKey(l_strB); });
+    return l_vOut;
 }
 
 // ---------- Save / Load (saveload.rml) ----------
@@ -866,93 +866,93 @@ std::vector<std::string> Game::cardCells() const {
 // opens a confirmation; nothing is written or loaded until the player says yes. Saving into a slot makes
 // it the run's slot (autosave writes there from then on), as loading one does.
 
-void Game::openSaveLoad(int mode) {
-    saveLoadOpen_ = true;
-    saveLoadMode_ = mode == 1 ? 1 : 0;
-    saveLoadConfirm_ = false;
-    saveLoadSlots_.clear();
-    const std::string dir = toms::defaultSaveDir();
-    for (int i = 1; i <= title_.slotCount(); i++) saveLoadSlots_.push_back(toms::summarizeSlot(dir, i));
-    saveLoadSel_ = std::max(0, std::min(activeSlot_ - 1, (int)saveLoadSlots_.size() - 1));
-    audio.play("confirm_click");
+void Game::f_OpenSaveLoad(int l_iMode) {
+    m_bSaveLoadOpen = true;
+    m_iSaveLoadMode = l_iMode == 1 ? 1 : 0;
+    m_bSaveLoadConfirm = false;
+    m_vSaveLoadSlots.clear();
+    const std::string l_strDir = toms::f_DefaultSaveDir();
+    for (int l_iI = 1; l_iI <= m_oTitle.f_SlotCount(); l_iI++) m_vSaveLoadSlots.push_back(toms::f_SummarizeSlot(l_strDir, l_iI));
+    m_iSaveLoadSel = std::max(0, std::min(m_iActiveSlot - 1, (int)m_vSaveLoadSlots.size() - 1));
+    m_oAudio.f_Play("confirm_click");
 }
 
-void Game::saveLoadAsk(int index) {
-    if (index < 0 || index >= (int)saveLoadSlots_.size()) return;
-    saveLoadSel_ = index;
-    const bool exists = saveLoadSlots_[index].exists;
-    if (saveLoadMode_ == 1 && !exists) { audio.play("deny"); return; }   // nothing to load
-    if (saveLoadMode_ == 0 && saveLoadSlots_[index].newer) { audio.play("deny"); return; }   // a newer game's save stays
-    saveLoadConfirm_ = true;
+void Game::f_SaveLoadAsk(int l_iIndex) {
+    if (l_iIndex < 0 || l_iIndex >= (int)m_vSaveLoadSlots.size()) return;
+    m_iSaveLoadSel = l_iIndex;
+    const bool l_bExists = m_vSaveLoadSlots[l_iIndex].m_bExists;
+    if (m_iSaveLoadMode == 1 && !l_bExists) { m_oAudio.f_Play("deny"); return; }   // nothing to load
+    if (m_iSaveLoadMode == 0 && m_vSaveLoadSlots[l_iIndex].m_bNewer) { m_oAudio.f_Play("deny"); return; }   // a newer game's save stays
+    m_bSaveLoadConfirm = true;
     // The safe answer is preselected wherever something is lost: overwriting a save, leaving the run.
-    saveLoadConfirmYes_ = saveLoadMode_ == 0 && !exists;
-    audio.play("confirm_click");
+    m_bSaveLoadConfirmYes = m_iSaveLoadMode == 0 && !l_bExists;
+    m_oAudio.f_Play("confirm_click");
 }
 
-void Game::saveLoadAnswer(bool yes) {
-    if (!saveLoadConfirm_) return;
-    saveLoadConfirm_ = false;
-    if (!yes) { audio.play("close_ui"); return; }
-    const int slot = saveLoadSel_ + 1;
-    if (saveLoadMode_ == 0) {
-        activeSlot_ = slot;
-        slotReadOnly_ = false;   // the Save tab never offers a newer game's slot (saveLoadAsk)
-        saveCurrentRun();
-        saveLoadSlots_[saveLoadSel_] = toms::summarizeSlot(toms::defaultSaveDir(), slot);
-        toastMsg_ = trParam(locale_.tr("saveload.saved"), "slot", std::to_string(slot));
-        toastTimer_ = 1600;
-        audio.play("confirm_click");
-    } else if (!continueFromSlot(slot)) {   // loading closes the menu (applyLoadedRun)
-        audio.play("deny");
+void Game::f_SaveLoadAnswer(bool l_bYes) {
+    if (!m_bSaveLoadConfirm) return;
+    m_bSaveLoadConfirm = false;
+    if (!l_bYes) { m_oAudio.f_Play("close_ui"); return; }
+    const int l_iSlot = m_iSaveLoadSel + 1;
+    if (m_iSaveLoadMode == 0) {
+        m_iActiveSlot = l_iSlot;
+        m_bSlotReadOnly = false;   // the Save tab never offers a newer game's slot (saveLoadAsk)
+        f_SaveCurrentRun();
+        m_vSaveLoadSlots[m_iSaveLoadSel] = toms::f_SummarizeSlot(toms::f_DefaultSaveDir(), l_iSlot);
+        m_strToastMsg = f_TrParam(m_oLocale.f_Tr("saveload.saved"), "slot", std::to_string(l_iSlot));
+        m_iToastTimer = 1600;
+        m_oAudio.f_Play("confirm_click");
+    } else if (!f_ContinueFromSlot(l_iSlot)) {   // loading closes the menu (applyLoadedRun)
+        m_oAudio.f_Play("deny");
     }
 }
 
-void Game::buildSaveLoadUi(toms::UiSaveLoad& v) const {
-    const toms::Locale& L = locale_;
-    v.visible = true;
-    v.title = L.tr("saveload.title");
-    v.hint = L.tr("saveload.hint");
-    v.close_label = L.tr("menu.back");
-    v.modes.push_back({L.tr("saveload.save"), saveLoadMode_ == 0, false});
-    v.modes.push_back({L.tr("saveload.load"), saveLoadMode_ == 1, false});
-    for (size_t i = 0; i < saveLoadSlots_.size(); i++) {
-        const toms::SlotSummary& s = saveLoadSlots_[i];
-        toms::UiSlot c;
-        c.title = L.tr("continue.slot") + " " + std::to_string(i + 1);
-        c.empty = !s.exists;
-        if (s.exists) {
-            const int sec = std::max(0, s.playTimeSec);
-            char t[32];
-            std::snprintf(t, sizeof t, "%02d:%02d:%02d", sec / 3600, (sec / 60) % 60, sec % 60);
-            c.line1 = (s.stageName.empty() ? s.stageId : s.stageName) + "   " + L.tr("hud.level") + " " + std::to_string(s.lv) +
-                      "   HP " + std::to_string(s.hp) + "/" + std::to_string(s.maxhp) + "   " + std::to_string(s.gold) + "G";
-            c.line2 = L.tr("continue.saved_at") + " " + s.savedAt + "    " + L.tr("continue.play_time") + " " + t;
-            if (s.fromBackup) c.line2 += "    [" + L.tr("continue.from_backup") + "]";
-            if (s.newer) c.line2 += "    [" + L.tr("continue.newer") + "]";
-        } else if (s.damaged) {
-            c.line1 = "[" + L.tr("continue.damaged") + "]";
+void Game::f_BuildSaveLoadUi(toms::UiSaveLoad& l_oV) const {
+    const toms::Locale& l_oL = m_oLocale;
+    l_oV.m_bVisible = true;
+    l_oV.m_strTitle = l_oL.f_Tr("saveload.title");
+    l_oV.m_strHint = l_oL.f_Tr("saveload.hint");
+    l_oV.m_strCloseLabel = l_oL.f_Tr("menu.back");
+    l_oV.m_vModes.push_back({l_oL.f_Tr("saveload.save"), m_iSaveLoadMode == 0, false});
+    l_oV.m_vModes.push_back({l_oL.f_Tr("saveload.load"), m_iSaveLoadMode == 1, false});
+    for (size_t l_nI = 0; l_nI < m_vSaveLoadSlots.size(); l_nI++) {
+        const toms::SlotSummary& l_oS = m_vSaveLoadSlots[l_nI];
+        toms::UiSlot l_oC;
+        l_oC.m_strTitle = l_oL.f_Tr("continue.slot") + " " + std::to_string(l_nI + 1);
+        l_oC.m_bEmpty = !l_oS.m_bExists;
+        if (l_oS.m_bExists) {
+            const int l_iSec = std::max(0, l_oS.m_iPlayTimeSec);
+            char l_pszT[32];
+            std::snprintf(l_pszT, sizeof l_pszT, "%02d:%02d:%02d", l_iSec / 3600, (l_iSec / 60) % 60, l_iSec % 60);
+            l_oC.m_strLine1 = (l_oS.m_strStageName.empty() ? l_oS.m_strStageId : l_oS.m_strStageName) + "   " + l_oL.f_Tr("hud.level") + " " + std::to_string(l_oS.m_iLv) +
+                      "   HP " + std::to_string(l_oS.m_iHp) + "/" + std::to_string(l_oS.m_iMaxhp) + "   " + std::to_string(l_oS.m_iGold) + "G";
+            l_oC.m_strLine2 = l_oL.f_Tr("continue.saved_at") + " " + l_oS.m_strSavedAt + "    " + l_oL.f_Tr("continue.play_time") + " " + l_pszT;
+            if (l_oS.m_bFromBackup) l_oC.m_strLine2 += "    [" + l_oL.f_Tr("continue.from_backup") + "]";
+            if (l_oS.m_bNewer) l_oC.m_strLine2 += "    [" + l_oL.f_Tr("continue.newer") + "]";
+        } else if (l_oS.m_bDamaged) {
+            l_oC.m_strLine1 = "[" + l_oL.f_Tr("continue.damaged") + "]";
         } else {
-            c.line1 = saveLoadMode_ == 1 ? L.tr("saveload.load_empty") : "[" + L.tr("continue.empty") + "]";
+            l_oC.m_strLine1 = m_iSaveLoadMode == 1 ? l_oL.f_Tr("saveload.load_empty") : "[" + l_oL.f_Tr("continue.empty") + "]";
         }
-        if ((int)i + 1 == activeSlot_) c.tag = L.tr("saveload.current");
-        c.selected = (int)i == saveLoadSel_;
-        c.enabled = saveLoadMode_ == 0 ? !s.newer : s.exists;
-        v.cards.push_back(c);
+        if ((int)l_nI + 1 == m_iActiveSlot) l_oC.m_strTag = l_oL.f_Tr("saveload.current");
+        l_oC.m_bSelected = (int)l_nI == m_iSaveLoadSel;
+        l_oC.m_bEnabled = m_iSaveLoadMode == 0 ? !l_oS.m_bNewer : l_oS.m_bExists;
+        l_oV.m_vCards.push_back(l_oC);
     }
-    if (saveLoadConfirm_ && saveLoadSel_ < (int)saveLoadSlots_.size()) {
-        const std::string slot = std::to_string(saveLoadSel_ + 1);
-        const bool exists = saveLoadSlots_[saveLoadSel_].exists;
-        v.confirm_open = true;
-        if (saveLoadMode_ == 1) {
-            v.confirm_question = trParam(L.tr("saveload.load_confirm"), "slot", slot);
-            v.confirm_body = L.tr("saveload.load_body");
-            v.yes_label = L.tr("saveload.load");
+    if (m_bSaveLoadConfirm && m_iSaveLoadSel < (int)m_vSaveLoadSlots.size()) {
+        const std::string l_strSlot = std::to_string(m_iSaveLoadSel + 1);
+        const bool l_bExists = m_vSaveLoadSlots[m_iSaveLoadSel].m_bExists;
+        l_oV.m_bConfirmOpen = true;
+        if (m_iSaveLoadMode == 1) {
+            l_oV.m_strConfirmQuestion = f_TrParam(l_oL.f_Tr("saveload.load_confirm"), "slot", l_strSlot);
+            l_oV.m_strConfirmBody = l_oL.f_Tr("saveload.load_body");
+            l_oV.m_strYesLabel = l_oL.f_Tr("saveload.load");
         } else {
-            v.confirm_question = trParam(L.tr(exists ? "saveload.overwrite_confirm" : "saveload.save_confirm"), "slot", slot);
-            v.confirm_body = exists ? L.tr("saveload.overwrite_body") : "";
-            v.yes_label = L.tr("saveload.save");
+            l_oV.m_strConfirmQuestion = f_TrParam(l_oL.f_Tr(l_bExists ? "saveload.overwrite_confirm" : "saveload.save_confirm"), "slot", l_strSlot);
+            l_oV.m_strConfirmBody = l_bExists ? l_oL.f_Tr("saveload.overwrite_body") : "";
+            l_oV.m_strYesLabel = l_oL.f_Tr("saveload.save");
         }
-        v.no_label = L.tr("saveload.cancel");
-        v.confirm_yes = saveLoadConfirmYes_;
+        l_oV.m_strNoLabel = l_oL.f_Tr("saveload.cancel");
+        l_oV.m_bConfirmYes = m_bSaveLoadConfirmYes;
     }
 }

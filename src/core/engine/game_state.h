@@ -29,8 +29,8 @@ enum class GameState {
     Count   // sentinel — not a real state; used to size iteration in tests
 };
 
-inline const char* toString(GameState s) {
-    switch (s) {
+inline const char* f_ToString(GameState l_eS) {
+    switch (l_eS) {
         case GameState::Boot:             return "Boot";
         case GameState::MainMenu:         return "MainMenu";
         case GameState::Settings:         return "Settings";
@@ -53,8 +53,8 @@ inline const char* toString(GameState s) {
 // docs/architecture/GAME_LOGIC_AND_RENDERING_ARCHITECTURE.md §4.2. Every state appears at least once as a
 // "from" (no dead ends) and every state is reachable from Boot (no unreachable states) —
 // both invariants are asserted by state_machine_test rather than just assumed here.
-inline const std::vector<std::pair<GameState, GameState>>& transitionTable() {
-    static const std::vector<std::pair<GameState, GameState>> table = {
+inline const std::vector<std::pair<GameState, GameState>>& f_TransitionTable() {
+    static const std::vector<std::pair<GameState, GameState>> l_vTable = {
         {GameState::Boot,             GameState::MainMenu},
 
         {GameState::MainMenu,         GameState::StageSelect},
@@ -92,37 +92,37 @@ inline const std::vector<std::pair<GameState, GameState>>& transitionTable() {
 
         {GameState::Credits,          GameState::MainMenu},
     };
-    return table;
+    return l_vTable;
 }
 
-inline bool isLegalTransition(GameState from, GameState to) {
-    for (auto& e : transitionTable())
-        if (e.first == from && e.second == to) return true;
+inline bool f_IsLegalTransition(GameState l_eFrom, GameState l_eTo) {
+    for (auto& l_pairE : f_TransitionTable())
+        if (l_pairE.first == l_eFrom && l_pairE.second == l_eTo) return true;
     return false;
 }
 
 // Owns the current state plus a bounded history (useful for a future debug overlay, Milestone 2).
 class GameStateMachine {
 public:
-    explicit GameStateMachine(GameState initial = GameState::Boot) : current_(initial) {
-        history_.push_back(initial);
+    explicit GameStateMachine(GameState l_eInitial = GameState::Boot) : m_eCurrent(l_eInitial) {
+        m_vHistory.push_back(l_eInitial);
     }
-    GameState current() const { return current_; }
-    const std::vector<GameState>& history() const { return history_; }
+    GameState f_Current() const { return m_eCurrent; }
+    const std::vector<GameState>& f_History() const { return m_vHistory; }
 
     // Applies the transition if (and only if) it's legal; returns whether it happened.
     // On rejection, current()/history() are left completely unchanged.
-    bool tryTransition(GameState to) {
-        if (!isLegalTransition(current_, to)) return false;
-        current_ = to;
-        history_.push_back(to);
-        if (history_.size() > 256) history_.erase(history_.begin());
+    bool f_TryTransition(GameState l_eTo) {
+        if (!f_IsLegalTransition(m_eCurrent, l_eTo)) return false;
+        m_eCurrent = l_eTo;
+        m_vHistory.push_back(l_eTo);
+        if (m_vHistory.size() > 256) m_vHistory.erase(m_vHistory.begin());
         return true;
     }
 
 private:
-    GameState current_;
-    std::vector<GameState> history_;
+    GameState m_eCurrent;
+    std::vector<GameState> m_vHistory;
 };
 
 } // namespace toms

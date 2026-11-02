@@ -26,752 +26,752 @@ using stage::Json;
 using namespace EvUi;
 
 namespace {
-QHBoxLayout* lrow(const QString& label) {
-    auto* h = new QHBoxLayout;
-    h->setContentsMargins(0, 0, 0, 0);
-    auto* l = new QLabel(label);
-    l->setMinimumWidth(130);
-    l->setStyleSheet(QStringLiteral("color:#8b929c"));
-    h->addWidget(l);
-    return h;
+QHBoxLayout* f_Lrow(const QString& l_oLabel) {
+    auto* l_pH = new QHBoxLayout;
+    l_pH->setContentsMargins(0, 0, 0, 0);
+    auto* l_pL = new QLabel(l_oLabel);
+    l_pL->setMinimumWidth(130);
+    l_pL->setStyleSheet(QStringLiteral("color:#8b929c"));
+    l_pH->addWidget(l_pL);
+    return l_pH;
 }
-Json field(const Json& v) { return v.is_object() ? v : Json{{"en", v.is_string() ? v.get<std::string>() : std::string()}}; }
-std::string lineDialogue(const Json& l) { return l.is_string() ? l.get<std::string>() : l.value("dialogue", std::string()); }
+Json f_Field(const Json& l_jV) { return l_jV.is_object() ? l_jV : Json{{"en", l_jV.is_string() ? l_jV.get<std::string>() : std::string()}}; }
+std::string f_LineDialogue(const Json& l_jL) { return l_jL.is_string() ? l_jL.get<std::string>() : l_jL.value("dialogue", std::string()); }
 }  // namespace
 
 // ---- NPCs ----------------------------------------------------------------------------------------------------------
 
-QWidget* EventEditor::npcsPane() {
-    auto* w = new QWidget;
-    auto* v = new QVBoxLayout(w);
-    const std::vector<std::string> ids = m_p.npcIds();
-    if (m_npcSel.empty() || std::find(ids.begin(), ids.end(), m_npcSel) == ids.end()) m_npcSel = ids.empty() ? std::string() : ids[0];
+QWidget* EventEditor::f_NpcsPane() {
+    auto* l_pW = new QWidget;
+    auto* l_pV = new QVBoxLayout(l_pW);
+    const std::vector<std::string> l_vIds = m_oP.f_NpcIds();
+    if (m_strNpcSel.empty() || std::find(l_vIds.begin(), l_vIds.end(), m_strNpcSel) == l_vIds.end()) m_strNpcSel = l_vIds.empty() ? std::string() : l_vIds[0];
     // the NPCs, and a new one
     {
-        auto* chips = new QWidget;
-        auto* flow = new FlowLayout(chips, 4);
-        for (const std::string& n : ids) {
-            auto* c = chip(q(n) + (m_p.S["npcs"].contains(n) ? QString() : QStringLiteral(" ⚠")), n == m_npcSel ? QColor("#4c9eff") : QColor());
-            connect(c, &QToolButton::clicked, this, [this, n] { m_npcSel = n; scheduleRender(); });
-            flow->addWidget(c);
+        auto* l_pChips = new QWidget;
+        auto* l_pFlow = new FlowLayout(l_pChips, 4);
+        for (const std::string& l_strN : l_vIds) {
+            auto* l_pC = f_Chip(f_Q(l_strN) + (m_oP.m_jS["npcs"].contains(l_strN) ? QString() : QStringLiteral(" ⚠")), l_strN == m_strNpcSel ? QColor("#4c9eff") : QColor());
+            connect(l_pC, &QToolButton::clicked, this, [this, l_strN] { m_strNpcSel = l_strN; f_ScheduleRender(); });
+            l_pFlow->addWidget(l_pC);
         }
-        auto* nw = new QLineEdit;
-        nw->setPlaceholderText(tr("new NPC id"));
-        nw->setMaximumWidth(150);
-        auto* nb = new QPushButton(tr("+ NPC"));
-        auto create = [this](const std::string& id) {
-            edit(tr("New NPC %1").arg(q(id)), [this, id] {
-                const std::string d = m_p.S["dialogues"].contains(id) ? id : m_p.dialogueList().empty() ? id : m_p.dialogueList()[0];
-                m_p.S["npcs"][id] = Json{{"npcId", id}, {"name", "npc." + id + ".name"}, {"chat", Json{{"lines", Json::array({Json{{"dialogue", d}}})}, {"order", "loop"}}},
+        auto* l_pNw = new QLineEdit;
+        l_pNw->setPlaceholderText(tr("new NPC id"));
+        l_pNw->setMaximumWidth(150);
+        auto* l_pNb = new QPushButton(tr("+ NPC"));
+        auto l_fnCreate = [this](const std::string& l_strId) {
+            f_Edit(tr("New NPC %1").arg(f_Q(l_strId)), [this, l_strId] {
+                const std::string l_strD = m_oP.m_jS["dialogues"].contains(l_strId) ? l_strId : m_oP.f_DialogueList().empty() ? l_strId : m_oP.f_DialogueList()[0];
+                m_oP.m_jS["npcs"][l_strId] = Json{{"npcId", l_strId}, {"name", "npc." + l_strId + ".name"}, {"chat", Json{{"lines", Json::array({Json{{"dialogue", l_strD}}})}, {"order", "loop"}}},
                                          {"topics", Json{{"menu", "auto"}}}};
-                if (!m_p.S["texts"].contains("npc." + id + ".name")) m_p.S["texts"]["npc." + id + ".name"] = Json{{"zh_TW", id}, {"en", id}};
+                if (!m_oP.m_jS["texts"].contains("npc." + l_strId + ".name")) m_oP.m_jS["texts"]["npc." + l_strId + ".name"] = Json{{"zh_TW", l_strId}, {"en", l_strId}};
             });
-            m_npcSel = id;
+            m_strNpcSel = l_strId;
         };
-        connect(nb, &QPushButton::clicked, this, [=] {
-            const std::string n = nw->text().trimmed().toStdString();
-            if (!stage::idOk(n)) { toast(tr("Use letters, digits, _ and - only."), true); return; }
-            if (m_p.S["npcs"].contains(n)) { toast(tr("%1 already exists.").arg(q(n)), true); return; }
-            create(n);
+        connect(l_pNb, &QPushButton::clicked, this, [=] {
+            const std::string l_strN = l_pNw->text().trimmed().toStdString();
+            if (!stage::f_IdOk(l_strN)) { f_Toast(tr("Use letters, digits, _ and - only."), true); return; }
+            if (m_oP.m_jS["npcs"].contains(l_strN)) { f_Toast(tr("%1 already exists.").arg(f_Q(l_strN)), true); return; }
+            l_fnCreate(l_strN);
         });
-        flow->addWidget(nw);
-        flow->addWidget(nb);
-        v->addWidget(chips);
-        if (m_npcSel.empty()) { v->addWidget(muted(tr("No NPCs yet."))); v->addStretch(1); return w; }
-        if (!m_p.S["npcs"].contains(m_npcSel)) {
-            v->addWidget(rich(tr("%1 has no NPC file: the game plays dialogue/%1.json as its only chat line.").arg(esc(q(m_npcSel)))));
-            auto* mk = new QPushButton(tr("Create its NPC file"));
-            const std::string id = m_npcSel;
-            connect(mk, &QPushButton::clicked, this, [=] { create(id); });
-            v->addWidget(mk, 0, Qt::AlignLeft);
-            v->addStretch(1);
-            return w;
+        l_pFlow->addWidget(l_pNw);
+        l_pFlow->addWidget(l_pNb);
+        l_pV->addWidget(l_pChips);
+        if (m_strNpcSel.empty()) { l_pV->addWidget(f_Muted(tr("No NPCs yet."))); l_pV->addStretch(1); return l_pW; }
+        if (!m_oP.m_jS["npcs"].contains(m_strNpcSel)) {
+            l_pV->addWidget(f_Rich(tr("%1 has no NPC file: the game plays dialogue/%1.json as its only chat line.").arg(f_Esc(f_Q(m_strNpcSel)))));
+            auto* l_pMk = new QPushButton(tr("Create its NPC file"));
+            const std::string l_strId = m_strNpcSel;
+            connect(l_pMk, &QPushButton::clicked, this, [=] { l_fnCreate(l_strId); });
+            l_pV->addWidget(l_pMk, 0, Qt::AlignLeft);
+            l_pV->addStretch(1);
+            return l_pW;
         }
     }
-    const std::string id = m_npcSel;
-    const Json f = m_p.S["npcs"][id];
-    const QString hNpc = tr("NPC %1").arg(q(id));
-    auto F = [this, id, hNpc](const std::function<void(Json&)>& fn) { edit(hNpc, [this, id, fn] { fn(m_p.S["npcs"][id]); }); };
+    const std::string l_strId = m_strNpcSel;
+    const Json l_jF = m_oP.m_jS["npcs"][l_strId];
+    const QString l_oHNpc = tr("NPC %1").arg(f_Q(l_strId));
+    auto l_fnF = [this, l_strId, l_oHNpc](const std::function<void(Json&)>& l_fnFn) { f_Edit(l_oHNpc, [this, l_strId, l_fnFn] { l_fnFn(m_oP.m_jS["npcs"][l_strId]); }); };
     // lines as objects (a plain string line is a dialogue id)
-    auto linesOf = [](Json& npc) -> Json& {
-        if (!npc.contains("chat") || !npc["chat"].is_object()) npc["chat"] = Json{{"lines", Json::array()}};
-        Json& l = npc["chat"]["lines"];
-        if (!l.is_array()) l = Json::array();
-        for (Json& x : l) if (x.is_string()) x = Json{{"dialogue", x}};
-        return l;
+    auto l_fnLinesOf = [](Json& l_jNpc) -> Json& {
+        if (!l_jNpc.contains("chat") || !l_jNpc["chat"].is_object()) l_jNpc["chat"] = Json{{"lines", Json::array()}};
+        Json& l_jL = l_jNpc["chat"]["lines"];
+        if (!l_jL.is_array()) l_jL = Json::array();
+        for (Json& l_jX : l_jL) if (l_jX.is_string()) l_jX = Json{{"dialogue", l_jX}};
+        return l_jL;
     };
     // the file: name, greeting, sprite, where, menu rule
     {
-        auto* g = new QGroupBox(tr("NPC file · npcs/%1.json").arg(q(id)));
-        auto* gv = new QVBoxLayout(g);
-        for (const char* key : {"name", "greeting"}) {
-            auto* h = lrow(std::string(key) == "name" ? tr("Name") : tr("Greeting (menu)"));
-            const Json t = f.contains(key) ? m_p.text(f[key].get<std::string>()) : Json::object();
-            for (const char* l : {"zh_TW", "en"}) {
-                auto* e = new CommitLine(t.contains(l) && t[l].is_string() ? q(t[l].get<std::string>()) : QString());
-                e->setPlaceholderText(QString::fromLatin1(l));
-                const std::string k = key, lang = l;
-                e->onCommit = [=](const QString& s) {
-                    edit(hNpc, [this, id, k, lang, s] {
-                        Json& n = m_p.S["npcs"][id];
-                        if (!n.contains(k) || !n[k].is_string() || n[k].get<std::string>().empty()) n[k] = "npc." + id + "." + k;
-                        Json& tt = m_p.S["texts"][n[k].get<std::string>()];
-                        if (!tt.is_object()) tt = Json::object();
-                        tt[lang] = s.toStdString();
+        auto* l_pG = new QGroupBox(tr("NPC file · npcs/%1.json").arg(f_Q(l_strId)));
+        auto* l_pGv = new QVBoxLayout(l_pG);
+        for (const char* l_pszKey : {"name", "greeting"}) {
+            auto* l_pH = f_Lrow(std::string(l_pszKey) == "name" ? tr("Name") : tr("Greeting (menu)"));
+            const Json l_jT = l_jF.contains(l_pszKey) ? m_oP.f_Text(l_jF[l_pszKey].get<std::string>()) : Json::object();
+            for (const char* l_pszL : {"zh_TW", "en"}) {
+                auto* l_pE = new CommitLine(l_jT.contains(l_pszL) && l_jT[l_pszL].is_string() ? f_Q(l_jT[l_pszL].get<std::string>()) : QString());
+                l_pE->setPlaceholderText(QString::fromLatin1(l_pszL));
+                const std::string l_strK = l_pszKey, l_strLang = l_pszL;
+                l_pE->m_fnOnCommit = [=](const QString& l_oS) {
+                    f_Edit(l_oHNpc, [this, l_strId, l_strK, l_strLang, l_oS] {
+                        Json& l_jN = m_oP.m_jS["npcs"][l_strId];
+                        if (!l_jN.contains(l_strK) || !l_jN[l_strK].is_string() || l_jN[l_strK].get<std::string>().empty()) l_jN[l_strK] = "npc." + l_strId + "." + l_strK;
+                        Json& l_jTt = m_oP.m_jS["texts"][l_jN[l_strK].get<std::string>()];
+                        if (!l_jTt.is_object()) l_jTt = Json::object();
+                        l_jTt[l_strLang] = l_oS.toStdString();
                     });
                 };
-                h->addWidget(e, 1);
+                l_pH->addWidget(l_pE, 1);
             }
-            gv->addLayout(h);
+            l_pGv->addLayout(l_pH);
         }
         {
-            auto* h = lrow(tr("Map sprite"));
-            auto* sp = new QComboBox;
-            sp->setEditable(true);
-            for (const std::string& s : m_p.sprites) sp->addItem(q(s));
-            sp->setEditText(q(f.value("sprite", std::string())));
-            sp->lineEdit()->setPlaceholderText(QStringLiteral("npc_") + q(id));
-            connect(sp->lineEdit(), &QLineEdit::editingFinished, this, [=] {
-                const std::string s = sp->currentText().trimmed().toStdString();
-                if (s == f.value("sprite", std::string())) return;
-                F([s](Json& n) { if (s.empty()) n.erase("sprite"); else n["sprite"] = s; });
+            auto* l_pH = f_Lrow(tr("Map sprite"));
+            auto* l_pSp = new QComboBox;
+            l_pSp->setEditable(true);
+            for (const std::string& l_strS : m_oP.m_vSprites) l_pSp->addItem(f_Q(l_strS));
+            l_pSp->setEditText(f_Q(l_jF.value("sprite", std::string())));
+            l_pSp->lineEdit()->setPlaceholderText(QStringLiteral("npc_") + f_Q(l_strId));
+            connect(l_pSp->lineEdit(), &QLineEdit::editingFinished, this, [=] {
+                const std::string l_strS = l_pSp->currentText().trimmed().toStdString();
+                if (l_strS == l_jF.value("sprite", std::string())) return;
+                l_fnF([l_strS](Json& l_jN) { if (l_strS.empty()) l_jN.erase("sprite"); else l_jN["sprite"] = l_strS; });
             });
-            h->addWidget(sp, 1);
-            gv->addLayout(h);
+            l_pH->addWidget(l_pSp, 1);
+            l_pGv->addLayout(l_pH);
         }
         {
-            auto* h = lrow(tr("Placed on"));
-            auto it = m_p.npcPlaces.find(id);
-            QStringList fl;
-            if (it != m_p.npcPlaces.end()) for (const std::string& x : it->second) fl << q(x);
-            h->addWidget(fl.isEmpty() ? rich(QStringLiteral("<span style='color:#ff9f43'>⚠ %1</span>").arg(tr("not placed on any floor (place it in the stage editor)"))) : rich(fl.join(QStringLiteral(", "))), 1);
-            gv->addLayout(h);
+            auto* l_pH = f_Lrow(tr("Placed on"));
+            auto l_itIt = m_oP.m_mapNpcPlaces.find(l_strId);
+            QStringList l_oFl;
+            if (l_itIt != m_oP.m_mapNpcPlaces.end()) for (const std::string& l_strX : l_itIt->second) l_oFl << f_Q(l_strX);
+            l_pH->addWidget(l_oFl.isEmpty() ? f_Rich(QStringLiteral("<span style='color:#ff9f43'>⚠ %1</span>").arg(tr("not placed on any floor (place it in the stage editor)"))) : f_Rich(l_oFl.join(QStringLiteral(", "))), 1);
+            l_pGv->addLayout(l_pH);
         }
         {
-            auto* h = lrow(tr("Topic menu"));
-            auto* m = new QComboBox;
-            m->addItem(tr("auto: only when more than one topic"), QStringLiteral("auto"));
-            m->addItem(tr("always"), QStringLiteral("always"));
-            m->setCurrentIndex(f.contains("topics") && f["topics"].value("menu", std::string()) == "always" ? 1 : 0);
-            connect(m, &QComboBox::activated, this, [=](int) {
-                const std::string s = m->currentData().toString().toStdString();
-                F([s](Json& n) { if (!n.contains("topics") || !n["topics"].is_object()) n["topics"] = Json::object(); n["topics"]["menu"] = s; });
+            auto* l_pH = f_Lrow(tr("Topic menu"));
+            auto* l_pM = new QComboBox;
+            l_pM->addItem(tr("auto: only when more than one topic"), QStringLiteral("auto"));
+            l_pM->addItem(tr("always"), QStringLiteral("always"));
+            l_pM->setCurrentIndex(l_jF.contains("topics") && l_jF["topics"].value("menu", std::string()) == "always" ? 1 : 0);
+            connect(l_pM, &QComboBox::activated, this, [=](int) {
+                const std::string l_strS = l_pM->currentData().toString().toStdString();
+                l_fnF([l_strS](Json& l_jN) { if (!l_jN.contains("topics") || !l_jN["topics"].is_object()) l_jN["topics"] = Json::object(); l_jN["topics"]["menu"] = l_strS; });
             });
-            h->addWidget(m);
-            h->addStretch(1);
-            gv->addLayout(h);
+            l_pH->addWidget(l_pM);
+            l_pH->addStretch(1);
+            l_pGv->addLayout(l_pH);
         }
-        v->addWidget(g);
+        l_pV->addWidget(l_pG);
     }
     // chat lines
     {
-        auto* g = new QGroupBox(tr("Chat lines (when no topic is offered)"));
-        auto* gv = new QVBoxLayout(g);
-        auto* h = lrow(tr("Order"));
-        auto* order = new QComboBox;
-        order->addItem(tr("loop: in order, then back to the first"), QStringLiteral("loop"));
-        order->addItem(tr("stay: in order, then repeat the last"), QStringLiteral("stay"));
-        order->addItem(tr("random (never twice in a row)"), QStringLiteral("random"));
-        order->setCurrentIndex(std::max(0, order->findData(q(f.contains("chat") ? f["chat"].value("order", std::string("loop")) : std::string("loop")))));
-        connect(order, &QComboBox::activated, this, [=](int) {
-            const std::string o = order->currentData().toString().toStdString();
-            F([o, linesOf](Json& n) { linesOf(n); n["chat"]["order"] = o; });
+        auto* l_pG = new QGroupBox(tr("Chat lines (when no topic is offered)"));
+        auto* l_pGv = new QVBoxLayout(l_pG);
+        auto* l_pH = f_Lrow(tr("Order"));
+        auto* l_pOrder = new QComboBox;
+        l_pOrder->addItem(tr("loop: in order, then back to the first"), QStringLiteral("loop"));
+        l_pOrder->addItem(tr("stay: in order, then repeat the last"), QStringLiteral("stay"));
+        l_pOrder->addItem(tr("random (never twice in a row)"), QStringLiteral("random"));
+        l_pOrder->setCurrentIndex(std::max(0, l_pOrder->findData(f_Q(l_jF.contains("chat") ? l_jF["chat"].value("order", std::string("loop")) : std::string("loop")))));
+        connect(l_pOrder, &QComboBox::activated, this, [=](int) {
+            const std::string l_strO = l_pOrder->currentData().toString().toStdString();
+            l_fnF([l_strO, l_fnLinesOf](Json& l_jN) { l_fnLinesOf(l_jN); l_jN["chat"]["order"] = l_strO; });
         });
-        h->addWidget(order);
-        h->addStretch(1);
-        gv->addLayout(h);
-        const Json lines = f.contains("chat") && f["chat"].contains("lines") && f["chat"]["lines"].is_array() ? f["chat"]["lines"] : Json::array();
-        for (size_t i = 0; i < lines.size(); i++) {
-            const Json line = lines[i].is_string() ? Json{{"dialogue", lines[i]}} : lines[i];
-            auto* card = new QWidget;
-            card->setStyleSheet(QStringLiteral("QWidget#card { border-top:1px solid #3a3f47; }"));
-            card->setObjectName(QStringLiteral("card"));
-            auto* cv = new QVBoxLayout(card);
-            auto* r = lrow(QString::number(i + 1));
-            auto* d = new QComboBox;
-            std::vector<std::string> ds = m_p.dialogueList();
-            const std::string cur = lineDialogue(line);
-            if (!cur.empty() && std::find(ds.begin(), ds.end(), cur) == ds.end()) ds.push_back(cur);
-            for (const std::string& x : ds) d->addItem(q(x));
-            d->setCurrentText(q(cur));
-            connect(d, &QComboBox::activated, this, [=](int) { const std::string s = d->currentText().toStdString(); F([i, s, linesOf](Json& n) { linesOf(n)[i]["dialogue"] = s; }); });
-            auto* open = new QToolButton;
-            open->setText(tr("open ↗"));
-            connect(open, &QToolButton::clicked, this, [this, cur] { m_dlgSel = cur; setTab(QStringLiteral("dlg")); });
-            auto mk = [&](const QString& t, int dir) {
-                auto* b = new QToolButton;
-                b->setText(t);
-                connect(b, &QToolButton::clicked, this, [=] {
-                    F([i, dir, linesOf](Json& n) {
-                        Json& l = linesOf(n);
-                        if (dir == 0) { l.erase(i); return; }
-                        const long j = (long)i + dir;
-                        if (j < 0 || j >= (long)l.size()) return;
-                        std::swap(l[i], l[(size_t)j]);
+        l_pH->addWidget(l_pOrder);
+        l_pH->addStretch(1);
+        l_pGv->addLayout(l_pH);
+        const Json l_jLines = l_jF.contains("chat") && l_jF["chat"].contains("lines") && l_jF["chat"]["lines"].is_array() ? l_jF["chat"]["lines"] : Json::array();
+        for (size_t l_nI = 0; l_nI < l_jLines.size(); l_nI++) {
+            const Json l_jLine = l_jLines[l_nI].is_string() ? Json{{"dialogue", l_jLines[l_nI]}} : l_jLines[l_nI];
+            auto* l_pCard = new QWidget;
+            l_pCard->setStyleSheet(QStringLiteral("QWidget#card { border-top:1px solid #3a3f47; }"));
+            l_pCard->setObjectName(QStringLiteral("card"));
+            auto* l_pCv = new QVBoxLayout(l_pCard);
+            auto* l_pR = f_Lrow(QString::number(l_nI + 1));
+            auto* l_pD = new QComboBox;
+            std::vector<std::string> l_vDs = m_oP.f_DialogueList();
+            const std::string l_strCur = f_LineDialogue(l_jLine);
+            if (!l_strCur.empty() && std::find(l_vDs.begin(), l_vDs.end(), l_strCur) == l_vDs.end()) l_vDs.push_back(l_strCur);
+            for (const std::string& l_strX : l_vDs) l_pD->addItem(f_Q(l_strX));
+            l_pD->setCurrentText(f_Q(l_strCur));
+            connect(l_pD, &QComboBox::activated, this, [=](int) { const std::string l_strS = l_pD->currentText().toStdString(); l_fnF([l_nI, l_strS, l_fnLinesOf](Json& l_jN) { l_fnLinesOf(l_jN)[l_nI]["dialogue"] = l_strS; }); });
+            auto* l_pOpen = new QToolButton;
+            l_pOpen->setText(tr("open ↗"));
+            connect(l_pOpen, &QToolButton::clicked, this, [this, l_strCur] { m_strDlgSel = l_strCur; f_SetTab(QStringLiteral("dlg")); });
+            auto l_fnMk = [&](const QString& l_oT, int l_iDir) {
+                auto* l_pB = new QToolButton;
+                l_pB->setText(l_oT);
+                connect(l_pB, &QToolButton::clicked, this, [=] {
+                    l_fnF([l_nI, l_iDir, l_fnLinesOf](Json& l_jN) {
+                        Json& l_jL = l_fnLinesOf(l_jN);
+                        if (l_iDir == 0) { l_jL.erase(l_nI); return; }
+                        const long l_iJ = (long)l_nI + l_iDir;
+                        if (l_iJ < 0 || l_iJ >= (long)l_jL.size()) return;
+                        std::swap(l_jL[l_nI], l_jL[(size_t)l_iJ]);
                     });
                 });
-                return b;
+                return l_pB;
             };
-            r->addWidget(d, 1);
-            r->addWidget(open);
-            r->addWidget(mk(QStringLiteral("▲"), -1));
-            r->addWidget(mk(QStringLiteral("▼"), 1));
-            r->addWidget(mk(QStringLiteral("✕"), 0));
-            cv->addLayout(r);
-            auto* wr = lrow(tr("Only when"));
-            wr->addWidget(condBox(QStringLiteral("line%1").arg(i), [this, id, i] {
-                const Json& cs = m_p.S;
-                const Json& n = cs["npcs"][id];
-                const Json l = n.contains("chat") && n["chat"].contains("lines") ? n["chat"]["lines"] : Json::array();
-                return i < l.size() && l[i].is_object() ? l[i].value("requires", Json()) : Json();
-            }, [this, id, i, linesOf](const Json& c) {
-                Json& l = linesOf(m_p.S["npcs"][id]);
-                if (i >= l.size()) return;
-                if (c.is_null()) l[i].erase("requires"); else l[i]["requires"] = c;
-            }, hNpc), 1);
-            cv->addLayout(wr);
-            cv->addWidget(muted(tr("When it plays (repeats every time: no rewards)")));
-            cv->addWidget(actsBox(QStringLiteral("line%1").arg(i), [line] { return line.value("actions", Json::array()); }, [this, id, i, linesOf]() -> Json* {
-                Json& l = linesOf(m_p.S["npcs"][id]);
-                if (i >= l.size()) return nullptr;
-                if (!l[i].contains("actions") || !l[i]["actions"].is_array()) l[i]["actions"] = Json::array();
-                return &l[i]["actions"];
-            }, hNpc));
-            bool miss = false;
-            const std::string first = m_pv.firstText(m_p, cur, lang().toStdString(), &miss);
-            cv->addWidget(muted(QStringLiteral("“%1”").arg(miss ? tr("(dialogue/%1.json is missing)").arg(q(cur)) : q(first).left(80))));
-            gv->addWidget(card);
+            l_pR->addWidget(l_pD, 1);
+            l_pR->addWidget(l_pOpen);
+            l_pR->addWidget(l_fnMk(QStringLiteral("▲"), -1));
+            l_pR->addWidget(l_fnMk(QStringLiteral("▼"), 1));
+            l_pR->addWidget(l_fnMk(QStringLiteral("✕"), 0));
+            l_pCv->addLayout(l_pR);
+            auto* l_pWr = f_Lrow(tr("Only when"));
+            l_pWr->addWidget(f_CondBox(QStringLiteral("line%1").arg(l_nI), [this, l_strId, l_nI] {
+                const Json& l_jCs = m_oP.m_jS;
+                const Json& l_jN = l_jCs["npcs"][l_strId];
+                const Json l_jL = l_jN.contains("chat") && l_jN["chat"].contains("lines") ? l_jN["chat"]["lines"] : Json::array();
+                return l_nI < l_jL.size() && l_jL[l_nI].is_object() ? l_jL[l_nI].value("requires", Json()) : Json();
+            }, [this, l_strId, l_nI, l_fnLinesOf](const Json& l_jC) {
+                Json& l_jL = l_fnLinesOf(m_oP.m_jS["npcs"][l_strId]);
+                if (l_nI >= l_jL.size()) return;
+                if (l_jC.is_null()) l_jL[l_nI].erase("requires"); else l_jL[l_nI]["requires"] = l_jC;
+            }, l_oHNpc), 1);
+            l_pCv->addLayout(l_pWr);
+            l_pCv->addWidget(f_Muted(tr("When it plays (repeats every time: no rewards)")));
+            l_pCv->addWidget(f_ActsBox(QStringLiteral("line%1").arg(l_nI), [l_jLine] { return l_jLine.value("actions", Json::array()); }, [this, l_strId, l_nI, l_fnLinesOf]() -> Json* {
+                Json& l_jL = l_fnLinesOf(m_oP.m_jS["npcs"][l_strId]);
+                if (l_nI >= l_jL.size()) return nullptr;
+                if (!l_jL[l_nI].contains("actions") || !l_jL[l_nI]["actions"].is_array()) l_jL[l_nI]["actions"] = Json::array();
+                return &l_jL[l_nI]["actions"];
+            }, l_oHNpc));
+            bool l_bMiss = false;
+            const std::string l_strFirst = m_oPv.f_FirstText(m_oP, l_strCur, f_Lang().toStdString(), &l_bMiss);
+            l_pCv->addWidget(f_Muted(QStringLiteral("“%1”").arg(l_bMiss ? tr("(dialogue/%1.json is missing)").arg(f_Q(l_strCur)) : f_Q(l_strFirst).left(80))));
+            l_pGv->addWidget(l_pCard);
         }
-        auto* add = new QPushButton(tr("+ Chat line"));
-        connect(add, &QPushButton::clicked, this, [=] {
-            const std::string d = m_p.dialogueList().empty() ? id : m_p.dialogueList()[0];
-            F([d, linesOf](Json& n) { linesOf(n).push_back(Json{{"dialogue", d}}); });
+        auto* l_pAdd = new QPushButton(tr("+ Chat line"));
+        connect(l_pAdd, &QPushButton::clicked, this, [=] {
+            const std::string l_strD = m_oP.f_DialogueList().empty() ? l_strId : m_oP.f_DialogueList()[0];
+            l_fnF([l_strD, l_fnLinesOf](Json& l_jN) { l_fnLinesOf(l_jN).push_back(Json{{"dialogue", l_strD}}); });
         });
-        gv->addWidget(add, 0, Qt::AlignLeft);
-        v->addWidget(g);
+        l_pGv->addWidget(l_pAdd, 0, Qt::AlignLeft);
+        l_pV->addWidget(l_pG);
     }
     // topics in menu order
     {
-        std::vector<Json*> topics = m_p.topicsOf(id);
-        auto* g = new QGroupBox(tr("Topics (%1) in menu order").arg(topics.size()));
-        auto* gv = new QVBoxLayout(g);
-        if (topics.empty()) gv->addWidget(muted(tr("No talk events yet: set an event's \"Fires when\" to \"the player talks to\" this NPC.")));
+        std::vector<Json*> l_vTopics = m_oP.f_TopicsOf(l_strId);
+        auto* l_pG = new QGroupBox(tr("Topics (%1) in menu order").arg(l_vTopics.size()));
+        auto* l_pGv = new QVBoxLayout(l_pG);
+        if (l_vTopics.empty()) l_pGv->addWidget(f_Muted(tr("No talk events yet: set an event's \"Fires when\" to \"the player talks to\" this NPC.")));
         else {
-            auto* t = new QTableWidget((int)topics.size(), 7);
-            t->setHorizontalHeaderLabels({QStringLiteral("#"), tr("Event"), tr("Talked to on"), tr("Active only when"), tr("After finishing"), tr("Repeat"), QString()});
-            t->verticalHeader()->hide();
-            t->setEditTriggers(QAbstractItemView::NoEditTriggers);
-            std::vector<std::string> tids;
-            for (Json* e : topics) tids.push_back((*e)["id"].get<std::string>());
-            for (size_t i = 0; i < topics.size(); i++) {
-                const Json& e = *topics[i];
-                const std::string eid = e["id"].get<std::string>();
-                t->setItem((int)i, 0, new QTableWidgetItem(QString::number(i + 1)));
-                auto* c = chip(q(eid));
-                c->setToolTip(L(m_p.text(e["title"].get<std::string>())));
-                connect(c, &QToolButton::clicked, this, [this, eid] { select(eid); });
-                t->setCellWidget((int)i, 1, c);
-                bool cond = false;
-                const std::string tf = m_p.talkFloorOf(e, &cond);
-                t->setItem((int)i, 2, new QTableWidgetItem(cond ? QStringLiteral("?") : tf.empty() ? tr("every floor") : q(tf)));
-                QStringList req;
-                if (!e["reqRaw"].is_null()) req << q(e["reqRaw"].dump());
-                for (const Json& l : e["req"]) req << q(l.dump());
-                t->setItem((int)i, 3, new QTableWidgetItem((req.isEmpty() ? QStringLiteral("—") : req.join(QStringLiteral(" & "))) + (m_p.woken(eid) ? QStringLiteral(" · ") + tr("waits to be woken") : QString())));
-                t->setItem((int)i, 4, new QTableWidgetItem(e["afterDialogue"].get<std::string>().empty() ? tr("(hide the topic)") : q(e["afterDialogue"].get<std::string>())));
-                t->setItem((int)i, 5, new QTableWidgetItem(e["once"] == false ? (e["maxTimes"].get<int>() ? QStringLiteral("× %1").arg(e["maxTimes"].get<int>()) : QStringLiteral("∞")) : QStringLiteral("—")));
-                auto* mv = new QWidget;
-                auto* mh = new QHBoxLayout(mv);
-                mh->setContentsMargins(0, 0, 0, 0);
-                for (int d : {-1, 1}) {   // ▲ / ▼ renumber every topic of this NPC 1..n (topicOrder)
-                    auto* b = new QToolButton;
-                    b->setText(d < 0 ? QStringLiteral("▲") : QStringLiteral("▼"));
-                    b->setEnabled(d < 0 ? i > 0 : i + 1 < topics.size());
-                    connect(b, &QToolButton::clicked, this, [this, id, i, d] {
-                        edit(tr("Topic order of %1").arg(q(id)), [this, id, i, d] {
-                            std::vector<Json*> tp = m_p.topicsOf(id);
-                            std::swap(tp[i], tp[(size_t)((long)i + d)]);
-                            for (size_t k = 0; k < tp.size(); k++) (*tp[k])["topicOrder"] = (int)k + 1;
+            auto* l_pT = new QTableWidget((int)l_vTopics.size(), 7);
+            l_pT->setHorizontalHeaderLabels({QStringLiteral("#"), tr("Event"), tr("Talked to on"), tr("Active only when"), tr("After finishing"), tr("Repeat"), QString()});
+            l_pT->verticalHeader()->hide();
+            l_pT->setEditTriggers(QAbstractItemView::NoEditTriggers);
+            std::vector<std::string> l_vTids;
+            for (Json* l_pE : l_vTopics) l_vTids.push_back((*l_pE)["id"].get<std::string>());
+            for (size_t l_nI = 0; l_nI < l_vTopics.size(); l_nI++) {
+                const Json& l_jE = *l_vTopics[l_nI];
+                const std::string l_strEid = l_jE["id"].get<std::string>();
+                l_pT->setItem((int)l_nI, 0, new QTableWidgetItem(QString::number(l_nI + 1)));
+                auto* l_pC = f_Chip(f_Q(l_strEid));
+                l_pC->setToolTip(f_L(m_oP.f_Text(l_jE["title"].get<std::string>())));
+                connect(l_pC, &QToolButton::clicked, this, [this, l_strEid] { f_Select(l_strEid); });
+                l_pT->setCellWidget((int)l_nI, 1, l_pC);
+                bool l_bCond = false;
+                const std::string l_strTf = m_oP.f_TalkFloorOf(l_jE, &l_bCond);
+                l_pT->setItem((int)l_nI, 2, new QTableWidgetItem(l_bCond ? QStringLiteral("?") : l_strTf.empty() ? tr("every floor") : f_Q(l_strTf)));
+                QStringList l_oReq;
+                if (!l_jE["reqRaw"].is_null()) l_oReq << f_Q(l_jE["reqRaw"].dump());
+                for (const Json& l_jL : l_jE["req"]) l_oReq << f_Q(l_jL.dump());
+                l_pT->setItem((int)l_nI, 3, new QTableWidgetItem((l_oReq.isEmpty() ? QStringLiteral("—") : l_oReq.join(QStringLiteral(" & "))) + (m_oP.f_Woken(l_strEid) ? QStringLiteral(" · ") + tr("waits to be woken") : QString())));
+                l_pT->setItem((int)l_nI, 4, new QTableWidgetItem(l_jE["afterDialogue"].get<std::string>().empty() ? tr("(hide the topic)") : f_Q(l_jE["afterDialogue"].get<std::string>())));
+                l_pT->setItem((int)l_nI, 5, new QTableWidgetItem(l_jE["once"] == false ? (l_jE["maxTimes"].get<int>() ? QStringLiteral("× %1").arg(l_jE["maxTimes"].get<int>()) : QStringLiteral("∞")) : QStringLiteral("—")));
+                auto* l_pMv = new QWidget;
+                auto* l_pMh = new QHBoxLayout(l_pMv);
+                l_pMh->setContentsMargins(0, 0, 0, 0);
+                for (int l_iD : {-1, 1}) {   // ▲ / ▼ renumber every topic of this NPC 1..n (topicOrder)
+                    auto* l_pB = new QToolButton;
+                    l_pB->setText(l_iD < 0 ? QStringLiteral("▲") : QStringLiteral("▼"));
+                    l_pB->setEnabled(l_iD < 0 ? l_nI > 0 : l_nI + 1 < l_vTopics.size());
+                    connect(l_pB, &QToolButton::clicked, this, [this, l_strId, l_nI, l_iD] {
+                        f_Edit(tr("Topic order of %1").arg(f_Q(l_strId)), [this, l_strId, l_nI, l_iD] {
+                            std::vector<Json*> l_vTp = m_oP.f_TopicsOf(l_strId);
+                            std::swap(l_vTp[l_nI], l_vTp[(size_t)((long)l_nI + l_iD)]);
+                            for (size_t l_nK = 0; l_nK < l_vTp.size(); l_nK++) (*l_vTp[l_nK])["topicOrder"] = (int)l_nK + 1;
                         });
                     });
-                    mh->addWidget(b);
+                    l_pMh->addWidget(l_pB);
                 }
-                t->setCellWidget((int)i, 6, mv);
+                l_pT->setCellWidget((int)l_nI, 6, l_pMv);
             }
-            t->resizeColumnsToContents();
-            t->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Stretch);
-            t->setMinimumHeight(std::min(320, 34 + 30 * (int)topics.size()));
-            gv->addWidget(t);
+            l_pT->resizeColumnsToContents();
+            l_pT->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Stretch);
+            l_pT->setMinimumHeight(std::min(320, 34 + 30 * (int)l_vTopics.size()));
+            l_pGv->addWidget(l_pT);
         }
-        v->addWidget(g);
+        l_pV->addWidget(l_pG);
     }
-    v->addWidget(previewBox(id));
-    v->addStretch(1);
-    return w;
+    l_pV->addWidget(f_PreviewBox(l_strId));
+    l_pV->addStretch(1);
+    return l_pW;
 }
 
 // ---- the talk preview ----------------------------------------------------------------------------------------------
 
-QWidget* EventEditor::previewBox(const std::string& npc) {
-    if (m_pv.npc != npc) m_pv.reset(m_p, npc);
-    auto* g = new QGroupBox(tr("Talk preview"));
-    auto* v = new QVBoxLayout(g);
-    v->addWidget(muted(tr("A pretend run with the game's rules: tick finished events, set values, press Talk.")));
-    std::vector<Json*> topics = m_p.topicsOf(npc);
-    auto name = [this](const std::string& id) { const Json* e = m_p.ev(id); const QString t = e ? L(m_p.text((*e)["title"].get<std::string>())) : QString(); return t.isEmpty() ? q(id) : t; };
+QWidget* EventEditor::f_PreviewBox(const std::string& l_strNpc) {
+    if (m_oPv.m_strNpc != l_strNpc) m_oPv.f_Reset(m_oP, l_strNpc);
+    auto* l_pG = new QGroupBox(tr("Talk preview"));
+    auto* l_pV = new QVBoxLayout(l_pG);
+    l_pV->addWidget(f_Muted(tr("A pretend run with the game's rules: tick finished events, set values, press Talk.")));
+    std::vector<Json*> l_vTopics = m_oP.f_TopicsOf(l_strNpc);
+    auto l_fnName = [this](const std::string& l_strId) { const Json* l_pE = m_oP.f_Ev(l_strId); const QString l_oT = l_pE ? f_L(m_oP.f_Text((*l_pE)["title"].get<std::string>())) : QString(); return l_oT.isEmpty() ? f_Q(l_strId) : l_oT; };
     // events the topics wait for, and the topics themselves
-    std::vector<std::string> refs;
-    for (Json* e : topics) {
-        for (const Json& l : (*e)["req"]) {
-            const std::string f = l.value("flag", std::string());
-            if (l.value("type", std::string()) == "runFlagSet" && f.rfind("event_", 0) == 0 && std::find(refs.begin(), refs.end(), f.substr(6)) == refs.end()) refs.push_back(f.substr(6));
+    std::vector<std::string> l_vRefs;
+    for (Json* l_pE : l_vTopics) {
+        for (const Json& l_jL : (*l_pE)["req"]) {
+            const std::string l_strF = l_jL.value("flag", std::string());
+            if (l_jL.value("type", std::string()) == "runFlagSet" && l_strF.rfind("event_", 0) == 0 && std::find(l_vRefs.begin(), l_vRefs.end(), l_strF.substr(6)) == l_vRefs.end()) l_vRefs.push_back(l_strF.substr(6));
         }
-        const std::string id = (*e)["id"].get<std::string>();
-        if (std::find(refs.begin(), refs.end(), id) == refs.end()) refs.push_back(id);
+        const std::string l_strId = (*l_pE)["id"].get<std::string>();
+        if (std::find(l_vRefs.begin(), l_vRefs.end(), l_strId) == l_vRefs.end()) l_vRefs.push_back(l_strId);
     }
     {
-        auto* h = lrow(tr("Finished events"));
-        auto* chips = new QWidget;
-        auto* flow = new FlowLayout(chips, 4);
-        for (const std::string& id : refs) {
-            auto* c = new QCheckBox(q(id));
-            c->setChecked(m_pv.finished.count(id) > 0);
-            connect(c, &QCheckBox::toggled, this, [this, id](bool on) { m_pv.tick(m_p, id, on); scheduleRender(); });
-            flow->addWidget(c);
+        auto* l_pH = f_Lrow(tr("Finished events"));
+        auto* l_pChips = new QWidget;
+        auto* l_pFlow = new FlowLayout(l_pChips, 4);
+        for (const std::string& l_strId : l_vRefs) {
+            auto* l_pC = new QCheckBox(f_Q(l_strId));
+            l_pC->setChecked(m_oPv.m_setFinished.count(l_strId) > 0);
+            connect(l_pC, &QCheckBox::toggled, this, [this, l_strId](bool l_bOn) { m_oPv.f_Tick(m_oP, l_strId, l_bOn); f_ScheduleRender(); });
+            l_pFlow->addWidget(l_pC);
         }
-        h->addWidget(chips, 1);
-        v->addLayout(h);
+        l_pH->addWidget(l_pChips, 1);
+        l_pV->addLayout(l_pH);
     }
     // the values its topics and chat lines read
     {
-        const std::string npcJson = m_p.S["npcs"].contains(npc) ? m_p.S["npcs"][npc].dump() : std::string();
-        auto used = [&](const std::string& name2) {
-            const std::string needle = "\"" + name2 + "\"";
-            if (npcJson.find(needle) != std::string::npos) return true;
-            for (Json* e : topics) if (m_p.reqJson(*e).dump().find(needle) != std::string::npos) return true;
+        const std::string l_strNpcJson = m_oP.m_jS["npcs"].contains(l_strNpc) ? m_oP.m_jS["npcs"][l_strNpc].dump() : std::string();
+        auto l_fnUsed = [&](const std::string& l_strName2) {
+            const std::string l_strNeedle = "\"" + l_strName2 + "\"";
+            if (l_strNpcJson.find(l_strNeedle) != std::string::npos) return true;
+            for (Json* l_pE : l_vTopics) if (m_oP.f_ReqJson(*l_pE).dump().find(l_strNeedle) != std::string::npos) return true;
             return false;
         };
-        auto* h = lrow(tr("Values"));
-        int n = 0;
-        for (auto& [vname, r] : m_p.S["vars"].items()) {
-            (void)r;
-            if (!used(vname)) continue;
-            h->addWidget(muted(q(vname)));
-            auto* s = new QSpinBox;
-            s->setRange(-99999, 99999);
-            s->setValue((int)m_pv.vars[vname]);
-            const std::string vn = vname;
-            connect(s, &QSpinBox::valueChanged, this, [this, vn](int x) { m_pv.vars[vn] = x; });
-            h->addWidget(s);
-            n++;
+        auto* l_pH = f_Lrow(tr("Values"));
+        int l_iN = 0;
+        for (auto& [l_strVname, l_jR] : m_oP.m_jS["vars"].items()) {
+            (void)l_jR;
+            if (!l_fnUsed(l_strVname)) continue;
+            l_pH->addWidget(f_Muted(f_Q(l_strVname)));
+            auto* l_pS = new QSpinBox;
+            l_pS->setRange(-99999, 99999);
+            l_pS->setValue((int)m_oPv.m_mapVars[l_strVname]);
+            const std::string l_strVn = l_strVname;
+            connect(l_pS, &QSpinBox::valueChanged, this, [this, l_strVn](int l_iX) { m_oPv.m_mapVars[l_strVn] = l_iX; });
+            l_pH->addWidget(l_pS);
+            l_iN++;
         }
-        for (auto& [cname, r] : m_p.S["counters"].items()) {
-            (void)r;
-            bool hit = false;
-            for (Json* e : topics) if (m_p.reqJson(*e).dump().find("\"" + cname + "\"") != std::string::npos) hit = true;
-            if (!hit) continue;
-            h->addWidget(muted(q(cname)));
-            auto* s = new QSpinBox;
-            s->setRange(-99999, 99999);
-            s->setValue((int)m_pv.counters[cname]);
-            const std::string cn = cname;
-            connect(s, &QSpinBox::valueChanged, this, [this, cn](int x) { m_pv.counters[cn] = x; });
-            h->addWidget(s);
-            n++;
+        for (auto& [l_strCname, l_jR] : m_oP.m_jS["counters"].items()) {
+            (void)l_jR;
+            bool l_bHit = false;
+            for (Json* l_pE : l_vTopics) if (m_oP.f_ReqJson(*l_pE).dump().find("\"" + l_strCname + "\"") != std::string::npos) l_bHit = true;
+            if (!l_bHit) continue;
+            l_pH->addWidget(f_Muted(f_Q(l_strCname)));
+            auto* l_pS = new QSpinBox;
+            l_pS->setRange(-99999, 99999);
+            l_pS->setValue((int)m_oPv.m_mapCounters[l_strCname]);
+            const std::string l_strCn = l_strCname;
+            connect(l_pS, &QSpinBox::valueChanged, this, [this, l_strCn](int l_iX) { m_oPv.m_mapCounters[l_strCn] = l_iX; });
+            l_pH->addWidget(l_pS);
+            l_iN++;
         }
-        h->addStretch(1);
-        if (n) v->addLayout(h);
-        else delete h;
+        l_pH->addStretch(1);
+        if (l_iN) l_pV->addLayout(l_pH);
+        else delete l_pH;
     }
     {
-        auto* h = lrow(tr("Talk on floor"));
-        auto* fc = new QComboBox;
-        auto it = m_p.npcPlaces.find(npc);
-        std::vector<std::string> fl = it != m_p.npcPlaces.end() ? it->second : std::vector<std::string>();
-        if (!m_pv.stage.empty() && std::find(fl.begin(), fl.end(), m_pv.stage) == fl.end()) fl.push_back(m_pv.stage);
-        for (const std::string& f : fl) fc->addItem(q(f));
-        fc->setCurrentText(q(m_pv.stage));
-        connect(fc, &QComboBox::activated, this, [this, fc](int) { m_pv.stage = fc->currentText().toStdString(); scheduleRender(); });
-        h->addWidget(fc);
-        h->addStretch(1);
-        v->addLayout(h);
+        auto* l_pH = f_Lrow(tr("Talk on floor"));
+        auto* l_pFc = new QComboBox;
+        auto l_itIt = m_oP.m_mapNpcPlaces.find(l_strNpc);
+        std::vector<std::string> l_vFl = l_itIt != m_oP.m_mapNpcPlaces.end() ? l_itIt->second : std::vector<std::string>();
+        if (!m_oPv.m_strStage.empty() && std::find(l_vFl.begin(), l_vFl.end(), m_oPv.m_strStage) == l_vFl.end()) l_vFl.push_back(m_oPv.m_strStage);
+        for (const std::string& l_strF : l_vFl) l_pFc->addItem(f_Q(l_strF));
+        l_pFc->setCurrentText(f_Q(m_oPv.m_strStage));
+        connect(l_pFc, &QComboBox::activated, this, [this, l_pFc](int) { m_oPv.m_strStage = l_pFc->currentText().toStdString(); f_ScheduleRender(); });
+        l_pH->addWidget(l_pFc);
+        l_pH->addStretch(1);
+        l_pV->addLayout(l_pH);
     }
     {
-        auto* h = lrow(tr("Floors cleared"));
-        QStringList cl;
-        for (const std::string& c : m_pv.cleared) cl << q(c);
-        auto* e = new CommitLine(cl.join(QStringLiteral(", ")));
-        e->setPlaceholderText(QStringLiteral("F05, F10"));
-        e->onCommit = [this](const QString& s) {
-            m_pv.cleared.clear();
-            for (const QString& x : s.split(QRegularExpression(QStringLiteral("[\\s,]+")), Qt::SkipEmptyParts)) m_pv.cleared.insert(x.toStdString());
+        auto* l_pH = f_Lrow(tr("Floors cleared"));
+        QStringList l_oCl;
+        for (const std::string& l_strC : m_oPv.m_setCleared) l_oCl << f_Q(l_strC);
+        auto* l_pE = new CommitLine(l_oCl.join(QStringLiteral(", ")));
+        l_pE->setPlaceholderText(QStringLiteral("F05, F10"));
+        l_pE->m_fnOnCommit = [this](const QString& l_oS) {
+            m_oPv.m_setCleared.clear();
+            for (const QString& l_oX : l_oS.split(QRegularExpression(QStringLiteral("[\\s,]+")), Qt::SkipEmptyParts)) m_oPv.m_setCleared.insert(l_oX.toStdString());
         };
-        h->addWidget(e, 1);
-        v->addLayout(h);
+        l_pH->addWidget(l_pE, 1);
+        l_pV->addLayout(l_pH);
     }
     {
-        auto* h = new QHBoxLayout;
-        auto* talk = new QPushButton(tr("💬 Talk"));
-        talk->setDefault(true);
-        connect(talk, &QPushButton::clicked, this, [this, npc] { m_pv.talk(m_p, npc, lang().toStdString()); scheduleRender(); });
-        auto* reset = new QPushButton(tr("Reset"));
-        connect(reset, &QPushButton::clicked, this, [this, npc] { m_pv.reset(m_p, npc); scheduleRender(); });
-        h->addWidget(talk);
-        h->addWidget(reset);
-        const auto st = m_pv.talks.count(npc) ? m_pv.talks[npc] : stage::TalkPreview::TalkState();
-        h->addWidget(muted(tr("talks so far: %1 · chat index: %2").arg(st.count).arg(st.index)), 1);
-        v->addLayout(h);
+        auto* l_pH = new QHBoxLayout;
+        auto* l_pTalk = new QPushButton(tr("💬 Talk"));
+        l_pTalk->setDefault(true);
+        connect(l_pTalk, &QPushButton::clicked, this, [this, l_strNpc] { m_oPv.f_Talk(m_oP, l_strNpc, f_Lang().toStdString()); f_ScheduleRender(); });
+        auto* l_pReset = new QPushButton(tr("Reset"));
+        connect(l_pReset, &QPushButton::clicked, this, [this, l_strNpc] { m_oPv.f_Reset(m_oP, l_strNpc); f_ScheduleRender(); });
+        l_pH->addWidget(l_pTalk);
+        l_pH->addWidget(l_pReset);
+        const auto l_oSt = m_oPv.m_mapTalks.count(l_strNpc) ? m_oPv.m_mapTalks[l_strNpc] : stage::TalkPreview::TalkState();
+        l_pH->addWidget(f_Muted(tr("talks so far: %1 · chat index: %2").arg(l_oSt.m_iCount).arg(l_oSt.m_iIndex)), 1);
+        l_pV->addLayout(l_pH);
     }
-    for (size_t i = 0; i < m_pv.log.size(); i++) {
-        const auto& x = m_pv.log[i];
-        auto* rowW = new QWidget;
-        if (i) { auto* eff = new QGraphicsOpacityEffect(rowW); eff->setOpacity(0.55); rowW->setGraphicsEffect(eff); }
-        auto* h = new QHBoxLayout(rowW);
-        h->setContentsMargins(0, 0, 0, 0);
-        auto* l = new QLabel(tr("Talk %1").arg(x.n));
-        l->setMinimumWidth(130);
-        l->setStyleSheet(QStringLiteral("color:#8b929c"));
-        h->addWidget(l);
-        auto item = [&](const stage::TalkPreview::MenuItem& m) {
-            auto* box = new QWidget;
-            auto* bh = new QHBoxLayout(box);
-            bh->setContentsMargins(0, 0, 0, 0);
-            bh->setSpacing(2);
-            bh->addWidget(chip((m.finished ? QStringLiteral("✓ ") : QString()) + name(m.id)));
-            if (!m.finished && i == 0) {
-                auto* fin = new QToolButton;
-                fin->setText(tr("finish"));
-                fin->setToolTip(tr("Pretend the player finished it (its next events wake, its variables change)"));
-                const std::string mid = m.id;
-                connect(fin, &QToolButton::clicked, this, [this, mid] { m_pv.finish(m_p, mid); scheduleRender(); });
-                bh->addWidget(fin);
+    for (size_t l_nI = 0; l_nI < m_oPv.m_vLog.size(); l_nI++) {
+        const auto& l_oX = m_oPv.m_vLog[l_nI];
+        auto* l_pRowW = new QWidget;
+        if (l_nI) { auto* l_pEff = new QGraphicsOpacityEffect(l_pRowW); l_pEff->setOpacity(0.55); l_pRowW->setGraphicsEffect(l_pEff); }
+        auto* l_pH = new QHBoxLayout(l_pRowW);
+        l_pH->setContentsMargins(0, 0, 0, 0);
+        auto* l_pL = new QLabel(tr("Talk %1").arg(l_oX.m_iN));
+        l_pL->setMinimumWidth(130);
+        l_pL->setStyleSheet(QStringLiteral("color:#8b929c"));
+        l_pH->addWidget(l_pL);
+        auto l_fnItem = [&](const stage::TalkPreview::MenuItem& l_oM) {
+            auto* l_pBox = new QWidget;
+            auto* l_pBh = new QHBoxLayout(l_pBox);
+            l_pBh->setContentsMargins(0, 0, 0, 0);
+            l_pBh->setSpacing(2);
+            l_pBh->addWidget(f_Chip((l_oM.m_bFinished ? QStringLiteral("✓ ") : QString()) + l_fnName(l_oM.m_strId)));
+            if (!l_oM.m_bFinished && l_nI == 0) {
+                auto* l_pFin = new QToolButton;
+                l_pFin->setText(tr("finish"));
+                l_pFin->setToolTip(tr("Pretend the player finished it (its next events wake, its variables change)"));
+                const std::string l_strMid = l_oM.m_strId;
+                connect(l_pFin, &QToolButton::clicked, this, [this, l_strMid] { m_oPv.f_Finish(m_oP, l_strMid); f_ScheduleRender(); });
+                l_pBh->addWidget(l_pFin);
             }
-            return box;
+            return l_pBox;
         };
-        if (x.kind == "chat") {
-            QString t;
-            if (x.dialogue.empty()) t = tr("(nothing to say: no chat line is available)");
-            else if (x.text == "\x01missing") t = QStringLiteral("💬 %1: ").arg(q(x.dialogue)) + tr("(dialogue/%1.json is missing)").arg(q(x.dialogue));
-            else t = QStringLiteral("💬 %1: %2").arg(q(x.dialogue), q(x.text));
-            h->addWidget(rich(esc(t)), 1);
-        } else if (x.kind == "topic") {
-            h->addWidget(muted(tr("plays at once:")));
-            h->addWidget(item(x.menu[0]));
-            h->addStretch(1);
+        if (l_oX.m_strKind == "chat") {
+            QString l_oT;
+            if (l_oX.m_strDialogue.empty()) l_oT = tr("(nothing to say: no chat line is available)");
+            else if (l_oX.m_strText == "\x01missing") l_oT = QStringLiteral("💬 %1: ").arg(f_Q(l_oX.m_strDialogue)) + tr("(dialogue/%1.json is missing)").arg(f_Q(l_oX.m_strDialogue));
+            else l_oT = QStringLiteral("💬 %1: %2").arg(f_Q(l_oX.m_strDialogue), f_Q(l_oX.m_strText));
+            l_pH->addWidget(f_Rich(f_Esc(l_oT)), 1);
+        } else if (l_oX.m_strKind == "topic") {
+            l_pH->addWidget(f_Muted(tr("plays at once:")));
+            l_pH->addWidget(l_fnItem(l_oX.m_vMenu[0]));
+            l_pH->addStretch(1);
         } else {
-            h->addWidget(muted(tr("menu:")));
-            auto* chips = new QWidget;
-            auto* flow = new FlowLayout(chips, 4);
-            for (const auto& m : x.menu) flow->addWidget(item(m));
-            flow->addWidget(chip(tr("Just chat")));
-            flow->addWidget(chip(tr("Leave")));
-            h->addWidget(chips, 1);
+            l_pH->addWidget(f_Muted(tr("menu:")));
+            auto* l_pChips = new QWidget;
+            auto* l_pFlow = new FlowLayout(l_pChips, 4);
+            for (const auto& l_oM : l_oX.m_vMenu) l_pFlow->addWidget(l_fnItem(l_oM));
+            l_pFlow->addWidget(f_Chip(tr("Just chat")));
+            l_pFlow->addWidget(f_Chip(tr("Leave")));
+            l_pH->addWidget(l_pChips, 1);
         }
-        v->addWidget(rowW);
+        l_pV->addWidget(l_pRowW);
     }
-    return g;
+    return l_pG;
 }
 
 // ---- dialogues -----------------------------------------------------------------------------------------------------
 
-QWidget* EventEditor::dialoguesPane() {
-    auto* w = new QWidget;
-    auto* v = new QVBoxLayout(w);
-    const std::vector<std::string> ids = m_p.dialogueList();
-    if (m_dlgSel.empty() || !m_p.S["dialogues"].contains(m_dlgSel)) m_dlgSel = ids.empty() ? std::string() : ids[0];
+QWidget* EventEditor::f_DialoguesPane() {
+    auto* l_pW = new QWidget;
+    auto* l_pV = new QVBoxLayout(l_pW);
+    const std::vector<std::string> l_vIds = m_oP.f_DialogueList();
+    if (m_strDlgSel.empty() || !m_oP.m_jS["dialogues"].contains(m_strDlgSel)) m_strDlgSel = l_vIds.empty() ? std::string() : l_vIds[0];
     {
-        auto* h = lrow(tr("Dialogue"));
-        auto* pick = new QComboBox;
-        for (const std::string& i : ids) pick->addItem(q(i));
-        pick->setCurrentText(q(m_dlgSel));
-        connect(pick, &QComboBox::activated, this, [this, pick](int) { m_dlgSel = pick->currentText().toStdString(); scheduleRender(); });
-        auto* nw = new QLineEdit;
-        nw->setPlaceholderText(tr("new dialogue id"));
-        nw->setMaximumWidth(170);
-        auto* nb = new QPushButton(tr("+ Dialogue"));
-        connect(nb, &QPushButton::clicked, this, [=] {
-            const std::string n = nw->text().trimmed().toStdString();
-            if (!stage::idOk(n)) { toast(tr("Use letters, digits, _ and - only."), true); return; }
-            if (m_p.S["dialogues"].contains(n)) { toast(tr("%1 already exists.").arg(q(n)), true); return; }
-            edit(tr("New dialogue %1").arg(q(n)), [this, n] {
-                m_p.S["dialogues"][n] = Json{{"start", "root"}, {"nodes", Json{{"root", Json{{"text", Json{{"zh_TW", ""}, {"en", ""}}},
+        auto* l_pH = f_Lrow(tr("Dialogue"));
+        auto* l_pPick = new QComboBox;
+        for (const std::string& l_strI : l_vIds) l_pPick->addItem(f_Q(l_strI));
+        l_pPick->setCurrentText(f_Q(m_strDlgSel));
+        connect(l_pPick, &QComboBox::activated, this, [this, l_pPick](int) { m_strDlgSel = l_pPick->currentText().toStdString(); f_ScheduleRender(); });
+        auto* l_pNw = new QLineEdit;
+        l_pNw->setPlaceholderText(tr("new dialogue id"));
+        l_pNw->setMaximumWidth(170);
+        auto* l_pNb = new QPushButton(tr("+ Dialogue"));
+        connect(l_pNb, &QPushButton::clicked, this, [=] {
+            const std::string l_strN = l_pNw->text().trimmed().toStdString();
+            if (!stage::f_IdOk(l_strN)) { f_Toast(tr("Use letters, digits, _ and - only."), true); return; }
+            if (m_oP.m_jS["dialogues"].contains(l_strN)) { f_Toast(tr("%1 already exists.").arg(f_Q(l_strN)), true); return; }
+            f_Edit(tr("New dialogue %1").arg(f_Q(l_strN)), [this, l_strN] {
+                m_oP.m_jS["dialogues"][l_strN] = Json{{"start", "root"}, {"nodes", Json{{"root", Json{{"text", Json{{"zh_TW", ""}, {"en", ""}}},
                                                                                              {"choices", Json::array({Json{{"label", Json{{"zh_TW", "……"}, {"en", "..."}}}, {"next", nullptr}}})}}}}}};
             });
-            m_dlgSel = n;
+            m_strDlgSel = l_strN;
         });
-        h->addWidget(pick, 1);
-        h->addWidget(nw);
-        h->addWidget(nb);
-        v->addLayout(h);
+        l_pH->addWidget(l_pPick, 1);
+        l_pH->addWidget(l_pNw);
+        l_pH->addWidget(l_pNb);
+        l_pV->addLayout(l_pH);
     }
-    if (m_dlgSel.empty()) { v->addStretch(1); return w; }
-    const std::string id = m_dlgSel;
-    const Json d = m_p.S["dialogues"][id];
-    const Json nodes = d.value("nodes", Json::object());
-    std::vector<std::string> nids;
-    for (auto& [k, n] : nodes.items()) { (void)n; nids.push_back(k); }
-    const bool condStart = d.contains("start") && d["start"].is_array();
-    const QString hD = tr("Dialogue %1").arg(q(id));
-    auto E = [this, id, hD](const std::function<void(Json&)>& fn) { edit(hD, [this, id, fn] { fn(m_p.S["dialogues"][id]); }); };
-    auto nodeCombo = [&](const std::string& cur, bool close) {
-        auto* c = new QComboBox;
-        if (close) c->addItem(tr("(close the dialogue)"), QString());
-        std::vector<std::string> l = nids;
-        if (!cur.empty() && std::find(l.begin(), l.end(), cur) == l.end()) l.push_back(cur);
-        for (const std::string& n : l) c->addItem(q(n) + (nodes.contains(n) ? QString() : QStringLiteral(" ⛔")), q(n));
-        c->setCurrentIndex(std::max(0, c->findData(q(cur))));
-        return c;
+    if (m_strDlgSel.empty()) { l_pV->addStretch(1); return l_pW; }
+    const std::string l_strId = m_strDlgSel;
+    const Json l_jD = m_oP.m_jS["dialogues"][l_strId];
+    const Json l_jNodes = l_jD.value("nodes", Json::object());
+    std::vector<std::string> l_vNids;
+    for (auto& [l_strK, l_jN] : l_jNodes.items()) { (void)l_jN; l_vNids.push_back(l_strK); }
+    const bool l_bCondStart = l_jD.contains("start") && l_jD["start"].is_array();
+    const QString l_oHD = tr("Dialogue %1").arg(f_Q(l_strId));
+    auto l_fnE = [this, l_strId, l_oHD](const std::function<void(Json&)>& l_fnFn) { f_Edit(l_oHD, [this, l_strId, l_fnFn] { l_fnFn(m_oP.m_jS["dialogues"][l_strId]); }); };
+    auto l_fnNodeCombo = [&](const std::string& l_strCur, bool l_bClose) {
+        auto* l_pC = new QComboBox;
+        if (l_bClose) l_pC->addItem(tr("(close the dialogue)"), QString());
+        std::vector<std::string> l_vL = l_vNids;
+        if (!l_strCur.empty() && std::find(l_vL.begin(), l_vL.end(), l_strCur) == l_vL.end()) l_vL.push_back(l_strCur);
+        for (const std::string& l_strN : l_vL) l_pC->addItem(f_Q(l_strN) + (l_jNodes.contains(l_strN) ? QString() : QStringLiteral(" ⛔")), f_Q(l_strN));
+        l_pC->setCurrentIndex(std::max(0, l_pC->findData(f_Q(l_strCur))));
+        return l_pC;
     };
     // the file: used by, where it starts
     {
-        auto* g = new QGroupBox(q(id) + QStringLiteral(".json"));
-        auto* gv = new QVBoxLayout(g);
-        auto* h = lrow(tr("Used by"));
-        auto* chips = new QWidget;
-        auto* flow = new FlowLayout(chips, 4);
-        int n = 0;
-        for (const Json& e : m_p.S["events"]) {
-            const std::string eid = e["id"].get<std::string>();
-            for (const auto& [key, role] : {std::pair<const char*, QString>{"dialogue", tr("topic")}, {"afterDialogue", tr("after finishing")}})
-                if (e[key] == id) {
-                    auto* c = chip(q(eid) + QStringLiteral(" · ") + role);
-                    connect(c, &QToolButton::clicked, this, [this, eid] { select(eid); });
-                    flow->addWidget(c);
-                    n++;
+        auto* l_pG = new QGroupBox(f_Q(l_strId) + QStringLiteral(".json"));
+        auto* l_pGv = new QVBoxLayout(l_pG);
+        auto* l_pH = f_Lrow(tr("Used by"));
+        auto* l_pChips = new QWidget;
+        auto* l_pFlow = new FlowLayout(l_pChips, 4);
+        int l_iN = 0;
+        for (const Json& l_jE : m_oP.m_jS["events"]) {
+            const std::string l_strEid = l_jE["id"].get<std::string>();
+            for (const auto& [l_pszKey, l_oRole] : {std::pair<const char*, QString>{"dialogue", tr("topic")}, {"afterDialogue", tr("after finishing")}})
+                if (l_jE[l_pszKey] == l_strId) {
+                    auto* l_pC = f_Chip(f_Q(l_strEid) + QStringLiteral(" · ") + l_oRole);
+                    connect(l_pC, &QToolButton::clicked, this, [this, l_strEid] { f_Select(l_strEid); });
+                    l_pFlow->addWidget(l_pC);
+                    l_iN++;
                 }
         }
-        for (auto& [nid, npc] : m_p.S["npcs"].items())
-            if (npc.contains("chat") && npc["chat"].contains("lines"))
-                for (const Json& l : npc["chat"]["lines"]) if (lineDialogue(l) == id) { flow->addWidget(chip(q(nid) + QStringLiteral(" · ") + tr("chat line"))); n++; break; }
-        if (!n) flow->addWidget(muted(tr("not used yet")));
-        h->addWidget(chips, 1);
-        gv->addLayout(h);
-        auto* sh = lrow(tr("Starts at"));
-        if (condStart) sh->addWidget(muted(tr("the first row whose condition holds:")));
+        for (auto& [l_strNid, l_jNpc] : m_oP.m_jS["npcs"].items())
+            if (l_jNpc.contains("chat") && l_jNpc["chat"].contains("lines"))
+                for (const Json& l_jL : l_jNpc["chat"]["lines"]) if (f_LineDialogue(l_jL) == l_strId) { l_pFlow->addWidget(f_Chip(f_Q(l_strNid) + QStringLiteral(" · ") + tr("chat line"))); l_iN++; break; }
+        if (!l_iN) l_pFlow->addWidget(f_Muted(tr("not used yet")));
+        l_pH->addWidget(l_pChips, 1);
+        l_pGv->addLayout(l_pH);
+        auto* l_pSh = f_Lrow(tr("Starts at"));
+        if (l_bCondStart) l_pSh->addWidget(f_Muted(tr("the first row whose condition holds:")));
         else {
-            auto* sc = nodeCombo(d.value("start", std::string()), false);
-            connect(sc, &QComboBox::activated, this, [=](int) { const std::string s = sc->currentData().toString().toStdString(); E([s](Json& x) { x["start"] = s; }); });
-            sh->addWidget(sc);
+            auto* l_pSc = l_fnNodeCombo(l_jD.value("start", std::string()), false);
+            connect(l_pSc, &QComboBox::activated, this, [=](int) { const std::string l_strS = l_pSc->currentData().toString().toStdString(); l_fnE([l_strS](Json& l_jX) { l_jX["start"] = l_strS; }); });
+            l_pSh->addWidget(l_pSc);
         }
-        auto* cs = new QCheckBox(tr("by condition"));
-        cs->setChecked(condStart);
-        connect(cs, &QCheckBox::toggled, this, [=](bool on) {
-            E([on, nids](Json& x) {
-                if (on) x["start"] = Json::array({Json{{"node", x["start"].is_string() ? x["start"].get<std::string>() : nids.empty() ? std::string() : nids[0]}}});
-                else x["start"] = x["start"].is_array() && !x["start"].empty() ? x["start"].back().value("node", nids.empty() ? std::string() : nids[0]) : (nids.empty() ? std::string() : nids[0]);
+        auto* l_pCs = new QCheckBox(tr("by condition"));
+        l_pCs->setChecked(l_bCondStart);
+        connect(l_pCs, &QCheckBox::toggled, this, [=](bool l_bOn) {
+            l_fnE([l_bOn, l_vNids](Json& l_jX) {
+                if (l_bOn) l_jX["start"] = Json::array({Json{{"node", l_jX["start"].is_string() ? l_jX["start"].get<std::string>() : l_vNids.empty() ? std::string() : l_vNids[0]}}});
+                else l_jX["start"] = l_jX["start"].is_array() && !l_jX["start"].empty() ? l_jX["start"].back().value("node", l_vNids.empty() ? std::string() : l_vNids[0]) : (l_vNids.empty() ? std::string() : l_vNids[0]);
             });
         });
-        auto* foc = new QCheckBox(tr("finish the event however it closes"));
-        foc->setChecked(d.value("finishOnClose", false));
-        connect(foc, &QCheckBox::toggled, this, [=](bool on) { E([on](Json& x) { if (on) x["finishOnClose"] = true; else x.erase("finishOnClose"); }); });
-        sh->addWidget(cs);
-        sh->addWidget(foc);
-        sh->addStretch(1);
-        gv->addLayout(sh);
-        if (condStart) {
-            const Json starts = d["start"];
-            for (size_t i = 0; i < starts.size(); i++) {
-                auto* r = lrow(QString::number(i + 1));
-                auto* nc = nodeCombo(starts[i].value("node", std::string()), false);
-                connect(nc, &QComboBox::activated, this, [=](int) { const std::string s = nc->currentData().toString().toStdString(); E([i, s](Json& x) { x["start"][i]["node"] = s; }); });
-                auto* del = new QToolButton;
-                del->setText(QStringLiteral("✕"));
-                connect(del, &QToolButton::clicked, this, [=] { E([i, nids](Json& x) { x["start"].erase(i); if (x["start"].empty()) x["start"] = nids.empty() ? std::string() : nids[0]; }); });
-                r->addWidget(nc);
-                r->addWidget(condBox(QStringLiteral("st%1").arg(i), [this, id, i] {
-                    const Json& cs = m_p.S;
-                    const Json& st = cs["dialogues"][id]["start"];
-                    return st.is_array() && i < st.size() ? st[i].value("requires", Json()) : Json();
-                }, [this, id, i](const Json& c) {
-                    Json& st = m_p.S["dialogues"][id]["start"];
-                    if (!st.is_array() || i >= st.size()) return;
-                    if (c.is_null()) st[i].erase("requires"); else st[i]["requires"] = c;
-                }, hD, tr("Otherwise (no condition).")), 1);
-                r->addWidget(del);
-                gv->addLayout(r);
+        auto* l_pFoc = new QCheckBox(tr("finish the event however it closes"));
+        l_pFoc->setChecked(l_jD.value("finishOnClose", false));
+        connect(l_pFoc, &QCheckBox::toggled, this, [=](bool l_bOn) { l_fnE([l_bOn](Json& l_jX) { if (l_bOn) l_jX["finishOnClose"] = true; else l_jX.erase("finishOnClose"); }); });
+        l_pSh->addWidget(l_pCs);
+        l_pSh->addWidget(l_pFoc);
+        l_pSh->addStretch(1);
+        l_pGv->addLayout(l_pSh);
+        if (l_bCondStart) {
+            const Json l_jStarts = l_jD["start"];
+            for (size_t l_nI = 0; l_nI < l_jStarts.size(); l_nI++) {
+                auto* l_pR = f_Lrow(QString::number(l_nI + 1));
+                auto* l_pNc = l_fnNodeCombo(l_jStarts[l_nI].value("node", std::string()), false);
+                connect(l_pNc, &QComboBox::activated, this, [=](int) { const std::string l_strS = l_pNc->currentData().toString().toStdString(); l_fnE([l_nI, l_strS](Json& l_jX) { l_jX["start"][l_nI]["node"] = l_strS; }); });
+                auto* l_pDel = new QToolButton;
+                l_pDel->setText(QStringLiteral("✕"));
+                connect(l_pDel, &QToolButton::clicked, this, [=] { l_fnE([l_nI, l_vNids](Json& l_jX) { l_jX["start"].erase(l_nI); if (l_jX["start"].empty()) l_jX["start"] = l_vNids.empty() ? std::string() : l_vNids[0]; }); });
+                l_pR->addWidget(l_pNc);
+                l_pR->addWidget(f_CondBox(QStringLiteral("st%1").arg(l_nI), [this, l_strId, l_nI] {
+                    const Json& l_jCs = m_oP.m_jS;
+                    const Json& l_jSt = l_jCs["dialogues"][l_strId]["start"];
+                    return l_jSt.is_array() && l_nI < l_jSt.size() ? l_jSt[l_nI].value("requires", Json()) : Json();
+                }, [this, l_strId, l_nI](const Json& l_jC) {
+                    Json& l_jSt = m_oP.m_jS["dialogues"][l_strId]["start"];
+                    if (!l_jSt.is_array() || l_nI >= l_jSt.size()) return;
+                    if (l_jC.is_null()) l_jSt[l_nI].erase("requires"); else l_jSt[l_nI]["requires"] = l_jC;
+                }, l_oHD, tr("Otherwise (no condition).")), 1);
+                l_pR->addWidget(l_pDel);
+                l_pGv->addLayout(l_pR);
             }
-            auto* add = new QPushButton(tr("+ start row"));
-            connect(add, &QPushButton::clicked, this, [=] { E([nids](Json& x) { x["start"].push_back(Json{{"node", nids.empty() ? std::string() : nids[0]}}); }); });
-            gv->addWidget(add, 0, Qt::AlignLeft);
+            auto* l_pAdd = new QPushButton(tr("+ start row"));
+            connect(l_pAdd, &QPushButton::clicked, this, [=] { l_fnE([l_vNids](Json& l_jX) { l_jX["start"].push_back(Json{{"node", l_vNids.empty() ? std::string() : l_vNids[0]}}); }); });
+            l_pGv->addWidget(l_pAdd, 0, Qt::AlignLeft);
         }
-        v->addWidget(g);
+        l_pV->addWidget(l_pG);
     }
     // the nodes as cards
-    for (const std::string& nid : nids) {
-        const Json n = nodes[nid];
-        auto* g = new QGroupBox;
-        auto* gv = new QVBoxLayout(g);
-        auto* head = new QHBoxLayout;
-        head->addWidget(rich(QStringLiteral("<b>%1</b>").arg(esc(q(nid)))));
-        auto* ren = new CommitLine(q(nid));
-        ren->setMaximumWidth(140);
-        ren->setToolTip(tr("Rename the node"));
-        ren->onCommit = [=](const QString& s) {
-            const std::string nu = s.trimmed().toStdString();
-            if (nu == nid) return;
-            if (!stage::idOk(nu)) { toast(tr("Use letters, digits, _ and - only."), true); return; }
-            if (nodes.contains(nu)) { toast(tr("%1 already exists.").arg(q(nu)), true); return; }
-            E([nid, nu](Json& x) {
-                Json nn = Json::object();
-                for (auto& [k, vv] : x["nodes"].items()) nn[k == nid ? nu : k] = vv;
-                x["nodes"] = nn;
-                for (auto& [k, vv] : x["nodes"].items()) { (void)k; if (vv.contains("choices")) for (Json& c : vv["choices"]) if (c.value("next", Json()) == nid) c["next"] = nu; }
-                if (x["start"] == nid) x["start"] = nu;
-                if (x["start"].is_array()) for (Json& st : x["start"]) if (st.value("node", std::string()) == nid) st["node"] = nu;
+    for (const std::string& l_strNid : l_vNids) {
+        const Json l_jN = l_jNodes[l_strNid];
+        auto* l_pG = new QGroupBox;
+        auto* l_pGv = new QVBoxLayout(l_pG);
+        auto* l_pHead = new QHBoxLayout;
+        l_pHead->addWidget(f_Rich(QStringLiteral("<b>%1</b>").arg(f_Esc(f_Q(l_strNid)))));
+        auto* l_pRen = new CommitLine(f_Q(l_strNid));
+        l_pRen->setMaximumWidth(140);
+        l_pRen->setToolTip(tr("Rename the node"));
+        l_pRen->m_fnOnCommit = [=](const QString& l_oS) {
+            const std::string l_strNu = l_oS.trimmed().toStdString();
+            if (l_strNu == l_strNid) return;
+            if (!stage::f_IdOk(l_strNu)) { f_Toast(tr("Use letters, digits, _ and - only."), true); return; }
+            if (l_jNodes.contains(l_strNu)) { f_Toast(tr("%1 already exists.").arg(f_Q(l_strNu)), true); return; }
+            l_fnE([l_strNid, l_strNu](Json& l_jX) {
+                Json l_jNn = Json::object();
+                for (auto& [l_strK, l_jVv] : l_jX["nodes"].items()) l_jNn[l_strK == l_strNid ? l_strNu : l_strK] = l_jVv;
+                l_jX["nodes"] = l_jNn;
+                for (auto& [l_strK, l_jVv] : l_jX["nodes"].items()) { (void)l_strK; if (l_jVv.contains("choices")) for (Json& l_jC : l_jVv["choices"]) if (l_jC.value("next", Json()) == l_strNid) l_jC["next"] = l_strNu; }
+                if (l_jX["start"] == l_strNid) l_jX["start"] = l_strNu;
+                if (l_jX["start"].is_array()) for (Json& l_jSt : l_jX["start"]) if (l_jSt.value("node", std::string()) == l_strNid) l_jSt["node"] = l_strNu;
             });
         };
-        head->addWidget(ren);
-        const bool isStart = condStart ? std::any_of(d["start"].begin(), d["start"].end(), [&](const Json& s) { return s.value("node", std::string()) == nid; }) : d.value("start", std::string()) == nid;
-        if (isStart) head->addWidget(chip(tr("start")));
-        head->addStretch(1);
-        auto* del = new QPushButton(tr("Delete node"));
-        connect(del, &QPushButton::clicked, this, [=] {
-            if (nids.size() < 2) { toast(tr("A dialogue needs one node."), true); return; }
-            if (QMessageBox::question(this, tr("Delete node"), tr("Delete node %1?").arg(q(nid))) != QMessageBox::Yes) return;
-            E([nid](Json& x) { x["nodes"].erase(nid); });
+        l_pHead->addWidget(l_pRen);
+        const bool l_bIsStart = l_bCondStart ? std::any_of(l_jD["start"].begin(), l_jD["start"].end(), [&](const Json& l_jS) { return l_jS.value("node", std::string()) == l_strNid; }) : l_jD.value("start", std::string()) == l_strNid;
+        if (l_bIsStart) l_pHead->addWidget(f_Chip(tr("start")));
+        l_pHead->addStretch(1);
+        auto* l_pDel = new QPushButton(tr("Delete node"));
+        connect(l_pDel, &QPushButton::clicked, this, [=] {
+            if (l_vNids.size() < 2) { f_Toast(tr("A dialogue needs one node."), true); return; }
+            if (QMessageBox::question(this, tr("Delete node"), tr("Delete node %1?").arg(f_Q(l_strNid))) != QMessageBox::Yes) return;
+            l_fnE([l_strNid](Json& l_jX) { l_jX["nodes"].erase(l_strNid); });
         });
-        head->addWidget(del);
-        gv->addLayout(head);
-        const Json tx = field(n.value("text", Json()));
-        for (const char* l : {"zh_TW", "en"}) {
-            auto* r = lrow(QString::fromLatin1(l));
-            auto* t = new CommitText(tx.contains(l) && tx[l].is_string() ? q(tx[l].get<std::string>()) : QString());
-            const std::string lang = l;
-            t->onCommit = [=](const QString& s) { E([nid, lang, s](Json& x) { Json& node = x["nodes"][nid]; Json tt = field(node.value("text", Json())); tt[lang] = s.toStdString(); node["text"] = tt; }); };
-            r->addWidget(t, 1);
-            gv->addLayout(r);
+        l_pHead->addWidget(l_pDel);
+        l_pGv->addLayout(l_pHead);
+        const Json l_jTx = f_Field(l_jN.value("text", Json()));
+        for (const char* l_pszL : {"zh_TW", "en"}) {
+            auto* l_pR = f_Lrow(QString::fromLatin1(l_pszL));
+            auto* l_pT = new CommitText(l_jTx.contains(l_pszL) && l_jTx[l_pszL].is_string() ? f_Q(l_jTx[l_pszL].get<std::string>()) : QString());
+            const std::string l_strLang = l_pszL;
+            l_pT->m_fnOnCommit = [=](const QString& l_oS) { l_fnE([l_strNid, l_strLang, l_oS](Json& l_jX) { Json& l_jNode = l_jX["nodes"][l_strNid]; Json l_jTt = f_Field(l_jNode.value("text", Json())); l_jTt[l_strLang] = l_oS.toStdString(); l_jNode["text"] = l_jTt; }); };
+            l_pR->addWidget(l_pT, 1);
+            l_pGv->addLayout(l_pR);
         }
-        int other = 0;
-        for (auto& [k, x] : tx.items()) { (void)x; if (k != "zh_TW" && k != "en") other++; }
-        if (other) gv->addWidget(muted(tr("%1 other language(s) kept as they are").arg(other)));
-        gv->addWidget(muted(tr("Choices (what the player can answer)")));
-        const Json choices = n.value("choices", Json::array());
-        for (size_t i = 0; i < choices.size(); i++) {
-            const Json c = choices[i];
-            auto* card = new QWidget;
-            card->setObjectName(QStringLiteral("choice"));
-            card->setStyleSheet(QStringLiteral("QWidget#choice { border-left:3px solid #3a3f47; }"));
-            auto* cv = new QVBoxLayout(card);
-            cv->setContentsMargins(8, 2, 0, 2);
-            auto C = [=](const std::function<void(Json&)>& fn) { E([nid, i, fn](Json& x) { fn(x["nodes"][nid]["choices"][i]); }); };
-            auto* r1 = lrow(QString::number(i + 1));
-            const Json lb = field(c.value("label", Json()));
-            for (const char* l : {"zh_TW", "en"}) {
-                auto* e = new CommitLine(lb.contains(l) && lb[l].is_string() ? q(lb[l].get<std::string>()) : QString());
-                e->setPlaceholderText(QString::fromLatin1(l));
-                const std::string lang = l;
-                e->onCommit = [=](const QString& s) { C([lang, s](Json& ch) { Json t = field(ch.value("label", Json())); t[lang] = s.toStdString(); ch["label"] = t; }); };
-                r1->addWidget(e, 1);
+        int l_iOther = 0;
+        for (auto& [l_strK, l_jX] : l_jTx.items()) { (void)l_jX; if (l_strK != "zh_TW" && l_strK != "en") l_iOther++; }
+        if (l_iOther) l_pGv->addWidget(f_Muted(tr("%1 other language(s) kept as they are").arg(l_iOther)));
+        l_pGv->addWidget(f_Muted(tr("Choices (what the player can answer)")));
+        const Json l_jChoices = l_jN.value("choices", Json::array());
+        for (size_t l_nI = 0; l_nI < l_jChoices.size(); l_nI++) {
+            const Json l_jC = l_jChoices[l_nI];
+            auto* l_pCard = new QWidget;
+            l_pCard->setObjectName(QStringLiteral("choice"));
+            l_pCard->setStyleSheet(QStringLiteral("QWidget#choice { border-left:3px solid #3a3f47; }"));
+            auto* l_pCv = new QVBoxLayout(l_pCard);
+            l_pCv->setContentsMargins(8, 2, 0, 2);
+            auto l_fnC = [=](const std::function<void(Json&)>& l_fnFn) { l_fnE([l_strNid, l_nI, l_fnFn](Json& l_jX) { l_fnFn(l_jX["nodes"][l_strNid]["choices"][l_nI]); }); };
+            auto* l_pR1 = f_Lrow(QString::number(l_nI + 1));
+            const Json l_jLb = f_Field(l_jC.value("label", Json()));
+            for (const char* l_pszL : {"zh_TW", "en"}) {
+                auto* l_pE = new CommitLine(l_jLb.contains(l_pszL) && l_jLb[l_pszL].is_string() ? f_Q(l_jLb[l_pszL].get<std::string>()) : QString());
+                l_pE->setPlaceholderText(QString::fromLatin1(l_pszL));
+                const std::string l_strLang = l_pszL;
+                l_pE->m_fnOnCommit = [=](const QString& l_oS) { l_fnC([l_strLang, l_oS](Json& l_jCh) { Json l_jT = f_Field(l_jCh.value("label", Json())); l_jT[l_strLang] = l_oS.toStdString(); l_jCh["label"] = l_jT; }); };
+                l_pR1->addWidget(l_pE, 1);
             }
-            for (int dir : {-1, 1, 0}) {
-                auto* b = new QToolButton;
-                b->setText(dir < 0 ? QStringLiteral("▲") : dir > 0 ? QStringLiteral("▼") : QStringLiteral("✕"));
-                connect(b, &QToolButton::clicked, this, [=] {
-                    E([nid, i, dir](Json& x) {
-                        Json& l = x["nodes"][nid]["choices"];
-                        if (dir == 0) { l.erase(i); return; }
-                        const long j = (long)i + dir;
-                        if (j >= 0 && j < (long)l.size()) std::swap(l[i], l[(size_t)j]);
+            for (int l_iDir : {-1, 1, 0}) {
+                auto* l_pB = new QToolButton;
+                l_pB->setText(l_iDir < 0 ? QStringLiteral("▲") : l_iDir > 0 ? QStringLiteral("▼") : QStringLiteral("✕"));
+                connect(l_pB, &QToolButton::clicked, this, [=] {
+                    l_fnE([l_strNid, l_nI, l_iDir](Json& l_jX) {
+                        Json& l_jL = l_jX["nodes"][l_strNid]["choices"];
+                        if (l_iDir == 0) { l_jL.erase(l_nI); return; }
+                        const long l_iJ = (long)l_nI + l_iDir;
+                        if (l_iJ >= 0 && l_iJ < (long)l_jL.size()) std::swap(l_jL[l_nI], l_jL[(size_t)l_iJ]);
                     });
                 });
-                r1->addWidget(b);
+                l_pR1->addWidget(l_pB);
             }
-            cv->addLayout(r1);
-            auto* r2 = lrow(tr("Then"));
-            auto* nx = nodeCombo(c.value("next", Json()).is_string() ? c["next"].get<std::string>() : std::string(), true);
-            connect(nx, &QComboBox::activated, this, [=](int) { const std::string s = nx->currentData().toString().toStdString(); C([s](Json& ch) { ch["next"] = s.empty() ? Json() : Json(s); }); });
-            auto* fin = new QCheckBox(tr("finishes the event"));
-            fin->setChecked(c.value("finish", false));
-            connect(fin, &QCheckBox::toggled, this, [=](bool on) { C([on](Json& ch) { if (on) ch["finish"] = true; else ch.erase("finish"); }); });
-            auto* cid = new CommitLine(q(c.value("id", std::string())));
-            cid->setMaximumWidth(100);
-            cid->setToolTip(tr("Remembered as choiceMade {event, id}, for later conditions"));
-            cid->onCommit = [=](const QString& s) { const std::string x = s.trimmed().toStdString(); C([x](Json& ch) { if (x.empty()) ch.erase("id"); else ch["id"] = x; }); };
-            r2->addWidget(nx);
-            r2->addWidget(fin);
-            r2->addWidget(muted(QStringLiteral("id")));
-            r2->addWidget(cid);
-            r2->addStretch(1);
-            cv->addLayout(r2);
-            auto* r3 = lrow(tr("Only when"));
-            r3->addWidget(condBox(QStringLiteral("ch:%1|%2").arg(q(nid)).arg(i), [this, id, nid, i] {
-                const Json& cs = m_p.S;
-                const Json& node = cs["dialogues"][id]["nodes"][nid];
-                const Json l = node.value("choices", Json::array());
-                return i < l.size() ? l[i].value("requires", Json()) : Json();
-            }, [this, id, nid, i](const Json& cond) {
-                Json& l = m_p.S["dialogues"][id]["nodes"][nid]["choices"];
-                if (i >= l.size()) return;
-                if (cond.is_null()) l[i].erase("requires"); else l[i]["requires"] = cond;
-            }, hD), 1);
-            cv->addLayout(r3);
-            auto* r4 = lrow(tr("Then do"));
-            auto* acts = new QWidget;
-            auto* av = new QVBoxLayout(acts);
-            av->setContentsMargins(0, 0, 0, 0);
-            av->addWidget(actsBox(QStringLiteral("%1|%2").arg(q(nid)).arg(i), [c] { return c.value("actions", Json::array()); }, [this, id, nid, i]() -> Json* {
-                Json& l = m_p.S["dialogues"][id]["nodes"][nid]["choices"];
-                if (i >= l.size()) return nullptr;
-                Json& ch = l[i];
-                if (!ch.contains("actions") || ch["actions"].is_null()) ch["actions"] = Json::array();
-                else if (!ch["actions"].is_array()) ch["actions"] = Json::array({ch["actions"]});
-                return &ch["actions"];
-            }, hD));
-            if (c.contains("action")) av->addWidget(muted(tr("Older single action (kept):") + QStringLiteral(" ") + q(c["action"].dump()).left(80)));
-            r4->addWidget(acts, 1);
-            cv->addLayout(r4);
-            auto* r5 = lrow(tr("Wakes"));
-            auto* chips = new QWidget;
-            auto* flow = new FlowLayout(chips, 4);
-            if (c.contains("fire") && c["fire"].is_array())
-                for (const Json& fx : c["fire"]) {
-                    const std::string x = fx.get<std::string>();
-                    auto* b = chip(q(x) + QStringLiteral("  ✕"), m_p.ev(x) ? QColor() : QColor("#ff5d5d"));
-                    connect(b, &QToolButton::clicked, this, [=] {
-                        C([x](Json& ch) { Json& l = ch["fire"]; l.erase(std::remove(l.begin(), l.end(), Json(x)), l.end()); if (l.empty()) ch.erase("fire"); });
+            l_pCv->addLayout(l_pR1);
+            auto* l_pR2 = f_Lrow(tr("Then"));
+            auto* l_pNx = l_fnNodeCombo(l_jC.value("next", Json()).is_string() ? l_jC["next"].get<std::string>() : std::string(), true);
+            connect(l_pNx, &QComboBox::activated, this, [=](int) { const std::string l_strS = l_pNx->currentData().toString().toStdString(); l_fnC([l_strS](Json& l_jCh) { l_jCh["next"] = l_strS.empty() ? Json() : Json(l_strS); }); });
+            auto* l_pFin = new QCheckBox(tr("finishes the event"));
+            l_pFin->setChecked(l_jC.value("finish", false));
+            connect(l_pFin, &QCheckBox::toggled, this, [=](bool l_bOn) { l_fnC([l_bOn](Json& l_jCh) { if (l_bOn) l_jCh["finish"] = true; else l_jCh.erase("finish"); }); });
+            auto* l_pCid = new CommitLine(f_Q(l_jC.value("id", std::string())));
+            l_pCid->setMaximumWidth(100);
+            l_pCid->setToolTip(tr("Remembered as choiceMade {event, id}, for later conditions"));
+            l_pCid->m_fnOnCommit = [=](const QString& l_oS) { const std::string l_strX = l_oS.trimmed().toStdString(); l_fnC([l_strX](Json& l_jCh) { if (l_strX.empty()) l_jCh.erase("id"); else l_jCh["id"] = l_strX; }); };
+            l_pR2->addWidget(l_pNx);
+            l_pR2->addWidget(l_pFin);
+            l_pR2->addWidget(f_Muted(QStringLiteral("id")));
+            l_pR2->addWidget(l_pCid);
+            l_pR2->addStretch(1);
+            l_pCv->addLayout(l_pR2);
+            auto* l_pR3 = f_Lrow(tr("Only when"));
+            l_pR3->addWidget(f_CondBox(QStringLiteral("ch:%1|%2").arg(f_Q(l_strNid)).arg(l_nI), [this, l_strId, l_strNid, l_nI] {
+                const Json& l_jCs = m_oP.m_jS;
+                const Json& l_jNode = l_jCs["dialogues"][l_strId]["nodes"][l_strNid];
+                const Json l_jL = l_jNode.value("choices", Json::array());
+                return l_nI < l_jL.size() ? l_jL[l_nI].value("requires", Json()) : Json();
+            }, [this, l_strId, l_strNid, l_nI](const Json& l_jCond) {
+                Json& l_jL = m_oP.m_jS["dialogues"][l_strId]["nodes"][l_strNid]["choices"];
+                if (l_nI >= l_jL.size()) return;
+                if (l_jCond.is_null()) l_jL[l_nI].erase("requires"); else l_jL[l_nI]["requires"] = l_jCond;
+            }, l_oHD), 1);
+            l_pCv->addLayout(l_pR3);
+            auto* l_pR4 = f_Lrow(tr("Then do"));
+            auto* l_pActs = new QWidget;
+            auto* l_pAv = new QVBoxLayout(l_pActs);
+            l_pAv->setContentsMargins(0, 0, 0, 0);
+            l_pAv->addWidget(f_ActsBox(QStringLiteral("%1|%2").arg(f_Q(l_strNid)).arg(l_nI), [l_jC] { return l_jC.value("actions", Json::array()); }, [this, l_strId, l_strNid, l_nI]() -> Json* {
+                Json& l_jL = m_oP.m_jS["dialogues"][l_strId]["nodes"][l_strNid]["choices"];
+                if (l_nI >= l_jL.size()) return nullptr;
+                Json& l_jCh = l_jL[l_nI];
+                if (!l_jCh.contains("actions") || l_jCh["actions"].is_null()) l_jCh["actions"] = Json::array();
+                else if (!l_jCh["actions"].is_array()) l_jCh["actions"] = Json::array({l_jCh["actions"]});
+                return &l_jCh["actions"];
+            }, l_oHD));
+            if (l_jC.contains("action")) l_pAv->addWidget(f_Muted(tr("Older single action (kept):") + QStringLiteral(" ") + f_Q(l_jC["action"].dump()).left(80)));
+            l_pR4->addWidget(l_pActs, 1);
+            l_pCv->addLayout(l_pR4);
+            auto* l_pR5 = f_Lrow(tr("Wakes"));
+            auto* l_pChips = new QWidget;
+            auto* l_pFlow = new FlowLayout(l_pChips, 4);
+            if (l_jC.contains("fire") && l_jC["fire"].is_array())
+                for (const Json& l_jFx : l_jC["fire"]) {
+                    const std::string l_strX = l_jFx.get<std::string>();
+                    auto* l_pB = f_Chip(f_Q(l_strX) + QStringLiteral("  ✕"), m_oP.f_Ev(l_strX) ? QColor() : QColor("#ff5d5d"));
+                    connect(l_pB, &QToolButton::clicked, this, [=] {
+                        l_fnC([l_strX](Json& l_jCh) { Json& l_jL = l_jCh["fire"]; l_jL.erase(std::remove(l_jL.begin(), l_jL.end(), Json(l_strX)), l_jL.end()); if (l_jL.empty()) l_jCh.erase("fire"); });
                     });
-                    flow->addWidget(b);
+                    l_pFlow->addWidget(l_pB);
                 }
-            auto* fa = new QComboBox;
-            fa->addItem(tr("+ link an event…"), QString());
-            for (const Json& e : m_p.S["events"]) fa->addItem(q(e["id"].get<std::string>()), q(e["id"].get<std::string>()));
-            connect(fa, &QComboBox::activated, this, [=](int) {
-                const std::string x = fa->currentData().toString().toStdString();
-                if (x.empty()) return;
-                C([x](Json& ch) {
-                    if (!ch.contains("fire") || !ch["fire"].is_array()) ch["fire"] = Json::array();
-                    if (std::find(ch["fire"].begin(), ch["fire"].end(), Json(x)) == ch["fire"].end()) ch["fire"].push_back(x);
+            auto* l_pFa = new QComboBox;
+            l_pFa->addItem(tr("+ link an event…"), QString());
+            for (const Json& l_jE : m_oP.m_jS["events"]) l_pFa->addItem(f_Q(l_jE["id"].get<std::string>()), f_Q(l_jE["id"].get<std::string>()));
+            connect(l_pFa, &QComboBox::activated, this, [=](int) {
+                const std::string l_strX = l_pFa->currentData().toString().toStdString();
+                if (l_strX.empty()) return;
+                l_fnC([l_strX](Json& l_jCh) {
+                    if (!l_jCh.contains("fire") || !l_jCh["fire"].is_array()) l_jCh["fire"] = Json::array();
+                    if (std::find(l_jCh["fire"].begin(), l_jCh["fire"].end(), Json(l_strX)) == l_jCh["fire"].end()) l_jCh["fire"].push_back(l_strX);
                 });
             });
-            flow->addWidget(fa);
-            r5->addWidget(chips, 1);
-            cv->addLayout(r5);
-            gv->addWidget(card);
+            l_pFlow->addWidget(l_pFa);
+            l_pR5->addWidget(l_pChips, 1);
+            l_pCv->addLayout(l_pR5);
+            l_pGv->addWidget(l_pCard);
         }
-        auto* addC = new QPushButton(tr("+ Choice"));
-        connect(addC, &QPushButton::clicked, this, [=] {
-            E([nid](Json& x) { Json& node = x["nodes"][nid]; if (!node.contains("choices")) node["choices"] = Json::array(); node["choices"].push_back(Json{{"label", Json{{"zh_TW", ""}, {"en", ""}}}, {"next", nullptr}}); });
+        auto* l_pAddC = new QPushButton(tr("+ Choice"));
+        connect(l_pAddC, &QPushButton::clicked, this, [=] {
+            l_fnE([l_strNid](Json& l_jX) { Json& l_jNode = l_jX["nodes"][l_strNid]; if (!l_jNode.contains("choices")) l_jNode["choices"] = Json::array(); l_jNode["choices"].push_back(Json{{"label", Json{{"zh_TW", ""}, {"en", ""}}}, {"next", nullptr}}); });
         });
-        gv->addWidget(addC, 0, Qt::AlignLeft);
-        v->addWidget(g);
+        l_pGv->addWidget(l_pAddC, 0, Qt::AlignLeft);
+        l_pV->addWidget(l_pG);
     }
     {
-        auto* h = new QHBoxLayout;
-        auto* nn = new QLineEdit;
-        nn->setPlaceholderText(tr("new node id"));
-        nn->setMaximumWidth(150);
-        auto* nb = new QPushButton(tr("+ Node"));
-        connect(nb, &QPushButton::clicked, this, [=] {
-            const std::string n = nn->text().trimmed().toStdString();
-            if (!stage::idOk(n)) { toast(tr("Use letters, digits, _ and - only."), true); return; }
-            if (nodes.contains(n)) { toast(tr("%1 already exists.").arg(q(n)), true); return; }
-            E([n](Json& x) { x["nodes"][n] = Json{{"text", Json{{"zh_TW", ""}, {"en", ""}}}, {"choices", Json::array({Json{{"label", Json{{"zh_TW", "……"}, {"en", "..."}}}, {"next", nullptr}}})}}; });
+        auto* l_pH = new QHBoxLayout;
+        auto* l_pNn = new QLineEdit;
+        l_pNn->setPlaceholderText(tr("new node id"));
+        l_pNn->setMaximumWidth(150);
+        auto* l_pNb = new QPushButton(tr("+ Node"));
+        connect(l_pNb, &QPushButton::clicked, this, [=] {
+            const std::string l_strN = l_pNn->text().trimmed().toStdString();
+            if (!stage::f_IdOk(l_strN)) { f_Toast(tr("Use letters, digits, _ and - only."), true); return; }
+            if (l_jNodes.contains(l_strN)) { f_Toast(tr("%1 already exists.").arg(f_Q(l_strN)), true); return; }
+            l_fnE([l_strN](Json& l_jX) { l_jX["nodes"][l_strN] = Json{{"text", Json{{"zh_TW", ""}, {"en", ""}}}, {"choices", Json::array({Json{{"label", Json{{"zh_TW", "……"}, {"en", "..."}}}, {"next", nullptr}}})}}; });
         });
-        h->addWidget(nn);
-        h->addWidget(nb);
-        h->addStretch(1);
-        v->addLayout(h);
+        l_pH->addWidget(l_pNn);
+        l_pH->addWidget(l_pNb);
+        l_pH->addStretch(1);
+        l_pV->addLayout(l_pH);
     }
-    v->addStretch(1);
-    return w;
+    l_pV->addStretch(1);
+    return l_pW;
 }

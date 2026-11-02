@@ -35,133 +35,133 @@ public:
     BattleEditorWindow();
 
     // ---- for the self-test and the smoke test ----
-    void setQuiet(bool q) { quiet_ = q; }          // no message boxes
-    QString dataDir() const { return dataDir_; }
-    QString setupsDir() const { return setupsDir_; }
-    int monsterCount() const;
-    bool setInBattle(const QString& id, bool on);  // the "+ Battle" tick (off: every copy of it leaves)
-    bool addToBattle(const QString& id);           // "+ Again": one more of it (three bats), up to three in all
-    QStringList inBattle() const { return inBattle_; }
-    bool selectMonster(const QString& id);
-    QString currentMonster() const { return current_; }
-    void setMonsterNumber(const QString& key, int value);   // hp, atk, def, ... as typed in the form
-    bed::Setup currentSetup() const;
-    bool startBattle();                             // ▶ Battle (and Restart)
-    BgfxViewport* viewport() const { return view_; }
-    void refreshLog();
-    QString logText() const;
-    bool saveSetupAs(const QString& name);
-    bool loadSetup(const QString& name);
-    bool isDirty() const { return monstersDirty_ || weaponsDirty_; }
-    static constexpr int kAutoRestartMs = 1500;   // the end of a battle stays on screen this long
-    void setPace(const QString& pace);              // "", "cooldown", "stamina"
+    void f_SetQuiet(bool l_bQ) { m_bQuiet = l_bQ; }          // no message boxes
+    QString f_DataDir() const { return m_oDataDir; }
+    QString f_SetupsDir() const { return m_oSetupsDir; }
+    int f_MonsterCount() const;
+    bool f_SetInBattle(const QString& l_oId, bool l_bOn);  // the "+ Battle" tick (off: every copy of it leaves)
+    bool f_AddToBattle(const QString& l_oId);           // "+ Again": one more of it (three bats), up to three in all
+    QStringList f_InBattle() const { return m_oInBattle; }
+    bool f_SelectMonster(const QString& l_oId);
+    QString f_CurrentMonster() const { return m_oCurrent; }
+    void f_SetMonsterNumber(const QString& l_oKey, int l_iValue);   // hp, atk, def, ... as typed in the form
+    bed::Setup f_CurrentSetup() const;
+    bool f_StartBattle();                             // ▶ Battle (and Restart)
+    BgfxViewport* f_Viewport() const { return m_pView; }
+    void f_RefreshLog();
+    QString f_LogText() const;
+    bool f_SaveSetupAs(const QString& l_oName);
+    bool f_LoadSetup(const QString& l_oName);
+    bool f_IsDirty() const { return m_bMonstersDirty || m_bWeaponsDirty; }
+    static constexpr int m_iAutoRestartMs = 1500;   // the end of a battle stays on screen this long
+    void f_SetPace(const QString& l_oPace);              // "", "cooldown", "stamina"
     // the growth calculator's table for (total, level, k), as shown
-    std::vector<int> calculate(int total, int level, double k);
+    std::vector<int> f_Calculate(int l_iTotal, int l_iLevel, double l_dK);
     // the Scenarios tab: start a scenario (a folder with scenario.json, or the file) in the game view; how many are listed
-    bool playScenario(const QString& path);
-    int scenarioCount() const;
+    bool f_PlayScenario(const QString& l_oPath);
+    int f_ScenarioCount() const;
 
 protected:
-    void closeEvent(class QCloseEvent* e) override;
+    void closeEvent(class QCloseEvent* l_pE) override;
 
 private:
     // building the window
-    QWidget* buildMonsterList();
-    QWidget* buildCentre();
-    QWidget* buildMonsterTab();
-    QWidget* buildWeaponTab();
-    QWidget* buildPlayerTab();
-    QWidget* buildEventsTab();
-    QWidget* buildLogTab();
-    QWidget* buildScenariosTab();
-    void fillScenarioList();
-    QString scenarioRoot() const;   // the repo's tests/scenarios
-    QWidget* buildSetupsBar();
+    QWidget* f_BuildMonsterList();
+    QWidget* f_BuildCentre();
+    QWidget* f_BuildMonsterTab();
+    QWidget* f_BuildWeaponTab();
+    QWidget* f_BuildPlayerTab();
+    QWidget* f_BuildEventsTab();
+    QWidget* f_BuildLogTab();
+    QWidget* f_BuildScenariosTab();
+    void f_FillScenarioList();
+    QString f_ScenarioRoot() const;   // the repo's tests/scenarios
+    QWidget* f_BuildSetupsBar();
 
     // the data files
-    bool loadData();
-    bool saveMonsters();
-    bool saveWeapons();
-    bool saveGrowthTable();
-    void fillMonsterList();
-    void showMonster(const QString& id);
-    void monsterEdited();                // the form -> enemies_[current_], and the running battle
-    void applyToRunningBattle(const QString& id);
-    void showWeapon(const QString& key);
-    void weaponEdited();
-    void fillSetups();
-    void showEvents();
-    void applyEventsText();
-    void updateInBattleLabel();
-    void updateReadout();
-    void say(const QString& text);       // the status line
-    bool ask(const QString& title, const QString& text);
-    void warn(const QString& title, const QString& text);
+    bool f_LoadData();
+    bool f_SaveMonsters();
+    bool f_SaveWeapons();
+    bool f_SaveGrowthTable();
+    void f_FillMonsterList();
+    void f_ShowMonster(const QString& l_oId);
+    void f_MonsterEdited();                // the form -> enemies_[current_], and the running battle
+    void f_ApplyToRunningBattle(const QString& l_oId);
+    void f_ShowWeapon(const QString& l_oKey);
+    void f_WeaponEdited();
+    void f_FillSetups();
+    void f_ShowEvents();
+    void f_ApplyEventsText();
+    void f_UpdateInBattleLabel();
+    void f_UpdateReadout();
+    void f_Say(const QString& l_oText);       // the status line
+    bool f_Ask(const QString& l_oTitle, const QString& l_oText);
+    void f_Warn(const QString& l_oTitle, const QString& l_oText);
 
-    QString dataDir_, setupsDir_, scratchDir_, fxFile_;
-    bed::ojson enemies_, weaponPlay_;
-    QStringList effects_;                // battle.particle's effect names (a setting naming another is shown red)
-    QStringList attrIds_;                // stats.json attributes
-    QString current_, currentWeapon_;
-    QStringList inBattle_;
-    bool monstersDirty_ = false, weaponsDirty_ = false;
-    bool filling_ = false;               // a form being filled: its signals are not edits
-    bool quiet_ = false;
-    int logShown_ = -1;
+    QString m_oDataDir, m_oSetupsDir, m_oScratchDir, m_oFxFile;
+    bed::ojson m_jEnemies, m_jWeaponPlay;
+    QStringList m_oEffects;                // battle.particle's effect names (a setting naming another is shown red)
+    QStringList m_oAttrIds;                // stats.json attributes
+    QString m_oCurrent, m_oCurrentWeapon;
+    QStringList m_oInBattle;
+    bool m_bMonstersDirty = false, m_bWeaponsDirty = false;
+    bool m_bFilling = false;               // a form being filled: its signals are not edits
+    bool m_bQuiet = false;
+    int m_iLogShown = -1;
 
     // widgets
-    BgfxViewport* view_ = nullptr;
-    AspectBox* viewBox_ = nullptr;
-    QLineEdit* search_ = nullptr;
-    QListWidget* monsters_ = nullptr;
-    QLabel* inBattleLabel_ = nullptr;
-    QTabWidget* tabs_ = nullptr;
-    QTreeWidget* scenarioList_ = nullptr;
-    QString extraScenarioDir_;           // "Open scenario folder...": a folder of scenarios outside tests/
-    QComboBox* speed_ = nullptr;
-    QComboBox* pace_ = nullptr;
-    QComboBox* shape_ = nullptr;
-    QCheckBox* autoRestart_ = nullptr;   // a battle that ends starts again (after kAutoRestartMs)
-    bool battleRunning_ = false;         // seen running at the last check (refreshLog)
-    bool restartPending_ = false;
-    QPushButton* pause_ = nullptr;
+    BgfxViewport* m_pView = nullptr;
+    AspectBox* m_pViewBox = nullptr;
+    QLineEdit* m_pSearch = nullptr;
+    QListWidget* m_pMonsters = nullptr;
+    QLabel* m_pInBattleLabel = nullptr;
+    QTabWidget* m_pTabs = nullptr;
+    QTreeWidget* m_pScenarioList = nullptr;
+    QString m_oExtraScenarioDir;           // "Open scenario folder...": a folder of scenarios outside tests/
+    QComboBox* m_pSpeed = nullptr;
+    QComboBox* m_pPace = nullptr;
+    QComboBox* m_pShape = nullptr;
+    QCheckBox* m_pAutoRestart = nullptr;   // a battle that ends starts again (after kAutoRestartMs)
+    bool m_bBattleRunning = false;         // seen running at the last check (refreshLog)
+    bool m_bRestartPending = false;
+    QPushButton* m_pPause = nullptr;
     // monster
-    QLabel* mId_ = nullptr;
-    QLineEdit* mNameEn_ = nullptr;
-    QLineEdit* mNameZh_ = nullptr;
-    QLineEdit* mSprite_ = nullptr;
-    QLineEdit* mLook_ = nullptr;
-    QLineEdit* mMoves_ = nullptr;
-    QLineEdit* mParty_ = nullptr;
-    QCheckBox* mBoss_ = nullptr;
-    QMap<QString, QSpinBox*>* mNumbers_ = nullptr;   // hp, atk, def, exp, gold, atk_interval_ms, break
-    QLabel* readout_ = nullptr;
+    QLabel* m_pMId = nullptr;
+    QLineEdit* m_pMNameEn = nullptr;
+    QLineEdit* m_pMNameZh = nullptr;
+    QLineEdit* m_pMSprite = nullptr;
+    QLineEdit* m_pMLook = nullptr;
+    QLineEdit* m_pMMoves = nullptr;
+    QLineEdit* m_pMParty = nullptr;
+    QCheckBox* m_pMBoss = nullptr;
+    QMap<QString, QSpinBox*>* m_pMNumbers = nullptr;   // hp, atk, def, exp, gold, atk_interval_ms, break
+    QLabel* m_pReadout = nullptr;
     // weapon
-    QListWidget* weapons_ = nullptr;
-    QMap<QString, QSpinBox*>* wNumbers_ = nullptr;   // sweepMs, chargeMs, hitWindowMs, lateMs
-    QComboBox* wPace_ = nullptr;
-    QTableWidget* results_ = nullptr;
-    QLabel* wLabel_ = nullptr;
+    QListWidget* m_pWeapons = nullptr;
+    QMap<QString, QSpinBox*>* m_pWNumbers = nullptr;   // sweepMs, chargeMs, hitWindowMs, lateMs
+    QComboBox* m_pWPace = nullptr;
+    QTableWidget* m_pResults = nullptr;
+    QLabel* m_pWLabel = nullptr;
     // player
-    QSpinBox* pLv_ = nullptr;
-    QSpinBox* pHp_ = nullptr;
-    QSpinBox* pMaxHp_ = nullptr;
-    QComboBox* pWeapon_ = nullptr;
-    QSpinBox* pWins_ = nullptr;
-    QSpinBox* pPoints_ = nullptr;
-    QMap<QString, QSpinBox*>* pAttrs_ = nullptr;
-    QSpinBox* cTotal_ = nullptr;
-    QSpinBox* cLevel_ = nullptr;
-    QDoubleSpinBox* cShape_ = nullptr;
-    QTableWidget* cTable_ = nullptr;
-    QLabel* cSum_ = nullptr;
+    QSpinBox* m_pPLv = nullptr;
+    QSpinBox* m_pPHp = nullptr;
+    QSpinBox* m_pPMaxHp = nullptr;
+    QComboBox* m_pPWeapon = nullptr;
+    QSpinBox* m_pPWins = nullptr;
+    QSpinBox* m_pPPoints = nullptr;
+    QMap<QString, QSpinBox*>* m_pPAttrs = nullptr;
+    QSpinBox* m_pCTotal = nullptr;
+    QSpinBox* m_pCLevel = nullptr;
+    QDoubleSpinBox* m_pCShape = nullptr;
+    QTableWidget* m_pCTable = nullptr;
+    QLabel* m_pCSum = nullptr;
     // events
-    QLabel* evMonster_ = nullptr;
-    QPlainTextEdit* evText_ = nullptr;
-    QListWidget* evList_ = nullptr;
+    QLabel* m_pEvMonster = nullptr;
+    QPlainTextEdit* m_pEvText = nullptr;
+    QListWidget* m_pEvList = nullptr;
     // log
-    QPlainTextEdit* log_ = nullptr;
+    QPlainTextEdit* m_pLog = nullptr;
     // setups
-    QComboBox* setups_ = nullptr;
-    QTimer logTimer_;
+    QComboBox* m_pSetups = nullptr;
+    QTimer m_oLogTimer;
 };

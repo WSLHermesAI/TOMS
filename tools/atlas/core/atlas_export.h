@@ -20,45 +20,45 @@
 namespace atlas {
 
 struct ExportFile {
-    std::string name;            // file name (no folder)
-    std::vector<uint8_t> data;
+    std::string m_strName;            // file name (no folder)
+    std::vector<uint8_t> m_vData;
 };
 
-const std::vector<std::string>& exportFormats();
-bool isExportFormat(const std::string& f);
+const std::vector<std::string>& f_ExportFormats();
+bool f_IsExportFormat(const std::string& l_strF);
 
 // All files for `formats`, page PNGs included.
-bool exportFiles(const BuildResult& b, const std::vector<std::string>& formats, std::vector<ExportFile>& out,
-                 std::string* err = nullptr);
+bool f_ExportFiles(const BuildResult& l_oB, const std::vector<std::string>& l_vFormats, std::vector<ExportFile>& l_vOut,
+                 std::string* l_pErr = nullptr);
 // Files whose bytes did not change are left alone (their timestamps too); `changed` gets the names
 // of the ones written.
-bool writeFiles(const std::string& dir, const std::vector<ExportFile>& files, std::string* err = nullptr,
-                std::vector<std::string>* changed = nullptr);
+bool f_WriteFiles(const std::string& l_strDir, const std::vector<ExportFile>& l_vFiles, std::string* l_pErr = nullptr,
+                std::vector<std::string>* l_pChanged = nullptr);
 
-std::string exportLibgdx(const BuildResult& b);
-std::string exportSpine3(const BuildResult& b);
-std::string exportPlist(const BuildResult& b, int page);
-std::string exportTpJson(const BuildResult& b, int page);
-std::string exportPi(const BuildResult& b, int page);
-std::string exportRcss(const BuildResult& b);
-std::string pageBaseName(const BuildResult& b, int page);   // "game", "game_1", ...
+std::string f_ExportLibgdx(const BuildResult& l_oB);
+std::string f_ExportSpine3(const BuildResult& l_oB);
+std::string f_ExportPlist(const BuildResult& l_oB, int l_iPage);
+std::string f_ExportTpJson(const BuildResult& l_oB, int l_iPage);
+std::string f_ExportPi(const BuildResult& l_oB, int l_iPage);
+std::string f_ExportRcss(const BuildResult& l_oB);
+std::string f_PageBaseName(const BuildResult& l_oB, int l_iPage);   // "game", "game_1", ...
 
 // Readers. The result holds the pages (decoded images) and regions; settings are left default.
-bool importAtlasFile(const std::string& path, BuildResult& out, std::string* err = nullptr);   // by extension
-bool importPi(const std::string& path, BuildResult& out, std::string* err = nullptr);
-bool importLibgdx(const std::string& path, BuildResult& out, std::string* err = nullptr);
-bool importTpJson(const std::string& path, BuildResult& out, std::string* err = nullptr);
-bool importPlist(const std::string& path, BuildResult& out, std::string* err = nullptr);
+bool f_ImportAtlasFile(const std::string& l_strPath, BuildResult& l_oOut, std::string* l_pErr = nullptr);   // by extension
+bool f_ImportPi(const std::string& l_strPath, BuildResult& l_oOut, std::string* l_pErr = nullptr);
+bool f_ImportLibgdx(const std::string& l_strPath, BuildResult& l_oOut, std::string* l_pErr = nullptr);
+bool f_ImportTpJson(const std::string& l_strPath, BuildResult& l_oOut, std::string* l_pErr = nullptr);
+bool f_ImportPlist(const std::string& l_strPath, BuildResult& l_oOut, std::string* l_pErr = nullptr);
 
 // Turns an imported atlas into a project: every image region is cut out at its original size
 // (trimmed pixels put back at their offset); child regions become child sprites. With an empty
 // imageDir the images stay in memory in an EMBEDDED project (output next to the project file; save
 // it with saveProjectAll); otherwise they are written to imageDir as <name>.png for a FOLDER
 // project. The project file is not written; its filePath is set to projectPath.
-bool importToProject(const BuildResult& in, const std::string& projectPath, const std::string& imageDir,
-                     Project& out, std::string* err = nullptr);
+bool f_ImportToProject(const BuildResult& l_oIn, const std::string& l_strProjectPath, const std::string& l_strImageDir,
+                     Project& l_oOut, std::string* l_pErr = nullptr);
 
 // Renders one region at its original size (transparent where trimmed) -- what a game would draw.
-Image renderRegion(const BuildResult& b, const Region& r);
+Image f_RenderRegion(const BuildResult& l_oB, const Region& l_oR);
 
 }  // namespace atlas

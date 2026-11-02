@@ -16,33 +16,33 @@ class AnimClipsDock : public QDockWidget
     Q_OBJECT
 
 public:
-    explicit AnimClipsDock(AnimDocument* doc, QWidget* parent = nullptr);
-    void beginRename();
+    explicit AnimClipsDock(AnimDocument* l_pDoc, QWidget* l_pParent = nullptr);
+    void f_BeginRename();
     // Makes clip `row` the current one (double-click / Enter). When the current clip has changes,
     // asks first whether to discard them; `discard` answers instead (tests). False = stayed.
-    bool openClip(int row, int discard = -1);
+    bool f_OpenClip(int l_iRow, int l_iDiscard = -1);
 
 signals:
     // A clip was opened from the list (double-click / Enter): the editor plays it from the start.
-    void clipActivated(int row);
+    void f_ClipActivated(int l_iRow);
 
 private:
-    void rebuild();
-    void refreshProps();
+    void f_Rebuild();
+    void f_RefreshProps();
 
-    AnimDocument* m_doc;
-    QListWidget* m_list;
-    QDoubleSpinBox* m_length;
-    QSpinBox* m_playCount;
-    QCheckBox* m_stay;
-    bool m_updating = false;
+    AnimDocument* m_pDoc;
+    QListWidget* m_pList;
+    QDoubleSpinBox* m_pLength;
+    QSpinBox* m_pPlayCount;
+    QCheckBox* m_pStay;
+    bool m_bUpdating = false;
 };
 
 // Shared by the Clips and Properties docks: the three clip settings as widgets bound to the doc.
 struct ClipFields {
-    QDoubleSpinBox* length = nullptr;
-    QSpinBox* playCount = nullptr;
-    QCheckBox* stay = nullptr;
-    static ClipFields create(AnimDocument* doc, QWidget* parent, bool* updating);
-    void refresh(const AnimDocument* doc) const;
+    QDoubleSpinBox* m_pLength = nullptr;
+    QSpinBox* m_pPlayCount = nullptr;
+    QCheckBox* m_pStay = nullptr;
+    static ClipFields f_Create(AnimDocument* l_pDoc, QWidget* l_pParent, bool* l_pUpdating);
+    void f_Refresh(const AnimDocument* l_pDoc) const;
 };

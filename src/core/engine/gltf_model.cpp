@@ -20,221 +20,221 @@ namespace {
 
 // ---- small helpers ------------------------------------------------------------------------------
 
-template <class T> int indexOf(const T* item, const T* first) { return item ? int(item - first) : -1; }
+template <class T> int f_IndexOf(const T* l_pItem, const T* l_pFirst) { return l_pItem ? int(l_pItem - l_pFirst) : -1; }
 
-bool contains(const std::vector<std::string>& v, const std::string& s) { return std::find(v.begin(), v.end(), s) != v.end(); }
+bool f_Contains(const std::vector<std::string>& l_vV, const std::string& l_strS) { return std::find(l_vV.begin(), l_vV.end(), l_strS) != l_vV.end(); }
 
 // The extensions we draw. Anything else the file uses is "ignored" (still loads), unless required.
-const char* const kSupported[] = {"KHR_materials_unlit", "KHR_texture_transform", "KHR_materials_emissive_strength",
+const char* const g_arrSupported[] = {"KHR_materials_unlit", "KHR_texture_transform", "KHR_materials_emissive_strength",
                                   "KHR_mesh_quantization", "EXT_mesh_gpu_instancing", "KHR_materials_pbrSpecularGlossiness",
                                   "KHR_materials_transmission", "KHR_materials_volume", "KHR_lights_punctual",
                                   "KHR_materials_specular", "KHR_materials_ior",
                                   "KHR_implicit_shapes", "KHR_physics_rigid_bodies"};
-bool supported(const std::string& e) {
-    for (const char* s : kSupported)
-        if (e == s) return true;
+bool f_Supported(const std::string& l_strE) {
+    for (const char* l_pszS : g_arrSupported)
+        if (l_strE == l_pszS) return true;
     return false;
 }
 
-std::vector<float> floats(const cgltf_accessor* a) {
-    std::vector<float> out;
-    if (!a) return out;
-    const size_t n = a->count * cgltf_num_components(a->type);
-    out.resize(n);
-    cgltf_accessor_unpack_floats(a, out.data(), n);   // normalized / quantized ints, sparse accessors
-    return out;
+std::vector<float> f_Floats(const cgltf_accessor* l_pA) {
+    std::vector<float> l_vOut;
+    if (!l_pA) return l_vOut;
+    const size_t l_nN = l_pA->count * cgltf_num_components(l_pA->type);
+    l_vOut.resize(l_nN);
+    cgltf_accessor_unpack_floats(l_pA, l_vOut.data(), l_nN);   // normalized / quantized ints, sparse accessors
+    return l_vOut;
 }
 
-template <class V> std::vector<V> vectors(const cgltf_accessor* a, int comps, float fill = 0.0f) {
-    std::vector<V> out;
-    if (!a) return out;
-    const int have = (int)cgltf_num_components(a->type);
-    const std::vector<float> f = floats(a);
-    out.resize(a->count);
-    for (size_t i = 0; i < a->count; i++) {
-        V v(fill);
-        for (int c = 0; c < comps && c < have; c++) v[c] = f[i * (size_t)have + (size_t)c];
-        out[i] = v;
+template <class V> std::vector<V> f_Vectors(const cgltf_accessor* l_pA, int l_iComps, float l_fFill = 0.0f) {
+    std::vector<V> l_vOut;
+    if (!l_pA) return l_vOut;
+    const int l_iHave = (int)cgltf_num_components(l_pA->type);
+    const std::vector<float> l_vF = f_Floats(l_pA);
+    l_vOut.resize(l_pA->count);
+    for (size_t l_nI = 0; l_nI < l_pA->count; l_nI++) {
+        V l_oV(l_fFill);
+        for (int l_iC = 0; l_iC < l_iComps && l_iC < l_iHave; l_iC++) l_oV[l_iC] = l_vF[l_nI * (size_t)l_iHave + (size_t)l_iC];
+        l_vOut[l_nI] = l_oV;
     }
-    return out;
+    return l_vOut;
 }
 
-std::vector<uint8_t> decodeBase64(const char* s, size_t len) {
-    auto val = [](char c) -> int {
-        if (c >= 'A' && c <= 'Z') return c - 'A';
-        if (c >= 'a' && c <= 'z') return c - 'a' + 26;
-        if (c >= '0' && c <= '9') return c - '0' + 52;
-        if (c == '+' || c == '-') return 62;
-        if (c == '/' || c == '_') return 63;
+std::vector<uint8_t> f_DecodeBase64(const char* l_pszS, size_t l_nLen) {
+    auto l_fnVal = [](char l_cC) -> int {
+        if (l_cC >= 'A' && l_cC <= 'Z') return l_cC - 'A';
+        if (l_cC >= 'a' && l_cC <= 'z') return l_cC - 'a' + 26;
+        if (l_cC >= '0' && l_cC <= '9') return l_cC - '0' + 52;
+        if (l_cC == '+' || l_cC == '-') return 62;
+        if (l_cC == '/' || l_cC == '_') return 63;
         return -1;
     };
-    std::vector<uint8_t> out;
-    out.reserve(len * 3 / 4);
-    int buf = 0, bits = 0;
-    for (size_t i = 0; i < len; i++) {
-        const int v = val(s[i]);
-        if (v < 0) continue;   // '=' padding, whitespace
-        buf = (buf << 6) | v;
-        bits += 6;
-        if (bits >= 8) {
-            bits -= 8;
-            out.push_back(uint8_t((buf >> bits) & 0xff));
+    std::vector<uint8_t> l_vOut;
+    l_vOut.reserve(l_nLen * 3 / 4);
+    int l_iBuf = 0, l_iBits = 0;
+    for (size_t l_nI = 0; l_nI < l_nLen; l_nI++) {
+        const int l_iV = l_fnVal(l_pszS[l_nI]);
+        if (l_iV < 0) continue;   // '=' padding, whitespace
+        l_iBuf = (l_iBuf << 6) | l_iV;
+        l_iBits += 6;
+        if (l_iBits >= 8) {
+            l_iBits -= 8;
+            l_vOut.push_back(uint8_t((l_iBuf >> l_iBits) & 0xff));
         }
     }
-    return out;
+    return l_vOut;
 }
 
 // Paths are UTF-8 (the viewer's command line, drag-and-drop, the open dialog). A plain std::ifstream(string) on
 // Windows reads them in the ANSI code page, so a name like "Unicode❤♻Test.glb" was not found: open through
 // std::filesystem's UTF-8 path instead (a wide path on Windows, the same bytes elsewhere).
-bool readFile(const std::string& path, std::vector<uint8_t>& out) {
-    std::ifstream f(std::filesystem::u8path(path), std::ios::binary);
-    if (!f) return false;
-    out.assign(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>());
+bool f_ReadFile(const std::string& l_strPath, std::vector<uint8_t>& l_vOut) {
+    std::ifstream l_oF(std::filesystem::u8path(l_strPath), std::ios::binary);
+    if (!l_oF) return false;
+    l_vOut.assign(std::istreambuf_iterator<char>(l_oF), std::istreambuf_iterator<char>());
     return true;
 }
 
 // cgltf's own file reads (the .gltf / .glb, external .bin buffers) through readFile, for the same reason.
-cgltf_result cgltfRead(const cgltf_memory_options*, const cgltf_file_options*, const char* path, cgltf_size* size, void** data) {
-    std::vector<uint8_t> bytes;
-    if (!path || !readFile(path, bytes)) return cgltf_result_file_not_found;
-    void* p = std::malloc(bytes.empty() ? 1 : bytes.size());
-    if (!p) return cgltf_result_out_of_memory;
-    if (!bytes.empty()) std::memcpy(p, bytes.data(), bytes.size());
-    *size = bytes.size();
-    *data = p;
+cgltf_result f_CgltfRead(const cgltf_memory_options*, const cgltf_file_options*, const char* l_pszPath, cgltf_size* l_pSize, void** l_pData) {
+    std::vector<uint8_t> l_vBytes;
+    if (!l_pszPath || !f_ReadFile(l_pszPath, l_vBytes)) return cgltf_result_file_not_found;
+    void* l_pP = std::malloc(l_vBytes.empty() ? 1 : l_vBytes.size());
+    if (!l_pP) return cgltf_result_out_of_memory;
+    if (!l_vBytes.empty()) std::memcpy(l_pP, l_vBytes.data(), l_vBytes.size());
+    *l_pSize = l_vBytes.size();
+    *l_pData = l_pP;
     return cgltf_result_success;
 }
-void cgltfRelease(const cgltf_memory_options*, const cgltf_file_options*, void* data) { std::free(data); }
+void f_CgltfRelease(const cgltf_memory_options*, const cgltf_file_options*, void* l_pData) { std::free(l_pData); }
 
-cgltf_options cgltfOptions() {
-    cgltf_options opt{};
-    opt.file.read = cgltfRead;
-    opt.file.release = cgltfRelease;
-    return opt;
+cgltf_options f_CgltfOptions() {
+    cgltf_options l_oOpt{};
+    l_oOpt.file.read = f_CgltfRead;
+    l_oOpt.file.release = f_CgltfRelease;
+    return l_oOpt;
 }
 
-std::string dirOf(const std::string& path) {
-    const size_t s = path.find_last_of("/\\");
-    return s == std::string::npos ? std::string(".") : path.substr(0, s);
+std::string f_DirOf(const std::string& l_strPath) {
+    const size_t l_nS = l_strPath.find_last_of("/\\");
+    return l_nS == std::string::npos ? std::string(".") : l_strPath.substr(0, l_nS);
 }
 
-void decodeImage(const cgltf_image& src, const std::string& baseDir, Image& out, std::vector<std::string>& warnings) {
-    out.name = src.name ? src.name : "";
-    std::vector<uint8_t> bytes;
-    if (src.buffer_view && src.buffer_view->buffer && src.buffer_view->buffer->data) {
-        const uint8_t* p = (const uint8_t*)src.buffer_view->buffer->data + src.buffer_view->offset;
-        bytes.assign(p, p + src.buffer_view->size);
-    } else if (src.uri && std::strncmp(src.uri, "data:", 5) == 0) {
-        const char* comma = std::strchr(src.uri, ',');
-        if (comma) bytes = decodeBase64(comma + 1, std::strlen(comma + 1));
-    } else if (src.uri) {
-        std::string uri = src.uri;
-        cgltf_decode_uri(&uri[0]);
-        uri.resize(std::strlen(uri.c_str()));
-        if (!readFile(baseDir + "/" + uri, bytes)) warnings.push_back("image not found: " + uri);
+void f_DecodeImage(const cgltf_image& l_oSrc, const std::string& l_strBaseDir, Image& l_oOut, std::vector<std::string>& l_vWarnings) {
+    l_oOut.m_strName = l_oSrc.name ? l_oSrc.name : "";
+    std::vector<uint8_t> l_vBytes;
+    if (l_oSrc.buffer_view && l_oSrc.buffer_view->buffer && l_oSrc.buffer_view->buffer->data) {
+        const uint8_t* l_pP = (const uint8_t*)l_oSrc.buffer_view->buffer->data + l_oSrc.buffer_view->offset;
+        l_vBytes.assign(l_pP, l_pP + l_oSrc.buffer_view->size);
+    } else if (l_oSrc.uri && std::strncmp(l_oSrc.uri, "data:", 5) == 0) {
+        const char* l_pszComma = std::strchr(l_oSrc.uri, ',');
+        if (l_pszComma) l_vBytes = f_DecodeBase64(l_pszComma + 1, std::strlen(l_pszComma + 1));
+    } else if (l_oSrc.uri) {
+        std::string l_strUri = l_oSrc.uri;
+        cgltf_decode_uri(&l_strUri[0]);
+        l_strUri.resize(std::strlen(l_strUri.c_str()));
+        if (!f_ReadFile(l_strBaseDir + "/" + l_strUri, l_vBytes)) l_vWarnings.push_back("image not found: " + l_strUri);
     }
-    if (bytes.empty()) return;
-    int w = 0, h = 0, n = 0;
-    stbi_uc* px = stbi_load_from_memory(bytes.data(), (int)bytes.size(), &w, &h, &n, 4);
-    if (!px) {
-        warnings.push_back("image could not be decoded (" + std::string(stbi_failure_reason() ? stbi_failure_reason() : "?") +
-                           "): " + (src.uri && std::strncmp(src.uri, "data:", 5) != 0 ? src.uri : out.name));
+    if (l_vBytes.empty()) return;
+    int l_iW = 0, l_iH = 0, l_iN = 0;
+    stbi_uc* l_pPx = stbi_load_from_memory(l_vBytes.data(), (int)l_vBytes.size(), &l_iW, &l_iH, &l_iN, 4);
+    if (!l_pPx) {
+        l_vWarnings.push_back("image could not be decoded (" + std::string(stbi_failure_reason() ? stbi_failure_reason() : "?") +
+                           "): " + (l_oSrc.uri && std::strncmp(l_oSrc.uri, "data:", 5) != 0 ? l_oSrc.uri : l_oOut.m_strName));
         return;
     }
-    out.width = w;
-    out.height = h;
-    out.rgba.assign(px, px + (size_t)w * (size_t)h * 4);
-    stbi_image_free(px);
+    l_oOut.m_iWidth = l_iW;
+    l_oOut.m_iHeight = l_iH;
+    l_oOut.m_vRgba.assign(l_pPx, l_pPx + (size_t)l_iW * (size_t)l_iH * 4);
+    stbi_image_free(l_pPx);
 }
 
-TextureRef textureRef(const cgltf_data* d, const cgltf_texture_view& v) {
-    TextureRef r;
-    r.texture = indexOf(v.texture, d->textures);
-    r.uvSet = (int)v.texcoord;
-    if (v.has_transform) {
-        r.offset = {v.transform.offset[0], v.transform.offset[1]};
-        r.scale = {v.transform.scale[0], v.transform.scale[1]};
-        r.rotation = v.transform.rotation;
-        if (v.transform.has_texcoord) r.uvSet = (int)v.transform.texcoord;
+TextureRef f_TextureRef(const cgltf_data* l_pD, const cgltf_texture_view& l_oV) {
+    TextureRef l_oR;
+    l_oR.m_iTexture = f_IndexOf(l_oV.texture, l_pD->textures);
+    l_oR.m_iUvSet = (int)l_oV.texcoord;
+    if (l_oV.has_transform) {
+        l_oR.m_v2Offset = {l_oV.transform.offset[0], l_oV.transform.offset[1]};
+        l_oR.m_v2Scale = {l_oV.transform.scale[0], l_oV.transform.scale[1]};
+        l_oR.m_fRotation = l_oV.transform.rotation;
+        if (l_oV.transform.has_texcoord) l_oR.m_iUvSet = (int)l_oV.transform.texcoord;
     }
-    return r;
+    return l_oR;
 }
 
 // Strips and fans to lists.
-std::vector<uint32_t> toList(cgltf_primitive_type type, const std::vector<uint32_t>& in, Topology& topo) {
-    std::vector<uint32_t> out;
-    switch (type) {
+std::vector<uint32_t> f_ToList(cgltf_primitive_type l_eType, const std::vector<uint32_t>& l_vIn, Topology& l_eTopo) {
+    std::vector<uint32_t> l_vOut;
+    switch (l_eType) {
     case cgltf_primitive_type_triangle_strip:
-        topo = Topology::Triangles;
-        for (size_t i = 2; i < in.size(); i++) {
-            if (i % 2 == 0) out.insert(out.end(), {in[i - 2], in[i - 1], in[i]});
-            else out.insert(out.end(), {in[i - 1], in[i - 2], in[i]});
+        l_eTopo = Topology::Triangles;
+        for (size_t l_nI = 2; l_nI < l_vIn.size(); l_nI++) {
+            if (l_nI % 2 == 0) l_vOut.insert(l_vOut.end(), {l_vIn[l_nI - 2], l_vIn[l_nI - 1], l_vIn[l_nI]});
+            else l_vOut.insert(l_vOut.end(), {l_vIn[l_nI - 1], l_vIn[l_nI - 2], l_vIn[l_nI]});
         }
-        return out;
+        return l_vOut;
     case cgltf_primitive_type_triangle_fan:
-        topo = Topology::Triangles;
-        for (size_t i = 2; i < in.size(); i++) out.insert(out.end(), {in[0], in[i - 1], in[i]});
-        return out;
+        l_eTopo = Topology::Triangles;
+        for (size_t l_nI = 2; l_nI < l_vIn.size(); l_nI++) l_vOut.insert(l_vOut.end(), {l_vIn[0], l_vIn[l_nI - 1], l_vIn[l_nI]});
+        return l_vOut;
     case cgltf_primitive_type_line_strip:
     case cgltf_primitive_type_line_loop:
-        topo = Topology::Lines;
-        for (size_t i = 1; i < in.size(); i++) out.insert(out.end(), {in[i - 1], in[i]});
-        if (type == cgltf_primitive_type_line_loop && in.size() > 2) out.insert(out.end(), {in.back(), in.front()});
-        return out;
-    case cgltf_primitive_type_lines: topo = Topology::Lines; return in;
-    case cgltf_primitive_type_points: topo = Topology::Points; return in;
-    default: topo = Topology::Triangles; return in;
+        l_eTopo = Topology::Lines;
+        for (size_t l_nI = 1; l_nI < l_vIn.size(); l_nI++) l_vOut.insert(l_vOut.end(), {l_vIn[l_nI - 1], l_vIn[l_nI]});
+        if (l_eType == cgltf_primitive_type_line_loop && l_vIn.size() > 2) l_vOut.insert(l_vOut.end(), {l_vIn.back(), l_vIn.front()});
+        return l_vOut;
+    case cgltf_primitive_type_lines: l_eTopo = Topology::Lines; return l_vIn;
+    case cgltf_primitive_type_points: l_eTopo = Topology::Points; return l_vIn;
+    default: l_eTopo = Topology::Triangles; return l_vIn;
     }
 }
 
 // No normals in the file: flat normals (the spec), so every triangle gets its own vertices.
-template <class T> void expand(std::vector<T>& v, const std::vector<uint32_t>& idx) {
-    if (v.empty()) return;
-    std::vector<T> out(idx.size());
-    for (size_t i = 0; i < idx.size(); i++) out[i] = v[idx[i]];
-    v.swap(out);
+template <class T> void f_Expand(std::vector<T>& l_vV, const std::vector<uint32_t>& l_vIdx) {
+    if (l_vV.empty()) return;
+    std::vector<T> l_vOut(l_vIdx.size());
+    for (size_t l_nI = 0; l_nI < l_vIdx.size(); l_nI++) l_vOut[l_nI] = l_vV[l_vIdx[l_nI]];
+    l_vV.swap(l_vOut);
 }
-void flatNormals(Primitive& p) {
-    expand(p.position, p.indices);
-    expand(p.tangent, p.indices);
-    expand(p.uv0, p.indices);
-    expand(p.uv1, p.indices);
-    expand(p.color, p.indices);
-    expand(p.joints, p.indices);
-    expand(p.weights, p.indices);
-    for (MorphTarget& t : p.targets) {
-        expand(t.position, p.indices);
-        expand(t.normal, p.indices);
-        expand(t.tangent, p.indices);
+void f_FlatNormals(Primitive& l_oP) {
+    f_Expand(l_oP.m_vPosition, l_oP.m_vIndices);
+    f_Expand(l_oP.m_vTangent, l_oP.m_vIndices);
+    f_Expand(l_oP.m_vUv0, l_oP.m_vIndices);
+    f_Expand(l_oP.m_vUv1, l_oP.m_vIndices);
+    f_Expand(l_oP.m_vColor, l_oP.m_vIndices);
+    f_Expand(l_oP.m_vJoints, l_oP.m_vIndices);
+    f_Expand(l_oP.m_vWeights, l_oP.m_vIndices);
+    for (MorphTarget& l_oT : l_oP.m_vTargets) {
+        f_Expand(l_oT.m_vPosition, l_oP.m_vIndices);
+        f_Expand(l_oT.m_vNormal, l_oP.m_vIndices);
+        f_Expand(l_oT.m_vTangent, l_oP.m_vIndices);
     }
-    p.normal.assign(p.position.size(), glm::vec3(0, 0, 1));
-    for (size_t i = 0; i + 2 < p.position.size(); i += 3) {
-        const glm::vec3 n = glm::cross(p.position[i + 1] - p.position[i], p.position[i + 2] - p.position[i]);
-        const float l = glm::length(n);
-        const glm::vec3 nn = l > 0 ? n / l : glm::vec3(0, 0, 1);
-        p.normal[i] = p.normal[i + 1] = p.normal[i + 2] = nn;
+    l_oP.m_vNormal.assign(l_oP.m_vPosition.size(), glm::vec3(0, 0, 1));
+    for (size_t l_nI = 0; l_nI + 2 < l_oP.m_vPosition.size(); l_nI += 3) {
+        const glm::vec3 l_v3N = glm::cross(l_oP.m_vPosition[l_nI + 1] - l_oP.m_vPosition[l_nI], l_oP.m_vPosition[l_nI + 2] - l_oP.m_vPosition[l_nI]);
+        const float l_fL = glm::length(l_v3N);
+        const glm::vec3 l_v3Nn = l_fL > 0 ? l_v3N / l_fL : glm::vec3(0, 0, 1);
+        l_oP.m_vNormal[l_nI] = l_oP.m_vNormal[l_nI + 1] = l_oP.m_vNormal[l_nI + 2] = l_v3Nn;
     }
-    for (uint32_t i = 0; i < (uint32_t)p.indices.size(); i++) p.indices[i] = i;
+    for (uint32_t l_uI = 0; l_uI < (uint32_t)l_oP.m_vIndices.size(); l_uI++) l_oP.m_vIndices[l_uI] = l_uI;
 }
 
-void readAttribute(const cgltf_attribute& a, Primitive& p) {
-    switch (a.type) {
-    case cgltf_attribute_type_position: p.position = vectors<glm::vec3>(a.data, 3); break;
-    case cgltf_attribute_type_normal: p.normal = vectors<glm::vec3>(a.data, 3); break;
-    case cgltf_attribute_type_tangent: p.tangent = vectors<glm::vec4>(a.data, 4, 1.0f); break;
+void f_ReadAttribute(const cgltf_attribute& l_oA, Primitive& l_oP) {
+    switch (l_oA.type) {
+    case cgltf_attribute_type_position: l_oP.m_vPosition = f_Vectors<glm::vec3>(l_oA.data, 3); break;
+    case cgltf_attribute_type_normal: l_oP.m_vNormal = f_Vectors<glm::vec3>(l_oA.data, 3); break;
+    case cgltf_attribute_type_tangent: l_oP.m_vTangent = f_Vectors<glm::vec4>(l_oA.data, 4, 1.0f); break;
     case cgltf_attribute_type_texcoord:
-        if (a.index == 0) p.uv0 = vectors<glm::vec2>(a.data, 2);
-        else if (a.index == 1) p.uv1 = vectors<glm::vec2>(a.data, 2);
+        if (l_oA.index == 0) l_oP.m_vUv0 = f_Vectors<glm::vec2>(l_oA.data, 2);
+        else if (l_oA.index == 1) l_oP.m_vUv1 = f_Vectors<glm::vec2>(l_oA.data, 2);
         break;
     case cgltf_attribute_type_color:
-        if (a.index == 0) p.color = vectors<glm::vec4>(a.data, 4, 1.0f);   // rgb: alpha stays 1
+        if (l_oA.index == 0) l_oP.m_vColor = f_Vectors<glm::vec4>(l_oA.data, 4, 1.0f);   // rgb: alpha stays 1
         break;
     case cgltf_attribute_type_joints:
-        if (a.index == 0) p.joints = vectors<glm::vec4>(a.data, 4);
+        if (l_oA.index == 0) l_oP.m_vJoints = f_Vectors<glm::vec4>(l_oA.data, 4);
         break;
     case cgltf_attribute_type_weights:
-        if (a.index == 0) p.weights = vectors<glm::vec4>(a.data, 4);
+        if (l_oA.index == 0) l_oP.m_vWeights = f_Vectors<glm::vec4>(l_oA.data, 4);
         break;
     default: break;
     }
@@ -242,549 +242,549 @@ void readAttribute(const cgltf_attribute& a, Primitive& p) {
 
 // ---- physics: KHR_implicit_shapes + KHR_physics_rigid_bodies (cgltf keeps them as raw JSON) ------------
 
-nlohmann::json extensionJson(const cgltf_extension* ext, size_t count, const char* name) {
-    for (size_t i = 0; i < count; i++)
-        if (ext[i].name && std::strcmp(ext[i].name, name) == 0 && ext[i].data)
-            return nlohmann::json::parse(ext[i].data, nullptr, false);
+nlohmann::json f_ExtensionJson(const cgltf_extension* l_pExt, size_t l_nCount, const char* l_pszName) {
+    for (size_t l_nI = 0; l_nI < l_nCount; l_nI++)
+        if (l_pExt[l_nI].name && std::strcmp(l_pExt[l_nI].name, l_pszName) == 0 && l_pExt[l_nI].data)
+            return nlohmann::json::parse(l_pExt[l_nI].data, nullptr, false);
     return nlohmann::json();
 }
 
-glm::vec3 vec3Of(const nlohmann::json& j, const char* key, glm::vec3 def) {
-    if (!j.contains(key) || !j[key].is_array() || j[key].size() < 3) return def;
-    return {j[key][0].get<float>(), j[key][1].get<float>(), j[key][2].get<float>()};
+glm::vec3 f_Vec3Of(const nlohmann::json& l_jJ, const char* l_pszKey, glm::vec3 l_v3Def) {
+    if (!l_jJ.contains(l_pszKey) || !l_jJ[l_pszKey].is_array() || l_jJ[l_pszKey].size() < 3) return l_v3Def;
+    return {l_jJ[l_pszKey][0].get<float>(), l_jJ[l_pszKey][1].get<float>(), l_jJ[l_pszKey][2].get<float>()};
 }
 
-PhysicsCombine combineOf(const nlohmann::json& j, const char* key) {
-    const std::string v = j.value(key, std::string());
-    return v == "average" ? PhysicsCombine::Average : v == "minimum" ? PhysicsCombine::Minimum
-         : v == "maximum" ? PhysicsCombine::Maximum : v == "multiply" ? PhysicsCombine::Multiply : PhysicsCombine::Unset;
+PhysicsCombine f_CombineOf(const nlohmann::json& l_jJ, const char* l_pszKey) {
+    const std::string l_strV = l_jJ.value(l_pszKey, std::string());
+    return l_strV == "average" ? PhysicsCombine::Average : l_strV == "minimum" ? PhysicsCombine::Minimum
+         : l_strV == "maximum" ? PhysicsCombine::Maximum : l_strV == "multiply" ? PhysicsCombine::Multiply : PhysicsCombine::Unset;
 }
 
-std::vector<std::string> stringsOf(const nlohmann::json& j, const char* key) {
-    std::vector<std::string> out;
-    if (j.contains(key) && j[key].is_array())
-        for (const auto& v : j[key]) if (v.is_string()) out.push_back(v.get<std::string>());
-    return out;
+std::vector<std::string> f_StringsOf(const nlohmann::json& l_jJ, const char* l_pszKey) {
+    std::vector<std::string> l_vOut;
+    if (l_jJ.contains(l_pszKey) && l_jJ[l_pszKey].is_array())
+        for (const auto& l_jV : l_jJ[l_pszKey]) if (l_jV.is_string()) l_vOut.push_back(l_jV.get<std::string>());
+    return l_vOut;
 }
 
-std::vector<int> intsOf(const nlohmann::json& j, const char* key) {
-    std::vector<int> out;
-    if (j.contains(key) && j[key].is_array())
-        for (const auto& v : j[key]) if (v.is_number_integer()) out.push_back(v.get<int>());
-    return out;
+std::vector<int> f_IntsOf(const nlohmann::json& l_jJ, const char* l_pszKey) {
+    std::vector<int> l_vOut;
+    if (l_jJ.contains(l_pszKey) && l_jJ[l_pszKey].is_array())
+        for (const auto& l_jV : l_jJ[l_pszKey]) if (l_jV.is_number_integer()) l_vOut.push_back(l_jV.get<int>());
+    return l_vOut;
 }
 
-PhysicsGeometry geometryOf(const nlohmann::json& j) {
-    PhysicsGeometry g;
-    if (!j.is_object()) return g;
-    g.shape = j.value("shape", -1);
-    g.mesh = j.value("mesh", -1);
-    g.convexHull = j.value("convexHull", false);
-    return g;
+PhysicsGeometry f_GeometryOf(const nlohmann::json& l_jJ) {
+    PhysicsGeometry l_oG;
+    if (!l_jJ.is_object()) return l_oG;
+    l_oG.m_iShape = l_jJ.value("shape", -1);
+    l_oG.m_iMesh = l_jJ.value("mesh", -1);
+    l_oG.m_bConvexHull = l_jJ.value("convexHull", false);
+    return l_oG;
 }
 
 // Reads the two extensions into m.physics. Indices are checked here, so the simulation can trust them.
-void readPhysics(const cgltf_data* d, Model& m) {
-    const nlohmann::json shapes = extensionJson(d->data_extensions, d->data_extensions_count, "KHR_implicit_shapes");
-    const nlohmann::json doc = extensionJson(d->data_extensions, d->data_extensions_count, "KHR_physics_rigid_bodies");
-    Physics& ph = m.physics;
-    if (shapes.is_object() && shapes.contains("shapes") && shapes["shapes"].is_array())
-        for (const auto& j : shapes["shapes"]) {
-            PhysicsShape s;
-            const std::string type = j.value("type", std::string());
-            const nlohmann::json body = j.contains(type) ? j[type] : nlohmann::json::object();
-            if (type == "sphere") { s.type = PhysicsShape::Type::Sphere; s.radius = body.value("radius", 0.5f); }
-            else if (type == "box") { s.type = PhysicsShape::Type::Box; s.size = vec3Of(body, "size", glm::vec3(1.0f)); }
-            else if (type == "capsule" || type == "cylinder") {
-                s.type = type == "capsule" ? PhysicsShape::Type::Capsule : PhysicsShape::Type::Cylinder;
-                s.height = body.value("height", 0.5f);
-                s.radiusTop = body.value("radiusTop", 0.25f);
-                s.radiusBottom = body.value("radiusBottom", 0.25f);
-            } else if (type == "plane") {
-                s.type = PhysicsShape::Type::Plane;
-                s.sizeX = body.value("sizeX", 0.0f);
-                s.sizeZ = body.value("sizeZ", 0.0f);
-                s.doubleSided = body.value("doubleSided", false);
+void f_ReadPhysics(const cgltf_data* l_pD, Model& l_oM) {
+    const nlohmann::json l_jShapes = f_ExtensionJson(l_pD->data_extensions, l_pD->data_extensions_count, "KHR_implicit_shapes");
+    const nlohmann::json l_jDoc = f_ExtensionJson(l_pD->data_extensions, l_pD->data_extensions_count, "KHR_physics_rigid_bodies");
+    Physics& l_oPh = l_oM.m_oPhysics;
+    if (l_jShapes.is_object() && l_jShapes.contains("shapes") && l_jShapes["shapes"].is_array())
+        for (const auto& l_jJ : l_jShapes["shapes"]) {
+            PhysicsShape l_oS;
+            const std::string l_strType = l_jJ.value("type", std::string());
+            const nlohmann::json l_jBody = l_jJ.contains(l_strType) ? l_jJ[l_strType] : nlohmann::json::object();
+            if (l_strType == "sphere") { l_oS.m_eType = PhysicsShape::Type::Sphere; l_oS.m_fRadius = l_jBody.value("radius", 0.5f); }
+            else if (l_strType == "box") { l_oS.m_eType = PhysicsShape::Type::Box; l_oS.m_v3Size = f_Vec3Of(l_jBody, "size", glm::vec3(1.0f)); }
+            else if (l_strType == "capsule" || l_strType == "cylinder") {
+                l_oS.m_eType = l_strType == "capsule" ? PhysicsShape::Type::Capsule : PhysicsShape::Type::Cylinder;
+                l_oS.m_fHeight = l_jBody.value("height", 0.5f);
+                l_oS.m_fRadiusTop = l_jBody.value("radiusTop", 0.25f);
+                l_oS.m_fRadiusBottom = l_jBody.value("radiusBottom", 0.25f);
+            } else if (l_strType == "plane") {
+                l_oS.m_eType = PhysicsShape::Type::Plane;
+                l_oS.m_fSizeX = l_jBody.value("sizeX", 0.0f);
+                l_oS.m_fSizeZ = l_jBody.value("sizeZ", 0.0f);
+                l_oS.m_bDoubleSided = l_jBody.value("doubleSided", false);
             } else {
-                m.warnings.push_back("physics: unknown implicit shape type '" + type + "' (read as a 1 m box)");
+                l_oM.m_vWarnings.push_back("physics: unknown implicit shape type '" + l_strType + "' (read as a 1 m box)");
             }
-            ph.shapes.push_back(s);
+            l_oPh.m_vShapes.push_back(l_oS);
         }
-    if (doc.is_object()) {
-        if (doc.contains("physicsMaterials") && doc["physicsMaterials"].is_array())
-            for (const auto& j : doc["physicsMaterials"]) {
-                PhysicsMaterial pm;
-                pm.staticFriction = j.value("staticFriction", 0.6f);
-                pm.dynamicFriction = j.value("dynamicFriction", 0.6f);
-                pm.restitution = j.value("restitution", 0.0f);
-                pm.frictionCombine = combineOf(j, "frictionCombine");
-                pm.restitutionCombine = combineOf(j, "restitutionCombine");
-                ph.materials.push_back(pm);
+    if (l_jDoc.is_object()) {
+        if (l_jDoc.contains("physicsMaterials") && l_jDoc["physicsMaterials"].is_array())
+            for (const auto& l_jJ : l_jDoc["physicsMaterials"]) {
+                PhysicsMaterial l_oPm;
+                l_oPm.m_fStaticFriction = l_jJ.value("staticFriction", 0.6f);
+                l_oPm.m_fDynamicFriction = l_jJ.value("dynamicFriction", 0.6f);
+                l_oPm.m_fRestitution = l_jJ.value("restitution", 0.0f);
+                l_oPm.m_eFrictionCombine = f_CombineOf(l_jJ, "frictionCombine");
+                l_oPm.m_eRestitutionCombine = f_CombineOf(l_jJ, "restitutionCombine");
+                l_oPh.m_vMaterials.push_back(l_oPm);
             }
-        if (doc.contains("collisionFilters") && doc["collisionFilters"].is_array())
-            for (const auto& j : doc["collisionFilters"]) {
-                PhysicsFilter f;
-                f.systems = stringsOf(j, "collisionSystems");
-                f.collideWith = stringsOf(j, "collideWithSystems");
-                f.notCollideWith = stringsOf(j, "notCollideWithSystems");
-                ph.filters.push_back(f);
+        if (l_jDoc.contains("collisionFilters") && l_jDoc["collisionFilters"].is_array())
+            for (const auto& l_jJ : l_jDoc["collisionFilters"]) {
+                PhysicsFilter l_oF;
+                l_oF.m_vSystems = f_StringsOf(l_jJ, "collisionSystems");
+                l_oF.m_vCollideWith = f_StringsOf(l_jJ, "collideWithSystems");
+                l_oF.m_vNotCollideWith = f_StringsOf(l_jJ, "notCollideWithSystems");
+                l_oPh.m_vFilters.push_back(l_oF);
             }
-        if (doc.contains("physicsJoints") && doc["physicsJoints"].is_array())
-            for (const auto& j : doc["physicsJoints"]) {
-                PhysicsJoint pj;
-                if (j.contains("limits") && j["limits"].is_array())
-                    for (const auto& l : j["limits"]) {
-                        PhysicsJointLimit o;
-                        o.linearAxes = intsOf(l, "linearAxes");
-                        o.angularAxes = intsOf(l, "angularAxes");
-                        o.hasMin = l.contains("min");
-                        o.hasMax = l.contains("max");
-                        o.min = l.value("min", 0.0f);
-                        o.max = l.value("max", 0.0f);
-                        o.stiffness = l.contains("stiffness") ? l.value("stiffness", 0.0f) : -1.0f;
-                        o.damping = l.value("damping", 0.0f);
-                        pj.limits.push_back(o);
+        if (l_jDoc.contains("physicsJoints") && l_jDoc["physicsJoints"].is_array())
+            for (const auto& l_jJ : l_jDoc["physicsJoints"]) {
+                PhysicsJoint l_oPj;
+                if (l_jJ.contains("limits") && l_jJ["limits"].is_array())
+                    for (const auto& l_jL : l_jJ["limits"]) {
+                        PhysicsJointLimit l_oO;
+                        l_oO.m_vLinearAxes = f_IntsOf(l_jL, "linearAxes");
+                        l_oO.m_vAngularAxes = f_IntsOf(l_jL, "angularAxes");
+                        l_oO.m_bHasMin = l_jL.contains("min");
+                        l_oO.m_bHasMax = l_jL.contains("max");
+                        l_oO.m_fMin = l_jL.value("min", 0.0f);
+                        l_oO.m_fMax = l_jL.value("max", 0.0f);
+                        l_oO.m_fStiffness = l_jL.contains("stiffness") ? l_jL.value("stiffness", 0.0f) : -1.0f;
+                        l_oO.m_fDamping = l_jL.value("damping", 0.0f);
+                        l_oPj.m_vLimits.push_back(l_oO);
                     }
-                if (j.contains("drives") && j["drives"].is_array())
-                    for (const auto& dr : j["drives"]) {
-                        PhysicsJointDrive o;
-                        o.angular = dr.value("type", std::string()) == "angular";
-                        o.acceleration = dr.value("mode", std::string()) == "acceleration";
-                        o.axis = std::clamp(dr.value("axis", 0), 0, 2);
-                        o.maxForce = dr.contains("maxForce") ? dr.value("maxForce", 0.0f) : -1.0f;
-                        o.hasPositionTarget = dr.contains("positionTarget");
-                        o.hasVelocityTarget = dr.contains("velocityTarget");
-                        o.positionTarget = dr.value("positionTarget", 0.0f);
-                        o.velocityTarget = dr.value("velocityTarget", 0.0f);
-                        o.stiffness = dr.value("stiffness", 0.0f);
-                        o.damping = dr.value("damping", 0.0f);
-                        pj.drives.push_back(o);
+                if (l_jJ.contains("drives") && l_jJ["drives"].is_array())
+                    for (const auto& l_jDr : l_jJ["drives"]) {
+                        PhysicsJointDrive l_oO;
+                        l_oO.m_bAngular = l_jDr.value("type", std::string()) == "angular";
+                        l_oO.m_bAcceleration = l_jDr.value("mode", std::string()) == "acceleration";
+                        l_oO.m_iAxis = std::clamp(l_jDr.value("axis", 0), 0, 2);
+                        l_oO.m_fMaxForce = l_jDr.contains("maxForce") ? l_jDr.value("maxForce", 0.0f) : -1.0f;
+                        l_oO.m_bHasPositionTarget = l_jDr.contains("positionTarget");
+                        l_oO.m_bHasVelocityTarget = l_jDr.contains("velocityTarget");
+                        l_oO.m_fPositionTarget = l_jDr.value("positionTarget", 0.0f);
+                        l_oO.m_fVelocityTarget = l_jDr.value("velocityTarget", 0.0f);
+                        l_oO.m_fStiffness = l_jDr.value("stiffness", 0.0f);
+                        l_oO.m_fDamping = l_jDr.value("damping", 0.0f);
+                        l_oPj.m_vDrives.push_back(l_oO);
                     }
-                ph.joints.push_back(pj);
+                l_oPh.m_vJoints.push_back(l_oPj);
             }
     }
-    bool anyNode = false;
-    std::vector<NodePhysics> nodes(d->nodes_count);
-    auto checkGeometry = [&](PhysicsGeometry& g, const std::string& where) {
-        if (g.shape >= (int)ph.shapes.size()) { m.warnings.push_back(where + ": shape " + std::to_string(g.shape) + " does not exist"); g.shape = -1; }
-        if (g.mesh >= (int)m.meshes.size()) { m.warnings.push_back(where + ": mesh " + std::to_string(g.mesh) + " does not exist"); g.mesh = -1; }
+    bool l_bAnyNode = false;
+    std::vector<NodePhysics> l_vNodes(l_pD->nodes_count);
+    auto l_fnCheckGeometry = [&](PhysicsGeometry& l_oG, const std::string& l_strWhere) {
+        if (l_oG.m_iShape >= (int)l_oPh.m_vShapes.size()) { l_oM.m_vWarnings.push_back(l_strWhere + ": shape " + std::to_string(l_oG.m_iShape) + " does not exist"); l_oG.m_iShape = -1; }
+        if (l_oG.m_iMesh >= (int)l_oM.m_vMeshes.size()) { l_oM.m_vWarnings.push_back(l_strWhere + ": mesh " + std::to_string(l_oG.m_iMesh) + " does not exist"); l_oG.m_iMesh = -1; }
     };
-    for (size_t i = 0; i < d->nodes_count; i++) {
-        const nlohmann::json j = extensionJson(d->nodes[i].extensions, d->nodes[i].extensions_count, "KHR_physics_rigid_bodies");
-        if (!j.is_object()) continue;
-        anyNode = true;
-        NodePhysics& n = nodes[i];
-        const std::string where = "physics, node '" + m.nodes[i].name + "'";
-        if (j.contains("motion") && j["motion"].is_object()) {
-            const auto& mo = j["motion"];
-            n.hasMotion = true;
-            n.kinematic = mo.value("isKinematic", false);
-            n.mass = mo.contains("mass") ? mo.value("mass", 1.0f) : -1.0f;
-            n.hasCenterOfMass = mo.contains("centerOfMass");
-            n.centerOfMass = vec3Of(mo, "centerOfMass", glm::vec3(0.0f));
-            n.hasInertia = mo.contains("inertiaDiagonal");
-            n.inertiaDiagonal = vec3Of(mo, "inertiaDiagonal", glm::vec3(0.0f));
-            if (mo.contains("inertiaOrientation") && mo["inertiaOrientation"].is_array() && mo["inertiaOrientation"].size() == 4) {
-                const auto& q = mo["inertiaOrientation"];
-                n.inertiaOrientation = glm::normalize(glm::quat(q[3].get<float>(), q[0].get<float>(), q[1].get<float>(), q[2].get<float>()));
+    for (size_t l_nI = 0; l_nI < l_pD->nodes_count; l_nI++) {
+        const nlohmann::json l_jJ = f_ExtensionJson(l_pD->nodes[l_nI].extensions, l_pD->nodes[l_nI].extensions_count, "KHR_physics_rigid_bodies");
+        if (!l_jJ.is_object()) continue;
+        l_bAnyNode = true;
+        NodePhysics& l_oN = l_vNodes[l_nI];
+        const std::string l_strWhere = "physics, node '" + l_oM.m_vNodes[l_nI].m_strName + "'";
+        if (l_jJ.contains("motion") && l_jJ["motion"].is_object()) {
+            const auto& l_jMo = l_jJ["motion"];
+            l_oN.m_bHasMotion = true;
+            l_oN.m_bKinematic = l_jMo.value("isKinematic", false);
+            l_oN.m_fMass = l_jMo.contains("mass") ? l_jMo.value("mass", 1.0f) : -1.0f;
+            l_oN.m_bHasCenterOfMass = l_jMo.contains("centerOfMass");
+            l_oN.m_v3CenterOfMass = f_Vec3Of(l_jMo, "centerOfMass", glm::vec3(0.0f));
+            l_oN.m_bHasInertia = l_jMo.contains("inertiaDiagonal");
+            l_oN.m_v3InertiaDiagonal = f_Vec3Of(l_jMo, "inertiaDiagonal", glm::vec3(0.0f));
+            if (l_jMo.contains("inertiaOrientation") && l_jMo["inertiaOrientation"].is_array() && l_jMo["inertiaOrientation"].size() == 4) {
+                const auto& l_jQ = l_jMo["inertiaOrientation"];
+                l_oN.m_qInertiaOrientation = glm::normalize(glm::quat(l_jQ[3].get<float>(), l_jQ[0].get<float>(), l_jQ[1].get<float>(), l_jQ[2].get<float>()));
             }
-            n.linearVelocity = vec3Of(mo, "linearVelocity", glm::vec3(0.0f));
-            n.angularVelocity = vec3Of(mo, "angularVelocity", glm::vec3(0.0f));
-            n.gravityFactor = mo.value("gravityFactor", 1.0f);
+            l_oN.m_v3LinearVelocity = f_Vec3Of(l_jMo, "linearVelocity", glm::vec3(0.0f));
+            l_oN.m_v3AngularVelocity = f_Vec3Of(l_jMo, "angularVelocity", glm::vec3(0.0f));
+            l_oN.m_fGravityFactor = l_jMo.value("gravityFactor", 1.0f);
         }
-        if (j.contains("collider") && j["collider"].is_object()) {
-            const auto& c = j["collider"];
-            n.collider = geometryOf(c.value("geometry", nlohmann::json::object()));
-            checkGeometry(n.collider, where);
-            n.hasCollider = n.collider.valid();
-            n.material = c.value("physicsMaterial", -1);
-            n.filter = c.value("collisionFilter", -1);
-            if (n.material >= (int)ph.materials.size()) n.material = -1;
-            if (n.filter >= (int)ph.filters.size()) n.filter = -1;
+        if (l_jJ.contains("collider") && l_jJ["collider"].is_object()) {
+            const auto& l_jC = l_jJ["collider"];
+            l_oN.m_oCollider = f_GeometryOf(l_jC.value("geometry", nlohmann::json::object()));
+            l_fnCheckGeometry(l_oN.m_oCollider, l_strWhere);
+            l_oN.m_bHasCollider = l_oN.m_oCollider.f_Valid();
+            l_oN.m_iMaterial = l_jC.value("physicsMaterial", -1);
+            l_oN.m_iFilter = l_jC.value("collisionFilter", -1);
+            if (l_oN.m_iMaterial >= (int)l_oPh.m_vMaterials.size()) l_oN.m_iMaterial = -1;
+            if (l_oN.m_iFilter >= (int)l_oPh.m_vFilters.size()) l_oN.m_iFilter = -1;
         }
-        if (j.contains("trigger") && j["trigger"].is_object()) {
-            const auto& t = j["trigger"];
-            n.trigger = geometryOf(t.value("geometry", nlohmann::json::object()));
-            checkGeometry(n.trigger, where);
-            for (int k : intsOf(t, "nodes")) if (k >= 0 && k < (int)d->nodes_count) n.triggerNodes.push_back(k);
-            n.hasTrigger = n.trigger.valid() || !n.triggerNodes.empty();
-            n.triggerFilter = t.value("collisionFilter", -1);
-            if (n.triggerFilter >= (int)ph.filters.size()) n.triggerFilter = -1;
+        if (l_jJ.contains("trigger") && l_jJ["trigger"].is_object()) {
+            const auto& l_jT = l_jJ["trigger"];
+            l_oN.m_oTrigger = f_GeometryOf(l_jT.value("geometry", nlohmann::json::object()));
+            l_fnCheckGeometry(l_oN.m_oTrigger, l_strWhere);
+            for (int l_iK : f_IntsOf(l_jT, "nodes")) if (l_iK >= 0 && l_iK < (int)l_pD->nodes_count) l_oN.m_vTriggerNodes.push_back(l_iK);
+            l_oN.m_bHasTrigger = l_oN.m_oTrigger.f_Valid() || !l_oN.m_vTriggerNodes.empty();
+            l_oN.m_iTriggerFilter = l_jT.value("collisionFilter", -1);
+            if (l_oN.m_iTriggerFilter >= (int)l_oPh.m_vFilters.size()) l_oN.m_iTriggerFilter = -1;
         }
-        if (j.contains("joint") && j["joint"].is_object()) {
-            const auto& jo = j["joint"];
-            n.connectedNode = jo.value("connectedNode", -1);
-            n.joint = jo.value("joint", -1);
-            n.enableCollision = jo.value("enableCollision", false);
-            n.hasJoint = n.connectedNode >= 0 && n.connectedNode < (int)d->nodes_count && n.joint >= 0 && n.joint < (int)ph.joints.size();
-            if (!n.hasJoint) m.warnings.push_back(where + ": a joint with a bad connectedNode or joint index (ignored)");
+        if (l_jJ.contains("joint") && l_jJ["joint"].is_object()) {
+            const auto& l_jJo = l_jJ["joint"];
+            l_oN.m_iConnectedNode = l_jJo.value("connectedNode", -1);
+            l_oN.m_iJoint = l_jJo.value("joint", -1);
+            l_oN.m_bEnableCollision = l_jJo.value("enableCollision", false);
+            l_oN.m_bHasJoint = l_oN.m_iConnectedNode >= 0 && l_oN.m_iConnectedNode < (int)l_pD->nodes_count && l_oN.m_iJoint >= 0 && l_oN.m_iJoint < (int)l_oPh.m_vJoints.size();
+            if (!l_oN.m_bHasJoint) l_oM.m_vWarnings.push_back(l_strWhere + ": a joint with a bad connectedNode or joint index (ignored)");
         }
     }
-    if (anyNode) ph.nodes = std::move(nodes);
+    if (l_bAnyNode) l_oPh.m_vNodes = std::move(l_vNodes);
 }
 
-bool convert(const cgltf_data* d, const std::string& baseDir, Model& m, std::string* error) {
-    m.generator = d->asset.generator ? d->asset.generator : "";
-    for (size_t i = 0; i < d->extensions_used_count; i++) {
-        const std::string e = d->extensions_used[i];
-        m.extensionsUsed.push_back(e);
-        if (!supported(e)) m.ignoredExtensions.push_back(e);
+bool f_Convert(const cgltf_data* l_pD, const std::string& l_strBaseDir, Model& l_oM, std::string* l_pError) {
+    l_oM.m_strGenerator = l_pD->asset.generator ? l_pD->asset.generator : "";
+    for (size_t l_nI = 0; l_nI < l_pD->extensions_used_count; l_nI++) {
+        const std::string l_strE = l_pD->extensions_used[l_nI];
+        l_oM.m_vExtensionsUsed.push_back(l_strE);
+        if (!f_Supported(l_strE)) l_oM.m_vIgnoredExtensions.push_back(l_strE);
     }
-    for (size_t i = 0; i < d->extensions_required_count; i++) {
-        const std::string e = d->extensions_required[i];
-        if (!supported(e)) {
-            if (error) *error = "the file requires the extension " + e + ", which this engine cannot read yet "
+    for (size_t l_nI = 0; l_nI < l_pD->extensions_required_count; l_nI++) {
+        const std::string l_strE = l_pD->extensions_required[l_nI];
+        if (!f_Supported(l_strE)) {
+            if (l_pError) *l_pError = "the file requires the extension " + l_strE + ", which this engine cannot read yet "
                                "(re-export without it, e.g. gltf-transform: no Draco / meshopt / KTX2)";
             return false;
         }
     }
 
     // Images and textures.
-    m.images.resize(d->images_count);
-    for (size_t i = 0; i < d->images_count; i++) decodeImage(d->images[i], baseDir, m.images[i], m.warnings);
-    m.textures.resize(d->textures_count);
-    for (size_t i = 0; i < d->textures_count; i++) {
-        const cgltf_texture& t = d->textures[i];
-        Texture& o = m.textures[i];
-        o.image = indexOf(t.image, d->images);
-        if (const cgltf_sampler* s = t.sampler) {
-            o.repeatS = (int)s->wrap_s == 10497;
-            o.repeatT = (int)s->wrap_t == 10497;
-            o.mirrorS = (int)s->wrap_s == 33648;
-            o.mirrorT = (int)s->wrap_t == 33648;
-            o.nearest = (int)s->mag_filter == 9728;
+    l_oM.m_vImages.resize(l_pD->images_count);
+    for (size_t l_nI = 0; l_nI < l_pD->images_count; l_nI++) f_DecodeImage(l_pD->images[l_nI], l_strBaseDir, l_oM.m_vImages[l_nI], l_oM.m_vWarnings);
+    l_oM.m_vTextures.resize(l_pD->textures_count);
+    for (size_t l_nI = 0; l_nI < l_pD->textures_count; l_nI++) {
+        const cgltf_texture& l_oT = l_pD->textures[l_nI];
+        Texture& l_oO = l_oM.m_vTextures[l_nI];
+        l_oO.m_iImage = f_IndexOf(l_oT.image, l_pD->images);
+        if (const cgltf_sampler* l_pS = l_oT.sampler) {
+            l_oO.m_bRepeatS = (int)l_pS->wrap_s == 10497;
+            l_oO.m_bRepeatT = (int)l_pS->wrap_t == 10497;
+            l_oO.m_bMirrorS = (int)l_pS->wrap_s == 33648;
+            l_oO.m_bMirrorT = (int)l_pS->wrap_t == 33648;
+            l_oO.m_bNearest = (int)l_pS->mag_filter == 9728;
         }
     }
 
     // Materials.
-    m.materials.resize(d->materials_count);
-    for (size_t i = 0; i < d->materials_count; i++) {
-        const cgltf_material& s = d->materials[i];
-        Material& o = m.materials[i];
-        o.name = s.name ? s.name : "";
-        if (s.has_pbr_metallic_roughness) {
-            const auto& pbr = s.pbr_metallic_roughness;
-            o.baseColor = glm::make_vec4(pbr.base_color_factor);
-            o.metallic = pbr.metallic_factor;
-            o.roughness = pbr.roughness_factor;
-            o.baseColorTex = textureRef(d, pbr.base_color_texture);
-            o.metalRoughTex = textureRef(d, pbr.metallic_roughness_texture);
-        } else if (s.has_pbr_specular_glossiness) {   // older files: diffuse as base colour, no metal
-            const auto& sg = s.pbr_specular_glossiness;
-            o.baseColor = glm::make_vec4(sg.diffuse_factor);
-            o.metallic = 0.0f;
-            o.roughness = 1.0f - sg.glossiness_factor;
-            o.baseColorTex = textureRef(d, sg.diffuse_texture);
+    l_oM.m_vMaterials.resize(l_pD->materials_count);
+    for (size_t l_nI = 0; l_nI < l_pD->materials_count; l_nI++) {
+        const cgltf_material& l_oS = l_pD->materials[l_nI];
+        Material& l_oO = l_oM.m_vMaterials[l_nI];
+        l_oO.m_strName = l_oS.name ? l_oS.name : "";
+        if (l_oS.has_pbr_metallic_roughness) {
+            const auto& l_oPbr = l_oS.pbr_metallic_roughness;
+            l_oO.m_v4BaseColor = glm::make_vec4(l_oPbr.base_color_factor);
+            l_oO.m_fMetallic = l_oPbr.metallic_factor;
+            l_oO.m_fRoughness = l_oPbr.roughness_factor;
+            l_oO.m_oBaseColorTex = f_TextureRef(l_pD, l_oPbr.base_color_texture);
+            l_oO.m_oMetalRoughTex = f_TextureRef(l_pD, l_oPbr.metallic_roughness_texture);
+        } else if (l_oS.has_pbr_specular_glossiness) {   // older files: diffuse as base colour, no metal
+            const auto& l_oSg = l_oS.pbr_specular_glossiness;
+            l_oO.m_v4BaseColor = glm::make_vec4(l_oSg.diffuse_factor);
+            l_oO.m_fMetallic = 0.0f;
+            l_oO.m_fRoughness = 1.0f - l_oSg.glossiness_factor;
+            l_oO.m_oBaseColorTex = f_TextureRef(l_pD, l_oSg.diffuse_texture);
         }
-        o.normalTex = textureRef(d, s.normal_texture);
-        o.normalScale = s.normal_texture.texture ? s.normal_texture.scale : 1.0f;
-        o.occlusionTex = textureRef(d, s.occlusion_texture);
-        o.occlusionStrength = s.occlusion_texture.texture ? s.occlusion_texture.scale : 1.0f;
-        o.emissiveTex = textureRef(d, s.emissive_texture);
-        o.emissive = glm::make_vec3(s.emissive_factor) * (s.has_emissive_strength ? s.emissive_strength.emissive_strength : 1.0f);
-        o.alphaMode = s.alpha_mode == cgltf_alpha_mode_mask ? AlphaMode::Mask
-                    : s.alpha_mode == cgltf_alpha_mode_blend ? AlphaMode::Blend : AlphaMode::Opaque;
-        o.alphaCutoff = s.alpha_cutoff;
-        o.doubleSided = s.double_sided;
-        o.unlit = s.unlit;
-        if (s.has_transmission) o.transmission = s.transmission.transmission_factor;
-        if (s.has_volume) o.attenuationColor = glm::make_vec3(s.volume.attenuation_color);
-        if (s.has_specular) {
-            o.specular = s.specular.specular_factor;
-            o.specularColor = glm::make_vec3(s.specular.specular_color_factor);
-            o.specularTex = textureRef(d, s.specular.specular_texture);
-            o.specularColorTex = textureRef(d, s.specular.specular_color_texture);
+        l_oO.m_oNormalTex = f_TextureRef(l_pD, l_oS.normal_texture);
+        l_oO.m_fNormalScale = l_oS.normal_texture.texture ? l_oS.normal_texture.scale : 1.0f;
+        l_oO.m_oOcclusionTex = f_TextureRef(l_pD, l_oS.occlusion_texture);
+        l_oO.m_fOcclusionStrength = l_oS.occlusion_texture.texture ? l_oS.occlusion_texture.scale : 1.0f;
+        l_oO.m_oEmissiveTex = f_TextureRef(l_pD, l_oS.emissive_texture);
+        l_oO.m_v3Emissive = glm::make_vec3(l_oS.emissive_factor) * (l_oS.has_emissive_strength ? l_oS.emissive_strength.emissive_strength : 1.0f);
+        l_oO.m_eAlphaMode = l_oS.alpha_mode == cgltf_alpha_mode_mask ? AlphaMode::Mask
+                    : l_oS.alpha_mode == cgltf_alpha_mode_blend ? AlphaMode::Blend : AlphaMode::Opaque;
+        l_oO.m_fAlphaCutoff = l_oS.alpha_cutoff;
+        l_oO.m_bDoubleSided = l_oS.double_sided;
+        l_oO.m_bUnlit = l_oS.unlit;
+        if (l_oS.has_transmission) l_oO.m_fTransmission = l_oS.transmission.transmission_factor;
+        if (l_oS.has_volume) l_oO.m_v3AttenuationColor = glm::make_vec3(l_oS.volume.attenuation_color);
+        if (l_oS.has_specular) {
+            l_oO.m_fSpecular = l_oS.specular.specular_factor;
+            l_oO.m_v3SpecularColor = glm::make_vec3(l_oS.specular.specular_color_factor);
+            l_oO.m_oSpecularTex = f_TextureRef(l_pD, l_oS.specular.specular_texture);
+            l_oO.m_oSpecularColorTex = f_TextureRef(l_pD, l_oS.specular.specular_color_texture);
         }
-        if (s.has_ior) o.ior = s.ior.ior;
-        for (const TextureRef* r : {&o.baseColorTex, &o.emissiveTex, &o.specularColorTex})   // colour data: sRGB
-            if (r->valid()) m.textures[(size_t)r->texture].srgb = true;
+        if (l_oS.has_ior) l_oO.m_fIor = l_oS.ior.ior;
+        for (const TextureRef* l_pR : {&l_oO.m_oBaseColorTex, &l_oO.m_oEmissiveTex, &l_oO.m_oSpecularColorTex})   // colour data: sRGB
+            if (l_pR->f_Valid()) l_oM.m_vTextures[(size_t)l_pR->m_iTexture].m_bSrgb = true;
     }
 
     // Meshes.
-    m.meshes.resize(d->meshes_count);
-    for (size_t i = 0; i < d->meshes_count; i++) {
-        const cgltf_mesh& s = d->meshes[i];
-        Mesh& o = m.meshes[i];
-        o.name = s.name ? s.name : "";
-        o.weights.assign(s.weights, s.weights + s.weights_count);
-        for (size_t t = 0; t < s.target_names_count; t++) o.targetNames.push_back(s.target_names[t]);
-        for (size_t pi = 0; pi < s.primitives_count; pi++) {
-            const cgltf_primitive& sp = s.primitives[pi];
-            if (sp.has_draco_mesh_compression) {
-                m.warnings.push_back("mesh '" + o.name + "': a Draco-compressed primitive is skipped");
+    l_oM.m_vMeshes.resize(l_pD->meshes_count);
+    for (size_t l_nI = 0; l_nI < l_pD->meshes_count; l_nI++) {
+        const cgltf_mesh& l_oS = l_pD->meshes[l_nI];
+        Mesh& l_oO = l_oM.m_vMeshes[l_nI];
+        l_oO.m_strName = l_oS.name ? l_oS.name : "";
+        l_oO.m_vWeights.assign(l_oS.weights, l_oS.weights + l_oS.weights_count);
+        for (size_t l_nT = 0; l_nT < l_oS.target_names_count; l_nT++) l_oO.m_vTargetNames.push_back(l_oS.target_names[l_nT]);
+        for (size_t l_nPi = 0; l_nPi < l_oS.primitives_count; l_nPi++) {
+            const cgltf_primitive& l_oSp = l_oS.primitives[l_nPi];
+            if (l_oSp.has_draco_mesh_compression) {
+                l_oM.m_vWarnings.push_back("mesh '" + l_oO.m_strName + "': a Draco-compressed primitive is skipped");
                 continue;
             }
-            Primitive p;
-            p.material = indexOf(sp.material, d->materials);
-            for (size_t a = 0; a < sp.attributes_count; a++) readAttribute(sp.attributes[a], p);
-            if (p.position.empty()) continue;
-            std::vector<uint32_t> idx;
-            if (sp.indices) {
-                idx.resize(sp.indices->count);
-                for (size_t k = 0; k < idx.size(); k++) idx[k] = (uint32_t)cgltf_accessor_read_index(sp.indices, k);
+            Primitive l_oP;
+            l_oP.m_iMaterial = f_IndexOf(l_oSp.material, l_pD->materials);
+            for (size_t l_nA = 0; l_nA < l_oSp.attributes_count; l_nA++) f_ReadAttribute(l_oSp.attributes[l_nA], l_oP);
+            if (l_oP.m_vPosition.empty()) continue;
+            std::vector<uint32_t> l_vIdx;
+            if (l_oSp.indices) {
+                l_vIdx.resize(l_oSp.indices->count);
+                for (size_t l_nK = 0; l_nK < l_vIdx.size(); l_nK++) l_vIdx[l_nK] = (uint32_t)cgltf_accessor_read_index(l_oSp.indices, l_nK);
             } else {
-                idx.resize(p.position.size());
-                for (uint32_t k = 0; k < (uint32_t)idx.size(); k++) idx[k] = k;
+                l_vIdx.resize(l_oP.m_vPosition.size());
+                for (uint32_t l_uK = 0; l_uK < (uint32_t)l_vIdx.size(); l_uK++) l_vIdx[l_uK] = l_uK;
             }
-            p.indices = toList(sp.type, idx, p.topology);
-            for (size_t t = 0; t < sp.targets_count; t++) {
-                MorphTarget mt;
-                for (size_t a = 0; a < sp.targets[t].attributes_count; a++) {
-                    const cgltf_attribute& ta = sp.targets[t].attributes[a];
-                    if (ta.type == cgltf_attribute_type_position) mt.position = vectors<glm::vec3>(ta.data, 3);
-                    else if (ta.type == cgltf_attribute_type_normal) mt.normal = vectors<glm::vec3>(ta.data, 3);
-                    else if (ta.type == cgltf_attribute_type_tangent) mt.tangent = vectors<glm::vec3>(ta.data, 3);
+            l_oP.m_vIndices = f_ToList(l_oSp.type, l_vIdx, l_oP.m_eTopology);
+            for (size_t l_nT = 0; l_nT < l_oSp.targets_count; l_nT++) {
+                MorphTarget l_oMt;
+                for (size_t l_nA = 0; l_nA < l_oSp.targets[l_nT].attributes_count; l_nA++) {
+                    const cgltf_attribute& l_oTa = l_oSp.targets[l_nT].attributes[l_nA];
+                    if (l_oTa.type == cgltf_attribute_type_position) l_oMt.m_vPosition = f_Vectors<glm::vec3>(l_oTa.data, 3);
+                    else if (l_oTa.type == cgltf_attribute_type_normal) l_oMt.m_vNormal = f_Vectors<glm::vec3>(l_oTa.data, 3);
+                    else if (l_oTa.type == cgltf_attribute_type_tangent) l_oMt.m_vTangent = f_Vectors<glm::vec3>(l_oTa.data, 3);
                 }
-                p.targets.push_back(std::move(mt));
+                l_oP.m_vTargets.push_back(std::move(l_oMt));
             }
-            if (p.normal.empty() && p.topology == Topology::Triangles) flatNormals(p);
-            p.boundsMin = p.boundsMax = p.position[0];
-            for (const glm::vec3& v : p.position) {
-                p.boundsMin = glm::min(p.boundsMin, v);
-                p.boundsMax = glm::max(p.boundsMax, v);
+            if (l_oP.m_vNormal.empty() && l_oP.m_eTopology == Topology::Triangles) f_FlatNormals(l_oP);
+            l_oP.m_v3BoundsMin = l_oP.m_v3BoundsMax = l_oP.m_vPosition[0];
+            for (const glm::vec3& l_v3V : l_oP.m_vPosition) {
+                l_oP.m_v3BoundsMin = glm::min(l_oP.m_v3BoundsMin, l_v3V);
+                l_oP.m_v3BoundsMax = glm::max(l_oP.m_v3BoundsMax, l_v3V);
             }
-            o.primitives.push_back(std::move(p));
+            l_oO.m_vPrimitives.push_back(std::move(l_oP));
         }
-        size_t targets = 0;
-        for (const Primitive& p : o.primitives) targets = std::max(targets, p.targets.size());
-        o.weights.resize(targets, 0.0f);
+        size_t l_nTargets = 0;
+        for (const Primitive& l_oP : l_oO.m_vPrimitives) l_nTargets = std::max(l_nTargets, l_oP.m_vTargets.size());
+        l_oO.m_vWeights.resize(l_nTargets, 0.0f);
     }
 
     // Nodes.
-    m.nodes.resize(d->nodes_count);
-    for (size_t i = 0; i < d->nodes_count; i++) {
-        const cgltf_node& s = d->nodes[i];
-        Node& o = m.nodes[i];
-        o.name = s.name ? s.name : "";
-        o.parent = indexOf(s.parent, d->nodes);
-        for (size_t c = 0; c < s.children_count; c++) o.children.push_back(indexOf(s.children[c], d->nodes));
-        if (s.has_matrix) {   // decompose: animations and the editor work on T, R, S
-            glm::mat4 mt = glm::make_mat4(s.matrix);
-            o.translation = glm::vec3(mt[3]);
-            glm::vec3 sc(glm::length(glm::vec3(mt[0])), glm::length(glm::vec3(mt[1])), glm::length(glm::vec3(mt[2])));
-            if (glm::determinant(glm::mat3(mt)) < 0) sc.x = -sc.x;   // mirrored
-            o.scale = sc;
-            glm::mat3 rm(glm::vec3(mt[0]) / (sc.x != 0 ? sc.x : 1.0f), glm::vec3(mt[1]) / (sc.y != 0 ? sc.y : 1.0f),
-                         glm::vec3(mt[2]) / (sc.z != 0 ? sc.z : 1.0f));
-            o.rotation = glm::normalize(glm::quat_cast(rm));
+    l_oM.m_vNodes.resize(l_pD->nodes_count);
+    for (size_t l_nI = 0; l_nI < l_pD->nodes_count; l_nI++) {
+        const cgltf_node& l_oS = l_pD->nodes[l_nI];
+        Node& l_oO = l_oM.m_vNodes[l_nI];
+        l_oO.m_strName = l_oS.name ? l_oS.name : "";
+        l_oO.m_iParent = f_IndexOf(l_oS.parent, l_pD->nodes);
+        for (size_t l_nC = 0; l_nC < l_oS.children_count; l_nC++) l_oO.m_vChildren.push_back(f_IndexOf(l_oS.children[l_nC], l_pD->nodes));
+        if (l_oS.has_matrix) {   // decompose: animations and the editor work on T, R, S
+            glm::mat4 l_mat4Mt = glm::make_mat4(l_oS.matrix);
+            l_oO.m_v3Translation = glm::vec3(l_mat4Mt[3]);
+            glm::vec3 l_v3Sc(glm::length(glm::vec3(l_mat4Mt[0])), glm::length(glm::vec3(l_mat4Mt[1])), glm::length(glm::vec3(l_mat4Mt[2])));
+            if (glm::determinant(glm::mat3(l_mat4Mt)) < 0) l_v3Sc.x = -l_v3Sc.x;   // mirrored
+            l_oO.m_v3Scale = l_v3Sc;
+            glm::mat3 l_mat3Rm(glm::vec3(l_mat4Mt[0]) / (l_v3Sc.x != 0 ? l_v3Sc.x : 1.0f), glm::vec3(l_mat4Mt[1]) / (l_v3Sc.y != 0 ? l_v3Sc.y : 1.0f),
+                         glm::vec3(l_mat4Mt[2]) / (l_v3Sc.z != 0 ? l_v3Sc.z : 1.0f));
+            l_oO.m_qRotation = glm::normalize(glm::quat_cast(l_mat3Rm));
         } else {
-            if (s.has_translation) o.translation = glm::make_vec3(s.translation);
-            if (s.has_rotation) o.rotation = glm::normalize(glm::quat(s.rotation[3], s.rotation[0], s.rotation[1], s.rotation[2]));
-            if (s.has_scale) o.scale = glm::make_vec3(s.scale);
+            if (l_oS.has_translation) l_oO.m_v3Translation = glm::make_vec3(l_oS.translation);
+            if (l_oS.has_rotation) l_oO.m_qRotation = glm::normalize(glm::quat(l_oS.rotation[3], l_oS.rotation[0], l_oS.rotation[1], l_oS.rotation[2]));
+            if (l_oS.has_scale) l_oO.m_v3Scale = glm::make_vec3(l_oS.scale);
         }
-        o.mesh = indexOf(s.mesh, d->meshes);
-        o.skin = indexOf(s.skin, d->skins);
-        o.weights.assign(s.weights, s.weights + s.weights_count);
-        if (s.has_mesh_gpu_instancing) {
-            std::vector<glm::vec3> t, sc;
-            std::vector<glm::vec4> r;
-            size_t count = 0;
-            for (size_t a = 0; a < s.mesh_gpu_instancing.attributes_count; a++) {
-                const cgltf_attribute& at = s.mesh_gpu_instancing.attributes[a];
-                const std::string name = at.name ? at.name : "";
-                if (name == "TRANSLATION") t = vectors<glm::vec3>(at.data, 3);
-                else if (name == "ROTATION") r = vectors<glm::vec4>(at.data, 4);
-                else if (name == "SCALE") sc = vectors<glm::vec3>(at.data, 3, 1.0f);
-                if (at.data) count = std::max(count, (size_t)at.data->count);
+        l_oO.m_iMesh = f_IndexOf(l_oS.mesh, l_pD->meshes);
+        l_oO.m_iSkin = f_IndexOf(l_oS.skin, l_pD->skins);
+        l_oO.m_vWeights.assign(l_oS.weights, l_oS.weights + l_oS.weights_count);
+        if (l_oS.has_mesh_gpu_instancing) {
+            std::vector<glm::vec3> l_vT, l_vSc;
+            std::vector<glm::vec4> l_vR;
+            size_t l_nCount = 0;
+            for (size_t l_nA = 0; l_nA < l_oS.mesh_gpu_instancing.attributes_count; l_nA++) {
+                const cgltf_attribute& l_oAt = l_oS.mesh_gpu_instancing.attributes[l_nA];
+                const std::string l_strName = l_oAt.name ? l_oAt.name : "";
+                if (l_strName == "TRANSLATION") l_vT = f_Vectors<glm::vec3>(l_oAt.data, 3);
+                else if (l_strName == "ROTATION") l_vR = f_Vectors<glm::vec4>(l_oAt.data, 4);
+                else if (l_strName == "SCALE") l_vSc = f_Vectors<glm::vec3>(l_oAt.data, 3, 1.0f);
+                if (l_oAt.data) l_nCount = std::max(l_nCount, (size_t)l_oAt.data->count);
             }
-            for (size_t k = 0; k < count; k++) {
-                const glm::vec3 tt = k < t.size() ? t[k] : glm::vec3(0.0f);
-                const glm::quat rr = k < r.size() ? glm::normalize(glm::quat(r[k].w, r[k].x, r[k].y, r[k].z)) : glm::quat(1, 0, 0, 0);
-                const glm::vec3 ss = k < sc.size() ? sc[k] : glm::vec3(1.0f);
-                o.instances.push_back(composeTRS(tt, rr, ss));
+            for (size_t l_nK = 0; l_nK < l_nCount; l_nK++) {
+                const glm::vec3 l_v3Tt = l_nK < l_vT.size() ? l_vT[l_nK] : glm::vec3(0.0f);
+                const glm::quat l_qRr = l_nK < l_vR.size() ? glm::normalize(glm::quat(l_vR[l_nK].w, l_vR[l_nK].x, l_vR[l_nK].y, l_vR[l_nK].z)) : glm::quat(1, 0, 0, 0);
+                const glm::vec3 l_v3Ss = l_nK < l_vSc.size() ? l_vSc[l_nK] : glm::vec3(1.0f);
+                l_oO.m_vInstances.push_back(f_ComposeTRS(l_v3Tt, l_qRr, l_v3Ss));
             }
         }
     }
 
     // Cameras. Unnamed ones take their node's name, else the nearest named parent's.
-    m.cameras.resize(d->cameras_count);
-    for (size_t i = 0; i < d->cameras_count; i++) {
-        const cgltf_camera& s = d->cameras[i];
-        Camera& o = m.cameras[i];
-        o.name = s.name ? s.name : "";
-        if (s.type == cgltf_camera_type_orthographic) {
-            o.perspective = false;
-            o.xmag = s.data.orthographic.xmag;
-            o.ymag = s.data.orthographic.ymag;
-            o.znear = s.data.orthographic.znear;
-            o.zfar = s.data.orthographic.zfar;
+    l_oM.m_vCameras.resize(l_pD->cameras_count);
+    for (size_t l_nI = 0; l_nI < l_pD->cameras_count; l_nI++) {
+        const cgltf_camera& l_oS = l_pD->cameras[l_nI];
+        Camera& l_oO = l_oM.m_vCameras[l_nI];
+        l_oO.m_strName = l_oS.name ? l_oS.name : "";
+        if (l_oS.type == cgltf_camera_type_orthographic) {
+            l_oO.m_bPerspective = false;
+            l_oO.m_fXmag = l_oS.data.orthographic.xmag;
+            l_oO.m_fYmag = l_oS.data.orthographic.ymag;
+            l_oO.m_fZnear = l_oS.data.orthographic.znear;
+            l_oO.m_fZfar = l_oS.data.orthographic.zfar;
         } else {
-            o.yfov = s.data.perspective.yfov;
-            o.aspectRatio = s.data.perspective.has_aspect_ratio ? s.data.perspective.aspect_ratio : 0.0f;
-            o.znear = s.data.perspective.znear;
-            o.zfar = s.data.perspective.has_zfar ? s.data.perspective.zfar : 0.0f;
+            l_oO.m_fYfov = l_oS.data.perspective.yfov;
+            l_oO.m_fAspectRatio = l_oS.data.perspective.has_aspect_ratio ? l_oS.data.perspective.aspect_ratio : 0.0f;
+            l_oO.m_fZnear = l_oS.data.perspective.znear;
+            l_oO.m_fZfar = l_oS.data.perspective.has_zfar ? l_oS.data.perspective.zfar : 0.0f;
         }
     }
-    for (size_t i = 0; i < d->nodes_count; i++) {
-        const int cam = indexOf(d->nodes[i].camera, d->cameras);
-        m.nodes[i].camera = cam;
-        if (cam < 0 || !m.cameras[(size_t)cam].name.empty()) continue;
-        for (const cgltf_node* n = &d->nodes[i]; n; n = n->parent)
-            if (n->name && *n->name) {
-                m.cameras[(size_t)cam].name = n->name;
+    for (size_t l_nI = 0; l_nI < l_pD->nodes_count; l_nI++) {
+        const int l_iCam = f_IndexOf(l_pD->nodes[l_nI].camera, l_pD->cameras);
+        l_oM.m_vNodes[l_nI].m_iCamera = l_iCam;
+        if (l_iCam < 0 || !l_oM.m_vCameras[(size_t)l_iCam].m_strName.empty()) continue;
+        for (const cgltf_node* l_pN = &l_pD->nodes[l_nI]; l_pN; l_pN = l_pN->parent)
+            if (l_pN->name && *l_pN->name) {
+                l_oM.m_vCameras[(size_t)l_iCam].m_strName = l_pN->name;
                 break;
             }
     }
 
     // Lights (KHR_lights_punctual).
-    m.lights.resize(d->lights_count);
-    for (size_t i = 0; i < d->lights_count; i++) {
-        const cgltf_light& s = d->lights[i];
-        Light& o = m.lights[i];
-        o.name = s.name ? s.name : "";
-        o.type = s.type == cgltf_light_type_directional ? Light::Type::Directional
-               : s.type == cgltf_light_type_spot ? Light::Type::Spot : Light::Type::Point;
-        o.color = glm::make_vec3(s.color);
-        o.intensity = s.intensity;
-        o.range = s.range;
-        o.innerCone = s.spot_inner_cone_angle;
-        o.outerCone = s.spot_outer_cone_angle > 0 ? s.spot_outer_cone_angle : o.outerCone;
+    l_oM.m_vLights.resize(l_pD->lights_count);
+    for (size_t l_nI = 0; l_nI < l_pD->lights_count; l_nI++) {
+        const cgltf_light& l_oS = l_pD->lights[l_nI];
+        Light& l_oO = l_oM.m_vLights[l_nI];
+        l_oO.m_strName = l_oS.name ? l_oS.name : "";
+        l_oO.m_eType = l_oS.type == cgltf_light_type_directional ? Light::Type::Directional
+               : l_oS.type == cgltf_light_type_spot ? Light::Type::Spot : Light::Type::Point;
+        l_oO.m_v3Color = glm::make_vec3(l_oS.color);
+        l_oO.m_fIntensity = l_oS.intensity;
+        l_oO.m_fRange = l_oS.range;
+        l_oO.m_fInnerCone = l_oS.spot_inner_cone_angle;
+        l_oO.m_fOuterCone = l_oS.spot_outer_cone_angle > 0 ? l_oS.spot_outer_cone_angle : l_oO.m_fOuterCone;
     }
-    for (size_t i = 0; i < d->nodes_count; i++) m.nodes[i].light = indexOf(d->nodes[i].light, d->lights);
+    for (size_t l_nI = 0; l_nI < l_pD->nodes_count; l_nI++) l_oM.m_vNodes[l_nI].m_iLight = f_IndexOf(l_pD->nodes[l_nI].light, l_pD->lights);
 
     // Skins.
-    m.skins.resize(d->skins_count);
-    for (size_t i = 0; i < d->skins_count; i++) {
-        const cgltf_skin& s = d->skins[i];
-        Skin& o = m.skins[i];
-        o.name = s.name ? s.name : "";
-        for (size_t j = 0; j < s.joints_count; j++) o.joints.push_back(indexOf(s.joints[j], d->nodes));
-        o.inverseBind.assign(o.joints.size(), glm::mat4(1.0f));
-        if (s.inverse_bind_matrices) {
-            const std::vector<float> f = floats(s.inverse_bind_matrices);
-            for (size_t j = 0; j < o.joints.size() && (j + 1) * 16 <= f.size(); j++) o.inverseBind[j] = glm::make_mat4(&f[j * 16]);
+    l_oM.m_vSkins.resize(l_pD->skins_count);
+    for (size_t l_nI = 0; l_nI < l_pD->skins_count; l_nI++) {
+        const cgltf_skin& l_oS = l_pD->skins[l_nI];
+        Skin& l_oO = l_oM.m_vSkins[l_nI];
+        l_oO.m_strName = l_oS.name ? l_oS.name : "";
+        for (size_t l_nJ = 0; l_nJ < l_oS.joints_count; l_nJ++) l_oO.m_vJoints.push_back(f_IndexOf(l_oS.joints[l_nJ], l_pD->nodes));
+        l_oO.m_vInverseBind.assign(l_oO.m_vJoints.size(), glm::mat4(1.0f));
+        if (l_oS.inverse_bind_matrices) {
+            const std::vector<float> l_vF = f_Floats(l_oS.inverse_bind_matrices);
+            for (size_t l_nJ = 0; l_nJ < l_oO.m_vJoints.size() && (l_nJ + 1) * 16 <= l_vF.size(); l_nJ++) l_oO.m_vInverseBind[l_nJ] = glm::make_mat4(&l_vF[l_nJ * 16]);
         }
-        if ((int)o.joints.size() > kMaxJoints)
-            m.warnings.push_back("skin '" + o.name + "' has " + std::to_string(o.joints.size()) + " joints; only " +
-                                 std::to_string(kMaxJoints) + " are animated");
+        if ((int)l_oO.m_vJoints.size() > g_iMaxJoints)
+            l_oM.m_vWarnings.push_back("skin '" + l_oO.m_strName + "' has " + std::to_string(l_oO.m_vJoints.size()) + " joints; only " +
+                                 std::to_string(g_iMaxJoints) + " are animated");
     }
 
     // Animations.
-    m.animations.resize(d->animations_count);
-    for (size_t i = 0; i < d->animations_count; i++) {
-        const cgltf_animation& s = d->animations[i];
-        Animation& o = m.animations[i];
-        o.name = s.name ? s.name : "animation " + std::to_string(i);
-        o.samplers.resize(s.samplers_count);
-        for (size_t k = 0; k < s.samplers_count; k++) {
-            const cgltf_animation_sampler& ss = s.samplers[k];
-            Sampler& so = o.samplers[k];
-            so.input = floats(ss.input);
-            so.output = floats(ss.output);
-            so.interpolation = ss.interpolation == cgltf_interpolation_type_step ? Interpolation::Step
-                             : ss.interpolation == cgltf_interpolation_type_cubic_spline ? Interpolation::CubicSpline
+    l_oM.m_vAnimations.resize(l_pD->animations_count);
+    for (size_t l_nI = 0; l_nI < l_pD->animations_count; l_nI++) {
+        const cgltf_animation& l_oS = l_pD->animations[l_nI];
+        Animation& l_oO = l_oM.m_vAnimations[l_nI];
+        l_oO.m_strName = l_oS.name ? l_oS.name : "animation " + std::to_string(l_nI);
+        l_oO.m_vSamplers.resize(l_oS.samplers_count);
+        for (size_t l_nK = 0; l_nK < l_oS.samplers_count; l_nK++) {
+            const cgltf_animation_sampler& l_oSs = l_oS.samplers[l_nK];
+            Sampler& l_oSo = l_oO.m_vSamplers[l_nK];
+            l_oSo.m_vInput = f_Floats(l_oSs.input);
+            l_oSo.m_vOutput = f_Floats(l_oSs.output);
+            l_oSo.m_eInterpolation = l_oSs.interpolation == cgltf_interpolation_type_step ? Interpolation::Step
+                             : l_oSs.interpolation == cgltf_interpolation_type_cubic_spline ? Interpolation::CubicSpline
                                                                                          : Interpolation::Linear;
-            const size_t keys = so.input.size();
-            const size_t per = so.interpolation == Interpolation::CubicSpline ? 3 : 1;
-            so.components = keys ? int(so.output.size() / (keys * per)) : 0;
-            if (!so.input.empty()) o.duration = std::max(o.duration, so.input.back());
+            const size_t l_nKeys = l_oSo.m_vInput.size();
+            const size_t l_nPer = l_oSo.m_eInterpolation == Interpolation::CubicSpline ? 3 : 1;
+            l_oSo.m_iComponents = l_nKeys ? int(l_oSo.m_vOutput.size() / (l_nKeys * l_nPer)) : 0;
+            if (!l_oSo.m_vInput.empty()) l_oO.m_fDuration = std::max(l_oO.m_fDuration, l_oSo.m_vInput.back());
         }
-        for (size_t k = 0; k < s.channels_count; k++) {
-            const cgltf_animation_channel& c = s.channels[k];
-            if (!c.target_node || !c.sampler) continue;
-            Channel co;
-            co.sampler = indexOf(c.sampler, s.samplers);
-            co.node = indexOf(c.target_node, d->nodes);
-            switch (c.target_path) {
-            case cgltf_animation_path_type_translation: co.path = Path::Translation; break;
-            case cgltf_animation_path_type_rotation: co.path = Path::Rotation; break;
-            case cgltf_animation_path_type_scale: co.path = Path::Scale; break;
-            case cgltf_animation_path_type_weights: co.path = Path::Weights; break;
+        for (size_t l_nK = 0; l_nK < l_oS.channels_count; l_nK++) {
+            const cgltf_animation_channel& l_oC = l_oS.channels[l_nK];
+            if (!l_oC.target_node || !l_oC.sampler) continue;
+            Channel l_oCo;
+            l_oCo.m_iSampler = f_IndexOf(l_oC.sampler, l_oS.samplers);
+            l_oCo.m_iNode = f_IndexOf(l_oC.target_node, l_pD->nodes);
+            switch (l_oC.target_path) {
+            case cgltf_animation_path_type_translation: l_oCo.m_ePath = Path::Translation; break;
+            case cgltf_animation_path_type_rotation: l_oCo.m_ePath = Path::Rotation; break;
+            case cgltf_animation_path_type_scale: l_oCo.m_ePath = Path::Scale; break;
+            case cgltf_animation_path_type_weights: l_oCo.m_ePath = Path::Weights; break;
             default: continue;
             }
-            o.channels.push_back(co);
+            l_oO.m_vChannels.push_back(l_oCo);
         }
     }
 
     // Scenes (a file without one: every root node).
-    for (size_t i = 0; i < d->scenes_count; i++) {
-        Scene sc;
-        sc.name = d->scenes[i].name ? d->scenes[i].name : "";
-        for (size_t k = 0; k < d->scenes[i].nodes_count; k++) sc.roots.push_back(indexOf(d->scenes[i].nodes[k], d->nodes));
-        m.scenes.push_back(sc);
+    for (size_t l_nI = 0; l_nI < l_pD->scenes_count; l_nI++) {
+        Scene l_oSc;
+        l_oSc.m_strName = l_pD->scenes[l_nI].name ? l_pD->scenes[l_nI].name : "";
+        for (size_t l_nK = 0; l_nK < l_pD->scenes[l_nI].nodes_count; l_nK++) l_oSc.m_vRoots.push_back(f_IndexOf(l_pD->scenes[l_nI].nodes[l_nK], l_pD->nodes));
+        l_oM.m_vScenes.push_back(l_oSc);
     }
-    if (m.scenes.empty()) {
-        Scene sc;
-        for (size_t i = 0; i < m.nodes.size(); i++)
-            if (m.nodes[i].parent < 0) sc.roots.push_back((int)i);
-        m.scenes.push_back(sc);
+    if (l_oM.m_vScenes.empty()) {
+        Scene l_oSc;
+        for (size_t l_nI = 0; l_nI < l_oM.m_vNodes.size(); l_nI++)
+            if (l_oM.m_vNodes[l_nI].m_iParent < 0) l_oSc.m_vRoots.push_back((int)l_nI);
+        l_oM.m_vScenes.push_back(l_oSc);
     }
-    m.scene = d->scene ? indexOf(d->scene, d->scenes) : 0;
-    readPhysics(d, m);   // KHR_physics_rigid_bodies + KHR_implicit_shapes (after the meshes and nodes)
+    l_oM.m_iScene = l_pD->scene ? f_IndexOf(l_pD->scene, l_pD->scenes) : 0;
+    f_ReadPhysics(l_pD, l_oM);   // KHR_physics_rigid_bodies + KHR_implicit_shapes (after the meshes and nodes)
     return true;
 }
 
-bool finish(cgltf_result r, cgltf_data* d, const cgltf_options& opt, const std::string& gltfPath, const std::string& baseDir,
-            Model& out, std::string* error) {
-    if (r != cgltf_result_success) {
-        if (error) *error = "not a valid glTF file (cgltf error " + std::to_string((int)r) + ")";
+bool f_Finish(cgltf_result l_eR, cgltf_data* l_pD, const cgltf_options& l_oOpt, const std::string& l_strGltfPath, const std::string& l_strBaseDir,
+            Model& l_oOut, std::string* l_pError) {
+    if (l_eR != cgltf_result_success) {
+        if (l_pError) *l_pError = "not a valid glTF file (cgltf error " + std::to_string((int)l_eR) + ")";
         return false;
     }
-    r = cgltf_load_buffers(&opt, d, gltfPath.c_str());
-    if (r != cgltf_result_success) {
-        cgltf_free(d);
-        if (error) *error = "a buffer (.bin) could not be loaded (cgltf error " + std::to_string((int)r) + ")";
+    l_eR = cgltf_load_buffers(&l_oOpt, l_pD, l_strGltfPath.c_str());
+    if (l_eR != cgltf_result_success) {
+        cgltf_free(l_pD);
+        if (l_pError) *l_pError = "a buffer (.bin) could not be loaded (cgltf error " + std::to_string((int)l_eR) + ")";
         return false;
     }
-    if (cgltf_validate(d) != cgltf_result_success) {
-        cgltf_free(d);
-        if (error) *error = "the file does not validate (an accessor or buffer is out of range)";
+    if (cgltf_validate(l_pD) != cgltf_result_success) {
+        cgltf_free(l_pD);
+        if (l_pError) *l_pError = "the file does not validate (an accessor or buffer is out of range)";
         return false;
     }
-    out = Model();
-    out.path = gltfPath;
-    const bool ok = convert(d, baseDir, out, error);
-    cgltf_free(d);
-    return ok;
+    l_oOut = Model();
+    l_oOut.m_strPath = l_strGltfPath;
+    const bool l_bOk = f_Convert(l_pD, l_strBaseDir, l_oOut, l_pError);
+    cgltf_free(l_pD);
+    return l_bOk;
 }
 
 // ---- animation sampling ---------------------------------------------------------------------------
 
 // Key segment for t: i (and i + 1), with the 0..1 position s inside it.
-void locate(const std::vector<float>& in, float t, size_t& i, float& s) {
-    if (t <= in.front()) {
-        i = 0;
-        s = 0;
+void f_Locate(const std::vector<float>& l_vIn, float l_fT, size_t& l_nI, float& l_fS) {
+    if (l_fT <= l_vIn.front()) {
+        l_nI = 0;
+        l_fS = 0;
         return;
     }
-    if (t >= in.back()) {
-        i = in.size() - 1;
-        s = 0;
+    if (l_fT >= l_vIn.back()) {
+        l_nI = l_vIn.size() - 1;
+        l_fS = 0;
         return;
     }
-    i = size_t(std::upper_bound(in.begin(), in.end(), t) - in.begin()) - 1;
-    const float dt = in[i + 1] - in[i];
-    s = dt > 0 ? (t - in[i]) / dt : 0.0f;
+    l_nI = size_t(std::upper_bound(l_vIn.begin(), l_vIn.end(), l_fT) - l_vIn.begin()) - 1;
+    const float l_fDt = l_vIn[l_nI + 1] - l_vIn[l_nI];
+    l_fS = l_fDt > 0 ? (l_fT - l_vIn[l_nI]) / l_fDt : 0.0f;
 }
 
-void sampleValue(const Sampler& sm, float t, bool isRotation, std::vector<float>& out) {
-    const size_t n = (size_t)sm.components;
-    out.assign(n, 0.0f);
-    if (sm.input.empty() || n == 0) return;
-    size_t i;
-    float s;
-    locate(sm.input, t, i, s);
-    const bool last = i + 1 >= sm.input.size();
-    if (sm.interpolation == Interpolation::CubicSpline) {
-        auto at = [&](size_t key, int part) { return &sm.output[(key * 3 + (size_t)part) * n]; };   // 0 in, 1 value, 2 out
-        if (last || s == 0) {
-            for (size_t c = 0; c < n; c++) out[c] = at(i, 1)[c];
+void f_SampleValue(const Sampler& l_oSm, float l_fT, bool l_bIsRotation, std::vector<float>& l_vOut) {
+    const size_t l_nN = (size_t)l_oSm.m_iComponents;
+    l_vOut.assign(l_nN, 0.0f);
+    if (l_oSm.m_vInput.empty() || l_nN == 0) return;
+    size_t l_nI;
+    float l_fS;
+    f_Locate(l_oSm.m_vInput, l_fT, l_nI, l_fS);
+    const bool l_bLast = l_nI + 1 >= l_oSm.m_vInput.size();
+    if (l_oSm.m_eInterpolation == Interpolation::CubicSpline) {
+        auto l_fnAt = [&](size_t l_nKey, int l_iPart) { return &l_oSm.m_vOutput[(l_nKey * 3 + (size_t)l_iPart) * l_nN]; };   // 0 in, 1 value, 2 out
+        if (l_bLast || l_fS == 0) {
+            for (size_t l_nC = 0; l_nC < l_nN; l_nC++) l_vOut[l_nC] = l_fnAt(l_nI, 1)[l_nC];
         } else {
-            const float dt = sm.input[i + 1] - sm.input[i];
-            const float s2 = s * s, s3 = s2 * s;
-            const float h00 = 2 * s3 - 3 * s2 + 1, h10 = s3 - 2 * s2 + s, h01 = -2 * s3 + 3 * s2, h11 = s3 - s2;
-            for (size_t c = 0; c < n; c++)
-                out[c] = h00 * at(i, 1)[c] + h10 * dt * at(i, 2)[c] + h01 * at(i + 1, 1)[c] + h11 * dt * at(i + 1, 0)[c];
+            const float l_fDt = l_oSm.m_vInput[l_nI + 1] - l_oSm.m_vInput[l_nI];
+            const float l_fS2 = l_fS * l_fS, l_fS3 = l_fS2 * l_fS;
+            const float l_fH00 = 2 * l_fS3 - 3 * l_fS2 + 1, l_fH10 = l_fS3 - 2 * l_fS2 + l_fS, l_fH01 = -2 * l_fS3 + 3 * l_fS2, l_fH11 = l_fS3 - l_fS2;
+            for (size_t l_nC = 0; l_nC < l_nN; l_nC++)
+                l_vOut[l_nC] = l_fH00 * l_fnAt(l_nI, 1)[l_nC] + l_fH10 * l_fDt * l_fnAt(l_nI, 2)[l_nC] + l_fH01 * l_fnAt(l_nI + 1, 1)[l_nC] + l_fH11 * l_fDt * l_fnAt(l_nI + 1, 0)[l_nC];
         }
-    } else if (sm.interpolation == Interpolation::Step || last || s == 0) {
-        for (size_t c = 0; c < n; c++) out[c] = sm.output[i * n + c];
-    } else if (isRotation) {
-        const float* a = &sm.output[i * n];
-        const float* b = &sm.output[(i + 1) * n];
-        const glm::quat q = glm::slerp(glm::quat(a[3], a[0], a[1], a[2]), glm::quat(b[3], b[0], b[1], b[2]), s);
-        out = {q.x, q.y, q.z, q.w};
+    } else if (l_oSm.m_eInterpolation == Interpolation::Step || l_bLast || l_fS == 0) {
+        for (size_t l_nC = 0; l_nC < l_nN; l_nC++) l_vOut[l_nC] = l_oSm.m_vOutput[l_nI * l_nN + l_nC];
+    } else if (l_bIsRotation) {
+        const float* l_pA = &l_oSm.m_vOutput[l_nI * l_nN];
+        const float* l_pB = &l_oSm.m_vOutput[(l_nI + 1) * l_nN];
+        const glm::quat l_qQ = glm::slerp(glm::quat(l_pA[3], l_pA[0], l_pA[1], l_pA[2]), glm::quat(l_pB[3], l_pB[0], l_pB[1], l_pB[2]), l_fS);
+        l_vOut = {l_qQ.x, l_qQ.y, l_qQ.z, l_qQ.w};
     } else {
-        for (size_t c = 0; c < n; c++) out[c] = sm.output[i * n + c] * (1 - s) + sm.output[(i + 1) * n + c] * s;
+        for (size_t l_nC = 0; l_nC < l_nN; l_nC++) l_vOut[l_nC] = l_oSm.m_vOutput[l_nI * l_nN + l_nC] * (1 - l_fS) + l_oSm.m_vOutput[(l_nI + 1) * l_nN + l_nC] * l_fS;
     }
 }
 
@@ -792,260 +792,260 @@ void sampleValue(const Sampler& sm, float t, bool isRotation, std::vector<float>
 
 // ---- Model ------------------------------------------------------------------------------------------
 
-size_t Model::vertexCount() const {
-    size_t n = 0;
-    for (const Mesh& m : meshes)
-        for (const Primitive& p : m.primitives) n += p.position.size();
-    return n;
+size_t Model::f_VertexCount() const {
+    size_t l_nN = 0;
+    for (const Mesh& l_oM : m_vMeshes)
+        for (const Primitive& l_oP : l_oM.m_vPrimitives) l_nN += l_oP.m_vPosition.size();
+    return l_nN;
 }
 
-size_t Model::triangleCount() const {
-    size_t n = 0;
-    for (const Mesh& m : meshes)
-        for (const Primitive& p : m.primitives)
-            if (p.topology == Topology::Triangles) n += p.indices.size() / 3;
-    return n;
+size_t Model::f_TriangleCount() const {
+    size_t l_nN = 0;
+    for (const Mesh& l_oM : m_vMeshes)
+        for (const Primitive& l_oP : l_oM.m_vPrimitives)
+            if (l_oP.m_eTopology == Topology::Triangles) l_nN += l_oP.m_vIndices.size() / 3;
+    return l_nN;
 }
 
-size_t Model::morphTargetCount() const {
-    size_t n = 0;
-    for (const Mesh& m : meshes) n += m.weights.size();
-    return n;
+size_t Model::f_MorphTargetCount() const {
+    size_t l_nN = 0;
+    for (const Mesh& l_oM : m_vMeshes) l_nN += l_oM.m_vWeights.size();
+    return l_nN;
 }
 
-size_t Model::instanceCount() const {
-    size_t n = 0;
-    for (const Node& node : nodes) n += node.instances.size();
-    return n;
+size_t Model::f_InstanceCount() const {
+    size_t l_nN = 0;
+    for (const Node& l_oNode : m_vNodes) l_nN += l_oNode.m_vInstances.size();
+    return l_nN;
 }
 
-bool loadModel(const std::string& path, Model& out, std::string* error) {
-    cgltf_options opt = cgltfOptions();
-    cgltf_data* d = nullptr;
-    const cgltf_result r = cgltf_parse_file(&opt, path.c_str(), &d);
-    if (r == cgltf_result_file_not_found || r == cgltf_result_io_error) {
-        if (error) *error = "cannot open " + path;
+bool f_LoadModel(const std::string& l_strPath, Model& l_oOut, std::string* l_pError) {
+    cgltf_options l_oOpt = f_CgltfOptions();
+    cgltf_data* l_pD = nullptr;
+    const cgltf_result l_eR = cgltf_parse_file(&l_oOpt, l_strPath.c_str(), &l_pD);
+    if (l_eR == cgltf_result_file_not_found || l_eR == cgltf_result_io_error) {
+        if (l_pError) *l_pError = "cannot open " + l_strPath;
         return false;
     }
-    return finish(r, d, opt, path, dirOf(path), out, error);
+    return f_Finish(l_eR, l_pD, l_oOpt, l_strPath, f_DirOf(l_strPath), l_oOut, l_pError);
 }
 
-bool loadModelFromMemory(const void* data, size_t size, const std::string& baseDir, Model& out, std::string* error) {
-    cgltf_options opt = cgltfOptions();
-    cgltf_data* d = nullptr;
-    const cgltf_result r = cgltf_parse(&opt, data, size, &d);
-    return finish(r, d, opt, baseDir + "/model.gltf", baseDir, out, error);
+bool f_LoadModelFromMemory(const void* l_pData, size_t l_nSize, const std::string& l_strBaseDir, Model& l_oOut, std::string* l_pError) {
+    cgltf_options l_oOpt = f_CgltfOptions();
+    cgltf_data* l_pD = nullptr;
+    const cgltf_result l_eR = cgltf_parse(&l_oOpt, l_pData, l_nSize, &l_pD);
+    return f_Finish(l_eR, l_pD, l_oOpt, l_strBaseDir + "/model.gltf", l_strBaseDir, l_oOut, l_pError);
 }
 
-glm::mat4 composeTRS(const glm::vec3& t, const glm::quat& r, const glm::vec3& s) {
-    glm::mat4 m = glm::mat4_cast(r);
-    m[0] *= s.x;
-    m[1] *= s.y;
-    m[2] *= s.z;
-    m[3] = glm::vec4(t, 1.0f);
-    return m;
+glm::mat4 f_ComposeTRS(const glm::vec3& l_v3T, const glm::quat& l_qR, const glm::vec3& l_v3S) {
+    glm::mat4 l_mat4M = glm::mat4_cast(l_qR);
+    l_mat4M[0] *= l_v3S.x;
+    l_mat4M[1] *= l_v3S.y;
+    l_mat4M[2] *= l_v3S.z;
+    l_mat4M[3] = glm::vec4(l_v3T, 1.0f);
+    return l_mat4M;
 }
 
-void morph(const Primitive& p, const std::vector<float>& weights, std::vector<glm::vec3>& position,
-           std::vector<glm::vec3>& normal, std::vector<glm::vec4>& tangent) {
-    position = p.position;
-    normal = p.normal;
-    tangent = p.tangent;
-    for (size_t t = 0; t < p.targets.size() && t < weights.size(); t++) {
-        const float w = weights[t];
-        if (w == 0.0f) continue;
-        const MorphTarget& mt = p.targets[t];
-        for (size_t i = 0; i < mt.position.size() && i < position.size(); i++) position[i] += w * mt.position[i];
-        for (size_t i = 0; i < mt.normal.size() && i < normal.size(); i++) normal[i] += w * mt.normal[i];
-        for (size_t i = 0; i < mt.tangent.size() && i < tangent.size(); i++) tangent[i] += glm::vec4(w * mt.tangent[i], 0.0f);
+void f_Morph(const Primitive& l_oP, const std::vector<float>& l_vWeights, std::vector<glm::vec3>& l_vPosition,
+           std::vector<glm::vec3>& l_vNormal, std::vector<glm::vec4>& l_vTangent) {
+    l_vPosition = l_oP.m_vPosition;
+    l_vNormal = l_oP.m_vNormal;
+    l_vTangent = l_oP.m_vTangent;
+    for (size_t l_nT = 0; l_nT < l_oP.m_vTargets.size() && l_nT < l_vWeights.size(); l_nT++) {
+        const float l_fW = l_vWeights[l_nT];
+        if (l_fW == 0.0f) continue;
+        const MorphTarget& l_oMt = l_oP.m_vTargets[l_nT];
+        for (size_t l_nI = 0; l_nI < l_oMt.m_vPosition.size() && l_nI < l_vPosition.size(); l_nI++) l_vPosition[l_nI] += l_fW * l_oMt.m_vPosition[l_nI];
+        for (size_t l_nI = 0; l_nI < l_oMt.m_vNormal.size() && l_nI < l_vNormal.size(); l_nI++) l_vNormal[l_nI] += l_fW * l_oMt.m_vNormal[l_nI];
+        for (size_t l_nI = 0; l_nI < l_oMt.m_vTangent.size() && l_nI < l_vTangent.size(); l_nI++) l_vTangent[l_nI] += glm::vec4(l_fW * l_oMt.m_vTangent[l_nI], 0.0f);
     }
-    for (glm::vec3& n : normal) {
-        const float l = glm::length(n);
-        if (l > 0) n /= l;
+    for (glm::vec3& l_v3N : l_vNormal) {
+        const float l_fL = glm::length(l_v3N);
+        if (l_fL > 0) l_v3N /= l_fL;
     }
 }
 
 // ---- Pose -------------------------------------------------------------------------------------------
 
-void Pose::bind(const Model* model) {
-    model_ = model;
-    reset();
+void Pose::f_Bind(const Model* l_pModel) {
+    m_pModel = l_pModel;
+    f_Reset();
 }
 
-void Pose::reset() {
-    if (!model_) return;
-    const size_t n = model_->nodes.size();
-    t_.resize(n);
-    r_.resize(n);
-    s_.resize(n);
-    weights_.assign(n, {});
-    for (size_t i = 0; i < n; i++) {
-        const Node& node = model_->nodes[i];
-        t_[i] = node.translation;
-        r_[i] = node.rotation;
-        s_[i] = node.scale;
-        if (node.mesh >= 0) {
-            const Mesh& mesh = model_->meshes[(size_t)node.mesh];
-            weights_[i] = node.weights.empty() ? mesh.weights : node.weights;
-            weights_[i].resize(mesh.weights.size(), 0.0f);
+void Pose::f_Reset() {
+    if (!m_pModel) return;
+    const size_t l_nN = m_pModel->m_vNodes.size();
+    m_vT.resize(l_nN);
+    m_vR.resize(l_nN);
+    m_vS.resize(l_nN);
+    m_vWeights.assign(l_nN, {});
+    for (size_t l_nI = 0; l_nI < l_nN; l_nI++) {
+        const Node& l_oNode = m_pModel->m_vNodes[l_nI];
+        m_vT[l_nI] = l_oNode.m_v3Translation;
+        m_vR[l_nI] = l_oNode.m_qRotation;
+        m_vS[l_nI] = l_oNode.m_v3Scale;
+        if (l_oNode.m_iMesh >= 0) {
+            const Mesh& l_oMesh = m_pModel->m_vMeshes[(size_t)l_oNode.m_iMesh];
+            m_vWeights[l_nI] = l_oNode.m_vWeights.empty() ? l_oMesh.m_vWeights : l_oNode.m_vWeights;
+            m_vWeights[l_nI].resize(l_oMesh.m_vWeights.size(), 0.0f);
         }
     }
-    updateWorld();
+    f_UpdateWorld();
 }
 
-void Pose::apply(int index, float t) { sample(index, t, 1.0f); }
+void Pose::f_Apply(int l_iIndex, float l_fT) { f_Sample(l_iIndex, l_fT, 1.0f); }
 
-void Pose::blend(int index, float t, float w) { sample(index, t, std::clamp(w, 0.0f, 1.0f)); }
+void Pose::f_Blend(int l_iIndex, float l_fT, float l_fW) { f_Sample(l_iIndex, l_fT, std::clamp(l_fW, 0.0f, 1.0f)); }
 
-void Pose::sample(int index, float t, float w) {
-    if (!model_ || index < 0 || index >= (int)model_->animations.size() || w <= 0.0f) return;
-    const Animation& a = model_->animations[(size_t)index];
-    t = std::clamp(t, 0.0f, a.duration);
-    std::vector<float> v;
-    for (const Channel& c : a.channels) {
-        if (c.node < 0 || c.node >= (int)t_.size() || c.sampler < 0 || c.sampler >= (int)a.samplers.size()) continue;
-        const size_t n = (size_t)c.node;
-        sampleValue(a.samplers[(size_t)c.sampler], t, c.path == Path::Rotation, v);
-        switch (c.path) {
+void Pose::f_Sample(int l_iIndex, float l_fT, float l_fW) {
+    if (!m_pModel || l_iIndex < 0 || l_iIndex >= (int)m_pModel->m_vAnimations.size() || l_fW <= 0.0f) return;
+    const Animation& l_oA = m_pModel->m_vAnimations[(size_t)l_iIndex];
+    l_fT = std::clamp(l_fT, 0.0f, l_oA.m_fDuration);
+    std::vector<float> l_vV;
+    for (const Channel& l_oC : l_oA.m_vChannels) {
+        if (l_oC.m_iNode < 0 || l_oC.m_iNode >= (int)m_vT.size() || l_oC.m_iSampler < 0 || l_oC.m_iSampler >= (int)l_oA.m_vSamplers.size()) continue;
+        const size_t l_nN = (size_t)l_oC.m_iNode;
+        f_SampleValue(l_oA.m_vSamplers[(size_t)l_oC.m_iSampler], l_fT, l_oC.m_ePath == Path::Rotation, l_vV);
+        switch (l_oC.m_ePath) {
         case Path::Translation:
-            if (v.size() >= 3) t_[n] = glm::mix(t_[n], glm::vec3(v[0], v[1], v[2]), w);
+            if (l_vV.size() >= 3) m_vT[l_nN] = glm::mix(m_vT[l_nN], glm::vec3(l_vV[0], l_vV[1], l_vV[2]), l_fW);
             break;
         case Path::Scale:
-            if (v.size() >= 3) s_[n] = glm::mix(s_[n], glm::vec3(v[0], v[1], v[2]), w);
+            if (l_vV.size() >= 3) m_vS[l_nN] = glm::mix(m_vS[l_nN], glm::vec3(l_vV[0], l_vV[1], l_vV[2]), l_fW);
             break;
         case Path::Rotation:
-            if (v.size() >= 4) {
-                const glm::quat q = glm::normalize(glm::quat(v[3], v[0], v[1], v[2]));
-                r_[n] = w >= 1.0f ? q : glm::normalize(glm::slerp(r_[n], q, w));
+            if (l_vV.size() >= 4) {
+                const glm::quat l_qQ = glm::normalize(glm::quat(l_vV[3], l_vV[0], l_vV[1], l_vV[2]));
+                m_vR[l_nN] = l_fW >= 1.0f ? l_qQ : glm::normalize(glm::slerp(m_vR[l_nN], l_qQ, l_fW));
             }
             break;
         case Path::Weights:
-            for (size_t k = 0; k < v.size() && k < weights_[n].size(); k++) weights_[n][k] = weights_[n][k] * (1 - w) + v[k] * w;
+            for (size_t l_nK = 0; l_nK < l_vV.size() && l_nK < m_vWeights[l_nN].size(); l_nK++) m_vWeights[l_nN][l_nK] = m_vWeights[l_nN][l_nK] * (1 - l_fW) + l_vV[l_nK] * l_fW;
             break;
         }
     }
 }
 
-void Pose::updateWorld() {
-    if (!model_) return;
-    const size_t n = model_->nodes.size();
-    world_.assign(n, glm::mat4(1.0f));
+void Pose::f_UpdateWorld() {
+    if (!m_pModel) return;
+    const size_t l_nN = m_pModel->m_vNodes.size();
+    m_vWorld.assign(l_nN, glm::mat4(1.0f));
     // Parents first: walk down from every root (files do not promise parents come first).
-    std::vector<int> stack;
-    for (size_t i = 0; i < n; i++)
-        if (model_->nodes[i].parent < 0) stack.push_back((int)i);
-    while (!stack.empty()) {
-        const int i = stack.back();
-        stack.pop_back();
-        const Node& node = model_->nodes[(size_t)i];
-        const glm::mat4 local = composeTRS(t_[(size_t)i], r_[(size_t)i], s_[(size_t)i]);
-        world_[(size_t)i] = node.parent >= 0 ? world_[(size_t)node.parent] * local : local;
-        for (int c : node.children) stack.push_back(c);
+    std::vector<int> l_vStack;
+    for (size_t l_nI = 0; l_nI < l_nN; l_nI++)
+        if (m_pModel->m_vNodes[l_nI].m_iParent < 0) l_vStack.push_back((int)l_nI);
+    while (!l_vStack.empty()) {
+        const int l_iI = l_vStack.back();
+        l_vStack.pop_back();
+        const Node& l_oNode = m_pModel->m_vNodes[(size_t)l_iI];
+        const glm::mat4 l_mat4Local = f_ComposeTRS(m_vT[(size_t)l_iI], m_vR[(size_t)l_iI], m_vS[(size_t)l_iI]);
+        m_vWorld[(size_t)l_iI] = l_oNode.m_iParent >= 0 ? m_vWorld[(size_t)l_oNode.m_iParent] * l_mat4Local : l_mat4Local;
+        for (int l_iC : l_oNode.m_vChildren) l_vStack.push_back(l_iC);
     }
 }
 
-void Pose::jointMatrices(int skin, std::vector<glm::mat4>& out) const {
-    out.clear();
-    if (!model_ || skin < 0 || skin >= (int)model_->skins.size()) return;
-    const Skin& s = model_->skins[(size_t)skin];
-    out.resize(std::min(s.joints.size(), (size_t)kMaxJoints));
-    for (size_t j = 0; j < out.size(); j++) out[j] = world_[(size_t)s.joints[j]] * s.inverseBind[j];
+void Pose::f_JointMatrices(int l_iSkin, std::vector<glm::mat4>& l_vOut) const {
+    l_vOut.clear();
+    if (!m_pModel || l_iSkin < 0 || l_iSkin >= (int)m_pModel->m_vSkins.size()) return;
+    const Skin& l_oS = m_pModel->m_vSkins[(size_t)l_iSkin];
+    l_vOut.resize(std::min(l_oS.m_vJoints.size(), (size_t)g_iMaxJoints));
+    for (size_t l_nJ = 0; l_nJ < l_vOut.size(); l_nJ++) l_vOut[l_nJ] = m_vWorld[(size_t)l_oS.m_vJoints[l_nJ]] * l_oS.m_vInverseBind[l_nJ];
 }
 
-std::vector<PlacedCamera> Pose::cameras() const {
-    std::vector<PlacedCamera> out;
-    if (!model_) return out;
-    for (size_t i = 0; i < model_->nodes.size() && i < world_.size(); i++) {
-        const int cam = model_->nodes[i].camera;
-        if (cam < 0 || cam >= (int)model_->cameras.size()) continue;
-        PlacedCamera p;
-        p.camera = cam;
-        p.node = (int)i;
-        const glm::mat4& w = world_[i];
+std::vector<PlacedCamera> Pose::f_Cameras() const {
+    std::vector<PlacedCamera> l_vOut;
+    if (!m_pModel) return l_vOut;
+    for (size_t l_nI = 0; l_nI < m_pModel->m_vNodes.size() && l_nI < m_vWorld.size(); l_nI++) {
+        const int l_iCam = m_pModel->m_vNodes[l_nI].m_iCamera;
+        if (l_iCam < 0 || l_iCam >= (int)m_pModel->m_vCameras.size()) continue;
+        PlacedCamera l_oP;
+        l_oP.m_iCamera = l_iCam;
+        l_oP.m_iNode = (int)l_nI;
+        const glm::mat4& l_mat4W = m_vWorld[l_nI];
         // Rotation only: a scaled (or mirrored) node must not stretch the view.
-        glm::vec3 z = glm::vec3(w[2]), y = glm::vec3(w[1]);
-        z = glm::length(z) > 0 ? glm::normalize(z) : glm::vec3(0, 0, 1);
-        glm::vec3 x = glm::cross(y, z);
-        x = glm::length(x) > 0 ? glm::normalize(x) : glm::vec3(1, 0, 0);
-        y = glm::cross(z, x);
-        p.world = glm::mat4(glm::vec4(x, 0), glm::vec4(y, 0), glm::vec4(z, 0), w[3]);
-        out.push_back(p);
+        glm::vec3 l_v3Z = glm::vec3(l_mat4W[2]), l_v3Y = glm::vec3(l_mat4W[1]);
+        l_v3Z = glm::length(l_v3Z) > 0 ? glm::normalize(l_v3Z) : glm::vec3(0, 0, 1);
+        glm::vec3 l_v3X = glm::cross(l_v3Y, l_v3Z);
+        l_v3X = glm::length(l_v3X) > 0 ? glm::normalize(l_v3X) : glm::vec3(1, 0, 0);
+        l_v3Y = glm::cross(l_v3Z, l_v3X);
+        l_oP.m_mat4World = glm::mat4(glm::vec4(l_v3X, 0), glm::vec4(l_v3Y, 0), glm::vec4(l_v3Z, 0), l_mat4W[3]);
+        l_vOut.push_back(l_oP);
     }
-    return out;
+    return l_vOut;
 }
 
-std::vector<PlacedLight> Pose::lights() const {
-    std::vector<PlacedLight> out;
-    if (!model_) return out;
-    for (size_t i = 0; i < model_->nodes.size() && i < world_.size(); i++) {
-        const int l = model_->nodes[i].light;
-        if (l < 0 || l >= (int)model_->lights.size()) continue;
-        PlacedLight p;
-        p.light = l;
-        p.position = glm::vec3(world_[i][3]);
-        const glm::vec3 d = -glm::vec3(world_[i][2]);
-        p.direction = glm::length(d) > 0 ? glm::normalize(d) : glm::vec3(0, 0, -1);
-        out.push_back(p);
+std::vector<PlacedLight> Pose::f_Lights() const {
+    std::vector<PlacedLight> l_vOut;
+    if (!m_pModel) return l_vOut;
+    for (size_t l_nI = 0; l_nI < m_pModel->m_vNodes.size() && l_nI < m_vWorld.size(); l_nI++) {
+        const int l_iL = m_pModel->m_vNodes[l_nI].m_iLight;
+        if (l_iL < 0 || l_iL >= (int)m_pModel->m_vLights.size()) continue;
+        PlacedLight l_oP;
+        l_oP.m_iLight = l_iL;
+        l_oP.m_v3Position = glm::vec3(m_vWorld[l_nI][3]);
+        const glm::vec3 l_v3D = -glm::vec3(m_vWorld[l_nI][2]);
+        l_oP.m_v3Direction = glm::length(l_v3D) > 0 ? glm::normalize(l_v3D) : glm::vec3(0, 0, -1);
+        l_vOut.push_back(l_oP);
     }
-    return out;
+    return l_vOut;
 }
 
-bool Pose::bounds(glm::vec3& mn, glm::vec3& mx) const {
-    if (!model_ || model_->scenes.empty()) return false;
-    bool any = false;
-    auto add = [&](const glm::vec3& p) {
-        if (!any) mn = mx = p;
-        mn = glm::min(mn, p);
-        mx = glm::max(mx, p);
-        any = true;
+bool Pose::f_Bounds(glm::vec3& l_v3Mn, glm::vec3& l_v3Mx) const {
+    if (!m_pModel || m_pModel->m_vScenes.empty()) return false;
+    bool l_bAny = false;
+    auto l_fnAdd = [&](const glm::vec3& l_v3P) {
+        if (!l_bAny) l_v3Mn = l_v3Mx = l_v3P;
+        l_v3Mn = glm::min(l_v3Mn, l_v3P);
+        l_v3Mx = glm::max(l_v3Mx, l_v3P);
+        l_bAny = true;
     };
-    const Scene& sc = model_->scenes[(size_t)std::clamp(model_->scene, 0, (int)model_->scenes.size() - 1)];
-    std::vector<int> stack(sc.roots.begin(), sc.roots.end());
-    std::vector<glm::mat4> joints;
-    while (!stack.empty()) {
-        const int i = stack.back();
-        stack.pop_back();
-        const Node& node = model_->nodes[(size_t)i];
-        for (int c : node.children) stack.push_back(c);
-        if (node.mesh < 0) continue;
-        const Mesh& mesh = model_->meshes[(size_t)node.mesh];
-        if (node.skin >= 0) {   // skinned on the CPU: the bind pose box can be far off
-            jointMatrices(node.skin, joints);
-            for (const Primitive& p : mesh.primitives) {
-                if (!p.skinned()) continue;
-                for (size_t v = 0; v < p.position.size(); v++) {
-                    glm::mat4 skinM(0.0f);
-                    for (int k = 0; k < 4; k++) {
-                        const int j = (int)p.joints[v][k];
-                        if (p.weights[v][k] > 0 && j >= 0 && j < (int)joints.size()) skinM += p.weights[v][k] * joints[(size_t)j];
+    const Scene& l_oSc = m_pModel->m_vScenes[(size_t)std::clamp(m_pModel->m_iScene, 0, (int)m_pModel->m_vScenes.size() - 1)];
+    std::vector<int> l_vStack(l_oSc.m_vRoots.begin(), l_oSc.m_vRoots.end());
+    std::vector<glm::mat4> l_vJoints;
+    while (!l_vStack.empty()) {
+        const int l_iI = l_vStack.back();
+        l_vStack.pop_back();
+        const Node& l_oNode = m_pModel->m_vNodes[(size_t)l_iI];
+        for (int l_iC : l_oNode.m_vChildren) l_vStack.push_back(l_iC);
+        if (l_oNode.m_iMesh < 0) continue;
+        const Mesh& l_oMesh = m_pModel->m_vMeshes[(size_t)l_oNode.m_iMesh];
+        if (l_oNode.m_iSkin >= 0) {   // skinned on the CPU: the bind pose box can be far off
+            f_JointMatrices(l_oNode.m_iSkin, l_vJoints);
+            for (const Primitive& l_oP : l_oMesh.m_vPrimitives) {
+                if (!l_oP.f_Skinned()) continue;
+                for (size_t l_nV = 0; l_nV < l_oP.m_vPosition.size(); l_nV++) {
+                    glm::mat4 l_mat4SkinM(0.0f);
+                    for (int l_iK = 0; l_iK < 4; l_iK++) {
+                        const int l_iJ = (int)l_oP.m_vJoints[l_nV][l_iK];
+                        if (l_oP.m_vWeights[l_nV][l_iK] > 0 && l_iJ >= 0 && l_iJ < (int)l_vJoints.size()) l_mat4SkinM += l_oP.m_vWeights[l_nV][l_iK] * l_vJoints[(size_t)l_iJ];
                     }
-                    add(glm::vec3(skinM * glm::vec4(p.position[v], 1.0f)));
+                    l_fnAdd(glm::vec3(l_mat4SkinM * glm::vec4(l_oP.m_vPosition[l_nV], 1.0f)));
                 }
             }
             continue;
         }
-        const std::vector<glm::mat4> one{glm::mat4(1.0f)};
-        const std::vector<glm::mat4>& inst = node.instances.empty() ? one : node.instances;
-        for (const Primitive& p : mesh.primitives) {
-            glm::vec3 bmin = p.boundsMin, bmax = p.boundsMax;
-            if (!p.targets.empty()) {   // morphed: the box of the morphed positions
-                std::vector<glm::vec3> mp, mn2;
-                std::vector<glm::vec4> mt;
-                morph(p, weights_[(size_t)i], mp, mn2, mt);
-                if (!mp.empty()) bmin = bmax = mp[0];
-                for (const glm::vec3& v : mp) {
-                    bmin = glm::min(bmin, v);
-                    bmax = glm::max(bmax, v);
+        const std::vector<glm::mat4> l_vOne{glm::mat4(1.0f)};
+        const std::vector<glm::mat4>& l_vInst = l_oNode.m_vInstances.empty() ? l_vOne : l_oNode.m_vInstances;
+        for (const Primitive& l_oP : l_oMesh.m_vPrimitives) {
+            glm::vec3 l_v3Bmin = l_oP.m_v3BoundsMin, l_v3Bmax = l_oP.m_v3BoundsMax;
+            if (!l_oP.m_vTargets.empty()) {   // morphed: the box of the morphed positions
+                std::vector<glm::vec3> l_vMp, l_vMn2;
+                std::vector<glm::vec4> l_vMt;
+                f_Morph(l_oP, m_vWeights[(size_t)l_iI], l_vMp, l_vMn2, l_vMt);
+                if (!l_vMp.empty()) l_v3Bmin = l_v3Bmax = l_vMp[0];
+                for (const glm::vec3& l_v3V : l_vMp) {
+                    l_v3Bmin = glm::min(l_v3Bmin, l_v3V);
+                    l_v3Bmax = glm::max(l_v3Bmax, l_v3V);
                 }
             }
-            for (const glm::mat4& im : inst)
-                for (int c = 0; c < 8; c++) {
-                    const glm::vec3 corner((c & 1) ? bmax.x : bmin.x, (c & 2) ? bmax.y : bmin.y, (c & 4) ? bmax.z : bmin.z);
-                    add(glm::vec3(world_[(size_t)i] * im * glm::vec4(corner, 1.0f)));
+            for (const glm::mat4& l_mat4Im : l_vInst)
+                for (int l_iC = 0; l_iC < 8; l_iC++) {
+                    const glm::vec3 l_v3Corner((l_iC & 1) ? l_v3Bmax.x : l_v3Bmin.x, (l_iC & 2) ? l_v3Bmax.y : l_v3Bmin.y, (l_iC & 4) ? l_v3Bmax.z : l_v3Bmin.z);
+                    l_fnAdd(glm::vec3(m_vWorld[(size_t)l_iI] * l_mat4Im * glm::vec4(l_v3Corner, 1.0f)));
                 }
         }
     }
-    return any;
+    return l_bAny;
 }
 
 }  // namespace toms::gltf

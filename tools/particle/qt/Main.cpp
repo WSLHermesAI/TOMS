@@ -45,468 +45,468 @@ using toms::fx::Emitter;
 
 namespace {
 
-QString qs(const std::string& s) { return QString::fromStdString(s); }
+QString f_Qs(const std::string& l_strS) { return QString::fromStdString(l_strS); }
 
 // ---- headless ------------------------------------------------------------------------------------
 
-bool readFile(const QString& path, std::string& out)
+bool f_ReadFile(const QString& l_oPath, std::string& l_strOut)
 {
-    QFile f(path);
-    if (!f.open(QIODevice::ReadOnly)) return false;
-    out = f.readAll().toStdString();
+    QFile l_oF(l_oPath);
+    if (!l_oF.open(QIODevice::ReadOnly)) return false;
+    l_strOut = l_oF.readAll().toStdString();
     return true;
 }
 
-int headlessCheck(const QString& path)
+int f_HeadlessCheck(const QString& l_oPath)
 {
-    std::string text, err;
-    toms::fx::ParticleFile file;
-    if (!readFile(path, text)) {
-        std::fprintf(stderr, "%s: cannot read\n", path.toUtf8().constData());
+    std::string l_strText, l_strErr;
+    toms::fx::ParticleFile l_oFile;
+    if (!f_ReadFile(l_oPath, l_strText)) {
+        std::fprintf(stderr, "%s: cannot read\n", l_oPath.toUtf8().constData());
         return 2;
     }
-    if (!toms::fx::parseParticles(text, file, &err)) {
-        std::fprintf(stderr, "%s: %s\n", path.toUtf8().constData(), err.c_str());
+    if (!toms::fx::f_ParseParticles(l_strText, l_oFile, &l_strErr)) {
+        std::fprintf(stderr, "%s: %s\n", l_oPath.toUtf8().constData(), l_strErr.c_str());
         return 2;
     }
-    std::vector<std::unique_ptr<toms::AtlasFile>> atlases;
-    toms::anim::AtlasSet set;
-    int errors = 0, warnings = 0;
-    const QDir dir = QFileInfo(path).absoluteDir();
-    for (const toms::anim::AtlasRef& r : file.atlases) {
-        auto a = std::make_unique<toms::AtlasFile>();
-        std::string atext;
-        if (!readFile(dir.absoluteFilePath(qs(r.path)), atext) || !toms::parseAtlas(atext, *a, &err)) {
-            std::printf("error: atlas %s (%s) does not load\n", r.path.c_str(), r.id.c_str());
-            errors++;
+    std::vector<std::unique_ptr<toms::AtlasFile>> l_vAtlases;
+    toms::anim::AtlasSet l_oSet;
+    int l_iErrors = 0, l_iWarnings = 0;
+    const QDir l_oDir = QFileInfo(l_oPath).absoluteDir();
+    for (const toms::anim::AtlasRef& l_oR : l_oFile.m_vAtlases) {
+        auto l_upA = std::make_unique<toms::AtlasFile>();
+        std::string l_strAtext;
+        if (!f_ReadFile(l_oDir.absoluteFilePath(f_Qs(l_oR.m_strPath)), l_strAtext) || !toms::f_ParseAtlas(l_strAtext, *l_upA, &l_strErr)) {
+            std::printf("error: atlas %s (%s) does not load\n", l_oR.m_strPath.c_str(), l_oR.m_strId.c_str());
+            l_iErrors++;
             continue;
         }
-        set.add(*a, r.id);
-        atlases.push_back(std::move(a));
+        l_oSet.f_Add(*l_upA, l_oR.m_strId);
+        l_vAtlases.push_back(std::move(l_upA));
     }
-    for (const toms::fx::Problem& p : toms::fx::checkParticles(file, &set)) {
-        std::printf("%s: %s: %s\n", p.warning ? "warning" : "error", p.where.c_str(), p.text.c_str());
-        (p.warning ? warnings : errors)++;
+    for (const toms::fx::Problem& l_oP : toms::fx::f_CheckParticles(l_oFile, &l_oSet)) {
+        std::printf("%s: %s: %s\n", l_oP.m_bWarning ? "warning" : "error", l_oP.m_strWhere.c_str(), l_oP.m_strText.c_str());
+        (l_oP.m_bWarning ? l_iWarnings : l_iErrors)++;
     }
-    std::printf("%s: %zu effect(s), %zu atlas(es), %d error(s), %d warning(s)\n", path.toUtf8().constData(), file.effects.size(),
-                file.atlases.size(), errors, warnings);
-    return errors ? 2 : 0;
+    std::printf("%s: %zu effect(s), %zu atlas(es), %d error(s), %d warning(s)\n", l_oPath.toUtf8().constData(), l_oFile.m_vEffects.size(),
+                l_oFile.m_vAtlases.size(), l_iErrors, l_iWarnings);
+    return l_iErrors ? 2 : 0;
 }
 
 // A contact sheet: the effect at `frames` moments, `every` seconds apart, seed 1, one 256 px cell each.
-int headlessRender(const QString& target, const QString& out, int frames, float every)
+int f_HeadlessRender(const QString& l_oTarget, const QString& l_oOut, int l_iFrames, float l_fEvery)
 {
-    const int hash = int(target.lastIndexOf(QLatin1Char('#')));
-    if (hash < 0) {
+    const int l_iHash = int(l_oTarget.lastIndexOf(QLatin1Char('#')));
+    if (l_iHash < 0) {
         std::fprintf(stderr, "render: expected file.particle#effect\n");
         return 3;
     }
-    ParticleDocument doc;
-    QString err;
-    if (!doc.open(target.left(hash), &err)) {
-        std::fprintf(stderr, "render: %s\n", err.toUtf8().constData());
+    ParticleDocument l_oDoc;
+    QString l_oErr;
+    if (!l_oDoc.f_Open(l_oTarget.left(l_iHash), &l_oErr)) {
+        std::fprintf(stderr, "render: %s\n", l_oErr.toUtf8().constData());
         return 2;
     }
-    const toms::fx::Effect* e = doc.file().find(target.mid(hash + 1).toStdString());
-    if (!e) {
-        std::fprintf(stderr, "render: no effect '%s'\n", target.mid(hash + 1).toUtf8().constData());
+    const toms::fx::Effect* l_pE = l_oDoc.f_File().f_Find(l_oTarget.mid(l_iHash + 1).toStdString());
+    if (!l_pE) {
+        std::fprintf(stderr, "render: no effect '%s'\n", l_oTarget.mid(l_iHash + 1).toUtf8().constData());
         return 2;
     }
-    const int cell = 256, cols = std::min(frames, 4), rows = (frames + cols - 1) / cols;
-    QImage sheet(cols * cell, rows * cell, QImage::Format_ARGB32_Premultiplied);
-    sheet.fill(QColor(24, 24, 30));
-    QPainter p(&sheet);
-    toms::fx::EffectInstance fx;
-    fx.play(e, 1);
-    std::vector<Quad> quads;
-    for (int i = 0; i < frames; i++) {
-        const float t = i * every;
-        fx.seek(t);
-        quads.clear();
-        fx.appendQuads(doc.atlasSet(), glm::mat3(1.0f), nullptr, quads);
-        const QPointF origin((i % cols) * cell + cell / 2.0, (i / cols) * cell + cell / 2.0);
-        p.setClipRect(QRectF((i % cols) * cell, (i / cols) * cell, cell, cell));
-        ParticleViewport::drawQuads(p, quads, doc, QTransform::fromTranslate(origin.x(), origin.y()));
-        p.setClipping(false);
-        p.setPen(QColor(150, 150, 160));
-        p.drawRect(QRectF((i % cols) * cell, (i / cols) * cell, cell - 1, cell - 1));
-        p.drawText(QPointF((i % cols) * cell + 6, (i / cols) * cell + 16), QStringLiteral("t=%1 s  %2 live").arg(t, 0, 'f', 2).arg(fx.liveCount()));
+    const int l_iCell = 256, l_iCols = std::min(l_iFrames, 4), l_iRows = (l_iFrames + l_iCols - 1) / l_iCols;
+    QImage l_oSheet(l_iCols * l_iCell, l_iRows * l_iCell, QImage::Format_ARGB32_Premultiplied);
+    l_oSheet.fill(QColor(24, 24, 30));
+    QPainter l_oP(&l_oSheet);
+    toms::fx::EffectInstance l_oFx;
+    l_oFx.f_Play(l_pE, 1);
+    std::vector<Quad> l_vQuads;
+    for (int l_iI = 0; l_iI < l_iFrames; l_iI++) {
+        const float l_fT = l_iI * l_fEvery;
+        l_oFx.f_Seek(l_fT);
+        l_vQuads.clear();
+        l_oFx.f_AppendQuads(l_oDoc.f_AtlasSet(), glm::mat3(1.0f), nullptr, l_vQuads);
+        const QPointF l_oOrigin((l_iI % l_iCols) * l_iCell + l_iCell / 2.0, (l_iI / l_iCols) * l_iCell + l_iCell / 2.0);
+        l_oP.setClipRect(QRectF((l_iI % l_iCols) * l_iCell, (l_iI / l_iCols) * l_iCell, l_iCell, l_iCell));
+        ParticleViewport::f_DrawQuads(l_oP, l_vQuads, l_oDoc, QTransform::fromTranslate(l_oOrigin.x(), l_oOrigin.y()));
+        l_oP.setClipping(false);
+        l_oP.setPen(QColor(150, 150, 160));
+        l_oP.drawRect(QRectF((l_iI % l_iCols) * l_iCell, (l_iI / l_iCols) * l_iCell, l_iCell - 1, l_iCell - 1));
+        l_oP.drawText(QPointF((l_iI % l_iCols) * l_iCell + 6, (l_iI / l_iCols) * l_iCell + 16), QStringLiteral("t=%1 s  %2 live").arg(l_fT, 0, 'f', 2).arg(l_oFx.f_LiveCount()));
     }
-    p.end();
-    if (!sheet.save(out)) {
-        std::fprintf(stderr, "render: cannot write %s\n", out.toUtf8().constData());
+    l_oP.end();
+    if (!l_oSheet.save(l_oOut)) {
+        std::fprintf(stderr, "render: cannot write %s\n", l_oOut.toUtf8().constData());
         return 2;
     }
-    std::printf("%s: %d frame(s) of %s\n", out.toUtf8().constData(), frames, target.toUtf8().constData());
+    std::printf("%s: %d frame(s) of %s\n", l_oOut.toUtf8().constData(), l_iFrames, l_oTarget.toUtf8().constData());
     return 0;
 }
 
 // ---- selftest ------------------------------------------------------------------------------------
 
-void processEvents()
+void f_ProcessEvents()
 {
-    for (int i = 0; i < 3; i++) QCoreApplication::processEvents();
+    for (int l_iI = 0; l_iI < 3; l_iI++) QCoreApplication::processEvents();
 }
 
-bool check(bool ok, const char* what)
+bool f_Check(bool l_bOk, const char* l_pszWhat)
 {
-    std::printf("selftest: %-64s %s\n", what, ok ? "ok" : "FAILED");
-    return ok;
+    std::printf("selftest: %-64s %s\n", l_pszWhat, l_bOk ? "ok" : "FAILED");
+    return l_bOk;
 }
 
-void mouse(QWidget* w, QEvent::Type type, const QPointF& at, Qt::MouseButton button, Qt::MouseButtons buttons,
-           Qt::KeyboardModifiers mods = Qt::NoModifier)
+void f_Mouse(QWidget* l_pW, QEvent::Type l_eType, const QPointF& l_oAt, Qt::MouseButton l_eButton, Qt::MouseButtons l_oButtons,
+           Qt::KeyboardModifiers l_oMods = Qt::NoModifier)
 {
-    QMouseEvent e(type, at, w->mapToGlobal(at), button, buttons, mods);
-    QApplication::sendEvent(w, &e);
+    QMouseEvent l_oE(l_eType, l_oAt, l_pW->mapToGlobal(l_oAt), l_eButton, l_oButtons, l_oMods);
+    QApplication::sendEvent(l_pW, &l_oE);
 }
 
-void drag(QWidget* w, const QPointF& from, const QPointF& to, Qt::MouseButton button = Qt::LeftButton, Qt::KeyboardModifiers mods = Qt::NoModifier)
+void f_Drag(QWidget* l_pW, const QPointF& l_oFrom, const QPointF& l_oTo, Qt::MouseButton l_eButton = Qt::LeftButton, Qt::KeyboardModifiers l_oMods = Qt::NoModifier)
 {
-    mouse(w, QEvent::MouseButtonPress, from, button, button, mods);
-    for (int i = 1; i <= 4; i++) mouse(w, QEvent::MouseMove, from + (to - from) * (i / 4.0), Qt::NoButton, button, mods);
-    mouse(w, QEvent::MouseButtonRelease, to, button, Qt::NoButton, mods);
-    processEvents();
+    f_Mouse(l_pW, QEvent::MouseButtonPress, l_oFrom, l_eButton, l_eButton, l_oMods);
+    for (int l_iI = 1; l_iI <= 4; l_iI++) f_Mouse(l_pW, QEvent::MouseMove, l_oFrom + (l_oTo - l_oFrom) * (l_iI / 4.0), Qt::NoButton, l_eButton, l_oMods);
+    f_Mouse(l_pW, QEvent::MouseButtonRelease, l_oTo, l_eButton, Qt::NoButton, l_oMods);
+    f_ProcessEvents();
 }
 
-bool selectEmitter(ParticleDocument* doc, const char* effect, const char* emitter)
+bool f_SelectEmitter(ParticleDocument* l_pDoc, const char* l_pszEffect, const char* l_pszEmitter)
 {
-    const auto& es = doc->file().effects;
-    for (int i = 0; i < int(es.size()); i++)
-        if (es[size_t(i)].name == effect)
-            for (int j = 0; j < int(es[size_t(i)].emitters.size()); j++)
-                if (es[size_t(i)].emitters[size_t(j)].name == emitter) {
-                    doc->select(i, j);
-                    processEvents();
+    const auto& l_vEs = l_pDoc->f_File().m_vEffects;
+    for (int l_iI = 0; l_iI < int(l_vEs.size()); l_iI++)
+        if (l_vEs[size_t(l_iI)].m_strName == l_pszEffect)
+            for (int l_iJ = 0; l_iJ < int(l_vEs[size_t(l_iI)].m_vEmitters.size()); l_iJ++)
+                if (l_vEs[size_t(l_iI)].m_vEmitters[size_t(l_iJ)].m_strName == l_pszEmitter) {
+                    l_pDoc->f_Select(l_iI, l_iJ);
+                    f_ProcessEvents();
                     return true;
                 }
     return false;
 }
 
-int runSelfTest(ParticleMainWindow& w, const QString& file, const QString& outDir)
+int f_RunSelfTest(ParticleMainWindow& l_oW, const QString& l_oFile, const QString& l_oOutDir)
 {
     qApp->setProperty("toms.selftest", true);
-    QDir().mkpath(outDir);
-    ParticleEditor* ed = w.editor();
-    ParticleDocument* doc = ed->document();
-    ParticlePlayback* play = ed->playback();
-    ParticleViewport* view = ed->viewport();
-    InspectorDock* insp = ed->inspector();
-    bool ok = true;
+    QDir().mkpath(l_oOutDir);
+    ParticleEditor* l_pEd = l_oW.f_Editor();
+    ParticleDocument* l_pDoc = l_pEd->f_Document();
+    ParticlePlayback* l_pPlay = l_pEd->f_Playback();
+    ParticleViewport* l_pView = l_pEd->f_Viewport();
+    InspectorDock* l_pInsp = l_pEd->f_Inspector();
+    bool l_bOk = true;
 
-    ok &= check(ed->openFile(file), "open the recipes");
-    processEvents();
-    ok &= check(doc->file().effects.size() >= 11 && doc->atlasCount() == 2, "11 effects, 2 atlases");
-    ok &= check(doc->problems().empty() && ed->problemsList()->count() >= 1, "no problems (the list shows only the log line)");
-    ok &= check(ed->effectsDock()->tree()->topLevelItemCount() == int(doc->file().effects.size()), "Effects dock lists every effect");
+    l_bOk &= f_Check(l_pEd->f_OpenFile(l_oFile), "open the recipes");
+    f_ProcessEvents();
+    l_bOk &= f_Check(l_pDoc->f_File().m_vEffects.size() >= 11 && l_pDoc->f_AtlasCount() == 2, "11 effects, 2 atlases");
+    l_bOk &= f_Check(l_pDoc->f_Problems().empty() && l_pEd->f_ProblemsList()->count() >= 1, "no problems (the list shows only the log line)");
+    l_bOk &= f_Check(l_pEd->f_EffectsDock()->f_Tree()->topLevelItemCount() == int(l_pDoc->f_File().m_vEffects.size()), "Effects dock lists every effect");
 
     // The preview: torch_fire's flames, paused at 1 s.
-    ok &= check(selectEmitter(doc, "torch_fire", "flames"), "select torch_fire / flames");
-    play->pause();
-    play->seek(1.0f);
-    w.grab();   // paints the viewport
-    ok &= check(play->instance().liveCount() > 20 && !view->lastQuads().empty() && std::fabs(play->time() - 1.0f) < 0.02f,
+    l_bOk &= f_Check(f_SelectEmitter(l_pDoc, "torch_fire", "flames"), "select torch_fire / flames");
+    l_pPlay->f_Pause();
+    l_pPlay->f_Seek(1.0f);
+    l_oW.grab();   // paints the viewport
+    l_bOk &= f_Check(l_pPlay->f_Instance().f_LiveCount() > 20 && !l_pView->f_LastQuads().empty() && std::fabs(l_pPlay->f_Time() - 1.0f) < 0.02f,
                 "paused at 1 s: particles live and drawn");
-    const std::vector<Quad> first = view->lastQuads();
-    play->seek(1.0f);
-    w.grab();
-    bool same = first.size() == view->lastQuads().size();
-    for (size_t i = 0; same && i < first.size(); i++) same = std::fabs(first[i].corners[0] - view->lastQuads()[i].corners[0]) < 1e-4f;
-    ok &= check(same, "seek(1) twice: the same particles (seeded)");
-    ok &= check(w.grab().save(QDir(outDir).filePath(QStringLiteral("main.png"))), "main.png");
+    const std::vector<Quad> l_vFirst = l_pView->f_LastQuads();
+    l_pPlay->f_Seek(1.0f);
+    l_oW.grab();
+    bool l_bSame = l_vFirst.size() == l_pView->f_LastQuads().size();
+    for (size_t l_nI = 0; l_bSame && l_nI < l_vFirst.size(); l_nI++) l_bSame = std::fabs(l_vFirst[l_nI].m_arrCorners[0] - l_pView->f_LastQuads()[l_nI].m_arrCorners[0]) < 1e-4f;
+    l_bOk &= f_Check(l_bSame, "seek(1) twice: the same particles (seeded)");
+    l_bOk &= f_Check(l_oW.grab().save(QDir(l_oOutDir).filePath(QStringLiteral("main.png"))), "main.png");
 
     // Inspector edits: one undo step each.
-    const int base = doc->undoStack()->index();
-    insp->rateSpin()->setValue(80);
-    processEvents();
-    ok &= check(doc->emitter()->rate == 80 && doc->undoStack()->index() == base + 1, "Inspector: rate 80 (1 step)");
-    ok &= check(std::fabs(play->time() - 1.0f) < 0.02f, "the preview stays at 1 s after an edit");
-    insp->sizeEdit()->minSpin()->setValue(30);
-    processEvents();
-    ok &= check(doc->emitter()->size.min == 30, "Inspector: size min 30");
-    insp->sizeCurve()->addKey(0.5f, 2.0f);
-    processEvents();
-    ok &= check(doc->emitter()->sizeOverLife.keys.size() == 3, "size curve: a key added (3 keys)");
-    insp->colorCurve()->addStop(0.4f);
-    processEvents();
-    ok &= check(doc->emitter()->colorOverLife.keys.size() == 5, "colour gradient: a stop added (5)");
-    insp->blendCombo()->setCurrentIndex(2);
-    emit insp->blendCombo()->activated(2);
-    processEvents();
-    ok &= check(doc->emitter()->blend == toms::fx::Blend::multiply(), "Blend: multiply");
-    insp->simulationCombo()->setCurrentIndex(2);
-    processEvents();
-    ok &= check(doc->emitter()->simulation == toms::fx::Emitter::Simulation::Gpu &&
-                    doc->toJson().contains(QStringLiteral("\"simulation\": \"gpu\"")),
+    const int l_iBase = l_pDoc->f_UndoStack()->index();
+    l_pInsp->f_RateSpin()->setValue(80);
+    f_ProcessEvents();
+    l_bOk &= f_Check(l_pDoc->f_Emitter()->m_fRate == 80 && l_pDoc->f_UndoStack()->index() == l_iBase + 1, "Inspector: rate 80 (1 step)");
+    l_bOk &= f_Check(std::fabs(l_pPlay->f_Time() - 1.0f) < 0.02f, "the preview stays at 1 s after an edit");
+    l_pInsp->f_SizeEdit()->f_MinSpin()->setValue(30);
+    f_ProcessEvents();
+    l_bOk &= f_Check(l_pDoc->f_Emitter()->m_oSize.m_fMin == 30, "Inspector: size min 30");
+    l_pInsp->f_SizeCurve()->f_AddKey(0.5f, 2.0f);
+    f_ProcessEvents();
+    l_bOk &= f_Check(l_pDoc->f_Emitter()->m_oSizeOverLife.m_vKeys.size() == 3, "size curve: a key added (3 keys)");
+    l_pInsp->f_ColorCurve()->f_AddStop(0.4f);
+    f_ProcessEvents();
+    l_bOk &= f_Check(l_pDoc->f_Emitter()->m_oColorOverLife.m_vKeys.size() == 5, "colour gradient: a stop added (5)");
+    l_pInsp->f_BlendCombo()->setCurrentIndex(2);
+    emit l_pInsp->f_BlendCombo()->activated(2);
+    f_ProcessEvents();
+    l_bOk &= f_Check(l_pDoc->f_Emitter()->m_oBlend == toms::fx::Blend::f_Multiply(), "Blend: multiply");
+    l_pInsp->f_SimulationCombo()->setCurrentIndex(2);
+    f_ProcessEvents();
+    l_bOk &= f_Check(l_pDoc->f_Emitter()->m_eSimulation == toms::fx::Emitter::Simulation::Gpu &&
+                    l_pDoc->f_ToJson().contains(QStringLiteral("\"simulation\": \"gpu\"")),
                 "Simulation: GPU (stored in the file)");
-    insp->shapeCombo()->setCurrentIndex(int(toms::fx::Shape::Box));
-    processEvents();
-    ok &= check(doc->emitter()->shape.type == toms::fx::Shape::Box && doc->emitter()->shape.width > 0, "Shape: box (with a size)");
-    ok &= check(w.grab().save(QDir(outDir).filePath(QStringLiteral("inspector.png"))), "inspector.png");
+    l_pInsp->f_ShapeCombo()->setCurrentIndex(int(toms::fx::Shape::Box));
+    f_ProcessEvents();
+    l_bOk &= f_Check(l_pDoc->f_Emitter()->m_oShape.m_eType == toms::fx::Shape::Box && l_pDoc->f_Emitter()->m_oShape.m_fWidth > 0, "Shape: box (with a size)");
+    l_bOk &= f_Check(l_oW.grab().save(QDir(l_oOutDir).filePath(QStringLiteral("inspector.png"))), "inspector.png");
 
     // Gizmo: drag the move square 40 px right, the arrow to straight right.
-    w.grab();
-    const glm::vec2 off0 = doc->emitter()->offset;
-    const int before = doc->undoStack()->index();
-    const QPointF mv = view->handlePos(ParticleViewport::Handle::Move);
-    drag(view, mv, mv + QPointF(40, 0));
-    const float moved = doc->emitter()->offset.x - off0.x;
-    ok &= check(moved > 5 && std::fabs(doc->emitter()->offset.y - off0.y) < 1 && doc->undoStack()->index() == before + 1,
+    l_oW.grab();
+    const glm::vec2 l_v2Off0 = l_pDoc->f_Emitter()->m_v2Offset;
+    const int l_iBefore = l_pDoc->f_UndoStack()->index();
+    const QPointF l_oMv = l_pView->f_HandlePos(ParticleViewport::Handle::Move);
+    f_Drag(l_pView, l_oMv, l_oMv + QPointF(40, 0));
+    const float l_fMoved = l_pDoc->f_Emitter()->m_v2Offset.x - l_v2Off0.x;
+    l_bOk &= f_Check(l_fMoved > 5 && std::fabs(l_pDoc->f_Emitter()->m_v2Offset.y - l_v2Off0.y) < 1 && l_pDoc->f_UndoStack()->index() == l_iBefore + 1,
                 "gizmo: drag the centre moves the emitter (1 step)");
-    w.grab();
-    const QPointF dir = view->handlePos(ParticleViewport::Handle::Direction);
-    const QPointF centre = view->handlePos(ParticleViewport::Handle::Move);
-    drag(view, dir, centre + QPointF(80, 0));
-    ok &= check(std::fabs(doc->emitter()->direction) < 1.5f, "gizmo: drag the arrow to the right: direction 0");
-    w.grab();
-    const QPointF spread = view->handlePos(ParticleViewport::Handle::SpreadB);
-    drag(view, spread, centre + QPointF(0, 80));
-    ok &= check(std::fabs(doc->emitter()->spread - 90) < 2, "gizmo: drag a spread end straight down: spread 90");
+    l_oW.grab();
+    const QPointF l_oDir = l_pView->f_HandlePos(ParticleViewport::Handle::Direction);
+    const QPointF l_oCentre = l_pView->f_HandlePos(ParticleViewport::Handle::Move);
+    f_Drag(l_pView, l_oDir, l_oCentre + QPointF(80, 0));
+    l_bOk &= f_Check(std::fabs(l_pDoc->f_Emitter()->m_fDirection) < 1.5f, "gizmo: drag the arrow to the right: direction 0");
+    l_oW.grab();
+    const QPointF l_oSpread = l_pView->f_HandlePos(ParticleViewport::Handle::SpreadB);
+    f_Drag(l_pView, l_oSpread, l_oCentre + QPointF(0, 80));
+    l_bOk &= f_Check(std::fabs(l_pDoc->f_Emitter()->m_fSpread - 90) < 2, "gizmo: drag a spread end straight down: spread 90");
 
     // Right-drag pans (no context menu); a click fires the effect there.
-    w.grab();
-    const QPointF h0 = view->handlePos(ParticleViewport::Handle::Move);
-    drag(view, QPointF(50, 50), QPointF(110, 70), Qt::RightButton);
-    w.grab();
-    const QPointF h1 = view->handlePos(ParticleViewport::Handle::Move);
-    ok &= check(std::fabs(h1.x() - h0.x() - 60) < 1 && std::fabs(h1.y() - h0.y() - 20) < 1, "right-drag pans the view");
-    const QPointF o0 = play->origin();
-    mouse(view, QEvent::MouseButtonPress, QPointF(60, 400), Qt::LeftButton, Qt::LeftButton);
-    mouse(view, QEvent::MouseButtonRelease, QPointF(60, 400), Qt::LeftButton, Qt::NoButton);
-    processEvents();
-    ok &= check(play->origin() != o0 && play->playing(), "click: the effect fires there");
-    play->setOrigin(QPointF(0, 0), false);
-    play->pause();
+    l_oW.grab();
+    const QPointF l_oH0 = l_pView->f_HandlePos(ParticleViewport::Handle::Move);
+    f_Drag(l_pView, QPointF(50, 50), QPointF(110, 70), Qt::RightButton);
+    l_oW.grab();
+    const QPointF l_oH1 = l_pView->f_HandlePos(ParticleViewport::Handle::Move);
+    l_bOk &= f_Check(std::fabs(l_oH1.x() - l_oH0.x() - 60) < 1 && std::fabs(l_oH1.y() - l_oH0.y() - 20) < 1, "right-drag pans the view");
+    const QPointF l_oO0 = l_pPlay->f_Origin();
+    f_Mouse(l_pView, QEvent::MouseButtonPress, QPointF(60, 400), Qt::LeftButton, Qt::LeftButton);
+    f_Mouse(l_pView, QEvent::MouseButtonRelease, QPointF(60, 400), Qt::LeftButton, Qt::NoButton);
+    f_ProcessEvents();
+    l_bOk &= f_Check(l_pPlay->f_Origin() != l_oO0 && l_pPlay->f_Playing(), "click: the effect fires there");
+    l_pPlay->f_SetOrigin(QPointF(0, 0), false);
+    l_pPlay->f_Pause();
 
     // Timeline: click the ruler at the middle = seek there, paused.
-    TimelineView* tl = ed->timeline()->view();
-    const float span = tl->span();
-    mouse(tl, QEvent::MouseButtonPress, QPointF(tl->xOf(span / 2), 8), Qt::LeftButton, Qt::LeftButton);
-    mouse(tl, QEvent::MouseButtonRelease, QPointF(tl->xOf(span / 2), 8), Qt::LeftButton, Qt::NoButton);
-    processEvents();
-    ok &= check(!play->playing() && std::fabs(play->time() - span / 2) < 0.05f, "timeline ruler: seek to the middle, paused");
+    TimelineView* l_pTl = l_pEd->f_Timeline()->f_View();
+    const float l_fSpan = l_pTl->f_Span();
+    f_Mouse(l_pTl, QEvent::MouseButtonPress, QPointF(l_pTl->f_XOf(l_fSpan / 2), 8), Qt::LeftButton, Qt::LeftButton);
+    f_Mouse(l_pTl, QEvent::MouseButtonRelease, QPointF(l_pTl->f_XOf(l_fSpan / 2), 8), Qt::LeftButton, Qt::NoButton);
+    f_ProcessEvents();
+    l_bOk &= f_Check(!l_pPlay->f_Playing() && std::fabs(l_pPlay->f_Time() - l_fSpan / 2) < 0.05f, "timeline ruler: seek to the middle, paused");
     // Drag the selected emitter's bar end to 1.5 s.
-    const int lane = doc->emitterIndex();
-    const QRectF bar = tl->barRect(lane);
-    drag(tl, QPointF(bar.right() - 1, bar.center().y()), QPointF(tl->xOf(1.5f), bar.center().y()));
-    ok &= check(std::fabs(doc->emitter()->stop - 1.5f) < 0.03f, "timeline: drag the bar's end: stop 1.5 s");
+    const int l_iLane = l_pDoc->f_EmitterIndex();
+    const QRectF l_oBar = l_pTl->f_BarRect(l_iLane);
+    f_Drag(l_pTl, QPointF(l_oBar.right() - 1, l_oBar.center().y()), QPointF(l_pTl->f_XOf(1.5f), l_oBar.center().y()));
+    l_bOk &= f_Check(std::fabs(l_pDoc->f_Emitter()->m_fStop - 1.5f) < 0.03f, "timeline: drag the bar's end: stop 1.5 s");
 
     // Undo everything since the file opened.
-    while (doc->undoStack()->index() > base) doc->undoStack()->undo();
-    processEvents();
-    ok &= check(!doc->isDirty() && doc->emitter()->rate == 40 && doc->emitter()->stop == 0, "undo restores the file");
+    while (l_pDoc->f_UndoStack()->index() > l_iBase) l_pDoc->f_UndoStack()->undo();
+    f_ProcessEvents();
+    l_bOk &= f_Check(!l_pDoc->f_IsDirty() && l_pDoc->f_Emitter()->m_fRate == 40 && l_pDoc->f_Emitter()->m_fStop == 0, "undo restores the file");
 
     // Effects dock: emitters added / duplicated / deleted.
-    const size_t n = doc->effect()->emitters.size();
-    ed->effectsDock()->addEmitter();
-    ed->effectsDock()->duplicateSelected();
-    processEvents();
-    ok &= check(doc->effect()->emitters.size() == n + 2, "add + duplicate an emitter");
-    ed->effectsDock()->deleteSelected();
-    processEvents();
-    ok &= check(doc->effect()->emitters.size() == n + 1, "delete one");
+    const size_t l_nN = l_pDoc->f_Effect()->m_vEmitters.size();
+    l_pEd->f_EffectsDock()->f_AddEmitter();
+    l_pEd->f_EffectsDock()->f_DuplicateSelected();
+    f_ProcessEvents();
+    l_bOk &= f_Check(l_pDoc->f_Effect()->m_vEmitters.size() == l_nN + 2, "add + duplicate an emitter");
+    l_pEd->f_EffectsDock()->f_DeleteSelected();
+    f_ProcessEvents();
+    l_bOk &= f_Check(l_pDoc->f_Effect()->m_vEmitters.size() == l_nN + 1, "delete one");
     // Sprites dropped into the viewport: a flipbook emitter there.
     {
-        auto mime = std::make_unique<QMimeData>();
-        mime->setData(QStringLiteral("application/x-toms-sprite"), QByteArrayLiteral("fx:flame_0\nfx:flame_1\nfx:flame_3"));
-        const QPointF at = view->rect().center();
-        QDragEnterEvent enter(at.toPoint(), Qt::CopyAction, mime.get(), Qt::LeftButton, Qt::NoModifier);
-        QApplication::sendEvent(view, &enter);
-        QDropEvent drop(at, Qt::CopyAction, mime.get(), Qt::LeftButton, Qt::NoModifier);
-        QApplication::sendEvent(view, &drop);
-        processEvents();
-        ok &= check(doc->emitter() && doc->emitter()->frames.size() == 3 && doc->emitter()->frames[2] == "fx:flame_3",
+        auto l_upMime = std::make_unique<QMimeData>();
+        l_upMime->setData(QStringLiteral("application/x-toms-sprite"), QByteArrayLiteral("fx:flame_0\nfx:flame_1\nfx:flame_3"));
+        const QPointF l_oAt = l_pView->rect().center();
+        QDragEnterEvent l_oEnter(l_oAt.toPoint(), Qt::CopyAction, l_upMime.get(), Qt::LeftButton, Qt::NoModifier);
+        QApplication::sendEvent(l_pView, &l_oEnter);
+        QDropEvent l_oDrop(l_oAt, Qt::CopyAction, l_upMime.get(), Qt::LeftButton, Qt::NoModifier);
+        QApplication::sendEvent(l_pView, &l_oDrop);
+        f_ProcessEvents();
+        l_bOk &= f_Check(l_pDoc->f_Emitter() && l_pDoc->f_Emitter()->m_vFrames.size() == 3 && l_pDoc->f_Emitter()->m_vFrames[2] == "fx:flame_3",
                     "3 sprites dropped in the viewport: a flipbook emitter");
     }
     // A sprite double-clicked in the Sprites dock: the emitter draws it.
-    if (FxSpriteList* list = ed->spritesDock()->listFor(0)) {
-        QListWidgetItem* star = nullptr;
-        for (int i = 0; i < list->count(); i++)
-            if (list->item(i)->text() == QLatin1String("star")) star = list->item(i);
-        if (star) emit list->itemDoubleClicked(star);
-        processEvents();
-        ok &= check(star && doc->emitter()->sprite == "fx:star" && doc->emitter()->frames.empty(), "Sprites dock: double-click star");
+    if (FxSpriteList* l_pList = l_pEd->f_SpritesDock()->f_ListFor(0)) {
+        QListWidgetItem* l_pStar = nullptr;
+        for (int l_iI = 0; l_iI < l_pList->count(); l_iI++)
+            if (l_pList->item(l_iI)->text() == QLatin1String("star")) l_pStar = l_pList->item(l_iI);
+        if (l_pStar) emit l_pList->itemDoubleClicked(l_pStar);
+        f_ProcessEvents();
+        l_bOk &= f_Check(l_pStar && l_pDoc->f_Emitter()->m_strSprite == "fx:star" && l_pDoc->f_Emitter()->m_vFrames.empty(), "Sprites dock: double-click star");
     }
-    while (doc->undoStack()->index() > base) doc->undoStack()->undo();
-    processEvents();
+    while (l_pDoc->f_UndoStack()->index() > l_iBase) l_pDoc->f_UndoStack()->undo();
+    f_ProcessEvents();
 
     // A preset into a new file: the atlases it needs come along.
-    doc->newFile();
-    processEvents();
-    ok &= check(ed->addPreset(QStringLiteral("coin_burst")) && doc->atlasIndexOf(QStringLiteral("game")) >= 0 &&
-                    doc->atlasIndexOf(QStringLiteral("fx")) >= 0 && doc->problems().empty(),
+    l_pDoc->f_NewFile();
+    f_ProcessEvents();
+    l_bOk &= f_Check(l_pEd->f_AddPreset(QStringLiteral("coin_burst")) && l_pDoc->f_AtlasIndexOf(QStringLiteral("game")) >= 0 &&
+                    l_pDoc->f_AtlasIndexOf(QStringLiteral("fx")) >= 0 && l_pDoc->f_Problems().empty(),
                 "preset coin_burst: game + fx atlases added, no problems");
-    play->restart();
-    play->pause();
-    play->seek(0.3f);
-    w.grab();
-    ok &= check(!view->lastQuads().empty(), "coin_burst draws at 0.3 s");
-    ok &= check(w.grab().save(QDir(outDir).filePath(QStringLiteral("preset.png"))), "preset.png");
+    l_pPlay->f_Restart();
+    l_pPlay->f_Pause();
+    l_pPlay->f_Seek(0.3f);
+    l_oW.grab();
+    l_bOk &= f_Check(!l_pView->f_LastQuads().empty(), "coin_burst draws at 0.3 s");
+    l_bOk &= f_Check(l_oW.grab().save(QDir(l_oOutDir).filePath(QStringLiteral("preset.png"))), "preset.png");
 
     // Save As next to the atlases' drive, reopen: the same JSON, relative atlas paths.
-    const QString saved = QDir(outDir).filePath(QStringLiteral("saved.particle"));
-    ok &= check(ed->saveTo(saved) && !doc->isDirty(), "save as");
-    const QString json = doc->toJson();
-    ok &= check(json.contains(QStringLiteral("\"../")) || json.contains(QStringLiteral("\"..")) || !json.contains(QStringLiteral(":/")),
+    const QString l_oSaved = QDir(l_oOutDir).filePath(QStringLiteral("saved.particle"));
+    l_bOk &= f_Check(l_pEd->f_SaveTo(l_oSaved) && !l_pDoc->f_IsDirty(), "save as");
+    const QString l_oJson = l_pDoc->f_ToJson();
+    l_bOk &= f_Check(l_oJson.contains(QStringLiteral("\"../")) || l_oJson.contains(QStringLiteral("\"..")) || !l_oJson.contains(QStringLiteral(":/")),
                 "atlas paths stored relative");
-    ok &= check(ed->openFile(saved) && doc->toJson() == json, "reopen: the same file");
+    l_bOk &= f_Check(l_pEd->f_OpenFile(l_oSaved) && l_pDoc->f_ToJson() == l_oJson, "reopen: the same file");
 
     // Backup copy: opens from anywhere (absolute atlas paths), the document is unchanged.
     {
-        const QString backup = QDir(outDir).filePath(QStringLiteral("backup_1.particle"));
-        const size_t effects = doc->file().effects.size();
-        QString berr;
-        ok &= check(doc->writeBackup(backup, &berr) && !doc->isDirty() && doc->filePath() == QFileInfo(saved).absoluteFilePath(),
+        const QString l_oBackup = QDir(l_oOutDir).filePath(QStringLiteral("backup_1.particle"));
+        const size_t l_nEffects = l_pDoc->f_File().m_vEffects.size();
+        QString l_oBerr;
+        l_bOk &= f_Check(l_pDoc->f_WriteBackup(l_oBackup, &l_oBerr) && !l_pDoc->f_IsDirty() && l_pDoc->f_FilePath() == QFileInfo(l_oSaved).absoluteFilePath(),
                     "backup copy written, the document unchanged");
-        ok &= check(ed->openFile(backup) && doc->file().effects.size() == effects && doc->atlasCount() == 2 && doc->problems().empty(),
+        l_bOk &= f_Check(l_pEd->f_OpenFile(l_oBackup) && l_pDoc->f_File().m_vEffects.size() == l_nEffects && l_pDoc->f_AtlasCount() == 2 && l_pDoc->f_Problems().empty(),
                     "the backup opens: same effects, both atlases found");
     }
 
-    std::printf("selftest: %s\n", ok ? "ok" : "FAILED");
-    return ok ? 0 : 1;
+    std::printf("selftest: %s\n", l_bOk ? "ok" : "FAILED");
+    return l_bOk ? 0 : 1;
 }
 
 // The preview with the game renderer (bgfx, on screen: a real window). Waits real time for frames.
-void pump(int ms)
+void f_Pump(int l_iMs)
 {
-    QElapsedTimer t;
-    t.start();
-    while (t.elapsed() < ms) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
+    QElapsedTimer l_oT;
+    l_oT.start();
+    while (l_oT.elapsed() < l_iMs) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
 }
 
-bool waitShot(int before, int ms)
+bool f_WaitShot(int l_iBefore, int l_iMs)
 {
-    QElapsedTimer t;
-    t.start();
-    while (toms::next::bgfxHostScreenshotsWritten() == before && t.elapsed() < ms) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
-    return toms::next::bgfxHostScreenshotsWritten() > before;
+    QElapsedTimer l_oT;
+    l_oT.start();
+    while (toms::next::f_BgfxHostScreenshotsWritten() == l_iBefore && l_oT.elapsed() < l_iMs) QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
+    return toms::next::f_BgfxHostScreenshotsWritten() > l_iBefore;
 }
 
-int runGpuSelfTest(ParticleMainWindow& w, const QString& file, const QString& outDir)
+int f_RunGpuSelfTest(ParticleMainWindow& l_oW, const QString& l_oFile, const QString& l_oOutDir)
 {
     qApp->setProperty("toms.selftest", true);
-    QDir().mkpath(outDir);
-    ParticleEditor* ed = w.editor();
-    ParticleDocument* doc = ed->document();
-    ParticlePlayback* play = ed->playback();
-    ParticleViewport* view = ed->viewport();
-    bool ok = true;
-    pump(500);
-    ok &= check(view->usingGameRenderer(), "the preview runs on the game renderer");
-    std::printf("selftest:   %s\n", view->rendererName().toUtf8().constData());
-    if (!view->usingGameRenderer()) return 1;
-    ok &= check(ed->openFile(file) && selectEmitter(doc, "torch_fire", "flames"), "open the recipes, torch_fire");
+    QDir().mkpath(l_oOutDir);
+    ParticleEditor* l_pEd = l_oW.f_Editor();
+    ParticleDocument* l_pDoc = l_pEd->f_Document();
+    ParticlePlayback* l_pPlay = l_pEd->f_Playback();
+    ParticleViewport* l_pView = l_pEd->f_Viewport();
+    bool l_bOk = true;
+    f_Pump(500);
+    l_bOk &= f_Check(l_pView->f_UsingGameRenderer(), "the preview runs on the game renderer");
+    std::printf("selftest:   %s\n", l_pView->f_RendererName().toUtf8().constData());
+    if (!l_pView->f_UsingGameRenderer()) return 1;
+    l_bOk &= f_Check(l_pEd->f_OpenFile(l_oFile) && f_SelectEmitter(l_pDoc, "torch_fire", "flames"), "open the recipes, torch_fire");
 
     // Every emitter on the GPU (threshold 1), as the game would with that setting.
-    ed->setGpuThreshold(1);
-    play->restart();
-    const int f0 = view->framesDrawn();
-    pump(1500);
-    const int frames = view->framesDrawn() - f0;
-    std::printf("selftest:   %d frames in 1.5 s\n", frames);
-    ok &= check(frames > 20, "frames are drawn (bgfx, vsync)");
-    ok &= check(play->instance().gpuEmitters() == 3 && play->instance().liveCount() > 0, "threshold 1: all 3 emitters on the GPU, particles live");
-    play->pause();
-    play->seek(1.0f);
-    pump(200);
-    int before = toms::next::bgfxHostScreenshotsWritten();
-    view->saveGameRendererShot(QDir(outDir).filePath(QStringLiteral("gpu_torch.png")));
-    ok &= check(waitShot(before, 3000), "gpu_torch.png (bgfx screenshot)");
+    l_pEd->f_SetGpuThreshold(1);
+    l_pPlay->f_Restart();
+    const int l_iF0 = l_pView->f_FramesDrawn();
+    f_Pump(1500);
+    const int l_iFrames = l_pView->f_FramesDrawn() - l_iF0;
+    std::printf("selftest:   %d frames in 1.5 s\n", l_iFrames);
+    l_bOk &= f_Check(l_iFrames > 20, "frames are drawn (bgfx, vsync)");
+    l_bOk &= f_Check(l_pPlay->f_Instance().f_GpuEmitters() == 3 && l_pPlay->f_Instance().f_LiveCount() > 0, "threshold 1: all 3 emitters on the GPU, particles live");
+    l_pPlay->f_Pause();
+    l_pPlay->f_Seek(1.0f);
+    f_Pump(200);
+    int l_iBefore = toms::next::f_BgfxHostScreenshotsWritten();
+    l_pView->f_SaveGameRendererShot(QDir(l_oOutDir).filePath(QStringLiteral("gpu_torch.png")));
+    l_bOk &= f_Check(f_WaitShot(l_iBefore, 3000), "gpu_torch.png (bgfx screenshot)");
 
     // The gizmo still edits through the native window.
-    const glm::vec2 off0 = doc->emitter()->offset;
-    const QPointF mv = view->handlePos(ParticleViewport::Handle::Move);
-    drag(view, mv, mv + QPointF(40, 0));
-    ok &= check(doc->emitter()->offset.x > off0.x + 5, "gizmo drag moves the emitter (game renderer)");
-    doc->undoStack()->undo();
-    pump(100);
+    const glm::vec2 l_v2Off0 = l_pDoc->f_Emitter()->m_v2Offset;
+    const QPointF l_oMv = l_pView->f_HandlePos(ParticleViewport::Handle::Move);
+    f_Drag(l_pView, l_oMv, l_oMv + QPointF(40, 0));
+    l_bOk &= f_Check(l_pDoc->f_Emitter()->m_v2Offset.x > l_v2Off0.x + 5, "gizmo drag moves the emitter (game renderer)");
+    l_pDoc->f_UndoStack()->undo();
+    f_Pump(100);
 
     // The same moment simulated on the CPU (threshold 0): it must look the same.
-    ed->setGpuThreshold(0);
-    play->seek(1.0f);
-    pump(200);
-    ok &= check(play->instance().gpuEmitters() == 0, "threshold 0: on the CPU");
-    before = toms::next::bgfxHostScreenshotsWritten();
-    view->saveGameRendererShot(QDir(outDir).filePath(QStringLiteral("cpu_torch.png")));
-    ok &= check(waitShot(before, 3000), "cpu_torch.png (bgfx screenshot)");
+    l_pEd->f_SetGpuThreshold(0);
+    l_pPlay->f_Seek(1.0f);
+    f_Pump(200);
+    l_bOk &= f_Check(l_pPlay->f_Instance().f_GpuEmitters() == 0, "threshold 0: on the CPU");
+    l_iBefore = toms::next::f_BgfxHostScreenshotsWritten();
+    l_pView->f_SaveGameRendererShot(QDir(l_oOutDir).filePath(QStringLiteral("cpu_torch.png")));
+    l_bOk &= f_Check(f_WaitShot(l_iBefore, 3000), "cpu_torch.png (bgfx screenshot)");
     // More effects, GPU and CPU at the same moment, for comparing (screenshots only).
-    for (const char* name : {"magic_circle", "hit_sparks", "snow"}) {
-        const auto& es = doc->file().effects;
-        for (int i = 0; i < int(es.size()); i++)
-            if (es[size_t(i)].name == name) doc->select(i, 0);
-        pump(50);
-        for (int gpu = 1; gpu >= 0; gpu--) {
-            ed->setGpuThreshold(gpu ? 1 : 0);
-            play->seek(std::string(name) == "hit_sparks" ? 0.15f : 1.0f);
-            pump(200);
-            before = toms::next::bgfxHostScreenshotsWritten();
-            view->saveGameRendererShot(QDir(outDir).filePath(QStringLiteral("%1_%2.png").arg(QLatin1String(name), gpu ? "gpu" : "cpu")));
-            waitShot(before, 3000);
+    for (const char* l_pszName : {"magic_circle", "hit_sparks", "snow"}) {
+        const auto& l_vEs = l_pDoc->f_File().m_vEffects;
+        for (int l_iI = 0; l_iI < int(l_vEs.size()); l_iI++)
+            if (l_vEs[size_t(l_iI)].m_strName == l_pszName) l_pDoc->f_Select(l_iI, 0);
+        f_Pump(50);
+        for (int l_iGpu = 1; l_iGpu >= 0; l_iGpu--) {
+            l_pEd->f_SetGpuThreshold(l_iGpu ? 1 : 0);
+            l_pPlay->f_Seek(std::string(l_pszName) == "hit_sparks" ? 0.15f : 1.0f);
+            f_Pump(200);
+            l_iBefore = toms::next::f_BgfxHostScreenshotsWritten();
+            l_pView->f_SaveGameRendererShot(QDir(l_oOutDir).filePath(QStringLiteral("%1_%2.png").arg(QLatin1String(l_pszName), l_iGpu ? "gpu" : "cpu")));
+            f_WaitShot(l_iBefore, 3000);
         }
     }
-    ed->setGpuThreshold(5000);
-    std::printf("selftest: %s\n", ok ? "ok" : "FAILED");
-    return ok ? 0 : 1;
+    l_pEd->f_SetGpuThreshold(5000);
+    std::printf("selftest: %s\n", l_bOk ? "ok" : "FAILED");
+    return l_bOk ? 0 : 1;
 }
 
 }  // namespace
 
-int main(int argc, char** argv)
+int main(int l_iArgc, char** l_pArgv)
 {
-    const std::vector<std::string> args = Console::utf8Args(argc, argv);
-    if (!args.empty() && args[0] == "--headless") {
-        Console::attachParent();
-        int code = 3;
-        if (args.size() == 3 && args[1] == "check") {
-            code = headlessCheck(QString::fromStdString(args[2]));
-        } else if ((args.size() >= 4 && args.size() <= 6) && args[1] == "render") {
+    const std::vector<std::string> l_vArgs = Console::f_Utf8Args(l_iArgc, l_pArgv);
+    if (!l_vArgs.empty() && l_vArgs[0] == "--headless") {
+        Console::f_AttachParent();
+        int l_iCode = 3;
+        if (l_vArgs.size() == 3 && l_vArgs[1] == "check") {
+            l_iCode = f_HeadlessCheck(QString::fromStdString(l_vArgs[2]));
+        } else if ((l_vArgs.size() >= 4 && l_vArgs.size() <= 6) && l_vArgs[1] == "render") {
             // No window is opened: the default platform plugin (the one deployed next to the exe) is enough.
-            QGuiApplication app(argc, argv);
-            code = headlessRender(QString::fromStdString(args[2]), QString::fromStdString(args[3]),
-                                  args.size() > 4 ? std::max(1, std::atoi(args[4].c_str())) : 8,
-                                  args.size() > 5 ? float(std::atof(args[5].c_str())) : 0.15f);
+            QGuiApplication l_oApp(l_iArgc, l_pArgv);
+            l_iCode = f_HeadlessRender(QString::fromStdString(l_vArgs[2]), QString::fromStdString(l_vArgs[3]),
+                                  l_vArgs.size() > 4 ? std::max(1, std::atoi(l_vArgs[4].c_str())) : 8,
+                                  l_vArgs.size() > 5 ? float(std::atof(l_vArgs[5].c_str())) : 0.15f);
         } else {
             std::fprintf(stderr, "usage: particle_editor --headless check file.particle\n"
                                  "       particle_editor --headless render file.particle#effect out.png [frames] [every]\n");
         }
         std::fflush(stdout);
         std::fflush(stderr);
-        return code;
+        return l_iCode;
     }
 
-    QApplication app(argc, argv);
+    QApplication l_oApp(l_iArgc, l_pArgv);
     QApplication::setOrganizationName(QStringLiteral("TOMS"));
     QApplication::setApplicationName(QStringLiteral("ParticleEditor"));
     QApplication::setApplicationDisplayName(QStringLiteral("Particle Editor"));
-    QApplication::setWindowIcon(Icons::icon(Icons::Id::Play));
-    Theme::apply(Theme::Mode::Dark);
-    Language::init();   // English / 中文 (tools/studio_common/Language.h), before any window
+    QApplication::setWindowIcon(Icons::f_Icon(Icons::Id::Play));
+    Theme::f_Apply(Theme::Mode::Dark);
+    Language::f_Init();   // English / 中文 (tools/studio_common/Language.h), before any window
 
-    const QStringList qargs = QCoreApplication::arguments().mid(1);
-    if (qargs.size() == 3 && qargs[0] == QLatin1String("--selftest")) {
-        Console::attachParent();
+    const QStringList l_oQargs = QCoreApplication::arguments().mid(1);
+    if (l_oQargs.size() == 3 && l_oQargs[0] == QLatin1String("--selftest")) {
+        Console::f_AttachParent();
         qApp->setProperty("toms.selftest", true);
-        ParticleMainWindow w;
-        w.setDarkTheme(true);
-        w.resize(1500, 920);
-        w.show();
-        const int code = runSelfTest(w, qargs[1], qargs[2]);
+        ParticleMainWindow l_oW;
+        l_oW.f_SetDarkTheme(true);
+        l_oW.resize(1500, 920);
+        l_oW.show();
+        const int l_iCode = f_RunSelfTest(l_oW, l_oQargs[1], l_oQargs[2]);
         std::fflush(stdout);
-        return code;
+        return l_iCode;
     }
-    if (qargs.size() == 3 && qargs[0] == QLatin1String("--selftest-gpu")) {   // on screen: the game renderer
-        Console::attachParent();
+    if (l_oQargs.size() == 3 && l_oQargs[0] == QLatin1String("--selftest-gpu")) {   // on screen: the game renderer
+        Console::f_AttachParent();
         qApp->setProperty("toms.selftest", true);
-        ParticleMainWindow w;
-        w.setDarkTheme(true);
-        w.resize(1500, 920);
-        w.show();
-        const int code = runGpuSelfTest(w, qargs[1], qargs[2]);
+        ParticleMainWindow l_oW;
+        l_oW.f_SetDarkTheme(true);
+        l_oW.resize(1500, 920);
+        l_oW.show();
+        const int l_iCode = f_RunGpuSelfTest(l_oW, l_oQargs[1], l_oQargs[2]);
         std::fflush(stdout);
-        return code;
+        return l_iCode;
     }
-    ParticleMainWindow w;
-    w.show();
-    if (!qargs.isEmpty()) w.editor()->openFile(qargs.first());
-    return app.exec();
+    ParticleMainWindow l_oW;
+    l_oW.show();
+    if (!l_oQargs.isEmpty()) l_oW.f_Editor()->f_OpenFile(l_oQargs.first());
+    return l_oApp.exec();
 }

@@ -10,195 +10,195 @@ using namespace toms::game_detail;
 
 namespace {
 
-std::string fmtPlayTime(int sec) {
-    if (sec < 0) sec = 0;
-    char b[32];
-    std::snprintf(b, sizeof(b), "%02d:%02d:%02d", sec / 3600, (sec / 60) % 60, sec % 60);
-    return b;
+std::string f_FmtPlayTime(int l_iSec) {
+    if (l_iSec < 0) l_iSec = 0;
+    char l_pszB[32];
+    std::snprintf(l_pszB, sizeof(l_pszB), "%02d:%02d:%02d", l_iSec / 3600, (l_iSec / 60) % 60, l_iSec % 60);
+    return l_pszB;
 }
 
-float pct(float num, float den) {
-    if (den <= 0.0f) return 0.0f;
-    return std::max(0.0f, std::min(100.0f, 100.0f * num / den));
+float f_Pct(float l_fNum, float l_fDen) {
+    if (l_fDen <= 0.0f) return 0.0f;
+    return std::max(0.0f, std::min(100.0f, 100.0f * l_fNum / l_fDen));
 }
 
-toms::UiPowerBar powerBar(const toms::PowerBarParams& p, const CombatState::AutoBar& bar,
-                          const std::string& prompt, const std::string& label) {
-    toms::UiPowerBar out;
-    out.prompt = prompt;
-    out.button_label = label;
-    out.cooling = bar.cooling;
-    const float span = 2.0f * p.redOuter;
-    if (span <= 0.0f) return out;
-    out.red_l = out.red_r = pct(p.redOuter - p.blueOuter, span);
-    out.blue_l = out.blue_r = pct(p.blueOuter - p.greenHalf, span);
-    out.green = pct(2.0f * p.greenHalf, span);
-    out.marker = pct(bar.pos, span);
-    return out;
+toms::UiPowerBar f_PowerBar(const toms::PowerBarParams& l_oP, const CombatState::AutoBar& l_oBar,
+                          const std::string& l_strPrompt, const std::string& l_strLabel) {
+    toms::UiPowerBar l_oOut;
+    l_oOut.m_strPrompt = l_strPrompt;
+    l_oOut.m_strButtonLabel = l_strLabel;
+    l_oOut.m_bCooling = l_oBar.m_bCooling;
+    const float l_fSpan = 2.0f * l_oP.m_fRedOuter;
+    if (l_fSpan <= 0.0f) return l_oOut;
+    l_oOut.m_fRedL = l_oOut.m_fRedR = f_Pct(l_oP.m_fRedOuter - l_oP.m_fBlueOuter, l_fSpan);
+    l_oOut.m_fBlueL = l_oOut.m_fBlueR = f_Pct(l_oP.m_fBlueOuter - l_oP.m_fGreenHalf, l_fSpan);
+    l_oOut.m_fGreen = f_Pct(2.0f * l_oP.m_fGreenHalf, l_fSpan);
+    l_oOut.m_fMarker = f_Pct(l_oBar.m_fPos, l_fSpan);
+    return l_oOut;
 }
 
 }  // namespace
 
 // atlas sprite id (or "<id>.png") -> the sprite name the .rml files use (uiSpritesheet). The art
 // style in use is the atlas loaded, so the UI matches the map without naming the style.
-std::string Game::uiSprite(std::string id) const {
-    if (id.empty()) id = "coin";
-    if (id.size() > 4 && id.compare(id.size() - 4, 4, ".png") == 0) id.resize(id.size() - 4);
-    return toms::rmlSpriteName(id);
+std::string Game::f_UiSprite(std::string l_strId) const {
+    if (l_strId.empty()) l_strId = "coin";
+    if (l_strId.size() > 4 && l_strId.compare(l_strId.size() - 4, 4, ".png") == 0) l_strId.resize(l_strId.size() - 4);
+    return toms::f_RmlSpriteName(l_strId);
 }
 
 // The page images are named as seen from assets/media/ui/, where the .rml documents are.
-std::string Game::uiSpritesheet() const {
-    if (spriteAtlas_.pages.empty()) return std::string();
-    const std::string dir = loadedArtStyle_ > 0 ? "../styles/" + artStyles_[loadedArtStyle_].id + "/atlas/" : "../atlas/";
-    return toms::rmlSpritesheets(spriteAtlas_, dir);
+std::string Game::f_UiSpritesheet() const {
+    if (m_oSpriteAtlas.m_vPages.empty()) return std::string();
+    const std::string l_strDir = m_iLoadedArtStyle > 0 ? "../styles/" + m_vArtStyles[m_iLoadedArtStyle].m_strId + "/atlas/" : "../atlas/";
+    return toms::f_RmlSpritesheets(m_oSpriteAtlas, l_strDir);
 }
 
-std::vector<std::string> Game::missingUiSprites() const {
-    std::vector<std::string> names(SPRITE_ORDER, SPRITE_ORDER + N_SPRITES);
-    for (const auto& kv : itemDefs) names.push_back(kv.second.value("sprite", std::string()));
+std::vector<std::string> Game::f_MissingUiSprites() const {
+    std::vector<std::string> l_vNames(g_arrSPRITEORDER, g_arrSPRITEORDER + g_iNSPRITES);
+    for (const auto& l_pairKv : m_mapItemDefs) l_vNames.push_back(l_pairKv.second.value("sprite", std::string()));
 
-    std::vector<std::string> missing;
-    for (std::string n : names) {
-        if (n.empty()) continue;
-        if (n.size() > 4 && n.compare(n.size() - 4, 4, ".png") == 0) n.resize(n.size() - 4);
-        if (!spriteAtlas_.find(n) && std::find(missing.begin(), missing.end(), n) == missing.end()) missing.push_back(n);
+    std::vector<std::string> l_vMissing;
+    for (std::string l_strN : l_vNames) {
+        if (l_strN.empty()) continue;
+        if (l_strN.size() > 4 && l_strN.compare(l_strN.size() - 4, 4, ".png") == 0) l_strN.resize(l_strN.size() - 4);
+        if (!m_oSpriteAtlas.f_Find(l_strN) && std::find(l_vMissing.begin(), l_vMissing.end(), l_strN) == l_vMissing.end()) l_vMissing.push_back(l_strN);
     }
-    return missing;
+    return l_vMissing;
 }
 
-std::string Game::artStyleName(int idx) const {
-    if (idx <= 0 || idx >= (int)artStyles_.size()) return locale_.tr("settings.style_original");
-    return locale_.field(artStyles_[idx].name);
+std::string Game::f_ArtStyleName(int l_iIdx) const {
+    if (l_iIdx <= 0 || l_iIdx >= (int)m_vArtStyles.size()) return m_oLocale.f_Tr("settings.style_original");
+    return m_oLocale.f_Field(m_vArtStyles[l_iIdx].m_jName);
 }
 
 // The Settings pages' art style section (none when only the original art exists). `selected` is
 // the highlighted style index (out of range = none). The chosen style is ticked; while it is not
 // the one in use (chosen during a run), its row says it applies back on the title screen.
-void Game::appendArtStyleRows(std::vector<toms::UiRow>& rows, int selected) const {
-    if (artStyles_.size() < 2) return;
-    const int chosen = chosenArtStyle();
-    for (int i = 0; i < (int)artStyles_.size(); i++) {
-        toms::UiRow r;
-        if (i == 0) r.section = locale_.tr("settings.style_section");
-        r.label = std::string(i == chosen ? "[x] " : "[ ] ") + artStyleName(i);
-        if (i == chosen && chosen != loadedArtStyle_) r.sub = locale_.tr("settings.style_pending");
-        r.selected = i == selected;
-        rows.push_back(r);
+void Game::f_AppendArtStyleRows(std::vector<toms::UiRow>& l_vRows, int l_iSelected) const {
+    if (m_vArtStyles.size() < 2) return;
+    const int l_iChosen = f_ChosenArtStyle();
+    for (int l_iI = 0; l_iI < (int)m_vArtStyles.size(); l_iI++) {
+        toms::UiRow l_oR;
+        if (l_iI == 0) l_oR.m_strSection = m_oLocale.f_Tr("settings.style_section");
+        l_oR.m_strLabel = std::string(l_iI == l_iChosen ? "[x] " : "[ ] ") + f_ArtStyleName(l_iI);
+        if (l_iI == l_iChosen && l_iChosen != m_iLoadedArtStyle) l_oR.m_strSub = m_oLocale.f_Tr("settings.style_pending");
+        l_oR.m_bSelected = l_iI == l_iSelected;
+        l_vRows.push_back(l_oR);
     }
 }
 
-std::string Game::itemSprite(const std::string& id) const {
-    auto it = itemDefs.find(id);
-    return uiSprite(it == itemDefs.end() ? "coin" : it->second.value("sprite", std::string("coin.png")));
+std::string Game::f_ItemSprite(const std::string& l_strId) const {
+    auto l_itIt = m_mapItemDefs.find(l_strId);
+    return f_UiSprite(l_itIt == m_mapItemDefs.end() ? "coin" : l_itIt->second.value("sprite", std::string("coin.png")));
 }
 
-std::string Game::itemEffectSummary(const std::string& id) const {
+std::string Game::f_ItemEffectSummary(const std::string& l_strId) const {
     // "HP +40 • ATK +1 • STR +2": the item's stats (data/items.json), in a fixed order, then the
     // attributes of data/stats.json by their short names.
-    const nlohmann::json& eff = itemStats(id);
-    std::vector<std::string> parts;
-    auto add = [&](const std::string& key, const std::string& label) {
-        if (eff.contains(key) && eff[key].is_number()) {
-            int v = eff[key].get<int>();
-            if (v == 0 && isGearType(itemType(id))) return;   // a worn piece's "atk: 0" says nothing
-            parts.push_back(label + (v >= 0 ? " +" : " ") + std::to_string(v));
+    const nlohmann::json& l_jEff = f_ItemStats(l_strId);
+    std::vector<std::string> l_vParts;
+    auto l_fnAdd = [&](const std::string& l_strKey, const std::string& l_strLabel) {
+        if (l_jEff.contains(l_strKey) && l_jEff[l_strKey].is_number()) {
+            int l_iV = l_jEff[l_strKey].get<int>();
+            if (l_iV == 0 && f_IsGearType(f_ItemType(l_strId))) return;   // a worn piece's "atk: 0" says nothing
+            l_vParts.push_back(l_strLabel + (l_iV >= 0 ? " +" : " ") + std::to_string(l_iV));
         }
     };
-    add("hp", "HP"); add("maxhp", "Max HP"); add("atk", "ATK"); add("def", "DEF");
-    add("exp", "EXP"); add("gold", locale_.tr("status.gold"));
-    for (const char* k : {"key_yellow", "key_blue", "key_red"}) add(k, itemName(k));
-    for (const AttrDef& a : attrDefs_) add(a.id, a.shortName);
-    if (eff.contains("warp")) parts.push_back("Warp");
-    if (parts.empty()) parts.push_back(locale_.tr("inventory.no_effect"));
-    std::string out;
-    for (size_t i = 0; i < parts.size(); ++i) out += (i ? " • " : "") + parts[i];
-    return out;
+    l_fnAdd("hp", "HP"); l_fnAdd("maxhp", "Max HP"); l_fnAdd("atk", "ATK"); l_fnAdd("def", "DEF");
+    l_fnAdd("exp", "EXP"); l_fnAdd("gold", m_oLocale.f_Tr("status.gold"));
+    for (const char* l_pszK : {"key_yellow", "key_blue", "key_red"}) l_fnAdd(l_pszK, f_ItemName(l_pszK));
+    for (const AttrDef& l_oA : m_vAttrDefs) l_fnAdd(l_oA.m_strId, l_oA.m_strShortName);
+    if (l_jEff.contains("warp")) l_vParts.push_back("Warp");
+    if (l_vParts.empty()) l_vParts.push_back(m_oLocale.f_Tr("inventory.no_effect"));
+    std::string l_strOut;
+    for (size_t l_nI = 0; l_nI < l_vParts.size(); ++l_nI) l_strOut += (l_nI ? " • " : "") + l_vParts[l_nI];
+    return l_strOut;
 }
 
-void Game::buildUiState(toms::UiState& u) const {
-    u = toms::UiState{};
-    const toms::Locale& L = locale_;
+void Game::f_BuildUiState(toms::UiState& l_oU) const {
+    l_oU = toms::UiState{};
+    const toms::Locale& l_oL = m_oLocale;
 
     // ---- title (the boot screen takes the whole screen) ----
-    if (title_.isOpen()) {
-        toms::UiTitle& t = u.title;
-        t.visible = true;
-        t.title = L.tr("game.title");
-        t.subtitle = L.tr("game.subtitle");
-        t.page = (int)title_.page();
-        t.back_label = L.tr("menu.back");
-        t.yes_label = L.tr("menu.yes");
-        t.no_label = L.tr("menu.no");
-        switch (title_.page()) {
+    if (m_oTitle.f_IsOpen()) {
+        toms::UiTitle& l_oT = l_oU.m_oTitle;
+        l_oT.m_bVisible = true;
+        l_oT.m_strTitle = l_oL.f_Tr("game.title");
+        l_oT.m_strSubtitle = l_oL.f_Tr("game.subtitle");
+        l_oT.m_iPage = (int)m_oTitle.f_Page();
+        l_oT.m_strBackLabel = l_oL.f_Tr("menu.back");
+        l_oT.m_strYesLabel = l_oL.f_Tr("menu.yes");
+        l_oT.m_strNoLabel = l_oL.f_Tr("menu.no");
+        switch (m_oTitle.f_Page()) {
             case toms::TitlePage::Menu: {
-                static const char* keys[3] = {"menu.new_game", "menu.continue", "menu.settings"};
-                for (int i = 0; i < 3; i++)
-                    t.rows.push_back({L.tr(keys[i]), L.tr(std::string(keys[i]) + ".desc"), title_.menuSelection() == i, true});
-                t.hint = L.tr("menu.hint");
+                static const char* l_arrKeys[3] = {"menu.new_game", "menu.continue", "menu.settings"};
+                for (int l_iI = 0; l_iI < 3; l_iI++)
+                    l_oT.m_vRows.push_back({l_oL.f_Tr(l_arrKeys[l_iI]), l_oL.f_Tr(std::string(l_arrKeys[l_iI]) + ".desc"), m_oTitle.f_MenuSelection() == l_iI, true});
+                l_oT.m_strHint = l_oL.f_Tr("menu.hint");
                 break;
             }
             case toms::TitlePage::Continue: {
-                t.header = L.tr("continue.header");
-                const auto& sums = title_.summaries();
-                bool any = false;
-                for (int i = 0; i < title_.slotCount(); i++) {
-                    toms::UiRow r;
-                    r.label = L.tr("continue.slot") + " " + std::to_string(i + 1);
-                    if (i < (int)sums.size() && sums[i].exists) {
-                        const toms::SlotSummary& s = sums[i];
-                        any = true;
-                        r.label += "   " + (s.stageName.empty() ? s.stageId : s.stageName) + "   " + L.tr("hud.level") +
-                                   " " + std::to_string(s.lv) + "   HP " + std::to_string(s.hp) + "/" +
-                                   std::to_string(s.maxhp) + "   " + std::to_string(s.gold) + "G";
-                        r.sub = L.tr("continue.saved_at") + " " + s.savedAt + "    " + L.tr("continue.play_time") +
-                                " " + fmtPlayTime(s.playTimeSec);
-                        if (s.fromBackup) r.sub += "    [" + L.tr("continue.from_backup") + "]";
-                        if (s.newer) r.sub += "    [" + L.tr("continue.newer") + "]";
-                    } else if (i < (int)sums.size() && sums[i].damaged) {
-                        r.label += "   [" + L.tr("continue.damaged") + "]";
+                l_oT.m_strHeader = l_oL.f_Tr("continue.header");
+                const auto& l_vSums = m_oTitle.f_Summaries();
+                bool l_bAny = false;
+                for (int l_iI = 0; l_iI < m_oTitle.f_SlotCount(); l_iI++) {
+                    toms::UiRow l_oR;
+                    l_oR.m_strLabel = l_oL.f_Tr("continue.slot") + " " + std::to_string(l_iI + 1);
+                    if (l_iI < (int)l_vSums.size() && l_vSums[l_iI].m_bExists) {
+                        const toms::SlotSummary& l_oS = l_vSums[l_iI];
+                        l_bAny = true;
+                        l_oR.m_strLabel += "   " + (l_oS.m_strStageName.empty() ? l_oS.m_strStageId : l_oS.m_strStageName) + "   " + l_oL.f_Tr("hud.level") +
+                                   " " + std::to_string(l_oS.m_iLv) + "   HP " + std::to_string(l_oS.m_iHp) + "/" +
+                                   std::to_string(l_oS.m_iMaxhp) + "   " + std::to_string(l_oS.m_iGold) + "G";
+                        l_oR.m_strSub = l_oL.f_Tr("continue.saved_at") + " " + l_oS.m_strSavedAt + "    " + l_oL.f_Tr("continue.play_time") +
+                                " " + f_FmtPlayTime(l_oS.m_iPlayTimeSec);
+                        if (l_oS.m_bFromBackup) l_oR.m_strSub += "    [" + l_oL.f_Tr("continue.from_backup") + "]";
+                        if (l_oS.m_bNewer) l_oR.m_strSub += "    [" + l_oL.f_Tr("continue.newer") + "]";
+                    } else if (l_iI < (int)l_vSums.size() && l_vSums[l_iI].m_bDamaged) {
+                        l_oR.m_strLabel += "   [" + l_oL.f_Tr("continue.damaged") + "]";
                     } else {
-                        r.label += "   [" + L.tr("continue.empty") + "]";
+                        l_oR.m_strLabel += "   [" + l_oL.f_Tr("continue.empty") + "]";
                     }
-                    r.selected = title_.slotSelection() == i;
-                    t.rows.push_back(r);
+                    l_oR.m_bSelected = m_oTitle.f_SlotSelection() == l_iI;
+                    l_oT.m_vRows.push_back(l_oR);
                 }
-                t.show_back = true;
-                t.show_empty_hint = !any;
-                t.empty_hint = L.tr("continue.hint");
-                t.hint = L.tr("menu.hint");
-                if (title_.newGameConfirmOpen()) {
-                    t.confirm_open = true;
-                    t.confirm_question = trParam(L.tr("continue.new_game_confirm"), "slot",
-                                                 std::to_string(title_.newGameConfirmSlot()));
-                    t.confirm_body = L.tr("continue.new_game_confirm.body");
-                    t.confirm_yes = title_.newGameConfirmYesSelected();
+                l_oT.m_bShowBack = true;
+                l_oT.m_bShowEmptyHint = !l_bAny;
+                l_oT.m_strEmptyHint = l_oL.f_Tr("continue.hint");
+                l_oT.m_strHint = l_oL.f_Tr("menu.hint");
+                if (m_oTitle.f_NewGameConfirmOpen()) {
+                    l_oT.m_bConfirmOpen = true;
+                    l_oT.m_strConfirmQuestion = f_TrParam(l_oL.f_Tr("continue.new_game_confirm"), "slot",
+                                                 std::to_string(m_oTitle.f_NewGameConfirmSlot()));
+                    l_oT.m_strConfirmBody = l_oL.f_Tr("continue.new_game_confirm.body");
+                    l_oT.m_bConfirmYes = m_oTitle.f_NewGameConfirmYesSelected();
                 }
                 break;
             }
             case toms::TitlePage::Settings: {
-                t.header = L.tr("settings.header");
-                const auto& langs = L.languages();
-                for (int i = 0; i < (int)langs.size(); i++)
-                    t.rows.push_back({std::string(i == L.languageIndex() ? "[x] " : "[ ] ") + langs[i].name, "",
-                                      title_.settingsSelection() == i, true});
-                if (!t.rows.empty()) t.rows[0].section = L.tr("settings.language");   // section 1: language
-                appendArtStyleRows(t.rows, title_.settingsSelection() - (int)langs.size());   // section 2: art style
-                t.show_back = true;
-                t.hint = L.tr("settings.hint");
-                if (title_.styleConfirmOpen()) {
-                    t.confirm_open = true;
-                    t.confirm_question = trParam(L.tr("settings.style_confirm"), "style",
-                                                 artStyleName(title_.styleConfirmIndex()));
-                    t.confirm_body = L.tr("settings.style_apply_now");   // the title reloads the images at once
-                    t.confirm_yes = title_.styleConfirmYesSelected();
+                l_oT.m_strHeader = l_oL.f_Tr("settings.header");
+                const auto& l_vLangs = l_oL.f_Languages();
+                for (int l_iI = 0; l_iI < (int)l_vLangs.size(); l_iI++)
+                    l_oT.m_vRows.push_back({std::string(l_iI == l_oL.f_LanguageIndex() ? "[x] " : "[ ] ") + l_vLangs[l_iI].m_strName, "",
+                                      m_oTitle.f_SettingsSelection() == l_iI, true});
+                if (!l_oT.m_vRows.empty()) l_oT.m_vRows[0].m_strSection = l_oL.f_Tr("settings.language");   // section 1: language
+                f_AppendArtStyleRows(l_oT.m_vRows, m_oTitle.f_SettingsSelection() - (int)l_vLangs.size());   // section 2: art style
+                l_oT.m_bShowBack = true;
+                l_oT.m_strHint = l_oL.f_Tr("settings.hint");
+                if (m_oTitle.f_StyleConfirmOpen()) {
+                    l_oT.m_bConfirmOpen = true;
+                    l_oT.m_strConfirmQuestion = f_TrParam(l_oL.f_Tr("settings.style_confirm"), "style",
+                                                 f_ArtStyleName(m_oTitle.f_StyleConfirmIndex()));
+                    l_oT.m_strConfirmBody = l_oL.f_Tr("settings.style_apply_now");   // the title reloads the images at once
+                    l_oT.m_bConfirmYes = m_oTitle.f_StyleConfirmYesSelected();
                 }
-                if (title_.languageConfirmOpen()) {
-                    const int idx = title_.languageConfirmIndex();
-                    t.confirm_open = true;
-                    t.confirm_question = trParam(L.tr("settings.language_confirm"), "lang",
-                                                 (idx >= 0 && idx < (int)langs.size()) ? langs[idx].name : "");
-                    t.confirm_yes = title_.languageConfirmYesSelected();
+                if (m_oTitle.f_LanguageConfirmOpen()) {
+                    const int l_iIdx = m_oTitle.f_LanguageConfirmIndex();
+                    l_oT.m_bConfirmOpen = true;
+                    l_oT.m_strConfirmQuestion = f_TrParam(l_oL.f_Tr("settings.language_confirm"), "lang",
+                                                 (l_iIdx >= 0 && l_iIdx < (int)l_vLangs.size()) ? l_vLangs[l_iIdx].m_strName : "");
+                    l_oT.m_bConfirmYes = m_oTitle.f_LanguageConfirmYesSelected();
                 }
                 break;
             }
@@ -207,720 +207,720 @@ void Game::buildUiState(toms::UiState& u) const {
     }
 
     // ---- ending (also takes the whole screen) ----
-    if (endingActive()) {
-        toms::UiEnding& e = u.ending;
-        e.visible = true;
-        const toms::EndingDefinition* def = nullptr;
-        for (auto& d : endingsTable_.endings) if (d.id == activeEndingId_) { def = &d; break; }
-        e.name = def ? L.tr(def->nameKey) : activeEndingId_;
-        e.text = def ? L.tr(def->textKey) : "";
-        e.rebirth = rebirthOffered();
-        e.rebirth_label = L.tr("ending.rebirth_button");
-        e.title_label = L.tr("ending.title_button");
-        e.hint = L.tr("ending.dismiss_hint");
+    if (f_EndingActive()) {
+        toms::UiEnding& l_oE = l_oU.m_oEnding;
+        l_oE.m_bVisible = true;
+        const toms::EndingDefinition* l_pDef = nullptr;
+        for (auto& l_oD : m_oEndingsTable.m_vEndings) if (l_oD.m_strId == m_strActiveEndingId) { l_pDef = &l_oD; break; }
+        l_oE.m_strName = l_pDef ? l_oL.f_Tr(l_pDef->m_strNameKey) : m_strActiveEndingId;
+        l_oE.m_strText = l_pDef ? l_oL.f_Tr(l_pDef->m_strTextKey) : "";
+        l_oE.m_bRebirth = f_RebirthOffered();
+        l_oE.m_strRebirthLabel = l_oL.f_Tr("ending.rebirth_button");
+        l_oE.m_strTitleLabel = l_oL.f_Tr("ending.title_button");
+        l_oE.m_strHint = l_oL.f_Tr("ending.dismiss_hint");
         return;
     }
 
     // Which scene is up -- the same precedence Game::draw() uses for the world.
-    const bool showStore = storeModal();
-    const bool showBattle = !showStore && (hideMask & 1) == 0 && (cs.active || cs.won || cs.resultPauseMs > 0);
-    const bool showTalk = !showStore && !showBattle && (hideMask & 2) == 0 && inDialogue;
-    const bool showWalk = !showStore && !showBattle && !showTalk;
+    const bool l_bShowStore = f_StoreModal();
+    const bool l_bShowBattle = !l_bShowStore && (m_iHideMask & 1) == 0 && (m_oCs.m_bActive || m_oCs.m_bWon || m_oCs.m_iResultPauseMs > 0);
+    const bool l_bShowTalk = !l_bShowStore && !l_bShowBattle && (m_iHideMask & 2) == 0 && m_bInDialogue;
+    const bool l_bShowWalk = !l_bShowStore && !l_bShowBattle && !l_bShowTalk;
 
     // ---- HUD (over the map) ----
-    if (showWalk) {
-        toms::UiHud& h = u.hud;
-        h.visible = !inGameMenuOpen_;   // the player menu covers the screen
-        h.title_line = L.tr("game.title") + " — " + st.name + " (" + std::to_string(st.index) + "/" +
-                       std::to_string(totalStages) + ")";
-        h.hp_pct = pct((float)pl.hp, (float)effectiveMaxHp());
-        h.hp_text = "HP " + std::to_string(pl.hp) + "/" + std::to_string(effectiveMaxHp());
-        h.stats_line = "ATK " + std::to_string(effectiveAtk()) + "   DEF " + std::to_string(effectiveDef()) + "   LV " + std::to_string(pl.lv);
-        h.res_line = "GOLD " + std::to_string(pl.gold) + "   " + L.tr("hud.crystals") + " " + std::to_string(pl.crystals) +
-                     "   EXP " + std::to_string(pl.exp) + "   " + L.tr("hud.keys") +
-                     " Y" + std::to_string(pl.key_yellow) + " B" + std::to_string(pl.key_blue) + " R" +
-                     std::to_string(pl.key_red);
+    if (l_bShowWalk) {
+        toms::UiHud& l_oH = l_oU.m_oHud;
+        l_oH.m_bVisible = !m_bInGameMenuOpen;   // the player menu covers the screen
+        l_oH.m_strTitleLine = l_oL.f_Tr("game.title") + " — " + m_oSt.m_strName + " (" + std::to_string(m_oSt.m_iIndex) + "/" +
+                       std::to_string(m_iTotalStages) + ")";
+        l_oH.m_fHpPct = f_Pct((float)m_oPl.m_iHp, (float)f_EffectiveMaxHp());
+        l_oH.m_strHpText = "HP " + std::to_string(m_oPl.m_iHp) + "/" + std::to_string(f_EffectiveMaxHp());
+        l_oH.m_strStatsLine = "ATK " + std::to_string(f_EffectiveAtk()) + "   DEF " + std::to_string(f_EffectiveDef()) + "   LV " + std::to_string(m_oPl.m_iLv);
+        l_oH.m_strResLine = "GOLD " + std::to_string(m_oPl.m_iGold) + "   " + l_oL.f_Tr("hud.crystals") + " " + std::to_string(m_oPl.m_iCrystals) +
+                     "   EXP " + std::to_string(m_oPl.m_iExp) + "   " + l_oL.f_Tr("hud.keys") +
+                     " Y" + std::to_string(m_oPl.m_iKeyYellow) + " B" + std::to_string(m_oPl.m_iKeyBlue) + " R" +
+                     std::to_string(m_oPl.m_iKeyRed);
         // The floor's story line: its intro, then its ambient lines as the player moves.
-        h.footer = st.story_note;
-        if (!storyIntroKey_.empty()) {
-            const int idx = storyLineIndex();
-            const std::string& key = (idx == 0 || storyAmbientKeys_.empty())
-                                     ? storyIntroKey_ : storyAmbientKeys_[(size_t)(idx - 1) % storyAmbientKeys_.size()];
-            std::string tr = L.tr(key);
-            if (!tr.empty() && tr.rfind("story.", 0) != 0) h.footer = tr;
+        l_oH.m_strFooter = m_oSt.m_strStoryNote;
+        if (!m_strStoryIntroKey.empty()) {
+            const int l_iIdx = f_StoryLineIndex();
+            const std::string& l_strKey = (l_iIdx == 0 || m_vStoryAmbientKeys.empty())
+                                     ? m_strStoryIntroKey : m_vStoryAmbientKeys[(size_t)(l_iIdx - 1) % m_vStoryAmbientKeys.size()];
+            std::string l_strTr = l_oL.f_Tr(l_strKey);
+            if (!l_strTr.empty() && l_strTr.rfind("story.", 0) != 0) l_oH.m_strFooter = l_strTr;
         }
-        h.menu_label = L.tr("ingame_menu.title");
-        h.menu_news = newsStore_ || newsGear_ || newsEvents_ || run_.skillPoints() > 0;
-        if (chapterCardMs_ > 0.0f && !chapterCardTitle_.empty()) {
-            h.chapter_card = true;
-            h.chapter_title = chapterCardTitle_;
-            h.chapter_sub = st.name;
-            h.chapter_alpha = std::min(1.0f, chapterCardMs_ / 600.0f);
+        l_oH.m_strMenuLabel = l_oL.f_Tr("ingame_menu.title");
+        l_oH.m_bMenuNews = m_bNewsStore || m_bNewsGear || m_bNewsEvents || m_oRun.f_SkillPoints() > 0;
+        if (m_fChapterCardMs > 0.0f && !m_strChapterCardTitle.empty()) {
+            l_oH.m_bChapterCard = true;
+            l_oH.m_strChapterTitle = m_strChapterCardTitle;
+            l_oH.m_strChapterSub = m_oSt.m_strName;
+            l_oH.m_fChapterAlpha = std::min(1.0f, m_fChapterCardMs / 600.0f);
         }
         // Name plates over bosses and roamers, at the same place the map draws them.
-        float ts; int cols, rows; cameraViewportTiles(ts, cols, rows);
-        const float ox = -cam_.x() * ts, oy = 60.0f - cam_.y() * ts, inset = ts / 6.0f;
-        const float W = ren ? (float)ren->width() : 1024.0f, H = ren ? (float)ren->height() : 768.0f;
-        for (const auto& e : st.entities) {
-            if (e.consumed || !(e.fp.bossTier() || e.roamer)) continue;
-            const float x = ox + e.x * ts + inset, y = oy + e.y * ts + inset, w = e.fp.w * ts - 2.0f * inset;
-            if (x + w < 0 || x > W || y < 0 || y > H) continue;
-            h.banners.push_back({e.displayName.empty() ? e.id : e.displayName, x + w * 0.5f, y - 2.0f});
+        float l_fTs; int l_iCols, l_iRows; f_CameraViewportTiles(l_fTs, l_iCols, l_iRows);
+        const float l_fOx = -m_oCam.f_X() * l_fTs, l_fOy = 60.0f - m_oCam.f_Y() * l_fTs, l_fInset = l_fTs / 6.0f;
+        const float l_fScreenW = m_pRen ? (float)m_pRen->f_Width() : 1024.0f, l_fScreenH = m_pRen ? (float)m_pRen->f_Height() : 768.0f;
+        for (const auto& l_oE : m_oSt.m_vEntities) {
+            if (l_oE.m_bConsumed || !(l_oE.m_oFp.f_BossTier() || l_oE.m_bRoamer)) continue;
+            const float l_fX = l_fOx + l_oE.m_iX * l_fTs + l_fInset, l_fY = l_fOy + l_oE.m_iY * l_fTs + l_fInset, l_fW = l_oE.m_oFp.m_iW * l_fTs - 2.0f * l_fInset;
+            if (l_fX + l_fW < 0 || l_fX > l_fScreenW || l_fY < 0 || l_fY > l_fScreenH) continue;
+            l_oH.m_vBanners.push_back({l_oE.m_strDisplayName.empty() ? l_oE.m_strId : l_oE.m_strDisplayName, l_fX + l_fW * 0.5f, l_fY - 2.0f});
         }
 
 
-        if (stairsConfirmOpen_) {
-            u.stairs.visible = true;
-            u.stairs.question = L.tr(stairsConfirmIsUp_ ? "stairs.confirm_up" : "stairs.confirm_down");
-            u.stairs.yes_label = L.tr("menu.yes") + " (Enter)";
-            u.stairs.no_label = L.tr("menu.no") + " (Esc)";
+        if (m_bStairsConfirmOpen) {
+            l_oU.m_oStairs.m_bVisible = true;
+            l_oU.m_oStairs.m_strQuestion = l_oL.f_Tr(m_bStairsConfirmIsUp ? "stairs.confirm_up" : "stairs.confirm_down");
+            l_oU.m_oStairs.m_strYesLabel = l_oL.f_Tr("menu.yes") + " (Enter)";
+            l_oU.m_oStairs.m_strNoLabel = l_oL.f_Tr("menu.no") + " (Esc)";
         }
-        if (inGameMenuOpen_) buildPlayerUi(u);
-        if (stageSelectOpen_) {
-            toms::UiStageSelect& s = u.stage_select;
-            s.visible = true;
-            s.title = L.tr("stageselect.title");
-            s.hint = L.tr("stageselect.hint");
-            s.close_label = L.tr("inventory.close");
-            for (size_t i = 0; i < stageList_.size(); i++) {
-                const StageInfo& info = stageList_[i];
-                auto has = [&](const std::string& id) {
-                    return std::find(meta_.unlockedStages.begin(), meta_.unlockedStages.end(), id) != meta_.unlockedStages.end();
+        if (m_bInGameMenuOpen) f_BuildPlayerUi(l_oU);
+        if (m_bStageSelectOpen) {
+            toms::UiStageSelect& l_oS = l_oU.m_oStageSelect;
+            l_oS.m_bVisible = true;
+            l_oS.m_strTitle = l_oL.f_Tr("stageselect.title");
+            l_oS.m_strHint = l_oL.f_Tr("stageselect.hint");
+            l_oS.m_strCloseLabel = l_oL.f_Tr("inventory.close");
+            for (size_t l_nI = 0; l_nI < m_vStageList.size(); l_nI++) {
+                const StageInfo& l_oInfo = m_vStageList[l_nI];
+                auto l_fnHas = [&](const std::string& l_strId) {
+                    return std::find(m_oMeta.m_vUnlockedStages.begin(), m_oMeta.m_vUnlockedStages.end(), l_strId) != m_oMeta.m_vUnlockedStages.end();
                 };
-                const bool reached = has(info.id);
-                const bool locked = info.index > 1 && i > 0 && !has(stageList_[i - 1].id);
-                toms::UiRow r;
-                r.label = std::to_string(info.index) + ". " + info.name;
-                if (reached) r.label += "  " + L.tr("stageselect.reached_tag");
-                else if (!locked) r.label += "  " + L.tr("stageselect.new_tag");
-                r.enabled = !locked;
-                r.sub = locked ? trParam(L.tr("stageselect.locked_hint"), "floor", std::to_string(info.index - 1)) : "";
-                if (!info.preview.empty()) r.sub += (r.sub.empty() ? "" : "   ") + info.preview;
-                s.rows.push_back(r);
+                const bool l_bReached = l_fnHas(l_oInfo.m_strId);
+                const bool l_bLocked = l_oInfo.m_iIndex > 1 && l_nI > 0 && !l_fnHas(m_vStageList[l_nI - 1].m_strId);
+                toms::UiRow l_oR;
+                l_oR.m_strLabel = std::to_string(l_oInfo.m_iIndex) + ". " + l_oInfo.m_strName;
+                if (l_bReached) l_oR.m_strLabel += "  " + l_oL.f_Tr("stageselect.reached_tag");
+                else if (!l_bLocked) l_oR.m_strLabel += "  " + l_oL.f_Tr("stageselect.new_tag");
+                l_oR.m_bEnabled = !l_bLocked;
+                l_oR.m_strSub = l_bLocked ? f_TrParam(l_oL.f_Tr("stageselect.locked_hint"), "floor", std::to_string(l_oInfo.m_iIndex - 1)) : "";
+                if (!l_oInfo.m_strPreview.empty()) l_oR.m_strSub += (l_oR.m_strSub.empty() ? "" : "   ") + l_oInfo.m_strPreview;
+                l_oS.m_vRows.push_back(l_oR);
             }
         }
     }
 
     // ---- battle ----
-    if (showBattle) {
-        toms::UiBattle& b = u.battle;
-        b.visible = true;
-        b.active = cs.active;
+    if (l_bShowBattle) {
+        toms::UiBattle& l_oB = l_oU.m_oBattle;
+        l_oB.m_bVisible = true;
+        l_oB.m_bActive = m_oCs.m_bActive;
         // "Slime", or "Slime +2" with a party (each name is under its monster)
-        b.title = L.tr("battle.title") + " " + (cs.foes.empty() ? std::string() : cs.foes[0].enemy.name) +
-                  (cs.foes.size() > 1 ? " +" + std::to_string(cs.foes.size() - 1) : std::string());
-        b.player_sprite = uiSprite(playerSprite());
-        b.player_anim = battleRigReady() && !battleRigState_.empty();   // drawBattleRig draws the player instead
-        for (size_t i = 0; i < cs.foes.size(); i++) {   // the monsters (battle.rml .foe)
-            const CombatState::Foe& f = cs.foes[i];
-            toms::UiFoe uf;
-            uf.sprite = uiSprite(monsterSprite((int)i));
-            uf.anim = i < foeRigs_.size() && foeRigs_[i].view && !foeRigs_[i].state.empty();   // drawBattleRig draws it
-            uf.hp_pct = pct((float)std::max(0, f.hp), (float)f.enemy.hp);
-            uf.name = f.enemy.name;
-            uf.hp_line = "HP " + std::to_string(std::max(0, f.hp));
-            uf.hp_text = uf.name + " " + uf.hp_line;
-            uf.target = cs.active && cs.foes.size() > 1 && (int)i == cs.target && !f.down();
-            uf.down = f.down();
-            if (cs.active && !f.down()) {   // its intent (docs/gameplay/13 §6.1)
-                const toms::MoveDef& m = moves_.get(f.move);
-                if (f.staggerMs > 0) {
-                    uf.intent_kind = f.broken ? "broken" : "stagger";
-                    uf.intent = L.tr(f.broken ? "battle.intent.broken" : "battle.intent.stagger");
-                    uf.intent_pct = 0.0f;
+        l_oB.m_strTitle = l_oL.f_Tr("battle.title") + " " + (m_oCs.m_vFoes.empty() ? std::string() : m_oCs.m_vFoes[0].m_oEnemy.m_strName) +
+                  (m_oCs.m_vFoes.size() > 1 ? " +" + std::to_string(m_oCs.m_vFoes.size() - 1) : std::string());
+        l_oB.m_strPlayerSprite = f_UiSprite(f_PlayerSprite());
+        l_oB.m_bPlayerAnim = f_BattleRigReady() && !m_strBattleRigState.empty();   // drawBattleRig draws the player instead
+        for (size_t l_nI = 0; l_nI < m_oCs.m_vFoes.size(); l_nI++) {   // the monsters (battle.rml .foe)
+            const CombatState::Foe& l_oF = m_oCs.m_vFoes[l_nI];
+            toms::UiFoe l_oUf;
+            l_oUf.m_strSprite = f_UiSprite(f_MonsterSprite((int)l_nI));
+            l_oUf.m_bAnim = l_nI < m_vFoeRigs.size() && m_vFoeRigs[l_nI].m_upView && !m_vFoeRigs[l_nI].m_strState.empty();   // drawBattleRig draws it
+            l_oUf.m_fHpPct = f_Pct((float)std::max(0, l_oF.m_iHp), (float)l_oF.m_oEnemy.m_iHp);
+            l_oUf.m_strName = l_oF.m_oEnemy.m_strName;
+            l_oUf.m_strHpLine = "HP " + std::to_string(std::max(0, l_oF.m_iHp));
+            l_oUf.m_strHpText = l_oUf.m_strName + " " + l_oUf.m_strHpLine;
+            l_oUf.m_bTarget = m_oCs.m_bActive && m_oCs.m_vFoes.size() > 1 && (int)l_nI == m_oCs.m_iTarget && !l_oF.f_Down();
+            l_oUf.m_bDown = l_oF.f_Down();
+            if (m_oCs.m_bActive && !l_oF.f_Down()) {   // its intent (docs/gameplay/13 §6.1)
+                const toms::MoveDef& l_oM = m_oMoves.f_Get(l_oF.m_strMove);
+                if (l_oF.m_iStaggerMs > 0) {
+                    l_oUf.m_strIntentKind = l_oF.m_bBroken ? "broken" : "stagger";
+                    l_oUf.m_strIntent = l_oL.f_Tr(l_oF.m_bBroken ? "battle.intent.broken" : "battle.intent.stagger");
+                    l_oUf.m_fIntentPct = 0.0f;
                 } else {
-                    uf.intent_kind = toms::moveKindName(m.kind);
-                    const int left = std::max(0, f.moveMs - std::max(0, f.clockMs));
-                    char secs[16];
-                    std::snprintf(secs, sizeof secs, " %.1fs", left / 1000.0);
-                    uf.intent = (L.has(m.text) ? L.tr(m.text) : m.text) + secs;
-                    uf.intent_pct = pct((float)std::max(0, f.clockMs), (float)std::max(1, f.moveMs));
+                    l_oUf.m_strIntentKind = toms::f_MoveKindName(l_oM.m_eKind);
+                    const int l_iLeft = std::max(0, l_oF.m_iMoveMs - std::max(0, l_oF.m_iClockMs));
+                    char l_pszSecs[16];
+                    std::snprintf(l_pszSecs, sizeof l_pszSecs, " %.1fs", l_iLeft / 1000.0);
+                    l_oUf.m_strIntent = (l_oL.f_Has(l_oM.m_strText) ? l_oL.f_Tr(l_oM.m_strText) : l_oM.m_strText) + l_pszSecs;
+                    l_oUf.m_fIntentPct = f_Pct((float)std::max(0, l_oF.m_iClockMs), (float)std::max(1, l_oF.m_iMoveMs));
                 }
-                uf.break_pct = pct(f.breakGauge, (float)foeBreakPoints((int)i));
-                uf.warn = foeWarning((int)i) && !cs.skill.on;   // the "!" before its hit (docs/gameplay/16 §4)
+                l_oUf.m_fBreakPct = f_Pct(l_oF.m_fBreakGauge, (float)f_FoeBreakPoints((int)l_nI));
+                l_oUf.m_bWarn = f_FoeWarning((int)l_nI) && !m_oCs.m_oSkill.m_bOn;   // the "!" before its hit (docs/gameplay/16 §4)
             }
-            b.foes.push_back(uf);
+            l_oB.m_vFoes.push_back(l_oUf);
         }
-        b.enemy_sprite = b.foes.empty() ? std::string() : b.foes[0].sprite;
-        b.enemy_anim = !b.foes.empty() && b.foes[0].anim;
-        b.player_hp_pct = pct((float)cs.playerHP, (float)effectiveMaxHp());
-        b.enemy_hp_pct = b.foes.empty() ? 0.0f : b.foes[0].hp_pct;
-        b.player_hp_text = L.tr("battle.you") + " HP " + std::to_string(cs.playerHP);
-        b.enemy_hp_text = b.foes.empty() ? std::string() : b.foes[0].hp_text;
-        b.log = cs.log;
-        b.continue_hint = L.tr("battle.continue_hint");
-        for (const auto& p : cs.popups) {   // over the fighter's box (battle.rcss #player / .foe .fbox: fighterBox)
-            toms::UiPopup q;
-            q.text = p.text;
-            q.style = p.style;
-            const float r = p.rise.value();            // 0 -> 1 as it rises
-            const glm::vec4 box = fighterBox(p.who);
-            q.x = box.x + box.z * 0.5f - 150.0f;       // the 300 px box (a word is wider than a number), centred over it
-            q.y = box.y + 26.0f - (float)p.lift - 70.0f * r;
-            q.opacity = r < 0.6f ? 1.0f : std::max(0.0f, 1.0f - (r - 0.6f) / 0.4f);
-            b.popups.push_back(q);
+        l_oB.m_strEnemySprite = l_oB.m_vFoes.empty() ? std::string() : l_oB.m_vFoes[0].m_strSprite;
+        l_oB.m_bEnemyAnim = !l_oB.m_vFoes.empty() && l_oB.m_vFoes[0].m_bAnim;
+        l_oB.m_fPlayerHpPct = f_Pct((float)m_oCs.m_iPlayerHP, (float)f_EffectiveMaxHp());
+        l_oB.m_fEnemyHpPct = l_oB.m_vFoes.empty() ? 0.0f : l_oB.m_vFoes[0].m_fHpPct;
+        l_oB.m_strPlayerHpText = l_oL.f_Tr("battle.you") + " HP " + std::to_string(m_oCs.m_iPlayerHP);
+        l_oB.m_strEnemyHpText = l_oB.m_vFoes.empty() ? std::string() : l_oB.m_vFoes[0].m_strHpText;
+        l_oB.m_strLog = m_oCs.m_strLog;
+        l_oB.m_strContinueHint = l_oL.f_Tr("battle.continue_hint");
+        for (const auto& l_oP : m_oCs.m_vPopups) {   // over the fighter's box (battle.rcss #player / .foe .fbox: fighterBox)
+            toms::UiPopup l_oQ;
+            l_oQ.m_strText = l_oP.m_strText;
+            l_oQ.m_strStyle = l_oP.m_strStyle;
+            const float l_fR = l_oP.m_oRise.f_Value();            // 0 -> 1 as it rises
+            const glm::vec4 l_v4Box = f_FighterBox(l_oP.m_iWho);
+            l_oQ.m_fX = l_v4Box.x + l_v4Box.z * 0.5f - 150.0f;       // the 300 px box (a word is wider than a number), centred over it
+            l_oQ.m_fY = l_v4Box.y + 26.0f - (float)l_oP.m_iLift - 70.0f * l_fR;
+            l_oQ.m_fOpacity = l_fR < 0.6f ? 1.0f : std::max(0.0f, 1.0f - (l_fR - 0.6f) / 0.4f);
+            l_oB.m_vPopups.push_back(l_oQ);
         }
-        if (cs.active) {
-            b.clock_label = L.tr("battle.enemy_clock");
+        if (m_oCs.m_bActive) {
+            l_oB.m_strClockLabel = l_oL.f_Tr("battle.enemy_clock");
             // the clock of the monster that attacks next (the nearest to its move); the stamina pace shows the stamina
-            float best = 0.0f;
-            for (const CombatState::Foe& f : cs.foes)
-                if (!f.down()) best = std::max(best, pct((float)std::max(0, f.clockMs), (float)std::max(1, f.moveMs)));
-            b.clock_pct = best;
-            b.stamina_pace = cs.pace == toms::Pace::Stamina;
-            if (b.stamina_pace) {
-                b.clock_label = L.tr("battle.stamina");
-                b.clock_pct = pct(cs.stamina, (float)paceSettings_.staminaMax);
-                b.attack_short = !attackRunning() && cs.stamina < (float)paceSettings_.attackCost;
-                b.guard_short = cs.stamina < (float)paceSettings_.guardCost;
+            float l_fBest = 0.0f;
+            for (const CombatState::Foe& l_oF : m_oCs.m_vFoes)
+                if (!l_oF.f_Down()) l_fBest = std::max(l_fBest, f_Pct((float)std::max(0, l_oF.m_iClockMs), (float)std::max(1, l_oF.m_iMoveMs)));
+            l_oB.m_fClockPct = l_fBest;
+            l_oB.m_bStaminaPace = m_oCs.m_ePace == toms::Pace::Stamina;
+            if (l_oB.m_bStaminaPace) {
+                l_oB.m_strClockLabel = l_oL.f_Tr("battle.stamina");
+                l_oB.m_fClockPct = f_Pct(m_oCs.m_fStamina, (float)m_oPaceSettings.m_iStaminaMax);
+                l_oB.m_bAttackShort = !f_AttackRunning() && m_oCs.m_fStamina < (float)m_oPaceSettings.m_iAttackCost;
+                l_oB.m_bGuardShort = m_oCs.m_fStamina < (float)m_oPaceSettings.m_iGuardCost;
             }
             {   // Battle v3 (docs/gameplay/07 phase 1): the charge, the track with the weapon level's points, the marker
-                toms::UiCombo& c = b.combo;
-                const std::string key = weaponKey();
-                const int lv = weaponLevel(key);
-                const toms::WeaponPlay& wp = weaponPlayOf(key);
-                c.running = cs.combo.running();
-                c.cooling = cs.atkBar.cooling;
-                c.waiting = cs.combo.waiting();
-                c.charge_pct = c.running ? 100.0f * cs.combo.result().charge : 100.0f * comboCharge();
-                if (c.running) {
-                    c.charge_pct = 0;   // spent on this combo
-                    c.marker = 100.0f * cs.combo.marker();
-                    const int near = cs.combo.nearPoint();
-                    for (size_t i = 0; i < cs.combo.pointsAt().size(); i++)
-                        c.points.push_back({100.0f * cs.combo.pointsAt()[i], (bool)cs.combo.pointsHit()[i], (int)i == near});
+                toms::UiCombo& l_oC = l_oB.m_oCombo;
+                const std::string l_strKey = f_WeaponKey();
+                const int l_iLv = f_WeaponLevel(l_strKey);
+                const toms::WeaponPlay& l_oWp = f_WeaponPlayOf(l_strKey);
+                l_oC.m_bRunning = m_oCs.m_oCombo.f_Running();
+                l_oC.m_bCooling = m_oCs.m_oAtkBar.m_bCooling;
+                l_oC.m_bWaiting = m_oCs.m_oCombo.f_Waiting();
+                l_oC.m_fChargePct = l_oC.m_bRunning ? 100.0f * m_oCs.m_oCombo.f_Result().m_fCharge : 100.0f * f_ComboCharge();
+                if (l_oC.m_bRunning) {
+                    l_oC.m_fChargePct = 0;   // spent on this combo
+                    l_oC.m_fMarker = 100.0f * m_oCs.m_oCombo.f_Marker();
+                    const int l_iNear = m_oCs.m_oCombo.f_NearPoint();
+                    for (size_t l_nI = 0; l_nI < m_oCs.m_oCombo.f_PointsAt().size(); l_nI++)
+                        l_oC.m_vPoints.push_back({100.0f * m_oCs.m_oCombo.f_PointsAt()[l_nI], (bool)m_oCs.m_oCombo.f_PointsHit()[l_nI], (int)l_nI == l_iNear});
                 } else {   // the points this combo will have, before it starts
-                    const int n = toms::weaponLevelEntry(wp, lv).points;
-                    for (int i = 0; i < n; i++) c.points.push_back({100.0f * float(i + 1) / float(n + 1), false});
+                    const int l_iN = toms::f_WeaponLevelEntry(l_oWp, l_iLv).m_iPoints;
+                    for (int l_iI = 0; l_iI < l_iN; l_iI++) l_oC.m_vPoints.push_back({100.0f * float(l_iI + 1) / float(l_iN + 1), false});
                 }
-                const std::string name = equipmentDefs_.count(key) ? itemName(key) : L.tr("battle.unarmed");
-                const int next = toms::usesToNextLevel(wp, lv);
-                int done = 0;
-                if (auto u = weaponUses_.find(key); u != weaponUses_.end()) {
-                    done = u->second;
-                    for (int l = 1; l < lv; l++) done -= toms::usesToNextLevel(wp, l);
+                const std::string l_strName = m_mapEquipmentDefs.count(l_strKey) ? f_ItemName(l_strKey) : l_oL.f_Tr("battle.unarmed");
+                const int l_iNext = toms::f_UsesToNextLevel(l_oWp, l_iLv);
+                int l_iDone = 0;
+                if (auto l_itU = m_mapWeaponUses.find(l_strKey); l_itU != m_mapWeaponUses.end()) {
+                    l_iDone = l_itU->second;
+                    for (int l_iL = 1; l_iL < l_iLv; l_iL++) l_iDone -= toms::f_UsesToNextLevel(l_oWp, l_iL);
                 }
-                c.level_text = trParam(trParam(L.tr("battle.weapon_level"), "name", name), "lv", std::to_string(lv)) +
-                               (next > 0 ? "  " + std::to_string(std::max(0, done)) + "/" + std::to_string(next) : std::string());
-                c.prompt = L.tr(c.running ? "battle.combo_prompt_run" : "battle.combo_prompt");
-                c.button_label = L.tr(c.cooling ? "battle.btn_charging" : c.running ? "battle.combo_tap" : "battle.combo_start");
+                l_oC.m_strLevelText = f_TrParam(f_TrParam(l_oL.f_Tr("battle.weapon_level"), "name", l_strName), "lv", std::to_string(l_iLv)) +
+                               (l_iNext > 0 ? "  " + std::to_string(std::max(0, l_iDone)) + "/" + std::to_string(l_iNext) : std::string());
+                l_oC.m_strPrompt = l_oL.f_Tr(l_oC.m_bRunning ? "battle.combo_prompt_run" : "battle.combo_prompt");
+                l_oC.m_strButtonLabel = l_oL.f_Tr(l_oC.m_bCooling ? "battle.btn_charging" : l_oC.m_bRunning ? "battle.combo_tap" : "battle.combo_start");
             }
-            b.defense = powerBar(toms::effectiveDefenseBar(equipped_, equipmentDefs_), cs.defBar, L.tr("battle.defense_prompt"),
-                                 L.tr(cs.defBar.cooling ? "battle.btn_charging" : "battle.btn_hold_defense"));
-            b.shield_armed = cs.shieldBanked;
-            b.shield_text = cs.shieldBanked
-                ? trParam(L.tr("battle.shield_armed"), "pct", std::to_string((int)std::lround(cs.shieldPower)))
-                : L.tr("battle.shield_none");
-            b.crit_armed = cs.nextAttackGuaranteedCrit;
-            b.crit_hint = L.tr("battle.active_armed_hint");
-            b.super_label = L.tr("battle.super_label");
-            for (int i = 0; i < run_.superMax(); i++) b.super_dots.push_back(i < cs.superCharge ? 1 : 0);
-            b.super_ready = cs.superCharge >= run_.superMax() && !cs.combo.running() && !cs.skill.on && !cs.winPending;
-            b.super_button = L.tr("battle.super_ready");
+            l_oB.m_oDefense = f_PowerBar(toms::f_EffectiveDefenseBar(m_oEquipped, m_mapEquipmentDefs), m_oCs.m_oDefBar, l_oL.f_Tr("battle.defense_prompt"),
+                                 l_oL.f_Tr(m_oCs.m_oDefBar.m_bCooling ? "battle.btn_charging" : "battle.btn_hold_defense"));
+            l_oB.m_bShieldArmed = m_oCs.m_bShieldBanked;
+            l_oB.m_strShieldText = m_oCs.m_bShieldBanked
+                ? f_TrParam(l_oL.f_Tr("battle.shield_armed"), "pct", std::to_string((int)std::lround(m_oCs.m_fShieldPower)))
+                : l_oL.f_Tr("battle.shield_none");
+            l_oB.m_bCritArmed = m_oCs.m_bNextAttackGuaranteedCrit;
+            l_oB.m_strCritHint = l_oL.f_Tr("battle.active_armed_hint");
+            l_oB.m_strSuperLabel = l_oL.f_Tr("battle.super_label");
+            for (int l_iI = 0; l_iI < m_oRun.f_SuperMax(); l_iI++) l_oB.m_vSuperDots.push_back(l_iI < m_oCs.m_iSuperCharge ? 1 : 0);
+            l_oB.m_bSuperReady = m_oCs.m_iSuperCharge >= m_oRun.f_SuperMax() && !m_oCs.m_oCombo.f_Running() && !m_oCs.m_oSkill.m_bOn && !m_oCs.m_bWinPending;
+            l_oB.m_strSuperButton = l_oL.f_Tr("battle.super_ready");
             // the revamp (docs/gameplay/15): the attack is the play, its panel only says how it is; one guard button
-            b.show_clock = cs.pace == toms::Pace::Stamina;
-            b.guard_timing = guard_.mode != "bar";   // the one GUARD button ("timing" and "warn"); "bar": the five zones
-            b.guard_lit = cs.guardAtMs >= 0 && cs.clockMs - cs.guardAtMs <= guard_.blockMs;
-            b.guard_cooling = cs.guardCdMs > 0 || b.guard_short;
-            if (guard_.mode == "warn") {   // lit while an "!" shows: now (16 §4.2)
-                b.guard_lit = false;
-                for (size_t i = 0; i < cs.foes.size(); i++) b.guard_lit = b.guard_lit || foeWarning((int)i);
-                b.guard_cooling = cs.guardLockMs > 0 || b.guard_short || cs.skill.on;
+            l_oB.m_bShowClock = m_oCs.m_ePace == toms::Pace::Stamina;
+            l_oB.m_bGuardTiming = m_oGuard.m_strMode != "bar";   // the one GUARD button ("timing" and "warn"); "bar": the five zones
+            l_oB.m_bGuardLit = m_oCs.m_iGuardAtMs >= 0 && m_oCs.m_iClockMs - m_oCs.m_iGuardAtMs <= m_oGuard.m_iBlockMs;
+            l_oB.m_bGuardCooling = m_oCs.m_iGuardCdMs > 0 || l_oB.m_bGuardShort;
+            if (m_oGuard.m_strMode == "warn") {   // lit while an "!" shows: now (16 §4.2)
+                l_oB.m_bGuardLit = false;
+                for (size_t l_nI = 0; l_nI < m_oCs.m_vFoes.size(); l_nI++) l_oB.m_bGuardLit = l_oB.m_bGuardLit || f_FoeWarning((int)l_nI);
+                l_oB.m_bGuardCooling = m_oCs.m_iGuardLockMs > 0 || l_oB.m_bGuardShort || m_oCs.m_oSkill.m_bOn;
             }
-            b.guard_label = L.tr("battle.guard_button");
-            b.guard_hint = L.tr(guard_.mode == "warn" ? "battle.guard_hint_warn" : "battle.guard_hint");
-            if (cs.skill.on && cs.skill.phase == CombatState::SkillRun::Phase::Play && cs.skill.def) {   // a move's play (16 §6)
-                const toms::SpecialMove& d = *cs.skill.def;
-                b.skill_prompt = L.has(d.prompt) ? L.tr(d.prompt) : d.prompt;
-                if (d.play.kind == "shape" || d.play.kind == "mash") {
-                    char t[16];
-                    std::snprintf(t, sizeof t, "%.1f", cs.touch.timeLeft() * (float)d.play.timeMs / 1000.0f);
-                    b.skill_time = t;
+            l_oB.m_strGuardLabel = l_oL.f_Tr("battle.guard_button");
+            l_oB.m_strGuardHint = l_oL.f_Tr(m_oGuard.m_strMode == "warn" ? "battle.guard_hint_warn" : "battle.guard_hint");
+            if (m_oCs.m_oSkill.m_bOn && m_oCs.m_oSkill.m_ePhase == CombatState::SkillRun::Phase::Play && m_oCs.m_oSkill.m_pDef) {   // a move's play (16 §6)
+                const toms::SpecialMove& l_oD = *m_oCs.m_oSkill.m_pDef;
+                l_oB.m_strSkillPrompt = l_oL.f_Has(l_oD.m_strPrompt) ? l_oL.f_Tr(l_oD.m_strPrompt) : l_oD.m_strPrompt;
+                if (l_oD.m_oPlay.m_strKind == "shape" || l_oD.m_oPlay.m_strKind == "mash") {
+                    char l_pszT[16];
+                    std::snprintf(l_pszT, sizeof l_pszT, "%.1f", m_oCs.m_oTouch.f_TimeLeft() * (float)l_oD.m_oPlay.m_iTimeMs / 1000.0f);
+                    l_oB.m_strSkillTime = l_pszT;
                 }
             }
-            const toms::PlayKind play = battlePlayKind();
-            if (attackRunning()) { b.attack_state = "running"; b.attack_label = L.tr("battle.attack_running"); }
-            else if (cs.pace == toms::Pace::Cooldown && cs.atkBar.cooling) {
-                b.attack_state = "recovering";
-                b.attack_label = L.tr("battle.attack_recovering");
-                b.attack_pct = 100.0f * (1.0f - (float)cs.atkBar.cooldownMs / (float)std::max(1, barCooldownMs()));
-            } else if (b.attack_short) { b.attack_state = "short"; b.attack_label = L.tr("battle.no_stamina"); }
+            const toms::PlayKind l_ePlay = f_BattlePlayKind();
+            if (f_AttackRunning()) { l_oB.m_strAttackState = "running"; l_oB.m_strAttackLabel = l_oL.f_Tr("battle.attack_running"); }
+            else if (m_oCs.m_ePace == toms::Pace::Cooldown && m_oCs.m_oAtkBar.m_bCooling) {
+                l_oB.m_strAttackState = "recovering";
+                l_oB.m_strAttackLabel = l_oL.f_Tr("battle.attack_recovering");
+                l_oB.m_fAttackPct = 100.0f * (1.0f - (float)m_oCs.m_oAtkBar.m_iCooldownMs / (float)std::max(1, f_BarCooldownMs()));
+            } else if (l_oB.m_bAttackShort) { l_oB.m_strAttackState = "short"; l_oB.m_strAttackLabel = l_oL.f_Tr("battle.no_stamina"); }
             else {
-                b.attack_state = "ready";
-                b.attack_label = L.tr("battle.attack_ready");
-                b.attack_hint = L.tr(play == toms::PlayKind::Track ? "battle.attack_ready_hint"
-                                     : std::string("battle.play_hint_") + toms::playKindName(play));
+                l_oB.m_strAttackState = "ready";
+                l_oB.m_strAttackLabel = l_oL.f_Tr("battle.attack_ready");
+                l_oB.m_strAttackHint = l_oL.f_Tr(l_ePlay == toms::PlayKind::Track ? "battle.attack_ready_hint"
+                                     : std::string("battle.play_hint_") + toms::f_PlayKindName(l_ePlay));
             }
-            if (play != toms::PlayKind::Track || cs.skill.on) touchPlayUi(b);
-            if (cs.chain > 1) b.chain_text = trParam(L.tr("battle.word_chain"), "n", std::to_string(cs.chain));
-            auto activeIds = toms::equippedActives(equipped_, equipmentDefs_);
-            if (!activeIds.empty() && toms::canUseActive(activeIds[0], activeDefs_, cs.activeRuntime, cs.activeStatus)) {
-                b.active_ready = true;   // (ActiveDefinition has no display name yet: the id is shown)
-                b.active_button = trParam(L.tr("battle.active_ready"), "name", activeIds[0]);
+            if (l_ePlay != toms::PlayKind::Track || m_oCs.m_oSkill.m_bOn) f_TouchPlayUi(l_oB);
+            if (m_oCs.m_iChain > 1) l_oB.m_strChainText = f_TrParam(l_oL.f_Tr("battle.word_chain"), "n", std::to_string(m_oCs.m_iChain));
+            auto l_vActiveIds = toms::f_EquippedActives(m_oEquipped, m_mapEquipmentDefs);
+            if (!l_vActiveIds.empty() && toms::f_CanUseActive(l_vActiveIds[0], m_mapActiveDefs, m_oCs.m_mapActiveRuntime, m_oCs.m_oActiveStatus)) {
+                l_oB.m_bActiveReady = true;   // (ActiveDefinition has no display name yet: the id is shown)
+                l_oB.m_strActiveButton = f_TrParam(l_oL.f_Tr("battle.active_ready"), "name", l_vActiveIds[0]);
             }
         }
     }
 
     // ---- the battle's moments and its result (docs/gameplay/15 §3.4, §3.6) ----
-    if (showBattle) {
-        toms::UiBattle& b = u.battle;
-        if (cs.bannerMs > 0 && !cs.banner.empty()) {   // across the screen: slides in, holds, slides out
-            const float t = 1.0f - (float)cs.bannerMs / (float)cs.bannerMsMax;
-            b.banner = cs.banner;
-            b.banner_kind = cs.bannerKind;
-            b.banner_opacity = t < 0.12f ? t / 0.12f : t > 0.85f ? (1.0f - t) / 0.15f : 1.0f;
-            b.banner_shift = t < 0.12f ? (1.0f - t / 0.12f) * 500.0f : t > 0.85f ? -(t - 0.85f) / 0.15f * 500.0f : 0.0f;
+    if (l_bShowBattle) {
+        toms::UiBattle& l_oB = l_oU.m_oBattle;
+        if (m_oCs.m_iBannerMs > 0 && !m_oCs.m_strBanner.empty()) {   // across the screen: slides in, holds, slides out
+            const float l_fT = 1.0f - (float)m_oCs.m_iBannerMs / (float)m_oCs.m_iBannerMsMax;
+            l_oB.m_strBanner = m_oCs.m_strBanner;
+            l_oB.m_strBannerKind = m_oCs.m_strBannerKind;
+            l_oB.m_fBannerOpacity = l_fT < 0.12f ? l_fT / 0.12f : l_fT > 0.85f ? (1.0f - l_fT) / 0.15f : 1.0f;
+            l_oB.m_fBannerShift = l_fT < 0.12f ? (1.0f - l_fT / 0.12f) * 500.0f : l_fT > 0.85f ? -(l_fT - 0.85f) / 0.15f * 500.0f : 0.0f;
         }
-        if (cs.won && cs.result.valid) {
-            const CombatState::Result& r = cs.result;
-            b.result_shown = true;
-            b.grade = r.grade;
-            b.grade_s = r.grade == "S";
-            b.result_title = L.tr("battle.result_title");
-            char secs[16];
-            std::snprintf(secs, sizeof secs, "%.1f", r.seconds);
-            b.result_stats = trParam(trParam(trParam(L.tr("battle.result_stats"), "t", secs), "c", std::to_string(cs.bestChain)),
-                                     "p", std::to_string(cs.perfects));
-            const toms::WeaponPlay& wp = weaponPlayOf(r.weapon);
-            const std::string name = equipmentDefs_.count(r.weapon) ? itemName(r.weapon) : L.tr("battle.unarmed");
-            b.result_weapon = trParam(trParam(L.tr("battle.result_weapon"), "name", name), "lv", std::to_string(r.lvAfter));
-            const int need = toms::usesToNextLevel(wp, r.lvAfter);
-            int done = r.uses;
-            for (int l = 1; l < r.lvAfter; l++) done -= toms::usesToNextLevel(wp, l);
-            if (need > 0) {   // the wins to the next level, and what that level adds (07 pillar 2: the reason to go on)
-                b.result_pct = pct((float)std::max(0, done), (float)need);
-                b.result_progress = trParam(trParam(L.tr("battle.result_progress"), "n", std::to_string(std::max(0, done))), "m",
-                                            std::to_string(need));
-                const toms::WeaponLevel& cur = toms::weaponLevelEntry(wp, r.lvAfter);
-                const toms::WeaponLevel& nxt = toms::weaponLevelEntry(wp, r.lvAfter + 1);
-                std::string what;
-                if (nxt.points > cur.points) what = trParam(L.tr("battle.result_points"), "n", std::to_string(nxt.points));
-                for (const auto& [stat, v] : nxt.stats) {
-                    const int was = cur.stats.count(stat) ? cur.stats.at(stat) : 0;
-                    if (v > was) {
-                        std::string up = stat;
-                        for (char& ch : up) ch = (char)std::toupper((unsigned char)ch);
-                        what += (what.empty() ? "" : ", ") + up + " +" + std::to_string(v - was);
+        if (m_oCs.m_bWon && m_oCs.m_oResult.m_bValid) {
+            const CombatState::Result& l_oR = m_oCs.m_oResult;
+            l_oB.m_bResultShown = true;
+            l_oB.m_strGrade = l_oR.m_strGrade;
+            l_oB.m_bGradeS = l_oR.m_strGrade == "S";
+            l_oB.m_strResultTitle = l_oL.f_Tr("battle.result_title");
+            char l_pszSecs[16];
+            std::snprintf(l_pszSecs, sizeof l_pszSecs, "%.1f", l_oR.m_fSeconds);
+            l_oB.m_strResultStats = f_TrParam(f_TrParam(f_TrParam(l_oL.f_Tr("battle.result_stats"), "t", l_pszSecs), "c", std::to_string(m_oCs.m_iBestChain)),
+                                     "p", std::to_string(m_oCs.m_iPerfects));
+            const toms::WeaponPlay& l_oWp = f_WeaponPlayOf(l_oR.m_strWeapon);
+            const std::string l_strName = m_mapEquipmentDefs.count(l_oR.m_strWeapon) ? f_ItemName(l_oR.m_strWeapon) : l_oL.f_Tr("battle.unarmed");
+            l_oB.m_strResultWeapon = f_TrParam(f_TrParam(l_oL.f_Tr("battle.result_weapon"), "name", l_strName), "lv", std::to_string(l_oR.m_iLvAfter));
+            const int l_iNeed = toms::f_UsesToNextLevel(l_oWp, l_oR.m_iLvAfter);
+            int l_iDone = l_oR.m_iUses;
+            for (int l_iL = 1; l_iL < l_oR.m_iLvAfter; l_iL++) l_iDone -= toms::f_UsesToNextLevel(l_oWp, l_iL);
+            if (l_iNeed > 0) {   // the wins to the next level, and what that level adds (07 pillar 2: the reason to go on)
+                l_oB.m_fResultPct = f_Pct((float)std::max(0, l_iDone), (float)l_iNeed);
+                l_oB.m_strResultProgress = f_TrParam(f_TrParam(l_oL.f_Tr("battle.result_progress"), "n", std::to_string(std::max(0, l_iDone))), "m",
+                                            std::to_string(l_iNeed));
+                const toms::WeaponLevel& l_oCur = toms::f_WeaponLevelEntry(l_oWp, l_oR.m_iLvAfter);
+                const toms::WeaponLevel& l_oNxt = toms::f_WeaponLevelEntry(l_oWp, l_oR.m_iLvAfter + 1);
+                std::string l_strWhat;
+                if (l_oNxt.m_iPoints > l_oCur.m_iPoints) l_strWhat = f_TrParam(l_oL.f_Tr("battle.result_points"), "n", std::to_string(l_oNxt.m_iPoints));
+                for (const auto& [l_strStat, l_iV] : l_oNxt.m_mapStats) {
+                    const int l_iWas = l_oCur.m_mapStats.count(l_strStat) ? l_oCur.m_mapStats.at(l_strStat) : 0;
+                    if (l_iV > l_iWas) {
+                        std::string l_strUp = l_strStat;
+                        for (char& l_cCh : l_strUp) l_cCh = (char)std::toupper((unsigned char)l_cCh);
+                        l_strWhat += (l_strWhat.empty() ? "" : ", ") + l_strUp + " +" + std::to_string(l_iV - l_iWas);
                     }
                 }
-                if (!what.empty()) b.result_next = trParam(L.tr("battle.result_next"), "what", what);
+                if (!l_strWhat.empty()) l_oB.m_strResultNext = f_TrParam(l_oL.f_Tr("battle.result_next"), "what", l_strWhat);
             } else {
-                b.result_pct = 100.0f;
-                b.result_progress = L.tr("battle.result_top");
+                l_oB.m_fResultPct = 100.0f;
+                l_oB.m_strResultProgress = l_oL.f_Tr("battle.result_top");
             }
-            if (r.lvAfter > r.lvBefore)
-                b.result_levelup = trParam(trParam(L.tr("battle.result_levelup"), "name", name), "lv", std::to_string(r.lvAfter));
-            b.result_gold = trParam(trParam(L.tr("battle.result_gold"), "gold", std::to_string(r.gold)), "exp", std::to_string(r.exp));
-            b.result_card = r.card;
+            if (l_oR.m_iLvAfter > l_oR.m_iLvBefore)
+                l_oB.m_strResultLevelup = f_TrParam(f_TrParam(l_oL.f_Tr("battle.result_levelup"), "name", l_strName), "lv", std::to_string(l_oR.m_iLvAfter));
+            l_oB.m_strResultGold = f_TrParam(f_TrParam(l_oL.f_Tr("battle.result_gold"), "gold", std::to_string(l_oR.m_iGold)), "exp", std::to_string(l_oR.m_iExp));
+            l_oB.m_strResultCard = l_oR.m_strCard;
         }
     }
 
     // ---- a reward event (docs/gameplay/07 phase 6) ----
-    if (miniGame_.open) {
-        if (const toms::MiniGameDef* def = miniGames_.find(miniGame_.id)) {
-            toms::UiMiniGame& m = u.minigame;
-            m.visible = true;
-            m.title = L.field(def->title);
-            m.text = L.field(def->text);
-            m.running = miniGame_.phase == 1;
-            m.done = miniGame_.phase == 2;
-            const std::string unit = L.tr(def->currency == "crystals" ? "minigame.crystals" : "minigame.gold");
-            m.prompt = m.running ? L.tr("battle.combo_prompt_run")
-                                 : trParam(trParam(trParam(L.tr("minigame.rule"), "n", std::to_string(def->perHit)), "unit", unit),
-                                           "bonus", std::to_string(def->bonusAll));
-            m.button_label = L.tr(m.done ? "minigame.close" : m.running ? "battle.combo_tap" : "minigame.start");
-            m.close_label = L.tr("minigame.close");
-            if (m.done)
-                m.result = miniGame_.reward > 0
-                    ? trParam(trParam(L.tr("minigame.result"), "n", std::to_string(miniGame_.reward)), "unit", unit)
-                    : L.tr("minigame.result_none");
-            if (m.running) {
-                m.marker = 100.0f * miniGame_.play.marker();
-                for (size_t i = 0; i < miniGame_.play.pointsAt().size(); i++)
-                    m.points.push_back({100.0f * miniGame_.play.pointsAt()[i], (bool)miniGame_.play.pointsHit()[i]});
+    if (m_oMiniGame.m_bOpen) {
+        if (const toms::MiniGameDef* l_pDef = m_oMiniGames.f_Find(m_oMiniGame.m_strId)) {
+            toms::UiMiniGame& l_oM = l_oU.m_oMinigame;
+            l_oM.m_bVisible = true;
+            l_oM.m_strTitle = l_oL.f_Field(l_pDef->m_jTitle);
+            l_oM.m_strText = l_oL.f_Field(l_pDef->m_jText);
+            l_oM.m_bRunning = m_oMiniGame.m_iPhase == 1;
+            l_oM.m_bDone = m_oMiniGame.m_iPhase == 2;
+            const std::string l_strUnit = l_oL.f_Tr(l_pDef->m_strCurrency == "crystals" ? "minigame.crystals" : "minigame.gold");
+            l_oM.m_strPrompt = l_oM.m_bRunning ? l_oL.f_Tr("battle.combo_prompt_run")
+                                 : f_TrParam(f_TrParam(f_TrParam(l_oL.f_Tr("minigame.rule"), "n", std::to_string(l_pDef->m_iPerHit)), "unit", l_strUnit),
+                                           "bonus", std::to_string(l_pDef->m_iBonusAll));
+            l_oM.m_strButtonLabel = l_oL.f_Tr(l_oM.m_bDone ? "minigame.close" : l_oM.m_bRunning ? "battle.combo_tap" : "minigame.start");
+            l_oM.m_strCloseLabel = l_oL.f_Tr("minigame.close");
+            if (l_oM.m_bDone)
+                l_oM.m_strResult = m_oMiniGame.m_iReward > 0
+                    ? f_TrParam(f_TrParam(l_oL.f_Tr("minigame.result"), "n", std::to_string(m_oMiniGame.m_iReward)), "unit", l_strUnit)
+                    : l_oL.f_Tr("minigame.result_none");
+            if (l_oM.m_bRunning) {
+                l_oM.m_fMarker = 100.0f * m_oMiniGame.m_oPlay.f_Marker();
+                for (size_t l_nI = 0; l_nI < m_oMiniGame.m_oPlay.f_PointsAt().size(); l_nI++)
+                    l_oM.m_vPoints.push_back({100.0f * m_oMiniGame.m_oPlay.f_PointsAt()[l_nI], (bool)m_oMiniGame.m_oPlay.f_PointsHit()[l_nI]});
             } else {
-                const int n = def->play.points;
-                for (int i = 0; i < n; i++)
-                    m.points.push_back({100.0f * float(i + 1) / float(n + 1), m.done && i < miniGame_.play.result().hits});
+                const int l_iN = l_pDef->m_oPlay.m_iPoints;
+                for (int l_iI = 0; l_iI < l_iN; l_iI++)
+                    l_oM.m_vPoints.push_back({100.0f * float(l_iI + 1) / float(l_iN + 1), l_oM.m_bDone && l_iI < m_oMiniGame.m_oPlay.f_Result().m_iHits});
             }
         }
     }
 
     // ---- dialogue ----
-    if (showTalk) {
-        toms::UiDialogue& d = u.dialogue;
-        d.visible = true;
-        d.scale = uiScale_;
+    if (l_bShowTalk) {
+        toms::UiDialogue& l_oD = l_oU.m_oDialogue;
+        l_oD.m_bVisible = true;
+        l_oD.m_fScale = m_fUiScale;
         // The box spans the canvas width minus 40 px a side and scales about its bottom centre; scaled up (phones) it is
         // narrowed first, so it keeps that width on screen instead of running off both edges.
-        const float cw = ren ? (float)ren->width() : 1024.0f;
-        d.side = (cw - (cw - 80.0f) / std::max(1.0f, uiScale_)) * 0.5f;
-        d.speaker = dlgSpeaker_;
-        if (dlgData.contains("nodes") && dlgData["nodes"].contains(dlgNode) && dlgData["nodes"][dlgNode].contains("text"))
-            d.text = L.field(dlgData["nodes"][dlgNode]["text"]);
-        for (size_t i = 0; i < dlgChoices.size(); i++)
-            d.choices.push_back({dlgChoices[i].label, "", (int)i == dlgSel, true});
+        const float l_fCw = m_pRen ? (float)m_pRen->f_Width() : 1024.0f;
+        l_oD.m_fSide = (l_fCw - (l_fCw - 80.0f) / std::max(1.0f, m_fUiScale)) * 0.5f;
+        l_oD.m_strSpeaker = m_strDlgSpeaker;
+        if (m_jDlgData.contains("nodes") && m_jDlgData["nodes"].contains(m_strDlgNode) && m_jDlgData["nodes"][m_strDlgNode].contains("text"))
+            l_oD.m_strText = l_oL.f_Field(m_jDlgData["nodes"][m_strDlgNode]["text"]);
+        for (size_t l_nI = 0; l_nI < m_vDlgChoices.size(); l_nI++)
+            l_oD.m_vChoices.push_back({m_vDlgChoices[l_nI].m_strLabel, "", (int)l_nI == m_iDlgSel, true});
     }
 
     // ---- store ----
-    if (storeOpen) {
-        toms::UiStore& s = u.store;
-        s.visible = true;
-        s.title = L.field(storeTitle_);
-        s.hint = L.tr("store.controls_hint");
-        s.gold_label = L.tr("store.gold_label");
-        s.close_label = L.tr("inventory.close");
-        s.effect_label = L.tr("store.effect_label");
-        s.price_label = L.tr("store.price_label");
-        s.buy_label = L.tr("store.buy_button");
-        s.gold = pl.gold;
-        static const char* tabKeys[4] = {"store.tab.potion", "store.tab.weapon", "store.tab.armor", "store.tab.talent"};
-        for (int i = 0; i < 4; i++) s.tabs.push_back({L.tr(tabKeys[i]), i == storeTab_});
-        const std::vector<int> idx = storeTabIndices();
-        for (size_t i = 0; i < idx.size(); i++) {
-            const StoreItemDef& d = storeItems_[idx[i]];
-            const bool gear = isGearType(itemType(d.id));
-            const bool owned = gear && std::find(gearOwned_.begin(), gearOwned_.end(), d.id) != gearOwned_.end();
-            toms::UiStoreItem it;
-            it.icon = itemSprite(d.id);
-            it.name = itemName(d.id);
-            it.desc = itemDesc(d.id);
-            it.effect = itemEffectSummary(d.id);
-            it.equipped = gear && (d.id == equipped_.weaponId || d.id == equipped_.armorId || d.id == equipped_.talentId);
-            it.status = gear ? L.tr(it.equipped ? "store.equipped" : "store.tap_to_equip")
-                             : L.tr("store.purchased_label") + " x" + std::to_string(d.purchases);
-            it.price = owned ? "-" : std::to_string(d.liveCost());
-            it.selected = (int)i == storeSel_;
-            s.items.push_back(it);
+    if (m_bStoreOpen) {
+        toms::UiStore& l_oS = l_oU.m_oStore;
+        l_oS.m_bVisible = true;
+        l_oS.m_strTitle = l_oL.f_Field(m_jStoreTitle);
+        l_oS.m_strHint = l_oL.f_Tr("store.controls_hint");
+        l_oS.m_strGoldLabel = l_oL.f_Tr("store.gold_label");
+        l_oS.m_strCloseLabel = l_oL.f_Tr("inventory.close");
+        l_oS.m_strEffectLabel = l_oL.f_Tr("store.effect_label");
+        l_oS.m_strPriceLabel = l_oL.f_Tr("store.price_label");
+        l_oS.m_strBuyLabel = l_oL.f_Tr("store.buy_button");
+        l_oS.m_iGold = m_oPl.m_iGold;
+        static const char* l_arrTabKeys[4] = {"store.tab.potion", "store.tab.weapon", "store.tab.armor", "store.tab.talent"};
+        for (int l_iI = 0; l_iI < 4; l_iI++) l_oS.m_vTabs.push_back({l_oL.f_Tr(l_arrTabKeys[l_iI]), l_iI == m_iStoreTab});
+        const std::vector<int> l_vIdx = f_StoreTabIndices();
+        for (size_t l_nI = 0; l_nI < l_vIdx.size(); l_nI++) {
+            const StoreItemDef& l_oD = m_vStoreItems[l_vIdx[l_nI]];
+            const bool l_bGear = f_IsGearType(f_ItemType(l_oD.m_strId));
+            const bool l_bOwned = l_bGear && std::find(m_vGearOwned.begin(), m_vGearOwned.end(), l_oD.m_strId) != m_vGearOwned.end();
+            toms::UiStoreItem l_oIt;
+            l_oIt.m_strIcon = f_ItemSprite(l_oD.m_strId);
+            l_oIt.m_strName = f_ItemName(l_oD.m_strId);
+            l_oIt.m_strDesc = f_ItemDesc(l_oD.m_strId);
+            l_oIt.m_strEffect = f_ItemEffectSummary(l_oD.m_strId);
+            l_oIt.m_bEquipped = l_bGear && (l_oD.m_strId == m_oEquipped.m_strWeaponId || l_oD.m_strId == m_oEquipped.m_strArmorId || l_oD.m_strId == m_oEquipped.m_strTalentId);
+            l_oIt.m_strStatus = l_bGear ? l_oL.f_Tr(l_oIt.m_bEquipped ? "store.equipped" : "store.tap_to_equip")
+                             : l_oL.f_Tr("store.purchased_label") + " x" + std::to_string(l_oD.m_iPurchases);
+            l_oIt.m_strPrice = l_bOwned ? "-" : std::to_string(l_oD.f_LiveCost());
+            l_oIt.m_bSelected = (int)l_nI == m_iStoreSel;
+            l_oS.m_vItems.push_back(l_oIt);
         }
     }
-    if (!notices_.empty()) {
-        u.notice.visible = true;
-        u.notice.title = notices_.front().title;
-        u.notice.body = notices_.front().body;
-        u.notice.ok = L.tr("notice.ok");
+    if (!m_vNotices.empty()) {
+        l_oU.m_oNotice.m_bVisible = true;
+        l_oU.m_oNotice.m_strTitle = m_vNotices.front().m_strTitle;
+        l_oU.m_oNotice.m_strBody = m_vNotices.front().m_strBody;
+        l_oU.m_oNotice.m_strOk = l_oL.f_Tr("notice.ok");
     }
-    if (storeUnlockDlg) {
-        u.store.unlocked_dialog = true;
-        u.store.unlocked_title = L.tr("store.unlocked_title");
-        u.store.unlocked_body = L.tr("store.unlocked_body");
-        u.store.unlocked_ok = L.tr("store.confirm_hint");
+    if (m_bStoreUnlockDlg) {
+        l_oU.m_oStore.m_bUnlockedDialog = true;
+        l_oU.m_oStore.m_strUnlockedTitle = l_oL.f_Tr("store.unlocked_title");
+        l_oU.m_oStore.m_strUnlockedBody = l_oL.f_Tr("store.unlocked_body");
+        l_oU.m_oStore.m_strUnlockedOk = l_oL.f_Tr("store.confirm_hint");
     }
 
     // ---- always on top ----
-    u.overlay.toast = toastTimer_ > 0 && !toastMsg_.empty();
-    u.overlay.toast_text = toastMsg_;
+    l_oU.m_oOverlay.m_bToast = m_iToastTimer > 0 && !m_strToastMsg.empty();
+    l_oU.m_oOverlay.m_strToastText = m_strToastMsg;
     // The pick-up / level-up / event lines wait while the player menu is open: they would cover its
     // right side (they still time out).
-    if (!inGameMenuOpen_)
-        for (const auto& n : notifications_) u.overlay.notifications.push_back(n.first);
+    if (!m_bInGameMenuOpen)
+        for (const auto& l_pairN : m_vNotifications) l_oU.m_oOverlay.m_vNotifications.push_back(l_pairN.first);
 }
 
-void Game::buildMenuUi(toms::UiMenu& m) const {
-    const toms::Locale& L = locale_;
-    m.visible = true;
-    m.yes_label = L.tr("menu.yes");
-    m.no_label = L.tr("menu.no");
-    m.close_label = L.tr("menu.back");
-    auto sel = [&](size_t i) { return (int)i == inGameMenuSel_; };
+void Game::f_BuildMenuUi(toms::UiMenu& l_oM) const {
+    const toms::Locale& l_oL = m_oLocale;
+    l_oM.m_bVisible = true;
+    l_oM.m_strYesLabel = l_oL.f_Tr("menu.yes");
+    l_oM.m_strNoLabel = l_oL.f_Tr("menu.no");
+    l_oM.m_strCloseLabel = l_oL.f_Tr("menu.back");
+    auto l_fnSel = [&](size_t l_nI) { return (int)l_nI == m_iInGameMenuSel; };
     // The left list is always there; a page (Settings, Skills, Forge, Village) opens on the right,
     // and while it is open the keyboard moves on its rows and the row that opened it stays lit.
     {
-        auto order = mainMenuOrder();
-        int lit = inGameMenuSel_;
-        if (inGameMenuPage_ == InGameMenuPage::Settings) lit = mainMenuRowIndex(MainMenuRow::Settings);
-        if (inGameMenuPage_ == InGameMenuPage::Skills)   lit = mainMenuRowIndex(MainMenuRow::Skills);
-        if (inGameMenuPage_ == InGameMenuPage::Forge)    lit = mainMenuRowIndex(MainMenuRow::Forge);
-        if (inGameMenuPage_ == InGameMenuPage::Hub)      lit = mainMenuRowIndex(MainMenuRow::Village);
-        for (size_t i = 0; i < order.size(); i++) {
-            toms::UiRow r;
-            switch (order[i]) {
+        auto l_vOrder = f_MainMenuOrder();
+        int l_iLit = m_iInGameMenuSel;
+        if (m_eInGameMenuPage == InGameMenuPage::Settings) l_iLit = f_MainMenuRowIndex(MainMenuRow::Settings);
+        if (m_eInGameMenuPage == InGameMenuPage::Skills)   l_iLit = f_MainMenuRowIndex(MainMenuRow::Skills);
+        if (m_eInGameMenuPage == InGameMenuPage::Forge)    l_iLit = f_MainMenuRowIndex(MainMenuRow::Forge);
+        if (m_eInGameMenuPage == InGameMenuPage::Hub)      l_iLit = f_MainMenuRowIndex(MainMenuRow::Village);
+        for (size_t l_nI = 0; l_nI < l_vOrder.size(); l_nI++) {
+            toms::UiRow l_oR;
+            switch (l_vOrder[l_nI]) {
                 case MainMenuRow::Store:
-                    r.label = L.tr("store.icon_label");
-                    r.enabled = storeUnlocked_;
-                    if (!storeUnlocked_) r.sub = L.tr("system.locked");
-                    else if (newsStore_) r.sub = "•";
+                    l_oR.m_strLabel = l_oL.f_Tr("store.icon_label");
+                    l_oR.m_bEnabled = m_bStoreUnlocked;
+                    if (!m_bStoreUnlocked) l_oR.m_strSub = l_oL.f_Tr("system.locked");
+                    else if (m_bNewsStore) l_oR.m_strSub = "•";
                     break;
-                case MainMenuRow::Save:        r.label = L.tr("saveload.row"); break;
-                case MainMenuRow::Settings:    r.label = L.tr("menu.settings"); break;
+                case MainMenuRow::Save:        l_oR.m_strLabel = l_oL.f_Tr("saveload.row"); break;
+                case MainMenuRow::Settings:    l_oR.m_strLabel = l_oL.f_Tr("menu.settings"); break;
                 case MainMenuRow::Skills:
-                    r.label = L.tr("ingame_menu.skills");
-                    if (run_.skillPoints() > 0) r.sub = trParam(L.tr("skill.points_label"), "n", std::to_string(run_.skillPoints()));
+                    l_oR.m_strLabel = l_oL.f_Tr("ingame_menu.skills");
+                    if (m_oRun.f_SkillPoints() > 0) l_oR.m_strSub = f_TrParam(l_oL.f_Tr("skill.points_label"), "n", std::to_string(m_oRun.f_SkillPoints()));
                     break;
-                case MainMenuRow::Village:     r.label = L.tr("ingame_menu.village"); break;
-                case MainMenuRow::Forge:       r.label = L.tr("ingame_menu.forge"); break;
+                case MainMenuRow::Village:     l_oR.m_strLabel = l_oL.f_Tr("ingame_menu.village"); break;
+                case MainMenuRow::Forge:       l_oR.m_strLabel = l_oL.f_Tr("ingame_menu.forge"); break;
                 case MainMenuRow::Fullscreen:
-                    r.label = L.tr("system.fullscreen");
-                    r.sub = L.tr(fullscreenOn_ ? "system.on" : "system.off");
+                    l_oR.m_strLabel = l_oL.f_Tr("system.fullscreen");
+                    l_oR.m_strSub = l_oL.f_Tr(m_bFullscreenOn ? "system.on" : "system.off");
                     break;
-                case MainMenuRow::BackToTitle: r.label = L.tr("ingame_menu.back_to_title"); break;
+                case MainMenuRow::BackToTitle: l_oR.m_strLabel = l_oL.f_Tr("ingame_menu.back_to_title"); break;
             }
-            r.selected = (int)i == lit;
-            m.main_rows.push_back(r);
+            l_oR.m_bSelected = (int)l_nI == l_iLit;
+            l_oM.m_vMainRows.push_back(l_oR);
         }
     }
-    switch (inGameMenuPage_) {
+    switch (m_eInGameMenuPage) {
         case InGameMenuPage::Main: {
-            m.page = 0;
-            m.close_label = L.tr("inventory.close");
+            l_oM.m_iPage = 0;
+            l_oM.m_strCloseLabel = l_oL.f_Tr("inventory.close");
             break;
         }
         case InGameMenuPage::Settings: {
-            m.page = 1;
-            m.header = L.tr("settings.header");
-            const auto& langs = L.languages();
-            for (size_t i = 0; i < langs.size(); i++)
-                m.rows.push_back({std::string((int)i == L.languageIndex() ? "[x] " : "[ ] ") + langs[i].name, "", sel(i), true});
-            if (!m.rows.empty()) m.rows[0].section = L.tr("settings.language");   // section: language
-            appendArtStyleRows(m.rows, inGameMenuSel_ - (int)langs.size());       // section: art style
-            const size_t cam = m.rows.size();                                      // section: other
-            m.rows.push_back({L.tr(cam_.mode() == toms::Camera::Mode::Rooms ? "settings.camera_rooms" : "settings.camera_follow"),
-                              "", sel(cam), true});
-            m.rows[cam].section = L.tr("settings.other_section");
-            m.rows.push_back({L.tr(settings_.reduceEffects ? "settings.reduce_effects_on" : "settings.reduce_effects_off"),
-                              "", sel(cam + 1), true});   // docs/gameplay/15 §3.8
+            l_oM.m_iPage = 1;
+            l_oM.m_strHeader = l_oL.f_Tr("settings.header");
+            const auto& l_vLangs = l_oL.f_Languages();
+            for (size_t l_nI = 0; l_nI < l_vLangs.size(); l_nI++)
+                l_oM.m_vRows.push_back({std::string((int)l_nI == l_oL.f_LanguageIndex() ? "[x] " : "[ ] ") + l_vLangs[l_nI].m_strName, "", l_fnSel(l_nI), true});
+            if (!l_oM.m_vRows.empty()) l_oM.m_vRows[0].m_strSection = l_oL.f_Tr("settings.language");   // section: language
+            f_AppendArtStyleRows(l_oM.m_vRows, m_iInGameMenuSel - (int)l_vLangs.size());       // section: art style
+            const size_t l_nCam = l_oM.m_vRows.size();                                      // section: other
+            l_oM.m_vRows.push_back({l_oL.f_Tr(m_oCam.f_Mode() == toms::Camera::Mode::Rooms ? "settings.camera_rooms" : "settings.camera_follow"),
+                              "", l_fnSel(l_nCam), true});
+            l_oM.m_vRows[l_nCam].m_strSection = l_oL.f_Tr("settings.other_section");
+            l_oM.m_vRows.push_back({l_oL.f_Tr(m_oSettings.m_bReduceEffects ? "settings.reduce_effects_on" : "settings.reduce_effects_off"),
+                              "", l_fnSel(l_nCam + 1), true});   // docs/gameplay/15 §3.8
             break;
         }
         case InGameMenuPage::Skills: {
-            m.page = 2;
-            m.header = L.tr("ingame_menu.skills");
-            m.subheader = trParam(L.tr("skill.points_label"), "n", std::to_string(run_.skillPoints()));
-            auto order = skillMenuOrder();
-            for (size_t i = 0; i < order.size(); i++) {
-                const auto& def = skillDefs_.at(order[i]);
-                const bool owned = run_.hasSkill(order[i]);
-                const bool unlockable = !owned && toms::canUnlockSkill(skillDefs_, run_.skillsOwned(), run_.skillPoints(), order[i]);
-                const std::string mark = owned ? "[x] " : (unlockable ? "[ ] " : "[--] ");
-                const std::string name = L.field(def.name);
-                m.rows.push_back({owned ? mark + name
-                                        : trParam(mark + name + " (" + L.tr("skill.cost_suffix") + ")", "n", std::to_string(def.cost)),
-                                  "", sel(i), owned || unlockable});
+            l_oM.m_iPage = 2;
+            l_oM.m_strHeader = l_oL.f_Tr("ingame_menu.skills");
+            l_oM.m_strSubheader = f_TrParam(l_oL.f_Tr("skill.points_label"), "n", std::to_string(m_oRun.f_SkillPoints()));
+            auto l_vOrder = f_SkillMenuOrder();
+            for (size_t l_nI = 0; l_nI < l_vOrder.size(); l_nI++) {
+                const auto& l_oDef = m_mapSkillDefs.at(l_vOrder[l_nI]);
+                const bool l_bOwned = m_oRun.f_HasSkill(l_vOrder[l_nI]);
+                const bool l_bUnlockable = !l_bOwned && toms::f_CanUnlockSkill(m_mapSkillDefs, m_oRun.f_SkillsOwned(), m_oRun.f_SkillPoints(), l_vOrder[l_nI]);
+                const std::string l_strMark = l_bOwned ? "[x] " : (l_bUnlockable ? "[ ] " : "[--] ");
+                const std::string l_strName = l_oL.f_Field(l_oDef.m_jName);
+                l_oM.m_vRows.push_back({l_bOwned ? l_strMark + l_strName
+                                        : f_TrParam(l_strMark + l_strName + " (" + l_oL.f_Tr("skill.cost_suffix") + ")", "n", std::to_string(l_oDef.m_iCost)),
+                                  "", l_fnSel(l_nI), l_bOwned || l_bUnlockable});
             }
             break;
         }
         case InGameMenuPage::Forge: {
-            m.page = 3;
-            m.header = L.tr("ingame_menu.forge");
-            m.subheader = trParam(L.tr("forge.gold_label"), "n", std::to_string(pl.gold));
-            auto order = forgeMenuOrder();
-            for (size_t i = 0; i < order.size(); i++) {
-                const auto& def = forgeDefs_.at(order[i]);
-                const bool known = std::find(meta_.forgeRecipesKnown.begin(), meta_.forgeRecipesKnown.end(), order[i]) !=
-                                   meta_.forgeRecipesKnown.end();
-                const bool craftable = known && toms::canCraft(forgeDefs_, meta_.forgeRecipesKnown, pl.inv, pl.gold, order[i]);
-                std::string label = std::string(!known ? "[--] " : (craftable ? "[ ] " : "[!] ")) +
-                                    (known ? L.field(def.name) : L.tr("forge.unknown_recipe"));
-                if (known) label += " (" + std::to_string(def.costGold) + "g)";
-                m.rows.push_back({label, "", sel(i), craftable});
+            l_oM.m_iPage = 3;
+            l_oM.m_strHeader = l_oL.f_Tr("ingame_menu.forge");
+            l_oM.m_strSubheader = f_TrParam(l_oL.f_Tr("forge.gold_label"), "n", std::to_string(m_oPl.m_iGold));
+            auto l_vOrder = f_ForgeMenuOrder();
+            for (size_t l_nI = 0; l_nI < l_vOrder.size(); l_nI++) {
+                const auto& l_oDef = m_mapForgeDefs.at(l_vOrder[l_nI]);
+                const bool l_bKnown = std::find(m_oMeta.m_vForgeRecipesKnown.begin(), m_oMeta.m_vForgeRecipesKnown.end(), l_vOrder[l_nI]) !=
+                                   m_oMeta.m_vForgeRecipesKnown.end();
+                const bool l_bCraftable = l_bKnown && toms::f_CanCraft(m_mapForgeDefs, m_oMeta.m_vForgeRecipesKnown, m_oPl.m_vInv, m_oPl.m_iGold, l_vOrder[l_nI]);
+                std::string l_strLabel = std::string(!l_bKnown ? "[--] " : (l_bCraftable ? "[ ] " : "[!] ")) +
+                                    (l_bKnown ? l_oL.f_Field(l_oDef.m_jName) : l_oL.f_Tr("forge.unknown_recipe"));
+                if (l_bKnown) l_strLabel += " (" + std::to_string(l_oDef.m_iCostGold) + "g)";
+                l_oM.m_vRows.push_back({l_strLabel, "", l_fnSel(l_nI), l_bCraftable});
             }
             break;
         }
         case InGameMenuPage::Hub: {
-            m.page = 4;
-            m.header = L.tr("ingame_menu.village");
-            auto order = hubMenuOrder();
-            auto hasFlag = [this](const std::string& f) { return run_.flag(f); };
-            for (size_t i = 0; i < order.size(); i++) {
-                const bool unlocked = toms::hubLocationUnlocked(hubDefs_, hasFlag, order[i]);
-                m.rows.push_back({std::string(unlocked ? "[ ] " : "[--] ") +
-                                  (unlocked ? L.field(hubDefs_.at(order[i]).name) : L.tr("hub.unknown_location")),
-                                  "", sel(i), unlocked});
+            l_oM.m_iPage = 4;
+            l_oM.m_strHeader = l_oL.f_Tr("ingame_menu.village");
+            auto l_vOrder = f_HubMenuOrder();
+            auto l_fnHasFlag = [this](const std::string& l_strF) { return m_oRun.f_Flag(l_strF); };
+            for (size_t l_nI = 0; l_nI < l_vOrder.size(); l_nI++) {
+                const bool l_bUnlocked = toms::f_HubLocationUnlocked(m_mapHubDefs, l_fnHasFlag, l_vOrder[l_nI]);
+                l_oM.m_vRows.push_back({std::string(l_bUnlocked ? "[ ] " : "[--] ") +
+                                  (l_bUnlocked ? l_oL.f_Field(m_mapHubDefs.at(l_vOrder[l_nI]).m_jName) : l_oL.f_Tr("hub.unknown_location")),
+                                  "", l_fnSel(l_nI), l_bUnlocked});
             }
             break;
         }
     }
-    if (inGameLangConfirmOpen_ && inGameConfirmIsStyle_) {
-        m.confirm_open = true;
-        m.confirm_question = trParam(L.tr("settings.style_confirm"), "style", artStyleName(inGameLangConfirmIdx_));
-        m.confirm_body = L.tr("settings.style_apply_title");   // a run never changes look under the player
-        m.confirm_yes = inGameLangConfirmYes_;
-    } else if (inGameLangConfirmOpen_) {
-        const auto& langs = L.languages();
-        m.confirm_open = true;
-        m.confirm_question = trParam(L.tr("settings.language_confirm"), "lang",
-                                     (inGameLangConfirmIdx_ >= 0 && inGameLangConfirmIdx_ < (int)langs.size())
-                                     ? langs[inGameLangConfirmIdx_].name : "");
-        m.confirm_yes = inGameLangConfirmYes_;
+    if (m_bInGameLangConfirmOpen && m_bInGameConfirmIsStyle) {
+        l_oM.m_bConfirmOpen = true;
+        l_oM.m_strConfirmQuestion = f_TrParam(l_oL.f_Tr("settings.style_confirm"), "style", f_ArtStyleName(m_iInGameLangConfirmIdx));
+        l_oM.m_strConfirmBody = l_oL.f_Tr("settings.style_apply_title");   // a run never changes look under the player
+        l_oM.m_bConfirmYes = m_bInGameLangConfirmYes;
+    } else if (m_bInGameLangConfirmOpen) {
+        const auto& l_vLangs = l_oL.f_Languages();
+        l_oM.m_bConfirmOpen = true;
+        l_oM.m_strConfirmQuestion = f_TrParam(l_oL.f_Tr("settings.language_confirm"), "lang",
+                                     (m_iInGameLangConfirmIdx >= 0 && m_iInGameLangConfirmIdx < (int)l_vLangs.size())
+                                     ? l_vLangs[m_iInGameLangConfirmIdx].m_strName : "");
+        l_oM.m_bConfirmYes = m_bInGameLangConfirmYes;
     }
 }
 
-void Game::uiEvent(const std::string& name, int arg) {
+void Game::f_UiEvent(const std::string& l_strName, int l_iArg) {
     // ---- title ----
-    if (name == "title_row")     { if (title_.isOpen()) handleTitleAction(title_.clickRow(arg)); return; }
-    if (name == "title_hover")   { if (title_.isOpen()) title_.hoverRow(arg); return; }
-    if (name == "title_back")    { if (title_.isOpen()) handleTitleAction(title_.cancel()); return; }
-    if (name == "title_confirm") { if (title_.isOpen()) handleTitleAction(title_.answerConfirm(arg != 0)); return; }
+    if (l_strName == "title_row")     { if (m_oTitle.f_IsOpen()) f_HandleTitleAction(m_oTitle.f_ClickRow(l_iArg)); return; }
+    if (l_strName == "title_hover")   { if (m_oTitle.f_IsOpen()) m_oTitle.f_HoverRow(l_iArg); return; }
+    if (l_strName == "title_back")    { if (m_oTitle.f_IsOpen()) f_HandleTitleAction(m_oTitle.f_Cancel()); return; }
+    if (l_strName == "title_confirm") { if (m_oTitle.f_IsOpen()) f_HandleTitleAction(m_oTitle.f_AnswerConfirm(l_iArg != 0)); return; }
     // ---- ending ----
-    if (name == "ending_rebirth") { if (endingActive()) rebirth(); return; }
-    if (name == "ending_title")   { if (endingActive()) dismissEndingScreen(); return; }
-    if (name == "ending_dismiss") { if (endingActive() && !rebirthOffered()) dismissEndingScreen(); return; }
+    if (l_strName == "ending_rebirth") { if (f_EndingActive()) f_Rebirth(); return; }
+    if (l_strName == "ending_title")   { if (f_EndingActive()) f_DismissEndingScreen(); return; }
+    if (l_strName == "ending_dismiss") { if (f_EndingActive() && !f_RebirthOffered()) f_DismissEndingScreen(); return; }
     // ---- HUD buttons ----
-    if (name == "hud_menu")      { if (!modalActive()) { cancelWalk(); openPlayerMenu(); } return; }
+    if (l_strName == "hud_menu")      { if (!f_ModalActive()) { f_CancelWalk(); f_OpenPlayerMenu(); } return; }
     // ---- battle ----
-    if (name == "battle_attack")   { battleTapAttack(); return; }
-    if (name == "minigame_tap")    { miniGameTap(); return; }
-    if (name == "minigame_close")  { closeMiniGame(); return; }
-    if (name == "battle_defend")   { battleTapDefense(); return; }
-    if (name == "battle_super")    { battleTapSuper(); return; }
-    if (name == "battle_active")   { battleTapActive(); return; }
-    if (name == "battle_target")   { battleSetTarget(arg); return; }
-    if (name == "battle_continue") { if (cs.won) dismissVictory(); return; }
+    if (l_strName == "battle_attack")   { f_BattleTapAttack(); return; }
+    if (l_strName == "minigame_tap")    { f_MiniGameTap(); return; }
+    if (l_strName == "minigame_close")  { f_CloseMiniGame(); return; }
+    if (l_strName == "battle_defend")   { f_BattleTapDefense(); return; }
+    if (l_strName == "battle_super")    { f_BattleTapSuper(); return; }
+    if (l_strName == "battle_active")   { f_BattleTapActive(); return; }
+    if (l_strName == "battle_target")   { f_BattleSetTarget(l_iArg); return; }
+    if (l_strName == "battle_continue") { if (m_oCs.m_bWon) f_DismissVictory(); return; }
     // ---- dialogue ----
-    if (name == "dlg_choose")  { if (inDialogue && arg >= 0 && arg < (int)dlgChoices.size()) { dlgSel = arg; chooseDialogue(arg); } return; }
-    if (name == "dlg_hover")   { if (inDialogue && arg >= 0 && arg < (int)dlgChoices.size()) dlgSel = arg; return; }
-    if (name == "dlg_advance") { if (inDialogue) chooseDialogue(dlgSel); return; }
+    if (l_strName == "dlg_choose")  { if (m_bInDialogue && l_iArg >= 0 && l_iArg < (int)m_vDlgChoices.size()) { m_iDlgSel = l_iArg; f_ChooseDialogue(l_iArg); } return; }
+    if (l_strName == "dlg_hover")   { if (m_bInDialogue && l_iArg >= 0 && l_iArg < (int)m_vDlgChoices.size()) m_iDlgSel = l_iArg; return; }
+    if (l_strName == "dlg_advance") { if (m_bInDialogue) f_ChooseDialogue(m_iDlgSel); return; }
     // ---- the player menu (game_player_menu.cpp) ----
-    if (name.rfind("pm_", 0) == 0) { playerMenuEvent(name, arg); return; }
+    if (l_strName.rfind("pm_", 0) == 0) { f_PlayerMenuEvent(l_strName, l_iArg); return; }
     // ---- store ----
-    if (name == "store_tab") {
-        if (storeOpen && arg >= 0 && arg < 4 && arg != storeTab_) { storeTab_ = arg; storeSel_ = 0; audio.play("confirm_click"); }
+    if (l_strName == "store_tab") {
+        if (m_bStoreOpen && l_iArg >= 0 && l_iArg < 4 && l_iArg != m_iStoreTab) { m_iStoreTab = l_iArg; m_iStoreSel = 0; m_oAudio.f_Play("confirm_click"); }
         return;
     }
-    if (name == "store_hover") { if (storeOpen && arg >= 0 && arg < (int)storeTabIndices().size()) storeSel_ = arg; return; }
-    if (name == "store_buy") {
-        const std::vector<int> idx = storeTabIndices();
-        if (storeOpen && arg >= 0 && arg < (int)idx.size()) { storeSel_ = arg; buyStoreItem(idx[arg]); }
+    if (l_strName == "store_hover") { if (m_bStoreOpen && l_iArg >= 0 && l_iArg < (int)f_StoreTabIndices().size()) m_iStoreSel = l_iArg; return; }
+    if (l_strName == "store_buy") {
+        const std::vector<int> l_vIdx = f_StoreTabIndices();
+        if (m_bStoreOpen && l_iArg >= 0 && l_iArg < (int)l_vIdx.size()) { m_iStoreSel = l_iArg; f_BuyStoreItem(l_vIdx[l_iArg]); }
         return;
     }
-    if (name == "store_close")       { if (storeOpen) closeStore(); return; }
-    if (name == "store_unlocked_ok") { if (storeUnlockDlg) storeKey(13); return; }
+    if (l_strName == "store_close")       { if (m_bStoreOpen) f_CloseStore(); return; }
+    if (l_strName == "store_unlocked_ok") { if (m_bStoreUnlockDlg) f_StoreKey(13); return; }
     // ---- in-game menu ----
-    if (name == "menu_row")     { if (inGameMenuOpen_ && !inGameLangConfirmOpen_) { inGameMenuSel_ = arg; inGameMenuActivate(); } return; }
-    if (name == "menu_hover")   { if (inGameMenuOpen_ && !inGameLangConfirmOpen_) inGameMenuSel_ = arg; return; }
-    if (name == "menu_close")   { if (inGameMenuOpen_) inGameMenuBack(); return; }
-    if (name == "menu_confirm") { if (inGameLangConfirmOpen_) { inGameLangConfirmYes_ = arg != 0; inGameMenuActivate(); } return; }
-    if (name == "notice_ok") { dismissNotice(); return; }
+    if (l_strName == "menu_row")     { if (m_bInGameMenuOpen && !m_bInGameLangConfirmOpen) { m_iInGameMenuSel = l_iArg; f_InGameMenuActivate(); } return; }
+    if (l_strName == "menu_hover")   { if (m_bInGameMenuOpen && !m_bInGameLangConfirmOpen) m_iInGameMenuSel = l_iArg; return; }
+    if (l_strName == "menu_close")   { if (m_bInGameMenuOpen) f_InGameMenuBack(); return; }
+    if (l_strName == "menu_confirm") { if (m_bInGameLangConfirmOpen) { m_bInGameLangConfirmYes = l_iArg != 0; f_InGameMenuActivate(); } return; }
+    if (l_strName == "notice_ok") { f_DismissNotice(); return; }
     // ---- stairs ----
-    if (name == "stairs") { if (stairsConfirmOpen_) { if (arg) confirmStageTransition(); else cancelStageTransition(); } return; }
+    if (l_strName == "stairs") { if (m_bStairsConfirmOpen) { if (l_iArg) f_ConfirmStageTransition(); else f_CancelStageTransition(); } return; }
     // ---- stage select ----
-    if (name == "stage_pick") {
-        if (!stageSelectOpen_ || arg < 0 || arg >= (int)stageList_.size()) return;
-        const StageInfo& info = stageList_[arg];
-        const bool locked = info.index > 1 && arg > 0 &&
-            std::find(meta_.unlockedStages.begin(), meta_.unlockedStages.end(), stageList_[arg - 1].id) == meta_.unlockedStages.end();
-        if (locked) return;
-        loadStage(info.id);
-        closeStageSelect();
+    if (l_strName == "stage_pick") {
+        if (!m_bStageSelectOpen || l_iArg < 0 || l_iArg >= (int)m_vStageList.size()) return;
+        const StageInfo& l_oInfo = m_vStageList[l_iArg];
+        const bool l_bLocked = l_oInfo.m_iIndex > 1 && l_iArg > 0 &&
+            std::find(m_oMeta.m_vUnlockedStages.begin(), m_oMeta.m_vUnlockedStages.end(), m_vStageList[l_iArg - 1].m_strId) == m_oMeta.m_vUnlockedStages.end();
+        if (l_bLocked) return;
+        f_LoadStage(l_oInfo.m_strId);
+        f_CloseStageSelect();
         return;
     }
-    if (name == "stage_close") { if (stageSelectOpen_) closeStageSelect(); return; }
+    if (l_strName == "stage_close") { if (m_bStageSelectOpen) f_CloseStageSelect(); return; }
 }
 
 // Each weapon's own play and a move's play (touch_play.h; docs/gameplay/15 §3.3, 16 §3, §6), drawn over the fight as
 // plain boxes (battle.rcss .tp): the bow's moving target, its pull, charge and crosshair (and the first-pull tutorial);
 // the sword's prompt popping in (a way, or a shape) and its input window; the staff's circles counting, hiding, the
 // "!" and the taps; a move's shape and its corners; and where each answer landed (a ring, or a cross), fading.
-void Game::touchPlayUi(toms::UiBattle& b) const {
-    const toms::TouchPlay& p = cs.touch;
-    b.touch_kind = toms::playKindName(cs.skill.on ? p.kind() : battlePlayKind());
-    auto add = [&](const std::string& cls, float cx, float cy, float w, float h, float rot = 0.0f, float radius = 0.0f,
-                   float opacity = 1.0f, std::string text = {}) {
-        b.touch.push_back({cls, cx - w * 0.5f, cy - h * 0.5f, w, h, rot, radius, opacity, std::move(text)});
+void Game::f_TouchPlayUi(toms::UiBattle& l_oB) const {
+    const toms::TouchPlay& l_oP = m_oCs.m_oTouch;
+    l_oB.m_strTouchKind = toms::f_PlayKindName(m_oCs.m_oSkill.m_bOn ? l_oP.f_Kind() : f_BattlePlayKind());
+    auto l_fnAdd = [&](const std::string& l_strCls, float l_fCx, float l_fCy, float l_fW, float l_fH, float l_fRot = 0.0f, float l_fRadius = 0.0f,
+                   float l_fOpacity = 1.0f, std::string l_strText = {}) {
+        l_oB.m_vTouch.push_back({l_strCls, l_fCx - l_fW * 0.5f, l_fCy - l_fH * 0.5f, l_fW, l_fH, l_fRot, l_fRadius, l_fOpacity, std::move(l_strText)});
     };
-    auto line = [&](const std::string& cls, glm::vec2 a, glm::vec2 c, float thick, float opacity = 1.0f) {
-        const glm::vec2 d = c - a;
-        const float len = std::sqrt(d.x * d.x + d.y * d.y);
-        if (len >= 2.0f) add(cls, (a.x + c.x) * 0.5f, (a.y + c.y) * 0.5f, len, thick, std::atan2(d.y, d.x) * 57.29578f, thick * 0.5f, opacity);
+    auto l_fnLine = [&](const std::string& l_strCls, glm::vec2 l_v2A, glm::vec2 l_v2C, float l_fThick, float l_fOpacity = 1.0f) {
+        const glm::vec2 l_v2D = l_v2C - l_v2A;
+        const float l_fLen = std::sqrt(l_v2D.x * l_v2D.x + l_v2D.y * l_v2D.y);
+        if (l_fLen >= 2.0f) l_fnAdd(l_strCls, (l_v2A.x + l_v2C.x) * 0.5f, (l_v2A.y + l_v2C.y) * 0.5f, l_fLen, l_fThick, std::atan2(l_v2D.y, l_v2D.x) * 57.29578f, l_fThick * 0.5f, l_fOpacity);
     };
-    for (const toms::TouchPlay::Mark& m : p.marks()) {
-        if (m.ageMs >= 500) continue;
-        const float k = (float)m.ageMs / 500.0f, s = 34.0f + 30.0f * k;
-        if (m.ok) add("mark ok", m.x, m.y, s, s, 0.0f, s * 0.5f, 1.0f - k);
-        else { add("mark bad", m.x, m.y, 40, 7, 45.0f, 3.5f, 1.0f - k); add("mark bad", m.x, m.y, 40, 7, -45.0f, 3.5f, 1.0f - k); }
+    for (const toms::TouchPlay::Mark& l_oM : l_oP.f_Marks()) {
+        if (l_oM.m_iAgeMs >= 500) continue;
+        const float l_fK = (float)l_oM.m_iAgeMs / 500.0f, l_fS = 34.0f + 30.0f * l_fK;
+        if (l_oM.m_bOk) l_fnAdd("mark ok", l_oM.m_fX, l_oM.m_fY, l_fS, l_fS, 0.0f, l_fS * 0.5f, 1.0f - l_fK);
+        else { l_fnAdd("mark bad", l_oM.m_fX, l_oM.m_fY, 40, 7, 45.0f, 3.5f, 1.0f - l_fK); l_fnAdd("mark bad", l_oM.m_fX, l_oM.m_fY, 40, 7, -45.0f, 3.5f, 1.0f - l_fK); }
     }
-    if (!p.running() || (cs.skill.on && cs.skill.phase != CombatState::SkillRun::Phase::Play)) return;
-    const std::string count = std::to_string(std::min(p.index() + 1, p.points())) + "/" + std::to_string(p.points());
-    switch (p.kind()) {
+    if (!l_oP.f_Running() || (m_oCs.m_oSkill.m_bOn && m_oCs.m_oSkill.m_ePhase != CombatState::SkillRun::Phase::Play)) return;
+    const std::string l_strCount = std::to_string(std::min(l_oP.f_Index() + 1, l_oP.f_Points())) + "/" + std::to_string(l_oP.f_Points());
+    switch (l_oP.f_Kind()) {
     case toms::PlayKind::Bow: {
-        const toms::TouchPlay::Target& t = p.target();
-        add(p.started() ? "target" : "target idle", t.x, t.y, 2 * t.r, 2 * t.r, 0.0f, t.r);
-        add("bull", t.x, t.y, 0.8f * t.r, 0.8f * t.r, 0.0f, 0.4f * t.r);
-        if (p.points() > 1) add("count", t.x, t.y - t.r - 18.0f, 80, 24, 0.0f, 0.0f, 1.0f, count);
-        if (p.started()) add("time", t.x, t.y + t.r + 10.0f, 2 * t.r * p.timeLeft(), 5, 0.0f, 2.5f);
-        if (p.aiming()) {
-            const glm::vec2 c = p.crosshair(), a = p.aimFrom();
-            const float ch = p.charge(), s = 26.0f + 40.0f * ch;
-            line("pull", a, p.aimTo(), 5);
-            line("shot", a, c, 2);
-            add("anchor", a.x, a.y, 14, 14, 0.0f, 7);
-            add(ch >= 1.0f ? "charge full" : "charge", a.x, a.y, s, s, 0.0f, s * 0.5f);   // the pull's charge (16 §3.2)
-            add("cross", c.x, c.y, 28, 28, 0.0f, 14);
-        } else if (!settings_.bowTutorialDone && !p.started() && !cs.skill.on) {
+        const toms::TouchPlay::Target& l_oT = l_oP.f_Target();
+        l_fnAdd(l_oP.f_Started() ? "target" : "target idle", l_oT.m_fX, l_oT.m_fY, 2 * l_oT.m_fR, 2 * l_oT.m_fR, 0.0f, l_oT.m_fR);
+        l_fnAdd("bull", l_oT.m_fX, l_oT.m_fY, 0.8f * l_oT.m_fR, 0.8f * l_oT.m_fR, 0.0f, 0.4f * l_oT.m_fR);
+        if (l_oP.f_Points() > 1) l_fnAdd("count", l_oT.m_fX, l_oT.m_fY - l_oT.m_fR - 18.0f, 80, 24, 0.0f, 0.0f, 1.0f, l_strCount);
+        if (l_oP.f_Started()) l_fnAdd("time", l_oT.m_fX, l_oT.m_fY + l_oT.m_fR + 10.0f, 2 * l_oT.m_fR * l_oP.f_TimeLeft(), 5, 0.0f, 2.5f);
+        if (l_oP.f_Aiming()) {
+            const glm::vec2 l_v2C = l_oP.f_Crosshair(), l_v2A = l_oP.f_AimFrom();
+            const float l_fCh = l_oP.f_Charge(), l_fS = 26.0f + 40.0f * l_fCh;
+            l_fnLine("pull", l_v2A, l_oP.f_AimTo(), 5);
+            l_fnLine("shot", l_v2A, l_v2C, 2);
+            l_fnAdd("anchor", l_v2A.x, l_v2A.y, 14, 14, 0.0f, 7);
+            l_fnAdd(l_fCh >= 1.0f ? "charge full" : "charge", l_v2A.x, l_v2A.y, l_fS, l_fS, 0.0f, l_fS * 0.5f);   // the pull's charge (16 §3.2)
+            l_fnAdd("cross", l_v2C.x, l_v2C.y, 28, 28, 0.0f, 14);
+        } else if (!m_oSettings.m_bBowTutorialDone && !l_oP.f_Started() && !m_oCs.m_oSkill.m_bOn) {
             // the first pull's tutorial: a ghost finger touches under the target, drags back and lets go (16 §3.2)
-            const float k = (float)(cs.clockMs % 1600) / 1600.0f;
-            const float drag = std::clamp((k - 0.25f) / 0.45f, 0.0f, 1.0f);
-            const glm::vec2 from(t.x, t.y + 90.0f), to(t.x, t.y + 150.0f);
-            const glm::vec2 f = from + (to - from) * drag;
-            if (k < 0.85f) {
-                if (drag > 0.0f) line("pull", from, f, 4, 0.6f);
-                add("ghost", f.x, f.y, 34, 34, 0.0f, 17, k < 0.15f ? k / 0.15f : 1.0f);
+            const float l_fK = (float)(m_oCs.m_iClockMs % 1600) / 1600.0f;
+            const float l_fDrag = std::clamp((l_fK - 0.25f) / 0.45f, 0.0f, 1.0f);
+            const glm::vec2 l_v2From(l_oT.m_fX, l_oT.m_fY + 90.0f), l_v2To(l_oT.m_fX, l_oT.m_fY + 150.0f);
+            const glm::vec2 l_v2F = l_v2From + (l_v2To - l_v2From) * l_fDrag;
+            if (l_fK < 0.85f) {
+                if (l_fDrag > 0.0f) l_fnLine("pull", l_v2From, l_v2F, 4, 0.6f);
+                l_fnAdd("ghost", l_v2F.x, l_v2F.y, 34, 34, 0.0f, 17, l_fK < 0.15f ? l_fK / 0.15f : 1.0f);
             }
-            add("tutorial", t.x, t.y + 190.0f, 360, 28, 0.0f, 0.0f, 1.0f, locale_.tr("battle.play_hint_bow"));
+            l_fnAdd("tutorial", l_oT.m_fX, l_oT.m_fY + 190.0f, 360, 28, 0.0f, 0.0f, 1.0f, m_oLocale.f_Tr("battle.play_hint_bow"));
         }
         break;
     }
     case toms::PlayKind::Slice: {
-        const toms::CueTrack& cues = p.cues();
-        const glm::vec2 at = p.promptAt();
-        add("count", at.x, at.y - 56.0f, 80, 24, 0.0f, 0.0f, 1.0f, count);
-        const int age = cues.cueAgeMs();
-        if (!cues.done() && age >= 0) {   // the prompt pops in with a little bounce (16 §3.1)
-            const int k = cues.index();
-            const float pop = age < 180 ? 0.5f + 0.7f * std::sin((float)age / 180.0f * 1.5708f) : age < 260 ? 1.2f - 0.2f * (float)(age - 180) / 80.0f : 1.0f;
-            const std::string cls = cues.open() ? "arrow now open" : "arrow now";
-            if (p.cueKind(k) == "way") {
-                const float ang = (float)p.cueDir(k) * 45.0f, rad = ang / 57.29578f;
-                const glm::vec2 dir(std::cos(rad), std::sin(rad));
-                add(cls, at.x - dir.x * 8.0f * pop, at.y - dir.y * 8.0f * pop, 56 * pop, 12 * pop, ang, 6 * pop);
-                add(cls + " head", at.x + dir.x * 16.0f * pop, at.y + dir.y * 16.0f * pop, 26 * pop, 26 * pop, ang + 45.0f);
+        const toms::CueTrack& l_oCues = l_oP.f_Cues();
+        const glm::vec2 l_v2At = l_oP.f_PromptAt();
+        l_fnAdd("count", l_v2At.x, l_v2At.y - 56.0f, 80, 24, 0.0f, 0.0f, 1.0f, l_strCount);
+        const int l_iAge = l_oCues.f_CueAgeMs();
+        if (!l_oCues.f_Done() && l_iAge >= 0) {   // the prompt pops in with a little bounce (16 §3.1)
+            const int l_iK = l_oCues.f_Index();
+            const float l_fPop = l_iAge < 180 ? 0.5f + 0.7f * std::sin((float)l_iAge / 180.0f * 1.5708f) : l_iAge < 260 ? 1.2f - 0.2f * (float)(l_iAge - 180) / 80.0f : 1.0f;
+            const std::string l_strCls = l_oCues.f_Open() ? "arrow now open" : "arrow now";
+            if (l_oP.f_CueKind(l_iK) == "way") {
+                const float l_fAng = (float)l_oP.f_CueDir(l_iK) * 45.0f, l_fRad = l_fAng / 57.29578f;
+                const glm::vec2 l_v2Dir(std::cos(l_fRad), std::sin(l_fRad));
+                l_fnAdd(l_strCls, l_v2At.x - l_v2Dir.x * 8.0f * l_fPop, l_v2At.y - l_v2Dir.y * 8.0f * l_fPop, 56 * l_fPop, 12 * l_fPop, l_fAng, 6 * l_fPop);
+                l_fnAdd(l_strCls + " head", l_v2At.x + l_v2Dir.x * 16.0f * l_fPop, l_v2At.y + l_v2Dir.y * 16.0f * l_fPop, 26 * l_fPop, 26 * l_fPop, l_fAng + 45.0f);
             } else {   // a shape to draw: its outline
-                const std::vector<glm::vec2> c = toms::shapeCorners(p.cueKind(k));
-                for (size_t i = 1; i < c.size(); i++)
-                    line(cls, at + (c[i - 1] - glm::vec2(0.5f)) * 70.0f * pop, at + (c[i] - glm::vec2(0.5f)) * 70.0f * pop, 7);
+                const std::vector<glm::vec2> l_vC = toms::f_ShapeCorners(l_oP.f_CueKind(l_iK));
+                for (size_t l_nI = 1; l_nI < l_vC.size(); l_nI++)
+                    l_fnLine(l_strCls, l_v2At + (l_vC[l_nI - 1] - glm::vec2(0.5f)) * 70.0f * l_fPop, l_v2At + (l_vC[l_nI] - glm::vec2(0.5f)) * 70.0f * l_fPop, 7);
             }
-            add(cues.open() ? "time open" : "time", at.x, at.y + 46.0f, 160.0f * cues.timeLeft(), 6, 0.0f, 3.0f);
+            l_fnAdd(l_oCues.f_Open() ? "time open" : "time", l_v2At.x, l_v2At.y + 46.0f, 160.0f * l_oCues.f_TimeLeft(), 6, 0.0f, 3.0f);
         }
-        if (p.swiping())
-            for (size_t i = 1; i < p.stroke().size(); i++) line("swipe", p.stroke()[i - 1], p.stroke()[i], 8);
+        if (l_oP.f_Swiping())
+            for (size_t l_nI = 1; l_nI < l_oP.f_Stroke().size(); l_nI++) l_fnLine("swipe", l_oP.f_Stroke()[l_nI - 1], l_oP.f_Stroke()[l_nI], 8);
         break;
     }
     case toms::PlayKind::Circles: {
-        const auto& circles = p.circles();
-        const float r = 34.0f;
-        const auto phase = p.circlePhase();
-        for (size_t k = 0; k < circles.size(); k++) {
-            const toms::TouchPlay::Circle& c = circles[k];
-            if (c.state != 0 || phase == toms::TouchPlay::CirclePhase::Hide) continue;
-            if (phase == toms::TouchPlay::CirclePhase::Count) {   // lit in turn with its number (16 §3.3)
-                const bool lit = (int)k < p.circlesLit();
-                add(lit ? "circle" : "circle idle", c.x, c.y, 2 * r, 2 * r, 0.0f, r, lit ? 1.0f : 0.35f, lit ? std::to_string(k + 1) : std::string());
+        const auto& l_vCircles = l_oP.f_Circles();
+        const float l_fR = 34.0f;
+        const auto l_ePhase = l_oP.f_CirclePhase();
+        for (size_t l_nK = 0; l_nK < l_vCircles.size(); l_nK++) {
+            const toms::TouchPlay::Circle& l_oC = l_vCircles[l_nK];
+            if (l_oC.m_iState != 0 || l_ePhase == toms::TouchPlay::CirclePhase::Hide) continue;
+            if (l_ePhase == toms::TouchPlay::CirclePhase::Count) {   // lit in turn with its number (16 §3.3)
+                const bool l_bLit = (int)l_nK < l_oP.f_CirclesLit();
+                l_fnAdd(l_bLit ? "circle" : "circle idle", l_oC.m_fX, l_oC.m_fY, 2 * l_fR, 2 * l_fR, 0.0f, l_fR, l_bLit ? 1.0f : 0.35f, l_bLit ? std::to_string(l_nK + 1) : std::string());
                 continue;
             }
-            add("circle", c.x, c.y, 2 * r, 2 * r, 0.0f, r);   // back together, without the numbers
-            if (phase == toms::TouchPlay::CirclePhase::Warn) add("warn", c.x, c.y - r - 18.0f, 30, 34, 0.0f, 0.0f, 1.0f, "!");
+            l_fnAdd("circle", l_oC.m_fX, l_oC.m_fY, 2 * l_fR, 2 * l_fR, 0.0f, l_fR);   // back together, without the numbers
+            if (l_ePhase == toms::TouchPlay::CirclePhase::Warn) l_fnAdd("warn", l_oC.m_fX, l_oC.m_fY - l_fR - 18.0f, 30, 34, 0.0f, 0.0f, 1.0f, "!");
         }
-        if (phase == toms::TouchPlay::CirclePhase::Tap) {
-            const glm::vec4 a = touchArea();
-            add("time", a.x + a.z * 0.5f, a.y + a.w + 6.0f, 200.0f * p.timeLeft(), 6, 0.0f, 3.0f);
+        if (l_ePhase == toms::TouchPlay::CirclePhase::Tap) {
+            const glm::vec4 l_v4A = f_TouchArea();
+            l_fnAdd("time", l_v4A.x + l_v4A.z * 0.5f, l_v4A.y + l_v4A.w + 6.0f, 200.0f * l_oP.f_TimeLeft(), 6, 0.0f, 3.0f);
         }
         break;
     }
     case toms::PlayKind::Shape: {   // a move's shape: its lines, the corners reached, the next one (16 §6.1)
-        const toms::ShapeTrace& tr = p.trace();
-        const auto& pts = tr.points();
-        for (size_t i = 1; i < pts.size(); i++) line((int)i < tr.reached() ? "star done" : "star", pts[i - 1], pts[i], 6);
-        const bool closed = pts.size() > 1 && glm::length(pts.front() - pts.back()) < 0.5f;   // its end is its start
-        for (size_t i = 0; i < pts.size() - (closed ? 1 : 0); i++) {
-            const bool done = (int)i < tr.reached(), next = (int)i == tr.reached();
-            add(done ? "corner done" : next ? "corner next" : "corner", pts[i].x, pts[i].y, 34, 34, 0.0f, 17);
+        const toms::ShapeTrace& l_oTr = l_oP.f_Trace();
+        const auto& l_vPts = l_oTr.f_Points();
+        for (size_t l_nI = 1; l_nI < l_vPts.size(); l_nI++) l_fnLine((int)l_nI < l_oTr.f_Reached() ? "star done" : "star", l_vPts[l_nI - 1], l_vPts[l_nI], 6);
+        const bool l_bClosed = l_vPts.size() > 1 && glm::length(l_vPts.front() - l_vPts.back()) < 0.5f;   // its end is its start
+        for (size_t l_nI = 0; l_nI < l_vPts.size() - (l_bClosed ? 1 : 0); l_nI++) {
+            const bool l_bDone = (int)l_nI < l_oTr.f_Reached(), l_bNext = (int)l_nI == l_oTr.f_Reached();
+            l_fnAdd(l_bDone ? "corner done" : l_bNext ? "corner next" : "corner", l_vPts[l_nI].x, l_vPts[l_nI].y, 34, 34, 0.0f, 17);
         }
-        if (tr.drawing()) add("cross", tr.last().x, tr.last().y, 24, 24, 0.0f, 12);
+        if (l_oTr.f_Drawing()) l_fnAdd("cross", l_oTr.f_Last().x, l_oTr.f_Last().y, 24, 24, 0.0f, 12);
         break;
     }
     case toms::PlayKind::Mash: {
-        const glm::vec4 a = touchArea();
-        const float pulse = 1.0f + 0.08f * std::sin((float)p.clockMs() * 0.025f);
-        add("circle", a.x + a.z * 0.5f, a.y + a.w * 0.5f, 110 * pulse, 110 * pulse, 0.0f, 55 * pulse, 1.0f, count);
+        const glm::vec4 l_v4A = f_TouchArea();
+        const float l_fPulse = 1.0f + 0.08f * std::sin((float)l_oP.f_ClockMs() * 0.025f);
+        l_fnAdd("circle", l_v4A.x + l_v4A.z * 0.5f, l_v4A.y + l_v4A.w * 0.5f, 110 * l_fPulse, 110 * l_fPulse, 0.0f, 55 * l_fPulse, 1.0f, l_strCount);
         break;
     }
     default:

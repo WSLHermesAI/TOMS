@@ -17,18 +17,18 @@ class AnimProblemsDock : public QDockWidget
     Q_OBJECT
 
 public:
-    explicit AnimProblemsDock(AnimDocument* doc, QWidget* parent = nullptr);
-    const std::vector<animed::Problem>& problems() const { return m_problems; }
-    QString logText() const;
+    explicit AnimProblemsDock(AnimDocument* l_pDoc, QWidget* l_pParent = nullptr);
+    const std::vector<animed::Problem>& f_Problems() const { return m_vProblems; }
+    QString f_LogText() const;
 
 public slots:
-    void appendLog(const QString& text);
-    void refresh();
+    void f_AppendLog(const QString& l_oText);
+    void f_Refresh();
 
 private:
-    AnimDocument* m_doc;
-    QTabWidget* m_tabs;
-    QTableWidget* m_table;
-    QPlainTextEdit* m_log;
-    std::vector<animed::Problem> m_problems;
+    AnimDocument* m_pDoc;
+    QTabWidget* m_pTabs;
+    QTableWidget* m_pTable;
+    QPlainTextEdit* m_pLog;
+    std::vector<animed::Problem> m_vProblems;
 };

@@ -22,9 +22,9 @@
 namespace fonttool {
 
 struct GlyphPicture {
-    uint32_t cp = 0;
-    std::string file;        // where it came from (messages)
-    atlas::Image img;
+    uint32_t m_uCp = 0;
+    std::string m_strFile;        // where it came from (messages)
+    atlas::Image m_oImg;
 };
 
 // How the pictures are arranged on the page.
@@ -33,62 +33,62 @@ enum class PageLayout {
     Tight,         // the atlas tool's packer (atlas::packPages, MaxRects): the smallest page, 1 px apart
     TightPow2,     // the same, the page's width and height powers of two
 };
-const char* pageLayoutName(PageLayout l);              // "row", "tight", "pot"
-bool parsePageLayout(const std::string& s, PageLayout& out);
+const char* f_PageLayoutName(PageLayout l_eL);              // "row", "tight", "pot"
+bool f_ParsePageLayout(const std::string& l_strS, PageLayout& l_eOut);
 
 struct BuildOptions {
-    std::string face = "fontpack";   // info face="...": the font's name, a label only (nothing reads it)
-    PageLayout layout = PageLayout::Row;
-    int maxWidth = 4096;             // Row: a row wraps before passing this; Tight: the largest page side
-    int spaceAdvance = -1;           // the space's width: -1 = auto (defaultSpaceAdvance); >= 0 wins over a space picture
-    int lineHeight = -1;             // the step down to the next line ('\n'): -1 = the tallest picture
-    int advancePad = 0;              // added to every glyph's xadvance (letter spacing)
+    std::string m_strFace = "fontpack";   // info face="...": the font's name, a label only (nothing reads it)
+    PageLayout m_eLayout = PageLayout::Row;
+    int m_iMaxWidth = 4096;             // Row: a row wraps before passing this; Tight: the largest page side
+    int m_iSpaceAdvance = -1;           // the space's width: -1 = auto (defaultSpaceAdvance); >= 0 wins over a space picture
+    int m_iLineHeight = -1;             // the step down to the next line ('\n'): -1 = the tallest picture
+    int m_iAdvancePad = 0;              // added to every glyph's xadvance (letter spacing)
 };
 
 // The auto values of BuildOptions::spaceAdvance and lineHeight for these pictures: the space is as wide as
 // a space picture if there is one, else as the '1' picture, else 5; the line is as tall as the tallest picture.
-int defaultSpaceAdvance(const std::vector<GlyphPicture>& glyphs);
-int defaultLineHeight(const std::vector<GlyphPicture>& glyphs);
+int f_DefaultSpaceAdvance(const std::vector<GlyphPicture>& l_vGlyphs);
+int f_DefaultLineHeight(const std::vector<GlyphPicture>& l_vGlyphs);
 
 struct BuiltFont {
-    atlas::Image page;
-    std::string fnt;         // the .fnt text
-    BitmapFont font;         // the same, parsed
+    atlas::Image m_oPage;
+    std::string m_strFnt;         // the .fnt text
+    BitmapFont m_oFont;         // the same, parsed
 };
 
 // The character a file name (without .png) stands for; 0 when it names none.
-uint32_t charFromName(const std::string& stem);
+uint32_t f_CharFromName(const std::string& l_strStem);
 // A file name (without .png) for a character, that charFromName reads back and Windows accepts.
-std::string glyphFileName(uint32_t cp);
-std::string utf8Encode(uint32_t cp);
+std::string f_GlyphFileName(uint32_t l_uCp);
+std::string f_Utf8Encode(uint32_t l_uCp);
 
 // Loads one picture; its character comes from the file name (0 when the name is no character).
-bool loadPicture(const std::string& path, GlyphPicture& out, std::string& err);
+bool f_LoadPicture(const std::string& l_strPath, GlyphPicture& l_oOut, std::string& l_strErr);
 // Every glyph of a finished font as a picture (a space or other blank glyph: a transparent picture as
 // wide as its advance), in page order: open a .fnt, change it, build it again.
-bool glyphsFromFont(const std::string& fntPath, std::vector<GlyphPicture>& out, std::string& err);
+bool f_GlyphsFromFont(const std::string& l_strFntPath, std::vector<GlyphPicture>& l_vOut, std::string& l_strErr);
 // What stops these pictures from building: one line per picture without a character, or with a
 // character an earlier picture already has. Empty = fine.
-std::vector<std::string> checkGlyphs(const std::vector<GlyphPicture>& glyphs);
+std::vector<std::string> f_CheckGlyphs(const std::vector<GlyphPicture>& l_vGlyphs);
 
 // Reads the single pictures of a folder (and its chars.txt). warnings: files that were skipped.
-bool collectGlyphs(const std::string& folder, std::vector<GlyphPicture>& out, std::vector<std::string>& warnings,
-                   std::string& err);
+bool f_CollectGlyphs(const std::string& l_strFolder, std::vector<GlyphPicture>& l_vOut, std::vector<std::string>& l_vWarnings,
+                   std::string& l_strErr);
 // Packs the pictures into one page; pageFile is the PNG name the .fnt refers to. Fails when
 // checkGlyphs finds a problem.
-bool buildFont(const std::vector<GlyphPicture>& glyphs, const BuildOptions& opt, const std::string& pageFile,
-               BuiltFont& out, std::string& err);
+bool f_BuildFont(const std::vector<GlyphPicture>& l_vGlyphs, const BuildOptions& l_oOpt, const std::string& l_strPageFile,
+               BuiltFont& l_oOut, std::string& l_strErr);
 // Writes out.fnt to fntPath and its page next to it.
-bool writeFont(const BuiltFont& font, const std::string& fntPath, std::string& err);
+bool f_WriteFont(const BuiltFont& l_oFont, const std::string& l_strFntPath, std::string& l_strErr);
 
 // Reads a .fnt and its (first) page.
-bool loadFont(const std::string& fntPath, BitmapFont& font, atlas::Image& page, std::string& err);
+bool f_LoadFont(const std::string& l_strFntPath, BitmapFont& l_oFont, atlas::Image& l_oPage, std::string& l_strErr);
 // The reverse of building: every glyph of a font as a single picture + chars.txt in outDir.
-bool splitFont(const std::string& fntPath, const std::string& outDir, int& written, std::string& err);
+bool f_SplitFont(const std::string& l_strFntPath, const std::string& l_strOutDir, int& l_iWritten, std::string& l_strErr);
 
 // Draws text with the font (BitmapFont::layout, as the game lays it out) onto a new image:
 // `pad` pixels around it, `background` RGBA under it (alpha 0: transparent).
-atlas::Image renderText(const BitmapFont& font, const atlas::Image& page, const std::string& utf8, float scale = 1.0f,
-                        int pad = 8, const uint8_t background[4] = nullptr, int* missing = nullptr);
+atlas::Image f_RenderText(const BitmapFont& l_oFont, const atlas::Image& l_oPage, const std::string& l_strUtf8, float l_fScale = 1.0f,
+                        int l_iPad = 8, const uint8_t l_arrBackground[4] = nullptr, int* l_pMissing = nullptr);
 
 }  // namespace fonttool

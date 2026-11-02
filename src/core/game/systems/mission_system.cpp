@@ -2,8 +2,8 @@
 
 namespace toms {
 
-const char* toString(MissionKind k) {
-    switch (k) {
+const char* f_ToString(MissionKind l_eK) {
+    switch (l_eK) {
         case MissionKind::Side:  return "side";
         case MissionKind::Daily: return "daily";
         case MissionKind::Once:  return "once";
@@ -11,14 +11,14 @@ const char* toString(MissionKind k) {
     return "side";
 }
 
-MissionKind missionKindFromString(const std::string& s) {
-    if (s == "daily") return MissionKind::Daily;
-    if (s == "once")  return MissionKind::Once;
+MissionKind f_MissionKindFromString(const std::string& l_strS) {
+    if (l_strS == "daily") return MissionKind::Daily;
+    if (l_strS == "once")  return MissionKind::Once;
     return MissionKind::Side;
 }
 
-const char* toString(MissionState s) {
-    switch (s) {
+const char* f_ToString(MissionState l_eS) {
+    switch (l_eS) {
         case MissionState::Locked:    return "locked";
         case MissionState::Available: return "available";
         case MissionState::Active:    return "active";
@@ -28,81 +28,81 @@ const char* toString(MissionState s) {
     return "locked";
 }
 
-MissionState missionStateFromString(const std::string& s) {
-    if (s == "available") return MissionState::Available;
-    if (s == "active")    return MissionState::Active;
-    if (s == "completed") return MissionState::Completed;
-    if (s == "claimed")   return MissionState::Claimed;
+MissionState f_MissionStateFromString(const std::string& l_strS) {
+    if (l_strS == "available") return MissionState::Available;
+    if (l_strS == "active")    return MissionState::Active;
+    if (l_strS == "completed") return MissionState::Completed;
+    if (l_strS == "claimed")   return MissionState::Claimed;
     return MissionState::Locked;
 }
 
-nlohmann::json toJson(const MissionDefinition& d) {
-    nlohmann::json j;
-    j["missionId"] = d.missionId;
-    j["kind"] = toString(d.kind);
-    j["giver"] = d.giver;
-    j["prerequisites"] = d.prerequisites;
-    j["objective"] = { {"type", d.objective.type}, {"targetId", d.objective.targetId}, {"count", d.objective.count} };
-    j["rewardExp"] = d.rewardExp;
-    j["rewardGold"] = d.rewardGold;
-    j["rewardItemId"] = d.rewardItemId;
-    return j;
+nlohmann::json f_ToJson(const MissionDefinition& l_oD) {
+    nlohmann::json l_jJ;
+    l_jJ["missionId"] = l_oD.m_strMissionId;
+    l_jJ["kind"] = f_ToString(l_oD.m_eKind);
+    l_jJ["giver"] = l_oD.m_strGiver;
+    l_jJ["prerequisites"] = l_oD.m_jPrerequisites;
+    l_jJ["objective"] = { {"type", l_oD.m_oObjective.m_strType}, {"targetId", l_oD.m_oObjective.m_strTargetId}, {"count", l_oD.m_oObjective.m_iCount} };
+    l_jJ["rewardExp"] = l_oD.m_iRewardExp;
+    l_jJ["rewardGold"] = l_oD.m_iRewardGold;
+    l_jJ["rewardItemId"] = l_oD.m_strRewardItemId;
+    return l_jJ;
 }
 
-MissionDefinition missionDefinitionFromJson(const nlohmann::json& j) {
-    MissionDefinition d;
-    if (!j.is_object()) return d;
-    d.missionId = j.value("missionId", std::string());
-    d.kind = missionKindFromString(j.value("kind", std::string("side")));
-    d.giver = j.value("giver", std::string());
-    d.prerequisites = j.contains("prerequisites") ? j["prerequisites"] : nlohmann::json();
-    if (j.contains("objective") && j["objective"].is_object()) {
-        auto& o = j["objective"];
-        d.objective.type = o.value("type", std::string());
-        d.objective.targetId = o.value("targetId", std::string());
-        d.objective.count = o.value("count", 1);
+MissionDefinition f_MissionDefinitionFromJson(const nlohmann::json& l_jJ) {
+    MissionDefinition l_oD;
+    if (!l_jJ.is_object()) return l_oD;
+    l_oD.m_strMissionId = l_jJ.value("missionId", std::string());
+    l_oD.m_eKind = f_MissionKindFromString(l_jJ.value("kind", std::string("side")));
+    l_oD.m_strGiver = l_jJ.value("giver", std::string());
+    l_oD.m_jPrerequisites = l_jJ.contains("prerequisites") ? l_jJ["prerequisites"] : nlohmann::json();
+    if (l_jJ.contains("objective") && l_jJ["objective"].is_object()) {
+        auto& l_jO = l_jJ["objective"];
+        l_oD.m_oObjective.m_strType = l_jO.value("type", std::string());
+        l_oD.m_oObjective.m_strTargetId = l_jO.value("targetId", std::string());
+        l_oD.m_oObjective.m_iCount = l_jO.value("count", 1);
     }
-    d.rewardExp = j.value("rewardExp", 0);
-    d.rewardGold = j.value("rewardGold", 0);
-    d.rewardItemId = j.value("rewardItemId", std::string());
-    return d;
+    l_oD.m_iRewardExp = l_jJ.value("rewardExp", 0);
+    l_oD.m_iRewardGold = l_jJ.value("rewardGold", 0);
+    l_oD.m_strRewardItemId = l_jJ.value("rewardItemId", std::string());
+    return l_oD;
 }
 
-nlohmann::json toJson(const MissionTracker& t) {
-    nlohmann::json j;
-    j["missionId"] = t.missionId;
-    j["state"] = toString(t.state);
-    j["progress"] = t.progress;
-    j["lastResetDate"] = t.lastResetDate;
-    return j;
+nlohmann::json f_ToJson(const MissionTracker& l_oT) {
+    nlohmann::json l_jJ;
+    l_jJ["missionId"] = l_oT.m_strMissionId;
+    l_jJ["state"] = f_ToString(l_oT.m_eState);
+    l_jJ["progress"] = l_oT.m_iProgress;
+    l_jJ["lastResetDate"] = l_oT.m_strLastResetDate;
+    return l_jJ;
 }
 
-MissionTracker missionTrackerFromJson(const nlohmann::json& j) {
-    MissionTracker t;
-    if (!j.is_object()) return t;
-    t.missionId = j.value("missionId", std::string());
-    t.state = missionStateFromString(j.value("state", std::string("locked")));
-    t.progress = j.value("progress", 0);
-    t.lastResetDate = j.value("lastResetDate", std::string());
-    return t;
+MissionTracker f_MissionTrackerFromJson(const nlohmann::json& l_jJ) {
+    MissionTracker l_oT;
+    if (!l_jJ.is_object()) return l_oT;
+    l_oT.m_strMissionId = l_jJ.value("missionId", std::string());
+    l_oT.m_eState = f_MissionStateFromString(l_jJ.value("state", std::string("locked")));
+    l_oT.m_iProgress = l_jJ.value("progress", 0);
+    l_oT.m_strLastResetDate = l_jJ.value("lastResetDate", std::string());
+    return l_oT;
 }
 
-void rollDailyReset(MissionTracker& tracker, const MissionDefinition& def, const std::string& today) {
-    if (def.kind != MissionKind::Daily) return;           // side/once missions never reset
-    if (tracker.lastResetDate == today) return;             // already rolled for today
-    tracker.progress = 0;
-    tracker.state = MissionState::Available;
-    tracker.lastResetDate = today;
+void f_RollDailyReset(MissionTracker& l_oTracker, const MissionDefinition& l_oDef, const std::string& l_strToday) {
+    if (l_oDef.m_eKind != MissionKind::Daily) return;           // side/once missions never reset
+    if (l_oTracker.m_strLastResetDate == l_strToday) return;             // already rolled for today
+    l_oTracker.m_iProgress = 0;
+    l_oTracker.m_eState = MissionState::Available;
+    l_oTracker.m_strLastResetDate = l_strToday;
 }
 
-void applyProgressEvent(MissionTracker& tracker, const MissionDefinition& def,
-                         const std::string& eventType, const std::string& targetId) {
-    if (tracker.state != MissionState::Active) return;      // only active missions gain progress
-    if (def.objective.type != eventType) return;
-    if (def.objective.targetId != targetId) return;
-    if (tracker.progress >= def.objective.count) return;    // already capped
-    tracker.progress++;
-    if (tracker.progress >= def.objective.count) tracker.state = MissionState::Completed;
+void f_ApplyProgressEvent(MissionTracker& l_oTracker, const MissionDefinition& l_oDef,
+                         const std::string& l_strEventType, const std::string& l_strTargetId) {
+    if (l_oTracker.m_eState != MissionState::Active) return;      // only active missions gain progress
+    if (l_oDef.m_oObjective.m_strType != l_strEventType) return;
+    if (l_oDef.m_oObjective.m_strTargetId != l_strTargetId) return;
+    if (l_oTracker.m_iProgress >= l_oDef.m_oObjective.m_iCount) return;    // already capped
+    l_oTracker.m_iProgress++;
+    if (l_oTracker.m_iProgress >= l_oDef.m_oObjective.m_iCount) l_oTracker.m_eState = MissionState::Completed;
 }
 
 } // namespace toms

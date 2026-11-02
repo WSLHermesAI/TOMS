@@ -26,25 +26,25 @@ using atlas::Project;
 
 namespace {
 
-QString qs(const std::string& s) { return QString::fromStdString(s); }
-std::string u8(const QString& s) { return s.toStdString(); }
+QString f_Qs(const std::string& l_strS) { return QString::fromStdString(l_strS); }
+std::string f_U8(const QString& l_oS) { return l_oS.toStdString(); }
 
 // Works on a const or a mutable project (returns a pointer of matching constness).
 template <class P>
-auto findAnimation(P& p, const QString& name) -> decltype(&p.animations.front())
+auto f_FindAnimation(P& l_oP, const QString& l_oName) -> decltype(&l_oP.m_vAnimations.front())
 {
-    for (auto& a : p.animations)
-        if (qs(a.name) == name) return &a;
+    for (auto& l_oA : l_oP.m_vAnimations)
+        if (f_Qs(l_oA.m_strName) == l_oName) return &l_oA;
     return nullptr;
 }
 
-QToolButton* toolButton(QWidget* parent, Icons::Id icon, const QString& tip)
+QToolButton* f_ToolButton(QWidget* l_pParent, Icons::Id l_eIcon, const QString& l_oTip)
 {
-    auto* b = new QToolButton(parent);
-    b->setIcon(Icons::icon(icon));
-    b->setToolTip(tip);
-    b->setAutoRaise(true);
-    return b;
+    auto* l_pB = new QToolButton(l_pParent);
+    l_pB->setIcon(Icons::f_Icon(l_eIcon));
+    l_pB->setToolTip(l_oTip);
+    l_pB->setAutoRaise(true);
+    return l_pB;
 }
 
 }  // namespace
@@ -54,373 +54,373 @@ QToolButton* toolButton(QWidget* parent, Icons::Id icon, const QString& tip)
 class AnimationPreview : public QWidget
 {
 public:
-    AnimationPreview(AtlasDocument* doc, QWidget* parent)
-        : QWidget(parent)
-        , m_doc(doc)
-        , m_timer(new QTimer(this))
+    AnimationPreview(AtlasDocument* l_pDoc, QWidget* l_pParent)
+        : QWidget(l_pParent)
+        , m_pDoc(l_pDoc)
+        , m_pTimer(new QTimer(this))
     {
         setMinimumSize(120, 100);
-        m_timer->setSingleShot(true);
-        connect(m_timer, &QTimer::timeout, this, [this] { step(); });
+        m_pTimer->setSingleShot(true);
+        connect(m_pTimer, &QTimer::timeout, this, [this] { f_Step(); });
     }
 
-    void setAnimation(const QString& name)
+    void f_SetAnimation(const QString& l_oName)
     {
-        if (name != m_name) m_frame = 0;
-        m_name = name;
+        if (l_oName != m_oName) m_iFrame = 0;
+        m_oName = l_oName;
         update();
-        if (m_playing) schedule();
+        if (m_bPlaying) f_Schedule();
     }
-    bool isPlaying() const { return m_playing; }
-    void setPlaying(bool on)
+    bool f_IsPlaying() const { return m_bPlaying; }
+    void f_SetPlaying(bool l_bOn)
     {
-        m_playing = on;
-        if (on) schedule();
-        else m_timer->stop();
+        m_bPlaying = l_bOn;
+        if (l_bOn) f_Schedule();
+        else m_pTimer->stop();
         update();
     }
 
 protected:
     void paintEvent(QPaintEvent*) override
     {
-        QPainter p(this);
-        const Theme::Colors& tc = Theme::colors();
-        p.fillRect(rect(), tc.canvasBackground);
-        const Animation* a = animation();
-        if (!a || a->frames.empty()) {
-            p.setPen(palette().color(QPalette::PlaceholderText));
-            p.drawText(rect(), Qt::AlignCenter, a ? tr("No frames") : tr("No animation"));
+        QPainter l_oP(this);
+        const Theme::Colors& l_oTc = Theme::f_Colors();
+        l_oP.fillRect(rect(), l_oTc.m_oCanvasBackground);
+        const Animation* l_pA = f_Animation();
+        if (!l_pA || l_pA->m_vFrames.empty()) {
+            l_oP.setPen(palette().color(QPalette::PlaceholderText));
+            l_oP.drawText(rect(), Qt::AlignCenter, l_pA ? tr("No frames") : tr("No animation"));
             return;
         }
         // One scale and one anchor for all frames: from the largest extents around the pivot.
-        double left = 0, right = 1, top = 0, bottom = 1;
-        for (const atlas::AnimFrame& f : a->frames) {
-            const QImage img = m_doc->spriteImage(qs(f.sprite));
-            if (img.isNull()) continue;
-            const QPointF pv = pivot(qs(f.sprite), img.size());
-            left = std::max(left, pv.x());
-            right = std::max(right, img.width() - pv.x());
-            top = std::max(top, pv.y());
-            bottom = std::max(bottom, img.height() - pv.y());
+        double l_dLeft = 0, l_dRight = 1, l_dTop = 0, l_dBottom = 1;
+        for (const atlas::AnimFrame& l_oF : l_pA->m_vFrames) {
+            const QImage l_oImg = m_pDoc->f_SpriteImage(f_Qs(l_oF.m_strSprite));
+            if (l_oImg.isNull()) continue;
+            const QPointF l_oPv = f_Pivot(f_Qs(l_oF.m_strSprite), l_oImg.size());
+            l_dLeft = std::max(l_dLeft, l_oPv.x());
+            l_dRight = std::max(l_dRight, l_oImg.width() - l_oPv.x());
+            l_dTop = std::max(l_dTop, l_oPv.y());
+            l_dBottom = std::max(l_dBottom, l_oImg.height() - l_oPv.y());
         }
-        const QRectF area = QRectF(rect()).adjusted(8, 8, -8, -22);
-        double scale = std::min(area.width() / (left + right), area.height() / (top + bottom));
-        if (scale >= 1) scale = std::floor(scale);   // crisp pixel art
-        const QPointF anchor(area.center().x() + (left - right) * scale / 2, area.center().y() + (top - bottom) * scale / 2);
+        const QRectF l_oArea = QRectF(rect()).adjusted(8, 8, -8, -22);
+        double l_dScale = std::min(l_oArea.width() / (l_dLeft + l_dRight), l_oArea.height() / (l_dTop + l_dBottom));
+        if (l_dScale >= 1) l_dScale = std::floor(l_dScale);   // crisp pixel art
+        const QPointF l_oAnchor(l_oArea.center().x() + (l_dLeft - l_dRight) * l_dScale / 2, l_oArea.center().y() + (l_dTop - l_dBottom) * l_dScale / 2);
 
-        const atlas::AnimFrame& f = a->frames[size_t(m_frame) % a->frames.size()];
-        const QImage img = m_doc->spriteImage(qs(f.sprite));
-        if (!img.isNull()) {
-            const QPointF pv = pivot(qs(f.sprite), img.size());
-            const QRectF target(anchor - pv * scale, QSizeF(img.size()) * scale);
-            p.setRenderHint(QPainter::SmoothPixmapTransform, scale < 1);
-            p.drawImage(target, img);
+        const atlas::AnimFrame& l_oF = l_pA->m_vFrames[size_t(m_iFrame) % l_pA->m_vFrames.size()];
+        const QImage l_oImg = m_pDoc->f_SpriteImage(f_Qs(l_oF.m_strSprite));
+        if (!l_oImg.isNull()) {
+            const QPointF l_oPv = f_Pivot(f_Qs(l_oF.m_strSprite), l_oImg.size());
+            const QRectF l_oTarget(l_oAnchor - l_oPv * l_dScale, QSizeF(l_oImg.size()) * l_dScale);
+            l_oP.setRenderHint(QPainter::SmoothPixmapTransform, l_dScale < 1);
+            l_oP.drawImage(l_oTarget, l_oImg);
         }
-        p.setPen(QPen(tc.pivot, 1));
-        p.drawLine(QLineF(anchor.x() - 4, anchor.y(), anchor.x() + 4, anchor.y()));
-        p.drawLine(QLineF(anchor.x(), anchor.y() - 4, anchor.x(), anchor.y() + 4));
-        p.setPen(palette().color(QPalette::PlaceholderText));
-        p.drawText(QRectF(rect()).adjusted(6, 0, -6, -4), Qt::AlignBottom | Qt::AlignLeft,
-                   tr("%1 / %2  %3").arg(m_frame % int(a->frames.size()) + 1).arg(a->frames.size()).arg(qs(f.sprite)));
+        l_oP.setPen(QPen(l_oTc.m_oPivot, 1));
+        l_oP.drawLine(QLineF(l_oAnchor.x() - 4, l_oAnchor.y(), l_oAnchor.x() + 4, l_oAnchor.y()));
+        l_oP.drawLine(QLineF(l_oAnchor.x(), l_oAnchor.y() - 4, l_oAnchor.x(), l_oAnchor.y() + 4));
+        l_oP.setPen(palette().color(QPalette::PlaceholderText));
+        l_oP.drawText(QRectF(rect()).adjusted(6, 0, -6, -4), Qt::AlignBottom | Qt::AlignLeft,
+                   tr("%1 / %2  %3").arg(m_iFrame % int(l_pA->m_vFrames.size()) + 1).arg(l_pA->m_vFrames.size()).arg(f_Qs(l_oF.m_strSprite)));
     }
 
 private:
-    const Animation* animation() const
+    const Animation* f_Animation() const
     {
-        return findAnimation(m_doc->project(), m_name);
+        return f_FindAnimation(m_pDoc->f_Project(), m_oName);
     }
-    QPointF pivot(const QString& sprite, const QSize& size) const
+    QPointF f_Pivot(const QString& l_oSprite, const QSize& l_oSize) const
     {
-        const atlas::SpriteDef d = m_doc->spriteDef(sprite);
-        const float* pv = d.hasPivot ? d.pivot : m_doc->project().settings.defaultPivot;
-        return QPointF(pv[0] * size.width(), pv[1] * size.height());
+        const atlas::SpriteDef l_oD = m_pDoc->f_SpriteDef(l_oSprite);
+        const float* l_pPv = l_oD.m_bHasPivot ? l_oD.m_arrPivot : m_pDoc->f_Project().m_oSettings.m_arrDefaultPivot;
+        return QPointF(l_pPv[0] * l_oSize.width(), l_pPv[1] * l_oSize.height());
     }
-    void schedule()
+    void f_Schedule()
     {
-        const Animation* a = animation();
-        if (!a || a->frames.empty()) return;
-        const float t = a->frames[size_t(m_frame) % a->frames.size()].time;
-        m_timer->start(std::max(16, int(std::lround(t * 1000))));
+        const Animation* l_pA = f_Animation();
+        if (!l_pA || l_pA->m_vFrames.empty()) return;
+        const float l_fT = l_pA->m_vFrames[size_t(m_iFrame) % l_pA->m_vFrames.size()].m_fTime;
+        m_pTimer->start(std::max(16, int(std::lround(l_fT * 1000))));
     }
-    void step()
+    void f_Step()
     {
-        const Animation* a = animation();
-        if (!a || a->frames.empty()) return;
-        const int n = int(a->frames.size());
-        if (m_frame + 1 >= n && !a->loop) {
-            m_playing = false;   // a one-shot animation stops on its last frame
+        const Animation* l_pA = f_Animation();
+        if (!l_pA || l_pA->m_vFrames.empty()) return;
+        const int l_iN = int(l_pA->m_vFrames.size());
+        if (m_iFrame + 1 >= l_iN && !l_pA->m_bLoop) {
+            m_bPlaying = false;   // a one-shot animation stops on its last frame
             update();
             return;
         }
-        m_frame = (m_frame + 1) % n;
+        m_iFrame = (m_iFrame + 1) % l_iN;
         update();
-        schedule();
+        f_Schedule();
     }
 
-    AtlasDocument* m_doc;
-    QTimer* m_timer;
-    QString m_name;
-    int m_frame = 0;
-    bool m_playing = true;
+    AtlasDocument* m_pDoc;
+    QTimer* m_pTimer;
+    QString m_oName;
+    int m_iFrame = 0;
+    bool m_bPlaying = true;
 };
 
-AnimationDock::AnimationDock(AtlasDocument* doc, QWidget* parent)
-    : QDockWidget(tr("Animations"), parent)
-    , m_doc(doc)
+AnimationDock::AnimationDock(AtlasDocument* l_pDoc, QWidget* l_pParent)
+    : QDockWidget(tr("Animations"), l_pParent)
+    , m_pDoc(l_pDoc)
 {
     setObjectName(QStringLiteral("AnimationsDock"));
-    auto* split = new QSplitter(Qt::Horizontal, this);
+    auto* l_pSplit = new QSplitter(Qt::Horizontal, this);
 
     // Animations.
-    auto* left = new QWidget(split);
-    m_list = new QListWidget(left);
-    auto* add = toolButton(left, Icons::Id::Add, tr("New animation"));
-    auto* remove = toolButton(left, Icons::Id::Remove, tr("Delete animation"));
-    auto* lbar = new QHBoxLayout;
-    lbar->addWidget(new QLabel(tr("Animations"), left));
-    lbar->addStretch(1);
-    lbar->addWidget(add);
-    lbar->addWidget(remove);
-    auto* ll = new QVBoxLayout(left);
-    ll->setContentsMargins(4, 2, 4, 4);
-    ll->addLayout(lbar);
-    ll->addWidget(m_list, 1);
+    auto* l_pLeft = new QWidget(l_pSplit);
+    m_pList = new QListWidget(l_pLeft);
+    auto* l_pAdd = f_ToolButton(l_pLeft, Icons::Id::Add, tr("New animation"));
+    auto* l_pRemove = f_ToolButton(l_pLeft, Icons::Id::Remove, tr("Delete animation"));
+    auto* l_pLbar = new QHBoxLayout;
+    l_pLbar->addWidget(new QLabel(tr("Animations"), l_pLeft));
+    l_pLbar->addStretch(1);
+    l_pLbar->addWidget(l_pAdd);
+    l_pLbar->addWidget(l_pRemove);
+    auto* l_pLl = new QVBoxLayout(l_pLeft);
+    l_pLl->setContentsMargins(4, 2, 4, 4);
+    l_pLl->addLayout(l_pLbar);
+    l_pLl->addWidget(m_pList, 1);
 
     // Frames.
-    auto* mid = new QWidget(split);
-    m_frames = new QTableWidget(0, 2, mid);
-    m_frames->setHorizontalHeaderLabels({tr("Sprite"), tr("Time (s)")});
-    m_frames->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
-    m_frames->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
-    m_frames->verticalHeader()->setDefaultSectionSize(22);
-    m_frames->setSelectionBehavior(QAbstractItemView::SelectRows);
-    m_loop = new QCheckBox(tr("Loop"), mid);
-    m_addFrames = toolButton(mid, Icons::Id::Add, tr("Add the selected sprites as frames"));
-    m_removeFrames = toolButton(mid, Icons::Id::Remove, tr("Remove the selected frames"));
-    m_up = toolButton(mid, Icons::Id::Up, tr("Move frame up"));
-    m_down = toolButton(mid, Icons::Id::Down, tr("Move frame down"));
-    auto* mbar = new QHBoxLayout;
-    mbar->addWidget(new QLabel(tr("Frames"), mid));
-    mbar->addWidget(m_loop);
-    mbar->addStretch(1);
-    for (QToolButton* b : {m_addFrames, m_removeFrames, m_up, m_down}) mbar->addWidget(b);
-    auto* ml = new QVBoxLayout(mid);
-    ml->setContentsMargins(4, 2, 4, 4);
-    ml->addLayout(mbar);
-    ml->addWidget(m_frames, 1);
+    auto* l_pMid = new QWidget(l_pSplit);
+    m_pFrames = new QTableWidget(0, 2, l_pMid);
+    m_pFrames->setHorizontalHeaderLabels({tr("Sprite"), tr("Time (s)")});
+    m_pFrames->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+    m_pFrames->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+    m_pFrames->verticalHeader()->setDefaultSectionSize(22);
+    m_pFrames->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_pLoop = new QCheckBox(tr("Loop"), l_pMid);
+    m_pAddFrames = f_ToolButton(l_pMid, Icons::Id::Add, tr("Add the selected sprites as frames"));
+    m_pRemoveFrames = f_ToolButton(l_pMid, Icons::Id::Remove, tr("Remove the selected frames"));
+    m_pUp = f_ToolButton(l_pMid, Icons::Id::Up, tr("Move frame up"));
+    m_pDown = f_ToolButton(l_pMid, Icons::Id::Down, tr("Move frame down"));
+    auto* l_pMbar = new QHBoxLayout;
+    l_pMbar->addWidget(new QLabel(tr("Frames"), l_pMid));
+    l_pMbar->addWidget(m_pLoop);
+    l_pMbar->addStretch(1);
+    for (QToolButton* l_pB : {m_pAddFrames, m_pRemoveFrames, m_pUp, m_pDown}) l_pMbar->addWidget(l_pB);
+    auto* l_pMl = new QVBoxLayout(l_pMid);
+    l_pMl->setContentsMargins(4, 2, 4, 4);
+    l_pMl->addLayout(l_pMbar);
+    l_pMl->addWidget(m_pFrames, 1);
 
     // Preview.
-    auto* right = new QWidget(split);
-    m_preview = new AnimationPreview(doc, right);
-    m_play = toolButton(right, Icons::Id::Pause, tr("Play / pause"));
-    auto* rbar = new QHBoxLayout;
-    rbar->addWidget(new QLabel(tr("Preview"), right));
-    rbar->addStretch(1);
-    rbar->addWidget(m_play);
-    auto* rl = new QVBoxLayout(right);
-    rl->setContentsMargins(4, 2, 4, 4);
-    rl->addLayout(rbar);
-    rl->addWidget(m_preview, 1);
+    auto* l_pRight = new QWidget(l_pSplit);
+    m_pPreview = new AnimationPreview(l_pDoc, l_pRight);
+    m_pPlay = f_ToolButton(l_pRight, Icons::Id::Pause, tr("Play / pause"));
+    auto* l_pRbar = new QHBoxLayout;
+    l_pRbar->addWidget(new QLabel(tr("Preview"), l_pRight));
+    l_pRbar->addStretch(1);
+    l_pRbar->addWidget(m_pPlay);
+    auto* l_pRl = new QVBoxLayout(l_pRight);
+    l_pRl->setContentsMargins(4, 2, 4, 4);
+    l_pRl->addLayout(l_pRbar);
+    l_pRl->addWidget(m_pPreview, 1);
 
-    split->addWidget(left);
-    split->addWidget(mid);
-    split->addWidget(right);
-    split->setStretchFactor(0, 1);
-    split->setStretchFactor(1, 2);
-    split->setStretchFactor(2, 1);
-    setWidget(split);
+    l_pSplit->addWidget(l_pLeft);
+    l_pSplit->addWidget(l_pMid);
+    l_pSplit->addWidget(l_pRight);
+    l_pSplit->setStretchFactor(0, 1);
+    l_pSplit->setStretchFactor(1, 2);
+    l_pSplit->setStretchFactor(2, 1);
+    setWidget(l_pSplit);
 
-    connect(add, &QToolButton::clicked, this, &AnimationDock::onAdd);
-    connect(remove, &QToolButton::clicked, this, &AnimationDock::onRemove);
-    connect(m_addFrames, &QToolButton::clicked, this, &AnimationDock::onAddFrames);
-    connect(m_removeFrames, &QToolButton::clicked, this, &AnimationDock::onRemoveFrames);
-    connect(m_up, &QToolButton::clicked, this, [this] { onMoveFrame(-1); });
-    connect(m_down, &QToolButton::clicked, this, [this] { onMoveFrame(1); });
-    connect(m_play, &QToolButton::clicked, this, [this] {
-        m_preview->setPlaying(!m_preview->isPlaying());
-        m_play->setIcon(Icons::icon(m_preview->isPlaying() ? Icons::Id::Pause : Icons::Id::Play));
+    connect(l_pAdd, &QToolButton::clicked, this, &AnimationDock::f_OnAdd);
+    connect(l_pRemove, &QToolButton::clicked, this, &AnimationDock::f_OnRemove);
+    connect(m_pAddFrames, &QToolButton::clicked, this, &AnimationDock::f_OnAddFrames);
+    connect(m_pRemoveFrames, &QToolButton::clicked, this, &AnimationDock::f_OnRemoveFrames);
+    connect(m_pUp, &QToolButton::clicked, this, [this] { f_OnMoveFrame(-1); });
+    connect(m_pDown, &QToolButton::clicked, this, [this] { f_OnMoveFrame(1); });
+    connect(m_pPlay, &QToolButton::clicked, this, [this] {
+        m_pPreview->f_SetPlaying(!m_pPreview->f_IsPlaying());
+        m_pPlay->setIcon(Icons::f_Icon(m_pPreview->f_IsPlaying() ? Icons::Id::Pause : Icons::Id::Play));
     });
-    connect(m_list, &QListWidget::currentRowChanged, this, [this] {
-        if (m_updating) return;
-        refreshFrames();
+    connect(m_pList, &QListWidget::currentRowChanged, this, [this] {
+        if (m_bUpdating) return;
+        f_RefreshFrames();
     });
-    connect(m_list, &QListWidget::itemChanged, this, [this](QListWidgetItem* item) {
-        if (m_updating) return;
-        const QString from = item->data(Qt::UserRole).toString(), to = item->text().trimmed();
-        if (to.isEmpty() || findAnimation(m_doc->project(), to)) {   // empty or taken: put the old name back
-            m_updating = true;
-            item->setText(from);
-            m_updating = false;
+    connect(m_pList, &QListWidget::itemChanged, this, [this](QListWidgetItem* l_pItem) {
+        if (m_bUpdating) return;
+        const QString l_oFrom = l_pItem->data(Qt::UserRole).toString(), l_oTo = l_pItem->text().trimmed();
+        if (l_oTo.isEmpty() || f_FindAnimation(m_pDoc->f_Project(), l_oTo)) {   // empty or taken: put the old name back
+            m_bUpdating = true;
+            l_pItem->setText(l_oFrom);
+            m_bUpdating = false;
             return;
         }
-        m_doc->edit(tr("Rename animation"), [&](Project& p) {
-            if (Animation* a = findAnimation(p, from)) a->name = u8(to);
+        m_pDoc->f_Edit(tr("Rename animation"), [&](Project& l_oP) {
+            if (Animation* l_pA = f_FindAnimation(l_oP, l_oFrom)) l_pA->m_strName = f_U8(l_oTo);
         });
     });
-    connect(m_loop, &QCheckBox::toggled, this, [this](bool on) {
-        editCurrent(on ? tr("Loop animation") : tr("Play once"), [&](Animation& a) { a.loop = on; });
+    connect(m_pLoop, &QCheckBox::toggled, this, [this](bool l_bOn) {
+        f_EditCurrent(l_bOn ? tr("Loop animation") : tr("Play once"), [&](Animation& l_oA) { l_oA.m_bLoop = l_bOn; });
     });
-    connect(m_frames, &QTableWidget::itemChanged, this, [this](QTableWidgetItem* item) {
-        if (m_updating) return;
-        const int row = item->row();
-        if (item->column() == 0) {
-            const std::string sprite = u8(item->text().trimmed());
-            editCurrent(tr("Frame sprite"), [&](Animation& a) {
-                if (row < int(a.frames.size())) a.frames[size_t(row)].sprite = sprite;
+    connect(m_pFrames, &QTableWidget::itemChanged, this, [this](QTableWidgetItem* l_pItem) {
+        if (m_bUpdating) return;
+        const int l_iRow = l_pItem->row();
+        if (l_pItem->column() == 0) {
+            const std::string l_strSprite = f_U8(l_pItem->text().trimmed());
+            f_EditCurrent(tr("Frame sprite"), [&](Animation& l_oA) {
+                if (l_iRow < int(l_oA.m_vFrames.size())) l_oA.m_vFrames[size_t(l_iRow)].m_strSprite = l_strSprite;
             });
         } else {
-            const float t = std::max(0.001f, item->data(Qt::EditRole).toFloat());
-            editCurrent(tr("Frame time"), [&](Animation& a) {
-                if (row < int(a.frames.size())) a.frames[size_t(row)].time = t;
-            }, QStringLiteral("frametime%1").arg(row));
+            const float l_fT = std::max(0.001f, l_pItem->data(Qt::EditRole).toFloat());
+            f_EditCurrent(tr("Frame time"), [&](Animation& l_oA) {
+                if (l_iRow < int(l_oA.m_vFrames.size())) l_oA.m_vFrames[size_t(l_iRow)].m_fTime = l_fT;
+            }, QStringLiteral("frametime%1").arg(l_iRow));
         }
     });
-    connect(doc, &AtlasDocument::projectChanged, this, &AnimationDock::refresh);
-    connect(doc, &AtlasDocument::buildFinished, this, [this] {
-        markMissingSprites();
-        m_preview->update();
+    connect(l_pDoc, &AtlasDocument::f_ProjectChanged, this, &AnimationDock::f_Refresh);
+    connect(l_pDoc, &AtlasDocument::f_BuildFinished, this, [this] {
+        f_MarkMissingSprites();
+        m_pPreview->update();
     });
-    connect(doc, &AtlasDocument::selectionChanged, this, [this] { m_addFrames->setEnabled(!m_doc->selection().isEmpty() && m_list->currentItem()); });
-    refresh();
+    connect(l_pDoc, &AtlasDocument::f_SelectionChanged, this, [this] { m_pAddFrames->setEnabled(!m_pDoc->f_Selection().isEmpty() && m_pList->currentItem()); });
+    f_Refresh();
 }
 
-QString AnimationDock::currentAnimation() const
+QString AnimationDock::f_CurrentAnimation() const
 {
-    const QListWidgetItem* item = m_list->currentItem();
-    return item ? item->data(Qt::UserRole).toString() : QString();
+    const QListWidgetItem* l_pItem = m_pList->currentItem();
+    return l_pItem ? l_pItem->data(Qt::UserRole).toString() : QString();
 }
 
-void AnimationDock::refresh()
+void AnimationDock::f_Refresh()
 {
-    const QString keep = currentAnimation();
-    m_updating = true;
-    m_list->clear();
-    for (const Animation& a : m_doc->project().animations) {
-        auto* item = new QListWidgetItem(qs(a.name), m_list);
-        item->setData(Qt::UserRole, qs(a.name));
-        item->setFlags(item->flags() | Qt::ItemIsEditable);
-        item->setIcon(Icons::icon(Icons::Id::Play));
+    const QString l_oKeep = f_CurrentAnimation();
+    m_bUpdating = true;
+    m_pList->clear();
+    for (const Animation& l_oA : m_pDoc->f_Project().m_vAnimations) {
+        auto* l_pItem = new QListWidgetItem(f_Qs(l_oA.m_strName), m_pList);
+        l_pItem->setData(Qt::UserRole, f_Qs(l_oA.m_strName));
+        l_pItem->setFlags(l_pItem->flags() | Qt::ItemIsEditable);
+        l_pItem->setIcon(Icons::f_Icon(Icons::Id::Play));
     }
-    int row = 0;
-    for (int i = 0; i < m_list->count(); i++)
-        if (m_list->item(i)->data(Qt::UserRole).toString() == keep) row = i;
-    if (m_list->count()) m_list->setCurrentRow(row);
-    m_updating = false;
-    refreshFrames();
+    int l_iRow = 0;
+    for (int l_iI = 0; l_iI < m_pList->count(); l_iI++)
+        if (m_pList->item(l_iI)->data(Qt::UserRole).toString() == l_oKeep) l_iRow = l_iI;
+    if (m_pList->count()) m_pList->setCurrentRow(l_iRow);
+    m_bUpdating = false;
+    f_RefreshFrames();
 }
 
-void AnimationDock::refreshFrames()
+void AnimationDock::f_RefreshFrames()
 {
-    const QString name = currentAnimation();
-    const Animation* a = findAnimation(m_doc->project(), name);
-    m_updating = true;
-    const int keepRow = m_frames->currentRow();
-    m_frames->setRowCount(a ? int(a->frames.size()) : 0);
-    if (a) {
-        for (size_t i = 0; i < a->frames.size(); i++) {
-            const atlas::AnimFrame& f = a->frames[i];
-            auto* sprite = new QTableWidgetItem(qs(f.sprite));
-            auto* time = new QTableWidgetItem;
-            time->setData(Qt::EditRole, double(f.time));
-            m_frames->setItem(int(i), 0, sprite);
-            m_frames->setItem(int(i), 1, time);
+    const QString l_oName = f_CurrentAnimation();
+    const Animation* l_pA = f_FindAnimation(m_pDoc->f_Project(), l_oName);
+    m_bUpdating = true;
+    const int l_iKeepRow = m_pFrames->currentRow();
+    m_pFrames->setRowCount(l_pA ? int(l_pA->m_vFrames.size()) : 0);
+    if (l_pA) {
+        for (size_t l_nI = 0; l_nI < l_pA->m_vFrames.size(); l_nI++) {
+            const atlas::AnimFrame& l_oF = l_pA->m_vFrames[l_nI];
+            auto* l_pSprite = new QTableWidgetItem(f_Qs(l_oF.m_strSprite));
+            auto* l_pTime = new QTableWidgetItem;
+            l_pTime->setData(Qt::EditRole, double(l_oF.m_fTime));
+            m_pFrames->setItem(int(l_nI), 0, l_pSprite);
+            m_pFrames->setItem(int(l_nI), 1, l_pTime);
         }
-        if (keepRow >= 0 && keepRow < m_frames->rowCount()) m_frames->selectRow(keepRow);
+        if (l_iKeepRow >= 0 && l_iKeepRow < m_pFrames->rowCount()) m_pFrames->selectRow(l_iKeepRow);
     }
-    m_loop->setChecked(a && a->loop);
-    markMissingSprites();
-    m_updating = false;
-    for (QWidget* w : std::initializer_list<QWidget*>{m_frames, m_loop, m_removeFrames, m_up, m_down}) w->setEnabled(a != nullptr);
-    m_addFrames->setEnabled(a && !m_doc->selection().isEmpty());
-    m_preview->setAnimation(name);
+    m_pLoop->setChecked(l_pA && l_pA->m_bLoop);
+    f_MarkMissingSprites();
+    m_bUpdating = false;
+    for (QWidget* l_pW : std::initializer_list<QWidget*>{m_pFrames, m_pLoop, m_pRemoveFrames, m_pUp, m_pDown}) l_pW->setEnabled(l_pA != nullptr);
+    m_pAddFrames->setEnabled(l_pA && !m_pDoc->f_Selection().isEmpty());
+    m_pPreview->f_SetAnimation(l_oName);
 }
 
-void AnimationDock::markMissingSprites()
+void AnimationDock::f_MarkMissingSprites()
 {
     // Only recolours: rebuilding the rows would close an editor the user may have open.
-    for (int r = 0; r < m_frames->rowCount(); r++)
-        if (QTableWidgetItem* item = m_frames->item(r, 0)) {
-            const bool missing = m_doc->snapshot() && !m_doc->spriteExists(item->text());
-            const QSignalBlocker block(m_frames);   // a colour change is not an edit
-            item->setData(Qt::ForegroundRole, missing ? QVariant(QColor(0xf0, 0x4a, 0x5a)) : QVariant());
-            item->setToolTip(missing ? tr("No sprite with this name") : QString());
+    for (int l_iR = 0; l_iR < m_pFrames->rowCount(); l_iR++)
+        if (QTableWidgetItem* l_pItem = m_pFrames->item(l_iR, 0)) {
+            const bool l_bMissing = m_pDoc->f_Snapshot() && !m_pDoc->f_SpriteExists(l_pItem->text());
+            const QSignalBlocker l_oBlock(m_pFrames);   // a colour change is not an edit
+            l_pItem->setData(Qt::ForegroundRole, l_bMissing ? QVariant(QColor(0xf0, 0x4a, 0x5a)) : QVariant());
+            l_pItem->setToolTip(l_bMissing ? tr("No sprite with this name") : QString());
         }
 }
 
-void AnimationDock::editCurrent(const QString& text, const std::function<void(Animation&)>& change, const QString& mergeKey)
+void AnimationDock::f_EditCurrent(const QString& l_oText, const std::function<void(Animation&)>& l_fnChange, const QString& l_oMergeKey)
 {
-    const QString name = currentAnimation();
-    if (m_updating || name.isEmpty()) return;
-    m_doc->edit(text, [&](Project& p) {
-        if (Animation* a = findAnimation(p, name)) change(*a);
-    }, mergeKey.isEmpty() ? QString() : QStringLiteral("anim.%1.%2").arg(name, mergeKey));
+    const QString l_oName = f_CurrentAnimation();
+    if (m_bUpdating || l_oName.isEmpty()) return;
+    m_pDoc->f_Edit(l_oText, [&](Project& l_oP) {
+        if (Animation* l_pA = f_FindAnimation(l_oP, l_oName)) l_fnChange(*l_pA);
+    }, l_oMergeKey.isEmpty() ? QString() : QStringLiteral("anim.%1.%2").arg(l_oName, l_oMergeKey));
 }
 
-void AnimationDock::onAdd()
+void AnimationDock::f_OnAdd()
 {
-    QString name = QStringLiteral("anim");
-    for (int i = 1; findAnimation(m_doc->project(), name); i++) name = QStringLiteral("anim_%1").arg(i);
+    QString l_oName = QStringLiteral("anim");
+    for (int l_iI = 1; f_FindAnimation(m_pDoc->f_Project(), l_oName); l_iI++) l_oName = QStringLiteral("anim_%1").arg(l_iI);
     // New animations start with the selected sprites, in natural name order (run_2 before run_10).
-    QStringList sprites = m_doc->selection();
-    QCollator coll;
-    coll.setNumericMode(true);
-    std::sort(sprites.begin(), sprites.end(), [&](const QString& a, const QString& b) { return coll.compare(a, b) < 0; });
-    m_doc->edit(tr("New animation"), [&](Project& p) {
-        Animation a;
-        a.name = u8(name);
-        for (const QString& s : sprites) a.frames.push_back({u8(s), 0.1f});
-        p.animations.push_back(a);
+    QStringList l_oSprites = m_pDoc->f_Selection();
+    QCollator l_oColl;
+    l_oColl.setNumericMode(true);
+    std::sort(l_oSprites.begin(), l_oSprites.end(), [&](const QString& l_oA, const QString& l_oB) { return l_oColl.compare(l_oA, l_oB) < 0; });
+    m_pDoc->f_Edit(tr("New animation"), [&](Project& l_oP) {
+        Animation l_oA;
+        l_oA.m_strName = f_U8(l_oName);
+        for (const QString& l_oS : l_oSprites) l_oA.m_vFrames.push_back({f_U8(l_oS), 0.1f});
+        l_oP.m_vAnimations.push_back(l_oA);
     });
-    for (int i = 0; i < m_list->count(); i++)
-        if (m_list->item(i)->data(Qt::UserRole).toString() == name) {
-            m_list->setCurrentRow(i);
-            m_list->editItem(m_list->item(i));
+    for (int l_iI = 0; l_iI < m_pList->count(); l_iI++)
+        if (m_pList->item(l_iI)->data(Qt::UserRole).toString() == l_oName) {
+            m_pList->setCurrentRow(l_iI);
+            m_pList->editItem(m_pList->item(l_iI));
         }
 }
 
-void AnimationDock::onRemove()
+void AnimationDock::f_OnRemove()
 {
-    const QString name = currentAnimation();
-    if (name.isEmpty()) return;
-    m_doc->edit(tr("Delete animation %1").arg(name), [&](Project& p) {
-        p.animations.erase(std::remove_if(p.animations.begin(), p.animations.end(),
-                                          [&](const Animation& a) { return qs(a.name) == name; }),
-                           p.animations.end());
+    const QString l_oName = f_CurrentAnimation();
+    if (l_oName.isEmpty()) return;
+    m_pDoc->f_Edit(tr("Delete animation %1").arg(l_oName), [&](Project& l_oP) {
+        l_oP.m_vAnimations.erase(std::remove_if(l_oP.m_vAnimations.begin(), l_oP.m_vAnimations.end(),
+                                          [&](const Animation& l_oA) { return f_Qs(l_oA.m_strName) == l_oName; }),
+                           l_oP.m_vAnimations.end());
     });
 }
 
-void AnimationDock::onAddFrames()
+void AnimationDock::f_OnAddFrames()
 {
-    QStringList sprites = m_doc->selection();
-    QCollator coll;
-    coll.setNumericMode(true);
-    std::sort(sprites.begin(), sprites.end(), [&](const QString& a, const QString& b) { return coll.compare(a, b) < 0; });
+    QStringList l_oSprites = m_pDoc->f_Selection();
+    QCollator l_oColl;
+    l_oColl.setNumericMode(true);
+    std::sort(l_oSprites.begin(), l_oSprites.end(), [&](const QString& l_oA, const QString& l_oB) { return l_oColl.compare(l_oA, l_oB) < 0; });
     // Insert after the selected frame, or at the end.
-    const int at = m_frames->currentRow() >= 0 ? m_frames->currentRow() + 1 : m_frames->rowCount();
-    editCurrent(tr("Add frames"), [&](Animation& a) {
-        std::vector<atlas::AnimFrame> add;
-        for (const QString& s : sprites) add.push_back({u8(s), 0.1f});
-        a.frames.insert(a.frames.begin() + std::min<size_t>(size_t(at), a.frames.size()), add.begin(), add.end());
+    const int l_iAt = m_pFrames->currentRow() >= 0 ? m_pFrames->currentRow() + 1 : m_pFrames->rowCount();
+    f_EditCurrent(tr("Add frames"), [&](Animation& l_oA) {
+        std::vector<atlas::AnimFrame> l_vAdd;
+        for (const QString& l_oS : l_oSprites) l_vAdd.push_back({f_U8(l_oS), 0.1f});
+        l_oA.m_vFrames.insert(l_oA.m_vFrames.begin() + std::min<size_t>(size_t(l_iAt), l_oA.m_vFrames.size()), l_vAdd.begin(), l_vAdd.end());
     });
 }
 
-void AnimationDock::onRemoveFrames()
+void AnimationDock::f_OnRemoveFrames()
 {
-    QList<int> rows;
-    for (const QModelIndex& idx : m_frames->selectionModel()->selectedRows()) rows << idx.row();
-    if (rows.isEmpty()) return;
-    std::sort(rows.begin(), rows.end(), std::greater<int>());
-    editCurrent(tr("Remove frames"), [&](Animation& a) {
-        for (int r : rows)
-            if (r < int(a.frames.size())) a.frames.erase(a.frames.begin() + r);
+    QList<int> l_oRows;
+    for (const QModelIndex& l_oIdx : m_pFrames->selectionModel()->selectedRows()) l_oRows << l_oIdx.row();
+    if (l_oRows.isEmpty()) return;
+    std::sort(l_oRows.begin(), l_oRows.end(), std::greater<int>());
+    f_EditCurrent(tr("Remove frames"), [&](Animation& l_oA) {
+        for (int l_iR : l_oRows)
+            if (l_iR < int(l_oA.m_vFrames.size())) l_oA.m_vFrames.erase(l_oA.m_vFrames.begin() + l_iR);
     });
 }
 
-void AnimationDock::onMoveFrame(int delta)
+void AnimationDock::f_OnMoveFrame(int l_iDelta)
 {
-    const int row = m_frames->currentRow();
-    const int to = row + delta;
-    if (row < 0 || to < 0 || to >= m_frames->rowCount()) return;
-    editCurrent(tr("Move frame"), [&](Animation& a) { std::swap(a.frames[size_t(row)], a.frames[size_t(to)]); });
-    m_frames->selectRow(to);
+    const int l_iRow = m_pFrames->currentRow();
+    const int l_iTo = l_iRow + l_iDelta;
+    if (l_iRow < 0 || l_iTo < 0 || l_iTo >= m_pFrames->rowCount()) return;
+    f_EditCurrent(tr("Move frame"), [&](Animation& l_oA) { std::swap(l_oA.m_vFrames[size_t(l_iRow)], l_oA.m_vFrames[size_t(l_iTo)]); });
+    m_pFrames->selectRow(l_iTo);
 }

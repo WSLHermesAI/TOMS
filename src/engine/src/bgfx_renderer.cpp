@@ -19,198 +19,198 @@ namespace {
 
 // pos2, uv2, tint4, solid1 -- the four corners of a quad are expanded on the CPU.
 struct SpriteVertex {
-    float x, y;
-    float u, v;
-    float r, g, b, a;
-    float solid;
+    float m_fX, m_fY;
+    float m_fU, m_fV;
+    float m_fR, m_fG, m_fB, m_fA;
+    float m_fSolid;
 };
 
-bgfx::VertexLayout& spriteLayout() {
-    static bgfx::VertexLayout layout;
-    static bool ready = false;
-    if (!ready) {
-        layout.begin()
+bgfx::VertexLayout& f_SpriteLayout() {
+    static bgfx::VertexLayout l_oLayout;
+    static bool l_bReady = false;
+    if (!l_bReady) {
+        l_oLayout.begin()
             .add(bgfx::Attrib::Position,  2, bgfx::AttribType::Float)
             .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
             .add(bgfx::Attrib::Color0,    4, bgfx::AttribType::Float)
             .add(bgfx::Attrib::TexCoord1, 1, bgfx::AttribType::Float)
             .end();
-        ready = true;
+        l_bReady = true;
     }
-    return layout;
+    return l_oLayout;
 }
 
 // One instance of the GPU path: what vs_sprite_inst.sc reads as i_data0..3.
 struct QuadInstance {
-    float c0x, c0y, c1x, c1y;   // corners 0, 1
-    float c2x, c2y, c3x, c3y;   // corners 2, 3
-    float u0, v0, u1, v1;       // uv rect; u0 = -1: a solid quad (tint only)
-    float r, g, b, a;
+    float m_fC0x, m_fC0y, m_fC1x, m_fC1y;   // corners 0, 1
+    float m_fC2x, m_fC2y, m_fC3x, m_fC3y;   // corners 2, 3
+    float m_fU0, m_fV0, m_fU1, m_fV1;       // uv rect; u0 = -1: a solid quad (tint only)
+    float m_fR, m_fG, m_fB, m_fA;
 };
 static_assert(sizeof(QuadInstance) == 64, "instance stride must be a multiple of 16 bytes");
 
 // Compute path layouts: the input is 4 vec4 per quad, the output 3 vec4 per vertex.
-bgfx::VertexLayout& csInLayout() {
-    static bgfx::VertexLayout layout;
-    static bool ready = false;
-    if (!ready) {
-        layout.begin().add(bgfx::Attrib::TexCoord0, 4, bgfx::AttribType::Float).end();   // one vec4 element
-        ready = true;
+bgfx::VertexLayout& f_CsInLayout() {
+    static bgfx::VertexLayout l_oLayout;
+    static bool l_bReady = false;
+    if (!l_bReady) {
+        l_oLayout.begin().add(bgfx::Attrib::TexCoord0, 4, bgfx::AttribType::Float).end();   // one vec4 element
+        l_bReady = true;
     }
-    return layout;
+    return l_oLayout;
 }
-bgfx::VertexLayout& csOutLayout() {
-    static bgfx::VertexLayout layout;
-    static bool ready = false;
-    if (!ready) {
-        layout.begin()
+bgfx::VertexLayout& f_CsOutLayout() {
+    static bgfx::VertexLayout l_oLayout;
+    static bool l_bReady = false;
+    if (!l_bReady) {
+        l_oLayout.begin()
             .add(bgfx::Attrib::TexCoord2, 4, bgfx::AttribType::Float)   // x, y, u, v
             .add(bgfx::Attrib::Color1,    4, bgfx::AttribType::Float)   // tint
             .add(bgfx::Attrib::TexCoord3, 4, bgfx::AttribType::Float)   // solid, 0, 0, 0
             .end();
-        ready = true;
+        l_bReady = true;
     }
-    return layout;
+    return l_oLayout;
 }
-constexpr uint32_t kChunk = 16384;   // quads per draw on the CPU / compute paths: 65536 vertices, 16-bit indices
+constexpr uint32_t g_uChunk = 16384;   // quads per draw on the CPU / compute paths: 65536 vertices, 16-bit indices
 
 // The instancing path's per-quad data in a vertex buffer: 4 vec4 = 64 bytes (QuadInstance).
-bgfx::VertexLayout& instanceLayout() {
-    static bgfx::VertexLayout layout;
-    static bool ready = false;
-    if (!ready) {
-        layout.begin()
+bgfx::VertexLayout& f_InstanceLayout() {
+    static bgfx::VertexLayout l_oLayout;
+    static bool l_bReady = false;
+    if (!l_bReady) {
+        l_oLayout.begin()
             .add(bgfx::Attrib::TexCoord4, 4, bgfx::AttribType::Float)
             .add(bgfx::Attrib::TexCoord5, 4, bgfx::AttribType::Float)
             .add(bgfx::Attrib::TexCoord6, 4, bgfx::AttribType::Float)
             .add(bgfx::Attrib::TexCoord7, 4, bgfx::AttribType::Float)
             .end();
-        ready = true;
+        l_bReady = true;
     }
-    return layout;
+    return l_oLayout;
 }
-constexpr uint16_t kComputeBufferFlags = BGFX_BUFFER_NONE;   // this bgfx takes the element format from the layout (vec4)
+constexpr uint16_t g_u16ComputeBufferFlags = BGFX_BUFFER_NONE;   // this bgfx takes the element format from the layout (vec4)
 
 // The shared unit quad: just its corner, (0,0) (1,0) (1,1) (0,1).
-bgfx::VertexLayout& unitQuadLayout() {
-    static bgfx::VertexLayout layout;
-    static bool ready = false;
-    if (!ready) {
-        layout.begin().add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float).end();
-        ready = true;
+bgfx::VertexLayout& f_UnitQuadLayout() {
+    static bgfx::VertexLayout l_oLayout;
+    static bool l_bReady = false;
+    if (!l_bReady) {
+        l_oLayout.begin().add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float).end();
+        l_bReady = true;
     }
-    return layout;
+    return l_oLayout;
 }
 
-uint32_t packClearColor(const float c[4]) {
-    auto b = [](float f) { return (uint32_t)std::lround(std::clamp(f, 0.0f, 1.0f) * 255.0f); };
-    return (b(c[0]) << 24) | (b(c[1]) << 16) | (b(c[2]) << 8) | b(c[3]);
+uint32_t f_PackClearColor(const float l_arrC[4]) {
+    auto l_fnB = [](float l_fF) { return (uint32_t)std::lround(std::clamp(l_fF, 0.0f, 1.0f) * 255.0f); };
+    return (l_fnB(l_arrC[0]) << 24) | (l_fnB(l_arrC[1]) << 16) | (l_fnB(l_arrC[2]) << 8) | l_fnB(l_arrC[3]);
 }
 
 }  // namespace
 
-BgfxRenderer::~BgfxRenderer() { destroy(); }
+BgfxRenderer::~BgfxRenderer() { f_Destroy(); }
 
-BgfxRenderer::ViewportRect BgfxRenderer::computeAspectFitViewport(uint32_t deviceW, uint32_t deviceH,
-                                                                  uint32_t targetW, uint32_t targetH) {
-    if (deviceW == 0 || deviceH == 0 || targetW == 0 || targetH == 0) return {0, 0, 0, 0};
-    float scale = std::min((float)deviceW / (float)targetW, (float)deviceH / (float)targetH);
-    float vw = (float)targetW * scale, vh = (float)targetH * scale;
-    return {((float)deviceW - vw) / 2.0f, ((float)deviceH - vh) / 2.0f, vw, vh};
+BgfxRenderer::ViewportRect BgfxRenderer::f_ComputeAspectFitViewport(uint32_t l_uDeviceW, uint32_t l_uDeviceH,
+                                                                  uint32_t l_uTargetW, uint32_t l_uTargetH) {
+    if (l_uDeviceW == 0 || l_uDeviceH == 0 || l_uTargetW == 0 || l_uTargetH == 0) return {0, 0, 0, 0};
+    float l_fScale = std::min((float)l_uDeviceW / (float)l_uTargetW, (float)l_uDeviceH / (float)l_uTargetH);
+    float l_fVw = (float)l_uTargetW * l_fScale, l_fVh = (float)l_uTargetH * l_fScale;
+    return {((float)l_uDeviceW - l_fVw) / 2.0f, ((float)l_uDeviceH - l_fVh) / 2.0f, l_fVw, l_fVh};
 }
 
-bool BgfxRenderer::deviceToDesign(double deviceX, double deviceY, float& outX, float& outY) const {
-    ViewportRect fit = computeAspectFitViewport(devW_, devH_, kDesignW, kDesignH);
-    if (fit.width <= 0.0f || fit.height <= 0.0f) return false;
-    double lx = deviceX - fit.x, ly = deviceY - fit.y;
-    if (lx < 0 || ly < 0 || lx > fit.width || ly > fit.height) return false;
-    outX = (float)(lx / fit.width * kDesignW);
-    outY = (float)(ly / fit.height * kDesignH);
+bool BgfxRenderer::f_DeviceToDesign(double l_dDeviceX, double l_dDeviceY, float& l_fOutX, float& l_fOutY) const {
+    ViewportRect l_oFit = f_ComputeAspectFitViewport(m_uDevW, m_uDevH, m_uDesignW, m_uDesignH);
+    if (l_oFit.m_fWidth <= 0.0f || l_oFit.m_fHeight <= 0.0f) return false;
+    double l_dLx = l_dDeviceX - l_oFit.m_fX, l_dLy = l_dDeviceY - l_oFit.m_fY;
+    if (l_dLx < 0 || l_dLy < 0 || l_dLx > l_oFit.m_fWidth || l_dLy > l_oFit.m_fHeight) return false;
+    l_fOutX = (float)(l_dLx / l_oFit.m_fWidth * m_uDesignW);
+    l_fOutY = (float)(l_dLy / l_oFit.m_fHeight * m_uDesignH);
     return true;
 }
 
-void BgfxRenderer::init(uint32_t, uint32_t) {
-    bgfx::ProgramHandle prog = createEmbeddedProgram(ShaderProgram::Sprite);
-    program_ = prog.idx;
-    sampler_ = bgfx::createUniform("s_tex", bgfx::UniformType::Sampler).idx;
-    if (program_ == kInvalid)
+void BgfxRenderer::f_Init(uint32_t, uint32_t) {
+    bgfx::ProgramHandle l_oProg = f_CreateEmbeddedProgram(ShaderProgram::Sprite);
+    m_u16Program = l_oProg.idx;
+    m_u16Sampler = bgfx::createUniform("s_tex", bgfx::UniformType::Sampler).idx;
+    if (m_u16Program == m_u16Invalid)
         std::fprintf(stderr, "[toms] BgfxRenderer: sprite program failed to load\n");
     // The CPU and compute paths' index buffer: kChunk quads, 0 1 2 0 2 3 per quad.
     {
-        static std::vector<uint16_t> indices;
-        if (indices.empty())
-            for (uint32_t q = 0; q < kChunk; q++)
-                for (uint16_t k : {0, 1, 2, 0, 2, 3}) indices.push_back((uint16_t)(q * 4 + k));
-        chunkIb_ = bgfx::createIndexBuffer(bgfx::makeRef(indices.data(), (uint32_t)(indices.size() * sizeof(uint16_t)))).idx;
+        static std::vector<uint16_t> l_vIndices;
+        if (l_vIndices.empty())
+            for (uint32_t l_uQ = 0; l_uQ < g_uChunk; l_uQ++)
+                for (uint16_t l_u16K : {0, 1, 2, 0, 2, 3}) l_vIndices.push_back((uint16_t)(l_uQ * 4 + l_u16K));
+        m_u16ChunkIb = bgfx::createIndexBuffer(bgfx::makeRef(l_vIndices.data(), (uint32_t)(l_vIndices.size() * sizeof(uint16_t)))).idx;
     }
     // The GPU path (instancing): every backend this bgfx supports can instance, so it is on whenever
     // the instanced program exists for the active backend.
-    instProgram_ = createEmbeddedProgram(ShaderProgram::SpriteInstanced).idx;
-    if (instProgram_ != kInvalid) {
-        static const float corners[8] = {0, 0, 1, 0, 1, 1, 0, 1};
-        static const uint16_t indices[6] = {0, 1, 2, 0, 2, 3};
-        quadVb_ = bgfx::createVertexBuffer(bgfx::makeRef(corners, sizeof(corners)), unitQuadLayout()).idx;
-        quadIb_ = bgfx::createIndexBuffer(bgfx::makeRef(indices, sizeof(indices))).idx;
+    m_u16InstProgram = f_CreateEmbeddedProgram(ShaderProgram::SpriteInstanced).idx;
+    if (m_u16InstProgram != m_u16Invalid) {
+        static const float l_arrCorners[8] = {0, 0, 1, 0, 1, 1, 0, 1};
+        static const uint16_t l_arrIndices[6] = {0, 1, 2, 0, 2, 3};
+        m_u16QuadVb = bgfx::createVertexBuffer(bgfx::makeRef(l_arrCorners, sizeof(l_arrCorners)), f_UnitQuadLayout()).idx;
+        m_u16QuadIb = bgfx::createIndexBuffer(bgfx::makeRef(l_arrIndices, sizeof(l_arrIndices))).idx;
     }
     // The compute path: only where the backend runs compute shaders and has the programs.
     if (bgfx::getCaps()->supported & BGFX_CAPS_COMPUTE) {
-        csProgram_ = createEmbeddedProgram(ShaderProgram::SpriteCompute).idx;
-        csDrawProgram_ = createEmbeddedProgram(ShaderProgram::SpriteFromCompute).idx;
-        if (csProgram_ != kInvalid && csDrawProgram_ != kInvalid) {
-            csParams_ = bgfx::createUniform("u_spriteParams", bgfx::UniformType::Vec4).idx;
+        m_u16CsProgram = f_CreateEmbeddedProgram(ShaderProgram::SpriteCompute).idx;
+        m_u16CsDrawProgram = f_CreateEmbeddedProgram(ShaderProgram::SpriteFromCompute).idx;
+        if (m_u16CsProgram != m_u16Invalid && m_u16CsDrawProgram != m_u16Invalid) {
+            m_u16CsParams = bgfx::createUniform("u_spriteParams", bgfx::UniformType::Vec4).idx;
             // GPU-simulated particles: the same compute support, two more programs.
-            fxSpawn_ = createEmbeddedProgram(ShaderProgram::FxSpawn).idx;
-            fxUpdate_ = createEmbeddedProgram(ShaderProgram::FxUpdate).idx;
-            if (fxSpawn_ != kInvalid && fxUpdate_ != kInvalid) {
-                uFxSim_ = bgfx::createUniform("u_fxSim", bgfx::UniformType::Vec4).idx;
-                uFxForce_ = bgfx::createUniform("u_fxForce", bgfx::UniformType::Vec4).idx;
-                uFxOrigin_ = bgfx::createUniform("u_fxOrigin", bgfx::UniformType::Vec4).idx;
-                uFxXform_ = bgfx::createUniform("u_fxXform", bgfx::UniformType::Vec4, 2).idx;
-                uFxTint_ = bgfx::createUniform("u_fxTint", bgfx::UniformType::Vec4).idx;
-                uFxColorLut_ = bgfx::createUniform("u_fxColorLut", bgfx::UniformType::Vec4, GpuParticleFrame::kLut).idx;
-                uFxScalarLut_ = bgfx::createUniform("u_fxScalarLut", bgfx::UniformType::Vec4, GpuParticleFrame::kLut).idx;
-                uFxFrameUv_ = bgfx::createUniform("u_fxFrameUv", bgfx::UniformType::Vec4, GpuParticleFrame::kMaxFrames).idx;
-                uFxFrameRect_ = bgfx::createUniform("u_fxFrameRect", bgfx::UniformType::Vec4, GpuParticleFrame::kMaxFrames).idx;
+            m_u16FxSpawn = f_CreateEmbeddedProgram(ShaderProgram::FxSpawn).idx;
+            m_u16FxUpdate = f_CreateEmbeddedProgram(ShaderProgram::FxUpdate).idx;
+            if (m_u16FxSpawn != m_u16Invalid && m_u16FxUpdate != m_u16Invalid) {
+                m_u16UFxSim = bgfx::createUniform("u_fxSim", bgfx::UniformType::Vec4).idx;
+                m_u16UFxForce = bgfx::createUniform("u_fxForce", bgfx::UniformType::Vec4).idx;
+                m_u16UFxOrigin = bgfx::createUniform("u_fxOrigin", bgfx::UniformType::Vec4).idx;
+                m_u16UFxXform = bgfx::createUniform("u_fxXform", bgfx::UniformType::Vec4, 2).idx;
+                m_u16UFxTint = bgfx::createUniform("u_fxTint", bgfx::UniformType::Vec4).idx;
+                m_u16UFxColorLut = bgfx::createUniform("u_fxColorLut", bgfx::UniformType::Vec4, GpuParticleFrame::m_uLut).idx;
+                m_u16UFxScalarLut = bgfx::createUniform("u_fxScalarLut", bgfx::UniformType::Vec4, GpuParticleFrame::m_uLut).idx;
+                m_u16UFxFrameUv = bgfx::createUniform("u_fxFrameUv", bgfx::UniformType::Vec4, GpuParticleFrame::m_uMaxFrames).idx;
+                m_u16UFxFrameRect = bgfx::createUniform("u_fxFrameRect", bgfx::UniformType::Vec4, GpuParticleFrame::m_uMaxFrames).idx;
             }
         }
     }
     // Layers (beginLayer): the composite program and its uniforms.
-    layerProgram_ = createEmbeddedProgram(ShaderProgram::Layer).idx;
-    if (layerProgram_ != kInvalid) {
-        uLayerMode_ = bgfx::createUniform("u_layerMode", bgfx::UniformType::Vec4).idx;
-        uLayerParams_ = bgfx::createUniform("u_layerParams", bgfx::UniformType::Vec4).idx;
-        uLayerColor_ = bgfx::createUniform("u_layerColor", bgfx::UniformType::Vec4).idx;
-        uLayerTexel_ = bgfx::createUniform("u_layerTexel", bgfx::UniformType::Vec4).idx;
+    m_u16LayerProgram = f_CreateEmbeddedProgram(ShaderProgram::Layer).idx;
+    if (m_u16LayerProgram != m_u16Invalid) {
+        m_u16ULayerMode = bgfx::createUniform("u_layerMode", bgfx::UniformType::Vec4).idx;
+        m_u16ULayerParams = bgfx::createUniform("u_layerParams", bgfx::UniformType::Vec4).idx;
+        m_u16ULayerColor = bgfx::createUniform("u_layerColor", bgfx::UniformType::Vec4).idx;
+        m_u16ULayerTexel = bgfx::createUniform("u_layerTexel", bgfx::UniformType::Vec4).idx;
     }
-    std::fprintf(stderr, "[toms] sprite batch: %s (compute %s, instancing %s, GPU particles %s, layers %s)\n", spritePathName(spritePath()),
-                 hasComputePath() ? "yes" : "no", hasInstancingPath() ? "yes" : "no", supportsGpuParticles() ? "yes" : "no",
-                 supportsLayers() ? "yes" : "no");
+    std::fprintf(stderr, "[toms] sprite batch: %s (compute %s, instancing %s, GPU particles %s, layers %s)\n", f_SpritePathName(f_SpritePath()),
+                 f_HasComputePath() ? "yes" : "no", f_HasInstancingPath() ? "yes" : "no", f_SupportsGpuParticles() ? "yes" : "no",
+                 f_SupportsLayers() ? "yes" : "no");
 }
 
-BgfxRenderer::SpritePath BgfxRenderer::spritePath() const {
+BgfxRenderer::SpritePath BgfxRenderer::f_SpritePath() const {
     // Auto: instancing (measured fastest: 30000 particles, D3D11 -- instancing 1.37 ms per frame,
     // CPU vertices 1.70 ms, compute 1.76 ms: compute expansion adds a pass and removes no CPU work).
-    if (wantPath_ == SpritePath::Auto) {
-        if (hasInstancingPath()) return SpritePath::Instancing;
-        if (hasComputePath()) return SpritePath::Compute;
+    if (m_eWantPath == SpritePath::Auto) {
+        if (f_HasInstancingPath()) return SpritePath::Instancing;
+        if (f_HasComputePath()) return SpritePath::Compute;
         return SpritePath::Cpu;
     }
     // A wanted path, else the next one down: compute -> instancing -> CPU.
-    switch (wantPath_) {
+    switch (m_eWantPath) {
     case SpritePath::Auto:
     case SpritePath::Compute:
-        if (hasComputePath()) return SpritePath::Compute;
+        if (f_HasComputePath()) return SpritePath::Compute;
         [[fallthrough]];
     case SpritePath::Instancing:
-        if (hasInstancingPath()) return SpritePath::Instancing;
+        if (f_HasInstancingPath()) return SpritePath::Instancing;
         [[fallthrough]];
     case SpritePath::Cpu: break;
     }
     return SpritePath::Cpu;
 }
 
-const char* BgfxRenderer::spritePathName(SpritePath p) {
-    switch (p) {
+const char* BgfxRenderer::f_SpritePathName(SpritePath l_eP) {
+    switch (l_eP) {
     case SpritePath::Compute: return "GPU compute";
     case SpritePath::Instancing: return "GPU instancing";
     case SpritePath::Cpu: return "CPU vertices";
@@ -219,834 +219,834 @@ const char* BgfxRenderer::spritePathName(SpritePath p) {
     return "auto";
 }
 
-void BgfxRenderer::destroy() {
-    withdrawAllTextures();
-    destroyTexture(spriteTex_);
-    for (uint16_t& t : extraTex_) destroyTexture(t);
-    extraTex_.clear();
-    if (program_ != kInvalid) { bgfx::destroy(bgfx::ProgramHandle{program_}); program_ = kInvalid; }
-    if (instProgram_ != kInvalid) { bgfx::destroy(bgfx::ProgramHandle{instProgram_}); instProgram_ = kInvalid; }
-    if (quadVb_ != kInvalid) { bgfx::destroy(bgfx::VertexBufferHandle{quadVb_}); quadVb_ = kInvalid; }
-    if (quadIb_ != kInvalid) { bgfx::destroy(bgfx::IndexBufferHandle{quadIb_}); quadIb_ = kInvalid; }
-    if (csProgram_ != kInvalid) { bgfx::destroy(bgfx::ProgramHandle{csProgram_}); csProgram_ = kInvalid; }
-    if (csDrawProgram_ != kInvalid) { bgfx::destroy(bgfx::ProgramHandle{csDrawProgram_}); csDrawProgram_ = kInvalid; }
-    if (csParams_ != kInvalid) { bgfx::destroy(bgfx::UniformHandle{csParams_}); csParams_ = kInvalid; }
-    for (uint32_t id = 1; id <= gpuEmitters_.size(); id++) releaseGpuParticles(id);
-    gpuEmitters_.clear();
-    for (uint16_t* p : {&fxSpawn_, &fxUpdate_})
-        if (*p != kInvalid) { bgfx::destroy(bgfx::ProgramHandle{*p}); *p = kInvalid; }
-    for (uint16_t* u : {&uFxSim_, &uFxForce_, &uFxOrigin_, &uFxXform_, &uFxTint_, &uFxColorLut_, &uFxScalarLut_, &uFxFrameUv_, &uFxFrameRect_})
-        if (*u != kInvalid) { bgfx::destroy(bgfx::UniformHandle{*u}); *u = kInvalid; }
-    if (csIn_ != kInvalid) { bgfx::destroy(bgfx::DynamicVertexBufferHandle{csIn_}); csIn_ = kInvalid; }
-    if (csOut_ != kInvalid) { bgfx::destroy(bgfx::DynamicVertexBufferHandle{csOut_}); csOut_ = kInvalid; }
-    if (chunkIb_ != kInvalid) { bgfx::destroy(bgfx::IndexBufferHandle{chunkIb_}); chunkIb_ = kInvalid; }
-    for (uint16_t* vb : {&cpuVb_, &instVb_, &meshVb_})
-        if (*vb != kInvalid) { bgfx::destroy(bgfx::DynamicVertexBufferHandle{*vb}); *vb = kInvalid; }
-    if (meshIb_ != kInvalid) { bgfx::destroy(bgfx::DynamicIndexBufferHandle{meshIb_}); meshIb_ = kInvalid; }
-    csCapacity_ = csOutCap_ = cpuCap_ = instCap_ = meshVbCap_ = meshIbCap_ = 0;
-    if (sampler_ != kInvalid) { bgfx::destroy(bgfx::UniformHandle{sampler_}); sampler_ = kInvalid; }
-    for (uint16_t fb : layerFb_) bgfx::destroy(bgfx::FrameBufferHandle{fb});
-    layerFb_.clear();
-    layerW_ = layerH_ = 0;
-    if (layerProgram_ != kInvalid) { bgfx::destroy(bgfx::ProgramHandle{layerProgram_}); layerProgram_ = kInvalid; }
-    for (uint16_t* u : {&uLayerMode_, &uLayerParams_, &uLayerColor_, &uLayerTexel_})
-        if (*u != kInvalid) { bgfx::destroy(bgfx::UniformHandle{*u}); *u = kInvalid; }
-    linearTex_.clear();
-    for (uint16_t* t : {&captureRead_})
-        if (*t != kInvalid) { bgfx::destroy(bgfx::TextureHandle{*t}); *t = kInvalid; }
-    if (captureFb_ != kInvalid) { bgfx::destroy(bgfx::FrameBufferHandle{captureFb_}); captureFb_ = kInvalid; }
-    captureFbW_ = captureFbH_ = 0;
+void BgfxRenderer::f_Destroy() {
+    f_WithdrawAllTextures();
+    f_DestroyTexture(m_u16SpriteTex);
+    for (uint16_t& l_u16T : m_vExtraTex) f_DestroyTexture(l_u16T);
+    m_vExtraTex.clear();
+    if (m_u16Program != m_u16Invalid) { bgfx::destroy(bgfx::ProgramHandle{m_u16Program}); m_u16Program = m_u16Invalid; }
+    if (m_u16InstProgram != m_u16Invalid) { bgfx::destroy(bgfx::ProgramHandle{m_u16InstProgram}); m_u16InstProgram = m_u16Invalid; }
+    if (m_u16QuadVb != m_u16Invalid) { bgfx::destroy(bgfx::VertexBufferHandle{m_u16QuadVb}); m_u16QuadVb = m_u16Invalid; }
+    if (m_u16QuadIb != m_u16Invalid) { bgfx::destroy(bgfx::IndexBufferHandle{m_u16QuadIb}); m_u16QuadIb = m_u16Invalid; }
+    if (m_u16CsProgram != m_u16Invalid) { bgfx::destroy(bgfx::ProgramHandle{m_u16CsProgram}); m_u16CsProgram = m_u16Invalid; }
+    if (m_u16CsDrawProgram != m_u16Invalid) { bgfx::destroy(bgfx::ProgramHandle{m_u16CsDrawProgram}); m_u16CsDrawProgram = m_u16Invalid; }
+    if (m_u16CsParams != m_u16Invalid) { bgfx::destroy(bgfx::UniformHandle{m_u16CsParams}); m_u16CsParams = m_u16Invalid; }
+    for (uint32_t l_uId = 1; l_uId <= m_vGpuEmitters.size(); l_uId++) f_ReleaseGpuParticles(l_uId);
+    m_vGpuEmitters.clear();
+    for (uint16_t* l_pP : {&m_u16FxSpawn, &m_u16FxUpdate})
+        if (*l_pP != m_u16Invalid) { bgfx::destroy(bgfx::ProgramHandle{*l_pP}); *l_pP = m_u16Invalid; }
+    for (uint16_t* l_pU : {&m_u16UFxSim, &m_u16UFxForce, &m_u16UFxOrigin, &m_u16UFxXform, &m_u16UFxTint, &m_u16UFxColorLut, &m_u16UFxScalarLut, &m_u16UFxFrameUv, &m_u16UFxFrameRect})
+        if (*l_pU != m_u16Invalid) { bgfx::destroy(bgfx::UniformHandle{*l_pU}); *l_pU = m_u16Invalid; }
+    if (m_u16CsIn != m_u16Invalid) { bgfx::destroy(bgfx::DynamicVertexBufferHandle{m_u16CsIn}); m_u16CsIn = m_u16Invalid; }
+    if (m_u16CsOut != m_u16Invalid) { bgfx::destroy(bgfx::DynamicVertexBufferHandle{m_u16CsOut}); m_u16CsOut = m_u16Invalid; }
+    if (m_u16ChunkIb != m_u16Invalid) { bgfx::destroy(bgfx::IndexBufferHandle{m_u16ChunkIb}); m_u16ChunkIb = m_u16Invalid; }
+    for (uint16_t* l_pVb : {&m_u16CpuVb, &m_u16InstVb, &m_u16MeshVb})
+        if (*l_pVb != m_u16Invalid) { bgfx::destroy(bgfx::DynamicVertexBufferHandle{*l_pVb}); *l_pVb = m_u16Invalid; }
+    if (m_u16MeshIb != m_u16Invalid) { bgfx::destroy(bgfx::DynamicIndexBufferHandle{m_u16MeshIb}); m_u16MeshIb = m_u16Invalid; }
+    m_uCsCapacity = m_uCsOutCap = m_uCpuCap = m_uInstCap = m_uMeshVbCap = m_uMeshIbCap = 0;
+    if (m_u16Sampler != m_u16Invalid) { bgfx::destroy(bgfx::UniformHandle{m_u16Sampler}); m_u16Sampler = m_u16Invalid; }
+    for (uint16_t l_u16Fb : m_vLayerFb) bgfx::destroy(bgfx::FrameBufferHandle{l_u16Fb});
+    m_vLayerFb.clear();
+    m_u16LayerW = m_u16LayerH = 0;
+    if (m_u16LayerProgram != m_u16Invalid) { bgfx::destroy(bgfx::ProgramHandle{m_u16LayerProgram}); m_u16LayerProgram = m_u16Invalid; }
+    for (uint16_t* l_pU : {&m_u16ULayerMode, &m_u16ULayerParams, &m_u16ULayerColor, &m_u16ULayerTexel})
+        if (*l_pU != m_u16Invalid) { bgfx::destroy(bgfx::UniformHandle{*l_pU}); *l_pU = m_u16Invalid; }
+    m_vLinearTex.clear();
+    for (uint16_t* l_pT : {&m_u16CaptureRead})
+        if (*l_pT != m_u16Invalid) { bgfx::destroy(bgfx::TextureHandle{*l_pT}); *l_pT = m_u16Invalid; }
+    if (m_u16CaptureFb != m_u16Invalid) { bgfx::destroy(bgfx::FrameBufferHandle{m_u16CaptureFb}); m_u16CaptureFb = m_u16Invalid; }
+    m_u16CaptureFbW = m_u16CaptureFbH = 0;
 }
 
-void BgfxRenderer::setCapture(uint16_t w, uint16_t h) {
-    captureW_ = w && h ? w : 0;
-    captureH_ = w && h ? h : 0;
+void BgfxRenderer::f_SetCapture(uint16_t l_u16W, uint16_t l_u16H) {
+    m_u16CaptureW = l_u16W && l_u16H ? l_u16W : 0;
+    m_u16CaptureH = l_u16W && l_u16H ? l_u16H : 0;
 }
 
-void BgfxRenderer::prepareCapture() {
-    captureFrame_ = 0;
-    if (!captureW_) {
-        bgfx::setViewFrameBuffer(kViewGame, BGFX_INVALID_HANDLE);   // the window again (kViewClear clears it)
-        bgfx::setViewClear(kViewGame, BGFX_CLEAR_NONE);
+void BgfxRenderer::f_PrepareCapture() {
+    m_uCaptureFrame = 0;
+    if (!m_u16CaptureW) {
+        bgfx::setViewFrameBuffer(m_u16ViewGame, BGFX_INVALID_HANDLE);   // the window again (kViewClear clears it)
+        bgfx::setViewClear(m_u16ViewGame, BGFX_CLEAR_NONE);
         return;
     }
-    if (captureFbW_ != captureW_ || captureFbH_ != captureH_ || captureFb_ == kInvalid) {
-        if (captureFb_ != kInvalid) bgfx::destroy(bgfx::FrameBufferHandle{captureFb_});
-        if (captureRead_ != kInvalid) bgfx::destroy(bgfx::TextureHandle{captureRead_});
+    if (m_u16CaptureFbW != m_u16CaptureW || m_u16CaptureFbH != m_u16CaptureH || m_u16CaptureFb == m_u16Invalid) {
+        if (m_u16CaptureFb != m_u16Invalid) bgfx::destroy(bgfx::FrameBufferHandle{m_u16CaptureFb});
+        if (m_u16CaptureRead != m_u16Invalid) bgfx::destroy(bgfx::TextureHandle{m_u16CaptureRead});
 #if TOMS_GAMMA_SPACE
         const uint64_t srgb = 0;
 #else
-        const uint64_t srgb = BGFX_TEXTURE_SRGB;   // written as the sRGB backbuffer would show it
+        const uint64_t l_u64Srgb = BGFX_TEXTURE_SRGB;   // written as the sRGB backbuffer would show it
 #endif
-        const bgfx::TextureHandle t = bgfx::createTexture2D(captureW_, captureH_, false, 1, bgfx::TextureFormat::RGBA8,
-                                                            BGFX_TEXTURE_RT | srgb | BGFX_SAMPLER_UVW_CLAMP);
-        captureFb_ = bgfx::createFrameBuffer(1, &t, true).idx;
-        captureRead_ = bgfx::createTexture2D(captureW_, captureH_, false, 1, bgfx::TextureFormat::RGBA8,
-                                             BGFX_TEXTURE_BLIT_DST | BGFX_TEXTURE_READ_BACK | srgb).idx;
-        captureFbW_ = captureW_;
-        captureFbH_ = captureH_;
+        const bgfx::TextureHandle l_oT = bgfx::createTexture2D(m_u16CaptureW, m_u16CaptureH, false, 1, bgfx::TextureFormat::RGBA8,
+                                                            BGFX_TEXTURE_RT | l_u64Srgb | BGFX_SAMPLER_UVW_CLAMP);
+        m_u16CaptureFb = bgfx::createFrameBuffer(1, &l_oT, true).idx;
+        m_u16CaptureRead = bgfx::createTexture2D(m_u16CaptureW, m_u16CaptureH, false, 1, bgfx::TextureFormat::RGBA8,
+                                             BGFX_TEXTURE_BLIT_DST | BGFX_TEXTURE_READ_BACK | l_u64Srgb).idx;
+        m_u16CaptureFbW = m_u16CaptureW;
+        m_u16CaptureFbH = m_u16CaptureH;
     }
-    if (captureFb_ == kInvalid || captureRead_ == kInvalid) return;
-    bgfx::setViewFrameBuffer(kViewGame, bgfx::FrameBufferHandle{captureFb_});
-    bgfx::setViewRect(kViewGame, 0, 0, captureW_, captureH_);
-    bgfx::setViewClear(kViewGame, BGFX_CLEAR_COLOR, 0x00000000, 1.0f, 0);
-    bgfx::touch(kViewGame);
-    capturePx_.resize((size_t)captureW_ * captureH_ * 4);
-    bgfx::touch(kViewCapture);
-    bgfx::TextureRegion dst, src;
-    dst.init(bgfx::TextureHandle{captureRead_});
-    src.init(bgfx::getTexture(bgfx::FrameBufferHandle{captureFb_}));
-    bgfx::blit(kViewCapture, dst, src);
-    bgfx::TextureRegion all;
-    all.init(bgfx::TextureHandle{captureRead_});
-    captureFrame_ = bgfx::read(all, capturePx_.data());
+    if (m_u16CaptureFb == m_u16Invalid || m_u16CaptureRead == m_u16Invalid) return;
+    bgfx::setViewFrameBuffer(m_u16ViewGame, bgfx::FrameBufferHandle{m_u16CaptureFb});
+    bgfx::setViewRect(m_u16ViewGame, 0, 0, m_u16CaptureW, m_u16CaptureH);
+    bgfx::setViewClear(m_u16ViewGame, BGFX_CLEAR_COLOR, 0x00000000, 1.0f, 0);
+    bgfx::touch(m_u16ViewGame);
+    m_vCapturePx.resize((size_t)m_u16CaptureW * m_u16CaptureH * 4);
+    bgfx::touch(m_u16ViewCapture);
+    bgfx::TextureRegion l_oDst, l_oSrc;
+    l_oDst.init(bgfx::TextureHandle{m_u16CaptureRead});
+    l_oSrc.init(bgfx::getTexture(bgfx::FrameBufferHandle{m_u16CaptureFb}));
+    bgfx::blit(m_u16ViewCapture, l_oDst, l_oSrc);
+    bgfx::TextureRegion l_oAll;
+    l_oAll.init(bgfx::TextureHandle{m_u16CaptureRead});
+    m_uCaptureFrame = bgfx::read(l_oAll, m_vCapturePx.data());
 }
 
-void BgfxRenderer::destroyTexture(uint16_t& handle) {
-    if (handle != kInvalid) { bgfx::destroy(bgfx::TextureHandle{handle}); handle = kInvalid; }
+void BgfxRenderer::f_DestroyTexture(uint16_t& l_u16Handle) {
+    if (l_u16Handle != m_u16Invalid) { bgfx::destroy(bgfx::TextureHandle{l_u16Handle}); l_u16Handle = m_u16Invalid; }
 }
 
-uint16_t BgfxRenderer::createAtlas(const std::vector<uint8_t>& px, uint32_t w, uint32_t h) {
-    if (w == 0 || h == 0 || px.size() < (size_t)w * h * 4) return kInvalid;
-    const uint32_t maxSize = bgfx::getCaps()->limits.maxTextureSize;
-    if (w > maxSize || h > maxSize) {
-        std::fprintf(stderr, "[toms] atlas %ux%u exceeds the GPU limit %u -- not uploaded\n", w, h, maxSize);
-        return kInvalid;
+uint16_t BgfxRenderer::f_CreateAtlas(const std::vector<uint8_t>& l_vPx, uint32_t l_uW, uint32_t l_uH) {
+    if (l_uW == 0 || l_uH == 0 || l_vPx.size() < (size_t)l_uW * l_uH * 4) return m_u16Invalid;
+    const uint32_t l_uMaxSize = bgfx::getCaps()->limits.maxTextureSize;
+    if (l_uW > l_uMaxSize || l_uH > l_uMaxSize) {
+        std::fprintf(stderr, "[toms] atlas %ux%u exceeds the GPU limit %u -- not uploaded\n", l_uW, l_uH, l_uMaxSize);
+        return m_u16Invalid;
     }
 #if TOMS_GAMMA_SPACE
     // No sRGB backbuffer (the web, Android: color_space.h), so sampling sRGB textures would darken everything. Same
     // as the old WebGL renderer: plain RGBA8, blending in gamma space.
     const uint64_t flags = BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP;
 #else
-    const uint64_t flags = BGFX_TEXTURE_SRGB | BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP;
+    const uint64_t l_u64Flags = BGFX_TEXTURE_SRGB | BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP;
 #endif
-    return bgfx::createTexture2D((uint16_t)w, (uint16_t)h, false, 1, bgfx::TextureFormat::RGBA8, flags,
-                                 bgfx::copy(px.data(), (uint32_t)((size_t)w * h * 4))).idx;
+    return bgfx::createTexture2D((uint16_t)l_uW, (uint16_t)l_uH, false, 1, bgfx::TextureFormat::RGBA8, l_u64Flags,
+                                 bgfx::copy(l_vPx.data(), (uint32_t)((size_t)l_uW * l_uH * 4))).idx;
 }
 
-void BgfxRenderer::loadSprites(const std::vector<std::vector<uint8_t>>& layers, uint32_t sw, uint32_t sh) {
-    uint32_t aw = 0, ah = 0;
-    std::vector<uint8_t> atlas;
-    if (!packAtlas(layers, sw, sh, 9, atlas, aw, ah)) {
+void BgfxRenderer::f_LoadSprites(const std::vector<std::vector<uint8_t>>& l_vLayers, uint32_t l_uSw, uint32_t l_uSh) {
+    uint32_t l_uAw = 0, l_uAh = 0;
+    std::vector<uint8_t> l_vAtlas;
+    if (!f_PackAtlas(l_vLayers, l_uSw, l_uSh, 9, l_vAtlas, l_uAw, l_uAh)) {
         std::fprintf(stderr, "[toms] loadSprites: bad layers\n");
         return;
     }
-    withdrawAllTextures();   // the runtime grid is no file the UI could ask for
-    destroyTexture(spriteTex_);
-    spriteTex_ = createAtlas(atlas, aw, ah);
+    f_WithdrawAllTextures();   // the runtime grid is no file the UI could ask for
+    f_DestroyTexture(m_u16SpriteTex);
+    m_u16SpriteTex = f_CreateAtlas(l_vAtlas, l_uAw, l_uAh);
 }
 
-void BgfxRenderer::loadSpriteAtlas(const std::vector<uint8_t>& rgba, uint32_t w, uint32_t h, const std::string& file) {
-    withdrawAllTextures();   // before the old texture goes: the UI must not draw with it again
-    destroyTexture(spriteTex_);
-    spriteTex_ = createAtlas(rgba, w, h);
-    if (spriteTex_ != kInvalid && !file.empty())   // the UI's icons come from the same file (shared_textures.h)
-        lendTexture(file, SharedTexture{spriteTex_, (int)w, (int)h, true});
+void BgfxRenderer::f_LoadSpriteAtlas(const std::vector<uint8_t>& l_vRgba, uint32_t l_uW, uint32_t l_uH, const std::string& l_strFile) {
+    f_WithdrawAllTextures();   // before the old texture goes: the UI must not draw with it again
+    f_DestroyTexture(m_u16SpriteTex);
+    m_u16SpriteTex = f_CreateAtlas(l_vRgba, l_uW, l_uH);
+    if (m_u16SpriteTex != m_u16Invalid && !l_strFile.empty())   // the UI's icons come from the same file (shared_textures.h)
+        f_LendTexture(l_strFile, SharedTexture{m_u16SpriteTex, (int)l_uW, (int)l_uH, true});
 }
 
-uint16_t BgfxRenderer::loadTexture(const std::vector<uint8_t>& rgba, uint32_t w, uint32_t h) {
-    const uint16_t t = createAtlas(rgba, w, h);   // same sampling as the sprite atlas
-    if (t == kInvalid) return kSpriteAtlasTexture;
-    extraTex_.push_back(t);
-    return t;
+uint16_t BgfxRenderer::f_LoadTexture(const std::vector<uint8_t>& l_vRgba, uint32_t l_uW, uint32_t l_uH) {
+    const uint16_t l_u16T = f_CreateAtlas(l_vRgba, l_uW, l_uH);   // same sampling as the sprite atlas
+    if (l_u16T == m_u16Invalid) return g_u16SpriteAtlasTexture;
+    m_vExtraTex.push_back(l_u16T);
+    return l_u16T;
 }
 
-uint16_t BgfxRenderer::createDynamicTexture(uint32_t w, uint32_t h) {
-    if (w == 0 || h == 0) return kSpriteAtlasTexture;
+uint16_t BgfxRenderer::f_CreateDynamicTexture(uint32_t l_uW, uint32_t l_uH) {
+    if (l_uW == 0 || l_uH == 0) return g_u16SpriteAtlasTexture;
 #if TOMS_GAMMA_SPACE
     const uint64_t flags = BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP;
 #else
-    const uint64_t flags = BGFX_TEXTURE_SRGB | BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP;
+    const uint64_t l_u64Flags = BGFX_TEXTURE_SRGB | BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP;
 #endif
     // No initial pixels: an updatable texture (updateTexture).
-    const uint16_t t = bgfx::createTexture2D((uint16_t)w, (uint16_t)h, false, 1, bgfx::TextureFormat::RGBA8, flags, nullptr).idx;
-    if (t == kInvalid) return kSpriteAtlasTexture;
-    extraTex_.push_back(t);
-    return t;
+    const uint16_t l_u16T = bgfx::createTexture2D((uint16_t)l_uW, (uint16_t)l_uH, false, 1, bgfx::TextureFormat::RGBA8, l_u64Flags, nullptr).idx;
+    if (l_u16T == m_u16Invalid) return g_u16SpriteAtlasTexture;
+    m_vExtraTex.push_back(l_u16T);
+    return l_u16T;
 }
 
-void BgfxRenderer::updateTexture(uint16_t texture, const uint8_t* rgba, uint32_t w, uint32_t h) {
-    if (texture == kInvalid || texture == kSpriteAtlasTexture || !rgba) return;
-    bgfx::updateTexture2D(bgfx::TextureHandle{texture}, 0, 0, 0, 0, (uint16_t)w, (uint16_t)h, bgfx::copy(rgba, w * h * 4));
+void BgfxRenderer::f_UpdateTexture(uint16_t l_u16Texture, const uint8_t* l_pRgba, uint32_t l_uW, uint32_t l_uH) {
+    if (l_u16Texture == m_u16Invalid || l_u16Texture == g_u16SpriteAtlasTexture || !l_pRgba) return;
+    bgfx::updateTexture2D(bgfx::TextureHandle{l_u16Texture}, 0, 0, 0, 0, (uint16_t)l_uW, (uint16_t)l_uH, bgfx::copy(l_pRgba, l_uW * l_uH * 4));
 }
 
-void BgfxRenderer::releaseTexture(uint16_t texture) {
-    auto it = std::find(extraTex_.begin(), extraTex_.end(), texture);
-    if (it == extraTex_.end()) return;   // not ours (or the sprite atlas): nothing to free
-    linearTex_.erase(std::remove(linearTex_.begin(), linearTex_.end(), texture), linearTex_.end());
-    destroyTexture(*it);
-    extraTex_.erase(it);
+void BgfxRenderer::f_ReleaseTexture(uint16_t l_u16Texture) {
+    auto l_itIt = std::find(m_vExtraTex.begin(), m_vExtraTex.end(), l_u16Texture);
+    if (l_itIt == m_vExtraTex.end()) return;   // not ours (or the sprite atlas): nothing to free
+    m_vLinearTex.erase(std::remove(m_vLinearTex.begin(), m_vLinearTex.end(), l_u16Texture), m_vLinearTex.end());
+    f_DestroyTexture(*l_itIt);
+    m_vExtraTex.erase(l_itIt);
 }
 
-void BgfxRenderer::setTextureFilter(uint16_t texture, bool linear) {
-    if (texture == kInvalid) return;
-    linearTex_.erase(std::remove(linearTex_.begin(), linearTex_.end(), texture), linearTex_.end());
-    if (linear) linearTex_.push_back(texture);
+void BgfxRenderer::f_SetTextureFilter(uint16_t l_u16Texture, bool l_bLinear) {
+    if (l_u16Texture == m_u16Invalid) return;
+    m_vLinearTex.erase(std::remove(m_vLinearTex.begin(), m_vLinearTex.end(), l_u16Texture), m_vLinearTex.end());
+    if (l_bLinear) m_vLinearTex.push_back(l_u16Texture);
 }
 
-void BgfxRenderer::bindTexture(uint16_t texture) {
-    if (texture == kInvalid) return;
+void BgfxRenderer::f_BindTexture(uint16_t l_u16Texture) {
+    if (l_u16Texture == m_u16Invalid) return;
     // A linear texture: this draw's sampler flags replace the texture's point sampling (sRGB belongs to the texture).
-    const bool linear = std::find(linearTex_.begin(), linearTex_.end(), texture) != linearTex_.end();
-    bgfx::setTexture(0, bgfx::UniformHandle{sampler_}, bgfx::TextureHandle{texture}, linear ? BGFX_SAMPLER_UVW_CLAMP : UINT32_MAX);
+    const bool l_bLinear = std::find(m_vLinearTex.begin(), m_vLinearTex.end(), l_u16Texture) != m_vLinearTex.end();
+    bgfx::setTexture(0, bgfx::UniformHandle{m_u16Sampler}, bgfx::TextureHandle{l_u16Texture}, l_bLinear ? BGFX_SAMPLER_UVW_CLAMP : UINT32_MAX);
 }
 
 void BgfxRenderer::begin() {
-    sprites_.clear();
-    topSprites_.clear();
-    layer_ = 0;
-    gpuDraws_.clear();
-    meshVerts_.clear();
-    meshIdx_.clear();
-    layers_.clear();
-    layerStack_.clear();
-    layerClosed_.clear();
+    m_vSprites.clear();
+    m_vTopSprites.clear();
+    m_iLayer = 0;
+    m_vGpuDraws.clear();
+    m_vMeshVerts.clear();
+    m_vMeshIdx.clear();
+    m_vLayers.clear();
+    m_vLayerStack.clear();
+    m_vLayerClosed.clear();
 }
-void BgfxRenderer::setNode(uint8_t n) { node_ = n; }
-void BgfxRenderer::setNodeFilter(uint8_t n) { nodeFilter_ = n; }
+void BgfxRenderer::f_SetNode(uint8_t l_u8N) { m_u8Node = l_u8N; }
+void BgfxRenderer::f_SetNodeFilter(uint8_t l_u8N) { m_u8NodeFilter = l_u8N; }
 
-void BgfxRenderer::drawSprite(const Quad& q) {
-    if (nodeFilter_ && node_ != nodeFilter_) return;
-    std::vector<Quad>& list = layer_ == 1 ? topSprites_ : currentQuads();
-    list.push_back(q);
-    list.back().node = node_;
+void BgfxRenderer::f_DrawSprite(const Quad& l_oQ) {
+    if (m_u8NodeFilter && m_u8Node != m_u8NodeFilter) return;
+    std::vector<Quad>& l_vList = m_iLayer == 1 ? m_vTopSprites : f_CurrentQuads();
+    l_vList.push_back(l_oQ);
+    l_vList.back().m_u8Node = m_u8Node;
 }
 
-void BgfxRenderer::drawMesh(const Mesh& m) {
-    if (nodeFilter_ && node_ != nodeFilter_) return;
-    if (!validMesh(m)) return;
-    const uint32_t first = (uint32_t)(meshVerts_.size() / 9);
+void BgfxRenderer::f_DrawMesh(const Mesh& l_oM) {
+    if (m_u8NodeFilter && m_u8Node != m_u8NodeFilter) return;
+    if (!f_ValidMesh(l_oM)) return;
+    const uint32_t l_uFirst = (uint32_t)(m_vMeshVerts.size() / 9);
     // The CPU path's vertex (SpriteVertex): position, uv, the mesh's tint (times the vertex's colour), not solid.
-    for (uint32_t i = 0; i < m.vertexCount; i++) {
-        const MeshVertex& v = m.vertices[i];
-        const float* c = m.colors ? m.colors + 4 * i : nullptr;
-        meshVerts_.insert(meshVerts_.end(), {v.x, v.y, v.u, v.v, m.tint[0] * (c ? c[0] : 1.0f), m.tint[1] * (c ? c[1] : 1.0f),
-                                             m.tint[2] * (c ? c[2] : 1.0f), m.tint[3] * (c ? c[3] : 1.0f), 0.0f});
+    for (uint32_t l_uI = 0; l_uI < l_oM.m_uVertexCount; l_uI++) {
+        const MeshVertex& l_oV = l_oM.m_pVertices[l_uI];
+        const float* l_pC = l_oM.m_pColors ? l_oM.m_pColors + 4 * l_uI : nullptr;
+        m_vMeshVerts.insert(m_vMeshVerts.end(), {l_oV.m_fX, l_oV.m_fY, l_oV.m_fU, l_oV.m_fV, l_oM.m_arrTint[0] * (l_pC ? l_pC[0] : 1.0f), l_oM.m_arrTint[1] * (l_pC ? l_pC[1] : 1.0f),
+                                             l_oM.m_arrTint[2] * (l_pC ? l_pC[2] : 1.0f), l_oM.m_arrTint[3] * (l_pC ? l_pC[3] : 1.0f), 0.0f});
     }
     // Right after another mesh with the same texture and blending (no quad, particles or layer between): one draw for
     // both -- its indices then count from that mesh's first vertex. A crowd of skinned characters is a few draws.
-    std::vector<GpuDraw>& draws = currentDraws();
-    if (!draws.empty()) {
-        GpuDraw& prev = draws.back();
-        if (prev.emitter == 0 && prev.layer < 0 && prev.at == currentQuads().size() && prev.texture == m.texture &&
-            prev.additive == m.additive && prev.firstIndex + prev.indexCount == meshIdx_.size() &&
-            (first - prev.firstVertex) + m.vertexCount <= 65536u) {
-            const uint16_t base = uint16_t(first - prev.firstVertex);
-            for (uint32_t i = 0; i < m.indexCount; i++) meshIdx_.push_back(uint16_t(m.indices[i] + base));
-            prev.vertexCount += m.vertexCount;
-            prev.indexCount += m.indexCount;
+    std::vector<GpuDraw>& l_vDraws = f_CurrentDraws();
+    if (!l_vDraws.empty()) {
+        GpuDraw& l_oPrev = l_vDraws.back();
+        if (l_oPrev.m_uEmitter == 0 && l_oPrev.m_iLayer < 0 && l_oPrev.m_nAt == f_CurrentQuads().size() && l_oPrev.m_u16Texture == l_oM.m_u16Texture &&
+            l_oPrev.m_bAdditive == l_oM.m_bAdditive && l_oPrev.m_uFirstIndex + l_oPrev.m_uIndexCount == m_vMeshIdx.size() &&
+            (l_uFirst - l_oPrev.m_uFirstVertex) + l_oM.m_uVertexCount <= 65536u) {
+            const uint16_t l_u16Base = uint16_t(l_uFirst - l_oPrev.m_uFirstVertex);
+            for (uint32_t l_uI = 0; l_uI < l_oM.m_uIndexCount; l_uI++) m_vMeshIdx.push_back(uint16_t(l_oM.m_pIndices[l_uI] + l_u16Base));
+            l_oPrev.m_uVertexCount += l_oM.m_uVertexCount;
+            l_oPrev.m_uIndexCount += l_oM.m_uIndexCount;
             return;
         }
     }
-    GpuDraw d{currentQuads().size(), 0, m.texture, m.additive};
-    d.firstVertex = first;
-    d.vertexCount = m.vertexCount;
-    d.firstIndex = (uint32_t)meshIdx_.size();
-    d.indexCount = m.indexCount;
-    meshIdx_.insert(meshIdx_.end(), m.indices, m.indices + m.indexCount);
-    draws.push_back(d);
+    GpuDraw l_oD{f_CurrentQuads().size(), 0, l_oM.m_u16Texture, l_oM.m_bAdditive};
+    l_oD.m_uFirstVertex = l_uFirst;
+    l_oD.m_uVertexCount = l_oM.m_uVertexCount;
+    l_oD.m_uFirstIndex = (uint32_t)m_vMeshIdx.size();
+    l_oD.m_uIndexCount = l_oM.m_uIndexCount;
+    m_vMeshIdx.insert(m_vMeshIdx.end(), l_oM.m_pIndices, l_oM.m_pIndices + l_oM.m_uIndexCount);
+    l_vDraws.push_back(l_oD);
 }
 
 // This frame's meshes into their buffers, once (end(), before any path draws).
-void BgfxRenderer::uploadMeshes() {
-    if (meshIdx_.empty()) return;
-    const uint32_t verts = (uint32_t)(meshVerts_.size() / 9), indices = (uint32_t)meshIdx_.size();
-    auto grow = [](uint32_t cap, uint32_t need) { cap = std::max(cap, 1024u); while (cap < need) cap *= 2; return cap; };
-    if (meshVb_ == kInvalid || verts > meshVbCap_) {
-        if (meshVb_ != kInvalid) bgfx::destroy(bgfx::DynamicVertexBufferHandle{meshVb_});
-        meshVbCap_ = grow(meshVbCap_, verts);
-        meshVb_ = bgfx::createDynamicVertexBuffer(meshVbCap_, spriteLayout(), BGFX_BUFFER_NONE).idx;
+void BgfxRenderer::f_UploadMeshes() {
+    if (m_vMeshIdx.empty()) return;
+    const uint32_t l_uVerts = (uint32_t)(m_vMeshVerts.size() / 9), l_uIndices = (uint32_t)m_vMeshIdx.size();
+    auto l_fnGrow = [](uint32_t l_uCap, uint32_t l_uNeed) { l_uCap = std::max(l_uCap, 1024u); while (l_uCap < l_uNeed) l_uCap *= 2; return l_uCap; };
+    if (m_u16MeshVb == m_u16Invalid || l_uVerts > m_uMeshVbCap) {
+        if (m_u16MeshVb != m_u16Invalid) bgfx::destroy(bgfx::DynamicVertexBufferHandle{m_u16MeshVb});
+        m_uMeshVbCap = l_fnGrow(m_uMeshVbCap, l_uVerts);
+        m_u16MeshVb = bgfx::createDynamicVertexBuffer(m_uMeshVbCap, f_SpriteLayout(), BGFX_BUFFER_NONE).idx;
     }
-    if (meshIb_ == kInvalid || indices > meshIbCap_) {
-        if (meshIb_ != kInvalid) bgfx::destroy(bgfx::DynamicIndexBufferHandle{meshIb_});
-        meshIbCap_ = grow(meshIbCap_, indices);
-        meshIb_ = bgfx::createDynamicIndexBuffer(meshIbCap_, BGFX_BUFFER_NONE).idx;
+    if (m_u16MeshIb == m_u16Invalid || l_uIndices > m_uMeshIbCap) {
+        if (m_u16MeshIb != m_u16Invalid) bgfx::destroy(bgfx::DynamicIndexBufferHandle{m_u16MeshIb});
+        m_uMeshIbCap = l_fnGrow(m_uMeshIbCap, l_uIndices);
+        m_u16MeshIb = bgfx::createDynamicIndexBuffer(m_uMeshIbCap, BGFX_BUFFER_NONE).idx;
     }
-    if (meshVb_ == kInvalid || meshIb_ == kInvalid) {
-        std::fprintf(stderr, "[toms] meshes: no buffers for %u vertices\n", verts);
-        meshVbCap_ = meshIbCap_ = 0;
+    if (m_u16MeshVb == m_u16Invalid || m_u16MeshIb == m_u16Invalid) {
+        std::fprintf(stderr, "[toms] meshes: no buffers for %u vertices\n", l_uVerts);
+        m_uMeshVbCap = m_uMeshIbCap = 0;
         return;
     }
-    bgfx::update(bgfx::DynamicVertexBufferHandle{meshVb_}, 0, bgfx::copy(meshVerts_.data(), (uint32_t)(meshVerts_.size() * sizeof(float))));
-    bgfx::update(bgfx::DynamicIndexBufferHandle{meshIb_}, 0, bgfx::copy(meshIdx_.data(), indices * (uint32_t)sizeof(uint16_t)));
+    bgfx::update(bgfx::DynamicVertexBufferHandle{m_u16MeshVb}, 0, bgfx::copy(m_vMeshVerts.data(), (uint32_t)(m_vMeshVerts.size() * sizeof(float))));
+    bgfx::update(bgfx::DynamicIndexBufferHandle{m_u16MeshIb}, 0, bgfx::copy(m_vMeshIdx.data(), l_uIndices * (uint32_t)sizeof(uint16_t)));
 }
 
 void BgfxRenderer::end() {
-    lastDrawCalls_ = 0;
-    lastDrawnQuads_ = 0;
-    lastGpuEmitters_ = 0;
-    lastMeshCount_ = 0;
-    lastQuadCount_ = sprites_.size();
-    while (!layerStack_.empty()) endLayer();   // a layer left open ends with the frame
-    for (const LayerDraw& l : layers_) lastQuadCount_ += l.quads.size();
+    m_uLastDrawCalls = 0;
+    m_nLastDrawnQuads = 0;
+    m_uLastGpuEmitters = 0;
+    m_nLastMeshCount = 0;
+    m_nLastQuadCount = m_vSprites.size();
+    while (!m_vLayerStack.empty()) f_EndLayer();   // a layer left open ends with the frame
+    for (const LayerDraw& l_oL : m_vLayers) m_nLastQuadCount += l_oL.m_vQuads.size();
 
     // View 0: clear the whole backbuffer (letterbox bars included) to the background colour.
-    bgfx::setViewRect(kViewClear, 0, 0, (uint16_t)devW_, (uint16_t)devH_);
-    bgfx::setViewClear(kViewClear, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, packClearColor(kBackgroundClearColor), 1.0f, 0);
-    bgfx::touch(kViewClear);
+    bgfx::setViewRect(m_u16ViewClear, 0, 0, (uint16_t)m_uDevW, (uint16_t)m_uDevH);
+    bgfx::setViewClear(m_u16ViewClear, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, f_PackClearColor(g_arrBackgroundClearColor), 1.0f, 0);
+    bgfx::touch(m_u16ViewClear);
 
     // View 1: the fixed design resolution, scaled and centred into the backbuffer.
-    ViewportRect fit = computeAspectFitViewport(devW_, devH_, kDesignW, kDesignH);
-    bgfx::setViewRect(kViewGame, (uint16_t)std::lround(fit.x), (uint16_t)std::lround(fit.y),
-                      (uint16_t)std::lround(fit.width), (uint16_t)std::lround(fit.height));
-    bgfx::setViewMode(kViewGame, bgfx::ViewMode::Sequential);   // keep submission order
-    float proj[16];
-    bx::mtxOrtho(proj, 0.0f, (float)kDesignW, (float)kDesignH, 0.0f, 0.0f, 100.0f, 0.0f,
+    ViewportRect l_oFit = f_ComputeAspectFitViewport(m_uDevW, m_uDevH, m_uDesignW, m_uDesignH);
+    bgfx::setViewRect(m_u16ViewGame, (uint16_t)std::lround(l_oFit.m_fX), (uint16_t)std::lround(l_oFit.m_fY),
+                      (uint16_t)std::lround(l_oFit.m_fWidth), (uint16_t)std::lround(l_oFit.m_fHeight));
+    bgfx::setViewMode(m_u16ViewGame, bgfx::ViewMode::Sequential);   // keep submission order
+    float l_arrProj[16];
+    bx::mtxOrtho(l_arrProj, 0.0f, (float)m_uDesignW, (float)m_uDesignH, 0.0f, 0.0f, 100.0f, 0.0f,
                  bgfx::getCaps()->homogeneousDepth);
-    bgfx::setViewTransform(kViewGame, nullptr, proj);
-    prepareCapture();
+    bgfx::setViewTransform(m_u16ViewGame, nullptr, l_arrProj);
+    f_PrepareCapture();
     // The top layer: the same space, a view after kViewUi, so its sprites are drawn over the UI.
-    bgfx::setViewRect(kViewTop, (uint16_t)std::lround(fit.x), (uint16_t)std::lround(fit.y),
-                      (uint16_t)std::lround(fit.width), (uint16_t)std::lround(fit.height));
-    bgfx::setViewMode(kViewTop, bgfx::ViewMode::Sequential);
-    bgfx::setViewTransform(kViewTop, nullptr, proj);
+    bgfx::setViewRect(m_u16ViewTop, (uint16_t)std::lround(l_oFit.m_fX), (uint16_t)std::lround(l_oFit.m_fY),
+                      (uint16_t)std::lround(l_oFit.m_fWidth), (uint16_t)std::lround(l_oFit.m_fHeight));
+    bgfx::setViewMode(m_u16ViewTop, bgfx::ViewMode::Sequential);
+    bgfx::setViewTransform(m_u16ViewTop, nullptr, l_arrProj);
 
-    if (program_ == kInvalid) return;
-    submitTop();
-    uploadMeshes();
-    prepareLayers();
-    applyViewOrder();
+    if (m_u16Program == m_u16Invalid) return;
+    f_SubmitTop();
+    f_UploadMeshes();
+    f_PrepareLayers();
+    f_ApplyViewOrder();
     // text and UI are RmlUi's, in view kViewUi
-    if (sprites_.empty()) {   // only GPU particles and meshes (if any)
-        size_t next = 0;
-        drawGpuAt(SIZE_MAX, next, spriteTex_);
+    if (m_vSprites.empty()) {   // only GPU particles and meshes (if any)
+        size_t l_nNext = 0;
+        f_DrawGpuAt(SIZE_MAX, l_nNext, m_u16SpriteTex);
         return;
     }
-    const SpritePath path = spritePath();
-    if (path == SpritePath::Compute && submitQuadsCompute(sprites_, spriteTex_)) return;
-    if (path != SpritePath::Cpu && submitQuadsInstanced(sprites_, spriteTex_)) return;
-    submitQuads(sprites_, spriteTex_);
+    const SpritePath l_ePath = f_SpritePath();
+    if (l_ePath == SpritePath::Compute && f_SubmitQuadsCompute(m_vSprites, m_u16SpriteTex)) return;
+    if (l_ePath != SpritePath::Cpu && f_SubmitQuadsInstanced(m_vSprites, m_u16SpriteTex)) return;
+    f_SubmitQuads(m_vSprites, m_u16SpriteTex);
 }
 
 namespace {
-bool ensureBuffer(uint16_t& handle, uint32_t& capacity, uint32_t need, const bgfx::VertexLayout& layout, uint16_t flags) {
-    constexpr uint16_t kInvalid = UINT16_MAX;
-    if (need <= capacity && handle != kInvalid) return true;
-    uint32_t cap = 1024;
-    while (cap < need) cap *= 2;
-    if (handle != kInvalid) bgfx::destroy(bgfx::DynamicVertexBufferHandle{handle});
-    handle = bgfx::createDynamicVertexBuffer(cap, layout, flags).idx;
-    capacity = handle == kInvalid ? 0 : cap;
-    return handle != kInvalid;
+bool f_EnsureBuffer(uint16_t& l_u16Handle, uint32_t& l_uCapacity, uint32_t l_uNeed, const bgfx::VertexLayout& l_oLayout, uint16_t l_u16Flags) {
+    constexpr uint16_t l_u16Invalid = UINT16_MAX;
+    if (l_uNeed <= l_uCapacity && l_u16Handle != l_u16Invalid) return true;
+    uint32_t l_uCap = 1024;
+    while (l_uCap < l_uNeed) l_uCap *= 2;
+    if (l_u16Handle != l_u16Invalid) bgfx::destroy(bgfx::DynamicVertexBufferHandle{l_u16Handle});
+    l_u16Handle = bgfx::createDynamicVertexBuffer(l_uCap, l_oLayout, l_u16Flags).idx;
+    l_uCapacity = l_u16Handle == l_u16Invalid ? 0 : l_uCap;
+    return l_u16Handle != l_u16Invalid;
 }
 }  // namespace
 
-bool BgfxRenderer::submitQuadsCompute(const std::vector<Quad>& quads, uint16_t texture) {
-    const uint32_t n = (uint32_t)quads.size();
-    if (n == 0) return true;
-    uint32_t outCap = csOutCap_;
-    if (!ensureBuffer(csIn_, csCapacity_, n * 4, csInLayout(), BGFX_BUFFER_COMPUTE_READ | kComputeBufferFlags) ||
-        !ensureBuffer(csOut_, outCap, n * 4, csOutLayout(), BGFX_BUFFER_COMPUTE_WRITE | kComputeBufferFlags))
+bool BgfxRenderer::f_SubmitQuadsCompute(const std::vector<Quad>& l_vQuads, uint16_t l_u16Texture) {
+    const uint32_t l_uN = (uint32_t)l_vQuads.size();
+    if (l_uN == 0) return true;
+    uint32_t l_uOutCap = m_uCsOutCap;
+    if (!f_EnsureBuffer(m_u16CsIn, m_uCsCapacity, l_uN * 4, f_CsInLayout(), BGFX_BUFFER_COMPUTE_READ | g_u16ComputeBufferFlags) ||
+        !f_EnsureBuffer(m_u16CsOut, l_uOutCap, l_uN * 4, f_CsOutLayout(), BGFX_BUFFER_COMPUTE_WRITE | g_u16ComputeBufferFlags))
         return false;
-    csOutCap_ = outCap;
+    m_uCsOutCap = l_uOutCap;
     // The quads in, as m_pParticleInSSO was filled: corners, uv rect (u0 = -1: solid), tint.
-    csScratch_.resize((size_t)n * 16);
-    float* d = csScratch_.data();
-    for (const Quad& q : quads) {
-        const float x0 = q.rect[0], y0 = q.rect[1], x1 = q.rect[0] + q.rect[2], y1 = q.rect[1] + q.rect[3];
-        const float rectCorners[8] = {x0, y0, x1, y0, x1, y1, x0, y1};
-        const float* c = q.hasCorners ? q.corners : rectCorners;
-        std::memcpy(d, c, 8 * sizeof(float));
-        d[8] = q.solid ? -1.0f : q.uv[0]; d[9] = q.uv[1]; d[10] = q.uv[2]; d[11] = q.uv[3];
-        std::memcpy(d + 12, q.tint, 4 * sizeof(float));
-        d += 16;
+    m_vCsScratch.resize((size_t)l_uN * 16);
+    float* l_pD = m_vCsScratch.data();
+    for (const Quad& l_oQ : l_vQuads) {
+        const float l_fX0 = l_oQ.m_arrRect[0], l_fY0 = l_oQ.m_arrRect[1], l_fX1 = l_oQ.m_arrRect[0] + l_oQ.m_arrRect[2], l_fY1 = l_oQ.m_arrRect[1] + l_oQ.m_arrRect[3];
+        const float l_arrRectCorners[8] = {l_fX0, l_fY0, l_fX1, l_fY0, l_fX1, l_fY1, l_fX0, l_fY1};
+        const float* l_pC = l_oQ.m_bHasCorners ? l_oQ.m_arrCorners : l_arrRectCorners;
+        std::memcpy(l_pD, l_pC, 8 * sizeof(float));
+        l_pD[8] = l_oQ.m_bSolid ? -1.0f : l_oQ.m_arrUv[0]; l_pD[9] = l_oQ.m_arrUv[1]; l_pD[10] = l_oQ.m_arrUv[2]; l_pD[11] = l_oQ.m_arrUv[3];
+        std::memcpy(l_pD + 12, l_oQ.m_arrTint, 4 * sizeof(float));
+        l_pD += 16;
     }
-    bgfx::update(bgfx::DynamicVertexBufferHandle{csIn_}, 0, bgfx::copy(csScratch_.data(), (uint32_t)(csScratch_.size() * sizeof(float))));
+    bgfx::update(bgfx::DynamicVertexBufferHandle{m_u16CsIn}, 0, bgfx::copy(m_vCsScratch.data(), (uint32_t)(m_vCsScratch.size() * sizeof(float))));
     // Expand them on the GPU, in the clear view: views run in order, so before kViewGame draws.
-    const float params[4] = {(float)n, 0, 0, 0};
-    bgfx::setUniform(bgfx::UniformHandle{csParams_}, params);
-    bgfx::setBuffer(0, bgfx::DynamicVertexBufferHandle{csIn_}, bgfx::Access::Read);
-    bgfx::setBuffer(1, bgfx::DynamicVertexBufferHandle{csOut_}, bgfx::Access::Write);
-    bgfx::dispatch(kViewClear, bgfx::ProgramHandle{csProgram_}, (n + 63) / 64, 1, 1);
+    const float l_arrParams[4] = {(float)l_uN, 0, 0, 0};
+    bgfx::setUniform(bgfx::UniformHandle{m_u16CsParams}, l_arrParams);
+    bgfx::setBuffer(0, bgfx::DynamicVertexBufferHandle{m_u16CsIn}, bgfx::Access::Read);
+    bgfx::setBuffer(1, bgfx::DynamicVertexBufferHandle{m_u16CsOut}, bgfx::Access::Write);
+    bgfx::dispatch(m_u16ViewClear, bgfx::ProgramHandle{m_u16CsProgram}, (l_uN + 63) / 64, 1, 1);
     // Draw straight from the output buffer: one draw per run of texture / blending, in chunks.
-    size_t first = 0, nextGpu = 0;
-    while (first < n) {
-        const size_t limit = drawGpuAt(first, nextGpu, texture);
-        const bool additive = quads[first].additive;
-        const uint16_t tex = quads[first].texture;
-        size_t runEnd = first + 1;
-        while (runEnd < n && runEnd < limit && quads[runEnd].additive == additive && quads[runEnd].texture == tex) ++runEnd;
-        for (size_t at = first; at < runEnd; at += kChunk) {
-            const uint32_t count = (uint32_t)std::min<size_t>(kChunk, runEnd - at);
-            bgfx::setVertexBuffer(0, bgfx::DynamicVertexBufferHandle{csOut_}, (uint32_t)at * 4, count * 4);
-            bgfx::setIndexBuffer(bgfx::IndexBufferHandle{chunkIb_}, 0, count * 6);
-            const uint16_t use = tex == kSpriteAtlasTexture ? texture : tex;
-            bindTexture(use);
-            bgfx::setState(blendState(additive));
-            bgfx::submit(kViewGame, bgfx::ProgramHandle{csDrawProgram_});
-            ++lastDrawCalls_;
-            lastDrawnQuads_ += count;
+    size_t l_nFirst = 0, l_nNextGpu = 0;
+    while (l_nFirst < l_uN) {
+        const size_t l_nLimit = f_DrawGpuAt(l_nFirst, l_nNextGpu, l_u16Texture);
+        const bool l_bAdditive = l_vQuads[l_nFirst].m_bAdditive;
+        const uint16_t l_u16Tex = l_vQuads[l_nFirst].m_u16Texture;
+        size_t l_nRunEnd = l_nFirst + 1;
+        while (l_nRunEnd < l_uN && l_nRunEnd < l_nLimit && l_vQuads[l_nRunEnd].m_bAdditive == l_bAdditive && l_vQuads[l_nRunEnd].m_u16Texture == l_u16Tex) ++l_nRunEnd;
+        for (size_t l_nAt = l_nFirst; l_nAt < l_nRunEnd; l_nAt += g_uChunk) {
+            const uint32_t l_uCount = (uint32_t)std::min<size_t>(g_uChunk, l_nRunEnd - l_nAt);
+            bgfx::setVertexBuffer(0, bgfx::DynamicVertexBufferHandle{m_u16CsOut}, (uint32_t)l_nAt * 4, l_uCount * 4);
+            bgfx::setIndexBuffer(bgfx::IndexBufferHandle{m_u16ChunkIb}, 0, l_uCount * 6);
+            const uint16_t l_u16Use = l_u16Tex == g_u16SpriteAtlasTexture ? l_u16Texture : l_u16Tex;
+            f_BindTexture(l_u16Use);
+            bgfx::setState(f_BlendState(l_bAdditive));
+            bgfx::submit(m_u16ViewGame, bgfx::ProgramHandle{m_u16CsDrawProgram});
+            ++m_uLastDrawCalls;
+            m_nLastDrawnQuads += l_uCount;
         }
-        first = runEnd;
+        l_nFirst = l_nRunEnd;
     }
-    drawGpuAt(SIZE_MAX, nextGpu, texture);   // GPU particles after the last quad
+    f_DrawGpuAt(SIZE_MAX, l_nNextGpu, l_u16Texture);   // GPU particles after the last quad
     return true;
 }
 
-uint64_t BgfxRenderer::blendState(bool additive) const {
-    if (captureW_) return layerBlendState(additive);   // a capture keeps its alpha: premultiplied, as a layer
+uint64_t BgfxRenderer::f_BlendState(bool l_bAdditive) const {
+    if (m_u16CaptureW) return f_LayerBlendState(l_bAdditive);   // a capture keeps its alpha: premultiplied, as a layer
     // Straight alpha: additive scales the colour by its alpha and adds it.
     return BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
-           (additive ? BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE) : BGFX_STATE_BLEND_ALPHA);
+           (l_bAdditive ? BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE) : BGFX_STATE_BLEND_ALPHA);
 }
 
 // Grows a persistent dynamic vertex buffer to hold `need` vertices (powers of two: few regrowths).
 // Persistent buffers instead of bgfx's per-frame transient ones: those are a few MB per frame, so
 // 300000 quads did not fit and most were dropped.
-bool BgfxRenderer::submitQuadsInstanced(const std::vector<Quad>& quads, uint16_t texture) {
-    const uint32_t total = (uint32_t)quads.size();
-    if (total == 0) return true;
-    if (!ensureBuffer(instVb_, instCap_, total, instanceLayout(), BGFX_BUFFER_NONE)) return false;
-    instScratch_.resize((size_t)total * 16);
-    auto* inst = reinterpret_cast<QuadInstance*>(instScratch_.data());
-    for (uint32_t i = 0; i < total; ++i) {
-        const Quad& q = quads[i];
-        const float x0 = q.rect[0], y0 = q.rect[1], x1 = q.rect[0] + q.rect[2], y1 = q.rect[1] + q.rect[3];
-        const float rectCorners[8] = {x0, y0, x1, y0, x1, y1, x0, y1};
-        const float* c = q.hasCorners ? q.corners : rectCorners;
-        inst[i] = {c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7],
-                           q.solid ? -1.0f : q.uv[0], q.uv[1], q.uv[2], q.uv[3],
-                           q.tint[0], q.tint[1], q.tint[2], q.tint[3]};
+bool BgfxRenderer::f_SubmitQuadsInstanced(const std::vector<Quad>& l_vQuads, uint16_t l_u16Texture) {
+    const uint32_t l_uTotal = (uint32_t)l_vQuads.size();
+    if (l_uTotal == 0) return true;
+    if (!f_EnsureBuffer(m_u16InstVb, m_uInstCap, l_uTotal, f_InstanceLayout(), BGFX_BUFFER_NONE)) return false;
+    m_vInstScratch.resize((size_t)l_uTotal * 16);
+    auto* l_pInst = reinterpret_cast<QuadInstance*>(m_vInstScratch.data());
+    for (uint32_t l_uI = 0; l_uI < l_uTotal; ++l_uI) {
+        const Quad& l_oQ = l_vQuads[l_uI];
+        const float l_fX0 = l_oQ.m_arrRect[0], l_fY0 = l_oQ.m_arrRect[1], l_fX1 = l_oQ.m_arrRect[0] + l_oQ.m_arrRect[2], l_fY1 = l_oQ.m_arrRect[1] + l_oQ.m_arrRect[3];
+        const float l_arrRectCorners[8] = {l_fX0, l_fY0, l_fX1, l_fY0, l_fX1, l_fY1, l_fX0, l_fY1};
+        const float* l_pC = l_oQ.m_bHasCorners ? l_oQ.m_arrCorners : l_arrRectCorners;
+        l_pInst[l_uI] = {l_pC[0], l_pC[1], l_pC[2], l_pC[3], l_pC[4], l_pC[5], l_pC[6], l_pC[7],
+                           l_oQ.m_bSolid ? -1.0f : l_oQ.m_arrUv[0], l_oQ.m_arrUv[1], l_oQ.m_arrUv[2], l_oQ.m_arrUv[3],
+                           l_oQ.m_arrTint[0], l_oQ.m_arrTint[1], l_oQ.m_arrTint[2], l_oQ.m_arrTint[3]};
     }
-    bgfx::update(bgfx::DynamicVertexBufferHandle{instVb_}, 0, bgfx::copy(inst, total * (uint32_t)sizeof(QuadInstance)));
-    size_t first = 0, nextGpu = 0;
-    while (first < total) {
-        const size_t limit = drawGpuAt(first, nextGpu, texture);   // GPU particles placed before quad `first`
+    bgfx::update(bgfx::DynamicVertexBufferHandle{m_u16InstVb}, 0, bgfx::copy(l_pInst, l_uTotal * (uint32_t)sizeof(QuadInstance)));
+    size_t l_nFirst = 0, l_nNextGpu = 0;
+    while (l_nFirst < l_uTotal) {
+        const size_t l_nLimit = f_DrawGpuAt(l_nFirst, l_nNextGpu, l_u16Texture);   // GPU particles placed before quad `first`
         // One draw call per run of quads with the same texture and blending, as the CPU path.
-        const bool additive = quads[first].additive;
-        const uint16_t tex = quads[first].texture;
-        size_t runEnd = first + 1;
-        while (runEnd < total && runEnd < limit && quads[runEnd].additive == additive && quads[runEnd].texture == tex) ++runEnd;
-        bgfx::setVertexBuffer(0, bgfx::VertexBufferHandle{quadVb_});
-        bgfx::setIndexBuffer(bgfx::IndexBufferHandle{quadIb_});
-        bgfx::setInstanceDataBuffer(bgfx::DynamicVertexBufferHandle{instVb_}, (uint32_t)first, (uint32_t)(runEnd - first));
-        const uint16_t use = tex == kSpriteAtlasTexture ? texture : tex;
-        bindTexture(use);
-        bgfx::setState(blendState(additive));
-        bgfx::submit(kViewGame, bgfx::ProgramHandle{instProgram_});
-        ++lastDrawCalls_;
-        lastDrawnQuads_ += runEnd - first;
-        first = runEnd;
+        const bool l_bAdditive = l_vQuads[l_nFirst].m_bAdditive;
+        const uint16_t l_u16Tex = l_vQuads[l_nFirst].m_u16Texture;
+        size_t l_nRunEnd = l_nFirst + 1;
+        while (l_nRunEnd < l_uTotal && l_nRunEnd < l_nLimit && l_vQuads[l_nRunEnd].m_bAdditive == l_bAdditive && l_vQuads[l_nRunEnd].m_u16Texture == l_u16Tex) ++l_nRunEnd;
+        bgfx::setVertexBuffer(0, bgfx::VertexBufferHandle{m_u16QuadVb});
+        bgfx::setIndexBuffer(bgfx::IndexBufferHandle{m_u16QuadIb});
+        bgfx::setInstanceDataBuffer(bgfx::DynamicVertexBufferHandle{m_u16InstVb}, (uint32_t)l_nFirst, (uint32_t)(l_nRunEnd - l_nFirst));
+        const uint16_t l_u16Use = l_u16Tex == g_u16SpriteAtlasTexture ? l_u16Texture : l_u16Tex;
+        f_BindTexture(l_u16Use);
+        bgfx::setState(f_BlendState(l_bAdditive));
+        bgfx::submit(m_u16ViewGame, bgfx::ProgramHandle{m_u16InstProgram});
+        ++m_uLastDrawCalls;
+        m_nLastDrawnQuads += l_nRunEnd - l_nFirst;
+        l_nFirst = l_nRunEnd;
     }
-    drawGpuAt(SIZE_MAX, nextGpu, texture);   // GPU particles after the last quad
+    f_DrawGpuAt(SIZE_MAX, l_nNextGpu, l_u16Texture);   // GPU particles after the last quad
     return true;
 }
 
-void BgfxRenderer::submitQuads(const std::vector<Quad>& quads, uint16_t texture) {
-    const uint32_t total = (uint32_t)quads.size();
-    if (total == 0) return;
-    if (!ensureBuffer(cpuVb_, cpuCap_, total * 4, spriteLayout(), BGFX_BUFFER_NONE)) {
-        std::fprintf(stderr, "[toms] sprite batch: no vertex buffer for %u quads\n", total);
+void BgfxRenderer::f_SubmitQuads(const std::vector<Quad>& l_vQuads, uint16_t l_u16Texture) {
+    const uint32_t l_uTotal = (uint32_t)l_vQuads.size();
+    if (l_uTotal == 0) return;
+    if (!f_EnsureBuffer(m_u16CpuVb, m_uCpuCap, l_uTotal * 4, f_SpriteLayout(), BGFX_BUFFER_NONE)) {
+        std::fprintf(stderr, "[toms] sprite batch: no vertex buffer for %u quads\n", l_uTotal);
         return;
     }
     static_assert(sizeof(SpriteVertex) == 9 * sizeof(float), "SpriteVertex is packed floats");
-    cpuScratch_.resize((size_t)total * 4 * 9);
-    auto* v = reinterpret_cast<SpriteVertex*>(cpuScratch_.data());
-    for (uint32_t i = 0; i < total; ++i) {
-        const Quad& q = quads[i];
-        const float x0 = q.rect[0], y0 = q.rect[1], x1 = q.rect[0] + q.rect[2], y1 = q.rect[1] + q.rect[3];
-        const float rectCorners[8] = {x0, y0, x1, y0, x1, y1, x0, y1};
-        const float* c = q.hasCorners ? q.corners : rectCorners;
-        const float u0 = q.uv[0], v0 = q.uv[1], u1 = q.uv[2], v1 = q.uv[3];
-        const float s = q.solid ? 1.0f : 0.0f;
-        const float* t = q.tint;
-        v[i * 4 + 0] = {c[0], c[1], u0, v0, t[0], t[1], t[2], t[3], s};
-        v[i * 4 + 1] = {c[2], c[3], u1, v0, t[0], t[1], t[2], t[3], s};
-        v[i * 4 + 2] = {c[4], c[5], u1, v1, t[0], t[1], t[2], t[3], s};
-        v[i * 4 + 3] = {c[6], c[7], u0, v1, t[0], t[1], t[2], t[3], s};
+    m_vCpuScratch.resize((size_t)l_uTotal * 4 * 9);
+    auto* l_pV = reinterpret_cast<SpriteVertex*>(m_vCpuScratch.data());
+    for (uint32_t l_uI = 0; l_uI < l_uTotal; ++l_uI) {
+        const Quad& l_oQ = l_vQuads[l_uI];
+        const float l_fX0 = l_oQ.m_arrRect[0], l_fY0 = l_oQ.m_arrRect[1], l_fX1 = l_oQ.m_arrRect[0] + l_oQ.m_arrRect[2], l_fY1 = l_oQ.m_arrRect[1] + l_oQ.m_arrRect[3];
+        const float l_arrRectCorners[8] = {l_fX0, l_fY0, l_fX1, l_fY0, l_fX1, l_fY1, l_fX0, l_fY1};
+        const float* l_pC = l_oQ.m_bHasCorners ? l_oQ.m_arrCorners : l_arrRectCorners;
+        const float l_fU0 = l_oQ.m_arrUv[0], l_fV0 = l_oQ.m_arrUv[1], l_fU1 = l_oQ.m_arrUv[2], l_fV1 = l_oQ.m_arrUv[3];
+        const float l_fS = l_oQ.m_bSolid ? 1.0f : 0.0f;
+        const float* l_pT = l_oQ.m_arrTint;
+        l_pV[l_uI * 4 + 0] = {l_pC[0], l_pC[1], l_fU0, l_fV0, l_pT[0], l_pT[1], l_pT[2], l_pT[3], l_fS};
+        l_pV[l_uI * 4 + 1] = {l_pC[2], l_pC[3], l_fU1, l_fV0, l_pT[0], l_pT[1], l_pT[2], l_pT[3], l_fS};
+        l_pV[l_uI * 4 + 2] = {l_pC[4], l_pC[5], l_fU1, l_fV1, l_pT[0], l_pT[1], l_pT[2], l_pT[3], l_fS};
+        l_pV[l_uI * 4 + 3] = {l_pC[6], l_pC[7], l_fU0, l_fV1, l_pT[0], l_pT[1], l_pT[2], l_pT[3], l_fS};
     }
-    bgfx::update(bgfx::DynamicVertexBufferHandle{cpuVb_}, 0, bgfx::copy(v, total * 4 * (uint32_t)sizeof(SpriteVertex)));
-    size_t first = 0, nextGpu = 0;
-    while (first < total) {
-        const size_t limit = drawGpuAt(first, nextGpu, texture);   // GPU particles placed before quad `first`
+    bgfx::update(bgfx::DynamicVertexBufferHandle{m_u16CpuVb}, 0, bgfx::copy(l_pV, l_uTotal * 4 * (uint32_t)sizeof(SpriteVertex)));
+    size_t l_nFirst = 0, l_nNextGpu = 0;
+    while (l_nFirst < l_uTotal) {
+        const size_t l_nLimit = f_DrawGpuAt(l_nFirst, l_nNextGpu, l_u16Texture);   // GPU particles placed before quad `first`
         // One draw call per run of quads with the same texture and blending (normally the whole
         // frame), in chunks of kChunk quads (16-bit indices into the shared index buffer).
-        const bool additive = quads[first].additive;
-        const uint16_t tex = quads[first].texture;
-        size_t runEnd = first + 1;
-        while (runEnd < total && runEnd < limit && quads[runEnd].additive == additive && quads[runEnd].texture == tex) ++runEnd;
-        for (size_t at = first; at < runEnd; at += kChunk) {
-            const uint32_t count = (uint32_t)std::min<size_t>(kChunk, runEnd - at);
-            bgfx::setVertexBuffer(0, bgfx::DynamicVertexBufferHandle{cpuVb_}, (uint32_t)at * 4, count * 4);
-            bgfx::setIndexBuffer(bgfx::IndexBufferHandle{chunkIb_}, 0, count * 6);
-            const uint16_t use = tex == kSpriteAtlasTexture ? texture : tex;   // the sprite atlas, or a loadTexture one
-            bindTexture(use);
-            bgfx::setState(blendState(additive));
-            bgfx::submit(kViewGame, bgfx::ProgramHandle{program_});
-            ++lastDrawCalls_;
-            lastDrawnQuads_ += count;
+        const bool l_bAdditive = l_vQuads[l_nFirst].m_bAdditive;
+        const uint16_t l_u16Tex = l_vQuads[l_nFirst].m_u16Texture;
+        size_t l_nRunEnd = l_nFirst + 1;
+        while (l_nRunEnd < l_uTotal && l_nRunEnd < l_nLimit && l_vQuads[l_nRunEnd].m_bAdditive == l_bAdditive && l_vQuads[l_nRunEnd].m_u16Texture == l_u16Tex) ++l_nRunEnd;
+        for (size_t l_nAt = l_nFirst; l_nAt < l_nRunEnd; l_nAt += g_uChunk) {
+            const uint32_t l_uCount = (uint32_t)std::min<size_t>(g_uChunk, l_nRunEnd - l_nAt);
+            bgfx::setVertexBuffer(0, bgfx::DynamicVertexBufferHandle{m_u16CpuVb}, (uint32_t)l_nAt * 4, l_uCount * 4);
+            bgfx::setIndexBuffer(bgfx::IndexBufferHandle{m_u16ChunkIb}, 0, l_uCount * 6);
+            const uint16_t l_u16Use = l_u16Tex == g_u16SpriteAtlasTexture ? l_u16Texture : l_u16Tex;   // the sprite atlas, or a loadTexture one
+            f_BindTexture(l_u16Use);
+            bgfx::setState(f_BlendState(l_bAdditive));
+            bgfx::submit(m_u16ViewGame, bgfx::ProgramHandle{m_u16Program});
+            ++m_uLastDrawCalls;
+            m_nLastDrawnQuads += l_uCount;
         }
-        first = runEnd;
+        l_nFirst = l_nRunEnd;
     }
-    drawGpuAt(SIZE_MAX, nextGpu, texture);   // GPU particles after the last quad
+    f_DrawGpuAt(SIZE_MAX, l_nNextGpu, l_u16Texture);   // GPU particles after the last quad
 }
 
-void BgfxRenderer::submitTop() {
-    const uint32_t total = (uint32_t)topSprites_.size();
-    if (total == 0) return;
-    for (size_t first = 0; first < total;) {
+void BgfxRenderer::f_SubmitTop() {
+    const uint32_t l_uTotal = (uint32_t)m_vTopSprites.size();
+    if (l_uTotal == 0) return;
+    for (size_t l_nFirst = 0; l_nFirst < l_uTotal;) {
         // one draw per run of quads with the same texture and blending, at most kChunk quads (the shared index buffer)
-        const bool additive = topSprites_[first].additive;
-        const uint16_t tex = topSprites_[first].texture;
-        size_t runEnd = first + 1;
-        while (runEnd < total && runEnd - first < kChunk && topSprites_[runEnd].additive == additive &&
-               topSprites_[runEnd].texture == tex)
-            ++runEnd;
-        const uint32_t count = (uint32_t)(runEnd - first);
-        if (bgfx::getAvailTransientVertexBuffer(count * 4, spriteLayout()) < count * 4) return;
-        bgfx::TransientVertexBuffer tvb;
-        bgfx::allocTransientVertexBuffer(&tvb, count * 4, spriteLayout());
-        auto* v = reinterpret_cast<SpriteVertex*>(tvb.data);
-        for (uint32_t i = 0; i < count; ++i) {
-            const Quad& q = topSprites_[first + i];
-            const float x0 = q.rect[0], y0 = q.rect[1], x1 = q.rect[0] + q.rect[2], y1 = q.rect[1] + q.rect[3];
-            const float rectCorners[8] = {x0, y0, x1, y0, x1, y1, x0, y1};
-            const float* c = q.hasCorners ? q.corners : rectCorners;
-            const float s = q.solid ? 1.0f : 0.0f;
-            const float* t = q.tint;
-            v[i * 4 + 0] = {c[0], c[1], q.uv[0], q.uv[1], t[0], t[1], t[2], t[3], s};
-            v[i * 4 + 1] = {c[2], c[3], q.uv[2], q.uv[1], t[0], t[1], t[2], t[3], s};
-            v[i * 4 + 2] = {c[4], c[5], q.uv[2], q.uv[3], t[0], t[1], t[2], t[3], s};
-            v[i * 4 + 3] = {c[6], c[7], q.uv[0], q.uv[3], t[0], t[1], t[2], t[3], s};
+        const bool l_bAdditive = m_vTopSprites[l_nFirst].m_bAdditive;
+        const uint16_t l_u16Tex = m_vTopSprites[l_nFirst].m_u16Texture;
+        size_t l_nRunEnd = l_nFirst + 1;
+        while (l_nRunEnd < l_uTotal && l_nRunEnd - l_nFirst < g_uChunk && m_vTopSprites[l_nRunEnd].m_bAdditive == l_bAdditive &&
+               m_vTopSprites[l_nRunEnd].m_u16Texture == l_u16Tex)
+            ++l_nRunEnd;
+        const uint32_t l_uCount = (uint32_t)(l_nRunEnd - l_nFirst);
+        if (bgfx::getAvailTransientVertexBuffer(l_uCount * 4, f_SpriteLayout()) < l_uCount * 4) return;
+        bgfx::TransientVertexBuffer l_oTvb;
+        bgfx::allocTransientVertexBuffer(&l_oTvb, l_uCount * 4, f_SpriteLayout());
+        auto* l_pV = reinterpret_cast<SpriteVertex*>(l_oTvb.data);
+        for (uint32_t l_uI = 0; l_uI < l_uCount; ++l_uI) {
+            const Quad& l_oQ = m_vTopSprites[l_nFirst + l_uI];
+            const float l_fX0 = l_oQ.m_arrRect[0], l_fY0 = l_oQ.m_arrRect[1], l_fX1 = l_oQ.m_arrRect[0] + l_oQ.m_arrRect[2], l_fY1 = l_oQ.m_arrRect[1] + l_oQ.m_arrRect[3];
+            const float l_arrRectCorners[8] = {l_fX0, l_fY0, l_fX1, l_fY0, l_fX1, l_fY1, l_fX0, l_fY1};
+            const float* l_pC = l_oQ.m_bHasCorners ? l_oQ.m_arrCorners : l_arrRectCorners;
+            const float l_fS = l_oQ.m_bSolid ? 1.0f : 0.0f;
+            const float* l_pT = l_oQ.m_arrTint;
+            l_pV[l_uI * 4 + 0] = {l_pC[0], l_pC[1], l_oQ.m_arrUv[0], l_oQ.m_arrUv[1], l_pT[0], l_pT[1], l_pT[2], l_pT[3], l_fS};
+            l_pV[l_uI * 4 + 1] = {l_pC[2], l_pC[3], l_oQ.m_arrUv[2], l_oQ.m_arrUv[1], l_pT[0], l_pT[1], l_pT[2], l_pT[3], l_fS};
+            l_pV[l_uI * 4 + 2] = {l_pC[4], l_pC[5], l_oQ.m_arrUv[2], l_oQ.m_arrUv[3], l_pT[0], l_pT[1], l_pT[2], l_pT[3], l_fS};
+            l_pV[l_uI * 4 + 3] = {l_pC[6], l_pC[7], l_oQ.m_arrUv[0], l_oQ.m_arrUv[3], l_pT[0], l_pT[1], l_pT[2], l_pT[3], l_fS};
         }
-        bgfx::setVertexBuffer(0, &tvb);
-        bgfx::setIndexBuffer(bgfx::IndexBufferHandle{chunkIb_}, 0, count * 6);
-        const uint16_t use = tex == kSpriteAtlasTexture ? spriteTex_ : tex;
-        bindTexture(use);
-        bgfx::setState(blendState(additive));
-        bgfx::submit(kViewTop, bgfx::ProgramHandle{program_});
-        ++lastDrawCalls_;
-        lastDrawnQuads_ += count;
-        first = runEnd;
+        bgfx::setVertexBuffer(0, &l_oTvb);
+        bgfx::setIndexBuffer(bgfx::IndexBufferHandle{m_u16ChunkIb}, 0, l_uCount * 6);
+        const uint16_t l_u16Use = l_u16Tex == g_u16SpriteAtlasTexture ? m_u16SpriteTex : l_u16Tex;
+        f_BindTexture(l_u16Use);
+        bgfx::setState(f_BlendState(l_bAdditive));
+        bgfx::submit(m_u16ViewTop, bgfx::ProgramHandle{m_u16Program});
+        ++m_uLastDrawCalls;
+        m_nLastDrawnQuads += l_uCount;
+        l_nFirst = l_nRunEnd;
     }
 }
 
 // ---- GPU-simulated particles --------------------------------------------------------------------
 
-bool BgfxRenderer::supportsGpuParticles() const {
-    return fxSpawn_ != kInvalid && fxUpdate_ != kInvalid && csDrawProgram_ != kInvalid && chunkIb_ != kInvalid;
+bool BgfxRenderer::f_SupportsGpuParticles() const {
+    return m_u16FxSpawn != m_u16Invalid && m_u16FxUpdate != m_u16Invalid && m_u16CsDrawProgram != m_u16Invalid && m_u16ChunkIb != m_u16Invalid;
 }
 
-uint32_t BgfxRenderer::createGpuParticles(uint32_t capacity) {
-    if (!supportsGpuParticles() || capacity == 0) return 0;
-    GpuEmitterBuffers b;
-    b.capacity = capacity;
+uint32_t BgfxRenderer::f_CreateGpuParticles(uint32_t l_uCapacity) {
+    if (!f_SupportsGpuParticles() || l_uCapacity == 0) return 0;
+    GpuEmitterBuffers l_oB;
+    l_oB.m_uCapacity = l_uCapacity;
     // Every slot starts empty (life 0): zeroed memory.
-    const bgfx::Memory* zeros = bgfx::alloc(capacity * 4 * 16);
-    std::memset(zeros->data, 0, zeros->size);
-    b.state = bgfx::createDynamicVertexBuffer(zeros, csInLayout(), BGFX_BUFFER_COMPUTE_READ_WRITE).idx;
-    b.out = bgfx::createDynamicVertexBuffer(capacity * 4, csOutLayout(), BGFX_BUFFER_COMPUTE_WRITE).idx;
-    if (b.state == kInvalid || b.out == kInvalid) {
-        if (b.state != kInvalid) bgfx::destroy(bgfx::DynamicVertexBufferHandle{b.state});
-        if (b.out != kInvalid) bgfx::destroy(bgfx::DynamicVertexBufferHandle{b.out});
+    const bgfx::Memory* l_pZeros = bgfx::alloc(l_uCapacity * 4 * 16);
+    std::memset(l_pZeros->data, 0, l_pZeros->size);
+    l_oB.m_u16State = bgfx::createDynamicVertexBuffer(l_pZeros, f_CsInLayout(), BGFX_BUFFER_COMPUTE_READ_WRITE).idx;
+    l_oB.m_u16Out = bgfx::createDynamicVertexBuffer(l_uCapacity * 4, f_CsOutLayout(), BGFX_BUFFER_COMPUTE_WRITE).idx;
+    if (l_oB.m_u16State == m_u16Invalid || l_oB.m_u16Out == m_u16Invalid) {
+        if (l_oB.m_u16State != m_u16Invalid) bgfx::destroy(bgfx::DynamicVertexBufferHandle{l_oB.m_u16State});
+        if (l_oB.m_u16Out != m_u16Invalid) bgfx::destroy(bgfx::DynamicVertexBufferHandle{l_oB.m_u16Out});
         return 0;
     }
-    for (size_t i = 0; i < gpuEmitters_.size(); i++)   // reuse a released id
-        if (gpuEmitters_[i].state == kInvalid) {
-            gpuEmitters_[i] = b;
-            return uint32_t(i + 1);
+    for (size_t l_nI = 0; l_nI < m_vGpuEmitters.size(); l_nI++)   // reuse a released id
+        if (m_vGpuEmitters[l_nI].m_u16State == m_u16Invalid) {
+            m_vGpuEmitters[l_nI] = l_oB;
+            return uint32_t(l_nI + 1);
         }
-    gpuEmitters_.push_back(b);
-    return uint32_t(gpuEmitters_.size());
+    m_vGpuEmitters.push_back(l_oB);
+    return uint32_t(m_vGpuEmitters.size());
 }
 
-void BgfxRenderer::releaseGpuParticles(uint32_t id) {
-    if (id == 0 || id > gpuEmitters_.size()) return;
-    GpuEmitterBuffers& b = gpuEmitters_[id - 1];
-    for (uint16_t* h : {&b.state, &b.out, &b.spawn})
-        if (*h != kInvalid) { bgfx::destroy(bgfx::DynamicVertexBufferHandle{*h}); *h = kInvalid; }
-    b.capacity = b.spawnCap = 0;
+void BgfxRenderer::f_ReleaseGpuParticles(uint32_t l_uId) {
+    if (l_uId == 0 || l_uId > m_vGpuEmitters.size()) return;
+    GpuEmitterBuffers& l_oB = m_vGpuEmitters[l_uId - 1];
+    for (uint16_t* l_pH : {&l_oB.m_u16State, &l_oB.m_u16Out, &l_oB.m_u16Spawn})
+        if (*l_pH != m_u16Invalid) { bgfx::destroy(bgfx::DynamicVertexBufferHandle{*l_pH}); *l_pH = m_u16Invalid; }
+    l_oB.m_uCapacity = l_oB.m_uSpawnCap = 0;
 }
 
-void BgfxRenderer::drawGpuParticles(const GpuParticleFrame& f) {
-    if (!supportsGpuParticles() || f.emitter == 0 || f.emitter > gpuEmitters_.size()) return;
-    GpuEmitterBuffers& b = gpuEmitters_[f.emitter - 1];
-    if (b.state == kInvalid) return;
+void BgfxRenderer::f_DrawGpuParticles(const GpuParticleFrame& l_oF) {
+    if (!f_SupportsGpuParticles() || l_oF.m_uEmitter == 0 || l_oF.m_uEmitter > m_vGpuEmitters.size()) return;
+    GpuEmitterBuffers& l_oB = m_vGpuEmitters[l_oF.m_uEmitter - 1];
+    if (l_oB.m_u16State == m_u16Invalid) return;
     // The simulation runs in the clear view, in order (newborns before the update), so before kViewGame draws.
-    bgfx::setViewMode(kViewClear, bgfx::ViewMode::Sequential);
-    float sim[4] = {(float)f.steps, f.dt, (float)b.capacity, (float)f.spawnCount};
-    if (f.spawnCount > 0) {
-        if (!ensureBuffer(b.spawn, b.spawnCap, f.spawnCount * 5, csInLayout(), BGFX_BUFFER_COMPUTE_READ)) return;
-        bgfx::update(bgfx::DynamicVertexBufferHandle{b.spawn}, 0, bgfx::copy(f.spawn, f.spawnCount * 20 * (uint32_t)sizeof(float)));
-        bgfx::setUniform(bgfx::UniformHandle{uFxSim_}, sim);
-        bgfx::setBuffer(0, bgfx::DynamicVertexBufferHandle{b.state}, bgfx::Access::ReadWrite);
-        bgfx::setBuffer(1, bgfx::DynamicVertexBufferHandle{b.spawn}, bgfx::Access::Read);
-        bgfx::dispatch(kViewClear, bgfx::ProgramHandle{fxSpawn_}, (f.spawnCount + 63) / 64, 1, 1);
+    bgfx::setViewMode(m_u16ViewClear, bgfx::ViewMode::Sequential);
+    float l_arrSim[4] = {(float)l_oF.m_uSteps, l_oF.m_fDt, (float)l_oB.m_uCapacity, (float)l_oF.m_uSpawnCount};
+    if (l_oF.m_uSpawnCount > 0) {
+        if (!f_EnsureBuffer(l_oB.m_u16Spawn, l_oB.m_uSpawnCap, l_oF.m_uSpawnCount * 5, f_CsInLayout(), BGFX_BUFFER_COMPUTE_READ)) return;
+        bgfx::update(bgfx::DynamicVertexBufferHandle{l_oB.m_u16Spawn}, 0, bgfx::copy(l_oF.m_pSpawn, l_oF.m_uSpawnCount * 20 * (uint32_t)sizeof(float)));
+        bgfx::setUniform(bgfx::UniformHandle{m_u16UFxSim}, l_arrSim);
+        bgfx::setBuffer(0, bgfx::DynamicVertexBufferHandle{l_oB.m_u16State}, bgfx::Access::ReadWrite);
+        bgfx::setBuffer(1, bgfx::DynamicVertexBufferHandle{l_oB.m_u16Spawn}, bgfx::Access::Read);
+        bgfx::dispatch(m_u16ViewClear, bgfx::ProgramHandle{m_u16FxSpawn}, (l_oF.m_uSpawnCount + 63) / 64, 1, 1);
     }
-    const float force[4] = {f.gravity[0], f.gravity[1], f.dragPerStep, f.alignToVelocity ? 1.0f : 0.0f};
-    const float origin[4] = {f.origin[0], f.origin[1], (float)f.frameCount, f.fps};
-    const float xform[8] = {f.xform[0], f.xform[1], f.xform[2], 0, f.xform[3], f.xform[4], f.xform[5], 0};
-    bgfx::setUniform(bgfx::UniformHandle{uFxSim_}, sim);
-    bgfx::setUniform(bgfx::UniformHandle{uFxForce_}, force);
-    bgfx::setUniform(bgfx::UniformHandle{uFxOrigin_}, origin);
-    bgfx::setUniform(bgfx::UniformHandle{uFxXform_}, xform, 2);
-    bgfx::setUniform(bgfx::UniformHandle{uFxTint_}, f.tint);
-    bgfx::setUniform(bgfx::UniformHandle{uFxColorLut_}, f.colorLut, GpuParticleFrame::kLut);
-    bgfx::setUniform(bgfx::UniformHandle{uFxScalarLut_}, f.scalarLut, GpuParticleFrame::kLut);
-    bgfx::setUniform(bgfx::UniformHandle{uFxFrameUv_}, f.frameUv, std::max(1u, f.frameCount));
-    bgfx::setUniform(bgfx::UniformHandle{uFxFrameRect_}, f.frameRect, std::max(1u, f.frameCount));
-    bgfx::setBuffer(0, bgfx::DynamicVertexBufferHandle{b.state}, bgfx::Access::ReadWrite);
-    bgfx::setBuffer(1, bgfx::DynamicVertexBufferHandle{b.out}, bgfx::Access::Write);
-    bgfx::dispatch(kViewClear, bgfx::ProgramHandle{fxUpdate_}, (b.capacity + 63) / 64, 1, 1);
-    currentDraws().push_back({currentQuads().size(), f.emitter, f.texture, f.additive});
+    const float l_arrForce[4] = {l_oF.m_arrGravity[0], l_oF.m_arrGravity[1], l_oF.m_fDragPerStep, l_oF.m_bAlignToVelocity ? 1.0f : 0.0f};
+    const float l_arrOrigin[4] = {l_oF.m_arrOrigin[0], l_oF.m_arrOrigin[1], (float)l_oF.m_uFrameCount, l_oF.m_fFps};
+    const float l_arrXform[8] = {l_oF.m_arrXform[0], l_oF.m_arrXform[1], l_oF.m_arrXform[2], 0, l_oF.m_arrXform[3], l_oF.m_arrXform[4], l_oF.m_arrXform[5], 0};
+    bgfx::setUniform(bgfx::UniformHandle{m_u16UFxSim}, l_arrSim);
+    bgfx::setUniform(bgfx::UniformHandle{m_u16UFxForce}, l_arrForce);
+    bgfx::setUniform(bgfx::UniformHandle{m_u16UFxOrigin}, l_arrOrigin);
+    bgfx::setUniform(bgfx::UniformHandle{m_u16UFxXform}, l_arrXform, 2);
+    bgfx::setUniform(bgfx::UniformHandle{m_u16UFxTint}, l_oF.m_arrTint);
+    bgfx::setUniform(bgfx::UniformHandle{m_u16UFxColorLut}, l_oF.m_pColorLut, GpuParticleFrame::m_uLut);
+    bgfx::setUniform(bgfx::UniformHandle{m_u16UFxScalarLut}, l_oF.m_pScalarLut, GpuParticleFrame::m_uLut);
+    bgfx::setUniform(bgfx::UniformHandle{m_u16UFxFrameUv}, l_oF.m_pFrameUv, std::max(1u, l_oF.m_uFrameCount));
+    bgfx::setUniform(bgfx::UniformHandle{m_u16UFxFrameRect}, l_oF.m_pFrameRect, std::max(1u, l_oF.m_uFrameCount));
+    bgfx::setBuffer(0, bgfx::DynamicVertexBufferHandle{l_oB.m_u16State}, bgfx::Access::ReadWrite);
+    bgfx::setBuffer(1, bgfx::DynamicVertexBufferHandle{l_oB.m_u16Out}, bgfx::Access::Write);
+    bgfx::dispatch(m_u16ViewClear, bgfx::ProgramHandle{m_u16FxUpdate}, (l_oB.m_uCapacity + 63) / 64, 1, 1);
+    f_CurrentDraws().push_back({f_CurrentQuads().size(), l_oF.m_uEmitter, l_oF.m_u16Texture, l_oF.m_bAdditive});
 }
 
-size_t BgfxRenderer::drawMarkers(uint16_t view, const std::vector<GpuDraw>& draws, bool inLayer, size_t at, size_t& next,
-                                 uint16_t texture) {
-    for (; next < draws.size() && draws[next].at <= at; next++) {
-        const GpuDraw& d = draws[next];
-        if (d.layer >= 0) { submitComposite(d.layer, view); continue; }
-        const uint16_t use = d.texture == kSpriteAtlasTexture ? texture : d.texture;
-        const uint64_t state = inLayer ? layerBlendState(d.additive) : blendState(d.additive);
-        if (d.emitter == 0) {   // a mesh (drawMesh): the CPU path's program, its own part of the frame's buffers
-            if (meshVb_ == kInvalid || meshIb_ == kInvalid) continue;
-            bgfx::setVertexBuffer(0, bgfx::DynamicVertexBufferHandle{meshVb_}, d.firstVertex, d.vertexCount);
-            bgfx::setIndexBuffer(bgfx::DynamicIndexBufferHandle{meshIb_}, d.firstIndex, d.indexCount);
-            bindTexture(use);
-            bgfx::setState(state);
-            bgfx::submit(view, bgfx::ProgramHandle{program_});
-            ++lastDrawCalls_;
-            ++lastMeshCount_;
+size_t BgfxRenderer::f_DrawMarkers(uint16_t l_u16View, const std::vector<GpuDraw>& l_vDraws, bool l_bInLayer, size_t l_nAt, size_t& l_nNext,
+                                 uint16_t l_u16Texture) {
+    for (; l_nNext < l_vDraws.size() && l_vDraws[l_nNext].m_nAt <= l_nAt; l_nNext++) {
+        const GpuDraw& l_oD = l_vDraws[l_nNext];
+        if (l_oD.m_iLayer >= 0) { f_SubmitComposite(l_oD.m_iLayer, l_u16View); continue; }
+        const uint16_t l_u16Use = l_oD.m_u16Texture == g_u16SpriteAtlasTexture ? l_u16Texture : l_oD.m_u16Texture;
+        const uint64_t l_u64State = l_bInLayer ? f_LayerBlendState(l_oD.m_bAdditive) : f_BlendState(l_oD.m_bAdditive);
+        if (l_oD.m_uEmitter == 0) {   // a mesh (drawMesh): the CPU path's program, its own part of the frame's buffers
+            if (m_u16MeshVb == m_u16Invalid || m_u16MeshIb == m_u16Invalid) continue;
+            bgfx::setVertexBuffer(0, bgfx::DynamicVertexBufferHandle{m_u16MeshVb}, l_oD.m_uFirstVertex, l_oD.m_uVertexCount);
+            bgfx::setIndexBuffer(bgfx::DynamicIndexBufferHandle{m_u16MeshIb}, l_oD.m_uFirstIndex, l_oD.m_uIndexCount);
+            f_BindTexture(l_u16Use);
+            bgfx::setState(l_u64State);
+            bgfx::submit(l_u16View, bgfx::ProgramHandle{m_u16Program});
+            ++m_uLastDrawCalls;
+            ++m_nLastMeshCount;
             continue;
         }
-        const GpuEmitterBuffers& b = gpuEmitters_[d.emitter - 1];
-        if (b.out == kInvalid) continue;
+        const GpuEmitterBuffers& l_oB = m_vGpuEmitters[l_oD.m_uEmitter - 1];
+        if (l_oB.m_u16Out == m_u16Invalid) continue;
         // Every slot's quad (empty slots are degenerate: nothing to rasterize), in chunks.
-        for (uint32_t first = 0; first < b.capacity; first += kChunk) {
-            const uint32_t count = std::min(kChunk, b.capacity - first);
-            bgfx::setVertexBuffer(0, bgfx::DynamicVertexBufferHandle{b.out}, first * 4, count * 4);
-            bgfx::setIndexBuffer(bgfx::IndexBufferHandle{chunkIb_}, 0, count * 6);
-            bindTexture(use);
-            bgfx::setState(state);
-            bgfx::submit(view, bgfx::ProgramHandle{csDrawProgram_});
-            ++lastDrawCalls_;
+        for (uint32_t l_uFirst = 0; l_uFirst < l_oB.m_uCapacity; l_uFirst += g_uChunk) {
+            const uint32_t l_uCount = std::min(g_uChunk, l_oB.m_uCapacity - l_uFirst);
+            bgfx::setVertexBuffer(0, bgfx::DynamicVertexBufferHandle{l_oB.m_u16Out}, l_uFirst * 4, l_uCount * 4);
+            bgfx::setIndexBuffer(bgfx::IndexBufferHandle{m_u16ChunkIb}, 0, l_uCount * 6);
+            f_BindTexture(l_u16Use);
+            bgfx::setState(l_u64State);
+            bgfx::submit(l_u16View, bgfx::ProgramHandle{m_u16CsDrawProgram});
+            ++m_uLastDrawCalls;
         }
-        ++lastGpuEmitters_;
+        ++m_uLastGpuEmitters;
     }
-    return next < draws.size() ? draws[next].at : SIZE_MAX;
+    return l_nNext < l_vDraws.size() ? l_vDraws[l_nNext].m_nAt : SIZE_MAX;
 }
 
 // ---- layers -------------------------------------------------------------------------------------
 
-uint64_t BgfxRenderer::layerBlendState(bool additive) const {
+uint64_t BgfxRenderer::f_LayerBlendState(bool l_bAdditive) const {
     // Into a layer's premultiplied picture: the colour blends as on screen, the alpha accumulates coverage (an additive
     // sprite adds light, no coverage).
     return BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
-           (additive ? BGFX_STATE_BLEND_FUNC_SEPARATE(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_ZERO,
+           (l_bAdditive ? BGFX_STATE_BLEND_FUNC_SEPARATE(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_ZERO,
                                                       BGFX_STATE_BLEND_ONE)
                      : BGFX_STATE_BLEND_FUNC_SEPARATE(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA,
                                                       BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_INV_SRC_ALPHA));
 }
 
-bool BgfxRenderer::supportsLayers() const {
-    if (layerProgram_ == kInvalid || program_ == kInvalid || chunkIb_ == kInvalid) return false;
-    const auto* caps = bgfx::getCaps();
-    return (caps->formats[bgfx::TextureFormat::RGBA16F] & BGFX_CAPS_FORMAT_TEXTURE_FRAMEBUFFER) != 0 ||
-           (caps->formats[bgfx::TextureFormat::RGBA8] & BGFX_CAPS_FORMAT_TEXTURE_FRAMEBUFFER) != 0;
+bool BgfxRenderer::f_SupportsLayers() const {
+    if (m_u16LayerProgram == m_u16Invalid || m_u16Program == m_u16Invalid || m_u16ChunkIb == m_u16Invalid) return false;
+    const auto* l_pCaps = bgfx::getCaps();
+    return (l_pCaps->formats[bgfx::TextureFormat::RGBA16F] & BGFX_CAPS_FORMAT_TEXTURE_FRAMEBUFFER) != 0 ||
+           (l_pCaps->formats[bgfx::TextureFormat::RGBA8] & BGFX_CAPS_FORMAT_TEXTURE_FRAMEBUFFER) != 0;
 }
 
-void BgfxRenderer::beginLayer(const LayerEffect& fx) {
+void BgfxRenderer::f_BeginLayer(const LayerEffect& l_oFx) {
     // Drawn straight through: the top layer, no support, too many this frame, or inside a layer drawn straight through.
-    if (layer_ == 1 || !supportsLayers() || layers_.size() >= kMaxLayers || (!layerStack_.empty() && layerStack_.back() < 0)) {
-        layerStack_.push_back(-1);
+    if (m_iLayer == 1 || !f_SupportsLayers() || m_vLayers.size() >= m_uMaxLayers || (!m_vLayerStack.empty() && m_vLayerStack.back() < 0)) {
+        m_vLayerStack.push_back(-1);
         return;
     }
-    LayerDraw l;
-    l.fx = fx;
-    layers_.push_back(std::move(l));
-    layerStack_.push_back(int(layers_.size() - 1));
+    LayerDraw l_oL;
+    l_oL.m_oFx = l_oFx;
+    m_vLayers.push_back(std::move(l_oL));
+    m_vLayerStack.push_back(int(m_vLayers.size() - 1));
 }
 
-void BgfxRenderer::endLayer() {
-    if (layerStack_.empty()) return;
-    const int idx = layerStack_.back();
-    layerStack_.pop_back();
-    if (idx < 0) return;
-    layerClosed_.push_back(idx);
+void BgfxRenderer::f_EndLayer() {
+    if (m_vLayerStack.empty()) return;
+    const int l_iIdx = m_vLayerStack.back();
+    m_vLayerStack.pop_back();
+    if (l_iIdx < 0) return;
+    m_vLayerClosed.push_back(l_iIdx);
     // Its picture goes where the layer began, among what is around it.
-    GpuDraw d{currentQuads().size(), 0, kSpriteAtlasTexture, false};
-    d.layer = idx;
-    currentDraws().push_back(d);
+    GpuDraw l_oD{f_CurrentQuads().size(), 0, g_u16SpriteAtlasTexture, false};
+    l_oD.m_iLayer = l_iIdx;
+    f_CurrentDraws().push_back(l_oD);
 }
 
-void BgfxRenderer::prepareLayers() {
-    lastLayerCount_ = 0;
-    if (layerClosed_.empty()) return;
+void BgfxRenderer::f_PrepareLayers() {
+    m_nLastLayerCount = 0;
+    if (m_vLayerClosed.empty()) return;
     // One picture per layer this frame, the game view's size in device pixels (a texel per screen pixel).
-    const ViewportRect fit = computeAspectFitViewport(devW_, devH_, kDesignW, kDesignH);
-    const uint16_t w = (uint16_t)std::max(1L, std::lround(fit.width)), h = (uint16_t)std::max(1L, std::lround(fit.height));
-    if (w != layerW_ || h != layerH_) {
-        for (uint16_t fb : layerFb_) bgfx::destroy(bgfx::FrameBufferHandle{fb});
-        layerFb_.clear();
-        layerW_ = w;
-        layerH_ = h;
+    const ViewportRect l_oFit = f_ComputeAspectFitViewport(m_uDevW, m_uDevH, m_uDesignW, m_uDesignH);
+    const uint16_t l_u16W = (uint16_t)std::max(1L, std::lround(l_oFit.m_fWidth)), l_u16H = (uint16_t)std::max(1L, std::lround(l_oFit.m_fHeight));
+    if (l_u16W != m_u16LayerW || l_u16H != m_u16LayerH) {
+        for (uint16_t l_u16Fb : m_vLayerFb) bgfx::destroy(bgfx::FrameBufferHandle{l_u16Fb});
+        m_vLayerFb.clear();
+        m_u16LayerW = l_u16W;
+        m_u16LayerH = l_u16H;
     }
-    const bool hdr = (bgfx::getCaps()->formats[bgfx::TextureFormat::RGBA16F] & BGFX_CAPS_FORMAT_TEXTURE_FRAMEBUFFER) != 0;
-    while (layerFb_.size() < layerClosed_.size()) {
-        const bgfx::TextureHandle t = bgfx::createTexture2D(w, h, false, 1, hdr ? bgfx::TextureFormat::RGBA16F : bgfx::TextureFormat::RGBA8,
+    const bool l_bHdr = (bgfx::getCaps()->formats[bgfx::TextureFormat::RGBA16F] & BGFX_CAPS_FORMAT_TEXTURE_FRAMEBUFFER) != 0;
+    while (m_vLayerFb.size() < m_vLayerClosed.size()) {
+        const bgfx::TextureHandle l_oT = bgfx::createTexture2D(l_u16W, l_u16H, false, 1, l_bHdr ? bgfx::TextureFormat::RGBA16F : bgfx::TextureFormat::RGBA8,
                                                             BGFX_TEXTURE_RT | BGFX_SAMPLER_UVW_CLAMP);
-        const bgfx::FrameBufferHandle fb = bgfx::createFrameBuffer(1, &t, true);
-        if (!bgfx::isValid(fb)) break;
-        layerFb_.push_back(fb.idx);
+        const bgfx::FrameBufferHandle l_oFb = bgfx::createFrameBuffer(1, &l_oT, true);
+        if (!bgfx::isValid(l_oFb)) break;
+        m_vLayerFb.push_back(l_oFb.idx);
     }
-    const float W = (float)kDesignW, H = (float)kDesignH, sx = float(w) / W, sy = float(h) / H;
+    const float l_fW = (float)m_uDesignW, l_fH = (float)m_uDesignH, l_fSx = float(l_u16W) / l_fW, l_fSy = float(l_u16H) / l_fH;
     // Inner layers close first: in closing order, every picture is drawn before the layer that uses it (and its bounds
     // are known when the layer around it is measured).
-    for (size_t k = 0; k < layerClosed_.size() && k < layerFb_.size(); k++) {
-        LayerDraw& l = layers_[(size_t)layerClosed_[k]];
+    for (size_t l_nK = 0; l_nK < m_vLayerClosed.size() && l_nK < m_vLayerFb.size(); l_nK++) {
+        LayerDraw& l_oL = m_vLayers[(size_t)m_vLayerClosed[l_nK]];
         // What it draws: its quads, its meshes' vertices, its inner layers' pictures; particles: anywhere
-        l.any = false;
-        auto grow = [&](float x0, float y0, float x1, float y1) {
-            if (!l.any) { l.x0 = x0; l.y0 = y0; l.x1 = x1; l.y1 = y1; l.any = true; return; }
-            l.x0 = std::min(l.x0, x0); l.y0 = std::min(l.y0, y0); l.x1 = std::max(l.x1, x1); l.y1 = std::max(l.y1, y1);
+        l_oL.m_bAny = false;
+        auto l_fnGrow = [&](float l_fX0, float l_fY0, float l_fX1, float l_fY1) {
+            if (!l_oL.m_bAny) { l_oL.m_fX0 = l_fX0; l_oL.m_fY0 = l_fY0; l_oL.m_fX1 = l_fX1; l_oL.m_fY1 = l_fY1; l_oL.m_bAny = true; return; }
+            l_oL.m_fX0 = std::min(l_oL.m_fX0, l_fX0); l_oL.m_fY0 = std::min(l_oL.m_fY0, l_fY0); l_oL.m_fX1 = std::max(l_oL.m_fX1, l_fX1); l_oL.m_fY1 = std::max(l_oL.m_fY1, l_fY1);
         };
-        for (const Quad& q : l.quads) grow(q.rect[0], q.rect[1], q.rect[0] + q.rect[2], q.rect[1] + q.rect[3]);
-        for (const GpuDraw& d : l.draws) {
-            if (d.layer >= 0) {
-                const LayerDraw& in = layers_[(size_t)d.layer];
-                if (in.any) grow(in.x0 - in.reach, in.y0 - in.reach, in.x1 + in.reach, in.y1 + in.reach);
-            } else if (d.emitter == 0) {
-                for (uint32_t v = d.firstVertex; v < d.firstVertex + d.vertexCount; v++)
-                    grow(meshVerts_[size_t(v) * 9], meshVerts_[size_t(v) * 9 + 1], meshVerts_[size_t(v) * 9], meshVerts_[size_t(v) * 9 + 1]);
+        for (const Quad& l_oQ : l_oL.m_vQuads) l_fnGrow(l_oQ.m_arrRect[0], l_oQ.m_arrRect[1], l_oQ.m_arrRect[0] + l_oQ.m_arrRect[2], l_oQ.m_arrRect[1] + l_oQ.m_arrRect[3]);
+        for (const GpuDraw& l_oD : l_oL.m_vDraws) {
+            if (l_oD.m_iLayer >= 0) {
+                const LayerDraw& l_oIn = m_vLayers[(size_t)l_oD.m_iLayer];
+                if (l_oIn.m_bAny) l_fnGrow(l_oIn.m_fX0 - l_oIn.m_fReach, l_oIn.m_fY0 - l_oIn.m_fReach, l_oIn.m_fX1 + l_oIn.m_fReach, l_oIn.m_fY1 + l_oIn.m_fReach);
+            } else if (l_oD.m_uEmitter == 0) {
+                for (uint32_t l_uV = l_oD.m_uFirstVertex; l_uV < l_oD.m_uFirstVertex + l_oD.m_uVertexCount; l_uV++)
+                    l_fnGrow(m_vMeshVerts[size_t(l_uV) * 9], m_vMeshVerts[size_t(l_uV) * 9 + 1], m_vMeshVerts[size_t(l_uV) * 9], m_vMeshVerts[size_t(l_uV) * 9 + 1]);
             } else {
-                grow(0, 0, W, H);
+                l_fnGrow(0, 0, l_fW, l_fH);
             }
         }
-        const float* p = l.fx.params;
-        l.reach = 2.0f + (l.fx.kind == LayerEffect::MotionBlur ? 0.5f * std::max(std::fabs(p[0]), std::fabs(p[1]))
-                         : l.fx.kind == LayerEffect::Glow    ? std::fabs(p[1])
-                         : l.fx.kind == LayerEffect::Outline ? std::fabs(p[0]) : 0.0f);
-        if (!l.any) continue;   // nothing drawn: no picture, no composite
+        const float* l_pP = l_oL.m_oFx.m_arrParams;
+        l_oL.m_fReach = 2.0f + (l_oL.m_oFx.m_eKind == LayerEffect::MotionBlur ? 0.5f * std::max(std::fabs(l_pP[0]), std::fabs(l_pP[1]))
+                         : l_oL.m_oFx.m_eKind == LayerEffect::Glow    ? std::fabs(l_pP[1])
+                         : l_oL.m_oFx.m_eKind == LayerEffect::Outline ? std::fabs(l_pP[0]) : 0.0f);
+        if (!l_oL.m_bAny) continue;   // nothing drawn: no picture, no composite
         // the picture's part used: the content and twice the reach (a blur tap at the composite's edge reads cleared
         // pixels), whole device pixels, in the picture
-        const float cx0 = std::max(0.0f, l.x0 - 2 * l.reach), cy0 = std::max(0.0f, l.y0 - 2 * l.reach);
-        const float cx1 = std::min(W, l.x1 + 2 * l.reach), cy1 = std::min(H, l.y1 + 2 * l.reach);
-        if (cx1 <= cx0 || cy1 <= cy0) { l.any = false; continue; }
-        const int px0 = std::max(0, (int)std::floor(cx0 * sx)), py0 = std::max(0, (int)std::floor(cy0 * sy));
-        const int px1 = std::min((int)w, (int)std::ceil(cx1 * sx)), py1 = std::min((int)h, (int)std::ceil(cy1 * sy));
-        l.slot = (int)k;
-        const uint16_t view = uint16_t(kViewLayerFirst + k);
-        bgfx::setViewFrameBuffer(view, bgfx::FrameBufferHandle{layerFb_[k]});
-        bgfx::setViewRect(view, uint16_t(px0), uint16_t(py0), uint16_t(px1 - px0), uint16_t(py1 - py0));
-        bgfx::setViewClear(view, BGFX_CLEAR_COLOR, 0x00000000, 1.0f, 0);
-        bgfx::setViewMode(view, bgfx::ViewMode::Sequential);
-        float proj[16];   // that part of the design space onto that part of the picture
-        bx::mtxOrtho(proj, float(px0) / sx, float(px1) / sx, float(py1) / sy, float(py0) / sy, 0.0f, 100.0f, 0.0f,
+        const float l_fCx0 = std::max(0.0f, l_oL.m_fX0 - 2 * l_oL.m_fReach), l_fCy0 = std::max(0.0f, l_oL.m_fY0 - 2 * l_oL.m_fReach);
+        const float l_fCx1 = std::min(l_fW, l_oL.m_fX1 + 2 * l_oL.m_fReach), l_fCy1 = std::min(l_fH, l_oL.m_fY1 + 2 * l_oL.m_fReach);
+        if (l_fCx1 <= l_fCx0 || l_fCy1 <= l_fCy0) { l_oL.m_bAny = false; continue; }
+        const int l_iPx0 = std::max(0, (int)std::floor(l_fCx0 * l_fSx)), l_iPy0 = std::max(0, (int)std::floor(l_fCy0 * l_fSy));
+        const int l_iPx1 = std::min((int)l_u16W, (int)std::ceil(l_fCx1 * l_fSx)), l_iPy1 = std::min((int)l_u16H, (int)std::ceil(l_fCy1 * l_fSy));
+        l_oL.m_iSlot = (int)l_nK;
+        const uint16_t l_u16View = uint16_t(m_u16ViewLayerFirst + l_nK);
+        bgfx::setViewFrameBuffer(l_u16View, bgfx::FrameBufferHandle{m_vLayerFb[l_nK]});
+        bgfx::setViewRect(l_u16View, uint16_t(l_iPx0), uint16_t(l_iPy0), uint16_t(l_iPx1 - l_iPx0), uint16_t(l_iPy1 - l_iPy0));
+        bgfx::setViewClear(l_u16View, BGFX_CLEAR_COLOR, 0x00000000, 1.0f, 0);
+        bgfx::setViewMode(l_u16View, bgfx::ViewMode::Sequential);
+        float l_arrProj[16];   // that part of the design space onto that part of the picture
+        bx::mtxOrtho(l_arrProj, float(l_iPx0) / l_fSx, float(l_iPx1) / l_fSx, float(l_iPy1) / l_fSy, float(l_iPy0) / l_fSy, 0.0f, 100.0f, 0.0f,
                      bgfx::getCaps()->homogeneousDepth);
-        bgfx::setViewTransform(view, nullptr, proj);
-        bgfx::touch(view);
-        lastLayerCount_++;
+        bgfx::setViewTransform(l_u16View, nullptr, l_arrProj);
+        bgfx::touch(l_u16View);
+        m_nLastLayerCount++;
     }
-    for (size_t k = 0; k < layerClosed_.size() && k < layerFb_.size(); k++)
-        if (layers_[(size_t)layerClosed_[k]].slot >= 0) submitLayer(layers_[(size_t)layerClosed_[k]], uint16_t(kViewLayerFirst + k));
+    for (size_t l_nK = 0; l_nK < m_vLayerClosed.size() && l_nK < m_vLayerFb.size(); l_nK++)
+        if (m_vLayers[(size_t)m_vLayerClosed[l_nK]].m_iSlot >= 0) f_SubmitLayer(m_vLayers[(size_t)m_vLayerClosed[l_nK]], uint16_t(m_u16ViewLayerFirst + l_nK));
 }
 
-void BgfxRenderer::submitLayer(const LayerDraw& l, uint16_t view) {
+void BgfxRenderer::f_SubmitLayer(const LayerDraw& l_oL, uint16_t l_u16View) {
     // Its quads in transient buffers, one draw per run of texture and blending; its markers (meshes, particles, inner
     // layers' pictures) in their places.
-    const size_t total = l.quads.size();
-    size_t first = 0, next = 0;
-    while (first < total) {
-        const size_t limit = drawMarkers(view, l.draws, true, first, next, spriteTex_);
-        const bool additive = l.quads[first].additive;
-        const uint16_t tex = l.quads[first].texture;
-        size_t runEnd = first + 1;
-        while (runEnd < total && runEnd < limit && runEnd - first < kChunk && l.quads[runEnd].additive == additive &&
-               l.quads[runEnd].texture == tex)
-            ++runEnd;
-        const uint32_t count = (uint32_t)(runEnd - first);
-        if (bgfx::getAvailTransientVertexBuffer(count * 4, spriteLayout()) < count * 4) break;
-        bgfx::TransientVertexBuffer tvb;
-        bgfx::allocTransientVertexBuffer(&tvb, count * 4, spriteLayout());
-        auto* v = reinterpret_cast<SpriteVertex*>(tvb.data);
-        for (uint32_t i = 0; i < count; ++i) {
-            const Quad& q = l.quads[first + i];
-            const float x0 = q.rect[0], y0 = q.rect[1], x1 = q.rect[0] + q.rect[2], y1 = q.rect[1] + q.rect[3];
-            const float rectCorners[8] = {x0, y0, x1, y0, x1, y1, x0, y1};
-            const float* c = q.hasCorners ? q.corners : rectCorners;
-            const float s = q.solid ? 1.0f : 0.0f;
-            const float* t = q.tint;
-            v[i * 4 + 0] = {c[0], c[1], q.uv[0], q.uv[1], t[0], t[1], t[2], t[3], s};
-            v[i * 4 + 1] = {c[2], c[3], q.uv[2], q.uv[1], t[0], t[1], t[2], t[3], s};
-            v[i * 4 + 2] = {c[4], c[5], q.uv[2], q.uv[3], t[0], t[1], t[2], t[3], s};
-            v[i * 4 + 3] = {c[6], c[7], q.uv[0], q.uv[3], t[0], t[1], t[2], t[3], s};
+    const size_t l_nTotal = l_oL.m_vQuads.size();
+    size_t l_nFirst = 0, l_nNext = 0;
+    while (l_nFirst < l_nTotal) {
+        const size_t l_nLimit = f_DrawMarkers(l_u16View, l_oL.m_vDraws, true, l_nFirst, l_nNext, m_u16SpriteTex);
+        const bool l_bAdditive = l_oL.m_vQuads[l_nFirst].m_bAdditive;
+        const uint16_t l_u16Tex = l_oL.m_vQuads[l_nFirst].m_u16Texture;
+        size_t l_nRunEnd = l_nFirst + 1;
+        while (l_nRunEnd < l_nTotal && l_nRunEnd < l_nLimit && l_nRunEnd - l_nFirst < g_uChunk && l_oL.m_vQuads[l_nRunEnd].m_bAdditive == l_bAdditive &&
+               l_oL.m_vQuads[l_nRunEnd].m_u16Texture == l_u16Tex)
+            ++l_nRunEnd;
+        const uint32_t l_uCount = (uint32_t)(l_nRunEnd - l_nFirst);
+        if (bgfx::getAvailTransientVertexBuffer(l_uCount * 4, f_SpriteLayout()) < l_uCount * 4) break;
+        bgfx::TransientVertexBuffer l_oTvb;
+        bgfx::allocTransientVertexBuffer(&l_oTvb, l_uCount * 4, f_SpriteLayout());
+        auto* l_pV = reinterpret_cast<SpriteVertex*>(l_oTvb.data);
+        for (uint32_t l_uI = 0; l_uI < l_uCount; ++l_uI) {
+            const Quad& l_oQ = l_oL.m_vQuads[l_nFirst + l_uI];
+            const float l_fX0 = l_oQ.m_arrRect[0], l_fY0 = l_oQ.m_arrRect[1], l_fX1 = l_oQ.m_arrRect[0] + l_oQ.m_arrRect[2], l_fY1 = l_oQ.m_arrRect[1] + l_oQ.m_arrRect[3];
+            const float l_arrRectCorners[8] = {l_fX0, l_fY0, l_fX1, l_fY0, l_fX1, l_fY1, l_fX0, l_fY1};
+            const float* l_pC = l_oQ.m_bHasCorners ? l_oQ.m_arrCorners : l_arrRectCorners;
+            const float l_fS = l_oQ.m_bSolid ? 1.0f : 0.0f;
+            const float* l_pT = l_oQ.m_arrTint;
+            l_pV[l_uI * 4 + 0] = {l_pC[0], l_pC[1], l_oQ.m_arrUv[0], l_oQ.m_arrUv[1], l_pT[0], l_pT[1], l_pT[2], l_pT[3], l_fS};
+            l_pV[l_uI * 4 + 1] = {l_pC[2], l_pC[3], l_oQ.m_arrUv[2], l_oQ.m_arrUv[1], l_pT[0], l_pT[1], l_pT[2], l_pT[3], l_fS};
+            l_pV[l_uI * 4 + 2] = {l_pC[4], l_pC[5], l_oQ.m_arrUv[2], l_oQ.m_arrUv[3], l_pT[0], l_pT[1], l_pT[2], l_pT[3], l_fS};
+            l_pV[l_uI * 4 + 3] = {l_pC[6], l_pC[7], l_oQ.m_arrUv[0], l_oQ.m_arrUv[3], l_pT[0], l_pT[1], l_pT[2], l_pT[3], l_fS};
         }
-        bgfx::setVertexBuffer(0, &tvb);
-        bgfx::setIndexBuffer(bgfx::IndexBufferHandle{chunkIb_}, 0, count * 6);
-        bindTexture(tex == kSpriteAtlasTexture ? spriteTex_ : tex);
-        bgfx::setState(layerBlendState(additive));
-        bgfx::submit(view, bgfx::ProgramHandle{program_});
-        ++lastDrawCalls_;
-        lastDrawnQuads_ += count;
-        first = runEnd;
+        bgfx::setVertexBuffer(0, &l_oTvb);
+        bgfx::setIndexBuffer(bgfx::IndexBufferHandle{m_u16ChunkIb}, 0, l_uCount * 6);
+        f_BindTexture(l_u16Tex == g_u16SpriteAtlasTexture ? m_u16SpriteTex : l_u16Tex);
+        bgfx::setState(f_LayerBlendState(l_bAdditive));
+        bgfx::submit(l_u16View, bgfx::ProgramHandle{m_u16Program});
+        ++m_uLastDrawCalls;
+        m_nLastDrawnQuads += l_uCount;
+        l_nFirst = l_nRunEnd;
     }
-    drawMarkers(view, l.draws, true, SIZE_MAX, next, spriteTex_);   // what was drawn after its last quad
+    f_DrawMarkers(l_u16View, l_oL.m_vDraws, true, SIZE_MAX, l_nNext, m_u16SpriteTex);   // what was drawn after its last quad
 }
 
-void BgfxRenderer::submitComposite(int layer, uint16_t view) {
-    if (layer < 0 || (size_t)layer >= layers_.size()) return;
-    const LayerDraw& l = layers_[(size_t)layer];
-    if (l.slot < 0 || (size_t)l.slot >= layerFb_.size()) return;
-    if (bgfx::getAvailTransientVertexBuffer(4, spriteLayout()) < 4) return;
-    if (!l.any) return;
+void BgfxRenderer::f_SubmitComposite(int l_iLayer, uint16_t l_u16View) {
+    if (l_iLayer < 0 || (size_t)l_iLayer >= m_vLayers.size()) return;
+    const LayerDraw& l_oL = m_vLayers[(size_t)l_iLayer];
+    if (l_oL.m_iSlot < 0 || (size_t)l_oL.m_iSlot >= m_vLayerFb.size()) return;
+    if (bgfx::getAvailTransientVertexBuffer(4, f_SpriteLayout()) < 4) return;
+    if (!l_oL.m_bAny) return;
     // The picture's content and its effect's reach (the rest of the picture is not cleared this frame); a
     // bottom-left-origin backend (OpenGL) stored it upside down.
-    const float W = (float)kDesignW, H = (float)kDesignH;
-    const float x0 = std::max(0.0f, l.x0 - l.reach), y0 = std::max(0.0f, l.y0 - l.reach);
-    const float x1 = std::min(W, l.x1 + l.reach), y1 = std::min(H, l.y1 + l.reach);
-    if (x1 <= x0 || y1 <= y0) return;
-    const bool flip = bgfx::getCaps()->originBottomLeft;
-    auto vOf = [&](float y) { return flip ? 1.0f - y / H : y / H; };
-    bgfx::TransientVertexBuffer tvb;
-    bgfx::allocTransientVertexBuffer(&tvb, 4, spriteLayout());
-    auto* v = reinterpret_cast<SpriteVertex*>(tvb.data);
-    v[0] = {x0, y0, x0 / W, vOf(y0), 1, 1, 1, 1, 0};
-    v[1] = {x1, y0, x1 / W, vOf(y0), 1, 1, 1, 1, 0};
-    v[2] = {x1, y1, x1 / W, vOf(y1), 1, 1, 1, 1, 0};
-    v[3] = {x0, y1, x0 / W, vOf(y1), 1, 1, 1, 1, 0};
-    bgfx::setVertexBuffer(0, &tvb);
-    bgfx::setIndexBuffer(bgfx::IndexBufferHandle{chunkIb_}, 0, 6);
+    const float l_fW = (float)m_uDesignW, l_fH = (float)m_uDesignH;
+    const float l_fX0 = std::max(0.0f, l_oL.m_fX0 - l_oL.m_fReach), l_fY0 = std::max(0.0f, l_oL.m_fY0 - l_oL.m_fReach);
+    const float l_fX1 = std::min(l_fW, l_oL.m_fX1 + l_oL.m_fReach), l_fY1 = std::min(l_fH, l_oL.m_fY1 + l_oL.m_fReach);
+    if (l_fX1 <= l_fX0 || l_fY1 <= l_fY0) return;
+    const bool l_bFlip = bgfx::getCaps()->originBottomLeft;
+    auto l_fnVOf = [&](float l_fY) { return l_bFlip ? 1.0f - l_fY / l_fH : l_fY / l_fH; };
+    bgfx::TransientVertexBuffer l_oTvb;
+    bgfx::allocTransientVertexBuffer(&l_oTvb, 4, f_SpriteLayout());
+    auto* l_pV = reinterpret_cast<SpriteVertex*>(l_oTvb.data);
+    l_pV[0] = {l_fX0, l_fY0, l_fX0 / l_fW, l_fnVOf(l_fY0), 1, 1, 1, 1, 0};
+    l_pV[1] = {l_fX1, l_fY0, l_fX1 / l_fW, l_fnVOf(l_fY0), 1, 1, 1, 1, 0};
+    l_pV[2] = {l_fX1, l_fY1, l_fX1 / l_fW, l_fnVOf(l_fY1), 1, 1, 1, 1, 0};
+    l_pV[3] = {l_fX0, l_fY1, l_fX0 / l_fW, l_fnVOf(l_fY1), 1, 1, 1, 1, 0};
+    bgfx::setVertexBuffer(0, &l_oTvb);
+    bgfx::setIndexBuffer(bgfx::IndexBufferHandle{m_u16ChunkIb}, 0, 6);
     // Lengths are design pixels; the shader takes them in texture units (y turned for a flipped picture).
-    const float mode[4] = {(float)l.fx.kind, std::clamp(l.fx.opacity, 0.0f, 1.0f), 0, 0};
-    const float texel[4] = {1.0f / W, (flip ? -1.0f : 1.0f) / H, W, H};
-    bgfx::setUniform(bgfx::UniformHandle{uLayerMode_}, mode);
-    bgfx::setUniform(bgfx::UniformHandle{uLayerParams_}, l.fx.params);
-    bgfx::setUniform(bgfx::UniformHandle{uLayerColor_}, l.fx.color);
-    bgfx::setUniform(bgfx::UniformHandle{uLayerTexel_}, texel);
-    bgfx::setTexture(0, bgfx::UniformHandle{sampler_}, bgfx::getTexture(bgfx::FrameBufferHandle{layerFb_[(size_t)l.slot]}),
+    const float l_arrMode[4] = {(float)l_oL.m_oFx.m_eKind, std::clamp(l_oL.m_oFx.m_fOpacity, 0.0f, 1.0f), 0, 0};
+    const float l_arrTexel[4] = {1.0f / l_fW, (l_bFlip ? -1.0f : 1.0f) / l_fH, l_fW, l_fH};
+    bgfx::setUniform(bgfx::UniformHandle{m_u16ULayerMode}, l_arrMode);
+    bgfx::setUniform(bgfx::UniformHandle{m_u16ULayerParams}, l_oL.m_oFx.m_arrParams);
+    bgfx::setUniform(bgfx::UniformHandle{m_u16ULayerColor}, l_oL.m_oFx.m_arrColor);
+    bgfx::setUniform(bgfx::UniformHandle{m_u16ULayerTexel}, l_arrTexel);
+    bgfx::setTexture(0, bgfx::UniformHandle{m_u16Sampler}, bgfx::getTexture(bgfx::FrameBufferHandle{m_vLayerFb[(size_t)l_oL.m_iSlot]}),
                      BGFX_SAMPLER_UVW_CLAMP);
     bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_INV_SRC_ALPHA));
-    bgfx::submit(view, bgfx::ProgramHandle{layerProgram_});
-    ++lastDrawCalls_;
+    bgfx::submit(l_u16View, bgfx::ProgramHandle{m_u16LayerProgram});
+    ++m_uLastDrawCalls;
 }
 
-void BgfxRenderer::applyViewOrder() {
+void BgfxRenderer::f_ApplyViewOrder() {
     // Plain id order, unless a 3D scene (setSceneViews) or layer pictures must run right after the clear: then the clear,
     // the scene's views, the layers' views (inner first), and every other view in id order.
-    const bool scene = sceneCount_ > 0 && sceneFirst_ > kViewOverlay;
-    if (!scene && lastLayerCount_ == 0) {
-        if (orderApplied_) bgfx::setViewOrder(0, UINT16_MAX, nullptr);   // back to the plain id order
-        orderApplied_ = false;
+    const bool l_bScene = m_u16SceneCount > 0 && m_u16SceneFirst > m_u16ViewOverlay;
+    if (!l_bScene && m_nLastLayerCount == 0) {
+        if (m_bOrderApplied) bgfx::setViewOrder(0, UINT16_MAX, nullptr);   // back to the plain id order
+        m_bOrderApplied = false;
         return;
     }
-    const uint16_t maxViews = (uint16_t)bgfx::getCaps()->limits.maxViews;
-    std::vector<bgfx::ViewId> order;
-    std::vector<unsigned char> placed(maxViews, 0);
-    auto put = [&](uint16_t v) {
-        if (v < maxViews && !placed[v]) { placed[v] = 1; order.push_back(v); }
+    const uint16_t l_u16MaxViews = (uint16_t)bgfx::getCaps()->limits.maxViews;
+    std::vector<bgfx::ViewId> l_vOrder;
+    std::vector<unsigned char> l_vPlaced(l_u16MaxViews, 0);
+    auto l_fnPut = [&](uint16_t l_u16V) {
+        if (l_u16V < l_u16MaxViews && !l_vPlaced[l_u16V]) { l_vPlaced[l_u16V] = 1; l_vOrder.push_back(l_u16V); }
     };
-    put(kViewClear);
-    if (scene)
-        for (uint16_t v = sceneFirst_; v < uint16_t(sceneFirst_ + sceneCount_); v++) put(v);
-    for (size_t k = 0; k < std::min(layerClosed_.size(), layerFb_.size()); k++) put(uint16_t(kViewLayerFirst + k));   // an empty one: untouched, a no-op
-    for (uint16_t v = 0; v < maxViews; v++) put(v);
-    bgfx::setViewOrder(0, (uint16_t)order.size(), order.data());
-    orderApplied_ = true;
+    l_fnPut(m_u16ViewClear);
+    if (l_bScene)
+        for (uint16_t l_u16V = m_u16SceneFirst; l_u16V < uint16_t(m_u16SceneFirst + m_u16SceneCount); l_u16V++) l_fnPut(l_u16V);
+    for (size_t l_nK = 0; l_nK < std::min(m_vLayerClosed.size(), m_vLayerFb.size()); l_nK++) l_fnPut(uint16_t(m_u16ViewLayerFirst + l_nK));   // an empty one: untouched, a no-op
+    for (uint16_t l_u16V = 0; l_u16V < l_u16MaxViews; l_u16V++) l_fnPut(l_u16V);
+    bgfx::setViewOrder(0, (uint16_t)l_vOrder.size(), l_vOrder.data());
+    m_bOrderApplied = true;
 }
 
-void BgfxRenderer::savePNG(const std::string& path) {
+void BgfxRenderer::f_SavePNG(const std::string& l_strPath) {
     // The host's bgfx callback (bgfx_host.cpp) writes the PNG a frame or two later.
-    bgfx::requestScreenShot(BGFX_INVALID_HANDLE, path.c_str());
+    bgfx::requestScreenShot(BGFX_INVALID_HANDLE, l_strPath.c_str());
 }
 
 }  // namespace toms::next

@@ -6,172 +6,172 @@
 
 namespace toms {
 
-std::vector<std::string> WeaponPlay::shapeCuesAt(int lv) const {
-    std::vector<std::string> out;
-    for (const ShapeCues& c : shapeCues) if (c.lv <= lv) out = c.cues;
-    return out;
+std::vector<std::string> WeaponPlay::f_ShapeCuesAt(int l_iLv) const {
+    std::vector<std::string> l_vOut;
+    for (const ShapeCues& l_oC : m_vShapeCues) if (l_oC.m_iLv <= l_iLv) l_vOut = l_oC.m_vCues;
+    return l_vOut;
 }
 
-WeaponPlay weaponPlayFromJson(const std::string& id, const nlohmann::json& j) {
-    WeaponPlay w;
-    w.id = id;
-    if (!j.is_object()) return w;
-    w.missWaitMs = std::max(0, j.value("missWaitMs", 0));
-    if (j.contains("missBack") && j["missBack"].is_array()) {
-        for (const auto& r : j["missBack"]) {
-            if (!r.is_object()) continue;
-            MissBackRule rule;
-            rule.lv = std::max(1, r.value("lv", 1));
-            const auto& b = r.contains("back") ? r["back"] : nlohmann::json("start");
-            rule.back = b.is_number_integer() ? std::max(0, b.get<int>()) : -1;   // "start" (or anything else): -1
-            w.missBack.push_back(rule);
+WeaponPlay f_WeaponPlayFromJson(const std::string& l_strId, const nlohmann::json& l_jJ) {
+    WeaponPlay l_oW;
+    l_oW.m_strId = l_strId;
+    if (!l_jJ.is_object()) return l_oW;
+    l_oW.m_iMissWaitMs = std::max(0, l_jJ.value("missWaitMs", 0));
+    if (l_jJ.contains("missBack") && l_jJ["missBack"].is_array()) {
+        for (const auto& l_jR : l_jJ["missBack"]) {
+            if (!l_jR.is_object()) continue;
+            MissBackRule l_oRule;
+            l_oRule.m_iLv = std::max(1, l_jR.value("lv", 1));
+            const auto& l_jB = l_jR.contains("back") ? l_jR["back"] : nlohmann::json("start");
+            l_oRule.m_iBack = l_jB.is_number_integer() ? std::max(0, l_jB.get<int>()) : -1;   // "start" (or anything else): -1
+            l_oW.m_vMissBack.push_back(l_oRule);
         }
-        std::stable_sort(w.missBack.begin(), w.missBack.end(),
-                         [](const MissBackRule& a, const MissBackRule& b) { return a.lv < b.lv; });
+        std::stable_sort(l_oW.m_vMissBack.begin(), l_oW.m_vMissBack.end(),
+                         [](const MissBackRule& l_oA, const MissBackRule& l_oB) { return l_oA.m_iLv < l_oB.m_iLv; });
     }
-    if (j.contains("levels") && j["levels"].is_array()) {
-        for (const auto& l : j["levels"]) {
-            if (!l.is_object()) continue;
-            WeaponLevel lv;
-            lv.lv = std::max(1, l.value("lv", 1));
-            lv.points = std::clamp(l.value("points", 3), 1, kMaxComboPoints);
-            if (l.contains("stats") && l["stats"].is_object())
-                for (auto s = l["stats"].begin(); s != l["stats"].end(); ++s)
-                    if (s.value().is_number_integer()) lv.stats[s.key()] = s.value().get<int>();
-            w.levels.push_back(lv);
+    if (l_jJ.contains("levels") && l_jJ["levels"].is_array()) {
+        for (const auto& l_jL : l_jJ["levels"]) {
+            if (!l_jL.is_object()) continue;
+            WeaponLevel l_oLv;
+            l_oLv.m_iLv = std::max(1, l_jL.value("lv", 1));
+            l_oLv.m_iPoints = std::clamp(l_jL.value("points", 3), 1, g_iMaxComboPoints);
+            if (l_jL.contains("stats") && l_jL["stats"].is_object())
+                for (auto l_oS = l_jL["stats"].begin(); l_oS != l_jL["stats"].end(); ++l_oS)
+                    if (l_oS.value().is_number_integer()) l_oLv.m_mapStats[l_oS.key()] = l_oS.value().get<int>();
+            l_oW.m_vLevels.push_back(l_oLv);
         }
-        std::stable_sort(w.levels.begin(), w.levels.end(), [](const WeaponLevel& a, const WeaponLevel& b) { return a.lv < b.lv; });
+        std::stable_sort(l_oW.m_vLevels.begin(), l_oW.m_vLevels.end(), [](const WeaponLevel& l_oA, const WeaponLevel& l_oB) { return l_oA.m_iLv < l_oB.m_iLv; });
     }
-    if (j.contains("usesToLevel") && j["usesToLevel"].is_array())
-        for (const auto& u : j["usesToLevel"])
-            if (u.is_number_integer()) w.usesToLevel.push_back(std::max(1, u.get<int>()));
-    w.turnBack = j.value("turnBack", w.turnBack);
-    w.sweepMs = std::max(200, j.value("sweepMs", w.sweepMs));
-    w.maxSweeps = std::max(1, j.value("maxSweeps", w.maxSweeps));
-    w.chargeMs = std::max(1, j.value("chargeMs", w.chargeMs));
-    w.chargeSpeedUp = std::max(0.0f, j.value("chargeSpeedUp", w.chargeSpeedUp));
-    w.chargeDamage = std::max(0.0f, j.value("chargeDamage", w.chargeDamage));
-    w.hitWindow = std::clamp(j.value("hitWindow", w.hitWindow), 0.01f, 0.25f);
-    w.hitWindowMs = std::clamp(j.value("hitWindowMs", w.hitWindowMs), 0, 1000);
-    w.lateMs = std::clamp(j.value("lateMs", w.lateMs), 0, 500);
-    if (j.contains("fx") && j["fx"].is_array()) {
-        for (const auto& f : j["fx"]) {
-            if (!f.is_object()) continue;
-            WeaponFx fx;
-            fx.lv = std::max(1, f.value("lv", 1));
-            fx.release = f.value("release", std::string());
-            fx.hit = f.value("hit", std::string());
-            w.fx.push_back(fx);
+    if (l_jJ.contains("usesToLevel") && l_jJ["usesToLevel"].is_array())
+        for (const auto& l_jU : l_jJ["usesToLevel"])
+            if (l_jU.is_number_integer()) l_oW.m_vUsesToLevel.push_back(std::max(1, l_jU.get<int>()));
+    l_oW.m_bTurnBack = l_jJ.value("turnBack", l_oW.m_bTurnBack);
+    l_oW.m_iSweepMs = std::max(200, l_jJ.value("sweepMs", l_oW.m_iSweepMs));
+    l_oW.m_iMaxSweeps = std::max(1, l_jJ.value("maxSweeps", l_oW.m_iMaxSweeps));
+    l_oW.m_iChargeMs = std::max(1, l_jJ.value("chargeMs", l_oW.m_iChargeMs));
+    l_oW.m_fChargeSpeedUp = std::max(0.0f, l_jJ.value("chargeSpeedUp", l_oW.m_fChargeSpeedUp));
+    l_oW.m_fChargeDamage = std::max(0.0f, l_jJ.value("chargeDamage", l_oW.m_fChargeDamage));
+    l_oW.m_fHitWindow = std::clamp(l_jJ.value("hitWindow", l_oW.m_fHitWindow), 0.01f, 0.25f);
+    l_oW.m_iHitWindowMs = std::clamp(l_jJ.value("hitWindowMs", l_oW.m_iHitWindowMs), 0, 1000);
+    l_oW.m_iLateMs = std::clamp(l_jJ.value("lateMs", l_oW.m_iLateMs), 0, 500);
+    if (l_jJ.contains("fx") && l_jJ["fx"].is_array()) {
+        for (const auto& l_jF : l_jJ["fx"]) {
+            if (!l_jF.is_object()) continue;
+            WeaponFx l_oFx;
+            l_oFx.m_iLv = std::max(1, l_jF.value("lv", 1));
+            l_oFx.m_strRelease = l_jF.value("release", std::string());
+            l_oFx.m_strHit = l_jF.value("hit", std::string());
+            l_oW.m_vFx.push_back(l_oFx);
         }
-        std::stable_sort(w.fx.begin(), w.fx.end(), [](const WeaponFx& a, const WeaponFx& b) { return a.lv < b.lv; });
+        std::stable_sort(l_oW.m_vFx.begin(), l_oW.m_vFx.end(), [](const WeaponFx& l_oA, const WeaponFx& l_oB) { return l_oA.m_iLv < l_oB.m_iLv; });
     }
-    if (j.contains("results") && j["results"].is_array()) {
-        for (const auto& r : j["results"]) {
-            if (!r.is_object()) continue;
-            WeaponResult x;
-            const nlohmann::json h = r.value("hits", nlohmann::json(0));
-            x.hits = h.is_string() ? (h.get<std::string>() == "all" ? -1 : 0) : std::max(0, h.get<int>());
-            x.name = r.value("name", std::string());
-            x.damage = std::max(0.0f, r.value("damage", 1.0f));
-            x.fx = r.value("fx", std::string());
-            x.anim = r.value("anim", std::string());
-            x.sound = r.value("sound", std::string());
-            x.move = r.value("move", std::string());
-            x.stunMs = std::max(0, r.value("stunMs", 0));
-            x.pushMs = std::max(0, r.value("pushMs", 0));
-            x.breakAdd = std::max(0.0f, r.value("breakAdd", 0.0f));
-            w.results.push_back(x);
+    if (l_jJ.contains("results") && l_jJ["results"].is_array()) {
+        for (const auto& l_jR : l_jJ["results"]) {
+            if (!l_jR.is_object()) continue;
+            WeaponResult l_oX;
+            const nlohmann::json l_jH = l_jR.value("hits", nlohmann::json(0));
+            l_oX.m_iHits = l_jH.is_string() ? (l_jH.get<std::string>() == "all" ? -1 : 0) : std::max(0, l_jH.get<int>());
+            l_oX.m_strName = l_jR.value("name", std::string());
+            l_oX.m_fDamage = std::max(0.0f, l_jR.value("damage", 1.0f));
+            l_oX.m_strFx = l_jR.value("fx", std::string());
+            l_oX.m_strAnim = l_jR.value("anim", std::string());
+            l_oX.m_strSound = l_jR.value("sound", std::string());
+            l_oX.m_strMove = l_jR.value("move", std::string());
+            l_oX.m_iStunMs = std::max(0, l_jR.value("stunMs", 0));
+            l_oX.m_iPushMs = std::max(0, l_jR.value("pushMs", 0));
+            l_oX.m_fBreakAdd = std::max(0.0f, l_jR.value("breakAdd", 0.0f));
+            l_oW.m_vResults.push_back(l_oX);
         }
     }
-    w.pace = j.value("pace", std::string());
-    w.play = j.value("play", std::string("track"));
-    if (j.contains("shapeCues") && j["shapeCues"].is_array()) {
-        for (const auto& e : j["shapeCues"]) {
-            if (!e.is_object()) continue;
-            WeaponPlay::ShapeCues c;
-            c.lv = std::max(1, e.value("lv", 1));
-            if (e.contains("cues") && e["cues"].is_array())
-                for (const auto& s : e["cues"]) if (s.is_string()) c.cues.push_back(s.get<std::string>());
-            w.shapeCues.push_back(c);
+    l_oW.m_strPace = l_jJ.value("pace", std::string());
+    l_oW.m_strPlay = l_jJ.value("play", std::string("track"));
+    if (l_jJ.contains("shapeCues") && l_jJ["shapeCues"].is_array()) {
+        for (const auto& l_jE : l_jJ["shapeCues"]) {
+            if (!l_jE.is_object()) continue;
+            WeaponPlay::ShapeCues l_oC;
+            l_oC.m_iLv = std::max(1, l_jE.value("lv", 1));
+            if (l_jE.contains("cues") && l_jE["cues"].is_array())
+                for (const auto& l_jS : l_jE["cues"]) if (l_jS.is_string()) l_oC.m_vCues.push_back(l_jS.get<std::string>());
+            l_oW.m_vShapeCues.push_back(l_oC);
         }
-        std::sort(w.shapeCues.begin(), w.shapeCues.end(), [](const auto& a, const auto& b) { return a.lv < b.lv; });
+        std::sort(l_oW.m_vShapeCues.begin(), l_oW.m_vShapeCues.end(), [](const auto& l_oA, const auto& l_oB) { return l_oA.m_iLv < l_oB.m_iLv; });
     }
-    return w;
+    return l_oW;
 }
 
-const WeaponResult* weaponResultFor(const WeaponPlay& w, int hits, int points, bool failed) {
-    if (failed) hits = 0;
-    const WeaponResult* best = nullptr;
-    int bestNeed = -1;
-    for (const WeaponResult& r : w.results) {
-        const int need = r.hits < 0 ? std::max(1, points) : r.hits;   // "all": every point
-        if (hits >= need && need > bestNeed) { best = &r; bestNeed = need; }
+const WeaponResult* f_WeaponResultFor(const WeaponPlay& l_oW, int l_iHits, int l_iPoints, bool l_bFailed) {
+    if (l_bFailed) l_iHits = 0;
+    const WeaponResult* l_pBest = nullptr;
+    int l_iBestNeed = -1;
+    for (const WeaponResult& l_oR : l_oW.m_vResults) {
+        const int l_iNeed = l_oR.m_iHits < 0 ? std::max(1, l_iPoints) : l_oR.m_iHits;   // "all": every point
+        if (l_iHits >= l_iNeed && l_iNeed > l_iBestNeed) { l_pBest = &l_oR; l_iBestNeed = l_iNeed; }
     }
-    return best;
+    return l_pBest;
 }
 
-const WeaponFx* weaponFxEntry(const WeaponPlay& w, int weaponLevel) {
-    const WeaponFx* best = nullptr;
-    for (const WeaponFx& f : w.fx)
-        if (f.lv <= weaponLevel) best = &f;
-    return best ? best : (w.fx.empty() ? nullptr : &w.fx.front());
+const WeaponFx* f_WeaponFxEntry(const WeaponPlay& l_oW, int l_iWeaponLevel) {
+    const WeaponFx* l_pBest = nullptr;
+    for (const WeaponFx& l_oF : l_oW.m_vFx)
+        if (l_oF.m_iLv <= l_iWeaponLevel) l_pBest = &l_oF;
+    return l_pBest ? l_pBest : (l_oW.m_vFx.empty() ? nullptr : &l_oW.m_vFx.front());
 }
 
-const WeaponLevel& weaponLevelEntry(const WeaponPlay& w, int weaponLevel) {
-    static const WeaponLevel builtIn;
-    const WeaponLevel* best = nullptr;
-    for (const WeaponLevel& l : w.levels)
-        if (l.lv <= weaponLevel) best = &l;
-    return best ? *best : (w.levels.empty() ? builtIn : w.levels.front());
+const WeaponLevel& f_WeaponLevelEntry(const WeaponPlay& l_oW, int l_iWeaponLevel) {
+    static const WeaponLevel l_oBuiltIn;
+    const WeaponLevel* l_pBest = nullptr;
+    for (const WeaponLevel& l_oL : l_oW.m_vLevels)
+        if (l_oL.m_iLv <= l_iWeaponLevel) l_pBest = &l_oL;
+    return l_pBest ? *l_pBest : (l_oW.m_vLevels.empty() ? l_oBuiltIn : l_oW.m_vLevels.front());
 }
 
-int weaponMaxLevel(const WeaponPlay& w) { return w.levels.empty() ? 1 : std::max(1, w.levels.back().lv); }
+int f_WeaponMaxLevel(const WeaponPlay& l_oW) { return l_oW.m_vLevels.empty() ? 1 : std::max(1, l_oW.m_vLevels.back().m_iLv); }
 
-int weaponLevelFromUses(const WeaponPlay& w, int uses) {
-    int lv = 1, need = 0;
-    for (int step : w.usesToLevel) {
-        need += step;
-        if (uses < need) break;
-        lv++;
+int f_WeaponLevelFromUses(const WeaponPlay& l_oW, int l_iUses) {
+    int l_iLv = 1, l_iNeed = 0;
+    for (int l_iStep : l_oW.m_vUsesToLevel) {
+        l_iNeed += l_iStep;
+        if (l_iUses < l_iNeed) break;
+        l_iLv++;
     }
-    return std::min(lv, weaponMaxLevel(w));
+    return std::min(l_iLv, f_WeaponMaxLevel(l_oW));
 }
 
-int usesToNextLevel(const WeaponPlay& w, int weaponLevel) {
-    if (weaponLevel >= weaponMaxLevel(w) || weaponLevel - 1 >= (int)w.usesToLevel.size()) return 0;
-    return w.usesToLevel[(size_t)(weaponLevel - 1)];
+int f_UsesToNextLevel(const WeaponPlay& l_oW, int l_iWeaponLevel) {
+    if (l_iWeaponLevel >= f_WeaponMaxLevel(l_oW) || l_iWeaponLevel - 1 >= (int)l_oW.m_vUsesToLevel.size()) return 0;
+    return l_oW.m_vUsesToLevel[(size_t)(l_iWeaponLevel - 1)];
 }
 
-WeaponPlayTable loadWeaponPlay(const std::string& path) {
-    WeaponPlayTable t;
-    const nlohmann::json j = readJsonFileSafe(path);
-    if (!j.is_object()) return t;
-    for (auto it = j.begin(); it != j.end(); ++it) {
-        if (it.key().empty() || it.key()[0] == '_' || !it.value().is_object()) continue;   // "_comment"
-        t.weapons[it.key()] = weaponPlayFromJson(it.key(), it.value());
+WeaponPlayTable f_LoadWeaponPlay(const std::string& l_strPath) {
+    WeaponPlayTable l_oT;
+    const nlohmann::json l_jJ = f_ReadJsonFileSafe(l_strPath);
+    if (!l_jJ.is_object()) return l_oT;
+    for (auto l_oIt = l_jJ.begin(); l_oIt != l_jJ.end(); ++l_oIt) {
+        if (l_oIt.key().empty() || l_oIt.key()[0] == '_' || !l_oIt.value().is_object()) continue;   // "_comment"
+        l_oT.m_mapWeapons[l_oIt.key()] = f_WeaponPlayFromJson(l_oIt.key(), l_oIt.value());
     }
-    return t;
+    return l_oT;
 }
 
-const WeaponPlay& WeaponPlayTable::get(const std::string& weaponId) const {
-    static const WeaponPlay builtIn = [] { WeaponPlay w; w.id = "builtin"; return w; }();
-    auto it = weapons.find(weaponId);
-    if (it != weapons.end()) return it->second;
-    it = weapons.find("default");
-    return it != weapons.end() ? it->second : builtIn;
+const WeaponPlay& WeaponPlayTable::f_Get(const std::string& l_strWeaponId) const {
+    static const WeaponPlay l_oBuiltIn = [] { WeaponPlay l_oW; l_oW.m_strId = "builtin"; return l_oW; }();
+    auto l_itIt = m_mapWeapons.find(l_strWeaponId);
+    if (l_itIt != m_mapWeapons.end()) return l_itIt->second;
+    l_itIt = m_mapWeapons.find("default");
+    return l_itIt != m_mapWeapons.end() ? l_itIt->second : l_oBuiltIn;
 }
 
-int missBackPoints(const WeaponPlay& w, int weaponLevel) {
-    int back = -1;   // no rule reaches this level: back to the start
-    for (const MissBackRule& r : w.missBack)
-        if (r.lv <= weaponLevel) back = r.back;
-    return back;
+int f_MissBackPoints(const WeaponPlay& l_oW, int l_iWeaponLevel) {
+    int l_iBack = -1;   // no rule reaches this level: back to the start
+    for (const MissBackRule& l_oR : l_oW.m_vMissBack)
+        if (l_oR.m_iLv <= l_iWeaponLevel) l_iBack = l_oR.m_iBack;
+    return l_iBack;
 }
 
-int stepAfterMiss(const WeaponPlay& w, int weaponLevel, int step) {
-    const int back = missBackPoints(w, weaponLevel);
-    if (back < 0) return 0;
-    return std::max(0, step - back);
+int f_StepAfterMiss(const WeaponPlay& l_oW, int l_iWeaponLevel, int l_iStep) {
+    const int l_iBack = f_MissBackPoints(l_oW, l_iWeaponLevel);
+    if (l_iBack < 0) return 0;
+    return std::max(0, l_iStep - l_iBack);
 }
 
 } // namespace toms

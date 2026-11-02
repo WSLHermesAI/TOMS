@@ -16,58 +16,58 @@
 namespace atlas {
 
 enum class Heuristic { Auto, BestShortSideFit, BestLongSideFit, BestAreaFit, BottomLeft, ContactPoint, Shelf };
-const char* heuristicName(Heuristic h);
-bool parseHeuristic(const std::string& s, Heuristic& out);
+const char* f_HeuristicName(Heuristic l_eH);
+bool f_ParseHeuristic(const std::string& l_strS, Heuristic& l_eOut);
 
 class MaxRectsBin {
 public:
-    MaxRectsBin(int w, int h);
-    int width() const { return w_; }
-    int height() const { return h_; }
+    MaxRectsBin(int l_iW, int l_iH);
+    int f_Width() const { return m_iW; }
+    int f_Height() const { return m_iH; }
     // Places a w x h rect; returns an empty rect when it does not fit.
-    IRect insert(int w, int h, Heuristic rule);
+    IRect f_Insert(int l_iW, int l_iH, Heuristic l_eRule);
     // Reserves an exact rect (a pinned sprite). Returns false if it overlaps something already used
     // or lies outside the bin.
-    bool reserve(const IRect& r);
+    bool f_Reserve(const IRect& l_oR);
     // Score of placing w x h under `rule` (lower is better); false if it does not fit.
-    bool score(int w, int h, Heuristic rule, IRect& place, int& s1, int& s2) const;
-    void commit(const IRect& r);
-    double occupancy() const;
+    bool f_Score(int l_iW, int l_iH, Heuristic l_eRule, IRect& l_oPlace, int& l_iS1, int& l_iS2) const;
+    void f_Commit(const IRect& l_oR);
+    double f_Occupancy() const;
 
 private:
-    int w_, h_;
-    std::vector<IRect> free_, used_;
-    std::vector<IRect> new_;    // free pieces cut by the last placement, until prune() merges them
-    void split(const IRect& used);
-    void prune();
-    int contactScore(const IRect& r) const;
+    int m_iW, m_iH;
+    std::vector<IRect> m_vFree, m_vUsed;
+    std::vector<IRect> m_vNew;    // free pieces cut by the last placement, until prune() merges them
+    void f_Split(const IRect& l_oUsed);
+    void f_Prune();
+    int f_ContactScore(const IRect& l_oR) const;
 };
 
 struct PackItem {
-    int w = 0, h = 0;        // size including padding/extrude
-    bool fixed = false;      // pinned: must go at (fixedPage, fixedX, fixedY)
-    int fixedPage = 0, fixedX = 0, fixedY = 0;
+    int m_iW = 0, m_iH = 0;        // size including padding/extrude
+    bool m_bFixed = false;      // pinned: must go at (fixedPage, fixedX, fixedY)
+    int m_iFixedPage = 0, m_iFixedX = 0, m_iFixedY = 0;
 };
 
 struct PackSettings {
-    int maxWidth = 2048, maxHeight = 2048;
-    int minWidth = 16, minHeight = 16;
-    bool powerOfTwo = false;
-    bool square = false;
-    bool fixedSize = false;     // always use maxWidth x maxHeight (no shrinking)
-    int border = 0;             // empty margin along the page edges
-    int padding = 0;            // empty pixels between two items
-    Heuristic heuristic = Heuristic::Auto;
+    int m_iMaxWidth = 2048, m_iMaxHeight = 2048;
+    int m_iMinWidth = 16, m_iMinHeight = 16;
+    bool m_bPowerOfTwo = false;
+    bool m_bSquare = false;
+    bool m_bFixedSize = false;     // always use maxWidth x maxHeight (no shrinking)
+    int m_iBorder = 0;             // empty margin along the page edges
+    int m_iPadding = 0;            // empty pixels between two items
+    Heuristic m_eHeuristic = Heuristic::Auto;
 };
 
-struct PackPlacement { int page = -1; int x = 0, y = 0; };
+struct PackPlacement { int m_iPage = -1; int m_iX = 0, m_iY = 0; };
 
 struct PackResult {
-    std::vector<PackPlacement> placements;   // one per item; page -1 = could not be placed
-    std::vector<IRect> pageSizes;            // w,h per page (x,y unused)
-    std::vector<std::string> errors;
+    std::vector<PackPlacement> m_vPlacements;   // one per item; page -1 = could not be placed
+    std::vector<IRect> m_vPageSizes;            // w,h per page (x,y unused)
+    std::vector<std::string> m_vErrors;
 };
 
-PackResult packPages(const std::vector<PackItem>& items, const PackSettings& s);
+PackResult f_PackPages(const std::vector<PackItem>& l_vItems, const PackSettings& l_oS);
 
 }  // namespace atlas

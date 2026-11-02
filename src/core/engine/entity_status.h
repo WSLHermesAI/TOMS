@@ -20,19 +20,19 @@ enum class EntityStatus {
     Hidden,      // not yet visible/interactive -- gated behind a story flag or mission state
 };
 
-const char* toString(EntityStatus s);
+const char* f_ToString(EntityStatus l_eS);
 // Unrecognized/garbage strings map to Untouched -- fail-safe default, never fail-locked-out.
-EntityStatus fromString(const std::string& s);
+EntityStatus f_FromString(const std::string& l_strS);
 
 // key format: "<stageId>|<x>,<y>" -- matches the convention already used by save_test.cpp and
 // architecture-doc §5.2.
-std::string entityStatusKey(const std::string& stageId, int x, int y);
+std::string f_EntityStatusKey(const std::string& l_strStageId, int l_iX, int l_iY);
 // With the object's stable id (the stage file's objects."x,y".uid, docs/gameplay/05_SAVE_SYSTEM.md): "<stageId>#<uid>", so the
 // status follows the object when a designer moves it. No uid -> the position key above.
-std::string entityStatusKey(const std::string& stageId, int x, int y, const std::string& uid);
+std::string f_EntityStatusKey(const std::string& l_strStageId, int l_iX, int l_iY, const std::string& l_strUid);
 
 // Convenience accessors over the plain map RunSaveData::entityStatus already stores.
-EntityStatus getEntityStatus(const std::map<std::string, std::string>& statusMap, const std::string& key);
-void setEntityStatus(std::map<std::string, std::string>& statusMap, const std::string& key, EntityStatus s);
+EntityStatus f_GetEntityStatus(const std::map<std::string, std::string>& l_mapStatusMap, const std::string& l_strKey);
+void f_SetEntityStatus(std::map<std::string, std::string>& l_mapStatusMap, const std::string& l_strKey, EntityStatus l_eS);
 
 } // namespace toms

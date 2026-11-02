@@ -24,62 +24,62 @@ class AnimPropertiesDock : public QDockWidget
     Q_OBJECT
 
 public:
-    explicit AnimPropertiesDock(AnimDocument* doc, QWidget* parent = nullptr);
+    explicit AnimPropertiesDock(AnimDocument* l_pDoc, QWidget* l_pParent = nullptr);
 
     // The key indicator button of a channel (selftest / tests).
-    QToolButton* keyButton(animed::Channel c) const { return m_key[int(c)]; }
-    QDoubleSpinBox* posXSpin() const { return m_pos[0]; }
-    QComboBox* spriteCombo() const { return m_sprite; }   // the rest sprite picker
-    AnimAtlasesPanel* atlasesPanel() const { return m_atlases; }
+    QToolButton* f_KeyButton(animed::Channel l_eC) const { return m_arrKey[int(l_eC)]; }
+    QDoubleSpinBox* f_PosXSpin() const { return m_arrPos[0]; }
+    QComboBox* f_SpriteCombo() const { return m_pSprite; }   // the rest sprite picker
+    AnimAtlasesPanel* f_AtlasesPanel() const { return m_pAtlases; }
 
 private:
-    void refresh();
-    void refreshPlayhead();
-    void commitChannel(animed::Channel c);
-    QToolButton* makeKeyButton(animed::Channel c, QWidget* parent);
+    void f_Refresh();
+    void f_RefreshPlayhead();
+    void f_CommitChannel(animed::Channel l_eC);
+    QToolButton* f_MakeKeyButton(animed::Channel l_eC, QWidget* l_pParent);
 
-    QString skinInfo(const toms::anim::Node& n) const;   // the Skin row's note
+    QString f_SkinInfo(const toms::anim::Node& l_oN) const;   // the Skin row's note
 public:
-    QString skinInfoText() const;   // the note as shown ("" when hidden; the selftest)
-    bool bonesOutsideShown() const;   // the "bones outside" warning is up (the selftest)
-    QSpinBox* meshGridBox() const { return m_meshCols; }   // cells across (and m_meshRows down)
+    QString f_SkinInfoText() const;   // the note as shown ("" when hidden; the selftest)
+    bool f_BonesOutsideShown() const;   // the "bones outside" warning is up (the selftest)
+    QSpinBox* f_MeshGridBox() const { return m_pMeshCols; }   // cells across (and m_meshRows down)
 private:
-    AnimDocument* m_doc;
-    bool m_updating = false;
-    ClipFields m_clip;
-    AnimAtlasesPanel* m_atlases;
-    QGroupBox *m_nodeBox, *m_playBox, *m_easeBox;
-    QLineEdit* m_name;
-    QComboBox* m_sprite;
-    QString m_spriteShown;   // what refresh() put in m_sprite
-    QCheckBox* m_atlasPivot;
-    QDoubleSpinBox *m_pivotX, *m_pivotY;
-    QSpinBox* m_order;
-    QComboBox* m_blend;
-    QCheckBox *m_inheritColor, *m_restVisible;
-    QComboBox* m_playback;   // once + stay / once + hide / loop
-    QLineEdit* m_skin;       // skin bones, comma separated (docs/engine/16_MESH_ANIMATION.md)
-    QLabel* m_skinInfo;      // its mesh, bones and weights, or why it has none
-    QWidget* m_bonesOutside;          // a warning + "Move Bones Under This Sprite" (bones the node does not carry)
-    QLabel* m_bonesOutsideText;
-    QSpinBox *m_meshCols, *m_meshRows;   // the node's mesh grid, cells across and down (re-cuts its mesh)
-    QWidget* m_meshGridRow;
-    QSpinBox *m_latticeCols, *m_latticeRows;   // the deform lattice's points across and down (docs/engine/16 step 4)
+    AnimDocument* m_pDoc;
+    bool m_bUpdating = false;
+    ClipFields m_oClip;
+    AnimAtlasesPanel* m_pAtlases;
+    QGroupBox *m_pNodeBox, *m_pPlayBox, *m_pEaseBox;
+    QLineEdit* m_pName;
+    QComboBox* m_pSprite;
+    QString m_oSpriteShown;   // what refresh() put in m_sprite
+    QCheckBox* m_pAtlasPivot;
+    QDoubleSpinBox *m_pPivotX, *m_pPivotY;
+    QSpinBox* m_pOrder;
+    QComboBox* m_pBlend;
+    QCheckBox *m_pInheritColor, *m_pRestVisible;
+    QComboBox* m_pPlayback;   // once + stay / once + hide / loop
+    QLineEdit* m_pSkin;       // skin bones, comma separated (docs/engine/16_MESH_ANIMATION.md)
+    QLabel* m_pSkinInfo;      // its mesh, bones and weights, or why it has none
+    QWidget* m_pBonesOutside;          // a warning + "Move Bones Under This Sprite" (bones the node does not carry)
+    QLabel* m_pBonesOutsideText;
+    QSpinBox *m_pMeshCols, *m_pMeshRows;   // the node's mesh grid, cells across and down (re-cuts its mesh)
+    QWidget* m_pMeshGridRow;
+    QSpinBox *m_pLatticeCols, *m_pLatticeRows;   // the deform lattice's points across and down (docs/engine/16 step 4)
     // Effect and trail (docs/engine/18_NODE_EFFECTS.md): the shader its subtree is drawn through, its params at the
     // playhead (keyed like the other channels), its colour; the afterimages' count, gap, colour, blending, strength.
-    QGroupBox* m_fxBox;
-    QComboBox* m_fxShader;
-    QDoubleSpinBox *m_fxParam[4], *m_fxColor[4];
-    QLabel* m_fxParamNames[4];
-    QSpinBox* m_trailCount;
-    QDoubleSpinBox *m_trailGap, *m_trailColor[4], *m_trailStrength;
-    QCheckBox* m_trailAdd;
-    void refreshEffect(const toms::anim::Node* n);
-    QLabel* m_playLabel;
-    QDoubleSpinBox *m_pos[3], *m_rot[3], *m_scale[3], *m_color[4];   // x, y, z
-    QLabel* m_spriteHere;
-    QCheckBox* m_visibleHere;
-    QToolButton* m_key[animed::kChannelCount] = {};
-    QComboBox* m_ease[4] = {};    // pos, rot, scale, color
-    QLabel* m_easeAt[4] = {};
+    QGroupBox* m_pFxBox;
+    QComboBox* m_pFxShader;
+    QDoubleSpinBox *m_arrFxParam[4], *m_arrFxColor[4];
+    QLabel* m_arrFxParamNames[4];
+    QSpinBox* m_pTrailCount;
+    QDoubleSpinBox *m_pTrailGap, *m_arrTrailColor[4], *m_pTrailStrength;
+    QCheckBox* m_pTrailAdd;
+    void f_RefreshEffect(const toms::anim::Node* l_pN);
+    QLabel* m_pPlayLabel;
+    QDoubleSpinBox *m_arrPos[3], *m_arrRot[3], *m_arrScale[3], *m_arrColor[4];   // x, y, z
+    QLabel* m_pSpriteHere;
+    QCheckBox* m_pVisibleHere;
+    QToolButton* m_arrKey[animed::g_iChannelCount] = {};
+    QComboBox* m_arrEase[4] = {};    // pos, rot, scale, color
+    QLabel* m_arrEaseAt[4] = {};
 };

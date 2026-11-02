@@ -31,67 +31,67 @@ class SpriteEditCanvas : public AtlasCanvasBase
 
 public:
     // Drawn with the game's renderer (GameCanvasView) unless the setting "preview/gameRenderer" is off.
-    explicit SpriteEditCanvas(AtlasDocument* doc, QWidget* parent = nullptr);
+    explicit SpriteEditCanvas(AtlasDocument* l_pDoc, QWidget* l_pParent = nullptr);
     ~SpriteEditCanvas() override;
 
-    QString target() const { return m_target; }
-    void setTarget(const QString& name);
+    QString f_Target() const { return m_oTarget; }
+    void f_SetTarget(const QString& l_oName);
 
 signals:
-    void targetChanged(const QString& name);
-    void exitRequested();
-    void contextMenuRequested(const QPoint& globalPos);
+    void f_TargetChanged(const QString& l_oName);
+    void f_ExitRequested();
+    void f_ContextMenuRequested(const QPoint& l_oGlobalPos);
 
 protected:
-    QSize contentSize() const override { return m_image.size(); }
-    void paintContent(QPainter& p) override;
+    QSize f_ContentSize() const override { return m_oImage.size(); }
+    void f_PaintContent(QPainter& l_oP) override;
 #if TOMS_ATLAS_GAME_RENDERER
-    void paintGameScene(const GameScene& s) override;   // the image, as the game samples it
-    void gameRendererChanged(toms::next::BgfxRenderer* ren) override { m_tex.attach(ren); }
+    void f_PaintGameScene(const GameScene& l_oS) override;   // the image, as the game samples it
+    void f_GameRendererChanged(toms::next::BgfxRenderer* l_pRen) override { m_oTex.f_Attach(l_pRen); }
 #endif
-    void mousePressEvent(QMouseEvent* e) override;
-    void mouseMoveEvent(QMouseEvent* e) override;
-    void mouseReleaseEvent(QMouseEvent* e) override;
-    void mouseDoubleClickEvent(QMouseEvent* e) override;
-    void keyPressEvent(QKeyEvent* e) override;
-    void contextMenuEvent(QContextMenuEvent* e) override;
+    void mousePressEvent(QMouseEvent* l_pE) override;
+    void mouseMoveEvent(QMouseEvent* l_pE) override;
+    void mouseReleaseEvent(QMouseEvent* l_pE) override;
+    void mouseDoubleClickEvent(QMouseEvent* l_pE) override;
+    void keyPressEvent(QKeyEvent* l_pE) override;
+    void contextMenuEvent(QContextMenuEvent* l_pE) override;
 
 private:
     struct Child {
-        QString name;
-        QRect rect;   // in the target's pixels
+        QString m_oName;
+        QRect m_oRect;   // in the target's pixels
     };
 
-    void reload();
-    QVector<Child> children() const;
+    void f_Reload();
+    QVector<Child> f_Children() const;
     // The sprite whose pivot and 9-slice are shown: the current child, or the target itself.
-    QString focus() const;
-    QRect focusRect() const;
-    QPointF pivotPoint(const QString& name, const QRect& r) const;   // content coordinates
-    int childAt(const QVector<Child>& kids, const QPointF& c) const;
-    int handleAt(const QRect& r, const QPointF& widgetPos) const;     // 0..7 clockwise from top-left, -1
-    int splitAt(const QPointF& widgetPos) const;                       // 0 left, 1 right, 2 top, 3 bottom, -1
-    QPointF handlePos(const QRect& r, int handle) const;              // widget coordinates
-    QRect clampToImage(QRect r) const;
-    void updateCursor(const QPointF& widgetPos);
-    void commitDrag();
-    void nudge(int dx, int dy);
+    QString f_Focus() const;
+    QRect f_FocusRect() const;
+    QPointF f_PivotPoint(const QString& l_oName, const QRect& l_oR) const;   // content coordinates
+    int f_ChildAt(const QVector<Child>& l_oKids, const QPointF& l_oC) const;
+    int f_HandleAt(const QRect& l_oR, const QPointF& l_oWidgetPos) const;     // 0..7 clockwise from top-left, -1
+    int f_SplitAt(const QPointF& l_oWidgetPos) const;                       // 0 left, 1 right, 2 top, 3 bottom, -1
+    QPointF f_HandlePos(const QRect& l_oR, int l_iHandle) const;              // widget coordinates
+    QRect f_ClampToImage(QRect l_oR) const;
+    void f_UpdateCursor(const QPointF& l_oWidgetPos);
+    void f_CommitDrag();
+    void f_Nudge(int l_iDx, int l_iDy);
 
     enum class Drag { None, Create, Move, Resize, Pivot, Split };
 
-    AtlasDocument* m_doc;
-    QString m_target;
-    QImage m_image;
+    AtlasDocument* m_pDoc;
+    QString m_oTarget;
+    QImage m_oImage;
 
-    Drag m_drag = Drag::None;
-    QString m_dragName;
-    QPointF m_pressContent;
-    QRect m_startRect, m_liveRect;
-    int m_handle = -1;
-    int m_splitSide = -1;
-    int m_liveSplit[4] = {0, 0, 0, 0};
-    QPointF m_livePivot;   // 0..1 of the focus rect
+    Drag m_eDrag = Drag::None;
+    QString m_oDragName;
+    QPointF m_oPressContent;
+    QRect m_oStartRect, m_oLiveRect;
+    int m_iHandle = -1;
+    int m_iSplitSide = -1;
+    int m_arrLiveSplit[4] = {0, 0, 0, 0};
+    QPointF m_oLivePivot;   // 0..1 of the focus rect
 #if TOMS_ATLAS_GAME_RENDERER
-    GameTextures m_tex;   // the image as a game-renderer texture
+    GameTextures m_oTex;   // the image as a game-renderer texture
 #endif
 };

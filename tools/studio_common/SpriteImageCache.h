@@ -10,21 +10,21 @@
 class SpriteImageCache
 {
 public:
-    void setPages(const QVector<QImage>& pages);   // converted to ARGB32_Premultiplied
-    void clear();
-    const QVector<QImage>& pages() const { return m_pages; }
+    void f_SetPages(const QVector<QImage>& l_oPages);   // converted to ARGB32_Premultiplied
+    void f_Clear();
+    const QVector<QImage>& f_Pages() const { return m_oPages; }
 
     // The pixels of `rect` on `page` (empty when out of range).
-    QImage cut(int page, const QRect& rect) const;
+    QImage f_Cut(int l_iPage, const QRect& l_oRect) const;
     // The same, every pixel multiplied by rgba (0..1) -- what a sprite shader's texture * tint
     // gives, for straight-alpha blending with the result's (premultiplied) alpha. White = cut().
-    QImage tinted(int page, const QRect& rect, const float rgba[4]) const;
+    QImage f_Tinted(int l_iPage, const QRect& l_oRect, const float l_arrRgba[4]) const;
 
     // A square-fitting copy for list icons: never upscaled by more than `size`, pixel art kept crisp.
-    static QImage thumbnail(const QImage& image, int size);
+    static QImage f_Thumbnail(const QImage& l_oImage, int l_iSize);
 
 private:
-    QVector<QImage> m_pages;
-    mutable QHash<QString, QImage> m_cut;
-    mutable QHash<QString, QImage> m_tinted;
+    QVector<QImage> m_oPages;
+    mutable QHash<QString, QImage> m_oCut;
+    mutable QHash<QString, QImage> m_oTinted;
 };

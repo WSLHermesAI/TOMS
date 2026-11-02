@@ -16,35 +16,35 @@ namespace toms {
 enum class Ease { Linear, InQuad, OutQuad, InOutQuad, InCubic, OutCubic, InOutCubic, OutBack, OutBounce };
 
 // t in [0, 1] -> eased [0, 1] (OutBack overshoots a little past 1 on the way).
-float ease(Ease e, float t);
+float f_Ease(Ease l_eE, float l_fT);
 // "linear", "inQuad", "outBack" ... (as in data files); unknown names give Linear.
-Ease easeFromName(const std::string& name);
+Ease f_EaseFromName(const std::string& l_strName);
 
 class Tween {
 public:
     enum class Loop { Once, Repeat, PingPong };
     Tween() = default;
-    Tween(float from, float to, int durationMs, Ease e = Ease::Linear, Loop loop = Loop::Once)
-        : from_(from), to_(to), durationMs_(durationMs > 0 ? durationMs : 1), ease_(e), loop_(loop) {}
+    Tween(float l_fFrom, float l_fTo, int l_iDurationMs, Ease l_eE = Ease::Linear, Loop l_eLoop = Loop::Once)
+        : m_fFrom(l_fFrom), m_fTo(l_fTo), m_iDurationMs(l_iDurationMs > 0 ? l_iDurationMs : 1), m_eEase(l_eE), m_eLoop(l_eLoop) {}
 
-    void update(int dtMs);
-    void restart() { elapsedMs_ = 0; forward_ = true; }
+    void f_Update(int l_iDtMs);
+    void f_Restart() { m_iElapsedMs = 0; m_bForward = true; }
     // Speeds the tween up (2 = twice as fast), keeping where it is: a marker that speeds up as power charges.
-    void setDuration(int durationMs);
+    void f_SetDuration(int l_iDurationMs);
 
-    float value() const;
-    float progress() const;      // 0..1 along the current pass (before easing)
-    bool done() const { return loop_ == Loop::Once && elapsedMs_ >= durationMs_; }
-    bool forward() const { return forward_; }   // PingPong: going from -> to
-    int durationMs() const { return durationMs_; }
+    float f_Value() const;
+    float f_Progress() const;      // 0..1 along the current pass (before easing)
+    bool f_Done() const { return m_eLoop == Loop::Once && m_iElapsedMs >= m_iDurationMs; }
+    bool f_Forward() const { return m_bForward; }   // PingPong: going from -> to
+    int f_DurationMs() const { return m_iDurationMs; }
 
 private:
-    float from_ = 0, to_ = 1;
-    int durationMs_ = 1;
-    Ease ease_ = Ease::Linear;
-    Loop loop_ = Loop::Once;
-    int elapsedMs_ = 0;          // within the current pass
-    bool forward_ = true;
+    float m_fFrom = 0, m_fTo = 1;
+    int m_iDurationMs = 1;
+    Ease m_eEase = Ease::Linear;
+    Loop m_eLoop = Loop::Once;
+    int m_iElapsedMs = 0;          // within the current pass
+    bool m_bForward = true;
 };
 
 } // namespace toms

@@ -28,25 +28,25 @@ class Trackable;   // forward declaration for the registry
 // Registry of currently-alive Trackables (one global instance, thread-safe).
 class ObjectRegistry {
 public:
-    static ObjectRegistry& instance() { static ObjectRegistry r; return r; }
+    static ObjectRegistry& f_Instance() { static ObjectRegistry l_oR; return l_oR; }
 
-    void Add(Trackable* o) {
-        std::lock_guard<std::mutex> lk(m_mutex);
-        m_live.insert(o);
+    void f_Add(Trackable* l_pO) {
+        std::lock_guard<std::mutex> l_oLk(m_oMutex);
+        m_setLive.insert(l_pO);
     }
-    void Remove(Trackable* o) {
-        std::lock_guard<std::mutex> lk(m_mutex);
-        m_live.erase(o);   // idempotent: erasing a missing pointer is a no-op
+    void f_Remove(Trackable* l_pO) {
+        std::lock_guard<std::mutex> l_oLk(m_oMutex);
+        m_setLive.erase(l_pO);   // idempotent: erasing a missing pointer is a no-op
     }
-    long LiveCount() const {
-        std::lock_guard<std::mutex> lk(m_mutex);
-        return (long)m_live.size();
+    long f_LiveCount() const {
+        std::lock_guard<std::mutex> l_oLk(m_oMutex);
+        return (long)m_setLive.size();
     }
-    void DumpLeaks();   // defined after Trackable is complete (needs Type()/Name())
+    void f_DumpLeaks();   // defined after Trackable is complete (needs f_Type()/f_Name())
 
 private:
-    std::unordered_set<Trackable*> m_live;
-    mutable std::mutex m_mutex;
+    std::unordered_set<Trackable*> m_setLive;
+    mutable std::mutex m_oMutex;
 };
 
 // ---------------------------------------------------------------------------
@@ -56,49 +56,49 @@ private:
 // ---------------------------------------------------------------------------
 class Trackable {
 public:
-    Trackable() : uid_(NextUID()) { ObjectRegistry::instance().Add(this); }
-    Trackable(const Trackable&) : uid_(NextUID()) { ObjectRegistry::instance().Add(this); }
+    Trackable() : m_u64Uid(f_NextUID()) { ObjectRegistry::f_Instance().f_Add(this); }
+    Trackable(const Trackable&) : m_u64Uid(f_NextUID()) { ObjectRegistry::f_Instance().f_Add(this); }
     Trackable& operator=(const Trackable&) { return *this; }   // keep our own uid; don't double-register
-    virtual ~Trackable() { ObjectRegistry::instance().Remove(this); }
+    virtual ~Trackable() { ObjectRegistry::f_Instance().f_Remove(this); }
 
-    virtual const char* Type() const { return "Trackable"; }
-    template<class T> bool IsType() const { return Type() == T::StaticType(); }
+    virtual const char* f_Type() const { return "Trackable"; }
+    template<class T> bool f_IsType() const { return f_Type() == T::f_StaticType(); }
 
-    void SetName(const std::string& n) { name_ = n; }
-    const std::string& Name() const { return name_; }
+    void f_SetName(const std::string& l_strN) { m_strName = l_strN; }
+    const std::string& f_Name() const { return m_strName; }
 
-    uint64_t UniqueID() const { return uid_; }
+    uint64_t f_UniqueID() const { return m_u64Uid; }
 
     // factory: make a shared_ptr<Object> subclass
-    template<class T, class... A> static std::shared_ptr<T> Make(A&&... a) {
-        return std::make_shared<T>(std::forward<A>(a)...);
+    template<class T, class... A> static std::shared_ptr<T> f_Make(A&&... l_oA) {
+        return std::make_shared<T>(std::forward<A>(l_oA)...);
     }
 
 protected:
-    std::string name_;
-    uint64_t uid_;
-    static uint64_t NextUID() { static std::atomic<uint64_t> c{1}; return c.fetch_add(1); }
+    std::string m_strName;
+    uint64_t m_u64Uid;
+    static uint64_t f_NextUID() { static std::atomic<uint64_t> l_oC{1}; return l_oC.fetch_add(1); }
 };
 
 // Per-class type key (mirrors FM79979 DEFINE_TYPE_INFO / TYPDE_DEFINE_MARCO).
 // Put TOMS_OBJECT(ClassName) in the class body.
 #define TOMS_OBJECT(T) \
 public: \
-    static const char* StaticType() { return #T; } \
-    const char* Type() const override { return #T; } \
+    static const char* f_StaticType() { return #T; } \
+    const char* f_Type() const override { return #T; } \
 private:
 
 // ---- ObjectRegistry::DumpLeaks defined here: Trackable is complete, so
 //      Type()/Name() are callable on each still-alive object. ----
-inline void ObjectRegistry::DumpLeaks() {
-    std::lock_guard<std::mutex> lk(m_mutex);
-    if (m_live.empty()) {
+inline void ObjectRegistry::f_DumpLeaks() {
+    std::lock_guard<std::mutex> l_oLk(m_oMutex);
+    if (m_setLive.empty()) {
         TOMS_LOG_INFO("Object lifecycle: live objects = 0, no leaks");
         return;
     }
-    TOMS_LOG_ERROR("Object lifecycle: LEAK {} object(s) still alive:", (int)m_live.size());
-    for (Trackable* o : m_live)
-        TOMS_LOG_ERROR("  - type={} name=\"{}\"", o->Type(), o->Name());
+    TOMS_LOG_ERROR("Object lifecycle: LEAK {} object(s) still alive:", (int)m_setLive.size());
+    for (Trackable* l_pO : m_setLive)
+        TOMS_LOG_ERROR("  - type={} name=\"{}\"", l_pO->f_Type(), l_pO->f_Name());
 }
 
 // ---------------------------------------------------------------------------
@@ -111,9 +111,9 @@ public:
     virtual ~Object() = default;
 
     // safe downcast to shared_ptr<T>
-    template<class T> std::shared_ptr<T> As() { return std::dynamic_pointer_cast<T>(shared_from_this()); }
-    template<class T> std::shared_ptr<const T> As() const { return std::dynamic_pointer_cast<const T>(shared_from_this()); }
+    template<class T> std::shared_ptr<T> f_As() { return std::dynamic_pointer_cast<T>(shared_from_this()); }
+    template<class T> std::shared_ptr<const T> f_As() const { return std::dynamic_pointer_cast<const T>(shared_from_this()); }
 
     // After teardown: dump any remaining live Objects by type + name.
-    static void DumpLeaks() { ObjectRegistry::instance().DumpLeaks(); }
+    static void f_DumpLeaks() { ObjectRegistry::f_Instance().f_DumpLeaks(); }
 };

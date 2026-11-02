@@ -24,10 +24,10 @@ namespace fs = std::filesystem;
 namespace toms::next {
 
 GameSession::GameSession() = default;
-GameSession::~GameSession() { stop(); }
+GameSession::~GameSession() { f_Stop(); }
 
-std::string GameSession::defaultAssetDir() {
-    if (const char* env = std::getenv("ASSET_DIR")) return env;
+std::string GameSession::f_DefaultAssetDir() {
+    if (const char* l_pszEnv = std::getenv("ASSET_DIR")) return l_pszEnv;
 #ifdef TOMS_DEFAULT_ASSET_DIR
     return TOMS_DEFAULT_ASSET_DIR;
 #else
@@ -35,387 +35,387 @@ std::string GameSession::defaultAssetDir() {
 #endif
 }
 
-bool GameSession::start(const SessionOptions& opts, std::string& error) {
-    stop();
-    debugUi_ = opts.enableDebugUi;
-    assetDir_ = opts.assetDir.empty() ? defaultAssetDir() : opts.assetDir;
-    pinW_ = opts.designW;
-    pinH_ = opts.designH;
-    canvas_ = pinW_ && pinH_ ? toms::Canvas{pinW_, pinH_} : toms::Canvas{};   // the screen's own on the first frame
-    BgfxRenderer::setDesignSizeExact(canvas_.w, canvas_.h);
+bool GameSession::f_Start(const SessionOptions& l_oOpts, std::string& l_strError) {
+    f_Stop();
+    m_bDebugUi = l_oOpts.m_bEnableDebugUi;
+    m_strAssetDir = l_oOpts.m_strAssetDir.empty() ? f_DefaultAssetDir() : l_oOpts.m_strAssetDir;
+    m_uPinW = l_oOpts.m_uDesignW;
+    m_uPinH = l_oOpts.m_uDesignH;
+    m_oCanvas = m_uPinW && m_uPinH ? toms::Canvas{m_uPinW, m_uPinH} : toms::Canvas{};   // the screen's own on the first frame
+    BgfxRenderer::f_SetDesignSizeExact(m_oCanvas.m_uW, m_oCanvas.m_uH);
 
     // vfs, not std::filesystem: on Android these are entries inside the APK (folders via vfsListDir).
-    if (toms::vfsListDir(assetDir_ + "/atlas").empty()) {
-        error = "Game assets were not found at:\n  " + assetDir_ +
+    if (toms::f_VfsListDir(m_strAssetDir + "/atlas").empty()) {
+        l_strError = "Game assets were not found at:\n  " + m_strAssetDir +
                 "\n\nExpected the game's media folder (assets/media, with atlas/ and fonts/). "
                 "Set the environment variable ASSET_DIR, or restore the content with: git checkout -- assets";
         return false;
     }
-    if (toms::vfsListDir(assetDir_ + "/../data/stages").empty()) {
-        error = "Game data was not found next to the assets folder:\n  " +
-                (fs::path(assetDir_) / ".." / "data").lexically_normal().string();
+    if (toms::f_VfsListDir(m_strAssetDir + "/../data/stages").empty()) {
+        l_strError = "Game data was not found next to the assets folder:\n  " +
+                (fs::path(m_strAssetDir) / ".." / "data").lexically_normal().string();
         return false;
     }
 #ifdef __EMSCRIPTEN__
-    const bool uiFiles = toms::vfsExists(assetDir_ + "/ui/hud.rml");   // the browser draws the text
+    const bool l_bUiFiles = toms::f_VfsExists(m_strAssetDir + "/ui/hud.rml");   // the browser draws the text
 #else
-    const bool uiFiles = toms::vfsExists(uiFontPath(assetDir_)) && toms::vfsExists(assetDir_ + "/ui/hud.rml");
+    const bool l_bUiFiles = toms::f_VfsExists(f_UiFontPath(m_strAssetDir)) && toms::f_VfsExists(m_strAssetDir + "/ui/hud.rml");
 #endif
-    if (!uiFiles) {
-        error = "The UI files were not found in\n  " + assetDir_ +
+    if (!l_bUiFiles) {
+        l_strError = "The UI files were not found in\n  " + m_strAssetDir +
                 "\n\nExpected fonts/NotoSansCJKtc-TOMS.otf and ui/*.rml (restore them with: git checkout -- assets)";
         return false;
     }
 
-    if (debugUi_ && !imgui_.init()) {
-        error = "ImGui could not be initialized (shader program missing for this renderer).";
+    if (m_bDebugUi && !m_oImgui.f_Init()) {
+        l_strError = "ImGui could not be initialized (shader program missing for this renderer).";
         return false;
     }
 
-    toms::JobSystem::start();   // worker threads for parallel work (once; none in the single-threaded web build)
-    toms::Logger::instance().setFile("toms.log");
-    toms::Logger::instance().setLevel(toms::LogLevel::Info);
+    toms::JobSystem::f_Start();   // worker threads for parallel work (once; none in the single-threaded web build)
+    toms::Logger::f_Instance().f_SetFile("toms.log");
+    toms::Logger::f_Instance().f_SetLevel(toms::LogLevel::Info);
     TOMS_LOG_INFO("TOMS start (bgfx host, C++{})", __cplusplus / 100);
 
-    game_ = std::make_unique<Game>();
-    if (opts.uiScale != 1.0f) game_->setUiScale(opts.uiScale);
-    if (!game_->loadAssets(assetDir_)) {   // creates the renderer: `new Renderer()` = BgfxRenderer
-        error = "Game::loadAssets failed for\n  " + assetDir_ + "\nSee the console / toms.log for the file that failed.";
-        renderer_ = dynamic_cast<BgfxRenderer*>(game_->renderer());
-        stop();
+    m_upGame = std::make_unique<Game>();
+    if (l_oOpts.m_fUiScale != 1.0f) m_upGame->f_SetUiScale(l_oOpts.m_fUiScale);
+    if (!m_upGame->f_LoadAssets(m_strAssetDir)) {   // creates the renderer: `new Renderer()` = BgfxRenderer
+        l_strError = "Game::loadAssets failed for\n  " + m_strAssetDir + "\nSee the console / toms.log for the file that failed.";
+        m_pRenderer = dynamic_cast<BgfxRenderer*>(m_upGame->f_Renderer());
+        f_Stop();
         return false;
     }
-    renderer_ = dynamic_cast<BgfxRenderer*>(game_->renderer());
-    game_->setHotReload(opts.hotReload);
-    watchUi_ = opts.hotReload;
-    if (!renderer_) {
-        error = "internal: Game did not create a BgfxRenderer (is game/compat first on the include path?)";
-        stop();
+    m_pRenderer = dynamic_cast<BgfxRenderer*>(m_upGame->f_Renderer());
+    m_upGame->f_SetHotReload(l_oOpts.m_bHotReload);
+    m_bWatchUi = l_oOpts.m_bHotReload;
+    if (!m_pRenderer) {
+        l_strError = "internal: Game did not create a BgfxRenderer (is game/compat first on the include path?)";
+        f_Stop();
         return false;
     }
-    if (const char* hm = std::getenv("TOMS_HIDE")) game_->hideMask = std::atoi(hm);
-    if (const char* sn = std::getenv("TOMS_SPLIT_NODE")) renderer_->setNodeFilter((uint8_t)std::atoi(sn));
-    showHud = opts.showFps;
-    if (opts.fxGpuThreshold >= 0) game_->overrideParticleGpuThreshold(opts.fxGpuThreshold);
-    if (opts.defaultBattleTuning) game_->useDefaultBattleTuning();
-    if (opts.battleLog) game_->setBattleLogToStderr(true);
-    if (opts.titleScene != "none") {   // the 3D scene behind the title; without it the title is plain
-        const std::string path = opts.titleScene.empty() ? assetDir_ + "/models/VirtualCity.glb" : opts.titleScene;
-        if (!opts.titleScene.empty() || toms::vfsExists(path)) {
-            titleScene_ = std::make_unique<TitleScene>();
-            std::string why;
-            if (!titleScene_->load(path, why)) {
-                std::fprintf(stderr, "[title] no 3D scene: %s\n", why.c_str());
-                titleScene_->shutdown();
-                titleScene_.reset();
+    if (const char* l_pszHm = std::getenv("TOMS_HIDE")) m_upGame->m_iHideMask = std::atoi(l_pszHm);
+    if (const char* l_pszSn = std::getenv("TOMS_SPLIT_NODE")) m_pRenderer->f_SetNodeFilter((uint8_t)std::atoi(l_pszSn));
+    m_bShowHud = l_oOpts.m_bShowFps;
+    if (l_oOpts.m_iFxGpuThreshold >= 0) m_upGame->f_OverrideParticleGpuThreshold(l_oOpts.m_iFxGpuThreshold);
+    if (l_oOpts.m_bDefaultBattleTuning) m_upGame->f_UseDefaultBattleTuning();
+    if (l_oOpts.m_bBattleLog) m_upGame->f_SetBattleLogToStderr(true);
+    if (l_oOpts.m_strTitleScene != "none") {   // the 3D scene behind the title; without it the title is plain
+        const std::string l_strPath = l_oOpts.m_strTitleScene.empty() ? m_strAssetDir + "/models/VirtualCity.glb" : l_oOpts.m_strTitleScene;
+        if (!l_oOpts.m_strTitleScene.empty() || toms::f_VfsExists(l_strPath)) {
+            m_upTitleScene = std::make_unique<TitleScene>();
+            std::string l_strWhy;
+            if (!m_upTitleScene->f_Load(l_strPath, l_strWhy)) {
+                std::fprintf(stderr, "[title] no 3D scene: %s\n", l_strWhy.c_str());
+                m_upTitleScene->f_Shutdown();
+                m_upTitleScene.reset();
             }
         }
     }
-    bgfxHostSetHud(showHud);
-    if (opts.spritePath != "auto") {   // --sprite-path / --no-instancing
+    f_BgfxHostSetHud(m_bShowHud);
+    if (l_oOpts.m_strSpritePath != "auto") {   // --sprite-path / --no-instancing
         using P = BgfxRenderer::SpritePath;
-        const P p = opts.spritePath == "compute" ? P::Compute : opts.spritePath == "instancing" ? P::Instancing
-                  : opts.spritePath == "cpu"     ? P::Cpu     : P::Auto;
-        renderer_->setSpritePath(p);
-        std::fprintf(stderr, "[toms] sprite batch: %s (asked for %s)\n", BgfxRenderer::spritePathName(renderer_->spritePath()),
-                     opts.spritePath.c_str());
+        const P l_eP = l_oOpts.m_strSpritePath == "compute" ? P::Compute : l_oOpts.m_strSpritePath == "instancing" ? P::Instancing
+                  : l_oOpts.m_strSpritePath == "cpu"     ? P::Cpu     : P::Auto;
+        m_pRenderer->f_SetSpritePath(l_eP);
+        std::fprintf(stderr, "[toms] sprite batch: %s (asked for %s)\n", BgfxRenderer::f_SpritePathName(m_pRenderer->f_SpritePath()),
+                     l_oOpts.m_strSpritePath.c_str());
     }
-    game_->loadStage(opts.startStage);
-    keyWas_.fill(false);
-    game_->setPreviewCharacter(opts.previewCharacter);   // --character (before the clip starts: it is fitted then)
-    game_->setPreviewHeld(opts.previewHeld);             // --held (bound when the clip starts)
-    game_->setPreviewCrowd(opts.previewCrowd);           // --anim-crowd
-    if (!opts.previewAnim.empty()) {   // --anim=<file>#<clip> (a developer/test option)
-        const size_t hash = opts.previewAnim.rfind('#');
-        std::string animError;
-        if (hash == std::string::npos ||
-            !game_->playPreviewAnim(opts.previewAnim.substr(0, hash), opts.previewAnim.substr(hash + 1), animError))
-            std::fprintf(stderr, "[anim] --anim=%s: %s\n", opts.previewAnim.c_str(),
-                         hash == std::string::npos ? "expected <file>#<clip>" : animError.c_str());
+    m_upGame->f_LoadStage(l_oOpts.m_strStartStage);
+    m_arrKeyWas.fill(false);
+    m_upGame->f_SetPreviewCharacter(l_oOpts.m_strPreviewCharacter);   // --character (before the clip starts: it is fitted then)
+    m_upGame->f_SetPreviewHeld(l_oOpts.m_strPreviewHeld);             // --held (bound when the clip starts)
+    m_upGame->f_SetPreviewCrowd(l_oOpts.m_iPreviewCrowd);           // --anim-crowd
+    if (!l_oOpts.m_strPreviewAnim.empty()) {   // --anim=<file>#<clip> (a developer/test option)
+        const size_t l_nHash = l_oOpts.m_strPreviewAnim.rfind('#');
+        std::string l_strAnimError;
+        if (l_nHash == std::string::npos ||
+            !m_upGame->f_PlayPreviewAnim(l_oOpts.m_strPreviewAnim.substr(0, l_nHash), l_oOpts.m_strPreviewAnim.substr(l_nHash + 1), l_strAnimError))
+            std::fprintf(stderr, "[anim] --anim=%s: %s\n", l_oOpts.m_strPreviewAnim.c_str(),
+                         l_nHash == std::string::npos ? "expected <file>#<clip>" : l_strAnimError.c_str());
     }
-    if (!opts.previewFx.empty()) {     // --fx=<file>#<effect> (a developer/test option)
-        const size_t hash = opts.previewFx.rfind('#');
-        std::string fxError;
-        if (hash == std::string::npos ||
-            !game_->playPreviewFx(opts.previewFx.substr(0, hash), opts.previewFx.substr(hash + 1), fxError))
-            std::fprintf(stderr, "[fx] --fx=%s: %s\n", opts.previewFx.c_str(),
-                         hash == std::string::npos ? "expected <file>#<effect>" : fxError.c_str());
+    if (!l_oOpts.m_strPreviewFx.empty()) {     // --fx=<file>#<effect> (a developer/test option)
+        const size_t l_nHash = l_oOpts.m_strPreviewFx.rfind('#');
+        std::string l_strFxError;
+        if (l_nHash == std::string::npos ||
+            !m_upGame->f_PlayPreviewFx(l_oOpts.m_strPreviewFx.substr(0, l_nHash), l_oOpts.m_strPreviewFx.substr(l_nHash + 1), l_strFxError))
+            std::fprintf(stderr, "[fx] --fx=%s: %s\n", l_oOpts.m_strPreviewFx.c_str(),
+                         l_nHash == std::string::npos ? "expected <file>#<effect>" : l_strFxError.c_str());
     }
-    if (!opts.previewMesh.empty()) {   // --mesh-test=<sprite> (a developer/test option)
-        std::string meshError;
-        if (!game_->playPreviewMesh(opts.previewMesh, meshError))
-            std::fprintf(stderr, "[mesh] --mesh-test=%s: %s\n", opts.previewMesh.c_str(), meshError.c_str());
+    if (!l_oOpts.m_strPreviewMesh.empty()) {   // --mesh-test=<sprite> (a developer/test option)
+        std::string l_strMeshError;
+        if (!m_upGame->f_PlayPreviewMesh(l_oOpts.m_strPreviewMesh, l_strMeshError))
+            std::fprintf(stderr, "[mesh] --mesh-test=%s: %s\n", l_oOpts.m_strPreviewMesh.c_str(), l_strMeshError.c_str());
     }
 
     // The UI: RmlUi on bgfx (view kViewUi), every screen bound to the game (game_ui.h).
-    rml_ = std::make_unique<RmlUi>();
-    ui_ = std::make_unique<GameUi>();
-    if (!rml_->init((int)BgfxRenderer::kDesignW, (int)BgfxRenderer::kDesignH, uiFontPath(assetDir_), error) ||
-        !ui_->init(rml_->context(), game_.get(), (fs::path(assetDir_) / "ui").string(), error)) {
-        error = "The game UI could not start:\n" + error;
-        stop();
+    m_upRml = std::make_unique<RmlUi>();
+    m_upUi = std::make_unique<GameUi>();
+    if (!m_upRml->f_Init((int)BgfxRenderer::m_uDesignW, (int)BgfxRenderer::m_uDesignH, f_UiFontPath(m_strAssetDir), l_strError) ||
+        !m_upUi->f_Init(m_upRml->f_Context(), m_upGame.get(), (fs::path(m_strAssetDir) / "ui").string(), l_strError)) {
+        l_strError = "The game UI could not start:\n" + l_strError;
+        f_Stop();
         return false;
     }
-    uiLanguage_.clear();
-    applyLanguageFont();
+    m_strUiLanguage.clear();
+    f_ApplyLanguageFont();
     return true;
 }
 
-void GameSession::reloadUi() {
-    if (ui_) ui_->reload();
+void GameSession::f_ReloadUi() {
+    if (m_upUi) m_upUi->f_Reload();
 }
 
 // The UI font follows the game's language (text.json: "font" on desktop, "web_font" on the web).
-void GameSession::applyLanguageFont() {
-    const toms::Locale& L = game_->locale();
-    if (L.languageCode() == uiLanguage_) return;
-    uiLanguage_ = L.languageCode();
-    const toms::LanguageInfo* info = nullptr;
-    for (const auto& li : L.languages()) if (li.code == uiLanguage_) info = &li;
-    std::string file;
-    if (info && !info->font.empty()) {
-        fs::path p(info->font);
-        file = (p.is_absolute() ? p : fs::path(assetDir_) / p).generic_string();
+void GameSession::f_ApplyLanguageFont() {
+    const toms::Locale& l_oL = m_upGame->f_Locale();
+    if (l_oL.f_LanguageCode() == m_strUiLanguage) return;
+    m_strUiLanguage = l_oL.f_LanguageCode();
+    const toms::LanguageInfo* l_pInfo = nullptr;
+    for (const auto& l_oLi : l_oL.f_Languages()) if (l_oLi.m_strCode == m_strUiLanguage) l_pInfo = &l_oLi;
+    std::string l_strFile;
+    if (l_pInfo && !l_pInfo->m_strFont.empty()) {
+        fs::path l_oP(l_pInfo->m_strFont);
+        l_strFile = (l_oP.is_absolute() ? l_oP : fs::path(m_strAssetDir) / l_oP).generic_string();
     }
-    ui_->setFontFamily(rml_->languageFont(uiLanguage_, file, info ? info->webFont : std::string()));
+    m_upUi->f_SetFontFamily(m_upRml->f_LanguageFont(m_strUiLanguage, l_strFile, l_pInfo ? l_pInfo->m_strWebFont : std::string()));
 }
 
-std::string GameSession::uiFontPath(const std::string& assetDir) {
-    return (fs::path(assetDir) / "fonts" / "NotoSansCJKtc-TOMS.otf").generic_string();
+std::string GameSession::f_UiFontPath(const std::string& l_strAssetDir) {
+    return (fs::path(l_strAssetDir) / "fonts" / "NotoSansCJKtc-TOMS.otf").generic_string();
 }
 
-void GameSession::stop() {
+void GameSession::f_Stop() {
     // Game never deletes its renderer (the old main called Renderer::destroy() by hand), so the
     // session frees it. Order: the UI (it points at Game and owns bgfx handles), Game, then the
     // renderer's GPU handles.
-    if (titleScene_) titleScene_->shutdown();   // its GPU buffers, while bgfx is up
-    titleScene_.reset();
-    if (ui_) ui_->shutdown();
-    if (rml_) rml_->shutdown();
-    ui_.reset();
-    rml_.reset();
-    game_.reset();
-    if (renderer_) {
-        renderer_->destroy();
-        delete renderer_;
-        renderer_ = nullptr;
+    if (m_upTitleScene) m_upTitleScene->f_Shutdown();   // its GPU buffers, while bgfx is up
+    m_upTitleScene.reset();
+    if (m_upUi) m_upUi->f_Shutdown();
+    if (m_upRml) m_upRml->f_Shutdown();
+    m_upUi.reset();
+    m_upRml.reset();
+    m_upGame.reset();
+    if (m_pRenderer) {
+        m_pRenderer->f_Destroy();
+        delete m_pRenderer;
+        m_pRenderer = nullptr;
     }
-    if (imgui_.ready()) imgui_.shutdown();
+    if (m_oImgui.f_Ready()) m_oImgui.f_Shutdown();
 }
 
-bool GameSession::keyPressed(const InputState& in, Key k) {
-    const bool now = in.isDown(k);
-    const bool fired = now && !keyWas_[(size_t)k];
-    keyWas_[(size_t)k] = now;
-    return fired;
+bool GameSession::f_KeyPressed(const InputState& l_oIn, Key l_eK) {
+    const bool l_bNow = l_oIn.f_IsDown(l_eK);
+    const bool l_bFired = l_bNow && !m_arrKeyWas[(size_t)l_eK];
+    m_arrKeyWas[(size_t)l_eK] = l_bNow;
+    return l_bFired;
 }
 
 // The design canvas for the screen (canvas.h): when the screen turns or the window changes shape, the renderer, the UI
 // (its documents lay out again and match their @media rules) and the game (the camera) move to the new one at once.
-void GameSession::fitCanvas(uint32_t deviceW, uint32_t deviceH) {
-    const toms::Canvas want = pinW_ && pinH_ ? toms::Canvas{pinW_, pinH_} : toms::canvasFor(deviceW, deviceH);
-    if (want == canvas_) return;
-    canvas_ = want;
-    BgfxRenderer::setDesignSizeExact(want.w, want.h);
-    if (rml_) rml_->setDesignSize((int)want.w, (int)want.h);
-    if (game_) game_->canvasChanged();
-    std::fprintf(stderr, "[toms] canvas %ux%u (%s)\n", want.w, want.h, want.portrait() ? "portrait" : "landscape");
+void GameSession::f_FitCanvas(uint32_t l_uDeviceW, uint32_t l_uDeviceH) {
+    const toms::Canvas l_oWant = m_uPinW && m_uPinH ? toms::Canvas{m_uPinW, m_uPinH} : toms::f_CanvasFor(l_uDeviceW, l_uDeviceH);
+    if (l_oWant == m_oCanvas) return;
+    m_oCanvas = l_oWant;
+    BgfxRenderer::f_SetDesignSizeExact(l_oWant.m_uW, l_oWant.m_uH);
+    if (m_upRml) m_upRml->f_SetDesignSize((int)l_oWant.m_uW, (int)l_oWant.m_uH);
+    if (m_upGame) m_upGame->f_CanvasChanged();
+    std::fprintf(stderr, "[toms] canvas %ux%u (%s)\n", l_oWant.m_uW, l_oWant.m_uH, l_oWant.f_Portrait() ? "portrait" : "landscape");
 }
 
-bool GameSession::frame(int dtMs, const InputState& in, uint32_t deviceW, uint32_t deviceH) {
-    if (!game_) return true;
-    Game& g = *game_;
-    renderer_->setDeviceSize(deviceW, deviceH);
-    fitCanvas(deviceW, deviceH);
-    if (dtMs > 0) g.update(dtMs);
+bool GameSession::f_Frame(int l_iDtMs, const InputState& l_oIn, uint32_t l_uDeviceW, uint32_t l_uDeviceH) {
+    if (!m_upGame) return true;
+    Game& l_oG = *m_upGame;
+    m_pRenderer->f_SetDeviceSize(l_uDeviceW, l_uDeviceH);
+    f_FitCanvas(l_uDeviceW, l_uDeviceH);
+    if (l_iDtMs > 0) l_oG.f_Update(l_iDtMs);
 
-    bool keepRunning = true;
+    bool l_bKeepRunning = true;
     // Query each key exactly once per frame (keyPressed is an edge trigger with state).
-    const bool upPressed    = keyPressed(in, Key::Up)    || keyPressed(in, Key::W);
-    const bool downPressed  = keyPressed(in, Key::Down)  || keyPressed(in, Key::S);
-    const bool leftPressed  = keyPressed(in, Key::Left)  || keyPressed(in, Key::A);
-    const bool rightPressed = keyPressed(in, Key::Right) || keyPressed(in, Key::D);
-    const bool enterPressed = keyPressed(in, Key::Enter);
-    const bool spacePressed = keyPressed(in, Key::Space);
-    const bool escPressed   = keyPressed(in, Key::Escape);
+    const bool l_bUpPressed    = f_KeyPressed(l_oIn, Key::Up)    || f_KeyPressed(l_oIn, Key::W);
+    const bool l_bDownPressed  = f_KeyPressed(l_oIn, Key::Down)  || f_KeyPressed(l_oIn, Key::S);
+    const bool l_bLeftPressed  = f_KeyPressed(l_oIn, Key::Left)  || f_KeyPressed(l_oIn, Key::A);
+    const bool l_bRightPressed = f_KeyPressed(l_oIn, Key::Right) || f_KeyPressed(l_oIn, Key::D);
+    const bool l_bEnterPressed = f_KeyPressed(l_oIn, Key::Enter);
+    const bool l_bSpacePressed = f_KeyPressed(l_oIn, Key::Space);
+    const bool l_bEscPressed   = f_KeyPressed(l_oIn, Key::Escape);
 
-    if (keyPressed(in, Key::F5)) ui_->reload();              // re-read assets/media/ui/*.rml/.rcss
-    if (watchUi_ && (uiWatchMs_ += std::max(dtMs, 1)) >= 500) {   // hot reload: a saved .rml / .rcss shows at once
-        uiWatchMs_ = 0;
-        const std::string changed = ui_->reloadIfChanged();
-        if (!changed.empty()) g.showNotice("UI reloaded: " + changed);
+    if (f_KeyPressed(l_oIn, Key::F5)) m_upUi->f_Reload();              // re-read assets/media/ui/*.rml/.rcss
+    if (m_bWatchUi && (m_iUiWatchMs += std::max(l_iDtMs, 1)) >= 500) {   // hot reload: a saved .rml / .rcss shows at once
+        m_iUiWatchMs = 0;
+        const std::string l_strChanged = m_upUi->f_ReloadIfChanged();
+        if (!l_strChanged.empty()) l_oG.f_ShowNotice("UI reloaded: " + l_strChanged);
     }
-    if (keyPressed(in, Key::F8)) rml_->toggleDebugger();     // RmlUi's element/style inspector
-    if (g.titleOpen()) {
-        if (upPressed)    g.titleMove(0, -1);
-        if (downPressed)  g.titleMove(0,  1);
-        if (leftPressed)  g.titleMove(-1, 0);
-        if (rightPressed) g.titleMove( 1, 0);
-        if (enterPressed || spacePressed) g.titleConfirm();
-        if (escPressed) {
-            if (g.title().page() == toms::TitlePage::Menu) keepRunning = false;
-            else g.titleCancel();
+    if (f_KeyPressed(l_oIn, Key::F8)) m_upRml->f_ToggleDebugger();     // RmlUi's element/style inspector
+    if (l_oG.f_TitleOpen()) {
+        if (l_bUpPressed)    l_oG.f_TitleMove(0, -1);
+        if (l_bDownPressed)  l_oG.f_TitleMove(0,  1);
+        if (l_bLeftPressed)  l_oG.f_TitleMove(-1, 0);
+        if (l_bRightPressed) l_oG.f_TitleMove( 1, 0);
+        if (l_bEnterPressed || l_bSpacePressed) l_oG.f_TitleConfirm();
+        if (l_bEscPressed) {
+            if (l_oG.f_Title().f_Page() == toms::TitlePage::Menu) l_bKeepRunning = false;
+            else l_oG.f_TitleCancel();
         }
     }
     // A screen opened by this frame's key (Enter on the System tab's Store row) does not also take
     // that key: the store only reads keys when it was already open at the start of the frame.
-    const bool storeWasOpen = g.storeModal();
-    if (!g.titleOpen()) {
-        if (keyPressed(in, Key::F1)) showDebugOverlay = !showDebugOverlay;
-        if (keyPressed(in, Key::F2)) showStylingSpike = !showStylingSpike;
-        if (escPressed) {
-            if (g.miniGameOpen()) g.closeMiniGame();
-            else if (g.endingActive()) g.dismissEndingScreen();
-            else if (g.noticeOpen()) g.dismissNotice();
-            else if (g.storeModal()) g.storeKey(27);
-            else if (g.stairsConfirmOpen()) g.cancelStageTransition();
-            else if (g.stageSelectOpen()) g.closeStageSelect();
-            else if (g.playerMenuOpen()) g.playerMenuBack();
-            else if (!g.modalActive()) { g.cancelWalk(); g.openPlayerMenu(); }
+    const bool l_bStoreWasOpen = l_oG.f_StoreModal();
+    if (!l_oG.f_TitleOpen()) {
+        if (f_KeyPressed(l_oIn, Key::F1)) m_bShowDebugOverlay = !m_bShowDebugOverlay;
+        if (f_KeyPressed(l_oIn, Key::F2)) m_bShowStylingSpike = !m_bShowStylingSpike;
+        if (l_bEscPressed) {
+            if (l_oG.f_MiniGameOpen()) l_oG.f_CloseMiniGame();
+            else if (l_oG.f_EndingActive()) l_oG.f_DismissEndingScreen();
+            else if (l_oG.f_NoticeOpen()) l_oG.f_DismissNotice();
+            else if (l_oG.f_StoreModal()) l_oG.f_StoreKey(27);
+            else if (l_oG.f_StairsConfirmOpen()) l_oG.f_CancelStageTransition();
+            else if (l_oG.f_StageSelectOpen()) l_oG.f_CloseStageSelect();
+            else if (l_oG.f_PlayerMenuOpen()) l_oG.f_PlayerMenuBack();
+            else if (!l_oG.f_ModalActive()) { l_oG.f_CancelWalk(); l_oG.f_OpenPlayerMenu(); }
         }
-        if (keyPressed(in, Key::Tab)) {
-            if (g.playerMenuOpen()) g.playerMenuTab(1);
-            else if (g.stageSelectOpen()) g.closeStageSelect();
-            else if (!g.modalActive()) g.openStageSelect();
+        if (f_KeyPressed(l_oIn, Key::Tab)) {
+            if (l_oG.f_PlayerMenuOpen()) l_oG.f_PlayerMenuTab(1);
+            else if (l_oG.f_StageSelectOpen()) l_oG.f_CloseStageSelect();
+            else if (!l_oG.f_ModalActive()) l_oG.f_OpenStageSelect();
         }
-        if (g.playerMenuOpen() && keyPressed(in, Key::Q)) g.playerMenuTab(-1);
-        if (g.playerMenuOpen() && keyPressed(in, Key::E)) g.playerMenuTab(1);
-        if (keyPressed(in, Key::C)) {   // the Status tab (closes the menu when it is already there)
+        if (l_oG.f_PlayerMenuOpen() && f_KeyPressed(l_oIn, Key::Q)) l_oG.f_PlayerMenuTab(-1);
+        if (l_oG.f_PlayerMenuOpen() && f_KeyPressed(l_oIn, Key::E)) l_oG.f_PlayerMenuTab(1);
+        if (f_KeyPressed(l_oIn, Key::C)) {   // the Status tab (closes the menu when it is already there)
             using Tab = ::Game::MenuTab;
-            if (g.playerMenuOpen() && g.playerMenuTab() == Tab::Status) g.closePlayerMenu();
-            else if (g.playerMenuOpen() || !g.modalActive()) { g.cancelWalk(); g.openPlayerMenu((int)Tab::Status); }
+            if (l_oG.f_PlayerMenuOpen() && l_oG.f_PlayerMenuTab() == Tab::Status) l_oG.f_ClosePlayerMenu();
+            else if (l_oG.f_PlayerMenuOpen() || !l_oG.f_ModalActive()) { l_oG.f_CancelWalk(); l_oG.f_OpenPlayerMenu((int)Tab::Status); }
         }
         {   // held movement repeats (level state, not edge)
-            int ydir = 0;
-            if (in.isDown(Key::Up) || in.isDown(Key::W)) ydir = -1;
-            else if (in.isDown(Key::Down) || in.isDown(Key::S)) ydir = 1;
-            g.setMoveHeldY(ydir);
-            int xdir = 0;
-            if (in.isDown(Key::Left) || in.isDown(Key::A)) xdir = -1;
-            else if (in.isDown(Key::Right) || in.isDown(Key::D)) xdir = 1;
-            g.setMoveHeldX(xdir);
+            int l_iYdir = 0;
+            if (l_oIn.f_IsDown(Key::Up) || l_oIn.f_IsDown(Key::W)) l_iYdir = -1;
+            else if (l_oIn.f_IsDown(Key::Down) || l_oIn.f_IsDown(Key::S)) l_iYdir = 1;
+            l_oG.f_SetMoveHeldY(l_iYdir);
+            int l_iXdir = 0;
+            if (l_oIn.f_IsDown(Key::Left) || l_oIn.f_IsDown(Key::A)) l_iXdir = -1;
+            else if (l_oIn.f_IsDown(Key::Right) || l_oIn.f_IsDown(Key::D)) l_iXdir = 1;
+            l_oG.f_SetMoveHeldX(l_iXdir);
         }
-        if (g.inDialogueFlag()) {
-            if (upPressed)   g.dlgMoveSel(-1);
-            if (downPressed) g.dlgMoveSel(1);
+        if (l_oG.f_InDialogueFlag()) {
+            if (l_bUpPressed)   l_oG.f_DlgMoveSel(-1);
+            if (l_bDownPressed) l_oG.f_DlgMoveSel(1);
         }
-        if (enterPressed || spacePressed) {
-            if (g.endingActive()) { if (!g.rebirth()) g.dismissEndingScreen(); }
-            else if (g.noticeOpen()) g.dismissNotice();
-            else if (g.playerMenuOpen()) g.playerMenuActivate();
-            else if (g.stairsConfirmOpen()) g.confirmStageTransition();
-            else if (g.miniGameOpen()) g.miniGameTap();
-            else if (g.combatWon()) g.dismissVictory();
-            else if (g.combatActive()) g.battleTapAttack();
-            else if (g.inDialogueFlag()) g.chooseDialogue(g.dialogueSel());
-            else g.interact();
+        if (l_bEnterPressed || l_bSpacePressed) {
+            if (l_oG.f_EndingActive()) { if (!l_oG.f_Rebirth()) l_oG.f_DismissEndingScreen(); }
+            else if (l_oG.f_NoticeOpen()) l_oG.f_DismissNotice();
+            else if (l_oG.f_PlayerMenuOpen()) l_oG.f_PlayerMenuActivate();
+            else if (l_oG.f_StairsConfirmOpen()) l_oG.f_ConfirmStageTransition();
+            else if (l_oG.f_MiniGameOpen()) l_oG.f_MiniGameTap();
+            else if (l_oG.f_CombatWon()) l_oG.f_DismissVictory();
+            else if (l_oG.f_CombatActive()) l_oG.f_BattleTapAttack();
+            else if (l_oG.f_InDialogueFlag()) l_oG.f_ChooseDialogue(l_oG.f_DialogueSel());
+            else l_oG.f_Interact();
         }
-        if (keyPressed(in, Key::F) && g.combatActive()) g.battleTapDefense();
-        if (g.combatActive() && (leftPressed || rightPressed)) g.battleCycleTarget(leftPressed ? -1 : 1);   // the target
-        if (keyPressed(in, Key::G) && g.combatActive()) g.battleTapSuper();
-        if (keyPressed(in, Key::H) && g.combatActive()) g.battleTapActive();
-        if (keyPressed(in, Key::I)) g.toggleInventory();
-        if (keyPressed(in, Key::B) && !g.modalActive()) g.openStore();
-        if (g.playerMenuOpen()) {
-            if (upPressed)    g.playerMenuMove(0, -1);
-            if (downPressed)  g.playerMenuMove(0,  1);
-            if (leftPressed)  g.playerMenuMove(-1, 0);
-            if (rightPressed) g.playerMenuMove( 1, 0);
+        if (f_KeyPressed(l_oIn, Key::F) && l_oG.f_CombatActive()) l_oG.f_BattleTapDefense();
+        if (l_oG.f_CombatActive() && (l_bLeftPressed || l_bRightPressed)) l_oG.f_BattleCycleTarget(l_bLeftPressed ? -1 : 1);   // the target
+        if (f_KeyPressed(l_oIn, Key::G) && l_oG.f_CombatActive()) l_oG.f_BattleTapSuper();
+        if (f_KeyPressed(l_oIn, Key::H) && l_oG.f_CombatActive()) l_oG.f_BattleTapActive();
+        if (f_KeyPressed(l_oIn, Key::I)) l_oG.f_ToggleInventory();
+        if (f_KeyPressed(l_oIn, Key::B) && !l_oG.f_ModalActive()) l_oG.f_OpenStore();
+        if (l_oG.f_PlayerMenuOpen()) {
+            if (l_bUpPressed)    l_oG.f_PlayerMenuMove(0, -1);
+            if (l_bDownPressed)  l_oG.f_PlayerMenuMove(0,  1);
+            if (l_bLeftPressed)  l_oG.f_PlayerMenuMove(-1, 0);
+            if (l_bRightPressed) l_oG.f_PlayerMenuMove( 1, 0);
         }
-        if (g.storeModal() && storeWasOpen) {
-            for (int k = 0; k < 9; ++k)
-                if (keyPressed(in, (Key)((int)Key::Num1 + k))) g.storeKey((char)('1' + k));
-            if (enterPressed) g.storeKey(13);
-            if (leftPressed)  g.storeKey(263);
-            if (rightPressed) g.storeKey(262);
+        if (l_oG.f_StoreModal() && l_bStoreWasOpen) {
+            for (int l_iK = 0; l_iK < 9; ++l_iK)
+                if (f_KeyPressed(l_oIn, (Key)((int)Key::Num1 + l_iK))) l_oG.f_StoreKey((char)('1' + l_iK));
+            if (l_bEnterPressed) l_oG.f_StoreKey(13);
+            if (l_bLeftPressed)  l_oG.f_StoreKey(263);
+            if (l_bRightPressed) l_oG.f_StoreKey(262);
         }
     }
 
     // Mouse: the UI first (design space). A press that lands on no UI element -- the HUD is
     // pointer-events: none except its buttons -- goes on to the map (Game::handleTouch).
     {
-        Rml::Context* ctx = rml_->context();
-        float bx = 0, by = 0;
-        const bool onGame = in.hasMouse && renderer_->deviceToDesign(in.mouseX, in.mouseY, bx, by);
-        if (onGame) ctx->ProcessMouseMove((int)bx, (int)by, 0);
-        if (onGame) {   // the battle's own plays read the pointer themselves (touch_play.h), but not a press on a button
-            int phase = in.mouseLeft ? (mouseWasDown_ ? 1 : 0) : (mouseWasDown_ ? 2 : -1);
-            if (phase == 0)
-                for (Rml::Element* e = ctx->GetHoverElement(); e; e = e->GetParentNode())
-                    if (e->IsClassSet("btn")) { phase = -1; break; }
-            if (phase >= 0) g.battlePointer(phase, bx, by);
+        Rml::Context* l_pCtx = m_upRml->f_Context();
+        float l_fBx = 0, l_fBy = 0;
+        const bool l_bOnGame = l_oIn.m_bHasMouse && m_pRenderer->f_DeviceToDesign(l_oIn.m_fMouseX, l_oIn.m_fMouseY, l_fBx, l_fBy);
+        if (l_bOnGame) l_pCtx->ProcessMouseMove((int)l_fBx, (int)l_fBy, 0);
+        if (l_bOnGame) {   // the battle's own plays read the pointer themselves (touch_play.h), but not a press on a button
+            int l_iPhase = l_oIn.m_bMouseLeft ? (m_bMouseWasDown ? 1 : 0) : (m_bMouseWasDown ? 2 : -1);
+            if (l_iPhase == 0)
+                for (Rml::Element* l_pE = l_pCtx->GetHoverElement(); l_pE; l_pE = l_pE->GetParentNode())
+                    if (l_pE->IsClassSet("btn")) { l_iPhase = -1; break; }
+            if (l_iPhase >= 0) l_oG.f_BattlePointer(l_iPhase, l_fBx, l_fBy);
         }
-        if (in.mouseLeft && !mouseWasDown_) {
-            const bool free = ctx->ProcessMouseButtonDown(0, 0);
-            mousePressFree_ = free && onGame;
-            if (mousePressFree_) g.handleTouch(bx, by, 0);
-        } else if (!in.mouseLeft && mouseWasDown_) {
-            ctx->ProcessMouseButtonUp(0, 0);
-            if (mousePressFree_) g.handleTouch(bx, by, 2);
-            mousePressFree_ = false;
+        if (l_oIn.m_bMouseLeft && !m_bMouseWasDown) {
+            const bool l_bFree = l_pCtx->ProcessMouseButtonDown(0, 0);
+            m_bMousePressFree = l_bFree && l_bOnGame;
+            if (m_bMousePressFree) l_oG.f_HandleTouch(l_fBx, l_fBy, 0);
+        } else if (!l_oIn.m_bMouseLeft && m_bMouseWasDown) {
+            l_pCtx->ProcessMouseButtonUp(0, 0);
+            if (m_bMousePressFree) l_oG.f_HandleTouch(l_fBx, l_fBy, 2);
+            m_bMousePressFree = false;
         }
-        if (in.wheel != 0) ctx->ProcessMouseWheel(-in.wheel, 0);
-        mouseWasDown_ = in.mouseLeft;
+        if (l_oIn.m_fWheel != 0) l_pCtx->ProcessMouseWheel(-l_oIn.m_fWheel, 0);
+        m_bMouseWasDown = l_oIn.m_bMouseLeft;
     }
 
     // Same order as the old main: ImGui frame, dev windows, ImGui render, then the game draw.
-    if (debugUi_) {
-        ImGuiBgfx::Input mi;
-        mi.mouseX = in.mouseX; mi.mouseY = in.mouseY; mi.hasMouse = in.hasMouse;
-        mi.mouseDown[0] = in.mouseLeft; mi.mouseDown[1] = in.mouseRight; mi.mouseDown[2] = in.mouseMiddle;
-        mi.wheel = in.wheel;
-        imgui_.newFrame(deviceW, deviceH, dtMs / 1000.0f, mi);
-        g.applyUiSettings();
-        if (showDebugOverlay) g.drawDebugOverlay();
-        g.setStylingSpikeVisible(false);
-        if (showStylingSpike) g.drawStylingSpike();
+    if (m_bDebugUi) {
+        ImGuiBgfx::Input l_oMi;
+        l_oMi.m_fMouseX = l_oIn.m_fMouseX; l_oMi.m_fMouseY = l_oIn.m_fMouseY; l_oMi.m_bHasMouse = l_oIn.m_bHasMouse;
+        l_oMi.m_arrMouseDown[0] = l_oIn.m_bMouseLeft; l_oMi.m_arrMouseDown[1] = l_oIn.m_bMouseRight; l_oMi.m_arrMouseDown[2] = l_oIn.m_bMouseMiddle;
+        l_oMi.m_fWheel = l_oIn.m_fWheel;
+        m_oImgui.f_NewFrame(l_uDeviceW, l_uDeviceH, l_iDtMs / 1000.0f, l_oMi);
+        l_oG.f_ApplyUiSettings();
+        if (m_bShowDebugOverlay) l_oG.f_DrawDebugOverlay();
+        l_oG.f_SetStylingSpikeVisible(false);
+        if (m_bShowStylingSpike) l_oG.f_DrawStylingSpike();
     }
     // The title's 3D scene: its own views, run between the screen clear and the sprites.
-    const bool scene = titleScene_ && g.titleOpen();
-    if (scene) titleScene_->draw(dtMs / 1000.0, deviceW, deviceH);
-    renderer_->setSceneViews(TitleScene::kFirstView, scene ? GltfRenderer::kViews : 0);
-    if (ui_) ui_->setTitleScene(scene);
-    g.draw();   // the world -> BgfxRenderer::end(): views kViewClear + kViewGame
+    const bool l_bScene = m_upTitleScene && l_oG.f_TitleOpen();
+    if (l_bScene) m_upTitleScene->f_Draw(l_iDtMs / 1000.0, l_uDeviceW, l_uDeviceH);
+    m_pRenderer->f_SetSceneViews(TitleScene::m_u16FirstView, l_bScene ? GltfRenderer::m_u16Views : 0);
+    if (m_upUi) m_upUi->f_SetTitleScene(l_bScene);
+    l_oG.f_Draw();   // the world -> BgfxRenderer::end(): views kViewClear + kViewGame
     {           // the UI over it, under ImGui
-        const auto vp = BgfxRenderer::computeAspectFitViewport(deviceW, deviceH, BgfxRenderer::kDesignW, BgfxRenderer::kDesignH);
-        rml_->setViewport(vp.x, vp.y, vp.width, vp.height);
-        applyLanguageFont();
-        ui_->sync();
-        uiTime_ += dtMs / 1000.0;
-        rml_->update(uiTime_);
-        rml_->render(BgfxRenderer::kViewUi);
+        const auto l_oVp = BgfxRenderer::f_ComputeAspectFitViewport(l_uDeviceW, l_uDeviceH, BgfxRenderer::m_uDesignW, BgfxRenderer::m_uDesignH);
+        m_upRml->f_SetViewport(l_oVp.m_fX, l_oVp.m_fY, l_oVp.m_fWidth, l_oVp.m_fHeight);
+        f_ApplyLanguageFont();
+        m_upUi->f_Sync();
+        m_dUiTime += l_iDtMs / 1000.0;
+        m_upRml->f_Update(m_dUiTime);
+        m_upRml->f_Render(BgfxRenderer::m_u16ViewUi);
     }
-    if (debugUi_) imgui_.render(BgfxRenderer::kViewOverlay);
-    if (keyPressed(in, Key::F3)) {   // anywhere, title included
-        showHud = !showHud;
-        bgfxHostSetHud(showHud);
+    if (m_bDebugUi) m_oImgui.f_Render(BgfxRenderer::m_u16ViewOverlay);
+    if (f_KeyPressed(l_oIn, Key::F3)) {   // anywhere, title included
+        m_bShowHud = !m_bShowHud;
+        f_BgfxHostSetHud(m_bShowHud);
     }
-    drawHud();
-    return keepRunning;
+    f_DrawHud();
+    return l_bKeepRunning;
 }
 
 // FPS 60.0 (16.7 ms) | Direct3D 11 | sprites: GPU instancing | compute: yes | 1234 quads, 3 draws
-void GameSession::drawHud() {
-    const double now = std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
-    if (hudClock_ < 0) hudClock_ = now;
-    hudFrames_++;
-    if (now - hudClock_ >= 0.5 || (hudFps_ == 0 && hudFrames_ >= 10 && now > hudClock_)) {   // a first value soon
-        hudFps_ = hudFrames_ / (now - hudClock_);
-        hudMs_ = (now - hudClock_) * 1000.0 / hudFrames_;
-        hudClock_ = now;
-        hudFrames_ = 0;
+void GameSession::f_DrawHud() {
+    const double l_dNow = std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
+    if (m_dHudClock < 0) m_dHudClock = l_dNow;
+    m_iHudFrames++;
+    if (l_dNow - m_dHudClock >= 0.5 || (m_dHudFps == 0 && m_iHudFrames >= 10 && l_dNow > m_dHudClock)) {   // a first value soon
+        m_dHudFps = m_iHudFrames / (l_dNow - m_dHudClock);
+        m_dHudMs = (l_dNow - m_dHudClock) * 1000.0 / m_iHudFrames;
+        m_dHudClock = l_dNow;
+        m_iHudFrames = 0;
     }
-    if (!showHud || !renderer_) return;
-    char line[256];
+    if (!m_bShowHud || !m_pRenderer) return;
+    char l_pszLine[256];
     // "quads drawn/asked": a frame that could not draw everything shows it.
-    std::snprintf(line, sizeof line,
+    std::snprintf(l_pszLine, sizeof l_pszLine,
                   "FPS %5.1f (%5.2f ms) | %s | sprites: %s | compute: %s | %zu/%zu quads, %u draws | fx %d alive, GPU %d/%d emitters (>%d)",
-                  hudFps_, hudMs_, bgfxHostRendererName().c_str(),
-                  BgfxRenderer::spritePathName(renderer_->spritePath()),
-                  bgfxHostSupportsCompute() ? "yes" : "no", renderer_->lastDrawnQuads(), renderer_->lastQuadCount(),
-                  renderer_->lastDrawCalls(), game_ ? game_->previewFxLive() : 0, game_ ? game_->previewFxGpuEmitters() : 0,
-                  game_ ? game_->previewFxEmitters() : 0, game_ ? game_->particleGpuThreshold() : 0);
-    bgfxHostHudText(line);
+                  m_dHudFps, m_dHudMs, f_BgfxHostRendererName().c_str(),
+                  BgfxRenderer::f_SpritePathName(m_pRenderer->f_SpritePath()),
+                  f_BgfxHostSupportsCompute() ? "yes" : "no", m_pRenderer->f_LastDrawnQuads(), m_pRenderer->f_LastQuadCount(),
+                  m_pRenderer->f_LastDrawCalls(), m_upGame ? m_upGame->f_PreviewFxLive() : 0, m_upGame ? m_upGame->f_PreviewFxGpuEmitters() : 0,
+                  m_upGame ? m_upGame->f_PreviewFxEmitters() : 0, m_upGame ? m_upGame->f_ParticleGpuThreshold() : 0);
+    f_BgfxHostHudText(l_pszLine);
 }
 
 }  // namespace toms::next

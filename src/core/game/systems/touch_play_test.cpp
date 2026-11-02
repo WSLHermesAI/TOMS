@@ -6,139 +6,139 @@
 
 using namespace toms;
 
-static int g_fail = 0;
-#define CHECK(cond, msg) do { if (!(cond)) { std::printf("FAIL: %s\n", msg); g_fail++; } } while (0)
+static int g_iFail = 0;
+#define CHECK(cond, msg) do { if (!(cond)) { std::printf("FAIL: %s\n", msg); g_iFail++; } } while (0)
 
-static void swipe(TouchPlay& p, float x, float y, float deg, float len) {
-    const float a = deg * 3.14159265f / 180.0f;
-    p.pointer(0, x, y);
-    p.pointer(1, x + std::cos(a) * len * 0.5f, y + std::sin(a) * len * 0.5f);
-    p.pointer(2, x + std::cos(a) * len, y + std::sin(a) * len);
+static void f_Swipe(TouchPlay& l_oP, float l_fX, float l_fY, float l_fDeg, float l_fLen) {
+    const float l_fA = l_fDeg * 3.14159265f / 180.0f;
+    l_oP.f_Pointer(0, l_fX, l_fY);
+    l_oP.f_Pointer(1, l_fX + std::cos(l_fA) * l_fLen * 0.5f, l_fY + std::sin(l_fA) * l_fLen * 0.5f);
+    l_oP.f_Pointer(2, l_fX + std::cos(l_fA) * l_fLen, l_fY + std::sin(l_fA) * l_fLen);
 }
 
 int main() {
-    const glm::vec4 area(500, 100, 300, 200);
+    const glm::vec4 l_v4Area(500, 100, 300, 200);
     // 1. Bow: the target moves 0.5 s, then stops; a pull charges and shakes; a normal attack is one arrow.
     {
-        TouchPlay p;
-        p.start(PlayKind::Bow, 1, false, area, 7);
-        CHECK(p.running() && !p.started(), "the bow waits for its pull");
-        const auto a = p.target();
-        p.update(250);
-        const auto b = p.target();
-        p.update(400);
-        const auto c = p.target();
-        p.update(400);
-        const auto d = p.target();
-        CHECK(std::hypot(b.x - a.x, b.y - a.y) > 1.0f, "the target moves at first");
-        CHECK(std::hypot(d.x - c.x, d.y - c.y) < 0.01f, "then stops (after 0.5 s)");
-        CHECK(d.x >= area.x && d.x <= area.x + area.z && d.y >= area.y && d.y <= area.y + area.w, "in the area");
+        TouchPlay l_oP;
+        l_oP.f_Start(PlayKind::Bow, 1, false, l_v4Area, 7);
+        CHECK(l_oP.f_Running() && !l_oP.f_Started(), "the bow waits for its pull");
+        const auto l_oA = l_oP.f_Target();
+        l_oP.f_Update(250);
+        const auto l_oB = l_oP.f_Target();
+        l_oP.f_Update(400);
+        const auto l_oC = l_oP.f_Target();
+        l_oP.f_Update(400);
+        const auto l_oD = l_oP.f_Target();
+        CHECK(std::hypot(l_oB.m_fX - l_oA.m_fX, l_oB.m_fY - l_oA.m_fY) > 1.0f, "the target moves at first");
+        CHECK(std::hypot(l_oD.m_fX - l_oC.m_fX, l_oD.m_fY - l_oC.m_fY) < 0.01f, "then stops (after 0.5 s)");
+        CHECK(l_oD.m_fX >= l_v4Area.x && l_oD.m_fX <= l_v4Area.x + l_v4Area.z && l_oD.m_fY >= l_v4Area.y && l_oD.m_fY <= l_v4Area.y + l_v4Area.w, "in the area");
         // pull 50 px straight down from 90 px under it: the crosshair (no shake at once) on the target
-        p.pointer(0, d.x, d.y + 90);
-        p.pointer(1, d.x, d.y + 140);
-        CHECK(p.aiming() && p.charge() == 0.0f && std::fabs(p.crosshair().y - d.y) < 0.01f, "aimed, not charged yet");
-        p.update(750);
-        CHECK(std::fabs(p.charge() - 0.5f) < 0.01f, "half the 1.5 s limit: half charged");
-        p.pointer(2, d.x, d.y + 140);
-        const ComboResult r = p.result();
-        CHECK(p.done() && r.hits == 1 && r.points == 1 && std::fabs(p.shotCharge() - 0.5f) < 0.01f, "one arrow, charged half");
+        l_oP.f_Pointer(0, l_oD.m_fX, l_oD.m_fY + 90);
+        l_oP.f_Pointer(1, l_oD.m_fX, l_oD.m_fY + 140);
+        CHECK(l_oP.f_Aiming() && l_oP.f_Charge() == 0.0f && std::fabs(l_oP.f_Crosshair().y - l_oD.m_fY) < 0.01f, "aimed, not charged yet");
+        l_oP.f_Update(750);
+        CHECK(std::fabs(l_oP.f_Charge() - 0.5f) < 0.01f, "half the 1.5 s limit: half charged");
+        l_oP.f_Pointer(2, l_oD.m_fX, l_oD.m_fY + 140);
+        const ComboResult l_oR = l_oP.f_Result();
+        CHECK(l_oP.f_Done() && l_oR.m_iHits == 1 && l_oR.m_iPoints == 1 && std::fabs(l_oP.f_ShotCharge() - 0.5f) < 0.01f, "one arrow, charged half");
     }
     {   // held to the charge limit: the arrow goes by itself, fully charged (Q41)
-        TouchPlaySettings s;
-        s.bowShakePx = 0.0f;
-        TouchPlay p;
-        p.start(PlayKind::Bow, 1, false, area, 3, s);
-        p.update(600);
-        const auto t = p.target();
-        p.pointer(0, t.x, t.y + 90);
-        p.pointer(1, t.x, t.y + 140);
-        p.update(1600);
-        CHECK(p.done() && p.result().hits == 1 && p.shotCharge() == 1.0f, "the charge limit lets it go at full charge");
+        TouchPlaySettings l_oS;
+        l_oS.m_fBowShakePx = 0.0f;
+        TouchPlay l_oP;
+        l_oP.f_Start(PlayKind::Bow, 1, false, l_v4Area, 3, l_oS);
+        l_oP.f_Update(600);
+        const auto l_oT = l_oP.f_Target();
+        l_oP.f_Pointer(0, l_oT.m_fX, l_oT.m_fY + 90);
+        l_oP.f_Pointer(1, l_oT.m_fX, l_oT.m_fY + 140);
+        l_oP.f_Update(1600);
+        CHECK(l_oP.f_Done() && l_oP.f_Result().m_iHits == 1 && l_oP.f_ShotCharge() == 1.0f, "the charge limit lets it go at full charge");
     }
     {   // a short pull is not a shot; an arrow not shot in time is a miss
-        TouchPlay p;
-        p.start(PlayKind::Bow, 1, false, area, 4);
-        p.pointer(0, 600, 300); p.pointer(2, 605, 300);
-        CHECK(p.started() && p.index() == 0, "too short a pull: no shot");
-        p.update(4100);
-        CHECK(p.done() && p.result().failed, "the arrow's time ran out: a miss");
+        TouchPlay l_oP;
+        l_oP.f_Start(PlayKind::Bow, 1, false, l_v4Area, 4);
+        l_oP.f_Pointer(0, 600, 300); l_oP.f_Pointer(2, 605, 300);
+        CHECK(l_oP.f_Started() && l_oP.f_Index() == 0, "too short a pull: no shot");
+        l_oP.f_Update(4100);
+        CHECK(l_oP.f_Done() && l_oP.f_Result().m_bFailed, "the arrow's time ran out: a miss");
     }
     // 2. Slice: one prompt at a time; only its last 0.5 s take the answer; each answer is a hit at once.
     {
-        TouchPlaySettings s;
-        s.sliceCues = {"way", "way", "triangle"};
-        TouchPlay p;
-        p.start(PlayKind::Slice, 3, false, area, 11, s);
-        CHECK(p.started() && p.cueKind(2) == "triangle", "the sword starts at once; its third prompt a triangle");
-        swipe(p, 650, 200, p.cueDir(0) * 45.0f, 160);
-        CHECK(p.index() == 0, "a swipe before the window: nothing");
-        p.update(600);   // the window is open (500..1000)
-        swipe(p, 650, 200, p.cueDir(0) * 45.0f, 160);
-        auto hits = p.takeHits();
-        CHECK(p.index() == 1 && hits.size() == 1 && hits[0].ok && hits[0].perfect, "the right way in the window: a hit, at once");
-        p.update(150 + 1000);   // the next prompt passes unanswered
-        hits = p.takeHits();
-        CHECK(p.index() == 2 && hits.size() == 1 && !hits[0].ok, "a prompt let pass: a miss");
-        p.update(600);
-        std::vector<glm::vec2> tri = {{650, 150}, {700, 250}, {600, 250}, {650, 150}};
-        p.pointer(0, tri[0].x, tri[0].y);
-        for (float t = 0.0f; t <= 3.0f; t += 0.1f) {
-            const int k = std::min(2, (int)t);
-            const glm::vec2 q = tri[(size_t)k] + (tri[(size_t)k + 1] - tri[(size_t)k]) * (t - (float)k);
-            p.pointer(1, q.x, q.y);
+        TouchPlaySettings l_oS;
+        l_oS.m_vSliceCues = {"way", "way", "triangle"};
+        TouchPlay l_oP;
+        l_oP.f_Start(PlayKind::Slice, 3, false, l_v4Area, 11, l_oS);
+        CHECK(l_oP.f_Started() && l_oP.f_CueKind(2) == "triangle", "the sword starts at once; its third prompt a triangle");
+        f_Swipe(l_oP, 650, 200, l_oP.f_CueDir(0) * 45.0f, 160);
+        CHECK(l_oP.f_Index() == 0, "a swipe before the window: nothing");
+        l_oP.f_Update(600);   // the window is open (500..1000)
+        f_Swipe(l_oP, 650, 200, l_oP.f_CueDir(0) * 45.0f, 160);
+        auto l_vHits = l_oP.f_TakeHits();
+        CHECK(l_oP.f_Index() == 1 && l_vHits.size() == 1 && l_vHits[0].m_bOk && l_vHits[0].m_bPerfect, "the right way in the window: a hit, at once");
+        l_oP.f_Update(150 + 1000);   // the next prompt passes unanswered
+        l_vHits = l_oP.f_TakeHits();
+        CHECK(l_oP.f_Index() == 2 && l_vHits.size() == 1 && !l_vHits[0].m_bOk, "a prompt let pass: a miss");
+        l_oP.f_Update(600);
+        std::vector<glm::vec2> l_vTri = {{650, 150}, {700, 250}, {600, 250}, {650, 150}};
+        l_oP.f_Pointer(0, l_vTri[0].x, l_vTri[0].y);
+        for (float l_fT = 0.0f; l_fT <= 3.0f; l_fT += 0.1f) {
+            const int l_iK = std::min(2, (int)l_fT);
+            const glm::vec2 l_v2Q = l_vTri[(size_t)l_iK] + (l_vTri[(size_t)l_iK + 1] - l_vTri[(size_t)l_iK]) * (l_fT - (float)l_iK);
+            l_oP.f_Pointer(1, l_v2Q.x, l_v2Q.y);
         }
-        p.pointer(2, tri[3].x, tri[3].y);
-        CHECK(p.done() && p.result().hits == 2 && p.result().points == 3, "a triangle drawn: the third prompt cut");
+        l_oP.f_Pointer(2, l_vTri[3].x, l_vTri[3].y);
+        CHECK(l_oP.f_Done() && l_oP.f_Result().m_iHits == 2 && l_oP.f_Result().m_iPoints == 3, "a triangle drawn: the third prompt cut");
     }
     // 3. Circles: count, hide, "!", then tapped in the remembered order; each tap a spell.
     {
-        TouchPlay p;
-        p.start(PlayKind::Circles, 3, false, area, 9);
-        CHECK(p.started() && p.circlePhase() == TouchPlay::CirclePhase::Count && p.circlesLit() == 1, "starts by itself, counting");
-        const auto c = p.circles();
-        for (size_t i = 0; i < c.size(); i++)
-            for (size_t j = i + 1; j < c.size(); j++) CHECK(std::hypot(c[i].x - c[j].x, c[i].y - c[j].y) >= 2.6f * 34.0f, "apart");
-        p.update(500);
-        CHECK(p.circlesLit() == 2, "the second lit");
-        p.pointer(0, c[0].x, c[0].y);
-        CHECK(p.index() == 0, "no tap while counting");
-        p.update(900);    // 1400: hiding
-        CHECK(p.circlePhase() == TouchPlay::CirclePhase::Hide, "then hidden");
-        p.update(500);    // 1900: back, with the "!"
-        CHECK(p.circlePhase() == TouchPlay::CirclePhase::Warn, "back, with the !");
-        p.update(500);    // 2400: tap
-        CHECK(p.circlePhase() == TouchPlay::CirclePhase::Tap, "now to be tapped");
-        p.pointer(0, c[0].x, c[0].y);
-        p.update(700);
-        p.pointer(0, c[2].x, c[2].y);   // the wrong one: the second is missed
-        p.pointer(0, c[2].x, c[2].y);   // now the third is due
-        const auto hits = p.takeHits();
-        CHECK(p.done() && p.result().hits == 2 && p.circles()[1].state == 3 && hits.size() == 3, "in order; a wrong one misses the due one");
-        CHECK(p.circles()[0].state == 2 && p.circles()[2].state == 2, "quick taps are perfect");
+        TouchPlay l_oP;
+        l_oP.f_Start(PlayKind::Circles, 3, false, l_v4Area, 9);
+        CHECK(l_oP.f_Started() && l_oP.f_CirclePhase() == TouchPlay::CirclePhase::Count && l_oP.f_CirclesLit() == 1, "starts by itself, counting");
+        const auto l_vC = l_oP.f_Circles();
+        for (size_t l_nI = 0; l_nI < l_vC.size(); l_nI++)
+            for (size_t l_nJ = l_nI + 1; l_nJ < l_vC.size(); l_nJ++) CHECK(std::hypot(l_vC[l_nI].m_fX - l_vC[l_nJ].m_fX, l_vC[l_nI].m_fY - l_vC[l_nJ].m_fY) >= 2.6f * 34.0f, "apart");
+        l_oP.f_Update(500);
+        CHECK(l_oP.f_CirclesLit() == 2, "the second lit");
+        l_oP.f_Pointer(0, l_vC[0].m_fX, l_vC[0].m_fY);
+        CHECK(l_oP.f_Index() == 0, "no tap while counting");
+        l_oP.f_Update(900);    // 1400: hiding
+        CHECK(l_oP.f_CirclePhase() == TouchPlay::CirclePhase::Hide, "then hidden");
+        l_oP.f_Update(500);    // 1900: back, with the "!"
+        CHECK(l_oP.f_CirclePhase() == TouchPlay::CirclePhase::Warn, "back, with the !");
+        l_oP.f_Update(500);    // 2400: tap
+        CHECK(l_oP.f_CirclePhase() == TouchPlay::CirclePhase::Tap, "now to be tapped");
+        l_oP.f_Pointer(0, l_vC[0].m_fX, l_vC[0].m_fY);
+        l_oP.f_Update(700);
+        l_oP.f_Pointer(0, l_vC[2].m_fX, l_vC[2].m_fY);   // the wrong one: the second is missed
+        l_oP.f_Pointer(0, l_vC[2].m_fX, l_vC[2].m_fY);   // now the third is due
+        const auto l_vHits = l_oP.f_TakeHits();
+        CHECK(l_oP.f_Done() && l_oP.f_Result().m_iHits == 2 && l_oP.f_Circles()[1].m_iState == 3 && l_vHits.size() == 3, "in order; a wrong one misses the due one");
+        CHECK(l_oP.f_Circles()[0].m_iState == 2 && l_oP.f_Circles()[2].m_iState == 2, "quick taps are perfect");
     }
     // 4. Shape: the pentagram traced corner by corner (5 steps); time up keeps what is done.
     {
-        TouchPlaySettings s;
-        s.shapeTimeMs = 3000;
-        TouchPlay p;
-        p.start(PlayKind::Shape, 0, true, area, 1, s);
-        CHECK(p.points() == 5 && p.trace().points().size() == 6, "a pentagram: 5 steps");
-        const auto& pts = p.trace().points();
-        p.pointer(0, pts[0].x, pts[0].y);
-        for (int k = 1; k <= 3; k++) p.pointer(1, pts[(size_t)k].x, pts[(size_t)k].y);
-        CHECK(p.index() == 3 && p.takeHits().size() == 3, "three corners: three steps");
-        p.update(3000);
-        CHECK(p.done() && p.result().hits == 3 && !p.result().failed, "time up: 3 of 5");
+        TouchPlaySettings l_oS;
+        l_oS.m_iShapeTimeMs = 3000;
+        TouchPlay l_oP;
+        l_oP.f_Start(PlayKind::Shape, 0, true, l_v4Area, 1, l_oS);
+        CHECK(l_oP.f_Points() == 5 && l_oP.f_Trace().f_Points().size() == 6, "a pentagram: 5 steps");
+        const auto& l_vPts = l_oP.f_Trace().f_Points();
+        l_oP.f_Pointer(0, l_vPts[0].x, l_vPts[0].y);
+        for (int l_iK = 1; l_iK <= 3; l_iK++) l_oP.f_Pointer(1, l_vPts[(size_t)l_iK].x, l_vPts[(size_t)l_iK].y);
+        CHECK(l_oP.f_Index() == 3 && l_oP.f_TakeHits().size() == 3, "three corners: three steps");
+        l_oP.f_Update(3000);
+        CHECK(l_oP.f_Done() && l_oP.f_Result().m_iHits == 3 && !l_oP.f_Result().m_bFailed, "time up: 3 of 5");
     }
     {   // mash
-        TouchPlay p;
-        p.start(PlayKind::Mash, 4, false, area, 1);
-        for (int k = 0; k < 4; k++) p.pointer(0, 600, 200);
-        CHECK(p.done() && p.result().hits == 4, "four taps");
+        TouchPlay l_oP;
+        l_oP.f_Start(PlayKind::Mash, 4, false, l_v4Area, 1);
+        for (int l_iK = 0; l_iK < 4; l_iK++) l_oP.f_Pointer(0, 600, 200);
+        CHECK(l_oP.f_Done() && l_oP.f_Result().m_iHits == 4, "four taps");
     }
-    CHECK(playKindFromString("bow") == PlayKind::Bow && playKindFromString("shape") == PlayKind::Shape &&
-              playKindFromString("anything") == PlayKind::Track && std::string(playKindName(PlayKind::Mash)) == "mash", "names");
-    if (g_fail) { std::printf("touch_play_test: %d failure(s)\n", g_fail); return 1; }
+    CHECK(f_PlayKindFromString("bow") == PlayKind::Bow && f_PlayKindFromString("shape") == PlayKind::Shape &&
+              f_PlayKindFromString("anything") == PlayKind::Track && std::string(f_PlayKindName(PlayKind::Mash)) == "mash", "names");
+    if (g_iFail) { std::printf("touch_play_test: %d failure(s)\n", g_iFail); return 1; }
     std::printf("touch_play_test: all passed\n");
     return 0;
 }

@@ -26,40 +26,40 @@ public:
     // Starts RmlUi (bgfx must be running). Desktop: defaultFont is registered as family "toms"
     // (`font-family: toms;` in RCSS) and as the fallback for characters other fonts lack. Web:
     // ignored -- text is drawn by the browser (rml_canvas_font.h), no font file is needed.
-    bool init(int designW, int designH, const std::string& defaultFont, std::string& error);
+    bool f_Init(int l_iDesignW, int l_iDesignH, const std::string& l_strDefaultFont, std::string& l_strError);
     // The font family to use for a language (docs/gameplay/01_RMLUI.md, "Fonts"). Desktop: registers
     // fontFile as "toms-<code>" the first time and returns that, or "toms" when fontFile is empty
     // or missing. Web: switches the browser font list to webFonts (CSS) and returns "toms".
-    std::string languageFont(const std::string& code, const std::string& fontFile, const std::string& webFonts);
-    void shutdown();                     // closes all documents; call before bgfx::shutdown
-    bool ready() const;
+    std::string f_LanguageFont(const std::string& l_strCode, const std::string& l_strFontFile, const std::string& l_strWebFonts);
+    void f_Shutdown();                     // closes all documents; call before bgfx::shutdown
+    bool f_Ready() const;
 
-    Rml::Context* context();
+    Rml::Context* f_Context();
 
     // Letterboxed game rectangle in backbuffer pixels (BgfxRenderer::computeAspectFitViewport).
-    void setViewport(float x, float y, float w, float h);
+    void f_SetViewport(float l_fX, float l_fY, float l_fW, float l_fH);
     // The design canvas changed (canvas.h: the screen turned or was resized). The documents lay out again at the new
     // size, and their @media rules (orientation: portrait, ...) are matched again.
-    void setDesignSize(int designW, int designH);
-    void update(double timeSeconds);     // animations, data bindings, layout
-    void render(uint16_t viewId);        // submits the UI to this bgfx view
+    void f_SetDesignSize(int l_iDesignW, int l_iDesignH);
+    void f_Update(double l_dTimeSeconds);     // animations, data bindings, layout
+    void f_Render(uint16_t l_u16ViewId);        // submits the UI to this bgfx view
 
     // A document made in memory: any RmlUi file request whose file name is `fileName` (whatever
     // folder it is linked from) reads `text` instead of a file. The game serves its sprite sheet
     // this way (GameUi, "_atlas.rcss"). Takes effect for documents loaded afterwards.
-    static void setVirtualFile(const std::string& fileName, const std::string& text);
+    static void f_SetVirtualFile(const std::string& l_strFileName, const std::string& l_strText);
     // The file is read from disk again (the UI editor: the text was saved, or its changes dropped).
-    static void clearVirtualFile(const std::string& fileName);
+    static void f_ClearVirtualFile(const std::string& l_strFileName);
     // Every RmlUi log message (level: 0 info, 1 warning, 2 error) also goes here, besides stderr; nullptr = none.
     // The UI editor lists the warnings and errors of the documents it previews.
-    static void setLogListener(std::function<void(int level, const std::string& message)> listener);
+    static void f_SetLogListener(std::function<void(int l_iLevel, const std::string& l_strMessage)> l_fnListener);
 
-    void toggleDebugger();               // RmlUi's element/style inspector
-    bool debuggerVisible() const;
+    void f_ToggleDebugger();               // RmlUi's element/style inspector
+    bool f_DebuggerVisible() const;
 
 private:
     struct Impl;
-    std::unique_ptr<Impl> impl_;
+    std::unique_ptr<Impl> m_upImpl;
 };
 
 }  // namespace toms::next

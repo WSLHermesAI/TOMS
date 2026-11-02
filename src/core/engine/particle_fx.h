@@ -33,25 +33,25 @@ using toms::anim::Ease;
 
 // A start value: a number, or picked uniformly from [min, max] per particle.
 struct Range {
-    float min = 0, max = 0;
+    float m_fMin = 0, m_fMax = 0;
     Range() = default;
-    Range(float v) : min(v), max(v) {}
-    Range(float a, float b) : min(a), max(b) {}
-    bool fixed() const { return min == max; }
-    bool operator==(const Range& o) const { return min == o.min && max == o.max; }
+    Range(float l_fV) : m_fMin(l_fV), m_fMax(l_fV) {}
+    Range(float l_fA, float l_fB) : m_fMin(l_fA), m_fMax(l_fB) {}
+    bool f_Fixed() const { return m_fMin == m_fMax; }
+    bool operator==(const Range& l_oO) const { return m_fMin == l_oO.m_fMin && m_fMax == l_oO.m_fMax; }
 };
 
 // A curve over the particle's normalised life (t = 0..1). Before the first key: the first value;
 // after the last: the last; no keys = 1 (curves multiply the start values).
 template <class T> struct CurveKey {
-    float t = 0;
-    T v{};
-    Ease ease;   // of the segment that starts here
+    float m_fT = 0;
+    T m_oV{};
+    Ease m_oEase;   // of the segment that starts here
 };
 template <class T> struct Curve {
-    std::vector<CurveKey<T>> keys;
-    bool empty() const { return keys.empty(); }
-    T at(float t, const T& none) const;
+    std::vector<CurveKey<T>> m_vKeys;
+    bool f_Empty() const { return m_vKeys.empty(); }
+    T f_At(float l_fT, const T& l_oNone) const;
 };
 
 // How a particle's colour (src) is combined with the screen (dst):
@@ -61,204 +61,204 @@ struct Blend {
         Zero, One, SrcColor, InvSrcColor, SrcAlpha, InvSrcAlpha, DstColor, InvDstColor, DstAlpha, InvDstAlpha,
         FactorCount
     };
-    Factor src = SrcAlpha, dst = InvSrcAlpha;
-    bool operator==(const Blend& o) const { return src == o.src && dst == o.dst; }
-    bool operator!=(const Blend& o) const { return !(*this == o); }
-    static Blend normal() { return {SrcAlpha, InvSrcAlpha}; }
-    static Blend add() { return {SrcAlpha, One}; }
-    static Blend multiply() { return {DstColor, Zero}; }
-    static Blend screen() { return {One, InvSrcColor}; }
-    std::string presetName() const;              // "" when it is not a preset
-    static bool fromPreset(const std::string& name, Blend& out);
-    static const char* factorName(Factor f);     // "srcAlpha", ...
-    static bool factorFromName(const std::string& name, Factor& out);
+    Factor m_eSrc = SrcAlpha, m_eDst = InvSrcAlpha;
+    bool operator==(const Blend& l_oO) const { return m_eSrc == l_oO.m_eSrc && m_eDst == l_oO.m_eDst; }
+    bool operator!=(const Blend& l_oO) const { return !(*this == l_oO); }
+    static Blend f_Normal() { return {SrcAlpha, InvSrcAlpha}; }
+    static Blend f_Add() { return {SrcAlpha, One}; }
+    static Blend f_Multiply() { return {DstColor, Zero}; }
+    static Blend f_Screen() { return {One, InvSrcColor}; }
+    std::string f_PresetName() const;              // "" when it is not a preset
+    static bool f_FromPreset(const std::string& l_strName, Blend& l_oOut);
+    static const char* f_FactorName(Factor l_eF);     // "srcAlpha", ...
+    static bool f_FactorFromName(const std::string& l_strName, Factor& l_eOut);
 };
 
 struct Shape {
-    enum Type { Point, Line, Box, Circle, Ring } type = Point;
-    float length = 0, angle = 0;        // line: centred, turned by angle (degrees)
-    float width = 0, height = 0;        // box
-    float radius = 0, thickness = 0;    // circle / ring (a ring spawns within thickness inside radius)
-    float arcFrom = 0, arcTo = 360;     // circle / ring: the part used, degrees (0 = right, clockwise)
-    bool edge = false;                  // box / circle: only on the outline
-    bool outward = false;               // fly away from the centre (direction is then ignored; spread still applies)
+    enum Type { Point, Line, Box, Circle, Ring } m_eType = Point;
+    float m_fLength = 0, m_fAngle = 0;        // line: centred, turned by angle (degrees)
+    float m_fWidth = 0, m_fHeight = 0;        // box
+    float m_fRadius = 0, m_fThickness = 0;    // circle / ring (a ring spawns within thickness inside radius)
+    float m_fArcFrom = 0, m_fArcTo = 360;     // circle / ring: the part used, degrees (0 = right, clockwise)
+    bool m_bEdge = false;                  // box / circle: only on the outline
+    bool m_bOutward = false;               // fly away from the centre (direction is then ignored; spread still applies)
 };
-const char* shapeName(Shape::Type t);
+const char* f_ShapeName(Shape::Type l_eT);
 
 struct Burst {
-    float t = 0;            // emitter time of the first one
-    Range count = 10;
-    int repeat = 0;         // more times after the first (-1 = while the emitter is active)
-    float interval = 0.5f;  // seconds between them
+    float m_fT = 0;            // emitter time of the first one
+    Range m_oCount = 10;
+    int m_iRepeat = 0;         // more times after the first (-1 = while the emitter is active)
+    float m_fInterval = 0.5f;  // seconds between them
 };
 
 struct Emitter {
-    std::string name;
-    glm::vec2 offset{0, 0};     // from the effect's origin
-    float start = 0;            // active from this effect time...
-    float stop = 0;             // ...until this one (0 = until the effect ends)
-    bool localSpace = false;    // false: particles stay where they were born; true: they move with the effect
-    int maxParticles = 100;
+    std::string m_strName;
+    glm::vec2 m_v2Offset{0, 0};     // from the effect's origin
+    float m_fStart = 0;            // active from this effect time...
+    float m_fStop = 0;             // ...until this one (0 = until the effect ends)
+    bool m_bLocalSpace = false;    // false: particles stay where they were born; true: they move with the effect
+    int m_iMaxParticles = 100;
 
-    float rate = 10;            // particles per second while active
-    std::vector<Burst> bursts;
-    Shape shape;
+    float m_fRate = 10;            // particles per second while active
+    std::vector<Burst> m_vBursts;
+    Shape m_oShape;
 
-    Range life = 1;             // seconds
-    float direction = -90;      // degrees; -90 = up
-    float spread = 0;           // +- degrees around the direction
-    Range speed = 50;           // px / s
-    Range size = 16;            // px, the width; the height follows the sprite's aspect
-    Range rotation = 0;         // start angle, degrees
-    Range spin = 0;             // degrees / s
-    glm::vec4 color{1, 1, 1, 1};
-    glm::vec4 color2{1, 1, 1, 1};   // a random colour between color and color2 (equal = fixed)
-    std::string sprite;             // "atlasId:name" or "name"
+    Range m_oLife = 1;             // seconds
+    float m_fDirection = -90;      // degrees; -90 = up
+    float m_fSpread = 0;           // +- degrees around the direction
+    Range m_oSpeed = 50;           // px / s
+    Range m_oSize = 16;            // px, the width; the height follows the sprite's aspect
+    Range m_oRotation = 0;         // start angle, degrees
+    Range m_oSpin = 0;             // degrees / s
+    glm::vec4 m_v4Color{1, 1, 1, 1};
+    glm::vec4 m_v4Color2{1, 1, 1, 1};   // a random colour between color and color2 (equal = fixed)
+    std::string m_strSprite;             // "atlasId:name" or "name"
 
-    Curve<glm::vec4> colorOverLife;   // multiplies the start colour
-    Curve<float> sizeOverLife, speedOverLife, spinOverLife;   // multiply the start values
+    Curve<glm::vec4> m_oColorOverLife;   // multiplies the start colour
+    Curve<float> m_oSizeOverLife, m_oSpeedOverLife, m_oSpinOverLife;   // multiply the start values
 
-    glm::vec2 gravity{0, 0};    // px / s^2
-    float drag = 0;             // 1 / s: velocity *= exp(-drag * dt)
-    Range radial = 0;           // px / s^2 away from the emitter's origin (negative = towards it)
-    Range tangential = 0;       // px / s^2 around it (clockwise)
+    glm::vec2 m_v2Gravity{0, 0};    // px / s^2
+    float m_fDrag = 0;             // 1 / s: velocity *= exp(-drag * dt)
+    Range m_oRadial = 0;           // px / s^2 away from the emitter's origin (negative = towards it)
+    Range m_oTangential = 0;       // px / s^2 around it (clockwise)
 
-    std::vector<std::string> frames;   // flipbook (replaces `sprite` when not empty)
-    bool framesByFps = false;          // false: the frames span the life; true: loop at fps
-    float fps = 12;
-    bool randomFrame = false;          // start each particle on a random frame
+    std::vector<std::string> m_vFrames;   // flipbook (replaces `sprite` when not empty)
+    bool m_bFramesByFps = false;          // false: the frames span the life; true: loop at fps
+    float m_fFps = 12;
+    bool m_bRandomFrame = false;          // start each particle on a random frame
 
-    Blend blend;
-    int order = 0;                     // among the effect's emitters, higher = in front
-    bool alignToVelocity = false;      // turn each particle to its direction of motion (+ rotation)
-    bool oldestOnTop = false;          // default: new particles draw over old ones
+    Blend m_oBlend;
+    int m_iOrder = 0;                     // among the effect's emitters, higher = in front
+    bool m_bAlignToVelocity = false;      // turn each particle to its direction of motion (+ rotation)
+    bool m_bOldestOnTop = false;          // default: new particles draw over old ones
 
     // Where the game simulates it (set in the particle editor). Auto: by its size -- on the GPU when
     // maxParticles is above the game's threshold (GameSettings::particleGpuThreshold). Gpu: on the GPU
     // whenever the device can (compute shaders), else the CPU. Cpu: always the CPU.
     enum class Simulation { Auto, Cpu, Gpu };
-    Simulation simulation = Simulation::Auto;
+    Simulation m_eSimulation = Simulation::Auto;
 };
-const char* simulationName(Emitter::Simulation s);   // "auto", "cpu", "gpu"
+const char* f_SimulationName(Emitter::Simulation l_eS);   // "auto", "cpu", "gpu"
 
 struct Effect {
-    std::string name;
-    float duration = 0;         // seconds; 0 = endless (until stopped)
-    bool loop = false;          // with a duration: start over at the end (bursts fire again)
-    float prewarm = 0;          // seconds simulated before the first frame
-    uint32_t seed = 0;          // 0 = the instance picks one
-    std::vector<Emitter> emitters;
+    std::string m_strName;
+    float m_fDuration = 0;         // seconds; 0 = endless (until stopped)
+    bool m_bLoop = false;          // with a duration: start over at the end (bursts fire again)
+    float m_fPrewarm = 0;          // seconds simulated before the first frame
+    uint32_t m_uSeed = 0;          // 0 = the instance picks one
+    std::vector<Emitter> m_vEmitters;
 };
 
 struct ParticleFile {
-    int version = 1;
-    std::vector<toms::anim::AtlasRef> atlases;   // as .anim: paths relative to the file, ids for "id:name"
-    std::vector<Effect> effects;
-    const Effect* find(const std::string& name) const;
+    int m_iVersion = 1;
+    std::vector<toms::anim::AtlasRef> m_vAtlases;   // as .anim: paths relative to the file, ids for "id:name"
+    std::vector<Effect> m_vEffects;
+    const Effect* f_Find(const std::string& l_strName) const;
 };
 
-bool parseParticles(const std::string& json, ParticleFile& out, std::string* err = nullptr);
-std::string particlesToJson(const ParticleFile& f);
+bool f_ParseParticles(const std::string& l_strJson, ParticleFile& l_oOut, std::string* l_pErr = nullptr);
+std::string f_ParticlesToJson(const ParticleFile& l_oF);
 
 // Problems a file can have without being unreadable (unsorted keys, t outside 0..1, a stop before
 // the start, bursts bigger than maxParticles, ...). With atlases: also sprites no atlas has.
 // Each is "effect/emitter: text"; `warning` marks the ones that are not errors.
-struct Problem { std::string where, text; bool warning = false; };
-std::vector<Problem> checkParticles(const ParticleFile& f, const toms::anim::AtlasSet* atlases = nullptr);
+struct Problem { std::string m_strWhere, m_strText; bool m_bWarning = false; };
+std::vector<Problem> f_CheckParticles(const ParticleFile& l_oF, const toms::anim::AtlasSet* l_pAtlases = nullptr);
 
 // One playing effect.
 class EffectInstance {
 public:
-    static constexpr float kStep = 1.0f / 60.0f;   // simulation step
-    static constexpr int kMaxSteps = 8;             // per update (a long hitch skips time instead)
+    static constexpr float m_fStep = 1.0f / 60.0f;   // simulation step
+    static constexpr int m_iMaxSteps = 8;             // per update (a long hitch skips time instead)
 
     // From time 0 (then the effect's prewarm). seed 0: the effect's seed, else a new one each play.
     // Call setTransform first: the prewarm already makes world-space particles where the effect is.
-    void play(const Effect* effect, uint32_t seed = 0);
-    void stop(bool clear = false);     // no more particles; clear = remove the live ones too
-    void update(float dt);             // seconds
+    void f_Play(const Effect* l_pEffect, uint32_t l_uSeed = 0);
+    void f_Stop(bool l_bClear = false);     // no more particles; clear = remove the live ones too
+    void f_Update(float l_fDt);             // seconds
     // Effect time t from a fresh play with the same seed (the editor's scrubbing). With a prewarm
     // the effect starts at that time, so an earlier t stays there.
-    void seek(float t);
+    void f_Seek(float l_fT);
 
     // Where the effect is: its origin, rotation and scale (anim::placement). World-space
     // emitters only use it when a particle is born; local-space ones every frame.
-    void setTransform(const glm::mat3& m) { transform_ = m; }
-    const glm::mat3& transform() const { return transform_; }
+    void f_SetTransform(const glm::mat3& l_mat3M) { m_mat3Transform = l_mat3M; }
+    const glm::mat3& f_Transform() const { return m_mat3Transform; }
 
-    const Effect* effect() const { return effect_; }
-    float time() const { return time_; }
-    uint32_t seed() const { return seed_; }
-    bool emitting() const;             // still making particles
-    bool finished() const;             // not emitting and nothing alive
-    int liveCount() const;
-    int liveCount(size_t emitter) const;
+    const Effect* f_Effect() const { return m_pEffect; }
+    float f_Time() const { return m_fTime; }
+    uint32_t f_Seed() const { return m_uSeed; }
+    bool f_Emitting() const;             // still making particles
+    bool f_Finished() const;             // not emitting and nothing alive
+    int f_LiveCount() const;
+    int f_LiveCount(size_t l_nEmitter) const;
 
     // The quads in draw order (emitters by order, then by their place in the list). placement
     // is applied after the transform (e.g. the camera); tint multiplies every colour. Only the
     // CPU-simulated emitters: draw() is what also draws the GPU ones.
-    void appendQuads(const toms::anim::AtlasSet& atlases, const glm::mat3& placement, const float tint[4],
-                     std::vector<Quad>& out, std::vector<std::string>* missing = nullptr) const;
+    void f_AppendQuads(const toms::anim::AtlasSet& l_oAtlases, const glm::mat3& l_mat3Placement, const float l_arrTint[4],
+                     std::vector<Quad>& l_vOut, std::vector<std::string>* l_pMissing = nullptr) const;
 
     // GPU simulation, decided per emitter in play() (so call this first), where `ren` has compute
     // shaders (IRenderer::supportsGpuParticles): Emitter::simulation "gpu" = on the GPU, "cpu" = never,
     // "auto" = when its maxParticles is above `threshold` (0 = never). The CPU still spawns (the same particles as on the
     // CPU, from the same seed); the GPU moves them, applies the curves and builds their quads.
     // The game's setting: GameSettings::particleGpuThreshold (desktop 5000, phones 3000).
-    void setGpuSimulation(IRenderer* ren, int threshold) { gpuRen_ = ren; gpuThreshold_ = threshold; }
-    int gpuEmitters() const;   // emitters simulated on the GPU now
-    bool gpuEmitter(size_t emitter) const { return emitter < gpu_.size() && gpu_[emitter] != nullptr; }
+    void f_SetGpuSimulation(IRenderer* l_pRen, int l_iThreshold) { m_pGpuRen = l_pRen; m_iGpuThreshold = l_iThreshold; }
+    int f_GpuEmitters() const;   // emitters simulated on the GPU now
+    bool f_GpuEmitter(size_t l_nEmitter) const { return l_nEmitter < m_vGpu.size() && m_vGpu[l_nEmitter] != nullptr; }
     // Draws everything through `ren`, in draw order: CPU emitters as quads (as appendQuads), GPU
     // ones with IRenderer::drawGpuParticles (which also runs their simulation steps since the last draw).
-    void draw(IRenderer* ren, const toms::anim::AtlasSet& atlases, const glm::mat3& placement, const float tint[4],
-              std::vector<std::string>* missing = nullptr);
+    void f_Draw(IRenderer* l_pRen, const toms::anim::AtlasSet& l_oAtlases, const glm::mat3& l_mat3Placement, const float l_arrTint[4],
+              std::vector<std::string>* l_pMissing = nullptr);
 
 private:
     // One GPU-simulated emitter: the renderer's buffers, which slots are free, when each used slot
     // frees (a particle's life is fixed at birth, so the CPU knows without reading anything back),
     // the newborns since the last draw, and the curves baked into tables.
     struct Gpu {
-        IRenderer* ren = nullptr;
-        uint32_t id = 0;
-        int capacity = 0;
-        std::vector<int> freeSlots;   // a stack
-        std::priority_queue<std::pair<long long, int>, std::vector<std::pair<long long, int>>, std::greater<>> frees;   // (step, slot)
-        std::vector<float> spawn;     // GpuParticleFrame spawn records
-        uint32_t pendingSteps = 0;
-        std::vector<float> colorLut, scalarLut;
-        ~Gpu() { if (ren && id) ren->releaseGpuParticles(id); }
+        IRenderer* m_pRen = nullptr;
+        uint32_t m_uId = 0;
+        int m_iCapacity = 0;
+        std::vector<int> m_vFreeSlots;   // a stack
+        std::priority_queue<std::pair<long long, int>, std::vector<std::pair<long long, int>>, std::greater<>> m_oFrees;   // (step, slot)
+        std::vector<float> m_vSpawn;     // GpuParticleFrame spawn records
+        uint32_t m_uPendingSteps = 0;
+        std::vector<float> m_vColorLut, m_vScalarLut;
+        ~Gpu() { if (m_pRen && m_uId) m_pRen->f_ReleaseGpuParticles(m_uId); }
     };
-    void startGpu(size_t emitter);
-    void appendEmitterQuads(size_t emitter, const toms::anim::AtlasSet& atlases, const glm::mat3& placement, const glm::vec4& tint,
-                            std::vector<Quad>& out, std::vector<std::string>* missing) const;
+    void f_StartGpu(size_t l_nEmitter);
+    void f_AppendEmitterQuads(size_t l_nEmitter, const toms::anim::AtlasSet& l_oAtlases, const glm::mat3& l_mat3Placement, const glm::vec4& l_v4Tint,
+                            std::vector<Quad>& l_vOut, std::vector<std::string>* l_pMissing) const;
     struct Pool {   // structure of arrays, in birth order (oldest first)
-        std::vector<glm::vec2> pos, vel;
-        std::vector<float> age, life, size, rot, spin, radial, tangential;
-        std::vector<glm::vec4> color;
-        std::vector<int> frame;
-        int count = 0;
-        double spawnCarry = 0;     // fraction of a particle owed by the rate
-        std::vector<int> burstsDone;
-        void reserve(int n);
+        std::vector<glm::vec2> m_vPos, m_vVel;
+        std::vector<float> m_vAge, m_vLife, m_vSize, m_vRot, m_vSpin, m_vRadial, m_vTangential;
+        std::vector<glm::vec4> m_vColor;
+        std::vector<int> m_vFrame;
+        int m_iCount = 0;
+        double m_dSpawnCarry = 0;     // fraction of a particle owed by the rate
+        std::vector<int> m_vBurstsDone;
+        void f_Reserve(int l_iN);
     };
-    void step(float dt);
-    void spawn(size_t e, int n);   // (not "emit": Qt defines that as a macro)
-    uint32_t next();
-    float rand01();
-    float pick(const Range& r) { return r.fixed() ? r.min : r.min + (r.max - r.min) * rand01(); }
+    void f_Step(float l_fDt);
+    void f_Spawn(size_t l_nE, int l_iN);   // (not "emit": Qt defines that as a macro)
+    uint32_t f_Next();
+    float f_Rand01();
+    float f_Pick(const Range& l_oR) { return l_oR.f_Fixed() ? l_oR.m_fMin : l_oR.m_fMin + (l_oR.m_fMax - l_oR.m_fMin) * f_Rand01(); }
 
-    const Effect* effect_ = nullptr;
-    std::vector<Pool> pools_;
-    std::vector<size_t> drawOrder_;
-    glm::mat3 transform_{1.0f};
-    float time_ = 0;          // effect time (wraps when it loops)
-    float carry_ = 0;         // update time not simulated yet
-    uint32_t seed_ = 0, rng_ = 0;
-    bool stopped_ = false;
-    IRenderer* gpuRen_ = nullptr;
-    int gpuThreshold_ = 0;
-    std::vector<std::shared_ptr<Gpu>> gpu_;   // per emitter; null = simulated on the CPU
-    long long stepIndex_ = 0;                 // steps since play()
+    const Effect* m_pEffect = nullptr;
+    std::vector<Pool> m_vPools;
+    std::vector<size_t> m_vDrawOrder;
+    glm::mat3 m_mat3Transform{1.0f};
+    float m_fTime = 0;          // effect time (wraps when it loops)
+    float m_fCarry = 0;         // update time not simulated yet
+    uint32_t m_uSeed = 0, m_uRng = 0;
+    bool m_bStopped = false;
+    IRenderer* m_pGpuRen = nullptr;
+    int m_iGpuThreshold = 0;
+    std::vector<std::shared_ptr<Gpu>> m_vGpu;   // per emitter; null = simulated on the CPU
+    long long m_i64StepIndex = 0;                 // steps since play()
 };
 
 }  // namespace toms::fx

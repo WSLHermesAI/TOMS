@@ -9,15 +9,15 @@
 #include "object.h"   // Trackable base (Audio is leak-tracked)
 
 struct Audio : public Trackable {
-    bool init(const std::string& sfxDir);
-    void play(const std::string& name);   // name without extension, e.g. "walk"
-    void setVolume(float v);              // 0..1 master
-    bool available() const { return ok; }
+    bool f_Init(const std::string& l_strSfxDir);
+    void f_Play(const std::string& l_strName);   // name without extension, e.g. "walk"
+    void f_SetVolume(float l_fV);              // 0..1 master
+    bool f_Available() const { return m_bOk; }
     ~Audio();
 private:
-    bool ok = false;
-    std::string dir;
-    float master = 1.0f;
-    void* engine = nullptr;               // ma_engine* (opaque to avoid pulling the 4MB header into every TU)
+    bool m_bOk = false;
+    std::string m_strDir;
+    float m_fMaster = 1.0f;
+    void* m_pEngine = nullptr;               // ma_engine* (opaque to avoid pulling the 4MB header into every TU)
     TOMS_OBJECT(Audio)
 };

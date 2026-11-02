@@ -21,6 +21,6 @@ enum class ShaderProgram { Sprite, ImGui, RmlUi, SpriteInstanced, SpriteCompute,
 
 // Creates the program for the active renderer. Returns an invalid handle (and logs) if the
 // renderer type has no embedded binary (e.g. Metal on Windows builds).
-bgfx::ProgramHandle createEmbeddedProgram(ShaderProgram which);
+bgfx::ProgramHandle f_CreateEmbeddedProgram(ShaderProgram l_eWhich);
 
 }  // namespace toms::next

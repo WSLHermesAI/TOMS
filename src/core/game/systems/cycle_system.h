@@ -16,16 +16,16 @@
 namespace toms {
 
 struct CyclesConfig {
-    int maxCycles = 9;              // STORY_BIBLE.md §8: cycleMark caps at 9 (e_10's own condition)
-    float skillEffectScale = 0.5f;  // "已學技能...數值效果 ×0.5" (tier<=0 roots are always exempt --
+    int m_iMaxCycles = 9;              // STORY_BIBLE.md §8: cycleMark caps at 9 (e_10's own condition)
+    float m_fSkillEffectScale = 0.5f;  // "已學技能...數值效果 ×0.5" (tier<=0 roots are always exempt --
                                      // see applySkillEffects's own comment for why that lives there)
-    float statBonusScale = 0.5f;    // "攻擊／防禦基礎加成 ×0.5" -- applied to the LEVEL-UP bonus over
+    float m_fStatBonusScale = 0.5f;    // "攻擊／防禦基礎加成 ×0.5" -- applied to the LEVEL-UP bonus over
                                      // the starting stat, not the starting stat itself
 };
 
 // Loads data/story/cycles.json. Missing/malformed file -> the documented defaults above (never
 // throws), matching readJsonFileSafe's fail-soft convention used everywhere else -- a game with no
 // cycles.json at all should still run rebirth with the bible's own baseline numbers, not refuse to.
-CyclesConfig loadCyclesConfig(const std::string& path);
+CyclesConfig f_LoadCyclesConfig(const std::string& l_strPath);
 
 } // namespace toms

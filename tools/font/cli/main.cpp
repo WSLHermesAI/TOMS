@@ -7,9 +7,9 @@
 #include <windows.h>
 #endif
 
-int main(int argc, char** argv) {
+int main(int l_iArgc, char** l_pArgv) {
 #ifdef _WIN32
     SetConsoleOutputCP(CP_UTF8);   // the glyph list prints the characters themselves
 #endif
-    return fontCliMain(utf8CommandLine(argc, argv));
+    return f_FontCliMain(f_Utf8CommandLine(l_iArgc, l_pArgv));
 }

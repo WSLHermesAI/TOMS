@@ -23,12 +23,12 @@ class JobSystem {
 public:
     // workers < 0: hardware threads - 1 (at most 8). Calling start() again changes nothing
     // unless stop() came first.
-    static void start(int workers = -1);
-    static void stop();                   // joins the workers; later jobs run inline
-    static int workers();                 // 0 = everything runs on the calling thread
-    static bool threadsAvailable();       // false in the single-threaded web build
+    static void f_Start(int l_iWorkers = -1);
+    static void f_Stop();                   // joins the workers; later jobs run inline
+    static int f_Workers();                 // 0 = everything runs on the calling thread
+    static bool f_ThreadsAvailable();       // false in the single-threaded web build
 
-    static void parallelFor(int count, const std::function<void(int)>& body);
+    static void f_ParallelFor(int l_iCount, const std::function<void(int)>& l_fnBody);
 };
 
 }  // namespace toms

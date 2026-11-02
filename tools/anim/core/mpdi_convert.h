@@ -25,24 +25,24 @@
 namespace animed {
 
 struct MpdiConvertReport {
-    int mpdiFiles = 0;          // .mpdi files found
-    int animFiles = 0;          // .anim files written
-    int clips = 0, nodes = 0;
-    int piFiles = 0;            // .pi converted to atlases
-    std::vector<std::string> written;    // every file written (the .anim, the .atlasproj / .atlas / .png ...)
-    std::vector<std::string> warnings;   // "file: what was approximated or skipped"
-    std::vector<std::string> errors;     // "file: why it was not converted"
+    int m_iMpdiFiles = 0;          // .mpdi files found
+    int m_iAnimFiles = 0;          // .anim files written
+    int m_iClips = 0, m_iNodes = 0;
+    int m_iPiFiles = 0;            // .pi converted to atlases
+    std::vector<std::string> m_vWritten;    // every file written (the .anim, the .atlasproj / .atlas / .png ...)
+    std::vector<std::string> m_vWarnings;   // "file: what was approximated or skipped"
+    std::vector<std::string> m_vErrors;     // "file: why it was not converted"
 };
 
 // Converts one .mpdi (and the .pi files it uses, once each per call of convertMpdiFolder). outDir: where the .anim
 // and the atlases go ("" = next to the .mpdi).
-bool convertMpdiFile(const std::string& mpdiPath, const std::string& outDir, MpdiConvertReport& report);
+bool f_ConvertMpdiFile(const std::string& l_strMpdiPath, const std::string& l_strOutDir, MpdiConvertReport& l_oReport);
 
 // Every .mpdi under `folder` (subfolders too). outDir "" = next to each file; else the same subfolders under outDir.
-MpdiConvertReport convertMpdiFolder(const std::string& folder, const std::string& outDir = std::string());
+MpdiConvertReport f_ConvertMpdiFolder(const std::string& l_strFolder, const std::string& l_strOutDir = std::string());
 
 // One .pi -> <outDir>/<name>.atlasproj (embedded) + its packed .atlas and .png (+ .plist). Returns the .atlas path
 // ("" on error).
-std::string convertPi(const std::string& piPath, const std::string& outDir, MpdiConvertReport& report);
+std::string f_ConvertPi(const std::string& l_strPiPath, const std::string& l_strOutDir, MpdiConvertReport& l_oReport);
 
 }  // namespace animed

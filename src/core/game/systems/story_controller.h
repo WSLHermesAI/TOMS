@@ -8,15 +8,15 @@
 
 namespace toms {
 
-inline void setStoryFlag(MetaSaveData& meta, const std::string& flag) { meta.storyFlags.insert(flag); }
-inline bool hasStoryFlag(const MetaSaveData& meta, const std::string& flag) {
-    return meta.storyFlags.count(flag) != 0;
+inline void f_SetStoryFlag(MetaSaveData& l_oMeta, const std::string& l_strFlag) { l_oMeta.m_setStoryFlags.insert(l_strFlag); }
+inline bool f_HasStoryFlag(const MetaSaveData& l_oMeta, const std::string& l_strFlag) {
+    return l_oMeta.m_setStoryFlags.count(l_strFlag) != 0;
 }
 
 // Monotonic: never regresses currentBeat, even if called with a smaller beat (e.g. replaying an
 // earlier floor from a future Stage Select hub shouldn't roll story progress backwards).
-inline void advanceStoryBeat(MetaSaveData& meta, int beat) {
-    if (beat > meta.currentBeat) meta.currentBeat = beat;
+inline void f_AdvanceStoryBeat(MetaSaveData& l_oMeta, int l_iBeat) {
+    if (l_iBeat > l_oMeta.m_iCurrentBeat) l_oMeta.m_iCurrentBeat = l_iBeat;
 }
 
 } // namespace toms

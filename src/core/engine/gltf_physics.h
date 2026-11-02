@@ -34,27 +34,27 @@ namespace toms::gltf {
 // Something entered (enter) or left a trigger. Node indices: the trigger (the compound trigger's node, if it is part
 // of one) and the body (the node with `motion`, or the static collider's node).
 struct TriggerEvent {
-    int trigger = -1;
-    int other = -1;
-    bool enter = true;
+    int m_iTrigger = -1;
+    int m_iOther = -1;
+    bool m_bEnter = true;
 };
 
 // A box around one body's collision shape, for drawing (PhysicsWorld::debugBoxes).
 struct PhysicsDebugBox {
-    glm::mat4 world{1.0f};               // the box's centre and rotation
-    glm::vec3 halfExtents{0.5f};
-    enum class Kind { Static, Kinematic, Dynamic, Trigger } kind = Kind::Static;
-    bool sleeping = false;
-    int node = -1;
+    glm::mat4 m_mat4World{1.0f};               // the box's centre and rotation
+    glm::vec3 m_v3HalfExtents{0.5f};
+    enum class Kind { Static, Kinematic, Dynamic, Trigger } m_eKind = Kind::Static;
+    bool m_bSleeping = false;
+    int m_iNode = -1;
 };
 
 class PhysicsWorld {
 public:
-    static constexpr float kStep = 1.0f / 60.0f;   // the simulation's fixed time step, seconds
+    static constexpr float m_fStep = 1.0f / 60.0f;   // the simulation's fixed time step, seconds
 
     struct Stats {
-        int dynamic = 0, kinematic = 0, statics = 0, triggers = 0, joints = 0;
-        int awake = 0;                     // dynamic bodies not asleep
+        int m_iDynamic = 0, m_iKinematic = 0, m_iStatics = 0, m_iTriggers = 0, m_iJoints = 0;
+        int m_iAwake = 0;                     // dynamic bodies not asleep
     };
 
     PhysicsWorld();
@@ -64,37 +64,37 @@ public:
 
     // Creates everything from model.physics at the pose's current world transforms (call pose.updateWorld() first).
     // False (+ error) when the model has no physics. The model must outlive the world.
-    bool build(const Model& model, const Pose& pose, std::string* error = nullptr);
-    void clear();
-    bool built() const;
+    bool f_Build(const Model& l_oModel, const Pose& l_oPose, std::string* l_pError = nullptr);
+    void f_Clear();
+    bool f_Built() const;
 
     // Advances by dt seconds in fixed kStep steps (the remainder carries over to the next call), at most maxSteps
     // of them (0 = no limit). Writes every moving body into the pose (local transforms) and updates its world.
-    void step(float dt, Pose& pose, int maxSteps = 8);
+    void f_Step(float l_fDt, Pose& l_oPose, int l_iMaxSteps = 8);
     // Writes every moving body into the pose (local transforms + world), without stepping: after something reset the
     // pose (an animation applied from the rest pose), so the bodies stay where the simulation has them.
-    void writePose(Pose& pose) const;
+    void f_WritePose(Pose& l_oPose) const;
     // Simulates from the current time up to `seconds` (no step limit): a frozen time for tests and screenshots.
-    void simulateTo(double seconds, Pose& pose);
-    double time() const;                   // simulated seconds since build()
-    int steps() const;
+    void f_SimulateTo(double l_dSeconds, Pose& l_oPose);
+    double f_Time() const;                   // simulated seconds since build()
+    int f_Steps() const;
 
-    void setGravity(const glm::vec3& g);   // default (0, -9.81, 0): glTF is metres, +Y up
-    glm::vec3 gravity() const;
+    void f_SetGravity(const glm::vec3& l_v3G);   // default (0, -9.81, 0): glTF is metres, +Y up
+    glm::vec3 f_Gravity() const;
 
-    std::vector<TriggerEvent> takeEvents();          // since the last call
-    std::vector<int> inside(int triggerNode) const;  // the bodies (nodes) inside a trigger now
+    std::vector<TriggerEvent> f_TakeEvents();          // since the last call
+    std::vector<int> f_Inside(int l_iTriggerNode) const;  // the bodies (nodes) inside a trigger now
 
-    bool isSleeping(int node) const;                 // a body node that has come to rest
-    glm::vec3 linearVelocity(int node) const;        // world space, m/s (0 for a node without a body)
+    bool f_IsSleeping(int l_iNode) const;                 // a body node that has come to rest
+    glm::vec3 f_LinearVelocity(int l_iNode) const;        // world space, m/s (0 for a node without a body)
 
-    Stats stats() const;
-    const std::vector<std::string>& warnings() const;   // what was approximated or skipped when building
-    void debugBoxes(std::vector<PhysicsDebugBox>& out) const;
+    Stats f_Stats() const;
+    const std::vector<std::string>& f_Warnings() const;   // what was approximated or skipped when building
+    void f_DebugBoxes(std::vector<PhysicsDebugBox>& l_vOut) const;
 
 private:
     struct Impl;
-    std::unique_ptr<Impl> impl_;
+    std::unique_ptr<Impl> m_upImpl;
 };
 
 }  // namespace toms::gltf

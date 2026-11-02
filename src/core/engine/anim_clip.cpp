@@ -18,8 +18,8 @@ namespace {
 
 using EaseFn = float (*)(float);
 // In the order of tweeny::easing::enumerated, so Ease::kind indexes both tables.
-#define TOMS_EASE(name) [](float p) { return tweeny::easing::name.run(p, 0.0f, 1.0f); }
-const EaseFn kEaseFns[] = {
+#define TOMS_EASE(name) [](float l_fP) { return tweeny::easing::name.run(l_fP, 0.0f, 1.0f); }
+const EaseFn g_arrEaseFns[] = {
     TOMS_EASE(linear),            // def: Tweeny's default is linear for floats
     TOMS_EASE(linear),
     [](float) { return 0.0f; },   // stepped: hold the key's value until the next key
@@ -35,138 +35,138 @@ const EaseFn kEaseFns[] = {
     TOMS_EASE(backIn),       TOMS_EASE(backOut),       TOMS_EASE(backInOut),
 };
 #undef TOMS_EASE
-constexpr int kEaseCount = (int)(sizeof(kEaseFns) / sizeof(kEaseFns[0]));
-static_assert(kEaseCount == (int)tweeny::easing::enumerated::backInOut + 1, "easing table out of step with Tweeny");
+constexpr int g_iEaseCount = (int)(sizeof(g_arrEaseFns) / sizeof(g_arrEaseFns[0]));
+static_assert(g_iEaseCount == (int)tweeny::easing::enumerated::backInOut + 1, "easing table out of step with Tweeny");
 
 // cubic-bezier(x1, y1, x2, y2) with P0 = (0,0), P3 = (1,1): find s with x(s) = p, return y(s).
-float bezierEase(const float b[4], float p) {
-    auto coord = [](float a1, float a2, float s) {   // one coordinate of the curve at s
-        const float u = 1 - s;
-        return 3 * u * u * s * a1 + 3 * u * s * s * a2 + s * s * s;
+float f_BezierEase(const float l_arrB[4], float l_fP) {
+    auto l_fnCoord = [](float l_fA1, float l_fA2, float l_fS) {   // one coordinate of the curve at s
+        const float l_fU = 1 - l_fS;
+        return 3 * l_fU * l_fU * l_fS * l_fA1 + 3 * l_fU * l_fS * l_fS * l_fA2 + l_fS * l_fS * l_fS;
     };
-    float lo = 0, hi = 1, s = p;
-    for (int i = 0; i < 8; i++) {   // Newton, falling back to bisection when it stalls or leaves [0,1]
-        const float x = coord(b[0], b[2], s) - p;
-        if (std::fabs(x) < 1e-6f) return coord(b[1], b[3], s);
-        const float u = 1 - s;
-        const float dx = 3 * u * u * b[0] + 6 * u * s * (b[2] - b[0]) + 3 * s * s * (1 - b[2]);
-        if (std::fabs(dx) < 1e-6f) break;
-        const float next = s - x / dx;
-        if (next < 0 || next > 1) break;
-        s = next;
+    float l_fLo = 0, l_fHi = 1, l_fS = l_fP;
+    for (int l_iI = 0; l_iI < 8; l_iI++) {   // Newton, falling back to bisection when it stalls or leaves [0,1]
+        const float l_fX = l_fnCoord(l_arrB[0], l_arrB[2], l_fS) - l_fP;
+        if (std::fabs(l_fX) < 1e-6f) return l_fnCoord(l_arrB[1], l_arrB[3], l_fS);
+        const float l_fU = 1 - l_fS;
+        const float l_fDx = 3 * l_fU * l_fU * l_arrB[0] + 6 * l_fU * l_fS * (l_arrB[2] - l_arrB[0]) + 3 * l_fS * l_fS * (1 - l_arrB[2]);
+        if (std::fabs(l_fDx) < 1e-6f) break;
+        const float l_fNext = l_fS - l_fX / l_fDx;
+        if (l_fNext < 0 || l_fNext > 1) break;
+        l_fS = l_fNext;
     }
-    for (int i = 0; i < 40; i++) {
-        s = (lo + hi) / 2;
-        if (coord(b[0], b[2], s) < p) lo = s; else hi = s;
+    for (int l_iI = 0; l_iI < 40; l_iI++) {
+        l_fS = (l_fLo + l_fHi) / 2;
+        if (l_fnCoord(l_arrB[0], l_arrB[2], l_fS) < l_fP) l_fLo = l_fS; else l_fHi = l_fS;
     }
-    return coord(b[1], b[3], (lo + hi) / 2);
+    return l_fnCoord(l_arrB[1], l_arrB[3], (l_fLo + l_fHi) / 2);
 }
 
 }  // namespace
 
-const std::vector<std::string>& easeNames() {
-    static const std::vector<std::string> names = {
+const std::vector<std::string>& f_EaseNames() {
+    static const std::vector<std::string> l_vNames = {
         "def", "linear", "stepped",
         "quadraticIn", "quadraticOut", "quadraticInOut", "cubicIn", "cubicOut", "cubicInOut",
         "quarticIn", "quarticOut", "quarticInOut", "quinticIn", "quinticOut", "quinticInOut",
         "sinusoidalIn", "sinusoidalOut", "sinusoidalInOut", "exponentialIn", "exponentialOut", "exponentialInOut",
         "circularIn", "circularOut", "circularInOut", "bounceIn", "bounceOut", "bounceInOut",
         "elasticIn", "elasticOut", "elasticInOut", "backIn", "backOut", "backInOut"};
-    return names;
+    return l_vNames;
 }
 
-bool Ease::operator==(const Ease& o) const {
-    if (kind != o.kind) return false;
-    return kind != kBezier || std::equal(bezier, bezier + 4, o.bezier);
+bool Ease::operator==(const Ease& l_oO) const {
+    if (m_iKind != l_oO.m_iKind) return false;
+    return m_iKind != m_iBezier || std::equal(m_arrBezier, m_arrBezier + 4, l_oO.m_arrBezier);
 }
 
-float Ease::apply(float p) const {
-    p = std::min(1.0f, std::max(0.0f, p));
-    if (kind == kBezier) return bezierEase(bezier, p);
-    if (kind < 0 || kind >= kEaseCount) return p;
-    return kEaseFns[kind](p);
+float Ease::f_Apply(float l_fP) const {
+    l_fP = std::min(1.0f, std::max(0.0f, l_fP));
+    if (m_iKind == m_iBezier) return f_BezierEase(m_arrBezier, l_fP);
+    if (m_iKind < 0 || m_iKind >= g_iEaseCount) return l_fP;
+    return g_arrEaseFns[m_iKind](l_fP);
 }
 
-bool parseEase(const std::string& name, Ease& out) {
-    const auto& n = easeNames();
-    for (size_t i = 0; i < n.size(); i++)
-        if (n[i] == name) { out.kind = (int)i; return true; }
+bool f_ParseEase(const std::string& l_strName, Ease& l_oOut) {
+    const auto& l_vN = f_EaseNames();
+    for (size_t l_nI = 0; l_nI < l_vN.size(); l_nI++)
+        if (l_vN[l_nI] == l_strName) { l_oOut.m_iKind = (int)l_nI; return true; }
     return false;
 }
 
-std::string easeName(const Ease& e) {
-    if (e.kind == Ease::kBezier || e.kind < 0 || e.kind >= (int)easeNames().size()) return std::string();
-    return easeNames()[(size_t)e.kind];
+std::string f_EaseName(const Ease& l_oE) {
+    if (l_oE.m_iKind == Ease::m_iBezier || l_oE.m_iKind < 0 || l_oE.m_iKind >= (int)f_EaseNames().size()) return std::string();
+    return f_EaseNames()[(size_t)l_oE.m_iKind];
 }
 
 // ---- sampling ----------------------------------------------------------------------------------
 
 namespace {
 
-template <class T> T lerpValue(const T& a, const T& b, float f) { return a + (b - a) * f; }
+template <class T> T f_LerpValue(const T& l_oA, const T& l_oB, float l_fF) { return l_oA + (l_oB - l_oA) * l_fF; }
 
 // Interpolated channel: the key segment around t, eased by the key that starts it.
-template <class T> T sample(const std::vector<Key<T>>& keys, float t, const T& rest) {
-    if (keys.empty()) return rest;
-    if (t <= keys.front().t) return keys.front().v;
-    if (t >= keys.back().t) return keys.back().v;
-    auto it = std::upper_bound(keys.begin(), keys.end(), t, [](float x, const Key<T>& k) { return x < k.t; });
-    const Key<T>& b = *it;
-    const Key<T>& a = *(it - 1);
-    const float span = b.t - a.t;
-    if (span <= 0 || a.ease.isStepped()) return a.v;
-    return lerpValue(a.v, b.v, a.ease.apply((t - a.t) / span));
+template <class T> T f_Sample(const std::vector<Key<T>>& l_vKeys, float l_fT, const T& l_oRest) {
+    if (l_vKeys.empty()) return l_oRest;
+    if (l_fT <= l_vKeys.front().m_fT) return l_vKeys.front().m_oV;
+    if (l_fT >= l_vKeys.back().m_fT) return l_vKeys.back().m_oV;
+    auto l_oIt = std::upper_bound(l_vKeys.begin(), l_vKeys.end(), l_fT, [](float l_fX, const Key<T>& l_oK) { return l_fX < l_oK.m_fT; });
+    const Key<T>& l_oB = *l_oIt;
+    const Key<T>& l_oA = *(l_oIt - 1);
+    const float l_fSpan = l_oB.m_fT - l_oA.m_fT;
+    if (l_fSpan <= 0 || l_oA.m_oEase.f_IsStepped()) return l_oA.m_oV;
+    return f_LerpValue(l_oA.m_oV, l_oB.m_oV, l_oA.m_oEase.f_Apply((l_fT - l_oA.m_fT) / l_fSpan));
 }
 
 // Stepped channel: the last key at or before t (the first key before it starts).
-template <class T> T sampleStep(const std::vector<Key<T>>& keys, float t, const T& rest) {
-    if (keys.empty()) return rest;
-    auto it = std::upper_bound(keys.begin(), keys.end(), t, [](float x, const Key<T>& k) { return x < k.t; });
-    return it == keys.begin() ? keys.front().v : (it - 1)->v;
+template <class T> T f_SampleStep(const std::vector<Key<T>>& l_vKeys, float l_fT, const T& l_oRest) {
+    if (l_vKeys.empty()) return l_oRest;
+    auto l_oIt = std::upper_bound(l_vKeys.begin(), l_vKeys.end(), l_fT, [](float l_fX, const Key<T>& l_oK) { return l_fX < l_oK.m_fT; });
+    return l_oIt == l_vKeys.begin() ? l_vKeys.front().m_oV : (l_oIt - 1)->m_oV;
 }
 
-template <class T> float lastTime(const std::vector<Key<T>>& keys) { return keys.empty() ? 0.0f : keys.back().t; }
-template <class T> void firstTime(const std::vector<Key<T>>& keys, float& m, bool& any) {
-    if (keys.empty()) return;
-    m = any ? std::min(m, keys.front().t) : keys.front().t;
-    any = true;
+template <class T> float f_LastTime(const std::vector<Key<T>>& l_vKeys) { return l_vKeys.empty() ? 0.0f : l_vKeys.back().m_fT; }
+template <class T> void f_FirstTime(const std::vector<Key<T>>& l_vKeys, float& l_fM, bool& l_bAny) {
+    if (l_vKeys.empty()) return;
+    l_fM = l_bAny ? std::min(l_fM, l_vKeys.front().m_fT) : l_vKeys.front().m_fT;
+    l_bAny = true;
 }
-void firstKey(const Node& n, float& m, bool& any) {
-    firstTime(n.posKeys, m, any);
-    firstTime(n.scaleKeys, m, any);
-    firstTime(n.rotKeys, m, any);
-    firstTime(n.colorKeys, m, any);
-    firstTime(n.spriteKeys, m, any);
-    firstTime(n.eventKeys, m, any);
-    firstTime(n.visibleKeys, m, any);
-    firstTime(n.deformKeys, m, any);
-    firstTime(n.fxKeys, m, any);
-    firstTime(n.trailKeys, m, any);
-    for (const Node& c : n.children) firstKey(c, m, any);
+void f_FirstKey(const Node& l_oN, float& l_fM, bool& l_bAny) {
+    f_FirstTime(l_oN.m_vPosKeys, l_fM, l_bAny);
+    f_FirstTime(l_oN.m_vScaleKeys, l_fM, l_bAny);
+    f_FirstTime(l_oN.m_vRotKeys, l_fM, l_bAny);
+    f_FirstTime(l_oN.m_vColorKeys, l_fM, l_bAny);
+    f_FirstTime(l_oN.m_vSpriteKeys, l_fM, l_bAny);
+    f_FirstTime(l_oN.m_vEventKeys, l_fM, l_bAny);
+    f_FirstTime(l_oN.m_vVisibleKeys, l_fM, l_bAny);
+    f_FirstTime(l_oN.m_vDeformKeys, l_fM, l_bAny);
+    f_FirstTime(l_oN.m_vFxKeys, l_fM, l_bAny);
+    f_FirstTime(l_oN.m_vTrailKeys, l_fM, l_bAny);
+    for (const Node& l_oC : l_oN.m_vChildren) f_FirstKey(l_oC, l_fM, l_bAny);
 }
 
 }  // namespace
 
-glm::vec3 positionAt(const Node& n, float t) { return sample(n.posKeys, t, n.pos); }
-glm::vec3 rotationAt(const Node& n, float t) { return sample(n.rotKeys, t, n.rot); }
-glm::vec3 scaleAt(const Node& n, float t) { return sample(n.scaleKeys, t, n.scale); }
-glm::vec4 colorAt(const Node& n, float t) { return glm::clamp(sample(n.colorKeys, t, n.color), 0.0f, 1.0f); }
-std::string spriteAt(const Node& n, float t) { return sampleStep(n.spriteKeys, t, n.sprite); }
-bool visibleAt(const Node& n, float t) { return sampleStep(n.visibleKeys, t, n.visible); }
-glm::vec4 fxParamsAt(const Node& n, float t) { return sample(n.fxKeys, t, n.fx.params); }
-float trailAt(const Node& n, float t) { return std::clamp(sample(n.trailKeys, t, 1.0f), 0.0f, 1.0f); }
+glm::vec3 f_PositionAt(const Node& l_oN, float l_fT) { return f_Sample(l_oN.m_vPosKeys, l_fT, l_oN.m_v3Pos); }
+glm::vec3 f_RotationAt(const Node& l_oN, float l_fT) { return f_Sample(l_oN.m_vRotKeys, l_fT, l_oN.m_v3Rot); }
+glm::vec3 f_ScaleAt(const Node& l_oN, float l_fT) { return f_Sample(l_oN.m_vScaleKeys, l_fT, l_oN.m_v3Scale); }
+glm::vec4 f_ColorAt(const Node& l_oN, float l_fT) { return glm::clamp(f_Sample(l_oN.m_vColorKeys, l_fT, l_oN.m_v4Color), 0.0f, 1.0f); }
+std::string f_SpriteAt(const Node& l_oN, float l_fT) { return f_SampleStep(l_oN.m_vSpriteKeys, l_fT, l_oN.m_strSprite); }
+bool f_VisibleAt(const Node& l_oN, float l_fT) { return f_SampleStep(l_oN.m_vVisibleKeys, l_fT, l_oN.m_bVisible); }
+glm::vec4 f_FxParamsAt(const Node& l_oN, float l_fT) { return f_Sample(l_oN.m_vFxKeys, l_fT, l_oN.m_oFx.m_v4Params); }
+float f_TrailAt(const Node& l_oN, float l_fT) { return std::clamp(f_Sample(l_oN.m_vTrailKeys, l_fT, 1.0f), 0.0f, 1.0f); }
 
 namespace {
-bool anyEffect(const Node& n) {
-    if (n.hasFx() || n.hasTrail()) return true;
-    for (const Node& c : n.children) if (anyEffect(c)) return true;
+bool f_AnyEffect(const Node& l_oN) {
+    if (l_oN.f_HasFx() || l_oN.f_HasTrail()) return true;
+    for (const Node& l_oC : l_oN.m_vChildren) if (f_AnyEffect(l_oC)) return true;
     return false;
 }
 }  // namespace
-bool hasEffects(const Clip& c) { return anyEffect(c.root); }
+bool f_HasEffects(const Clip& l_oC) { return f_AnyEffect(l_oC.m_oRoot); }
 
-const char* fxShaderName(FxShader s) {
-    switch (s) {
+const char* f_FxShaderName(FxShader l_eS) {
+    switch (l_eS) {
     case FxShader::Group: return "group";
     case FxShader::MotionBlur: return "motionBlur";
     case FxShader::Glow: return "glow";
@@ -177,197 +177,197 @@ const char* fxShaderName(FxShader s) {
     return "";
 }
 
-bool parseFxShader(const std::string& name, FxShader& out) {
-    for (FxShader s : {FxShader::None, FxShader::Group, FxShader::MotionBlur, FxShader::Glow, FxShader::Flash, FxShader::Outline})
-        if (name == fxShaderName(s)) { out = s; return true; }
+bool f_ParseFxShader(const std::string& l_strName, FxShader& l_eOut) {
+    for (FxShader l_eS : {FxShader::None, FxShader::Group, FxShader::MotionBlur, FxShader::Glow, FxShader::Flash, FxShader::Outline})
+        if (l_strName == f_FxShaderName(l_eS)) { l_eOut = l_eS; return true; }
     return false;
 }
 
-float Node::lastKeyTime() const {
-    float m = std::max({lastTime(posKeys), lastTime(scaleKeys), lastTime(rotKeys), lastTime(colorKeys),
-                        lastTime(spriteKeys), lastTime(eventKeys), lastTime(visibleKeys), lastTime(deformKeys),
-                        lastTime(fxKeys), lastTime(trailKeys)});
-    for (const Node& c : children) m = std::max(m, c.lastKeyTime());
-    return m;
+float Node::f_LastKeyTime() const {
+    float l_fM = std::max({f_LastTime(m_vPosKeys), f_LastTime(m_vScaleKeys), f_LastTime(m_vRotKeys), f_LastTime(m_vColorKeys),
+                        f_LastTime(m_vSpriteKeys), f_LastTime(m_vEventKeys), f_LastTime(m_vVisibleKeys), f_LastTime(m_vDeformKeys),
+                        f_LastTime(m_vFxKeys), f_LastTime(m_vTrailKeys)});
+    for (const Node& l_oC : m_vChildren) l_fM = std::max(l_fM, l_oC.f_LastKeyTime());
+    return l_fM;
 }
 
-float Node::firstKeyTime() const {
-    float m = 0;
-    bool any = false;
-    firstKey(*this, m, any);
-    return m;
+float Node::f_FirstKeyTime() const {
+    float l_fM = 0;
+    bool l_bAny = false;
+    f_FirstKey(*this, l_fM, l_bAny);
+    return l_fM;
 }
 
-bool Node::hasKeys() const {
-    float m = 0;
-    bool any = false;
-    firstKey(*this, m, any);
-    return any;
+bool Node::f_HasKeys() const {
+    float l_fM = 0;
+    bool l_bAny = false;
+    f_FirstKey(*this, l_fM, l_bAny);
+    return l_bAny;
 }
 
-bool Node::operator==(const Node& o) const {
-    return name == o.name && sprite == o.sprite && pos == o.pos && rot == o.rot && scale == o.scale && color == o.color &&
-           visible == o.visible && hasPivot == o.hasPivot && pivot == o.pivot && order == o.order && blend == o.blend &&
-           inheritColor == o.inheritColor && loop == o.loop && stayAtLastFrame == o.stayAtLastFrame &&
-           skinBones == o.skinBones && skinWeights == o.skinWeights && lattice[0] == o.lattice[0] &&
-           lattice[1] == o.lattice[1] && deformKeys == o.deformKeys && meshGrid[0] == o.meshGrid[0] &&
-           meshGrid[1] == o.meshGrid[1] && fx == o.fx && fxKeys == o.fxKeys && trail == o.trail && trailKeys == o.trailKeys &&
-           posKeys == o.posKeys && rotKeys == o.rotKeys && scaleKeys == o.scaleKeys && colorKeys == o.colorKeys &&
-           spriteKeys == o.spriteKeys && eventKeys == o.eventKeys && visibleKeys == o.visibleKeys && children == o.children;
+bool Node::operator==(const Node& l_oO) const {
+    return m_strName == l_oO.m_strName && m_strSprite == l_oO.m_strSprite && m_v3Pos == l_oO.m_v3Pos && m_v3Rot == l_oO.m_v3Rot && m_v3Scale == l_oO.m_v3Scale && m_v4Color == l_oO.m_v4Color &&
+           m_bVisible == l_oO.m_bVisible && m_bHasPivot == l_oO.m_bHasPivot && m_v2Pivot == l_oO.m_v2Pivot && m_iOrder == l_oO.m_iOrder && m_eBlend == l_oO.m_eBlend &&
+           m_bInheritColor == l_oO.m_bInheritColor && m_bLoop == l_oO.m_bLoop && m_bStayAtLastFrame == l_oO.m_bStayAtLastFrame &&
+           m_vSkinBones == l_oO.m_vSkinBones && m_vSkinWeights == l_oO.m_vSkinWeights && m_arrLattice[0] == l_oO.m_arrLattice[0] &&
+           m_arrLattice[1] == l_oO.m_arrLattice[1] && m_vDeformKeys == l_oO.m_vDeformKeys && m_arrMeshGrid[0] == l_oO.m_arrMeshGrid[0] &&
+           m_arrMeshGrid[1] == l_oO.m_arrMeshGrid[1] && m_oFx == l_oO.m_oFx && m_vFxKeys == l_oO.m_vFxKeys && m_oTrail == l_oO.m_oTrail && m_vTrailKeys == l_oO.m_vTrailKeys &&
+           m_vPosKeys == l_oO.m_vPosKeys && m_vRotKeys == l_oO.m_vRotKeys && m_vScaleKeys == l_oO.m_vScaleKeys && m_vColorKeys == l_oO.m_vColorKeys &&
+           m_vSpriteKeys == l_oO.m_vSpriteKeys && m_vEventKeys == l_oO.m_vEventKeys && m_vVisibleKeys == l_oO.m_vVisibleKeys && m_vChildren == l_oO.m_vChildren;
 }
 
-float Clip::duration() const { return length > 0 ? length : root.lastKeyTime(); }
+float Clip::f_Duration() const { return m_fLength > 0 ? m_fLength : m_oRoot.f_LastKeyTime(); }
 
-float nodeTime(const Node& n, float t, float first, float last, bool* ended) {
-    if (ended) *ended = false;
-    if (!(t > last)) return t;
-    if (n.loop) {
-        const float len = last - first;
-        if (len <= 1e-6f) return t;   // keys at one time only: nothing to repeat
-        return first + std::fmod(t - first, len);
+float f_NodeTime(const Node& l_oN, float l_fT, float l_fFirst, float l_fLast, bool* l_pEnded) {
+    if (l_pEnded) *l_pEnded = false;
+    if (!(l_fT > l_fLast)) return l_fT;
+    if (l_oN.m_bLoop) {
+        const float l_fLen = l_fLast - l_fFirst;
+        if (l_fLen <= 1e-6f) return l_fT;   // keys at one time only: nothing to repeat
+        return l_fFirst + std::fmod(l_fT - l_fFirst, l_fLen);
     }
-    if (!n.stayAtLastFrame && ended) *ended = true;
-    return t;
+    if (!l_oN.m_bStayAtLastFrame && l_pEnded) *l_pEnded = true;
+    return l_fT;
 }
 
 namespace {
-bool anyLoop(const Node& n) {
-    if (n.loop) return true;
-    for (const Node& c : n.children)
-        if (anyLoop(c)) return true;
+bool f_AnyLoop(const Node& l_oN) {
+    if (l_oN.m_bLoop) return true;
+    for (const Node& l_oC : l_oN.m_vChildren)
+        if (f_AnyLoop(l_oC)) return true;
     return false;
 }
 }  // namespace
 
-bool hasLoopingNodes(const Clip& c) { return anyLoop(c.root); }
+bool f_HasLoopingNodes(const Clip& l_oC) { return f_AnyLoop(l_oC.m_oRoot); }
 
-std::string defaultAtlasId(const std::string& path) {
-    const size_t slash = path.find_last_of("/\\");
-    std::string name = slash == std::string::npos ? path : path.substr(slash + 1);
-    if (name.size() > 6 && name.compare(name.size() - 6, 6, ".atlas") == 0) name.resize(name.size() - 6);
-    return name;
+std::string f_DefaultAtlasId(const std::string& l_strPath) {
+    const size_t l_nSlash = l_strPath.find_last_of("/\\");
+    std::string l_strName = l_nSlash == std::string::npos ? l_strPath : l_strPath.substr(l_nSlash + 1);
+    if (l_strName.size() > 6 && l_strName.compare(l_strName.size() - 6, 6, ".atlas") == 0) l_strName.resize(l_strName.size() - 6);
+    return l_strName;
 }
 
-SpriteRef parseSpriteRef(const std::string& ref) {
-    const size_t colon = ref.find(':');
-    if (colon == std::string::npos) return {std::string(), ref};
-    return {ref.substr(0, colon), ref.substr(colon + 1)};
+SpriteRef f_ParseSpriteRef(const std::string& l_strRef) {
+    const size_t l_nColon = l_strRef.find(':');
+    if (l_nColon == std::string::npos) return {std::string(), l_strRef};
+    return {l_strRef.substr(0, l_nColon), l_strRef.substr(l_nColon + 1)};
 }
 
-std::string spriteRef(const std::string& atlasId, const std::string& name) {
-    return atlasId.empty() ? name : atlasId + ":" + name;
+std::string f_SpriteRef(const std::string& l_strAtlasId, const std::string& l_strName) {
+    return l_strAtlasId.empty() ? l_strName : l_strAtlasId + ":" + l_strName;
 }
 
-const Clip* AnimFile::find(const std::string& n) const {
-    for (const Clip& c : clips)
-        if (c.name == n) return &c;
+const Clip* AnimFile::f_Find(const std::string& l_strN) const {
+    for (const Clip& l_oC : m_vClips)
+        if (l_oC.m_strName == l_strN) return &l_oC;
     return nullptr;
 }
 
 // ---- evaluation --------------------------------------------------------------------------------
 
-glm::mat4 compose(const glm::vec3& p, const glm::vec3& rotDegrees, const glm::vec3& s) {
+glm::mat4 f_Compose(const glm::vec3& l_v3P, const glm::vec3& l_v3RotDegrees, const glm::vec3& l_v3S) {
     // Column-major: T * Rx * Ry * Rz * S (z applied first). With y down, a positive z angle turns
     // clockwise on screen.
-    glm::mat3 r(1.0f);
-    if (rotDegrees.z != 0) {
-        const float a = glm::radians(rotDegrees.z), c = std::cos(a), sn = std::sin(a);
-        r = glm::mat3(c, sn, 0, -sn, c, 0, 0, 0, 1);
+    glm::mat3 l_mat3R(1.0f);
+    if (l_v3RotDegrees.z != 0) {
+        const float l_fA = glm::radians(l_v3RotDegrees.z), l_fC = std::cos(l_fA), l_fSn = std::sin(l_fA);
+        l_mat3R = glm::mat3(l_fC, l_fSn, 0, -l_fSn, l_fC, 0, 0, 0, 1);
     }
-    if (rotDegrees.y != 0) {
-        const float a = glm::radians(rotDegrees.y), c = std::cos(a), sn = std::sin(a);
-        r = glm::mat3(c, 0, -sn, 0, 1, 0, sn, 0, c) * r;
+    if (l_v3RotDegrees.y != 0) {
+        const float l_fA = glm::radians(l_v3RotDegrees.y), l_fC = std::cos(l_fA), l_fSn = std::sin(l_fA);
+        l_mat3R = glm::mat3(l_fC, 0, -l_fSn, 0, 1, 0, l_fSn, 0, l_fC) * l_mat3R;
     }
-    if (rotDegrees.x != 0) {
-        const float a = glm::radians(rotDegrees.x), c = std::cos(a), sn = std::sin(a);
-        r = glm::mat3(1, 0, 0, 0, c, sn, 0, -sn, c) * r;
+    if (l_v3RotDegrees.x != 0) {
+        const float l_fA = glm::radians(l_v3RotDegrees.x), l_fC = std::cos(l_fA), l_fSn = std::sin(l_fA);
+        l_mat3R = glm::mat3(1, 0, 0, 0, l_fC, l_fSn, 0, -l_fSn, l_fC) * l_mat3R;
     }
-    glm::mat4 m(1.0f);
-    m[0] = glm::vec4(r[0] * s.x, 0);
-    m[1] = glm::vec4(r[1] * s.y, 0);
-    m[2] = glm::vec4(r[2] * s.z, 0);
-    m[3] = glm::vec4(p, 1);
-    return m;
+    glm::mat4 l_mat4M(1.0f);
+    l_mat4M[0] = glm::vec4(l_mat3R[0] * l_v3S.x, 0);
+    l_mat4M[1] = glm::vec4(l_mat3R[1] * l_v3S.y, 0);
+    l_mat4M[2] = glm::vec4(l_mat3R[2] * l_v3S.z, 0);
+    l_mat4M[3] = glm::vec4(l_v3P, 1);
+    return l_mat4M;
 }
 
-glm::mat3 flatten(const glm::mat4& m) {
-    glm::mat3 f(1.0f);
-    f[0] = glm::vec3(m[0].x, m[0].y, 0);
-    f[1] = glm::vec3(m[1].x, m[1].y, 0);
-    f[2] = glm::vec3(m[3].x, m[3].y, 1);
-    return f;
+glm::mat3 f_Flatten(const glm::mat4& l_mat4M) {
+    glm::mat3 l_mat3F(1.0f);
+    l_mat3F[0] = glm::vec3(l_mat4M[0].x, l_mat4M[0].y, 0);
+    l_mat3F[1] = glm::vec3(l_mat4M[1].x, l_mat4M[1].y, 0);
+    l_mat3F[2] = glm::vec3(l_mat4M[3].x, l_mat4M[3].y, 1);
+    return l_mat3F;
 }
 
-std::vector<glm::vec2> deformAt(const Node& n, float t) {
-    const size_t count = (size_t)n.latticeCols() * (size_t)n.latticeRows();
-    std::vector<glm::vec2> out(count, glm::vec2(0.0f));
-    const auto& keys = n.deformKeys;
-    if (keys.empty()) return out;
-    auto put = [&](const Deform& d, float w) {
-        for (const auto& [i, v] : d)
-            if (i >= 0 && (size_t)i < count) out[(size_t)i] += w * v;
+std::vector<glm::vec2> f_DeformAt(const Node& l_oN, float l_fT) {
+    const size_t l_nCount = (size_t)l_oN.f_LatticeCols() * (size_t)l_oN.f_LatticeRows();
+    std::vector<glm::vec2> l_vOut(l_nCount, glm::vec2(0.0f));
+    const auto& l_vKeys = l_oN.m_vDeformKeys;
+    if (l_vKeys.empty()) return l_vOut;
+    auto l_fnPut = [&](const Deform& l_mapD, float l_fW) {
+        for (const auto& [l_iI, l_v2V] : l_mapD)
+            if (l_iI >= 0 && (size_t)l_iI < l_nCount) l_vOut[(size_t)l_iI] += l_fW * l_v2V;
     };
-    if (t <= keys.front().t) { put(keys.front().v, 1.0f); return out; }
-    if (t >= keys.back().t) { put(keys.back().v, 1.0f); return out; }
-    auto it = std::upper_bound(keys.begin(), keys.end(), t, [](float x, const Key<Deform>& k) { return x < k.t; });
-    const Key<Deform>& b = *it;
-    const Key<Deform>& a = *(it - 1);
-    const float span = b.t - a.t;
-    const float f = span <= 0 || a.ease.isStepped() ? 0.0f : a.ease.apply((t - a.t) / span);
-    put(a.v, 1.0f - f);   // a point one key leaves out is at 0 there
-    put(b.v, f);
-    return out;
+    if (l_fT <= l_vKeys.front().m_fT) { l_fnPut(l_vKeys.front().m_oV, 1.0f); return l_vOut; }
+    if (l_fT >= l_vKeys.back().m_fT) { l_fnPut(l_vKeys.back().m_oV, 1.0f); return l_vOut; }
+    auto l_itIt = std::upper_bound(l_vKeys.begin(), l_vKeys.end(), l_fT, [](float l_fX, const Key<Deform>& l_oK) { return l_fX < l_oK.m_fT; });
+    const Key<Deform>& l_oB = *l_itIt;
+    const Key<Deform>& l_oA = *(l_itIt - 1);
+    const float l_fSpan = l_oB.m_fT - l_oA.m_fT;
+    const float l_fF = l_fSpan <= 0 || l_oA.m_oEase.f_IsStepped() ? 0.0f : l_oA.m_oEase.f_Apply((l_fT - l_oA.m_fT) / l_fSpan);
+    l_fnPut(l_oA.m_oV, 1.0f - l_fF);   // a point one key leaves out is at 0 there
+    l_fnPut(l_oB.m_oV, l_fF);
+    return l_vOut;
 }
 
-glm::mat4 localTransform(const Node& n, float t) { return compose(positionAt(n, t), rotationAt(n, t), scaleAt(n, t)); }
+glm::mat4 f_LocalTransform(const Node& l_oN, float l_fT) { return f_Compose(f_PositionAt(l_oN, l_fT), f_RotationAt(l_oN, l_fT), f_ScaleAt(l_oN, l_fT)); }
 
 namespace {
 
-void walk(const Node& n, float t, const glm::mat4& parentWorld, const glm::vec4& parentColor, bool parentVisible,
-          int depth, float clipTime, std::vector<NodePose>& out) {
-    const size_t first = out.size();
-    bool ended = false;
-    if (n.timed()) t = nodeTime(n, t, n.firstKeyTime(), n.lastKeyTime(), &ended);
-    NodePose me;
-    me.node = &n;
-    me.depth = depth;
-    me.world = parentWorld * localTransform(n, t);
-    const glm::vec4 own = colorAt(n, t);
-    me.color = n.inheritColor ? parentColor * own : own;
-    me.visible = parentVisible && visibleAt(n, t) && !ended;
-    me.sprite = spriteAt(n, t);
-    me.time = t;
-    me.clipTime = clipTime;
+void f_Walk(const Node& l_oN, float l_fT, const glm::mat4& l_mat4ParentWorld, const glm::vec4& l_v4ParentColor, bool l_bParentVisible,
+          int l_iDepth, float l_fClipTime, std::vector<NodePose>& l_vOut) {
+    const size_t l_nFirst = l_vOut.size();
+    bool l_bEnded = false;
+    if (l_oN.f_Timed()) l_fT = f_NodeTime(l_oN, l_fT, l_oN.f_FirstKeyTime(), l_oN.f_LastKeyTime(), &l_bEnded);
+    NodePose l_oMe;
+    l_oMe.m_pNode = &l_oN;
+    l_oMe.m_iDepth = l_iDepth;
+    l_oMe.m_mat4World = l_mat4ParentWorld * f_LocalTransform(l_oN, l_fT);
+    const glm::vec4 l_v4Own = f_ColorAt(l_oN, l_fT);
+    l_oMe.m_v4Color = l_oN.m_bInheritColor ? l_v4ParentColor * l_v4Own : l_v4Own;
+    l_oMe.m_bVisible = l_bParentVisible && f_VisibleAt(l_oN, l_fT) && !l_bEnded;
+    l_oMe.m_strSprite = f_SpriteAt(l_oN, l_fT);
+    l_oMe.m_fTime = l_fT;
+    l_oMe.m_fClipTime = l_fClipTime;
     // Children in order (stable: equal orders keep their list order). Most nodes' children all have order 0: in list
     // order, with no sorting (and no allocation -- evaluate runs for every afterimage, every frame).
-    const bool ordered = std::all_of(n.children.begin(), n.children.end(), [](const Node& c) { return c.order == 0; });
-    std::vector<const Node*> kids;
-    if (!ordered) {
-        for (const Node& c : n.children) kids.push_back(&c);
-        std::stable_sort(kids.begin(), kids.end(), [](const Node* a, const Node* b) { return a->order < b->order; });
+    const bool l_bOrdered = std::all_of(l_oN.m_vChildren.begin(), l_oN.m_vChildren.end(), [](const Node& l_oC) { return l_oC.m_iOrder == 0; });
+    std::vector<const Node*> l_vKids;
+    if (!l_bOrdered) {
+        for (const Node& l_oC : l_oN.m_vChildren) l_vKids.push_back(&l_oC);
+        std::stable_sort(l_vKids.begin(), l_vKids.end(), [](const Node* l_pA, const Node* l_pB) { return l_pA->m_iOrder < l_pB->m_iOrder; });
     }
-    const size_t count = n.children.size();
-    auto kid = [&](size_t i) -> const Node& { return ordered ? n.children[i] : *kids[i]; };
-    size_t k = 0;
-    for (; k < count && kid(k).order < 0; k++) walk(kid(k), t, me.world, me.color, me.visible, depth + 1, clipTime, out);
-    const size_t at = out.size();
-    out.push_back(me);
-    for (; k < count; k++) walk(kid(k), t, me.world, me.color, me.visible, depth + 1, clipTime, out);
-    out[at].first = (uint32_t)first;
-    out[at].end = (uint32_t)out.size();
+    const size_t l_nCount = l_oN.m_vChildren.size();
+    auto l_fnKid = [&](size_t l_nI) -> const Node& { return l_bOrdered ? l_oN.m_vChildren[l_nI] : *l_vKids[l_nI]; };
+    size_t l_nK = 0;
+    for (; l_nK < l_nCount && l_fnKid(l_nK).m_iOrder < 0; l_nK++) f_Walk(l_fnKid(l_nK), l_fT, l_oMe.m_mat4World, l_oMe.m_v4Color, l_oMe.m_bVisible, l_iDepth + 1, l_fClipTime, l_vOut);
+    const size_t l_nAt = l_vOut.size();
+    l_vOut.push_back(l_oMe);
+    for (; l_nK < l_nCount; l_nK++) f_Walk(l_fnKid(l_nK), l_fT, l_oMe.m_mat4World, l_oMe.m_v4Color, l_oMe.m_bVisible, l_iDepth + 1, l_fClipTime, l_vOut);
+    l_vOut[l_nAt].m_uFirst = (uint32_t)l_nFirst;
+    l_vOut[l_nAt].m_uEnd = (uint32_t)l_vOut.size();
 }
 
-void collectEvents(const Node& n, float t0, float t1, std::vector<std::pair<float, std::string>>& out) {
-    for (const Key<std::string>& k : n.eventKeys)
-        if (k.t > t0 && k.t <= t1) out.emplace_back(k.t, k.v);
-    for (const Node& c : n.children) collectEvents(c, t0, t1, out);
+void f_CollectEvents(const Node& l_oN, float l_fT0, float l_fT1, std::vector<std::pair<float, std::string>>& l_vOut) {
+    for (const Key<std::string>& l_oK : l_oN.m_vEventKeys)
+        if (l_oK.m_fT > l_fT0 && l_oK.m_fT <= l_fT1) l_vOut.emplace_back(l_oK.m_fT, l_oK.m_oV);
+    for (const Node& l_oC : l_oN.m_vChildren) f_CollectEvents(l_oC, l_fT0, l_fT1, l_vOut);
 }
 
 }  // namespace
 
-void evaluate(const Clip& c, float t, std::vector<NodePose>& out) {
-    out.clear();
-    walk(c.root, t, glm::mat4(1.0f), glm::vec4(1.0f), true, 0, t, out);
+void f_Evaluate(const Clip& l_oC, float l_fT, std::vector<NodePose>& l_vOut) {
+    l_vOut.clear();
+    f_Walk(l_oC.m_oRoot, l_fT, glm::mat4(1.0f), glm::vec4(1.0f), true, 0, l_fT, l_vOut);
 }
 
 // ---- PoseCache ---------------------------------------------------------------------------------
@@ -376,543 +376,543 @@ namespace {
 
 // The last key at or before t (-1: before the first), starting from the previous answer: playback
 // moves forward a little each frame, so it is nearly always the same key or the next one.
-template <class T> int locate(const std::vector<Key<T>>& keys, float t, int hint) {
-    const int n = (int)keys.size();
-    auto fits = [&](int i) { return (i < 0 || keys[(size_t)i].t <= t) && (i + 1 >= n || t < keys[(size_t)i + 1].t); };
-    if (hint >= -1 && hint < n && fits(hint)) return hint;
-    if (hint >= -1 && hint + 1 < n && fits(hint + 1)) return hint + 1;
-    return int(std::upper_bound(keys.begin(), keys.end(), t, [](float x, const Key<T>& k) { return x < k.t; }) -
-               keys.begin()) - 1;
+template <class T> int f_Locate(const std::vector<Key<T>>& l_vKeys, float l_fT, int l_iHint) {
+    const int l_iN = (int)l_vKeys.size();
+    auto l_oFits = [&](int l_iI) { return (l_iI < 0 || l_vKeys[(size_t)l_iI].m_fT <= l_fT) && (l_iI + 1 >= l_iN || l_fT < l_vKeys[(size_t)l_iI + 1].m_fT); };
+    if (l_iHint >= -1 && l_iHint < l_iN && l_oFits(l_iHint)) return l_iHint;
+    if (l_iHint >= -1 && l_iHint + 1 < l_iN && l_oFits(l_iHint + 1)) return l_iHint + 1;
+    return int(std::upper_bound(l_vKeys.begin(), l_vKeys.end(), l_fT, [](float l_fX, const Key<T>& l_oK) { return l_fX < l_oK.m_fT; }) -
+               l_vKeys.begin()) - 1;
 }
 
 // Interpolated track: the key whose value it holds at t (before the first key, after the last, a
 // stepped or empty segment), or -1 while it moves between two keys. Same cases as sample().
-template <class T> int heldKey(const std::vector<Key<T>>& keys, float t, int i) {
-    if (t <= keys.front().t) return 0;
-    if (t >= keys.back().t) return (int)keys.size() - 1;
-    const Key<T>& a = keys[(size_t)i];
-    return a.ease.isStepped() || keys[(size_t)i + 1].t - a.t <= 0 ? i : -1;
+template <class T> int f_HeldKey(const std::vector<Key<T>>& l_vKeys, float l_fT, int l_iI) {
+    if (l_fT <= l_vKeys.front().m_fT) return 0;
+    if (l_fT >= l_vKeys.back().m_fT) return (int)l_vKeys.size() - 1;
+    const Key<T>& l_oA = l_vKeys[(size_t)l_iI];
+    return l_oA.m_oEase.f_IsStepped() || l_vKeys[(size_t)l_iI + 1].m_fT - l_oA.m_fT <= 0 ? l_iI : -1;
 }
 
 // Moves an interpolated track to t. True when its value changed.
-template <class T> bool advance(const std::vector<Key<T>>& keys, float t, int& cursor, int& held, T& value, bool force) {
-    if (keys.empty()) return false;
-    cursor = locate(keys, t, cursor);
-    const int h = heldKey(keys, t, cursor);
-    if (!force && h >= 0 && h == held) return false;   // still holding the same key: nothing to do
-    held = h;
-    T v;
-    if (h >= 0) {
-        v = keys[(size_t)h].v;
+template <class T> bool f_Advance(const std::vector<Key<T>>& l_vKeys, float l_fT, int& l_iCursor, int& l_iHeld, T& l_oValue, bool l_bForce) {
+    if (l_vKeys.empty()) return false;
+    l_iCursor = f_Locate(l_vKeys, l_fT, l_iCursor);
+    const int l_iH = f_HeldKey(l_vKeys, l_fT, l_iCursor);
+    if (!l_bForce && l_iH >= 0 && l_iH == l_iHeld) return false;   // still holding the same key: nothing to do
+    l_iHeld = l_iH;
+    T l_oV;
+    if (l_iH >= 0) {
+        l_oV = l_vKeys[(size_t)l_iH].m_oV;
     } else {
-        const Key<T>& a = keys[(size_t)cursor];
-        const Key<T>& b = keys[(size_t)cursor + 1];
-        v = lerpValue(a.v, b.v, a.ease.apply((t - a.t) / (b.t - a.t)));
+        const Key<T>& l_oA = l_vKeys[(size_t)l_iCursor];
+        const Key<T>& l_oB = l_vKeys[(size_t)l_iCursor + 1];
+        l_oV = f_LerpValue(l_oA.m_oV, l_oB.m_oV, l_oA.m_oEase.f_Apply((l_fT - l_oA.m_fT) / (l_oB.m_fT - l_oA.m_fT)));
     }
-    if (!force && v == value) return false;
-    value = v;
+    if (!l_bForce && l_oV == l_oValue) return false;
+    l_oValue = l_oV;
     return true;
 }
 
 // Moves a stepped track to t. True when its value changed.
-template <class T> bool advanceStep(const std::vector<Key<T>>& keys, float t, int& cursor, int& held, T& value, bool force) {
-    if (keys.empty()) return false;
-    cursor = locate(keys, t, cursor);
-    const int h = std::max(cursor, 0);
-    if (!force && h == held) return false;
-    held = h;
-    if (!force && keys[(size_t)h].v == value) return false;
-    value = keys[(size_t)h].v;
+template <class T> bool f_AdvanceStep(const std::vector<Key<T>>& l_vKeys, float l_fT, int& l_iCursor, int& l_iHeld, T& l_oValue, bool l_bForce) {
+    if (l_vKeys.empty()) return false;
+    l_iCursor = f_Locate(l_vKeys, l_fT, l_iCursor);
+    const int l_iH = std::max(l_iCursor, 0);
+    if (!l_bForce && l_iH == l_iHeld) return false;
+    l_iHeld = l_iH;
+    if (!l_bForce && l_vKeys[(size_t)l_iH].m_oV == l_oValue) return false;
+    l_oValue = l_vKeys[(size_t)l_iH].m_oV;
     return true;
 }
 
 }  // namespace
 
-void PoseCache::bind(const Clip* clip) {
-    clip_ = clip;
-    items_.clear();
-    poses_.clear();
-    animated_ = 0;
-    changedCount_ = 0;
-    fresh_ = true;
-    if (clip) addItems(clip->root, -1, 0);
-    changed_.assign(poses_.size(), 1);
+void PoseCache::f_Bind(const Clip* l_pClip) {
+    m_pClip = l_pClip;
+    m_vItems.clear();
+    m_vPoses.clear();
+    m_iAnimated = 0;
+    m_iChangedCount = 0;
+    m_bFresh = true;
+    if (l_pClip) f_AddItems(l_pClip->m_oRoot, -1, 0);
+    m_vChanged.assign(m_vPoses.size(), 1);
 }
 
-int PoseCache::addItems(const Node& n, int parent, int depth) {
-    const int me = (int)items_.size();
-    const size_t first = poses_.size();
-    Item it;
-    it.node = &n;
-    it.parent = parent;
-    it.animated = !(n.posKeys.empty() && n.rotKeys.empty() && n.scaleKeys.empty() && n.colorKeys.empty() &&
-                    n.spriteKeys.empty() && n.visibleKeys.empty());
-    for (int i = 0; i < kTracks; i++) {
-        it.cursor[i] = -1;
-        it.held[i] = -2;
+int PoseCache::f_AddItems(const Node& l_oN, int l_iParent, int l_iDepth) {
+    const int l_iMe = (int)m_vItems.size();
+    const size_t l_nFirst = m_vPoses.size();
+    Item l_oIt;
+    l_oIt.m_pNode = &l_oN;
+    l_oIt.m_iParent = l_iParent;
+    l_oIt.m_bAnimated = !(l_oN.m_vPosKeys.empty() && l_oN.m_vRotKeys.empty() && l_oN.m_vScaleKeys.empty() && l_oN.m_vColorKeys.empty() &&
+                    l_oN.m_vSpriteKeys.empty() && l_oN.m_vVisibleKeys.empty());
+    for (int l_iI = 0; l_iI < kTracks; l_iI++) {
+        l_oIt.m_arrCursor[l_iI] = -1;
+        l_oIt.m_arrHeld[l_iI] = -2;
     }
-    it.pos = n.pos;
-    it.rot = n.rot;
-    it.scale = n.scale;
-    it.color = n.color;
-    it.visible = n.visible;
-    it.timed = n.timed();
-    if (it.timed) {
-        it.first = n.firstKeyTime();
-        it.last = n.lastKeyTime();
+    l_oIt.m_v3Pos = l_oN.m_v3Pos;
+    l_oIt.m_v3Rot = l_oN.m_v3Rot;
+    l_oIt.m_v3Scale = l_oN.m_v3Scale;
+    l_oIt.m_v4Color = l_oN.m_v4Color;
+    l_oIt.m_bVisible = l_oN.m_bVisible;
+    l_oIt.m_bTimed = l_oN.f_Timed();
+    if (l_oIt.m_bTimed) {
+        l_oIt.m_fFirst = l_oN.f_FirstKeyTime();
+        l_oIt.m_fLast = l_oN.f_LastKeyTime();
     }
-    animated_ += it.animated;
-    items_.push_back(it);   // parents before their children: seek() updates in this order
+    m_iAnimated += l_oIt.m_bAnimated;
+    m_vItems.push_back(l_oIt);   // parents before their children: seek() updates in this order
     // Draw order as walk(): children with order < 0, the node itself, the rest.
-    std::vector<const Node*> kids;
-    for (const Node& c : n.children) kids.push_back(&c);
-    std::stable_sort(kids.begin(), kids.end(), [](const Node* a, const Node* b) { return a->order < b->order; });
-    size_t k = 0;
-    for (; k < kids.size() && kids[k]->order < 0; k++) addItems(*kids[k], me, depth + 1);
-    items_[(size_t)me].pose = poses_.size();
-    NodePose p;
-    p.node = &n;
-    p.depth = depth;
-    p.sprite = n.sprite;
-    poses_.push_back(p);
-    for (; k < kids.size(); k++) addItems(*kids[k], me, depth + 1);
-    NodePose& mine = poses_[items_[(size_t)me].pose];
-    mine.first = (uint32_t)first;
-    mine.end = (uint32_t)poses_.size();
-    return me;
+    std::vector<const Node*> l_vKids;
+    for (const Node& l_oC : l_oN.m_vChildren) l_vKids.push_back(&l_oC);
+    std::stable_sort(l_vKids.begin(), l_vKids.end(), [](const Node* l_pA, const Node* l_pB) { return l_pA->m_iOrder < l_pB->m_iOrder; });
+    size_t l_nK = 0;
+    for (; l_nK < l_vKids.size() && l_vKids[l_nK]->m_iOrder < 0; l_nK++) f_AddItems(*l_vKids[l_nK], l_iMe, l_iDepth + 1);
+    m_vItems[(size_t)l_iMe].m_nPose = m_vPoses.size();
+    NodePose l_oP;
+    l_oP.m_pNode = &l_oN;
+    l_oP.m_iDepth = l_iDepth;
+    l_oP.m_strSprite = l_oN.m_strSprite;
+    m_vPoses.push_back(l_oP);
+    for (; l_nK < l_vKids.size(); l_nK++) f_AddItems(*l_vKids[l_nK], l_iMe, l_iDepth + 1);
+    NodePose& l_oMine = m_vPoses[m_vItems[(size_t)l_iMe].m_nPose];
+    l_oMine.m_uFirst = (uint32_t)l_nFirst;
+    l_oMine.m_uEnd = (uint32_t)m_vPoses.size();
+    return l_iMe;
 }
 
-void PoseCache::seek(float t) {
-    changedCount_ = 0;
-    if (!clip_) return;
-    const bool all = fresh_;
-    fresh_ = false;
-    for (Item& it : items_) {
-        NodePose& p = poses_[it.pose];
-        bool local = all, colour = all, vis = all, sprite = false;
-        const Item* parent = it.parent >= 0 ? &items_[(size_t)it.parent] : nullptr;
-        it.time = parent ? parent->time : t;   // a looping ancestor's time passes down
-        if (it.timed) {
-            bool ended = false;
-            it.time = nodeTime(*it.node, it.time, it.first, it.last, &ended);
-            vis |= ended != it.ended;
-            it.ended = ended;
+void PoseCache::f_Seek(float l_fT) {
+    m_iChangedCount = 0;
+    if (!m_pClip) return;
+    const bool l_bAll = m_bFresh;
+    m_bFresh = false;
+    for (Item& l_oIt : m_vItems) {
+        NodePose& l_oP = m_vPoses[l_oIt.m_nPose];
+        bool l_bLocal = l_bAll, l_bColour = l_bAll, l_bVis = l_bAll, l_bSprite = false;
+        const Item* l_pParent = l_oIt.m_iParent >= 0 ? &m_vItems[(size_t)l_oIt.m_iParent] : nullptr;
+        l_oIt.m_fTime = l_pParent ? l_pParent->m_fTime : l_fT;   // a looping ancestor's time passes down
+        if (l_oIt.m_bTimed) {
+            bool l_bEnded = false;
+            l_oIt.m_fTime = f_NodeTime(*l_oIt.m_pNode, l_oIt.m_fTime, l_oIt.m_fFirst, l_oIt.m_fLast, &l_bEnded);
+            l_bVis |= l_bEnded != l_oIt.m_bEnded;
+            l_oIt.m_bEnded = l_bEnded;
         }
-        p.time = it.time;
-        p.clipTime = t;
-        if (it.animated) {   // only the tracks that have keys; a node without keys skips all of this
-            const Node& n = *it.node;
-            const float nt = it.time;
-            local |= advance(n.posKeys, nt, it.cursor[kPos], it.held[kPos], it.pos, all);
-            local |= advance(n.rotKeys, nt, it.cursor[kRot], it.held[kRot], it.rot, all);
-            local |= advance(n.scaleKeys, nt, it.cursor[kScale], it.held[kScale], it.scale, all);
-            colour |= advance(n.colorKeys, nt, it.cursor[kColor], it.held[kColor], it.color, all);
-            vis |= advanceStep(n.visibleKeys, nt, it.cursor[kVisible], it.held[kVisible], it.visible, all);
-            sprite = advanceStep(n.spriteKeys, nt, it.cursor[kSprite], it.held[kSprite], p.sprite, all);
+        l_oP.m_fTime = l_oIt.m_fTime;
+        l_oP.m_fClipTime = l_fT;
+        if (l_oIt.m_bAnimated) {   // only the tracks that have keys; a node without keys skips all of this
+            const Node& l_oN = *l_oIt.m_pNode;
+            const float l_fNt = l_oIt.m_fTime;
+            l_bLocal |= f_Advance(l_oN.m_vPosKeys, l_fNt, l_oIt.m_arrCursor[kPos], l_oIt.m_arrHeld[kPos], l_oIt.m_v3Pos, l_bAll);
+            l_bLocal |= f_Advance(l_oN.m_vRotKeys, l_fNt, l_oIt.m_arrCursor[kRot], l_oIt.m_arrHeld[kRot], l_oIt.m_v3Rot, l_bAll);
+            l_bLocal |= f_Advance(l_oN.m_vScaleKeys, l_fNt, l_oIt.m_arrCursor[kScale], l_oIt.m_arrHeld[kScale], l_oIt.m_v3Scale, l_bAll);
+            l_bColour |= f_Advance(l_oN.m_vColorKeys, l_fNt, l_oIt.m_arrCursor[kColor], l_oIt.m_arrHeld[kColor], l_oIt.m_v4Color, l_bAll);
+            l_bVis |= f_AdvanceStep(l_oN.m_vVisibleKeys, l_fNt, l_oIt.m_arrCursor[kVisible], l_oIt.m_arrHeld[kVisible], l_oIt.m_bVisible, l_bAll);
+            l_bSprite = f_AdvanceStep(l_oN.m_vSpriteKeys, l_fNt, l_oIt.m_arrCursor[kSprite], l_oIt.m_arrHeld[kSprite], l_oP.m_strSprite, l_bAll);
         }
-        const NodePose* pp = parent ? &poses_[parent->pose] : nullptr;
-        if (local) it.local = compose(it.pos, it.rot, it.scale);
-        it.worldChanged = local || (parent && parent->worldChanged);
-        if (it.worldChanged) p.world = (pp ? pp->world : glm::mat4(1.0f)) * it.local;
-        it.colorChanged = colour || (parent && parent->colorChanged && it.node->inheritColor);
-        if (it.colorChanged) {
-            const glm::vec4 own = glm::clamp(it.color, 0.0f, 1.0f);
-            p.color = it.node->inheritColor ? (pp ? pp->color : glm::vec4(1.0f)) * own : own;
+        const NodePose* l_pPp = l_pParent ? &m_vPoses[l_pParent->m_nPose] : nullptr;
+        if (l_bLocal) l_oIt.m_mat4Local = f_Compose(l_oIt.m_v3Pos, l_oIt.m_v3Rot, l_oIt.m_v3Scale);
+        l_oIt.m_bWorldChanged = l_bLocal || (l_pParent && l_pParent->m_bWorldChanged);
+        if (l_oIt.m_bWorldChanged) l_oP.m_mat4World = (l_pPp ? l_pPp->m_mat4World : glm::mat4(1.0f)) * l_oIt.m_mat4Local;
+        l_oIt.m_bColorChanged = l_bColour || (l_pParent && l_pParent->m_bColorChanged && l_oIt.m_pNode->m_bInheritColor);
+        if (l_oIt.m_bColorChanged) {
+            const glm::vec4 l_v4Own = glm::clamp(l_oIt.m_v4Color, 0.0f, 1.0f);
+            l_oP.m_v4Color = l_oIt.m_pNode->m_bInheritColor ? (l_pPp ? l_pPp->m_v4Color : glm::vec4(1.0f)) * l_v4Own : l_v4Own;
         }
-        it.visibleChanged = vis || (parent && parent->visibleChanged);
-        if (it.visibleChanged) p.visible = (pp ? pp->visible : true) && it.visible && !it.ended;
-        const bool changed = it.worldChanged || it.colorChanged || it.visibleChanged || sprite;
-        changed_[it.pose] = changed;
-        changedCount_ += changed;
+        l_oIt.m_bVisibleChanged = l_bVis || (l_pParent && l_pParent->m_bVisibleChanged);
+        if (l_oIt.m_bVisibleChanged) l_oP.m_bVisible = (l_pPp ? l_pPp->m_bVisible : true) && l_oIt.m_bVisible && !l_oIt.m_bEnded;
+        const bool l_bChanged = l_oIt.m_bWorldChanged || l_oIt.m_bColorChanged || l_oIt.m_bVisibleChanged || l_bSprite;
+        m_vChanged[l_oIt.m_nPose] = l_bChanged;
+        m_iChangedCount += l_bChanged;
     }
 }
 
-void eventsBetween(const Clip& c, float t0, float t1, std::vector<std::string>& out) {
-    std::vector<std::pair<float, std::string>> found;
-    collectEvents(c.root, t0, t1, found);
-    std::stable_sort(found.begin(), found.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
-    for (auto& f : found) out.push_back(std::move(f.second));
+void f_EventsBetween(const Clip& l_oC, float l_fT0, float l_fT1, std::vector<std::string>& l_vOut) {
+    std::vector<std::pair<float, std::string>> l_vFound;
+    f_CollectEvents(l_oC.m_oRoot, l_fT0, l_fT1, l_vFound);
+    std::stable_sort(l_vFound.begin(), l_vFound.end(), [](const auto& l_oA, const auto& l_oB) { return l_oA.first < l_oB.first; });
+    for (auto& l_pairF : l_vFound) l_vOut.push_back(std::move(l_pairF.second));
 }
 
 // ---- JSON --------------------------------------------------------------------------------------
 
 namespace {
 
-json vec(const glm::vec2& v) { return json::array({v.x, v.y}); }
-json vec(const glm::vec3& v) { return json::array({v.x, v.y, v.z}); }
-json vec(const glm::vec4& v) { return json::array({v.x, v.y, v.z, v.w}); }
-json easeToJson(const Ease& e) {
-    if (e.kind == Ease::kBezier) return json::array({e.bezier[0], e.bezier[1], e.bezier[2], e.bezier[3]});
-    return easeName(e);
+json f_Vec(const glm::vec2& l_v2V) { return json::array({l_v2V.x, l_v2V.y}); }
+json f_Vec(const glm::vec3& l_v3V) { return json::array({l_v3V.x, l_v3V.y, l_v3V.z}); }
+json f_Vec(const glm::vec4& l_v4V) { return json::array({l_v4V.x, l_v4V.y, l_v4V.z, l_v4V.w}); }
+json f_EaseToJson(const Ease& l_oE) {
+    if (l_oE.m_iKind == Ease::m_iBezier) return json::array({l_oE.m_arrBezier[0], l_oE.m_arrBezier[1], l_oE.m_arrBezier[2], l_oE.m_arrBezier[3]});
+    return f_EaseName(l_oE);
 }
 
-template <class T, class F> json keysToJson(const std::vector<Key<T>>& keys, F value, bool eased) {
-    json a = json::array();
-    for (const Key<T>& k : keys) {
-        json o{{"t", k.t}, {"v", value(k.v)}};
-        if (eased && !k.ease.isLinear()) o["ease"] = easeToJson(k.ease);
-        a.push_back(o);
+template <class T, class F> json f_KeysToJson(const std::vector<Key<T>>& l_vKeys, F l_oValue, bool l_bEased) {
+    json l_jA = json::array();
+    for (const Key<T>& l_oK : l_vKeys) {
+        json l_jO{{"t", l_oK.m_fT}, {"v", l_oValue(l_oK.m_oV)}};
+        if (l_bEased && !l_oK.m_oEase.f_IsLinear()) l_jO["ease"] = f_EaseToJson(l_oK.m_oEase);
+        l_jA.push_back(l_jO);
     }
-    return a;
+    return l_jA;
 }
 
-json nodeToJson(const Node& n) {
-    json j;
-    j["name"] = n.name;
-    if (!n.sprite.empty()) j["sprite"] = n.sprite;
-    if (n.pos != glm::vec3(0)) j["pos"] = vec(n.pos);
-    if (n.rot != glm::vec3(0)) j["rot"] = vec(n.rot);
-    if (n.scale != glm::vec3(1)) j["scale"] = vec(n.scale);
-    if (n.color != glm::vec4(1)) j["color"] = vec(n.color);
-    if (!n.visible) j["visible"] = false;
-    if (n.hasPivot) j["pivot"] = vec(n.pivot);
-    if (n.order != 0) j["order"] = n.order;
-    if (n.blend == Blend::Add) j["blend"] = "add";
-    if (!n.inheritColor) j["inheritColor"] = false;
-    if (n.loop) j["loop"] = true;
-    if (!n.stayAtLastFrame) j["stayAtLastFrame"] = false;
-    if (n.lattice[0] >= 2 || n.lattice[1] >= 2) j["lattice"] = {n.latticeCols(), n.latticeRows()};
-    if (n.hasMeshGrid()) j["meshGrid"] = {n.meshGrid[0], n.meshGrid[1]};
-    if (n.hasFx()) {
-        json fx{{"shader", fxShaderName(n.fx.shader)}};
-        if (n.fx.params != glm::vec4(0)) fx["params"] = vec(n.fx.params);
-        if (n.fx.color != glm::vec4(1)) fx["color"] = vec(n.fx.color);
-        j["fx"] = fx;
+json f_NodeToJson(const Node& l_oN) {
+    json l_jJ;
+    l_jJ["name"] = l_oN.m_strName;
+    if (!l_oN.m_strSprite.empty()) l_jJ["sprite"] = l_oN.m_strSprite;
+    if (l_oN.m_v3Pos != glm::vec3(0)) l_jJ["pos"] = f_Vec(l_oN.m_v3Pos);
+    if (l_oN.m_v3Rot != glm::vec3(0)) l_jJ["rot"] = f_Vec(l_oN.m_v3Rot);
+    if (l_oN.m_v3Scale != glm::vec3(1)) l_jJ["scale"] = f_Vec(l_oN.m_v3Scale);
+    if (l_oN.m_v4Color != glm::vec4(1)) l_jJ["color"] = f_Vec(l_oN.m_v4Color);
+    if (!l_oN.m_bVisible) l_jJ["visible"] = false;
+    if (l_oN.m_bHasPivot) l_jJ["pivot"] = f_Vec(l_oN.m_v2Pivot);
+    if (l_oN.m_iOrder != 0) l_jJ["order"] = l_oN.m_iOrder;
+    if (l_oN.m_eBlend == Blend::Add) l_jJ["blend"] = "add";
+    if (!l_oN.m_bInheritColor) l_jJ["inheritColor"] = false;
+    if (l_oN.m_bLoop) l_jJ["loop"] = true;
+    if (!l_oN.m_bStayAtLastFrame) l_jJ["stayAtLastFrame"] = false;
+    if (l_oN.m_arrLattice[0] >= 2 || l_oN.m_arrLattice[1] >= 2) l_jJ["lattice"] = {l_oN.f_LatticeCols(), l_oN.f_LatticeRows()};
+    if (l_oN.f_HasMeshGrid()) l_jJ["meshGrid"] = {l_oN.m_arrMeshGrid[0], l_oN.m_arrMeshGrid[1]};
+    if (l_oN.f_HasFx()) {
+        json l_jFx{{"shader", f_FxShaderName(l_oN.m_oFx.m_eShader)}};
+        if (l_oN.m_oFx.m_v4Params != glm::vec4(0)) l_jFx["params"] = f_Vec(l_oN.m_oFx.m_v4Params);
+        if (l_oN.m_oFx.m_v4Color != glm::vec4(1)) l_jFx["color"] = f_Vec(l_oN.m_oFx.m_v4Color);
+        l_jJ["fx"] = l_jFx;
     }
-    if (n.hasTrail()) {
-        json tr{{"count", n.trail.count}, {"gap", n.trail.gap}, {"color", vec(n.trail.color)}};
-        if (n.trail.additive) tr["blend"] = "add";
-        j["trail"] = tr;
+    if (l_oN.f_HasTrail()) {
+        json l_jTr{{"count", l_oN.m_oTrail.m_iCount}, {"gap", l_oN.m_oTrail.m_fGap}, {"color", f_Vec(l_oN.m_oTrail.m_v4Color)}};
+        if (l_oN.m_oTrail.m_bAdditive) l_jTr["blend"] = "add";
+        l_jJ["trail"] = l_jTr;
     }
-    if (n.skinned()) {
-        json skin{{"bones", n.skinBones}};
-        if (n.skinWeights.empty()) {
-            skin["weights"] = "auto";
+    if (l_oN.f_Skinned()) {
+        json l_jSkin{{"bones", l_oN.m_vSkinBones}};
+        if (l_oN.m_vSkinWeights.empty()) {
+            l_jSkin["weights"] = "auto";
         } else {   // per vertex [bone, weight, ...], the zero weights left out
-            json w = json::array();
-            for (size_t v = 0; v + 2 * kSkinInfluences <= n.skinWeights.size(); v += 2 * kSkinInfluences) {
-                json one = json::array();
-                for (int k = 0; k < kSkinInfluences; k++)
-                    if (n.skinWeights[v + 2 * k + 1] != 0.0f) { one.push_back((int)n.skinWeights[v + 2 * k]); one.push_back(n.skinWeights[v + 2 * k + 1]); }
-                w.push_back(one);
+            json l_jW = json::array();
+            for (size_t l_nV = 0; l_nV + 2 * g_iSkinInfluences <= l_oN.m_vSkinWeights.size(); l_nV += 2 * g_iSkinInfluences) {
+                json l_jOne = json::array();
+                for (int l_iK = 0; l_iK < g_iSkinInfluences; l_iK++)
+                    if (l_oN.m_vSkinWeights[l_nV + 2 * l_iK + 1] != 0.0f) { l_jOne.push_back((int)l_oN.m_vSkinWeights[l_nV + 2 * l_iK]); l_jOne.push_back(l_oN.m_vSkinWeights[l_nV + 2 * l_iK + 1]); }
+                l_jW.push_back(l_jOne);
             }
-            skin["weights"] = w;
+            l_jSkin["weights"] = l_jW;
         }
-        j["skin"] = skin;
+        l_jJ["skin"] = l_jSkin;
     }
-    json tr = json::object();
-    auto v3 = [](const glm::vec3& v) { return vec(v); };
-    auto v4 = [](const glm::vec4& v) { return vec(v); };
-    auto s = [](const std::string& v) { return json(v); };
-    auto b = [](bool v) { return json(v); };
-    if (!n.posKeys.empty()) tr["pos"] = keysToJson(n.posKeys, v3, true);
-    if (!n.rotKeys.empty()) tr["rot"] = keysToJson(n.rotKeys, v3, true);
-    if (!n.scaleKeys.empty()) tr["scale"] = keysToJson(n.scaleKeys, v3, true);
-    if (!n.colorKeys.empty()) tr["color"] = keysToJson(n.colorKeys, v4, true);
-    if (!n.spriteKeys.empty()) tr["sprite"] = keysToJson(n.spriteKeys, s, false);
-    if (!n.visibleKeys.empty()) tr["visible"] = keysToJson(n.visibleKeys, b, false);
-    if (!n.eventKeys.empty()) tr["event"] = keysToJson(n.eventKeys, s, false);
-    if (!n.fxKeys.empty()) tr["fx"] = keysToJson(n.fxKeys, v4, true);
-    if (!n.trailKeys.empty()) tr["trail"] = keysToJson(n.trailKeys, [](float v) { return json(v); }, true);
-    if (!n.deformKeys.empty()) {   // only the points that move: {"5": [0, -2], ...}
-        auto d = [](const Deform& v) {
-            json o = json::object();
-            for (const auto& [i, off] : v) o[std::to_string(i)] = vec(off);
-            return o;
+    json l_jTr = json::object();
+    auto l_fnV3 = [](const glm::vec3& l_v3V) { return f_Vec(l_v3V); };
+    auto l_fnV4 = [](const glm::vec4& l_v4V) { return f_Vec(l_v4V); };
+    auto l_fnS = [](const std::string& l_strV) { return json(l_strV); };
+    auto l_fnB = [](bool l_bV) { return json(l_bV); };
+    if (!l_oN.m_vPosKeys.empty()) l_jTr["pos"] = f_KeysToJson(l_oN.m_vPosKeys, l_fnV3, true);
+    if (!l_oN.m_vRotKeys.empty()) l_jTr["rot"] = f_KeysToJson(l_oN.m_vRotKeys, l_fnV3, true);
+    if (!l_oN.m_vScaleKeys.empty()) l_jTr["scale"] = f_KeysToJson(l_oN.m_vScaleKeys, l_fnV3, true);
+    if (!l_oN.m_vColorKeys.empty()) l_jTr["color"] = f_KeysToJson(l_oN.m_vColorKeys, l_fnV4, true);
+    if (!l_oN.m_vSpriteKeys.empty()) l_jTr["sprite"] = f_KeysToJson(l_oN.m_vSpriteKeys, l_fnS, false);
+    if (!l_oN.m_vVisibleKeys.empty()) l_jTr["visible"] = f_KeysToJson(l_oN.m_vVisibleKeys, l_fnB, false);
+    if (!l_oN.m_vEventKeys.empty()) l_jTr["event"] = f_KeysToJson(l_oN.m_vEventKeys, l_fnS, false);
+    if (!l_oN.m_vFxKeys.empty()) l_jTr["fx"] = f_KeysToJson(l_oN.m_vFxKeys, l_fnV4, true);
+    if (!l_oN.m_vTrailKeys.empty()) l_jTr["trail"] = f_KeysToJson(l_oN.m_vTrailKeys, [](float l_fV) { return json(l_fV); }, true);
+    if (!l_oN.m_vDeformKeys.empty()) {   // only the points that move: {"5": [0, -2], ...}
+        auto l_fnD = [](const Deform& l_mapV) {
+            json l_jO = json::object();
+            for (const auto& [l_iI, l_v2Off] : l_mapV) l_jO[std::to_string(l_iI)] = f_Vec(l_v2Off);
+            return l_jO;
         };
-        tr["deform"] = keysToJson(n.deformKeys, d, true);
+        l_jTr["deform"] = f_KeysToJson(l_oN.m_vDeformKeys, l_fnD, true);
     }
-    if (!tr.empty()) j["tracks"] = tr;
-    if (!n.children.empty()) {
-        j["children"] = json::array();
-        for (const Node& c : n.children) j["children"].push_back(nodeToJson(c));
+    if (!l_jTr.empty()) l_jJ["tracks"] = l_jTr;
+    if (!l_oN.m_vChildren.empty()) {
+        l_jJ["children"] = json::array();
+        for (const Node& l_oC : l_oN.m_vChildren) l_jJ["children"].push_back(f_NodeToJson(l_oC));
     }
-    return j;
+    return l_jJ;
 }
 
-glm::vec2 toVec2(const json& j) { return {j.at(0).get<float>(), j.at(1).get<float>()}; }
+glm::vec2 f_ToVec2(const json& l_jJ) { return {l_jJ.at(0).get<float>(), l_jJ.at(1).get<float>()}; }
 // [x, y, z]; a version 1 [x, y] gets z = `z`.
-glm::vec3 toVec3(const json& j, float z) {
-    return {j.at(0).get<float>(), j.at(1).get<float>(), j.size() > 2 ? j.at(2).get<float>() : z};
+glm::vec3 f_ToVec3(const json& l_jJ, float l_fZ) {
+    return {l_jJ.at(0).get<float>(), l_jJ.at(1).get<float>(), l_jJ.size() > 2 ? l_jJ.at(2).get<float>() : l_fZ};
 }
-glm::vec3 toPos(const json& j) { return toVec3(j, 0.0f); }
-glm::vec3 toScale(const json& j) { return toVec3(j, 1.0f); }
+glm::vec3 f_ToPos(const json& l_jJ) { return f_ToVec3(l_jJ, 0.0f); }
+glm::vec3 f_ToScale(const json& l_jJ) { return f_ToVec3(l_jJ, 1.0f); }
 // [x, y, z] degrees; a version 1 number is the z (screen-plane) rotation.
-glm::vec3 toRot(const json& j) { return j.is_number() ? glm::vec3(0, 0, j.get<float>()) : toVec3(j, 0.0f); }
-glm::vec4 toVec4(const json& j) { return {j.at(0).get<float>(), j.at(1).get<float>(), j.at(2).get<float>(), j.at(3).get<float>()}; }
+glm::vec3 f_ToRot(const json& l_jJ) { return l_jJ.is_number() ? glm::vec3(0, 0, l_jJ.get<float>()) : f_ToVec3(l_jJ, 0.0f); }
+glm::vec4 f_ToVec4(const json& l_jJ) { return {l_jJ.at(0).get<float>(), l_jJ.at(1).get<float>(), l_jJ.at(2).get<float>(), l_jJ.at(3).get<float>()}; }
 
-void easeFromJson(const json& j, Ease& e, const std::string& where) {
-    if (j.is_string()) {
-        if (!parseEase(j.get<std::string>(), e)) throw std::runtime_error(where + ": unknown ease '" + j.get<std::string>() + "'");
-    } else if (j.is_array() && j.size() == 4) {
-        e.kind = Ease::kBezier;
-        for (int i = 0; i < 4; i++) e.bezier[i] = j[i].get<float>();
+void f_EaseFromJson(const json& l_jJ, Ease& l_oE, const std::string& l_strWhere) {
+    if (l_jJ.is_string()) {
+        if (!f_ParseEase(l_jJ.get<std::string>(), l_oE)) throw std::runtime_error(l_strWhere + ": unknown ease '" + l_jJ.get<std::string>() + "'");
+    } else if (l_jJ.is_array() && l_jJ.size() == 4) {
+        l_oE.m_iKind = Ease::m_iBezier;
+        for (int l_iI = 0; l_iI < 4; l_iI++) l_oE.m_arrBezier[l_iI] = l_jJ[l_iI].get<float>();
     } else {
-        throw std::runtime_error(where + ": ease must be a name or [x1, y1, x2, y2]");
+        throw std::runtime_error(l_strWhere + ": ease must be a name or [x1, y1, x2, y2]");
     }
 }
 
 template <class T, class F>
-void keysFromJson(const json& tracks, const char* channel, std::vector<Key<T>>& out, F value, const std::string& where) {
-    if (!tracks.contains(channel)) return;
-    for (const json& k : tracks[channel]) {
-        Key<T> key;
-        key.t = k.at("t").get<float>();
-        key.v = value(k.at("v"));
-        if (k.contains("ease")) easeFromJson(k["ease"], key.ease, where + "." + channel);
-        out.push_back(key);
+void f_KeysFromJson(const json& l_jTracks, const char* l_pszChannel, std::vector<Key<T>>& l_vOut, F l_oValue, const std::string& l_strWhere) {
+    if (!l_jTracks.contains(l_pszChannel)) return;
+    for (const json& l_jK : l_jTracks[l_pszChannel]) {
+        Key<T> l_oKey;
+        l_oKey.m_fT = l_jK.at("t").get<float>();
+        l_oKey.m_oV = l_oValue(l_jK.at("v"));
+        if (l_jK.contains("ease")) f_EaseFromJson(l_jK["ease"], l_oKey.m_oEase, l_strWhere + "." + l_pszChannel);
+        l_vOut.push_back(l_oKey);
     }
-    std::stable_sort(out.begin(), out.end(), [](const Key<T>& a, const Key<T>& b) { return a.t < b.t; });
+    std::stable_sort(l_vOut.begin(), l_vOut.end(), [](const Key<T>& l_oA, const Key<T>& l_oB) { return l_oA.m_fT < l_oB.m_fT; });
 }
 
-void nodeFromJson(const json& j, Node& n, const std::string& where) {
-    n.name = j.value("name", std::string());
-    const std::string here = where + "/" + n.name;
-    n.sprite = j.value("sprite", std::string());
-    if (j.contains("pos")) n.pos = toPos(j["pos"]);
-    if (j.contains("rot")) n.rot = toRot(j["rot"]);
-    if (j.contains("scale")) n.scale = toScale(j["scale"]);
-    if (j.contains("color")) n.color = toVec4(j["color"]);
-    n.visible = j.value("visible", true);
-    if (j.contains("pivot")) { n.hasPivot = true; n.pivot = toVec2(j["pivot"]); }
-    n.order = j.value("order", 0);
-    const std::string blend = j.value("blend", std::string("normal"));
-    if (blend != "normal" && blend != "add") throw std::runtime_error(here + ": blend must be normal or add");
-    n.blend = blend == "add" ? Blend::Add : Blend::Normal;
-    n.inheritColor = j.value("inheritColor", true);
-    n.loop = j.value("loop", false);
-    n.stayAtLastFrame = j.value("stayAtLastFrame", true);
-    if (j.contains("lattice")) {
-        const json& l = j["lattice"];
-        if (!l.is_array() || l.size() != 2 || !l[0].is_number_integer() || !l[1].is_number_integer() ||
-            l[0].get<int>() < 2 || l[1].get<int>() < 2 || l[0].get<int>() > kMaxLattice || l[1].get<int>() > kMaxLattice)
-            throw std::runtime_error(here + ": lattice must be [cols, rows], 2 to " + std::to_string(kMaxLattice) + " each");
-        n.lattice[0] = l[0].get<int>();
-        n.lattice[1] = l[1].get<int>();
+void f_NodeFromJson(const json& l_jJ, Node& l_oN, const std::string& l_strWhere) {
+    l_oN.m_strName = l_jJ.value("name", std::string());
+    const std::string l_strHere = l_strWhere + "/" + l_oN.m_strName;
+    l_oN.m_strSprite = l_jJ.value("sprite", std::string());
+    if (l_jJ.contains("pos")) l_oN.m_v3Pos = f_ToPos(l_jJ["pos"]);
+    if (l_jJ.contains("rot")) l_oN.m_v3Rot = f_ToRot(l_jJ["rot"]);
+    if (l_jJ.contains("scale")) l_oN.m_v3Scale = f_ToScale(l_jJ["scale"]);
+    if (l_jJ.contains("color")) l_oN.m_v4Color = f_ToVec4(l_jJ["color"]);
+    l_oN.m_bVisible = l_jJ.value("visible", true);
+    if (l_jJ.contains("pivot")) { l_oN.m_bHasPivot = true; l_oN.m_v2Pivot = f_ToVec2(l_jJ["pivot"]); }
+    l_oN.m_iOrder = l_jJ.value("order", 0);
+    const std::string l_strBlend = l_jJ.value("blend", std::string("normal"));
+    if (l_strBlend != "normal" && l_strBlend != "add") throw std::runtime_error(l_strHere + ": blend must be normal or add");
+    l_oN.m_eBlend = l_strBlend == "add" ? Blend::Add : Blend::Normal;
+    l_oN.m_bInheritColor = l_jJ.value("inheritColor", true);
+    l_oN.m_bLoop = l_jJ.value("loop", false);
+    l_oN.m_bStayAtLastFrame = l_jJ.value("stayAtLastFrame", true);
+    if (l_jJ.contains("lattice")) {
+        const json& l_jL = l_jJ["lattice"];
+        if (!l_jL.is_array() || l_jL.size() != 2 || !l_jL[0].is_number_integer() || !l_jL[1].is_number_integer() ||
+            l_jL[0].get<int>() < 2 || l_jL[1].get<int>() < 2 || l_jL[0].get<int>() > g_iMaxLattice || l_jL[1].get<int>() > g_iMaxLattice)
+            throw std::runtime_error(l_strHere + ": lattice must be [cols, rows], 2 to " + std::to_string(g_iMaxLattice) + " each");
+        l_oN.m_arrLattice[0] = l_jL[0].get<int>();
+        l_oN.m_arrLattice[1] = l_jL[1].get<int>();
     }
-    if (j.contains("meshGrid")) {
-        const json& g = j["meshGrid"];
-        if (!g.is_array() || g.size() != 2 || !g[0].is_number_integer() || !g[1].is_number_integer() ||
-            g[0].get<int>() < 1 || g[1].get<int>() < 1 || g[0].get<int>() > kMaxMeshGrid || g[1].get<int>() > kMaxMeshGrid)
-            throw std::runtime_error(here + ": meshGrid must be [cols, rows], 1 to " + std::to_string(kMaxMeshGrid) + " each");
-        n.meshGrid[0] = g[0].get<int>();
-        n.meshGrid[1] = g[1].get<int>();
+    if (l_jJ.contains("meshGrid")) {
+        const json& l_jG = l_jJ["meshGrid"];
+        if (!l_jG.is_array() || l_jG.size() != 2 || !l_jG[0].is_number_integer() || !l_jG[1].is_number_integer() ||
+            l_jG[0].get<int>() < 1 || l_jG[1].get<int>() < 1 || l_jG[0].get<int>() > g_iMaxMeshGrid || l_jG[1].get<int>() > g_iMaxMeshGrid)
+            throw std::runtime_error(l_strHere + ": meshGrid must be [cols, rows], 1 to " + std::to_string(g_iMaxMeshGrid) + " each");
+        l_oN.m_arrMeshGrid[0] = l_jG[0].get<int>();
+        l_oN.m_arrMeshGrid[1] = l_jG[1].get<int>();
     }
-    if (j.contains("fx")) {
-        const json& fx = j["fx"];
-        const std::string name = fx.value("shader", std::string());
-        if (!parseFxShader(name, n.fx.shader) || n.fx.shader == FxShader::None)
-            throw std::runtime_error(here + ": fx shader must be group, motionBlur, glow, flash or outline");
-        if (fx.contains("params")) n.fx.params = toVec4(fx["params"]);
-        if (fx.contains("color")) n.fx.color = toVec4(fx["color"]);
+    if (l_jJ.contains("fx")) {
+        const json& l_jFx = l_jJ["fx"];
+        const std::string l_strName = l_jFx.value("shader", std::string());
+        if (!f_ParseFxShader(l_strName, l_oN.m_oFx.m_eShader) || l_oN.m_oFx.m_eShader == FxShader::None)
+            throw std::runtime_error(l_strHere + ": fx shader must be group, motionBlur, glow, flash or outline");
+        if (l_jFx.contains("params")) l_oN.m_oFx.m_v4Params = f_ToVec4(l_jFx["params"]);
+        if (l_jFx.contains("color")) l_oN.m_oFx.m_v4Color = f_ToVec4(l_jFx["color"]);
     }
-    if (j.contains("trail")) {
-        const json& tr = j["trail"];
-        n.trail.count = tr.value("count", 0);
-        if (n.trail.count < 0 || n.trail.count > kMaxTrail)
-            throw std::runtime_error(here + ": trail count must be 0 to " + std::to_string(kMaxTrail));
-        n.trail.gap = tr.value("gap", 0.04f);
-        if (!(n.trail.gap > 0)) throw std::runtime_error(here + ": trail gap must be above 0");
-        if (tr.contains("color")) n.trail.color = toVec4(tr["color"]);
-        const std::string blend = tr.value("blend", std::string("normal"));
-        if (blend != "normal" && blend != "add") throw std::runtime_error(here + ": trail blend must be normal or add");
-        n.trail.additive = blend == "add";
+    if (l_jJ.contains("trail")) {
+        const json& l_jTr = l_jJ["trail"];
+        l_oN.m_oTrail.m_iCount = l_jTr.value("count", 0);
+        if (l_oN.m_oTrail.m_iCount < 0 || l_oN.m_oTrail.m_iCount > g_iMaxTrail)
+            throw std::runtime_error(l_strHere + ": trail count must be 0 to " + std::to_string(g_iMaxTrail));
+        l_oN.m_oTrail.m_fGap = l_jTr.value("gap", 0.04f);
+        if (!(l_oN.m_oTrail.m_fGap > 0)) throw std::runtime_error(l_strHere + ": trail gap must be above 0");
+        if (l_jTr.contains("color")) l_oN.m_oTrail.m_v4Color = f_ToVec4(l_jTr["color"]);
+        const std::string l_strBlend = l_jTr.value("blend", std::string("normal"));
+        if (l_strBlend != "normal" && l_strBlend != "add") throw std::runtime_error(l_strHere + ": trail blend must be normal or add");
+        l_oN.m_oTrail.m_bAdditive = l_strBlend == "add";
     }
-    if (j.contains("skin")) {
-        const json& skin = j["skin"];
-        n.skinBones = skin.value("bones", std::vector<std::string>());
-        if (n.skinBones.empty()) throw std::runtime_error(here + ": a skin needs bones");
-        const json w = skin.value("weights", json("auto"));
-        if (w.is_array()) {
-            for (const json& one : w) {
-                if (!one.is_array() || one.size() % 2 || one.size() > 2 * kSkinInfluences)
-                    throw std::runtime_error(here + ": skin weights are [bone, weight, ...] per vertex, at most " +
-                                             std::to_string(kSkinInfluences) + " bones");
-                for (size_t k = 0; k < (size_t)kSkinInfluences; k++) {
-                    const bool has = 2 * k < one.size();
-                    const int bone = has ? one[2 * k].get<int>() : 0;
-                    if (bone < 0 || bone >= (int)n.skinBones.size()) throw std::runtime_error(here + ": skin weight names bone " + std::to_string(bone));
-                    n.skinWeights.push_back((float)bone);
-                    n.skinWeights.push_back(has ? one[2 * k + 1].get<float>() : 0.0f);
+    if (l_jJ.contains("skin")) {
+        const json& l_jSkin = l_jJ["skin"];
+        l_oN.m_vSkinBones = l_jSkin.value("bones", std::vector<std::string>());
+        if (l_oN.m_vSkinBones.empty()) throw std::runtime_error(l_strHere + ": a skin needs bones");
+        const json l_jW = l_jSkin.value("weights", json("auto"));
+        if (l_jW.is_array()) {
+            for (const json& l_jOne : l_jW) {
+                if (!l_jOne.is_array() || l_jOne.size() % 2 || l_jOne.size() > 2 * g_iSkinInfluences)
+                    throw std::runtime_error(l_strHere + ": skin weights are [bone, weight, ...] per vertex, at most " +
+                                             std::to_string(g_iSkinInfluences) + " bones");
+                for (size_t l_nK = 0; l_nK < (size_t)g_iSkinInfluences; l_nK++) {
+                    const bool l_bHas = 2 * l_nK < l_jOne.size();
+                    const int l_iBone = l_bHas ? l_jOne[2 * l_nK].get<int>() : 0;
+                    if (l_iBone < 0 || l_iBone >= (int)l_oN.m_vSkinBones.size()) throw std::runtime_error(l_strHere + ": skin weight names bone " + std::to_string(l_iBone));
+                    l_oN.m_vSkinWeights.push_back((float)l_iBone);
+                    l_oN.m_vSkinWeights.push_back(l_bHas ? l_jOne[2 * l_nK + 1].get<float>() : 0.0f);
                 }
             }
-        } else if (!w.is_string() || w.get<std::string>() != "auto") {
-            throw std::runtime_error(here + ": skin weights must be \"auto\" or a list per vertex");
+        } else if (!l_jW.is_string() || l_jW.get<std::string>() != "auto") {
+            throw std::runtime_error(l_strHere + ": skin weights must be \"auto\" or a list per vertex");
         }
     }
-    if (j.contains("tracks")) {
-        const json& tr = j["tracks"];
-        keysFromJson(tr, "pos", n.posKeys, toPos, here);
-        keysFromJson(tr, "rot", n.rotKeys, toRot, here);
-        keysFromJson(tr, "scale", n.scaleKeys, toScale, here);
-        keysFromJson(tr, "color", n.colorKeys, toVec4, here);
-        keysFromJson(tr, "sprite", n.spriteKeys, [](const json& v) { return v.get<std::string>(); }, here);
-        keysFromJson(tr, "visible", n.visibleKeys, [](const json& v) { return v.get<bool>(); }, here);
-        keysFromJson(tr, "event", n.eventKeys, [](const json& v) { return v.get<std::string>(); }, here);
-        keysFromJson(tr, "fx", n.fxKeys, toVec4, here);
-        keysFromJson(tr, "trail", n.trailKeys, [](const json& v) { return v.get<float>(); }, here);
-        const int points = n.latticeCols() * n.latticeRows();
-        keysFromJson(tr, "deform", n.deformKeys, [&](const json& v) {
-            if (!v.is_object()) throw std::runtime_error(here + ".deform: a key's value is {\"point\": [dx, dy], ...}");
-            Deform d;
-            for (auto it = v.begin(); it != v.end(); ++it) {
-                int i = -1;
-                try { i = std::stoi(it.key()); } catch (...) {}
-                if (i < 0 || i >= points)
-                    throw std::runtime_error(here + ".deform: no lattice point " + it.key() + " (" + std::to_string(points) + " points)");
-                d[i] = toVec2(it.value());
+    if (l_jJ.contains("tracks")) {
+        const json& l_jTr = l_jJ["tracks"];
+        f_KeysFromJson(l_jTr, "pos", l_oN.m_vPosKeys, f_ToPos, l_strHere);
+        f_KeysFromJson(l_jTr, "rot", l_oN.m_vRotKeys, f_ToRot, l_strHere);
+        f_KeysFromJson(l_jTr, "scale", l_oN.m_vScaleKeys, f_ToScale, l_strHere);
+        f_KeysFromJson(l_jTr, "color", l_oN.m_vColorKeys, f_ToVec4, l_strHere);
+        f_KeysFromJson(l_jTr, "sprite", l_oN.m_vSpriteKeys, [](const json& l_jV) { return l_jV.get<std::string>(); }, l_strHere);
+        f_KeysFromJson(l_jTr, "visible", l_oN.m_vVisibleKeys, [](const json& l_jV) { return l_jV.get<bool>(); }, l_strHere);
+        f_KeysFromJson(l_jTr, "event", l_oN.m_vEventKeys, [](const json& l_jV) { return l_jV.get<std::string>(); }, l_strHere);
+        f_KeysFromJson(l_jTr, "fx", l_oN.m_vFxKeys, f_ToVec4, l_strHere);
+        f_KeysFromJson(l_jTr, "trail", l_oN.m_vTrailKeys, [](const json& l_jV) { return l_jV.get<float>(); }, l_strHere);
+        const int l_iPoints = l_oN.f_LatticeCols() * l_oN.f_LatticeRows();
+        f_KeysFromJson(l_jTr, "deform", l_oN.m_vDeformKeys, [&](const json& l_jV) {
+            if (!l_jV.is_object()) throw std::runtime_error(l_strHere + ".deform: a key's value is {\"point\": [dx, dy], ...}");
+            Deform l_mapD;
+            for (auto l_oIt = l_jV.begin(); l_oIt != l_jV.end(); ++l_oIt) {
+                int l_iI = -1;
+                try { l_iI = std::stoi(l_oIt.key()); } catch (...) {}
+                if (l_iI < 0 || l_iI >= l_iPoints)
+                    throw std::runtime_error(l_strHere + ".deform: no lattice point " + l_oIt.key() + " (" + std::to_string(l_iPoints) + " points)");
+                l_mapD[l_iI] = f_ToVec2(l_oIt.value());
             }
-            return d;
-        }, here);
+            return l_mapD;
+        }, l_strHere);
     }
-    for (const json& c : j.value("children", json::array())) {
-        n.children.emplace_back();
-        nodeFromJson(c, n.children.back(), here);
+    for (const json& l_jC : l_jJ.value("children", json::array())) {
+        l_oN.m_vChildren.emplace_back();
+        f_NodeFromJson(l_jC, l_oN.m_vChildren.back(), l_strHere);
     }
 }
 
 }  // namespace
 
-bool parseAnim(const std::string& text, AnimFile& out, std::string* err) {
+bool f_ParseAnim(const std::string& l_strText, AnimFile& l_oOut, std::string* l_pErr) {
     try {
-        const json j = json::parse(text);
-        AnimFile f;
-        f.version = j.value("version", 1);
-        if (f.version > kAnimVersion)
-            throw std::runtime_error("version " + std::to_string(f.version) + " is newer than this build reads (" +
-                                     std::to_string(kAnimVersion) + ")");
-        if (j.contains("atlases")) {
-            for (const json& a : j["atlases"]) {
-                AtlasRef r;
-                if (a.is_string()) r.path = a.get<std::string>();
-                else { r.path = a.at("path").get<std::string>(); r.id = a.value("id", std::string()); }
-                if (r.id.empty()) r.id = defaultAtlasId(r.path);
-                for (const AtlasRef& o : f.atlases)
-                    if (o.id == r.id) throw std::runtime_error("two atlases have the id '" + r.id + "': give one an \"id\"");
-                f.atlases.push_back(r);
+        const json l_jJ = json::parse(l_strText);
+        AnimFile l_oF;
+        l_oF.m_iVersion = l_jJ.value("version", 1);
+        if (l_oF.m_iVersion > g_iAnimVersion)
+            throw std::runtime_error("version " + std::to_string(l_oF.m_iVersion) + " is newer than this build reads (" +
+                                     std::to_string(g_iAnimVersion) + ")");
+        if (l_jJ.contains("atlases")) {
+            for (const json& l_jA : l_jJ["atlases"]) {
+                AtlasRef l_oR;
+                if (l_jA.is_string()) l_oR.m_strPath = l_jA.get<std::string>();
+                else { l_oR.m_strPath = l_jA.at("path").get<std::string>(); l_oR.m_strId = l_jA.value("id", std::string()); }
+                if (l_oR.m_strId.empty()) l_oR.m_strId = f_DefaultAtlasId(l_oR.m_strPath);
+                for (const AtlasRef& l_oO : l_oF.m_vAtlases)
+                    if (l_oO.m_strId == l_oR.m_strId) throw std::runtime_error("two atlases have the id '" + l_oR.m_strId + "': give one an \"id\"");
+                l_oF.m_vAtlases.push_back(l_oR);
             }
-        } else if (j.contains("atlas")) {   // older files: one atlas
-            const std::string path = j["atlas"].get<std::string>();
-            f.atlases.push_back({defaultAtlasId(path), path});
+        } else if (l_jJ.contains("atlas")) {   // older files: one atlas
+            const std::string l_strPath = l_jJ["atlas"].get<std::string>();
+            l_oF.m_vAtlases.push_back({f_DefaultAtlasId(l_strPath), l_strPath});
         }
-        for (const json& c : j.value("clips", json::array())) {
-            Clip clip;
-            clip.name = c.value("name", std::string());
-            clip.length = c.value("length", 0.0f);
-            clip.playCount = c.value("playCount", 1);
-            clip.stayAtLastFrame = c.value("stayAtLastFrame", true);
-            if (c.contains("root")) nodeFromJson(c["root"], clip.root, clip.name);
-            f.clips.push_back(std::move(clip));
+        for (const json& l_jC : l_jJ.value("clips", json::array())) {
+            Clip l_oClip;
+            l_oClip.m_strName = l_jC.value("name", std::string());
+            l_oClip.m_fLength = l_jC.value("length", 0.0f);
+            l_oClip.m_iPlayCount = l_jC.value("playCount", 1);
+            l_oClip.m_bStayAtLastFrame = l_jC.value("stayAtLastFrame", true);
+            if (l_jC.contains("root")) f_NodeFromJson(l_jC["root"], l_oClip.m_oRoot, l_oClip.m_strName);
+            l_oF.m_vClips.push_back(std::move(l_oClip));
         }
-        out = std::move(f);
+        l_oOut = std::move(l_oF);
         return true;
-    } catch (const std::exception& e) {
-        if (err) *err = e.what();
+    } catch (const std::exception& l_oE) {
+        if (l_pErr) *l_pErr = l_oE.what();
         return false;
     }
 }
 
 // ---- characters ----
 
-const Node* findNode(const Node& root, const std::string& name) {
-    if (root.name == name) return &root;
-    for (const Node& c : root.children)
-        if (const Node* f = findNode(c, name)) return f;
+const Node* f_FindNode(const Node& l_oRoot, const std::string& l_strName) {
+    if (l_oRoot.m_strName == l_strName) return &l_oRoot;
+    for (const Node& l_oC : l_oRoot.m_vChildren)
+        if (const Node* l_pF = f_FindNode(l_oC, l_strName)) return l_pF;
     return nullptr;
 }
 
-glm::vec2 characterHandOffset(const glm::vec2& hand, const toms::SpriteBox& from, const toms::SpriteBox& to) {
-    if (from.empty() || to.empty()) return glm::vec2(0.0f);
+glm::vec2 f_CharacterHandOffset(const glm::vec2& l_v2Hand, const toms::SpriteBox& l_oFrom, const toms::SpriteBox& l_oTo) {
+    if (l_oFrom.f_Empty() || l_oTo.f_Empty()) return glm::vec2(0.0f);
     // Both bodies pivoted at the bottom centre: body space x from the centre, y up from the feet (negative).
-    auto top = [](const toms::SpriteBox& b) { return b.top - b.origH; };
-    auto bottom = [](const toms::SpriteBox& b) { return b.bottom - b.origH; };
-    auto right = [](const toms::SpriteBox& b) { return b.right - b.origW * 0.5f; };
-    const float share = (hand.y - top(from)) / (bottom(from) - top(from));   // 0 = top of the head, 1 = the feet
-    const float y = top(to) + share * (bottom(to) - top(to));
-    const float x = hand.x + (right(to) - right(from));
-    return glm::vec2(x - hand.x, y - hand.y);
+    auto l_fnTop = [](const toms::SpriteBox& l_oB) { return l_oB.m_fTop - l_oB.m_fOrigH; };
+    auto l_fnBottom = [](const toms::SpriteBox& l_oB) { return l_oB.m_fBottom - l_oB.m_fOrigH; };
+    auto l_fnRight = [](const toms::SpriteBox& l_oB) { return l_oB.m_fRight - l_oB.m_fOrigW * 0.5f; };
+    const float l_fShare = (l_v2Hand.y - l_fnTop(l_oFrom)) / (l_fnBottom(l_oFrom) - l_fnTop(l_oFrom));   // 0 = top of the head, 1 = the feet
+    const float l_fY = l_fnTop(l_oTo) + l_fShare * (l_fnBottom(l_oTo) - l_fnTop(l_oTo));
+    const float l_fX = l_v2Hand.x + (l_fnRight(l_oTo) - l_fnRight(l_oFrom));
+    return glm::vec2(l_fX - l_v2Hand.x, l_fY - l_v2Hand.y);
 }
 
 namespace {
-void fitWalk(Node& n, const std::string& sprite, const glm::vec2& offset) {
-    if (n.name == "body") {
-        n.sprite = sprite;
-        for (auto& k : n.spriteKeys)
-            if (!k.v.empty()) k.v = sprite;
+void f_FitWalk(Node& l_oN, const std::string& l_strSprite, const glm::vec2& l_v2Offset) {
+    if (l_oN.m_strName == "body") {
+        l_oN.m_strSprite = l_strSprite;
+        for (auto& l_oK : l_oN.m_vSpriteKeys)
+            if (!l_oK.m_oV.empty()) l_oK.m_oV = l_strSprite;
     }
-    if (n.name == "hand") {
-        n.pos += glm::vec3(offset, 0.0f);
-        for (auto& k : n.posKeys) k.v += glm::vec3(offset, 0.0f);
+    if (l_oN.m_strName == "hand") {
+        l_oN.m_v3Pos += glm::vec3(l_v2Offset, 0.0f);
+        for (auto& l_oK : l_oN.m_vPosKeys) l_oK.m_oV += glm::vec3(l_v2Offset, 0.0f);
     }
-    for (Node& c : n.children) fitWalk(c, sprite, offset);
+    for (Node& l_oC : l_oN.m_vChildren) f_FitWalk(l_oC, l_strSprite, l_v2Offset);
 }
 }  // namespace
 
-Clip fitCharacter(const Clip& c, const std::string& sprite,
-                  const std::function<bool(const std::string&, toms::SpriteBox&)>& boxOf, const glm::vec2& extra) {
-    Clip out = c;
-    const Node* body = findNode(c.root, "body");
-    const Node* hand = findNode(c.root, "hand");
-    glm::vec2 offset = extra;
-    toms::SpriteBox from, to;
-    if (body && hand && boxOf && boxOf(body->sprite, from) && boxOf(sprite, to))
-        offset += characterHandOffset(glm::vec2(hand->pos), from, to);
+Clip f_FitCharacter(const Clip& l_oC, const std::string& l_strSprite,
+                  const std::function<bool(const std::string&, toms::SpriteBox&)>& l_fnBoxOf, const glm::vec2& l_v2Extra) {
+    Clip l_oOut = l_oC;
+    const Node* l_pBody = f_FindNode(l_oC.m_oRoot, "body");
+    const Node* l_pHand = f_FindNode(l_oC.m_oRoot, "hand");
+    glm::vec2 l_v2Offset = l_v2Extra;
+    toms::SpriteBox l_oFrom, l_oTo;
+    if (l_pBody && l_pHand && l_fnBoxOf && l_fnBoxOf(l_pBody->m_strSprite, l_oFrom) && l_fnBoxOf(l_strSprite, l_oTo))
+        l_v2Offset += f_CharacterHandOffset(glm::vec2(l_pHand->m_v3Pos), l_oFrom, l_oTo);
     // A bare name keeps the body's atlas: "player_mage" for a body "game:player" is "game:player_mage".
-    std::string ref = sprite;
-    if (body && sprite.find(':') == std::string::npos) {
-        const SpriteRef was = parseSpriteRef(body->sprite);
-        if (!was.atlas.empty()) ref = spriteRef(was.atlas, sprite);
+    std::string l_strRef = l_strSprite;
+    if (l_pBody && l_strSprite.find(':') == std::string::npos) {
+        const SpriteRef l_oWas = f_ParseSpriteRef(l_pBody->m_strSprite);
+        if (!l_oWas.m_strAtlas.empty()) l_strRef = f_SpriteRef(l_oWas.m_strAtlas, l_strSprite);
     }
-    fitWalk(out.root, ref, offset);
-    return out;
+    f_FitWalk(l_oOut.m_oRoot, l_strRef, l_v2Offset);
+    return l_oOut;
 }
 
-std::string nodeToJsonText(const Node& n) { return nodeToJson(n).dump(2) + "\n"; }
+std::string f_NodeToJsonText(const Node& l_oN) { return f_NodeToJson(l_oN).dump(2) + "\n"; }
 
-bool parseNodeJson(const std::string& text, Node& out, std::string* err) {
+bool f_ParseNodeJson(const std::string& l_strText, Node& l_oOut, std::string* l_pErr) {
     try {
-        const json j = json::parse(text);
-        if (!j.is_object()) throw std::runtime_error("not a node");
-        Node n;
-        nodeFromJson(j, n, std::string());
-        out = std::move(n);
+        const json l_jJ = json::parse(l_strText);
+        if (!l_jJ.is_object()) throw std::runtime_error("not a node");
+        Node l_oN;
+        f_NodeFromJson(l_jJ, l_oN, std::string());
+        l_oOut = std::move(l_oN);
         return true;
-    } catch (const std::exception& e) {
-        if (err) *err = e.what();
+    } catch (const std::exception& l_oE) {
+        if (l_pErr) *l_pErr = l_oE.what();
         return false;
     }
 }
 
 namespace {
-bool anySkin(const Node& n) {   // version 3's fields: a skin or a lattice
-    if (n.skinned() || n.deformed() || n.lattice[0] >= 2 || n.lattice[1] >= 2 || n.hasMeshGrid()) return true;
-    for (const Node& c : n.children) if (anySkin(c)) return true;
+bool f_AnySkin(const Node& l_oN) {   // version 3's fields: a skin or a lattice
+    if (l_oN.f_Skinned() || l_oN.f_Deformed() || l_oN.m_arrLattice[0] >= 2 || l_oN.m_arrLattice[1] >= 2 || l_oN.f_HasMeshGrid()) return true;
+    for (const Node& l_oC : l_oN.m_vChildren) if (f_AnySkin(l_oC)) return true;
     return false;
 }
 }  // namespace
 
-std::string animToJson(const AnimFile& f) {
-    json j;
-    const bool effects = std::any_of(f.clips.begin(), f.clips.end(), [](const Clip& c) { return hasEffects(c); });
-    j["version"] = effects ? 4 : std::any_of(f.clips.begin(), f.clips.end(), [](const Clip& c) { return anySkin(c.root); }) ? 3 : 2;
-    if (!f.atlases.empty()) {
-        json a = json::array();
-        for (const AtlasRef& r : f.atlases) {   // the short form when the id is the default one
-            if (r.id == defaultAtlasId(r.path)) a.push_back(r.path);
-            else a.push_back({{"id", r.id}, {"path", r.path}});
+std::string f_AnimToJson(const AnimFile& l_oF) {
+    json l_jJ;
+    const bool l_bEffects = std::any_of(l_oF.m_vClips.begin(), l_oF.m_vClips.end(), [](const Clip& l_oC) { return f_HasEffects(l_oC); });
+    l_jJ["version"] = l_bEffects ? 4 : std::any_of(l_oF.m_vClips.begin(), l_oF.m_vClips.end(), [](const Clip& l_oC) { return f_AnySkin(l_oC.m_oRoot); }) ? 3 : 2;
+    if (!l_oF.m_vAtlases.empty()) {
+        json l_jA = json::array();
+        for (const AtlasRef& l_oR : l_oF.m_vAtlases) {   // the short form when the id is the default one
+            if (l_oR.m_strId == f_DefaultAtlasId(l_oR.m_strPath)) l_jA.push_back(l_oR.m_strPath);
+            else l_jA.push_back({{"id", l_oR.m_strId}, {"path", l_oR.m_strPath}});
         }
-        j["atlases"] = a;
+        l_jJ["atlases"] = l_jA;
     }
-    j["clips"] = json::array();
-    for (const Clip& c : f.clips) {
-        json cj{{"name", c.name}};
-        if (c.length > 0) cj["length"] = c.length;
-        if (c.playCount != 1) cj["playCount"] = c.playCount;
-        if (!c.stayAtLastFrame) cj["stayAtLastFrame"] = false;
-        cj["root"] = nodeToJson(c.root);
-        j["clips"].push_back(cj);
+    l_jJ["clips"] = json::array();
+    for (const Clip& l_oC : l_oF.m_vClips) {
+        json l_jCj{{"name", l_oC.m_strName}};
+        if (l_oC.m_fLength > 0) l_jCj["length"] = l_oC.m_fLength;
+        if (l_oC.m_iPlayCount != 1) l_jCj["playCount"] = l_oC.m_iPlayCount;
+        if (!l_oC.m_bStayAtLastFrame) l_jCj["stayAtLastFrame"] = false;
+        l_jCj["root"] = f_NodeToJson(l_oC.m_oRoot);
+        l_jJ["clips"].push_back(l_jCj);
     }
-    return j.dump(2) + "\n";
+    return l_jJ.dump(2) + "\n";
 }
 
 }  // namespace toms::anim

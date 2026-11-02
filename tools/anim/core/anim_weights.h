@@ -21,16 +21,16 @@ enum class WeightBrush {
 
 // How much of a dab reaches a point `dist` from the brush centre: 1 at the centre, 0 at `radius` and beyond, smooth
 // in between ((1 - (d/r)^2)^2).
-float brushFalloff(float dist, float radius);
+float f_BrushFalloff(float l_fDist, float l_fRadius);
 
 // Bone `bone`'s weight on vertex v (0 when the vertex does not follow it).
-float boneWeight(const std::vector<float>& weights, size_t v, int bone);
+float f_BoneWeight(const std::vector<float>& l_vWeights, size_t l_nV, int l_iBone);
 
 // One dab. weights: the skin's weights (resized to fit `amount` when they do not); boneCount: the skin's bones;
 // bone: the painted one (Add / Subtract); amount: per vertex; triangles: the mesh (Smooth's neighbours). fallback
 // (optional, same layout): the weights a vertex takes the removed share from when Subtract finds no other bone on it
 // (the editor passes the nearest other bone). A vertex left with no weight at all goes to bone 0.
-void paintWeights(std::vector<float>& weights, int boneCount, int bone, WeightBrush mode, const std::vector<float>& amount,
-                  const std::vector<uint16_t>& triangles, const std::vector<float>* fallback = nullptr);
+void f_PaintWeights(std::vector<float>& l_vWeights, int l_iBoneCount, int l_iBone, WeightBrush l_eMode, const std::vector<float>& l_vAmount,
+                  const std::vector<uint16_t>& l_vTriangles, const std::vector<float>* l_pFallback = nullptr);
 
 }  // namespace animed

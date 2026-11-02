@@ -26,29 +26,29 @@ namespace stage { class Project; }
 class SpriteBank {
 public:
     struct Anim {
-        bool ok = false;
-        std::string path;                                  // absolute .anim path
-        toms::anim::AnimFile file;
+        bool m_bOk = false;
+        std::string m_strPath;                                  // absolute .anim path
+        toms::anim::AnimFile m_oFile;
         // the atlases it names: (id, absolute path, parsed)
-        std::vector<std::tuple<std::string, std::string, std::shared_ptr<toms::AtlasFile>>> atlases;
+        std::vector<std::tuple<std::string, std::string, std::shared_ptr<toms::AtlasFile>>> m_vAtlases;
     };
 
-    void load(const QString& tomsRoot);
-    bool ok() const { return !m_pages.isEmpty(); }
-    QString atlasPath() const { return m_atlasPath; }
-    const toms::AtlasFile& atlas() const { return m_atlas; }
+    void f_Load(const QString& l_oTomsRoot);
+    bool f_Ok() const { return !m_oPages.isEmpty(); }
+    QString f_AtlasPath() const { return m_oAtlasPath; }
+    const toms::AtlasFile& f_Atlas() const { return m_oAtlas; }
 
-    bool has(const QString& sprite) const { return m_atlas.find(sprite.toStdString()) != nullptr; }
-    QImage image(const QString& sprite) const;                         // null when the atlas has no such sprite
-    QImage tinted(const QString& sprite, const float rgba[4]) const;   // multiplied, as the game's sprite shader
+    bool f_Has(const QString& l_oSprite) const { return m_oAtlas.f_Find(l_oSprite.toStdString()) != nullptr; }
+    QImage f_Image(const QString& l_oSprite) const;                         // null when the atlas has no such sprite
+    QImage f_Tinted(const QString& l_oSprite, const float l_arrRgba[4]) const;   // multiplied, as the game's sprite shader
     // An "anim/<file>.anim" (relative to assets/media), parsed on first use; nullptr when it cannot be read.
-    const Anim* anim(const std::string& file);
-    const toms::anim::Clip* clip(const std::string& ref, const Anim** owner = nullptr);   // "anim/<file>.anim#<clip>"
+    const Anim* f_Anim(const std::string& l_strFile);
+    const toms::anim::Clip* f_Clip(const std::string& l_strRef, const Anim** l_pOwner = nullptr);   // "anim/<file>.anim#<clip>"
 
 private:
-    QString m_root, m_atlasPath;
-    toms::AtlasFile m_atlas;
-    QVector<QImage> m_pages;
-    mutable QHash<QString, QImage> m_cut, m_tinted;
-    std::map<std::string, std::unique_ptr<Anim>> m_anims;
+    QString m_oRoot, m_oAtlasPath;
+    toms::AtlasFile m_oAtlas;
+    QVector<QImage> m_oPages;
+    mutable QHash<QString, QImage> m_oCut, m_oTinted;
+    std::map<std::string, std::unique_ptr<Anim>> m_mapAnims;
 };

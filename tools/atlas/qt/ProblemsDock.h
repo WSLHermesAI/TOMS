@@ -14,16 +14,16 @@ class ProblemsDock : public QDockWidget
     Q_OBJECT
 
 public:
-    explicit ProblemsDock(AtlasDocument* doc, QWidget* parent = nullptr);
+    explicit ProblemsDock(AtlasDocument* l_pDoc, QWidget* l_pParent = nullptr);
 
 public slots:
-    void appendLog(const QString& text);
+    void f_AppendLog(const QString& l_oText);
 
 private:
-    void refresh();
+    void f_Refresh();
 
-    AtlasDocument* m_doc;
-    QTabWidget* m_tabs;
-    QTableWidget* m_table;
-    QPlainTextEdit* m_log;
+    AtlasDocument* m_pDoc;
+    QTabWidget* m_pTabs;
+    QTableWidget* m_pTable;
+    QPlainTextEdit* m_pLog;
 };

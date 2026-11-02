@@ -25,1570 +25,1570 @@ using toms::anim::Node;
 
 namespace {
 
-QString qs(const std::string& s) { return QString::fromStdString(s); }
-std::string u8(const QString& s) { return s.toStdString(); }
+QString f_Qs(const std::string& l_strS) { return QString::fromStdString(l_strS); }
+std::string f_U8(const QString& l_oS) { return l_oS.toStdString(); }
 
-bool sameState(const AnimState& a, const AnimState& b)
+bool f_SameState(const AnimState& l_oA, const AnimState& l_oB)
 {
     // The data itself, not its JSON: dumping a large file for every edit (and every merge of a drag or
     // a held spin-box arrow) made editing stall.
-    return a.atlasesAbs == b.atlasesAbs && a.atlasIds == b.atlasIds && a.clip == b.clip && a.node == b.node &&
-           a.file == b.file;
+    return l_oA.m_oAtlasesAbs == l_oB.m_oAtlasesAbs && l_oA.m_oAtlasIds == l_oB.m_oAtlasIds && l_oA.m_iClip == l_oB.m_iClip && l_oA.m_vNode == l_oB.m_vNode &&
+           l_oA.m_oFile == l_oB.m_oFile;
 }
 
 // The interpolated channels a node animates already (has keys on). Key rows only ever add to
 // these: a node that only switches sprites gets no position / rotation / scale / colour keys.
-std::vector<Channel> animatedChannels(const Node& n)
+std::vector<Channel> f_AnimatedChannels(const Node& l_oN)
 {
-    std::vector<Channel> out;
-    for (Channel c : kInterpolated)
-        if (keyCount(n, c) > 0) out.push_back(c);
-    return out;
+    std::vector<Channel> l_vOut;
+    for (Channel l_eC : g_arrInterpolated)
+        if (f_KeyCount(l_oN, l_eC) > 0) l_vOut.push_back(l_eC);
+    return l_vOut;
 }
 
 // channel >= 0: that one; < 0: the ones the node animates (position for a node without any).
-std::vector<Channel> channelsFor(const Node& n, int channel)
+std::vector<Channel> f_ChannelsFor(const Node& l_oN, int l_iChannel)
 {
-    if (channel >= 0) return {Channel(channel)};
-    std::vector<Channel> out = animatedChannels(n);
-    if (out.empty()) out.push_back(Channel::Pos);
-    return out;
+    if (l_iChannel >= 0) return {Channel(l_iChannel)};
+    std::vector<Channel> l_vOut = f_AnimatedChannels(l_oN);
+    if (l_vOut.empty()) l_vOut.push_back(Channel::Pos);
+    return l_vOut;
 }
 
-QString uniqueClipName(const AnimFile& f, const QString& base)
+QString f_UniqueClipName(const AnimFile& l_oF, const QString& l_oBase)
 {
-    auto taken = [&](const QString& n) { return f.find(u8(n)) != nullptr; };
-    const QString b = base.isEmpty() ? QStringLiteral("clip") : base;
-    if (!taken(b)) return b;
-    for (int i = 2;; i++)
-        if (!taken(QStringLiteral("%1_%2").arg(b).arg(i))) return QStringLiteral("%1_%2").arg(b).arg(i);
+    auto l_fnTaken = [&](const QString& l_oN) { return l_oF.f_Find(f_U8(l_oN)) != nullptr; };
+    const QString l_oB = l_oBase.isEmpty() ? QStringLiteral("clip") : l_oBase;
+    if (!l_fnTaken(l_oB)) return l_oB;
+    for (int l_iI = 2;; l_iI++)
+        if (!l_fnTaken(QStringLiteral("%1_%2").arg(l_oB).arg(l_iI))) return QStringLiteral("%1_%2").arg(l_oB).arg(l_iI);
 }
 
 }  // namespace
 
-QString pathToString(const NodePath& p)
+QString f_PathToString(const NodePath& l_vP)
 {
-    QStringList parts;
-    for (int i : p) parts << QString::number(i);
-    return parts.join(QLatin1Char('/'));
+    QStringList l_oParts;
+    for (int l_iI : l_vP) l_oParts << QString::number(l_iI);
+    return l_oParts.join(QLatin1Char('/'));
 }
 
-NodePath pathFromString(const QString& s)
+NodePath f_PathFromString(const QString& l_oS)
 {
-    NodePath p;
-    if (s.isEmpty()) return p;
-    for (const QString& part : s.split(QLatin1Char('/'))) p.push_back(part.toInt());
-    return p;
+    NodePath l_vP;
+    if (l_oS.isEmpty()) return l_vP;
+    for (const QString& l_oPart : l_oS.split(QLatin1Char('/'))) l_vP.push_back(l_oPart.toInt());
+    return l_vP;
 }
 
 // ---- AnimCommand --------------------------------------------------------------------------------
 
-AnimCommand::AnimCommand(AnimDocument* doc, const QString& text, AnimState before, AnimState after, const QString& mergeKey)
-    : QUndoCommand(text)
-    , m_doc(doc)
-    , m_before(std::move(before))
-    , m_after(std::move(after))
-    , m_mergeKey(mergeKey)
-    , m_id(mergeKey.isEmpty() ? -1 : int(qHash(mergeKey) & INT_MAX))
-    , m_time(QDateTime::currentMSecsSinceEpoch())
+AnimCommand::AnimCommand(AnimDocument* l_pDoc, const QString& l_oText, AnimState l_oBefore, AnimState l_oAfter, const QString& l_oMergeKey)
+    : QUndoCommand(l_oText)
+    , m_pDoc(l_pDoc)
+    , m_oBefore(std::move(l_oBefore))
+    , m_oAfter(std::move(l_oAfter))
+    , m_oMergeKey(l_oMergeKey)
+    , m_iId(l_oMergeKey.isEmpty() ? -1 : int(qHash(l_oMergeKey) & INT_MAX))
+    , m_i64Time(QDateTime::currentMSecsSinceEpoch())
 {
 }
 
-void AnimCommand::undo() { m_doc->restoreState(m_before); }
+void AnimCommand::undo() { m_pDoc->f_RestoreState(m_oBefore); }
 
-void AnimCommand::redo() { m_doc->restoreState(m_after); }
+void AnimCommand::redo() { m_pDoc->f_RestoreState(m_oAfter); }
 
-bool AnimCommand::mergeWith(const QUndoCommand* other)
+bool AnimCommand::mergeWith(const QUndoCommand* l_pOther)
 {
-    const auto* o = static_cast<const AnimCommand*>(other);
-    const bool drag = m_mergeKey.startsWith(QLatin1Char('#'));
-    if (o->m_mergeKey != m_mergeKey || o->m_before.clip != m_after.clip || o->m_before.node != m_after.node) return false;
-    if (!drag && o->m_time - m_time > kMergeWindowMs) return false;
-    m_after = o->m_after;
-    m_time = o->m_time;
-    setObsolete(sameState(m_before, m_after));   // dragged back to where it started
+    const auto* l_pO = static_cast<const AnimCommand*>(l_pOther);
+    const bool l_bDrag = m_oMergeKey.startsWith(QLatin1Char('#'));
+    if (l_pO->m_oMergeKey != m_oMergeKey || l_pO->m_oBefore.m_iClip != m_oAfter.m_iClip || l_pO->m_oBefore.m_vNode != m_oAfter.m_vNode) return false;
+    if (!l_bDrag && l_pO->m_i64Time - m_i64Time > m_i64MergeWindowMs) return false;
+    m_oAfter = l_pO->m_oAfter;
+    m_i64Time = l_pO->m_i64Time;
+    setObsolete(f_SameState(m_oBefore, m_oAfter));   // dragged back to where it started
     return true;
 }
 
 // ---- AnimDocument -------------------------------------------------------------------------------
 
-AnimDocument::AnimDocument(QObject* parent)
-    : QObject(parent)
-    , m_undo(new QUndoStack(this))
+AnimDocument::AnimDocument(QObject* l_pParent)
+    : QObject(l_pParent)
+    , m_pUndo(new QUndoStack(this))
 {
-    connect(m_undo, &QUndoStack::cleanChanged, this, [this] { emit dirtyChanged(isDirty()); });
+    connect(m_pUndo, &QUndoStack::cleanChanged, this, [this] { emit f_DirtyChanged(f_IsDirty()); });
     // First of the clipChanged slots: a clip that becomes current starts unmodified.
-    connect(this, &AnimDocument::clipChanged, this, &AnimDocument::markClipBase);
+    connect(this, &AnimDocument::f_ClipChanged, this, &AnimDocument::f_MarkClipBase);
     // The solo is a node of the current clip: another clip, or the node gone, ends it.
-    connect(this, &AnimDocument::clipChanged, this, [this] { setSolo(std::nullopt); });
-    connect(this, &AnimDocument::fileChanged, this, [this] {
-        const Clip* c = clip();
-        if (m_solo && (!c || !nodeAt(c->root, *m_solo))) setSolo(std::nullopt);
+    connect(this, &AnimDocument::f_ClipChanged, this, [this] { f_SetSolo(std::nullopt); });
+    connect(this, &AnimDocument::f_FileChanged, this, [this] {
+        const Clip* l_pC = f_Clip();
+        if (m_optSolo && (!l_pC || !f_NodeAt(l_pC->m_oRoot, *m_optSolo))) f_SetSolo(std::nullopt);
     });
-    newFile();
+    f_NewFile();
 }
 
-QString AnimDocument::displayName() const
+QString AnimDocument::f_DisplayName() const
 {
-    return m_filePath.isEmpty() ? tr("Untitled.anim") : QFileInfo(m_filePath).fileName();
+    return m_oFilePath.isEmpty() ? tr("Untitled.anim") : QFileInfo(m_oFilePath).fileName();
 }
 
-bool AnimDocument::isDirty() const { return !m_undo->isClean(); }
+bool AnimDocument::f_IsDirty() const { return !m_pUndo->isClean(); }
 
-QString AnimDocument::toJson() const { return qs(toms::anim::animToJson(m_state.file)); }
+QString AnimDocument::f_ToJson() const { return f_Qs(toms::anim::f_AnimToJson(m_oState.m_oFile)); }
 
-void AnimDocument::newFile()
+void AnimDocument::f_NewFile()
 {
-    AnimState s;
-    Clip c;
-    c.name = "clip";
-    c.root.name = "root";
-    s.file.clips.push_back(c);
-    s.atlasesAbs = m_state.atlasesAbs;   // keep working with the same sprites (absolute until saved)
-    s.atlasIds = m_state.atlasIds;
-    reset(s, QString());
+    AnimState l_oS;
+    Clip l_oC;
+    l_oC.m_strName = "clip";
+    l_oC.m_oRoot.m_strName = "root";
+    l_oS.m_oFile.m_vClips.push_back(l_oC);
+    l_oS.m_oAtlasesAbs = m_oState.m_oAtlasesAbs;   // keep working with the same sprites (absolute until saved)
+    l_oS.m_oAtlasIds = m_oState.m_oAtlasIds;
+    f_Reset(l_oS, QString());
 }
 
-bool AnimDocument::open(const QString& path, QString* error)
+bool AnimDocument::f_Open(const QString& l_oPath, QString* l_pError)
 {
-    QFile in(path);
-    if (!in.open(QIODevice::ReadOnly)) {
-        if (error) *error = in.errorString();
+    QFile l_oIn(l_oPath);
+    if (!l_oIn.open(QIODevice::ReadOnly)) {
+        if (l_pError) *l_pError = l_oIn.errorString();
         return false;
     }
-    AnimState s;
-    std::string err;
-    if (!toms::anim::parseAnim(in.readAll().toStdString(), s.file, &err)) {
-        if (error) *error = qs(err);
+    AnimState l_oS;
+    std::string l_strErr;
+    if (!toms::anim::f_ParseAnim(l_oIn.readAll().toStdString(), l_oS.m_oFile, &l_strErr)) {
+        if (l_pError) *l_pError = f_Qs(l_strErr);
         return false;
     }
-    const QString abs = QFileInfo(path).absoluteFilePath();
-    const QDir dir = QFileInfo(abs).absoluteDir();
-    QStringList absolute;
-    for (const toms::anim::AtlasRef& a : s.file.atlases) {
-        const QString p = QDir::cleanPath(dir.absoluteFilePath(qs(a.path)));   // an absolute path stays as it is
-        if (isAbsoluteAtlasPath(a.path)) absolute << p;
-        if (s.atlasesAbs.contains(p)) continue;
-        s.atlasesAbs << p;
-        s.atlasIds << qs(a.id);
+    const QString l_oAbs = QFileInfo(l_oPath).absoluteFilePath();
+    const QDir l_oDir = QFileInfo(l_oAbs).absoluteDir();
+    QStringList l_oAbsolute;
+    for (const toms::anim::AtlasRef& l_oA : l_oS.m_oFile.m_vAtlases) {
+        const QString l_oP = QDir::cleanPath(l_oDir.absoluteFilePath(f_Qs(l_oA.m_strPath)));   // an absolute path stays as it is
+        if (f_IsAbsoluteAtlasPath(l_oA.m_strPath)) l_oAbsolute << l_oP;
+        if (l_oS.m_oAtlasesAbs.contains(l_oP)) continue;
+        l_oS.m_oAtlasesAbs << l_oP;
+        l_oS.m_oAtlasIds << f_Qs(l_oA.m_strId);
     }
-    reset(s, abs);
-    if (!absolute.isEmpty()) {
-        m_absoluteInFile = absolute;
-        emit message(tr("%1 names %2 atlas(es) with an absolute path: they will be stored relative on save.")
-                         .arg(displayName()).arg(absolute.size()));
-        emit atlasChanged();   // the Problems dock and the Atlases list show them
+    f_Reset(l_oS, l_oAbs);
+    if (!l_oAbsolute.isEmpty()) {
+        m_oAbsoluteInFile = l_oAbsolute;
+        emit f_Message(tr("%1 names %2 atlas(es) with an absolute path: they will be stored relative on save.")
+                         .arg(f_DisplayName()).arg(l_oAbsolute.size()));
+        emit f_AtlasChanged();   // the Problems dock and the Atlases list show them
     }
     return true;
 }
 
-bool AnimDocument::save(const QString& path, QString* error)
+bool AnimDocument::f_Save(const QString& l_oPath, QString* l_pError)
 {
-    const QString abs = QFileInfo(path).absoluteFilePath();
-    AnimFile f = m_state.file;
-    if (!relativeAtlases(abs, f.atlases, error)) return false;
-    QSaveFile out(abs);
-    if (!out.open(QIODevice::WriteOnly)) {
-        if (error) *error = out.errorString();
+    const QString l_oAbs = QFileInfo(l_oPath).absoluteFilePath();
+    AnimFile l_oF = m_oState.m_oFile;
+    if (!f_RelativeAtlases(l_oAbs, l_oF.m_vAtlases, l_pError)) return false;
+    QSaveFile l_oOut(l_oAbs);
+    if (!l_oOut.open(QIODevice::WriteOnly)) {
+        if (l_pError) *l_pError = l_oOut.errorString();
         return false;
     }
-    out.write(QByteArray::fromStdString(toms::anim::animToJson(f)));
-    if (!out.commit()) {
-        if (error) *error = out.errorString();
+    l_oOut.write(QByteArray::fromStdString(toms::anim::f_AnimToJson(l_oF)));
+    if (!l_oOut.commit()) {
+        if (l_pError) *l_pError = l_oOut.errorString();
         return false;
     }
-    if (!saveMeshes(error)) return false;   // its meshes go into its atlases' mesh files (docs/engine/16_MESH_ANIMATION.md)
-    const bool moved = abs != m_filePath;
-    m_filePath = abs;
-    m_state.file.atlases = f.atlases;
-    const bool hadAbsolute = !m_absoluteInFile.isEmpty();
-    m_absoluteInFile.clear();
-    m_undo->setClean();
-    markClipBase();   // saved: the clip's changes are kept
-    if (moved) emit filePathChanged();
-    if (moved || hadAbsolute) emit atlasChanged();   // the stored (relative) paths changed
-    emit dirtyChanged(false);
-    emit message(tr("Saved %1").arg(QDir::toNativeSeparators(abs)));
+    if (!f_SaveMeshes(l_pError)) return false;   // its meshes go into its atlases' mesh files (docs/engine/16_MESH_ANIMATION.md)
+    const bool l_bMoved = l_oAbs != m_oFilePath;
+    m_oFilePath = l_oAbs;
+    m_oState.m_oFile.m_vAtlases = l_oF.m_vAtlases;
+    const bool l_bHadAbsolute = !m_oAbsoluteInFile.isEmpty();
+    m_oAbsoluteInFile.clear();
+    m_pUndo->setClean();
+    f_MarkClipBase();   // saved: the clip's changes are kept
+    if (l_bMoved) emit f_FilePathChanged();
+    if (l_bMoved || l_bHadAbsolute) emit f_AtlasChanged();   // the stored (relative) paths changed
+    emit f_DirtyChanged(false);
+    emit f_Message(tr("Saved %1").arg(QDir::toNativeSeparators(l_oAbs)));
     return true;
 }
 
-bool AnimDocument::writeBackup(const QString& path, QString* error) const
+bool AnimDocument::f_WriteBackup(const QString& l_oPath, QString* l_pError) const
 {
-    AnimFile f = m_state.file;
-    f.atlases.clear();
-    for (int i = 0; i < m_state.atlasesAbs.size(); i++) {
-        toms::anim::AtlasRef r;
-        r.path = u8(QDir::fromNativeSeparators(m_state.atlasesAbs[i]));
-        r.id = i < m_state.atlasIds.size() ? u8(m_state.atlasIds[i]) : toms::anim::defaultAtlasId(r.path);
-        f.atlases.push_back(r);
+    AnimFile l_oF = m_oState.m_oFile;
+    l_oF.m_vAtlases.clear();
+    for (int l_iI = 0; l_iI < m_oState.m_oAtlasesAbs.size(); l_iI++) {
+        toms::anim::AtlasRef l_oR;
+        l_oR.m_strPath = f_U8(QDir::fromNativeSeparators(m_oState.m_oAtlasesAbs[l_iI]));
+        l_oR.m_strId = l_iI < m_oState.m_oAtlasIds.size() ? f_U8(m_oState.m_oAtlasIds[l_iI]) : toms::anim::f_DefaultAtlasId(l_oR.m_strPath);
+        l_oF.m_vAtlases.push_back(l_oR);
     }
-    QSaveFile out(path);
-    if (!out.open(QIODevice::WriteOnly) || out.write(QByteArray::fromStdString(toms::anim::animToJson(f))) < 0 || !out.commit()) {
-        if (error) *error = out.errorString();
+    QSaveFile l_oOut(l_oPath);
+    if (!l_oOut.open(QIODevice::WriteOnly) || l_oOut.write(QByteArray::fromStdString(toms::anim::f_AnimToJson(l_oF))) < 0 || !l_oOut.commit()) {
+        if (l_pError) *l_pError = l_oOut.errorString();
         return false;
     }
     return true;
 }
 
-void AnimDocument::reset(AnimState s, const QString& path)
+void AnimDocument::f_Reset(AnimState l_oS, const QString& l_oPath)
 {
-    m_filePath = path;
-    m_state = std::move(s);
-    fixSelection(m_state);
-    m_state.file.atlases = storedAtlases(m_state, m_filePath);
-    m_undo->clear();
-    m_undo->setClean();
-    m_time = 0;
-    m_absoluteInFile.clear();
-    loadAtlases(true);
-    updateMeshes();
-    emit fileReset();
-    emit fileChanged();
-    emit clipChanged();
-    emit selectionChanged();
-    emit timeChanged(m_time);
-    emit filePathChanged();
-    emit dirtyChanged(false);
+    m_oFilePath = l_oPath;
+    m_oState = std::move(l_oS);
+    f_FixSelection(m_oState);
+    m_oState.m_oFile.m_vAtlases = f_StoredAtlases(m_oState, m_oFilePath);
+    m_pUndo->clear();
+    m_pUndo->setClean();
+    m_fTime = 0;
+    m_oAbsoluteInFile.clear();
+    f_LoadAtlases(true);
+    f_UpdateMeshes();
+    emit f_FileReset();
+    emit f_FileChanged();
+    emit f_ClipChanged();
+    emit f_SelectionChanged();
+    emit f_TimeChanged(m_fTime);
+    emit f_FilePathChanged();
+    emit f_DirtyChanged(false);
 }
 
-std::vector<toms::anim::AtlasRef> AnimDocument::storedAtlases(const AnimState& s, const QString& filePath)
+std::vector<toms::anim::AtlasRef> AnimDocument::f_StoredAtlases(const AnimState& l_oS, const QString& l_oFilePath)
 {
-    std::vector<toms::anim::AtlasRef> out;
-    const QDir dir = QFileInfo(filePath).absoluteDir();
-    for (int i = 0; i < s.atlasesAbs.size(); i++) {
-        const QString& a = s.atlasesAbs[i];
-        toms::anim::AtlasRef r;
-        r.path = u8(QDir::fromNativeSeparators(filePath.isEmpty() ? a : dir.relativeFilePath(a)));
-        r.id = i < s.atlasIds.size() ? u8(s.atlasIds[i]) : toms::anim::defaultAtlasId(r.path);
-        out.push_back(r);
+    std::vector<toms::anim::AtlasRef> l_vOut;
+    const QDir l_oDir = QFileInfo(l_oFilePath).absoluteDir();
+    for (int l_iI = 0; l_iI < l_oS.m_oAtlasesAbs.size(); l_iI++) {
+        const QString& l_oA = l_oS.m_oAtlasesAbs[l_iI];
+        toms::anim::AtlasRef l_oR;
+        l_oR.m_strPath = f_U8(QDir::fromNativeSeparators(l_oFilePath.isEmpty() ? l_oA : l_oDir.relativeFilePath(l_oA)));
+        l_oR.m_strId = l_iI < l_oS.m_oAtlasIds.size() ? f_U8(l_oS.m_oAtlasIds[l_iI]) : toms::anim::f_DefaultAtlasId(l_oR.m_strPath);
+        l_vOut.push_back(l_oR);
     }
-    return out;
+    return l_vOut;
 }
 
-bool AnimDocument::relativeAtlases(const QString& animPath, std::vector<toms::anim::AtlasRef>& out, QString* error) const
+bool AnimDocument::f_RelativeAtlases(const QString& l_oAnimPath, std::vector<toms::anim::AtlasRef>& l_vOut, QString* l_pError) const
 {
-    out = storedAtlases(m_state, QFileInfo(animPath).absoluteFilePath());
-    for (size_t i = 0; i < out.size(); i++)
-        if (isAbsoluteAtlasPath(out[i].path)) {   // QDir::relativeFilePath gives up across drives / roots
-            if (error)
-                *error = tr("The atlas %1 cannot be stored relative to %2: they are on different drives.\n\n"
+    l_vOut = f_StoredAtlases(m_oState, QFileInfo(l_oAnimPath).absoluteFilePath());
+    for (size_t l_nI = 0; l_nI < l_vOut.size(); l_nI++)
+        if (f_IsAbsoluteAtlasPath(l_vOut[l_nI].m_strPath)) {   // QDir::relativeFilePath gives up across drives / roots
+            if (l_pError)
+                *l_pError = tr("The atlas %1 cannot be stored relative to %2: they are on different drives.\n\n"
                             "Save the .anim on the same drive as its atlases, or remove / replace that atlas.")
-                             .arg(QDir::toNativeSeparators(m_state.atlasesAbs[int(i)]), QDir::toNativeSeparators(animPath));
+                             .arg(QDir::toNativeSeparators(m_oState.m_oAtlasesAbs[int(l_nI)]), QDir::toNativeSeparators(l_oAnimPath));
             return false;
         }
     return true;
 }
 
-void AnimDocument::fixSelection(AnimState& s) const
+void AnimDocument::f_FixSelection(AnimState& l_oS) const
 {
-    if (s.file.clips.empty()) {
-        s.clip = 0;
-        s.node.clear();
+    if (l_oS.m_oFile.m_vClips.empty()) {
+        l_oS.m_iClip = 0;
+        l_oS.m_vNode.clear();
         return;
     }
-    s.clip = std::clamp(s.clip, 0, int(s.file.clips.size()) - 1);
-    while (!s.node.empty() && !nodeAt(s.file.clips[size_t(s.clip)].root, s.node)) s.node.pop_back();
+    l_oS.m_iClip = std::clamp(l_oS.m_iClip, 0, int(l_oS.m_oFile.m_vClips.size()) - 1);
+    while (!l_oS.m_vNode.empty() && !f_NodeAt(l_oS.m_oFile.m_vClips[size_t(l_oS.m_iClip)].m_oRoot, l_oS.m_vNode)) l_oS.m_vNode.pop_back();
 }
 
-void AnimDocument::restoreState(const AnimState& s)
+void AnimDocument::f_RestoreState(const AnimState& l_oS)
 {
-    const bool clipChanged_ = s.clip != m_state.clip;
-    const bool selChanged = clipChanged_ || s.node != m_state.node;
-    const bool atlasChanged_ = s.atlasesAbs != m_state.atlasesAbs || s.atlasIds != m_state.atlasIds;
-    m_state = s;
-    fixSelection(m_state);
-    m_state.file.atlases = storedAtlases(m_state, m_filePath);
-    if (atlasChanged_) loadAtlases(false);
-    updateMeshes();
-    emit fileChanged();
-    if (clipChanged_) emit clipChanged();
-    if (selChanged) emit selectionChanged();
+    const bool l_bClipChanged = l_oS.m_iClip != m_oState.m_iClip;
+    const bool l_bSelChanged = l_bClipChanged || l_oS.m_vNode != m_oState.m_vNode;
+    const bool l_bAtlasChanged = l_oS.m_oAtlasesAbs != m_oState.m_oAtlasesAbs || l_oS.m_oAtlasIds != m_oState.m_oAtlasIds;
+    m_oState = l_oS;
+    f_FixSelection(m_oState);
+    m_oState.m_oFile.m_vAtlases = f_StoredAtlases(m_oState, m_oFilePath);
+    if (l_bAtlasChanged) f_LoadAtlases(false);
+    f_UpdateMeshes();
+    emit f_FileChanged();
+    if (l_bClipChanged) emit f_ClipChanged();
+    if (l_bSelChanged) emit f_SelectionChanged();
 }
 
 // ---- atlases ------------------------------------------------------------------------------------
 
 namespace {
 
-std::shared_ptr<AnimDocument::LoadedAtlas> loadOne(const QString& path)
+std::shared_ptr<AnimDocument::LoadedAtlas> f_LoadOne(const QString& l_oPath)
 {
-    auto a = std::make_shared<AnimDocument::LoadedAtlas>();
-    a->path = path;
-    QFile in(path);
-    std::string err;
-    if (!in.open(QIODevice::ReadOnly)) {
-        a->error = AnimDocument::tr("cannot read %1: %2").arg(QDir::toNativeSeparators(path), in.errorString());
-        return a;
+    auto l_spA = std::make_shared<AnimDocument::LoadedAtlas>();
+    l_spA->m_oPath = l_oPath;
+    QFile l_oIn(l_oPath);
+    std::string l_strErr;
+    if (!l_oIn.open(QIODevice::ReadOnly)) {
+        l_spA->m_oError = AnimDocument::tr("cannot read %1: %2").arg(QDir::toNativeSeparators(l_oPath), l_oIn.errorString());
+        return l_spA;
     }
-    if (!toms::parseAtlas(in.readAll().toStdString(), a->atlas, &err)) {
-        a->error = AnimDocument::tr("%1: %2").arg(QDir::toNativeSeparators(path), qs(err));
-        return a;
+    if (!toms::f_ParseAtlas(l_oIn.readAll().toStdString(), l_spA->m_oAtlas, &l_strErr)) {
+        l_spA->m_oError = AnimDocument::tr("%1: %2").arg(QDir::toNativeSeparators(l_oPath), f_Qs(l_strErr));
+        return l_spA;
     }
-    QVector<QImage> pages;
-    const QDir dir = QFileInfo(path).absoluteDir();
-    bool sizesChanged = false;
-    for (toms::AtlasPage& p : a->atlas.pages) {
-        QImage img(dir.filePath(qs(p.file)));
-        if (img.isNull()) a->error = AnimDocument::tr("cannot load the atlas page %1").arg(QDir::toNativeSeparators(dir.filePath(qs(p.file))));
-        if (!img.isNull() && (p.w <= 0 || p.h <= 0)) {
-            p.w = img.width();
-            p.h = img.height();
-            sizesChanged = true;
+    QVector<QImage> l_oPages;
+    const QDir l_oDir = QFileInfo(l_oPath).absoluteDir();
+    bool l_bSizesChanged = false;
+    for (toms::AtlasPage& l_oP : l_spA->m_oAtlas.m_vPages) {
+        QImage l_oImg(l_oDir.filePath(f_Qs(l_oP.m_strFile)));
+        if (l_oImg.isNull()) l_spA->m_oError = AnimDocument::tr("cannot load the atlas page %1").arg(QDir::toNativeSeparators(l_oDir.filePath(f_Qs(l_oP.m_strFile))));
+        if (!l_oImg.isNull() && (l_oP.m_iW <= 0 || l_oP.m_iH <= 0)) {
+            l_oP.m_iW = l_oImg.width();
+            l_oP.m_iH = l_oImg.height();
+            l_bSizesChanged = true;
         }
-        pages.push_back(img);
+        l_oPages.push_back(l_oImg);
     }
-    if (sizesChanged) a->atlas.computeUVs();
-    for (const QImage& img : pages) a->rgba.push_back(img.convertToFormat(QImage::Format_RGBA8888));   // meshes are cut from these
+    if (l_bSizesChanged) l_spA->m_oAtlas.f_ComputeUVs();
+    for (const QImage& l_oImg : l_oPages) l_spA->m_vRgba.push_back(l_oImg.convertToFormat(QImage::Format_RGBA8888));   // meshes are cut from these
     {   // its mesh file (docs/engine/16_MESH_ANIMATION.md): what other clips put there, "hand" meshes, and its form
-        const std::string meshPath = toms::spriteMeshPath(u8(path));
-        const bool there = QFileInfo::exists(qs(meshPath));
-        bool binary = false;
-        std::string merr;
-        if (!animed::readMeshFile(meshPath, a->meshesOnDisk, &binary, &merr)) {
-            a->meshesOnDisk = toms::SpriteMeshFile();
-            a->meshWarning = AnimDocument::tr("Meshes: %1 (cut again)").arg(qs(merr));
+        const std::string l_strMeshPath = toms::f_SpriteMeshPath(f_U8(l_oPath));
+        const bool l_bThere = QFileInfo::exists(f_Qs(l_strMeshPath));
+        bool l_bBinary = false;
+        std::string l_strMerr;
+        if (!animed::f_ReadMeshFile(l_strMeshPath, l_spA->m_oMeshesOnDisk, &l_bBinary, &l_strMerr)) {
+            l_spA->m_oMeshesOnDisk = toms::SpriteMeshFile();
+            l_spA->m_oMeshWarning = AnimDocument::tr("Meshes: %1 (cut again)").arg(f_Qs(l_strMerr));
         }
-        a->meshesBinary = there ? binary : true;
-        a->meshes = a->meshesOnDisk;
+        l_spA->m_bMeshesBinary = l_bThere ? l_bBinary : true;
+        l_spA->m_oMeshes = l_spA->m_oMeshesOnDisk;
     }
-    a->images.setPages(pages);
-    for (const toms::AtlasRegion& r : a->atlas.regions) a->spriteNames << qs(r.name);
-    a->spriteNames.removeDuplicates();
-    a->spriteNames.sort(Qt::CaseInsensitive);
-    a->ok = a->error.isEmpty();
-    return a;
+    l_spA->m_oImages.f_SetPages(l_oPages);
+    for (const toms::AtlasRegion& l_oR : l_spA->m_oAtlas.m_vRegions) l_spA->m_oSpriteNames << f_Qs(l_oR.m_strName);
+    l_spA->m_oSpriteNames.removeDuplicates();
+    l_spA->m_oSpriteNames.sort(Qt::CaseInsensitive);
+    l_spA->m_bOk = l_spA->m_oError.isEmpty();
+    return l_spA;
 }
 
 }  // namespace
 
 // force: reread every atlas; else keep the ones already loaded (undo / redo of a list change).
-void AnimDocument::loadAtlases(bool force)
+void AnimDocument::f_LoadAtlases(bool l_bForce)
 {
-    m_boxes.clear();   // the sprites' visible pixels are measured again (drawClip)
-    m_fitValid = false;
-    std::vector<std::shared_ptr<LoadedAtlas>> next;
-    for (const QString& path : m_state.atlasesAbs) {
-        std::shared_ptr<LoadedAtlas> a;
-        if (!force)
-            for (const auto& old : m_atlases)
-                if (old->path == path) a = old;
-        if (!a) {
-            a = loadOne(path);
-            if (!a->error.isEmpty()) emit message(tr("Atlas: %1").arg(a->error));
-            if (!a->meshWarning.isEmpty()) emit message(a->meshWarning);
+    m_mapBoxes.clear();   // the sprites' visible pixels are measured again (drawClip)
+    m_bFitValid = false;
+    std::vector<std::shared_ptr<LoadedAtlas>> l_vNext;
+    for (const QString& l_oPath : m_oState.m_oAtlasesAbs) {
+        std::shared_ptr<LoadedAtlas> l_spA;
+        if (!l_bForce)
+            for (const auto& l_spOld : m_vAtlases)
+                if (l_spOld->m_oPath == l_oPath) l_spA = l_spOld;
+        if (!l_spA) {
+            l_spA = f_LoadOne(l_oPath);
+            if (!l_spA->m_oError.isEmpty()) emit f_Message(tr("Atlas: %1").arg(l_spA->m_oError));
+            if (!l_spA->m_oMeshWarning.isEmpty()) emit f_Message(l_spA->m_oMeshWarning);
         }
-        next.push_back(a);
+        l_vNext.push_back(l_spA);
     }
-    m_atlases = std::move(next);
+    m_vAtlases = std::move(l_vNext);
     // The game's lookup: every page gets its own texture id, which maps back to (atlas, page).
-    m_atlasSet = toms::anim::AtlasSet();
-    m_textures.clear();
-    m_setToDoc.clear();
-    m_spriteNames.clear();
-    for (size_t i = 0; i < m_atlases.size(); i++) {
-        const LoadedAtlas& a = *m_atlases[i];
-        if (!a.ok) continue;
-        std::vector<uint16_t> pageTextures;
-        for (size_t p = 0; p < a.atlas.pages.size(); p++) {
-            pageTextures.push_back(uint16_t(m_textures.size()));
-            m_textures.push_back({int(i), int(p)});
+    m_oAtlasSet = toms::anim::AtlasSet();
+    m_vTextures.clear();
+    m_vSetToDoc.clear();
+    m_oSpriteNames.clear();
+    for (size_t l_nI = 0; l_nI < m_vAtlases.size(); l_nI++) {
+        const LoadedAtlas& l_oA = *m_vAtlases[l_nI];
+        if (!l_oA.m_bOk) continue;
+        std::vector<uint16_t> l_vPageTextures;
+        for (size_t l_nP = 0; l_nP < l_oA.m_oAtlas.m_vPages.size(); l_nP++) {
+            l_vPageTextures.push_back(uint16_t(m_vTextures.size()));
+            m_vTextures.push_back({int(l_nI), int(l_nP)});
         }
-        m_atlasSet.add(a.atlas, u8(atlasId(int(i))), std::move(pageTextures));
-        m_setToDoc.push_back(int(i));
-        m_spriteNames << a.spriteNames;
+        m_oAtlasSet.f_Add(l_oA.m_oAtlas, f_U8(f_AtlasId(int(l_nI))), std::move(l_vPageTextures));
+        m_vSetToDoc.push_back(int(l_nI));
+        m_oSpriteNames << l_oA.m_oSpriteNames;
     }
-    m_spriteNames.removeDuplicates();
-    m_spriteNames.sort(Qt::CaseInsensitive);
+    m_oSpriteNames.removeDuplicates();
+    m_oSpriteNames.sort(Qt::CaseInsensitive);
     // Every copy, by name and then lookup order: "coin (game)", "coin (extra)", "spark (extra)".
-    m_spriteChoices.clear();
-    for (const QString& name : m_spriteNames)
-        for (size_t i = 0; i < m_atlases.size(); i++)
-            if (m_atlases[i]->ok && m_atlases[i]->atlas.find(u8(name))) m_spriteChoices << spriteDisplay(spriteRefFor(int(i), name));
-    emit atlasChanged();
+    m_oSpriteChoices.clear();
+    for (const QString& l_oName : m_oSpriteNames)
+        for (size_t l_nI = 0; l_nI < m_vAtlases.size(); l_nI++)
+            if (m_vAtlases[l_nI]->m_bOk && m_vAtlases[l_nI]->m_oAtlas.f_Find(f_U8(l_oName))) m_oSpriteChoices << f_SpriteDisplay(f_SpriteRefFor(int(l_nI), l_oName));
+    emit f_AtlasChanged();
 }
 
-void AnimDocument::reloadAtlases()
+void AnimDocument::f_ReloadAtlases()
 {
-    loadAtlases(true);
-    updateMeshes();   // cut again from the reloaded pixels
-    emit fileChanged();   // repaint everything that shows sprites
+    f_LoadAtlases(true);
+    f_UpdateMeshes();   // cut again from the reloaded pixels
+    emit f_FileChanged();   // repaint everything that shows sprites
 }
 
-QString AnimDocument::storedAtlasPath(int i) const
+QString AnimDocument::f_StoredAtlasPath(int l_iI) const
 {
-    return i >= 0 && i < int(m_state.file.atlases.size()) ? qs(m_state.file.atlases[size_t(i)].path) : QString();
+    return l_iI >= 0 && l_iI < int(m_oState.m_oFile.m_vAtlases.size()) ? f_Qs(m_oState.m_oFile.m_vAtlases[size_t(l_iI)].m_strPath) : QString();
 }
 
-bool AnimDocument::atlasPathIsAbsoluteInFile(int i) const
+bool AnimDocument::f_AtlasPathIsAbsoluteInFile(int l_iI) const
 {
-    return i >= 0 && i < m_state.atlasesAbs.size() && m_absoluteInFile.contains(m_state.atlasesAbs[i]);
+    return l_iI >= 0 && l_iI < m_oState.m_oAtlasesAbs.size() && m_oAbsoluteInFile.contains(m_oState.m_oAtlasesAbs[l_iI]);
 }
 
-bool AnimDocument::atlasLoaded() const
+bool AnimDocument::f_AtlasLoaded() const
 {
-    if (m_atlases.empty()) return false;
-    for (const auto& a : m_atlases)
-        if (!a->ok) return false;
+    if (m_vAtlases.empty()) return false;
+    for (const auto& l_spA : m_vAtlases)
+        if (!l_spA->m_bOk) return false;
     return true;
 }
 
-const SpriteImageCache* AnimDocument::pageImages(uint16_t texture, int* page) const
+const SpriteImageCache* AnimDocument::f_PageImages(uint16_t l_u16Texture, int* l_pPage) const
 {
-    if (texture >= m_textures.size()) return nullptr;
-    const auto [atlas, p] = m_textures[texture];
-    if (page) *page = p;
-    return &m_atlases[size_t(atlas)]->images;
+    if (l_u16Texture >= m_vTextures.size()) return nullptr;
+    const auto [l_iAtlas, l_iP] = m_vTextures[l_u16Texture];
+    if (l_pPage) *l_pPage = l_iP;
+    return &m_vAtlases[size_t(l_iAtlas)]->m_oImages;
 }
 
-std::vector<CheckAtlas> AnimDocument::checkAtlases() const
+std::vector<CheckAtlas> AnimDocument::f_CheckAtlases() const
 {
-    std::vector<CheckAtlas> out;
-    for (int i = 0; i < atlasCount(); i++) {
-        const LoadedAtlas& a = atlasAt(i);
-        CheckAtlas r;
-        r.id = u8(atlasId(i));
-        r.path = u8(storedAtlasPath(i));
-        r.atlas = a.ok ? &a.atlas : nullptr;
-        r.error = u8(a.error);
-        r.absolute = atlasPathIsAbsoluteInFile(i);
-        r.meshes = a.ok && !a.meshes.meshes.empty() ? &a.meshes : nullptr;
-        out.push_back(r);
+    std::vector<CheckAtlas> l_vOut;
+    for (int l_iI = 0; l_iI < f_AtlasCount(); l_iI++) {
+        const LoadedAtlas& l_oA = f_AtlasAt(l_iI);
+        CheckAtlas l_oR;
+        l_oR.m_strId = f_U8(f_AtlasId(l_iI));
+        l_oR.m_strPath = f_U8(f_StoredAtlasPath(l_iI));
+        l_oR.m_pAtlas = l_oA.m_bOk ? &l_oA.m_oAtlas : nullptr;
+        l_oR.m_strError = f_U8(l_oA.m_oError);
+        l_oR.m_bAbsolute = f_AtlasPathIsAbsoluteInFile(l_iI);
+        l_oR.m_pMeshes = l_oA.m_bOk && !l_oA.m_oMeshes.m_mapMeshes.empty() ? &l_oA.m_oMeshes : nullptr;
+        l_vOut.push_back(l_oR);
     }
-    return out;
+    return l_vOut;
 }
 
-const toms::AtlasRegion* AnimDocument::findSprite(const std::string& ref, int* atlasIndex) const
+const toms::AtlasRegion* AnimDocument::f_FindSprite(const std::string& l_strRef, int* l_pAtlasIndex) const
 {
-    int entry = -1;
-    const toms::AtlasRegion* r = m_atlasSet.find(ref, nullptr, &entry);
-    if (r && atlasIndex) *atlasIndex = entry >= 0 && entry < int(m_setToDoc.size()) ? m_setToDoc[size_t(entry)] : -1;
-    return r;
+    int l_iEntry = -1;
+    const toms::AtlasRegion* l_pR = m_oAtlasSet.f_Find(l_strRef, nullptr, &l_iEntry);
+    if (l_pR && l_pAtlasIndex) *l_pAtlasIndex = l_iEntry >= 0 && l_iEntry < int(m_vSetToDoc.size()) ? m_vSetToDoc[size_t(l_iEntry)] : -1;
+    return l_pR;
 }
 
-std::string AnimDocument::spriteRefFor(int atlasIndex, const QString& name) const
+std::string AnimDocument::f_SpriteRefFor(int l_iAtlasIndex, const QString& l_oName) const
 {
-    return toms::anim::spriteRef(u8(atlasId(atlasIndex)), u8(name));
+    return toms::anim::f_SpriteRef(f_U8(f_AtlasId(l_iAtlasIndex)), f_U8(l_oName));
 }
 
-QString AnimDocument::spriteDisplay(const std::string& ref) const
+QString AnimDocument::f_SpriteDisplay(const std::string& l_strRef) const
 {
-    if (ref.empty()) return tr("(none)");
-    const toms::anim::SpriteRef s = toms::anim::parseSpriteRef(ref);
-    if (!s.atlas.empty()) return QStringLiteral("%1 (%2)").arg(qs(s.name), qs(s.atlas));
-    int i = -1;
-    if (findSprite(ref, &i) && i >= 0) return QStringLiteral("%1 (auto: %2)").arg(qs(s.name), atlasId(i));
-    return qs(s.name);
+    if (l_strRef.empty()) return tr("(none)");
+    const toms::anim::SpriteRef l_oS = toms::anim::f_ParseSpriteRef(l_strRef);
+    if (!l_oS.m_strAtlas.empty()) return QStringLiteral("%1 (%2)").arg(f_Qs(l_oS.m_strName), f_Qs(l_oS.m_strAtlas));
+    int l_iI = -1;
+    if (f_FindSprite(l_strRef, &l_iI) && l_iI >= 0) return QStringLiteral("%1 (auto: %2)").arg(f_Qs(l_oS.m_strName), f_AtlasId(l_iI));
+    return f_Qs(l_oS.m_strName);
 }
 
-std::string AnimDocument::spriteFromText(const QString& text) const
+std::string AnimDocument::f_SpriteFromText(const QString& l_oText) const
 {
-    const QString t = text.trimmed();
-    if (t.isEmpty() || t == tr("(none)") || t == QLatin1String("(none)")) return std::string();
+    const QString l_oT = l_oText.trimmed();
+    if (l_oT.isEmpty() || l_oT == tr("(none)") || l_oT == QLatin1String("(none)")) return std::string();
     // "name (id)" / "name (auto: id)" -- what the fields show.
-    static const QRegularExpression shown(QStringLiteral("^(.*\\S)\\s*\\((?:auto:\\s*)?([^()\\s]+)\\)$"));
-    const QRegularExpressionMatch m = shown.match(t);
-    if (m.hasMatch()) return toms::anim::spriteRef(u8(m.captured(2)), u8(m.captured(1)));
-    const toms::anim::SpriteRef s = toms::anim::parseSpriteRef(u8(t));
-    if (!s.atlas.empty()) return toms::anim::spriteRef(u8(qs(s.atlas).trimmed()), u8(qs(s.name).trimmed()));
-    int i = -1;   // a bare name: the atlas the lookup picks now
-    if (findSprite(s.name, &i) && i >= 0) return spriteRefFor(i, qs(s.name));
-    return s.name;
+    static const QRegularExpression l_oShown(QStringLiteral("^(.*\\S)\\s*\\((?:auto:\\s*)?([^()\\s]+)\\)$"));
+    const QRegularExpressionMatch l_oM = l_oShown.match(l_oT);
+    if (l_oM.hasMatch()) return toms::anim::f_SpriteRef(f_U8(l_oM.captured(2)), f_U8(l_oM.captured(1)));
+    const toms::anim::SpriteRef l_oS = toms::anim::f_ParseSpriteRef(f_U8(l_oT));
+    if (!l_oS.m_strAtlas.empty()) return toms::anim::f_SpriteRef(f_U8(f_Qs(l_oS.m_strAtlas).trimmed()), f_U8(f_Qs(l_oS.m_strName).trimmed()));
+    int l_iI = -1;   // a bare name: the atlas the lookup picks now
+    if (f_FindSprite(l_oS.m_strName, &l_iI) && l_iI >= 0) return f_SpriteRefFor(l_iI, f_Qs(l_oS.m_strName));
+    return l_oS.m_strName;
 }
 
-QRect AnimDocument::regionRect(int atlasIndex, const toms::AtlasRegion& r) const
+QRect AnimDocument::f_RegionRect(int l_iAtlasIndex, const toms::AtlasRegion& l_oR) const
 {
-    if (atlasIndex < 0 || atlasIndex >= atlasCount()) return QRect();
-    const QVector<QImage>& pages = atlasAt(atlasIndex).images.pages();
-    if (r.page < 0 || r.page >= pages.size()) return QRect();
-    const QSize ps = pages[r.page].size();
-    const int x0 = int(std::lround(r.uv[0] * ps.width())), y0 = int(std::lround(r.uv[1] * ps.height()));
-    const int x1 = int(std::lround(r.uv[2] * ps.width())), y1 = int(std::lround(r.uv[3] * ps.height()));
-    return QRect(x0, y0, x1 - x0, y1 - y0);
+    if (l_iAtlasIndex < 0 || l_iAtlasIndex >= f_AtlasCount()) return QRect();
+    const QVector<QImage>& l_oPages = f_AtlasAt(l_iAtlasIndex).m_oImages.f_Pages();
+    if (l_oR.m_iPage < 0 || l_oR.m_iPage >= l_oPages.size()) return QRect();
+    const QSize l_oPs = l_oPages[l_oR.m_iPage].size();
+    const int l_iX0 = int(std::lround(l_oR.m_arrUv[0] * l_oPs.width())), l_iY0 = int(std::lround(l_oR.m_arrUv[1] * l_oPs.height()));
+    const int l_iX1 = int(std::lround(l_oR.m_arrUv[2] * l_oPs.width())), l_iY1 = int(std::lround(l_oR.m_arrUv[3] * l_oPs.height()));
+    return QRect(l_iX0, l_iY0, l_iX1 - l_iX0, l_iY1 - l_iY0);
 }
 
-QImage AnimDocument::spriteImage(int atlasIndex, const QString& name) const
+QImage AnimDocument::f_SpriteImage(int l_iAtlasIndex, const QString& l_oName) const
 {
-    if (atlasIndex < 0 || atlasIndex >= atlasCount() || !atlasAt(atlasIndex).ok) return QImage();
-    const toms::AtlasRegion* r = atlasAt(atlasIndex).atlas.find(u8(name));
-    return r ? atlasAt(atlasIndex).images.cut(r->page, regionRect(atlasIndex, *r)) : QImage();
+    if (l_iAtlasIndex < 0 || l_iAtlasIndex >= f_AtlasCount() || !f_AtlasAt(l_iAtlasIndex).m_bOk) return QImage();
+    const toms::AtlasRegion* l_pR = f_AtlasAt(l_iAtlasIndex).m_oAtlas.f_Find(f_U8(l_oName));
+    return l_pR ? f_AtlasAt(l_iAtlasIndex).m_oImages.f_Cut(l_pR->m_iPage, f_RegionRect(l_iAtlasIndex, *l_pR)) : QImage();
 }
 
-QImage AnimDocument::spriteImage(const QString& ref) const
+QImage AnimDocument::f_SpriteImage(const QString& l_oRef) const
 {
-    int i = -1;
-    return findSprite(u8(ref), &i) ? spriteImage(i, qs(toms::anim::parseSpriteRef(u8(ref)).name)) : QImage();
+    int l_iI = -1;
+    return f_FindSprite(f_U8(l_oRef), &l_iI) ? f_SpriteImage(l_iI, f_Qs(toms::anim::f_ParseSpriteRef(f_U8(l_oRef)).m_strName)) : QImage();
 }
 
-bool AnimDocument::atlasIdUsable(const QString& id, int exceptIndex, QString* error) const
+bool AnimDocument::f_AtlasIdUsable(const QString& l_oId, int l_iExceptIndex, QString* l_pError) const
 {
-    if (!isAtlasId(u8(id))) {
-        if (error) *error = tr("'%1' cannot be an atlas id: it must not be empty or contain ':', '/', '\\', '=' or spaces.").arg(id);
+    if (!f_IsAtlasId(f_U8(l_oId))) {
+        if (l_pError) *l_pError = tr("'%1' cannot be an atlas id: it must not be empty or contain ':', '/', '\\', '=' or spaces.").arg(l_oId);
         return false;
     }
-    const int other = atlasIndexOf(id);
-    if (other >= 0 && other != exceptIndex) {
-        if (error) *error = tr("Another atlas (%1) has the id '%2' already: ids must be unique.").arg(storedAtlasPath(other), id);
+    const int l_iOther = f_AtlasIndexOf(l_oId);
+    if (l_iOther >= 0 && l_iOther != l_iExceptIndex) {
+        if (l_pError) *l_pError = tr("Another atlas (%1) has the id '%2' already: ids must be unique.").arg(f_StoredAtlasPath(l_iOther), l_oId);
         return false;
     }
     return true;
 }
 
-QString AnimDocument::suggestAtlasId(const QString& absolutePath) const
+QString AnimDocument::f_SuggestAtlasId(const QString& l_oAbsolutePath) const
 {
-    auto clean = [](QString s) {
-        for (QChar& c : s)
-            if (c == QLatin1Char(':') || c == QLatin1Char('/') || c == QLatin1Char('\\') || c == QLatin1Char('=') || c.isSpace())
-                c = QLatin1Char('_');
-        return s;
+    auto l_fnClean = [](QString l_oS) {
+        for (QChar& l_oC : l_oS)
+            if (l_oC == QLatin1Char(':') || l_oC == QLatin1Char('/') || l_oC == QLatin1Char('\\') || l_oC == QLatin1Char('=') || l_oC.isSpace())
+                l_oC = QLatin1Char('_');
+        return l_oS;
     };
-    const QFileInfo fi(absolutePath);
-    const QString base = clean(qs(toms::anim::defaultAtlasId(u8(fi.fileName()))));
-    if (atlasIndexOf(base) < 0 && isAtlasId(u8(base))) return base;
-    QDir up = fi.absoluteDir();   // styles/dark16/atlas/game.atlas -> "dark16"
-    QString folder = up.cdUp() ? clean(up.dirName()) : QString();
-    QString start = isAtlasId(u8(folder)) ? folder : base.isEmpty() ? QStringLiteral("atlas") : base;
-    if (atlasIndexOf(start) < 0) return start;
-    for (int n = 2;; n++)
-        if (atlasIndexOf(QStringLiteral("%1_%2").arg(start).arg(n)) < 0) return QStringLiteral("%1_%2").arg(start).arg(n);
+    const QFileInfo l_oFi(l_oAbsolutePath);
+    const QString l_oBase = l_fnClean(f_Qs(toms::anim::f_DefaultAtlasId(f_U8(l_oFi.fileName()))));
+    if (f_AtlasIndexOf(l_oBase) < 0 && f_IsAtlasId(f_U8(l_oBase))) return l_oBase;
+    QDir l_oUp = l_oFi.absoluteDir();   // styles/dark16/atlas/game.atlas -> "dark16"
+    QString l_oFolder = l_oUp.cdUp() ? l_fnClean(l_oUp.dirName()) : QString();
+    QString l_oStart = f_IsAtlasId(f_U8(l_oFolder)) ? l_oFolder : l_oBase.isEmpty() ? QStringLiteral("atlas") : l_oBase;
+    if (f_AtlasIndexOf(l_oStart) < 0) return l_oStart;
+    for (int l_iN = 2;; l_iN++)
+        if (f_AtlasIndexOf(QStringLiteral("%1_%2").arg(l_oStart).arg(l_iN)) < 0) return QStringLiteral("%1_%2").arg(l_oStart).arg(l_iN);
 }
 
-bool AnimDocument::addAtlas(const QString& absolutePath, const QString& idIn, QString* error)
+bool AnimDocument::f_AddAtlas(const QString& l_oAbsolutePath, const QString& l_oIdIn, QString* l_pError)
 {
-    const QString abs = QDir::cleanPath(QFileInfo(absolutePath).absoluteFilePath());
-    if (m_state.atlasesAbs.contains(abs)) {
-        if (error) *error = tr("%1 is already in the list.").arg(QDir::toNativeSeparators(abs));
+    const QString l_oAbs = QDir::cleanPath(QFileInfo(l_oAbsolutePath).absoluteFilePath());
+    if (m_oState.m_oAtlasesAbs.contains(l_oAbs)) {
+        if (l_pError) *l_pError = tr("%1 is already in the list.").arg(QDir::toNativeSeparators(l_oAbs));
         return false;
     }
-    const QString id = idIn.isEmpty() ? qs(toms::anim::defaultAtlasId(u8(QFileInfo(abs).fileName()))) : idIn.trimmed();
-    if (!atlasIdUsable(id, -1, error)) return false;
-    QFile probe(abs);
-    if (!probe.open(QIODevice::ReadOnly)) {
-        if (error) *error = probe.errorString();
+    const QString l_oId = l_oIdIn.isEmpty() ? f_Qs(toms::anim::f_DefaultAtlasId(f_U8(QFileInfo(l_oAbs).fileName()))) : l_oIdIn.trimmed();
+    if (!f_AtlasIdUsable(l_oId, -1, l_pError)) return false;
+    QFile l_oProbe(l_oAbs);
+    if (!l_oProbe.open(QIODevice::ReadOnly)) {
+        if (l_pError) *l_pError = l_oProbe.errorString();
         return false;
     }
-    toms::AtlasFile test;
-    std::string err;
-    if (!toms::parseAtlas(probe.readAll().toStdString(), test, &err)) {
-        if (error) *error = qs(err);
+    toms::AtlasFile l_oTest;
+    std::string l_strErr;
+    if (!toms::f_ParseAtlas(l_oProbe.readAll().toStdString(), l_oTest, &l_strErr)) {
+        if (l_pError) *l_pError = f_Qs(l_strErr);
         return false;
     }
-    if (!m_filePath.isEmpty() && isAbsoluteAtlasPath(u8(QFileInfo(m_filePath).absoluteDir().relativeFilePath(abs)))) {
-        if (error)
-            *error = tr("%1 is on another drive than %2: atlas paths are stored relative to the .anim file.")
-                         .arg(QDir::toNativeSeparators(abs), QDir::toNativeSeparators(m_filePath));
+    if (!m_oFilePath.isEmpty() && f_IsAbsoluteAtlasPath(f_U8(QFileInfo(m_oFilePath).absoluteDir().relativeFilePath(l_oAbs)))) {
+        if (l_pError)
+            *l_pError = tr("%1 is on another drive than %2: atlas paths are stored relative to the .anim file.")
+                         .arg(QDir::toNativeSeparators(l_oAbs), QDir::toNativeSeparators(m_oFilePath));
         return false;
     }
-    return edit(tr("Add atlas"), [&](AnimState& s) {
-        s.atlasesAbs << abs;
-        s.atlasIds << id;
+    return f_Edit(tr("Add atlas"), [&](AnimState& l_oS) {
+        l_oS.m_oAtlasesAbs << l_oAbs;
+        l_oS.m_oAtlasIds << l_oId;
         return true;
     });
 }
 
-bool AnimDocument::removeAtlas(int index)
+bool AnimDocument::f_RemoveAtlas(int l_iIndex)
 {
-    if (index < 0 || index >= m_state.atlasesAbs.size()) return false;
-    return edit(tr("Remove atlas"), [&](AnimState& s) {
-        s.atlasesAbs.removeAt(index);
-        s.atlasIds.removeAt(index);
+    if (l_iIndex < 0 || l_iIndex >= m_oState.m_oAtlasesAbs.size()) return false;
+    return f_Edit(tr("Remove atlas"), [&](AnimState& l_oS) {
+        l_oS.m_oAtlasesAbs.removeAt(l_iIndex);
+        l_oS.m_oAtlasIds.removeAt(l_iIndex);
         return true;
     });
 }
 
-bool AnimDocument::moveAtlas(int index, int delta)
+bool AnimDocument::f_MoveAtlas(int l_iIndex, int l_iDelta)
 {
-    const int to = index + delta;
-    if (index < 0 || index >= m_state.atlasesAbs.size() || to < 0 || to >= m_state.atlasesAbs.size()) return false;
-    return edit(tr("Reorder atlases"), [&](AnimState& s) {
-        s.atlasesAbs.move(index, to);
-        s.atlasIds.move(index, to);
+    const int l_iTo = l_iIndex + l_iDelta;
+    if (l_iIndex < 0 || l_iIndex >= m_oState.m_oAtlasesAbs.size() || l_iTo < 0 || l_iTo >= m_oState.m_oAtlasesAbs.size()) return false;
+    return f_Edit(tr("Reorder atlases"), [&](AnimState& l_oS) {
+        l_oS.m_oAtlasesAbs.move(l_iIndex, l_iTo);
+        l_oS.m_oAtlasIds.move(l_iIndex, l_iTo);
         return true;
     });
 }
 
-bool AnimDocument::renameAtlasId(int index, const QString& idIn, QString* error)
+bool AnimDocument::f_RenameAtlasId(int l_iIndex, const QString& l_oIdIn, QString* l_pError)
 {
-    const QString id = idIn.trimmed();
-    if (index < 0 || index >= m_state.atlasIds.size() || id == m_state.atlasIds[index]) return false;
-    if (!atlasIdUsable(id, index, error)) return false;
-    const std::string from = u8(m_state.atlasIds[index]), to = u8(id);
-    int rewritten = 0;
-    const bool ok = edit(tr("Rename atlas id"), [&](AnimState& s) {
-        s.atlasIds[index] = id;
-        for (Clip& c : s.file.clips)
-            rewritten += rewriteSpriteRefs(c.root, [&](const std::string& r) {
-                const toms::anim::SpriteRef p = toms::anim::parseSpriteRef(r);
-                return p.atlas == from ? toms::anim::spriteRef(to, p.name) : r;
+    const QString l_oId = l_oIdIn.trimmed();
+    if (l_iIndex < 0 || l_iIndex >= m_oState.m_oAtlasIds.size() || l_oId == m_oState.m_oAtlasIds[l_iIndex]) return false;
+    if (!f_AtlasIdUsable(l_oId, l_iIndex, l_pError)) return false;
+    const std::string l_strFrom = f_U8(m_oState.m_oAtlasIds[l_iIndex]), l_strTo = f_U8(l_oId);
+    int l_iRewritten = 0;
+    const bool l_bOk = f_Edit(tr("Rename atlas id"), [&](AnimState& l_oS) {
+        l_oS.m_oAtlasIds[l_iIndex] = l_oId;
+        for (Clip& l_oC : l_oS.m_oFile.m_vClips)
+            l_iRewritten += f_RewriteSpriteRefs(l_oC.m_oRoot, [&](const std::string& l_strR) {
+                const toms::anim::SpriteRef l_oP = toms::anim::f_ParseSpriteRef(l_strR);
+                return l_oP.m_strAtlas == l_strFrom ? toms::anim::f_SpriteRef(l_strTo, l_oP.m_strName) : l_strR;
             });
         return true;
     });
-    if (ok) emit message(tr("Atlas id '%1' is now '%2': %n sprite reference(s) rewritten.", nullptr, rewritten).arg(qs(from), id));
-    return ok;
+    if (l_bOk) emit f_Message(tr("Atlas id '%1' is now '%2': %n sprite reference(s) rewritten.", nullptr, l_iRewritten).arg(f_Qs(l_strFrom), l_oId));
+    return l_bOk;
 }
 
-int AnimDocument::atlasReferenceCount(int index) const
+int AnimDocument::f_AtlasReferenceCount(int l_iIndex) const
 {
-    if (index < 0 || index >= atlasCount()) return 0;
-    const std::string id = u8(atlasId(index));
-    int n = 0;
-    for (const Clip& c : m_state.file.clips) {
-        std::vector<std::string> refs;
-        collectSpriteRefs(c.root, refs);
-        for (const std::string& r : refs) {
-            const toms::anim::SpriteRef p = toms::anim::parseSpriteRef(r);
-            if (!p.atlas.empty()) {
-                n += p.atlas == id;
+    if (l_iIndex < 0 || l_iIndex >= f_AtlasCount()) return 0;
+    const std::string l_strId = f_U8(f_AtlasId(l_iIndex));
+    int l_iN = 0;
+    for (const Clip& l_oC : m_oState.m_oFile.m_vClips) {
+        std::vector<std::string> l_vRefs;
+        f_CollectSpriteRefs(l_oC.m_oRoot, l_vRefs);
+        for (const std::string& l_strR : l_vRefs) {
+            const toms::anim::SpriteRef l_oP = toms::anim::f_ParseSpriteRef(l_strR);
+            if (!l_oP.m_strAtlas.empty()) {
+                l_iN += l_oP.m_strAtlas == l_strId;
                 continue;
             }
-            int owner = -1, others = 0;
-            for (int i = 0; i < atlasCount(); i++)
-                if (atlasAt(i).ok && atlasAt(i).atlas.find(p.name)) {
-                    if (i == index) owner = i;
-                    else others++;
+            int l_iOwner = -1, l_iOthers = 0;
+            for (int l_iI = 0; l_iI < f_AtlasCount(); l_iI++)
+                if (f_AtlasAt(l_iI).m_bOk && f_AtlasAt(l_iI).m_oAtlas.f_Find(l_oP.m_strName)) {
+                    if (l_iI == l_iIndex) l_iOwner = l_iI;
+                    else l_iOthers++;
                 }
-            n += owner == index && others == 0;
+            l_iN += l_iOwner == l_iIndex && l_iOthers == 0;
         }
     }
-    return n;
+    return l_iN;
 }
 
-int AnimDocument::bareSpriteReferenceCount() const
+int AnimDocument::f_BareSpriteReferenceCount() const
 {
-    int n = 0;
-    for (const Clip& c : m_state.file.clips) {
-        std::vector<std::string> refs;
-        collectSpriteRefs(c.root, refs);
-        for (const std::string& r : refs) n += toms::anim::parseSpriteRef(r).atlas.empty() && findSprite(r);
+    int l_iN = 0;
+    for (const Clip& l_oC : m_oState.m_oFile.m_vClips) {
+        std::vector<std::string> l_vRefs;
+        f_CollectSpriteRefs(l_oC.m_oRoot, l_vRefs);
+        for (const std::string& l_strR : l_vRefs) l_iN += toms::anim::f_ParseSpriteRef(l_strR).m_strAtlas.empty() && f_FindSprite(l_strR);
     }
-    return n;
+    return l_iN;
 }
 
-int AnimDocument::qualifySpriteReferences()
+int AnimDocument::f_QualifySpriteReferences()
 {
-    int changed = 0;
-    edit(tr("Qualify sprite references"), [&](AnimState& s) {
-        for (Clip& c : s.file.clips)
-            changed += rewriteSpriteRefs(c.root, [&](const std::string& r) {
-                if (!toms::anim::parseSpriteRef(r).atlas.empty()) return r;
-                int i = -1;
-                return findSprite(r, &i) && i >= 0 ? spriteRefFor(i, qs(r)) : r;
+    int l_iChanged = 0;
+    f_Edit(tr("Qualify sprite references"), [&](AnimState& l_oS) {
+        for (Clip& l_oC : l_oS.m_oFile.m_vClips)
+            l_iChanged += f_RewriteSpriteRefs(l_oC.m_oRoot, [&](const std::string& l_strR) {
+                if (!toms::anim::f_ParseSpriteRef(l_strR).m_strAtlas.empty()) return l_strR;
+                int l_iI = -1;
+                return f_FindSprite(l_strR, &l_iI) && l_iI >= 0 ? f_SpriteRefFor(l_iI, f_Qs(l_strR)) : l_strR;
             });
-        return changed > 0;
+        return l_iChanged > 0;
     });
-    emit message(changed ? tr("Qualified %n sprite reference(s): each now stores its atlas (id:name).", nullptr, changed)
+    emit f_Message(l_iChanged ? tr("Qualified %n sprite reference(s): each now stores its atlas (id:name).", nullptr, l_iChanged)
                          : tr("No bare sprite names to qualify (names no atlas has stay as they are)."));
-    return changed;
+    return l_iChanged;
 }
 
 // ---- current clip / node / time -----------------------------------------------------------------
 
-const Clip* AnimDocument::clip() const
+const Clip* AnimDocument::f_Clip() const
 {
-    if (m_state.file.clips.empty()) return nullptr;
-    return &m_state.file.clips[size_t(m_state.clip)];
+    if (m_oState.m_oFile.m_vClips.empty()) return nullptr;
+    return &m_oState.m_oFile.m_vClips[size_t(m_oState.m_iClip)];
 }
 
-void AnimDocument::markClipBase()
+void AnimDocument::f_MarkClipBase()
 {
-    const Clip* c = clip();
-    m_clipBaseIndex = c ? m_state.clip : -1;
-    m_clipBase = c ? *c : Clip();
+    const Clip* l_pC = f_Clip();
+    m_iClipBaseIndex = l_pC ? m_oState.m_iClip : -1;
+    m_oClipBase = l_pC ? *l_pC : Clip();
 }
 
-bool AnimDocument::clipModified() const
+bool AnimDocument::f_ClipModified() const
 {
-    const Clip* c = clip();
-    return c && m_clipBaseIndex == m_state.clip && *c != m_clipBase;
+    const Clip* l_pC = f_Clip();
+    return l_pC && m_iClipBaseIndex == m_oState.m_iClip && *l_pC != m_oClipBase;
 }
 
-bool AnimDocument::discardClipChanges()
+bool AnimDocument::f_DiscardClipChanges()
 {
-    if (!clipModified()) return false;
-    const Clip base = m_clipBase;
-    return edit(tr("Discard changes to clip %1").arg(qs(base.name)), [&](AnimState& s) {
-        s.file.clips[size_t(s.clip)] = base;
-        s.node.clear();
+    if (!f_ClipModified()) return false;
+    const Clip l_oBase = m_oClipBase;
+    return f_Edit(tr("Discard changes to clip %1").arg(f_Qs(l_oBase.m_strName)), [&](AnimState& l_oS) {
+        l_oS.m_oFile.m_vClips[size_t(l_oS.m_iClip)] = l_oBase;
+        l_oS.m_vNode.clear();
         return true;
     });
 }
 
-void AnimDocument::setClipIndex(int index)
+void AnimDocument::f_SetClipIndex(int l_iIndex)
 {
-    if (index < 0 || index >= int(m_state.file.clips.size()) || index == m_state.clip) return;
-    m_state.clip = index;
-    m_state.node.clear();
-    emit clipChanged();
-    emit selectionChanged();
-    if (m_time > duration()) setTime(0);
+    if (l_iIndex < 0 || l_iIndex >= int(m_oState.m_oFile.m_vClips.size()) || l_iIndex == m_oState.m_iClip) return;
+    m_oState.m_iClip = l_iIndex;
+    m_oState.m_vNode.clear();
+    emit f_ClipChanged();
+    emit f_SelectionChanged();
+    if (m_fTime > f_Duration()) f_SetTime(0);
 }
 
-const Node* AnimDocument::selectedNode() const
+const Node* AnimDocument::f_SelectedNode() const
 {
-    const Clip* c = clip();
-    return c ? nodeAt(c->root, m_state.node) : nullptr;
+    const Clip* l_pC = f_Clip();
+    return l_pC ? f_NodeAt(l_pC->m_oRoot, m_oState.m_vNode) : nullptr;
 }
 
-void AnimDocument::selectNode(const NodePath& path)
+void AnimDocument::f_SelectNode(const NodePath& l_vPath)
 {
-    const Clip* c = clip();
-    if (!c || !nodeAt(c->root, path) || path == m_state.node) return;
-    m_state.node = path;
-    emit selectionChanged();
+    const Clip* l_pC = f_Clip();
+    if (!l_pC || !f_NodeAt(l_pC->m_oRoot, l_vPath) || l_vPath == m_oState.m_vNode) return;
+    m_oState.m_vNode = l_vPath;
+    emit f_SelectionChanged();
 }
 
-bool AnimDocument::selectNodeByName(const QString& name)
+bool AnimDocument::f_SelectNodeByName(const QString& l_oName)
 {
-    const Clip* c = clip();
-    if (!c) return false;
-    std::function<bool(const Node&, NodePath&)> find = [&](const Node& n, NodePath& p) {
-        if (qs(n.name) == name) return true;
-        for (size_t i = 0; i < n.children.size(); i++) {
-            p.push_back(int(i));
-            if (find(n.children[i], p)) return true;
-            p.pop_back();
+    const Clip* l_pC = f_Clip();
+    if (!l_pC) return false;
+    std::function<bool(const Node&, NodePath&)> l_fnFind = [&](const Node& l_oN, NodePath& l_vP) {
+        if (f_Qs(l_oN.m_strName) == l_oName) return true;
+        for (size_t l_nI = 0; l_nI < l_oN.m_vChildren.size(); l_nI++) {
+            l_vP.push_back(int(l_nI));
+            if (l_fnFind(l_oN.m_vChildren[l_nI], l_vP)) return true;
+            l_vP.pop_back();
         }
         return false;
     };
-    NodePath p;
-    if (!find(c->root, p)) return false;
-    selectNode(p);
+    NodePath l_vP;
+    if (!l_fnFind(l_pC->m_oRoot, l_vP)) return false;
+    f_SelectNode(l_vP);
     return true;
 }
 
-void AnimDocument::setTime(float t)
+void AnimDocument::f_SetTime(float l_fT)
 {
-    if (!std::isfinite(t)) return;
-    t = std::clamp(t, 0.0f, 3600.0f);
-    if (t == m_time) {
+    if (!std::isfinite(l_fT)) return;
+    l_fT = std::clamp(l_fT, 0.0f, 3600.0f);
+    if (l_fT == m_fTime) {
         // Asked for the time it already has: still back from a preview that ran on (looping nodes past the end),
         // so a click on the playhead's own key row shows that row.
-        if (m_preview >= 0) {
-            setPreviewTime(-1);
-            emit timeChanged(m_time);
+        if (m_fPreview >= 0) {
+            f_SetPreviewTime(-1);
+            emit f_TimeChanged(m_fTime);
         }
         return;
     }
-    m_time = t;
-    setPreviewTime(-1);
-    emit timeChanged(m_time);
+    m_fTime = l_fT;
+    f_SetPreviewTime(-1);
+    emit f_TimeChanged(m_fTime);
 }
 
-void AnimDocument::setSolo(const std::optional<NodePath>& path)
+void AnimDocument::f_SetSolo(const std::optional<NodePath>& l_optPath)
 {
-    if (path == m_solo) return;
-    m_solo = path;
-    emit soloChanged();
+    if (l_optPath == m_optSolo) return;
+    m_optSolo = l_optPath;
+    emit f_SoloChanged();
 }
 
-void AnimDocument::setPreviewCharacter(const QString& sprite)
+void AnimDocument::f_SetPreviewCharacter(const QString& l_oSprite)
 {
-    if (sprite == m_previewCharacter) return;
-    m_previewCharacter = sprite;
-    m_fitValid = false;
-    emit fileChanged();   // every view redraws
+    if (l_oSprite == m_oPreviewCharacter) return;
+    m_oPreviewCharacter = l_oSprite;
+    m_bFitValid = false;
+    emit f_FileChanged();   // every view redraws
 }
 
-bool AnimDocument::setHeldFile(const QString& path, QString* error)
+bool AnimDocument::f_SetHeldFile(const QString& l_oPath, QString* l_pError)
 {
-    toms::anim::AnimFile held;
-    if (!path.isEmpty()) {
-        QFile f(path);
-        std::string err;
-        if (!f.open(QIODevice::ReadOnly) || !toms::anim::parseAnim(f.readAll().toStdString(), held, &err)) {
-            if (error) *error = err.empty() ? tr("cannot read %1").arg(path) : qs(err);
+    toms::anim::AnimFile l_oHeld;
+    if (!l_oPath.isEmpty()) {
+        QFile l_oF(l_oPath);
+        std::string l_strErr;
+        if (!l_oF.open(QIODevice::ReadOnly) || !toms::anim::f_ParseAnim(l_oF.readAll().toStdString(), l_oHeld, &l_strErr)) {
+            if (l_pError) *l_pError = l_strErr.empty() ? tr("cannot read %1").arg(l_oPath) : f_Qs(l_strErr);
             return false;
         }
     }
-    m_heldPath = path;
-    m_held = std::move(held);
-    emit fileChanged();   // every view redraws
+    m_oHeldPath = l_oPath;
+    m_oHeld = std::move(l_oHeld);
+    emit f_FileChanged();   // every view redraws
     return true;
 }
 
-const Clip* AnimDocument::heldClip() const
+const Clip* AnimDocument::f_HeldClip() const
 {
-    const Clip* c = clip();
-    return c && !m_heldPath.isEmpty() ? m_held.find(c->name) : nullptr;
+    const Clip* l_pC = f_Clip();
+    return l_pC && !m_oHeldPath.isEmpty() ? m_oHeld.f_Find(l_pC->m_strName) : nullptr;
 }
 
-QStringList AnimDocument::characterChoices() const
+QStringList AnimDocument::f_CharacterChoices() const
 {
-    const Clip* c = clip();
-    const Node* body = c ? toms::anim::findNode(c->root, "body") : nullptr;
-    if (!body || !toms::anim::findNode(c->root, "hand") || body->sprite.empty()) return {};
-    const QString base = qs(toms::anim::parseSpriteRef(body->sprite).name);
-    QStringList out;
-    for (const QString& name : m_spriteNames)
-        if (name == base || name.startsWith(base + QLatin1Char('_'))) out << name;
-    return out;
+    const Clip* l_pC = f_Clip();
+    const Node* l_pBody = l_pC ? toms::anim::f_FindNode(l_pC->m_oRoot, "body") : nullptr;
+    if (!l_pBody || !toms::anim::f_FindNode(l_pC->m_oRoot, "hand") || l_pBody->m_strSprite.empty()) return {};
+    const QString l_oBase = f_Qs(toms::anim::f_ParseSpriteRef(l_pBody->m_strSprite).m_strName);
+    QStringList l_oOut;
+    for (const QString& l_oName : m_oSpriteNames)
+        if (l_oName == l_oBase || l_oName.startsWith(l_oBase + QLatin1Char('_'))) l_oOut << l_oName;
+    return l_oOut;
 }
 
-const Clip* AnimDocument::drawClip() const
+const Clip* AnimDocument::f_DrawClip() const
 {
-    const Clip* c = clip();
-    if (!c || m_previewCharacter.isEmpty()) return c;
-    if (m_fitValid && m_fitFor == m_previewCharacter && m_fitSource == *c) return &m_fitted;
+    const Clip* l_pC = f_Clip();
+    if (!l_pC || m_oPreviewCharacter.isEmpty()) return l_pC;
+    if (m_bFitValid && m_oFitFor == m_oPreviewCharacter && m_oFitSource == *l_pC) return &m_oFitted;
     // A sprite's visible pixels, from its atlas page (cached by reference until the atlases reload).
-    auto boxOf = [this](const std::string& ref, toms::SpriteBox& out) {
-        auto it = m_boxes.find(ref);
-        if (it == m_boxes.end()) {
-            int ai = -1;
-            const toms::AtlasRegion* r = findSprite(ref, &ai);
-            if (!r || ai < 0 || r->rotated || r->child || r->page < 0 || r->page >= m_atlases[size_t(ai)]->images.pages().size())
+    auto l_fnBoxOf = [this](const std::string& l_strRef, toms::SpriteBox& l_oOut) {
+        auto l_itIt = m_mapBoxes.find(l_strRef);
+        if (l_itIt == m_mapBoxes.end()) {
+            int l_iAi = -1;
+            const toms::AtlasRegion* l_pR = f_FindSprite(l_strRef, &l_iAi);
+            if (!l_pR || l_iAi < 0 || l_pR->m_bRotated || l_pR->m_bChild || l_pR->m_iPage < 0 || l_pR->m_iPage >= m_vAtlases[size_t(l_iAi)]->m_oImages.f_Pages().size())
                 return false;
-            const QImage page = m_atlases[size_t(ai)]->images.pages()[r->page].convertToFormat(QImage::Format_RGBA8888);
-            if (r->x < 0 || r->y < 0 || r->x + r->w > page.width() || r->y + r->h > page.height()) return false;
-            const uchar* px = page.constBits() + size_t(r->y) * page.bytesPerLine() + size_t(r->x) * 4;
-            it = m_boxes.emplace(ref, toms::visibleBox(px, page.bytesPerLine() / 4, r->w, r->h, r->offX, r->offY, r->origW, r->origH)).first;
+            const QImage l_oPage = m_vAtlases[size_t(l_iAi)]->m_oImages.f_Pages()[l_pR->m_iPage].convertToFormat(QImage::Format_RGBA8888);
+            if (l_pR->m_iX < 0 || l_pR->m_iY < 0 || l_pR->m_iX + l_pR->m_iW > l_oPage.width() || l_pR->m_iY + l_pR->m_iH > l_oPage.height()) return false;
+            const uchar* l_pPx = l_oPage.constBits() + size_t(l_pR->m_iY) * l_oPage.bytesPerLine() + size_t(l_pR->m_iX) * 4;
+            l_itIt = m_mapBoxes.emplace(l_strRef, toms::f_VisibleBox(l_pPx, l_oPage.bytesPerLine() / 4, l_pR->m_iW, l_pR->m_iH, l_pR->m_iOffX, l_pR->m_iOffY, l_pR->m_iOrigW, l_pR->m_iOrigH)).first;
         }
-        out = it->second;
+        l_oOut = l_itIt->second;
         return true;
     };
     // The character's nudge, as the game reads it: data/character_fit.json above the .anim (assets/data/).
-    glm::vec2 nudge(0.0f);
-    for (QDir d = QFileInfo(m_filePath).absoluteDir(); !m_filePath.isEmpty(); ) {
-        QFile f(d.filePath(QStringLiteral("data/character_fit.json")));
-        if (f.open(QIODevice::ReadOnly)) {
-            const nlohmann::json j = nlohmann::json::parse(f.readAll().toStdString(), nullptr, false);
-            const std::string id = u8(m_previewCharacter);
-            if (j.is_object() && j.contains(id) && j[id].is_object()) {
-                const nlohmann::json h = j[id].value("hand", nlohmann::json::array());
-                if (h.is_array() && h.size() == 2 && h[0].is_number() && h[1].is_number()) nudge = {h[0].get<float>(), h[1].get<float>()};
+    glm::vec2 l_v2Nudge(0.0f);
+    for (QDir l_oD = QFileInfo(m_oFilePath).absoluteDir(); !m_oFilePath.isEmpty(); ) {
+        QFile l_oF(l_oD.filePath(QStringLiteral("data/character_fit.json")));
+        if (l_oF.open(QIODevice::ReadOnly)) {
+            const nlohmann::json l_jJ = nlohmann::json::parse(l_oF.readAll().toStdString(), nullptr, false);
+            const std::string l_strId = f_U8(m_oPreviewCharacter);
+            if (l_jJ.is_object() && l_jJ.contains(l_strId) && l_jJ[l_strId].is_object()) {
+                const nlohmann::json l_jH = l_jJ[l_strId].value("hand", nlohmann::json::array());
+                if (l_jH.is_array() && l_jH.size() == 2 && l_jH[0].is_number() && l_jH[1].is_number()) l_v2Nudge = {l_jH[0].get<float>(), l_jH[1].get<float>()};
             }
             break;
         }
-        if (!d.cdUp()) break;
+        if (!l_oD.cdUp()) break;
     }
-    m_fitSource = *c;
-    m_fitted = toms::anim::fitCharacter(*c, u8(m_previewCharacter), boxOf, nudge);
-    m_fitFor = m_previewCharacter;
-    m_fitValid = true;
-    return &m_fitted;
+    m_oFitSource = *l_pC;
+    m_oFitted = toms::anim::f_FitCharacter(*l_pC, f_U8(m_oPreviewCharacter), l_fnBoxOf, l_v2Nudge);
+    m_oFitFor = m_oPreviewCharacter;
+    m_bFitValid = true;
+    return &m_oFitted;
 }
 
-const Node* AnimDocument::drawNode(const Node* n) const
+const Node* AnimDocument::f_DrawNode(const Node* l_pN) const
 {
-    const Clip* c = clip();
-    const Clip* d = drawClip();
-    if (!n || !c || c == d) return n;
-    NodePath p;
-    return findPath(c->root, n, p) ? nodeAt(d->root, p) : nullptr;
+    const Clip* l_pC = f_Clip();
+    const Clip* l_pD = f_DrawClip();
+    if (!l_pN || !l_pC || l_pC == l_pD) return l_pN;
+    NodePath l_vP;
+    return f_FindPath(l_pC->m_oRoot, l_pN, l_vP) ? f_NodeAt(l_pD->m_oRoot, l_vP) : nullptr;
 }
 
-bool AnimDocument::soloShows(const Node* n) const
+bool AnimDocument::f_SoloShows(const Node* l_pN) const
 {
-    const Clip* c = clip();
-    if (!m_solo || !c) return true;
-    NodePath probe;
-    if (!findPath(c->root, n, probe) && drawClip() != c) c = drawClip();   // a node of the fitted copy
-    const Node* top = nodeAt(c->root, *m_solo);
-    if (!top) return true;
-    std::function<bool(const Node&)> inside = [&](const Node& x) {
-        if (&x == n) return true;
-        for (const Node& k : x.children)
-            if (inside(k)) return true;
+    const Clip* l_pC = f_Clip();
+    if (!m_optSolo || !l_pC) return true;
+    NodePath l_vProbe;
+    if (!f_FindPath(l_pC->m_oRoot, l_pN, l_vProbe) && f_DrawClip() != l_pC) l_pC = f_DrawClip();   // a node of the fitted copy
+    const Node* l_pTop = f_NodeAt(l_pC->m_oRoot, *m_optSolo);
+    if (!l_pTop) return true;
+    std::function<bool(const Node&)> l_fnInside = [&](const Node& l_oX) {
+        if (&l_oX == l_pN) return true;
+        for (const Node& l_oK : l_oX.m_vChildren)
+            if (l_fnInside(l_oK)) return true;
         return false;
     };
-    return inside(*top);
+    return l_fnInside(*l_pTop);
 }
 
-void AnimDocument::setPreviewTime(float t)
+void AnimDocument::f_SetPreviewTime(float l_fT)
 {
-    if (!std::isfinite(t) || t < 0) t = -1;
-    if (t == m_preview) return;
-    m_preview = t;
-    emit previewTimeChanged();
+    if (!std::isfinite(l_fT) || l_fT < 0) l_fT = -1;
+    if (l_fT == m_fPreview) return;
+    m_fPreview = l_fT;
+    emit f_PreviewTimeChanged();
 }
 
-float AnimDocument::duration() const
+float AnimDocument::f_Duration() const
 {
-    const Clip* c = clip();
-    return c ? c->duration() : 0.0f;
+    const Clip* l_pC = f_Clip();
+    return l_pC ? l_pC->f_Duration() : 0.0f;
 }
 
-void AnimDocument::setAutoKey(bool on)
+void AnimDocument::f_SetAutoKey(bool l_bOn)
 {
-    if (on == m_autoKey) return;
-    m_autoKey = on;
-    emit autoKeyChanged(on);
+    if (l_bOn == m_bAutoKey) return;
+    m_bAutoKey = l_bOn;
+    emit f_AutoKeyChanged(l_bOn);
 }
 
 // ---- editing ------------------------------------------------------------------------------------
 
-bool AnimDocument::edit(const QString& text, const std::function<bool(AnimState&)>& change, const QString& mergeKey)
+bool AnimDocument::f_Edit(const QString& l_oText, const std::function<bool(AnimState&)>& l_fnChange, const QString& l_oMergeKey)
 {
-    emit aboutToEdit();
-    AnimState after = m_state;
-    if (!change(after)) return false;
-    fixSelection(after);
-    after.file.atlases = storedAtlases(after, m_filePath);
-    if (sameState(after, m_state)) return false;
-    if (after.atlasesAbs == m_state.atlasesAbs && after.atlasIds == m_state.atlasIds && after.file == m_state.file) {
+    emit f_AboutToEdit();
+    AnimState l_oAfter = m_oState;
+    if (!l_fnChange(l_oAfter)) return false;
+    f_FixSelection(l_oAfter);
+    l_oAfter.m_oFile.m_vAtlases = f_StoredAtlases(l_oAfter, m_oFilePath);
+    if (f_SameState(l_oAfter, m_oState)) return false;
+    if (l_oAfter.m_oAtlasesAbs == m_oState.m_oAtlasesAbs && l_oAfter.m_oAtlasIds == m_oState.m_oAtlasIds && l_oAfter.m_oFile == m_oState.m_oFile) {
         // Only the current clip / node moved: not an edit.
-        if (after.clip != m_state.clip) setClipIndex(after.clip);
-        selectNode(after.node);
+        if (l_oAfter.m_iClip != m_oState.m_iClip) f_SetClipIndex(l_oAfter.m_iClip);
+        f_SelectNode(l_oAfter.m_vNode);
         return false;
     }
-    m_undo->push(new AnimCommand(this, text, m_state, after, mergeKey));
+    m_pUndo->push(new AnimCommand(this, l_oText, m_oState, l_oAfter, l_oMergeKey));
     return true;
 }
 
-bool AnimDocument::editClip(const QString& text, const std::function<void(Clip&)>& change, const QString& mergeKey)
+bool AnimDocument::f_EditClip(const QString& l_oText, const std::function<void(Clip&)>& l_fnChange, const QString& l_oMergeKey)
 {
-    if (!clip()) return false;
-    return edit(text, [&](AnimState& s) {
-        change(s.file.clips[size_t(s.clip)]);
+    if (!f_Clip()) return false;
+    return f_Edit(l_oText, [&](AnimState& l_oS) {
+        l_fnChange(l_oS.m_oFile.m_vClips[size_t(l_oS.m_iClip)]);
         return true;
-    }, mergeKey);
+    }, l_oMergeKey);
 }
 
-bool AnimDocument::editNodeIf(const NodePath& path, const QString& text, const std::function<bool(Node&)>& change,
-                              const QString& mergeKey)
+bool AnimDocument::f_EditNodeIf(const NodePath& l_vPath, const QString& l_oText, const std::function<bool(Node&)>& l_fnChange,
+                              const QString& l_oMergeKey)
 {
-    if (!clip()) return false;
-    return edit(text, [&](AnimState& s) {
-        Node* n = nodeAt(s.file.clips[size_t(s.clip)].root, path);
-        return n && change(*n);
-    }, mergeKey);
+    if (!f_Clip()) return false;
+    return f_Edit(l_oText, [&](AnimState& l_oS) {
+        Node* l_pN = f_NodeAt(l_oS.m_oFile.m_vClips[size_t(l_oS.m_iClip)].m_oRoot, l_vPath);
+        return l_pN && l_fnChange(*l_pN);
+    }, l_oMergeKey);
 }
 
-bool AnimDocument::editNode(const NodePath& path, const QString& text, const std::function<void(Node&)>& change,
-                            const QString& mergeKey)
+bool AnimDocument::f_EditNode(const NodePath& l_vPath, const QString& l_oText, const std::function<void(Node&)>& l_fnChange,
+                            const QString& l_oMergeKey)
 {
-    return editNodeIf(path, text, [&](Node& n) {
-        change(n);
+    return f_EditNodeIf(l_vPath, l_oText, [&](Node& l_oN) {
+        l_fnChange(l_oN);
         return true;
-    }, mergeKey);
+    }, l_oMergeKey);
 }
 
-bool AnimDocument::editSelected(const QString& text, const std::function<void(Node&)>& change, const QString& mergeKey)
+bool AnimDocument::f_EditSelected(const QString& l_oText, const std::function<void(Node&)>& l_fnChange, const QString& l_oMergeKey)
 {
-    return editNode(m_state.node, text, change, mergeKey);
+    return f_EditNode(m_oState.m_vNode, l_oText, l_fnChange, l_oMergeKey);
 }
 
-bool AnimDocument::setChannel(Channel c, const Value& v, const QString& mergeKey)
+bool AnimDocument::f_SetChannel(Channel l_eC, const Value& l_oV, const QString& l_oMergeKey)
 {
-    const Node* sel = selectedNode();
-    if (!sel) return false;
-    emit aboutToEdit();   // playback stops before the key's time is taken
-    const float t = m_time;
-    const bool keyed = m_autoKey || c == Channel::Event || c == Channel::Deform || c == Channel::Trail ||
-                       hasKeyAt(*sel, c, t);   // no rest deform or trail strength
-    const bool ok = editSelected(keyed ? tr("Key %1").arg(QLatin1String(channelName(c))) : tr("Set %1").arg(QLatin1String(channelName(c))),
-                                 [&](Node& n) {
-                                     if (keyed) setKey(n, c, t, v);
-                                     else setRest(n, c, v);
-                                 }, mergeKey);
-    if (ok && !keyed && keyCount(*sel, c) > 0)
-        emit message(tr("Auto-key is off: the rest %1 changed, but the channel is animated, so nothing moves here.")
-                         .arg(QLatin1String(channelName(c))));
-    return ok;
+    const Node* l_pSel = f_SelectedNode();
+    if (!l_pSel) return false;
+    emit f_AboutToEdit();   // playback stops before the key's time is taken
+    const float l_fT = m_fTime;
+    const bool l_bKeyed = m_bAutoKey || l_eC == Channel::Event || l_eC == Channel::Deform || l_eC == Channel::Trail ||
+                       f_HasKeyAt(*l_pSel, l_eC, l_fT);   // no rest deform or trail strength
+    const bool l_bOk = f_EditSelected(l_bKeyed ? tr("Key %1").arg(QLatin1String(f_ChannelName(l_eC))) : tr("Set %1").arg(QLatin1String(f_ChannelName(l_eC))),
+                                 [&](Node& l_oN) {
+                                     if (l_bKeyed) f_SetKey(l_oN, l_eC, l_fT, l_oV);
+                                     else f_SetRest(l_oN, l_eC, l_oV);
+                                 }, l_oMergeKey);
+    if (l_bOk && !l_bKeyed && f_KeyCount(*l_pSel, l_eC) > 0)
+        emit f_Message(tr("Auto-key is off: the rest %1 changed, but the channel is animated, so nothing moves here.")
+                         .arg(QLatin1String(f_ChannelName(l_eC))));
+    return l_bOk;
 }
 
-bool AnimDocument::addKeyHere(Channel c)
+bool AnimDocument::f_AddKeyHere(Channel l_eC)
 {
-    const Node* sel = selectedNode();
-    if (!sel || hasKeyAt(*sel, c, m_time)) return false;
-    Value v = valueAt(*sel, c, m_time);
-    if (c == Channel::Event) v.s = "event";
-    const float t = m_time;
-    return editSelected(tr("Add %1 key").arg(QLatin1String(channelName(c))), [&](Node& n) { setKey(n, c, t, v); });
+    const Node* l_pSel = f_SelectedNode();
+    if (!l_pSel || f_HasKeyAt(*l_pSel, l_eC, m_fTime)) return false;
+    Value l_oV = f_ValueAt(*l_pSel, l_eC, m_fTime);
+    if (l_eC == Channel::Event) l_oV.m_strS = "event";
+    const float l_fT = m_fTime;
+    return f_EditSelected(tr("Add %1 key").arg(QLatin1String(f_ChannelName(l_eC))), [&](Node& l_oN) { f_SetKey(l_oN, l_eC, l_fT, l_oV); });
 }
 
-bool AnimDocument::removeKeyHere(Channel c)
+bool AnimDocument::f_RemoveKeyHere(Channel l_eC)
 {
-    const float t = m_time;
-    return editNodeIf(m_state.node, tr("Remove %1 key").arg(QLatin1String(channelName(c))), [&](Node& n) { return removeKey(n, c, t); });
+    const float l_fT = m_fTime;
+    return f_EditNodeIf(m_oState.m_vNode, tr("Remove %1 key").arg(QLatin1String(f_ChannelName(l_eC))), [&](Node& l_oN) { return f_RemoveKey(l_oN, l_eC, l_fT); });
 }
 
-bool AnimDocument::setEaseHere(Channel c, const Ease& e)
+bool AnimDocument::f_SetEaseHere(Channel l_eC, const Ease& l_oE)
 {
-    const Node* sel = selectedNode();
-    if (!sel) return false;
-    Ease cur;
-    float kt = 0;
-    if (!easeAtOrBefore(*sel, c, m_time, cur, &kt)) {
-        const std::vector<float> times = keyTimes(*sel, c);
-        if (times.empty()) return false;
-        kt = times.front();   // before the first key: that key's segment is the next one to play
+    const Node* l_pSel = f_SelectedNode();
+    if (!l_pSel) return false;
+    Ease l_oCur;
+    float l_fKt = 0;
+    if (!f_EaseAtOrBefore(*l_pSel, l_eC, m_fTime, l_oCur, &l_fKt)) {
+        const std::vector<float> l_vTimes = f_KeyTimes(*l_pSel, l_eC);
+        if (l_vTimes.empty()) return false;
+        l_fKt = l_vTimes.front();   // before the first key: that key's segment is the next one to play
     }
-    return editNodeIf(m_state.node, tr("Set ease"), [&](Node& n) { return setEase(n, c, kt, e); });
+    return f_EditNodeIf(m_oState.m_vNode, tr("Set ease"), [&](Node& l_oN) { return f_SetEase(l_oN, l_eC, l_fKt, l_oE); });
 }
 
-bool AnimDocument::assignSprite(const QString& ref)
+bool AnimDocument::f_AssignSprite(const QString& l_oRef)
 {
-    Value v;
-    v.s = u8(ref);
-    return setChannel(Channel::Sprite, v);
+    Value l_oV;
+    l_oV.m_strS = f_U8(l_oRef);
+    return f_SetChannel(Channel::Sprite, l_oV);
 }
 
 // ---- key list -----------------------------------------------------------------------------------
 
-bool AnimDocument::insertKeys(float t, int channel)
+bool AnimDocument::f_InsertKeys(float l_fT, int l_iChannel)
 {
-    return editNodeIf(m_state.node, tr("Insert key"), [&](Node& n) {
-        bool any = false;
-        for (Channel c : channelsFor(n, channel)) {
-            if (hasKeyAt(n, c, t)) continue;
-            Value v = valueAt(n, c, t);
-            if (c == Channel::Event) v.s = "event";
-            setKey(n, c, t, v);
-            any = true;
+    return f_EditNodeIf(m_oState.m_vNode, tr("Insert key"), [&](Node& l_oN) {
+        bool l_bAny = false;
+        for (Channel l_eC : f_ChannelsFor(l_oN, l_iChannel)) {
+            if (f_HasKeyAt(l_oN, l_eC, l_fT)) continue;
+            Value l_oV = f_ValueAt(l_oN, l_eC, l_fT);
+            if (l_eC == Channel::Event) l_oV.m_strS = "event";
+            f_SetKey(l_oN, l_eC, l_fT, l_oV);
+            l_bAny = true;
         }
-        return any;
+        return l_bAny;
     });
 }
 
-bool AnimDocument::deleteKeys(const std::vector<float>& times, int channel)
+bool AnimDocument::f_DeleteKeys(const std::vector<float>& l_vTimes, int l_iChannel)
 {
-    return editNodeIf(m_state.node, tr("Delete keys"), [&](Node& n) {
-        bool any = false;
-        for (float t : times) {
-            if (channel >= 0) any |= removeKey(n, Channel(channel), t);
+    return f_EditNodeIf(m_oState.m_vNode, tr("Delete keys"), [&](Node& l_oN) {
+        bool l_bAny = false;
+        for (float l_fT : l_vTimes) {
+            if (l_iChannel >= 0) l_bAny |= f_RemoveKey(l_oN, Channel(l_iChannel), l_fT);
             else
-                for (Channel c : kAllChannels) any |= removeKey(n, c, t);
+                for (Channel l_eC : g_arrAllChannels) l_bAny |= f_RemoveKey(l_oN, l_eC, l_fT);
         }
-        return any;
+        return l_bAny;
     });
 }
 
-bool AnimDocument::setCell(float t, Channel c, const Value& v, bool together)
+bool AnimDocument::f_SetCell(float l_fT, Channel l_eC, const Value& l_oV, bool l_bTogether)
 {
-    return editNodeIf(m_state.node, tr("Edit %1 key").arg(QLatin1String(channelName(c))), [&](Node& n) {
-        if (together && isInterpolated(c))   // keeps the row whole, on the channels it animates already
-            for (Channel o : animatedChannels(n))
-                if (o != c && !hasKeyAt(n, o, t)) setKey(n, o, t, valueAt(n, o, t));
-        setKey(n, c, t, v);
+    return f_EditNodeIf(m_oState.m_vNode, tr("Edit %1 key").arg(QLatin1String(f_ChannelName(l_eC))), [&](Node& l_oN) {
+        if (l_bTogether && f_IsInterpolated(l_eC))   // keeps the row whole, on the channels it animates already
+            for (Channel l_eO : f_AnimatedChannels(l_oN))
+                if (l_eO != l_eC && !f_HasKeyAt(l_oN, l_eO, l_fT)) f_SetKey(l_oN, l_eO, l_fT, f_ValueAt(l_oN, l_eO, l_fT));
+        f_SetKey(l_oN, l_eC, l_fT, l_oV);
         return true;
     });
 }
 
-bool AnimDocument::removeCell(float t, Channel c)
+bool AnimDocument::f_RemoveCell(float l_fT, Channel l_eC)
 {
-    return editNodeIf(m_state.node, tr("Remove %1 key").arg(QLatin1String(channelName(c))), [&](Node& n) { return removeKey(n, c, t); });
+    return f_EditNodeIf(m_oState.m_vNode, tr("Remove %1 key").arg(QLatin1String(f_ChannelName(l_eC))), [&](Node& l_oN) { return f_RemoveKey(l_oN, l_eC, l_fT); });
 }
 
-bool AnimDocument::moveRows(const std::vector<float>& from, const std::vector<float>& to, QString* conflict, const QString& text)
+bool AnimDocument::f_MoveRows(const std::vector<float>& l_vFrom, const std::vector<float>& l_vTo, QString* l_pConflict, const QString& l_oText)
 {
-    std::string why;
-    const bool ok = editNodeIf(m_state.node, text.isEmpty() ? tr("Move keys") : text,
-                               [&](Node& n) { return moveKeyTimes(n, from, to, &why); });
-    if (!ok && conflict) *conflict = qs(why);
-    return ok;
+    std::string l_strWhy;
+    const bool l_bOk = f_EditNodeIf(m_oState.m_vNode, l_oText.isEmpty() ? tr("Move keys") : l_oText,
+                               [&](Node& l_oN) { return f_MoveKeyTimes(l_oN, l_vFrom, l_vTo, &l_strWhy); });
+    if (!l_bOk && l_pConflict) *l_pConflict = f_Qs(l_strWhy);
+    return l_bOk;
 }
 
-bool AnimDocument::moveChannelKey(Channel c, float from, float to, QString* conflict)
+bool AnimDocument::f_MoveChannelKey(Channel l_eC, float l_fFrom, float l_fTo, QString* l_pConflict)
 {
-    const Node* sel = selectedNode();
-    if (!sel) return false;
-    if (to < 0) {
-        if (conflict) *conflict = tr("time must not be negative");
+    const Node* l_pSel = f_SelectedNode();
+    if (!l_pSel) return false;
+    if (l_fTo < 0) {
+        if (l_pConflict) *l_pConflict = tr("time must not be negative");
         return false;
     }
-    if (!sameTime(from, to) && hasKeyAt(*sel, c, to)) {
-        if (conflict) *conflict = tr("%1 already has a key at %2").arg(QLatin1String(channelName(c))).arg(to);
+    if (!f_SameTime(l_fFrom, l_fTo) && f_HasKeyAt(*l_pSel, l_eC, l_fTo)) {
+        if (l_pConflict) *l_pConflict = tr("%1 already has a key at %2").arg(QLatin1String(f_ChannelName(l_eC))).arg(l_fTo);
         return false;
     }
-    return editNodeIf(m_state.node, tr("Move %1 key").arg(QLatin1String(channelName(c))), [&](Node& n) {
-        Value v;
-        if (!keyAt(n, c, from, v)) return false;
-        Ease e;
-        const bool eased = easeAt(n, c, from, e);
-        removeKey(n, c, from);
-        setKey(n, c, to, v);
-        if (eased) setEase(n, c, to, e);
+    return f_EditNodeIf(m_oState.m_vNode, tr("Move %1 key").arg(QLatin1String(f_ChannelName(l_eC))), [&](Node& l_oN) {
+        Value l_oV;
+        if (!f_KeyAt(l_oN, l_eC, l_fFrom, l_oV)) return false;
+        Ease l_oE;
+        const bool l_bEased = f_EaseAt(l_oN, l_eC, l_fFrom, l_oE);
+        f_RemoveKey(l_oN, l_eC, l_fFrom);
+        f_SetKey(l_oN, l_eC, l_fTo, l_oV);
+        if (l_bEased) f_SetEase(l_oN, l_eC, l_fTo, l_oE);
         return true;
     });
 }
 
-bool AnimDocument::rescale(float newDuration, bool wholeClip, QString* error)
+bool AnimDocument::f_Rescale(float l_fNewDuration, bool l_bWholeClip, QString* l_pError)
 {
-    const Clip* c = clip();
-    const Node* sel = selectedNode();
-    if (!c || !sel || !(newDuration > 0)) {
-        if (error) *error = tr("the new duration must be above 0");
+    const Clip* l_pC = f_Clip();
+    const Node* l_pSel = f_SelectedNode();
+    if (!l_pC || !l_pSel || !(l_fNewDuration > 0)) {
+        if (l_pError) *l_pError = tr("the new duration must be above 0");
         return false;
     }
-    float cur = 0;
-    if (wholeClip) cur = c->duration();
+    float l_fCur = 0;
+    if (l_bWholeClip) l_fCur = l_pC->f_Duration();
     else {
-        const std::vector<float> t = unionKeyTimes(*sel);
-        cur = t.empty() ? 0 : t.back();
+        const std::vector<float> l_vT = f_UnionKeyTimes(*l_pSel);
+        l_fCur = l_vT.empty() ? 0 : l_vT.back();
     }
-    if (cur <= 0) {
-        if (error) *error = tr("there are no key times to scale");
+    if (l_fCur <= 0) {
+        if (l_pError) *l_pError = tr("there are no key times to scale");
         return false;
     }
-    const float factor = newDuration / cur;
-    if (wholeClip)
-        return editClip(tr("Rescale clip"), [&](Clip& clip) {
-            scaleKeyTimes(clip.root, factor, true);
-            if (clip.length > 0) clip.length *= factor;
+    const float l_fFactor = l_fNewDuration / l_fCur;
+    if (l_bWholeClip)
+        return f_EditClip(tr("Rescale clip"), [&](Clip& l_oClip) {
+            f_ScaleKeyTimes(l_oClip.m_oRoot, l_fFactor, true);
+            if (l_oClip.m_fLength > 0) l_oClip.m_fLength *= l_fFactor;
         });
-    return editSelected(tr("Rescale keys"), [&](Node& n) { scaleKeyTimes(n, factor, false); });
+    return f_EditSelected(tr("Rescale keys"), [&](Node& l_oN) { f_ScaleKeyTimes(l_oN, l_fFactor, false); });
 }
 
-bool AnimDocument::ramp(const std::vector<float>& timesIn, Channel c, const Value& first, const Value& last, bool alphaOnly)
+bool AnimDocument::f_Ramp(const std::vector<float>& l_vTimesIn, Channel l_eC, const Value& l_oFirst, const Value& l_oLast, bool l_bAlphaOnly)
 {
-    if (timesIn.size() < 2 || !isInterpolated(c)) return false;
-    std::vector<float> times = timesIn;
-    std::sort(times.begin(), times.end());
-    const float t0 = times.front(), t1 = times.back();
-    return editNodeIf(m_state.node, alphaOnly ? tr("Ramp alpha") : tr("Ramp %1").arg(QLatin1String(channelName(c))), [&](Node& n) {
+    if (l_vTimesIn.size() < 2 || !f_IsInterpolated(l_eC)) return false;
+    std::vector<float> l_vTimes = l_vTimesIn;
+    std::sort(l_vTimes.begin(), l_vTimes.end());
+    const float l_fT0 = l_vTimes.front(), l_fT1 = l_vTimes.back();
+    return f_EditNodeIf(m_oState.m_vNode, l_bAlphaOnly ? tr("Ramp alpha") : tr("Ramp %1").arg(QLatin1String(f_ChannelName(l_eC))), [&](Node& l_oN) {
         // Sample before writing: the colour a row keeps must not depend on the keys just written.
-        std::vector<Value> current;
-        for (float t : times) current.push_back(valueAt(n, c, t));
-        for (size_t i = 0; i < times.size(); i++) {
-            const float f = t1 > t0 ? (times[i] - t0) / (t1 - t0) : float(i) / float(times.size() - 1);
-            Value v = current[i];
-            if (alphaOnly) v.v.w = first.v.x + (last.v.x - first.v.x) * f;
-            else v.v = first.v + (last.v - first.v) * f;
-            setKey(n, c, times[i], v);
+        std::vector<Value> l_vCurrent;
+        for (float l_fT : l_vTimes) l_vCurrent.push_back(f_ValueAt(l_oN, l_eC, l_fT));
+        for (size_t l_nI = 0; l_nI < l_vTimes.size(); l_nI++) {
+            const float l_fF = l_fT1 > l_fT0 ? (l_vTimes[l_nI] - l_fT0) / (l_fT1 - l_fT0) : float(l_nI) / float(l_vTimes.size() - 1);
+            Value l_oV = l_vCurrent[l_nI];
+            if (l_bAlphaOnly) l_oV.m_v4V.w = l_oFirst.m_v4V.x + (l_oLast.m_v4V.x - l_oFirst.m_v4V.x) * l_fF;
+            else l_oV.m_v4V = l_oFirst.m_v4V + (l_oLast.m_v4V - l_oFirst.m_v4V) * l_fF;
+            f_SetKey(l_oN, l_eC, l_vTimes[l_nI], l_oV);
         }
         return true;
     });
 }
 
-bool AnimDocument::fade(const std::vector<float>& times, bool in)
+bool AnimDocument::f_Fade(const std::vector<float>& l_vTimes, bool l_bIn)
 {
-    Value a, b;
-    a.v.x = in ? 0.0f : 1.0f;
-    b.v.x = in ? 1.0f : 0.0f;
-    return ramp(times, Channel::Color, a, b, true);
+    Value l_oA, l_oB;
+    l_oA.m_v4V.x = l_bIn ? 0.0f : 1.0f;
+    l_oB.m_v4V.x = l_bIn ? 1.0f : 0.0f;
+    return f_Ramp(l_vTimes, Channel::Color, l_oA, l_oB, true);
 }
 
-bool AnimDocument::spriteSequence(const std::vector<float>& timesIn, const QStringList& sprites)
+bool AnimDocument::f_SpriteSequence(const std::vector<float>& l_vTimesIn, const QStringList& l_oSprites)
 {
-    if (timesIn.empty() || sprites.isEmpty()) return false;
-    std::vector<float> times = timesIn;
-    std::sort(times.begin(), times.end());
-    return editNodeIf(m_state.node, tr("Sprite sequence"), [&](Node& n) {
-        for (size_t i = 0; i < times.size(); i++) {
-            Value v;
-            v.s = u8(sprites[int(i % size_t(sprites.size()))]);
-            setKey(n, Channel::Sprite, times[i], v);
+    if (l_vTimesIn.empty() || l_oSprites.isEmpty()) return false;
+    std::vector<float> l_vTimes = l_vTimesIn;
+    std::sort(l_vTimes.begin(), l_vTimes.end());
+    return f_EditNodeIf(m_oState.m_vNode, tr("Sprite sequence"), [&](Node& l_oN) {
+        for (size_t l_nI = 0; l_nI < l_vTimes.size(); l_nI++) {
+            Value l_oV;
+            l_oV.m_strS = f_U8(l_oSprites[int(l_nI % size_t(l_oSprites.size()))]);
+            f_SetKey(l_oN, Channel::Sprite, l_vTimes[l_nI], l_oV);
         }
         return true;
     });
 }
 
-bool AnimDocument::insertSpriteSequence(float start, float gap, const QStringList& sprites, bool extendClip)
+bool AnimDocument::f_InsertSpriteSequence(float l_fStart, float l_fGap, const QStringList& l_oSprites, bool l_bExtendClip)
 {
-    if (sprites.isEmpty() || gap <= 0.0f || !clip() || !selectedNode()) return false;
-    start = std::max(0.0f, start);
-    const float last = start + gap * float(sprites.size() - 1);
-    return edit(tr("Insert %n sprite key(s)", nullptr, sprites.size()), [&](AnimState& s) {
-        Clip& c = s.file.clips[size_t(s.clip)];
-        Node* n = nodeAt(c.root, s.node);
-        if (!n) return false;
-        for (int i = 0; i < sprites.size(); i++) {
-            Value v;
-            v.s = u8(sprites[i]);
-            setKey(*n, Channel::Sprite, start + gap * float(i), v);
+    if (l_oSprites.isEmpty() || l_fGap <= 0.0f || !f_Clip() || !f_SelectedNode()) return false;
+    l_fStart = std::max(0.0f, l_fStart);
+    const float l_fLast = l_fStart + l_fGap * float(l_oSprites.size() - 1);
+    return f_Edit(tr("Insert %n sprite key(s)", nullptr, l_oSprites.size()), [&](AnimState& l_oS) {
+        Clip& l_oC = l_oS.m_oFile.m_vClips[size_t(l_oS.m_iClip)];
+        Node* l_pN = f_NodeAt(l_oC.m_oRoot, l_oS.m_vNode);
+        if (!l_pN) return false;
+        for (int l_iI = 0; l_iI < l_oSprites.size(); l_iI++) {
+            Value l_oV;
+            l_oV.m_strS = f_U8(l_oSprites[l_iI]);
+            f_SetKey(*l_pN, Channel::Sprite, l_fStart + l_fGap * float(l_iI), l_oV);
         }
-        if (extendClip && c.length > 0 && c.length < last) c.length = last;
+        if (l_bExtendClip && l_oC.m_fLength > 0 && l_oC.m_fLength < l_fLast) l_oC.m_fLength = l_fLast;
         return true;
     });
 }
 
-bool AnimDocument::setEaseRows(const std::vector<float>& times, const Ease& e)
+bool AnimDocument::f_SetEaseRows(const std::vector<float>& l_vTimes, const Ease& l_oE)
 {
-    return editNodeIf(m_state.node, tr("Set ease"), [&](Node& n) {
-        bool any = false;
-        for (float t : times)
-            for (Channel c : kInterpolated) any |= setEase(n, c, t, e);
-        return any;
+    return f_EditNodeIf(m_oState.m_vNode, tr("Set ease"), [&](Node& l_oN) {
+        bool l_bAny = false;
+        for (float l_fT : l_vTimes)
+            for (Channel l_eC : g_arrInterpolated) l_bAny |= f_SetEase(l_oN, l_eC, l_fT, l_oE);
+        return l_bAny;
     });
 }
 
 // ---- structure ----------------------------------------------------------------------------------
 
-bool AnimDocument::addNode(const NodePath& parent, Node node, const QString& text)
+bool AnimDocument::f_AddNode(const NodePath& l_vParent, Node l_oNode, const QString& l_oText)
 {
-    return edit(text, [&](AnimState& s) {
-        if (s.file.clips.empty()) return false;
-        Node& root = s.file.clips[size_t(s.clip)].root;
-        Node* p = nodeAt(root, parent);
-        if (!p) return false;
-        node.name = uniqueNodeName(root, node.name);
-        p->children.push_back(std::move(node));
-        s.node = parent;
-        s.node.push_back(int(p->children.size()) - 1);
+    return f_Edit(l_oText, [&](AnimState& l_oS) {
+        if (l_oS.m_oFile.m_vClips.empty()) return false;
+        Node& l_oRoot = l_oS.m_oFile.m_vClips[size_t(l_oS.m_iClip)].m_oRoot;
+        Node* l_pP = f_NodeAt(l_oRoot, l_vParent);
+        if (!l_pP) return false;
+        l_oNode.m_strName = f_UniqueNodeName(l_oRoot, l_oNode.m_strName);
+        l_pP->m_vChildren.push_back(std::move(l_oNode));
+        l_oS.m_vNode = l_vParent;
+        l_oS.m_vNode.push_back(int(l_pP->m_vChildren.size()) - 1);
         return true;
     });
 }
 
-bool AnimDocument::addSpriteNode(const NodePath& parent, const QString& sprite, const glm::vec2& pos)
+bool AnimDocument::f_AddSpriteNode(const NodePath& l_vParent, const QString& l_oSprite, const glm::vec2& l_v2Pos)
 {
-    Node n;
-    n.name = u8(qs(toms::anim::parseSpriteRef(u8(sprite)).name).section(QLatin1Char('/'), -1));
-    n.sprite = u8(sprite);
-    n.pos = glm::vec3(pos, 0.0f);
-    return addNode(parent, n, tr("Add sprite node"));
+    Node l_oN;
+    l_oN.m_strName = f_U8(f_Qs(toms::anim::f_ParseSpriteRef(f_U8(l_oSprite)).m_strName).section(QLatin1Char('/'), -1));
+    l_oN.m_strSprite = f_U8(l_oSprite);
+    l_oN.m_v3Pos = glm::vec3(l_v2Pos, 0.0f);
+    return f_AddNode(l_vParent, l_oN, tr("Add sprite node"));
 }
 
-bool AnimDocument::deleteNode(const NodePath& path)
+bool AnimDocument::f_DeleteNode(const NodePath& l_vPath)
 {
-    if (path.empty()) {
-        emit message(tr("The root node cannot be deleted (it is the clip)."));
+    if (l_vPath.empty()) {
+        emit f_Message(tr("The root node cannot be deleted (it is the clip)."));
         return false;
     }
-    return edit(tr("Delete node"), [&](AnimState& s) {
-        if (s.file.clips.empty()) return false;
-        NodePath parent(path.begin(), path.end() - 1);
-        Node* p = nodeAt(s.file.clips[size_t(s.clip)].root, parent);
-        if (!p || path.back() >= int(p->children.size())) return false;
-        p->children.erase(p->children.begin() + path.back());
-        s.node = parent;
+    return f_Edit(tr("Delete node"), [&](AnimState& l_oS) {
+        if (l_oS.m_oFile.m_vClips.empty()) return false;
+        NodePath l_vParent(l_vPath.begin(), l_vPath.end() - 1);
+        Node* l_pP = f_NodeAt(l_oS.m_oFile.m_vClips[size_t(l_oS.m_iClip)].m_oRoot, l_vParent);
+        if (!l_pP || l_vPath.back() >= int(l_pP->m_vChildren.size())) return false;
+        l_pP->m_vChildren.erase(l_pP->m_vChildren.begin() + l_vPath.back());
+        l_oS.m_vNode = l_vParent;
         return true;
     });
 }
 
-bool AnimDocument::duplicateNode(const NodePath& path)
+bool AnimDocument::f_DuplicateNode(const NodePath& l_vPath)
 {
-    if (path.empty()) {
-        emit message(tr("The root node cannot be duplicated; duplicate the clip instead."));
+    if (l_vPath.empty()) {
+        emit f_Message(tr("The root node cannot be duplicated; duplicate the clip instead."));
         return false;
     }
-    return edit(tr("Duplicate node"), [&](AnimState& s) {
-        if (s.file.clips.empty()) return false;
-        Node& root = s.file.clips[size_t(s.clip)].root;
-        NodePath parent(path.begin(), path.end() - 1);
-        Node* p = nodeAt(root, parent);
-        if (!p || path.back() >= int(p->children.size())) return false;
-        Node copy = p->children[size_t(path.back())];
-        animed::renameForPaste(root, copy);
-        p->children.insert(p->children.begin() + path.back() + 1, std::move(copy));
-        s.node = parent;
-        s.node.push_back(path.back() + 1);
+    return f_Edit(tr("Duplicate node"), [&](AnimState& l_oS) {
+        if (l_oS.m_oFile.m_vClips.empty()) return false;
+        Node& l_oRoot = l_oS.m_oFile.m_vClips[size_t(l_oS.m_iClip)].m_oRoot;
+        NodePath l_vParent(l_vPath.begin(), l_vPath.end() - 1);
+        Node* l_pP = f_NodeAt(l_oRoot, l_vParent);
+        if (!l_pP || l_vPath.back() >= int(l_pP->m_vChildren.size())) return false;
+        Node l_oCopy = l_pP->m_vChildren[size_t(l_vPath.back())];
+        animed::f_RenameForPaste(l_oRoot, l_oCopy);
+        l_pP->m_vChildren.insert(l_pP->m_vChildren.begin() + l_vPath.back() + 1, std::move(l_oCopy));
+        l_oS.m_vNode = l_vParent;
+        l_oS.m_vNode.push_back(l_vPath.back() + 1);
         return true;
     });
 }
 
-bool AnimDocument::parentBonesUnder(const NodePath& path)
+bool AnimDocument::f_ParentBonesUnder(const NodePath& l_vPath)
 {
-    QString why;
-    const bool done = edit(tr("Move bones under the sprite"), [&](AnimState& s) {
-        if (s.file.clips.empty()) return false;
-        toms::anim::Clip& clip = s.file.clips[size_t(s.clip)];
-        NodePath cur = path;   // the skinned node's path, as bones before it move out of its parent
-        Node* node = nodeAt(clip.root, cur);
-        if (!node || !node->skinned()) return false;
-        bool moved = false;
+    QString l_oWhy;
+    const bool l_bDone = f_Edit(tr("Move bones under the sprite"), [&](AnimState& l_oS) {
+        if (l_oS.m_oFile.m_vClips.empty()) return false;
+        toms::anim::Clip& l_oClip = l_oS.m_oFile.m_vClips[size_t(l_oS.m_iClip)];
+        NodePath l_vCur = l_vPath;   // the skinned node's path, as bones before it move out of its parent
+        Node* l_pNode = f_NodeAt(l_oClip.m_oRoot, l_vCur);
+        if (!l_pNode || !l_pNode->f_Skinned()) return false;
+        bool l_bMoved = false;
         // One bone subtree at a time (paths change as nodes move); a bone under another outside bone moves with it.
-        for (int guard = 0; guard < 64; guard++) {
-            node = nodeAt(clip.root, cur);
-            const std::vector<std::string> outside = animed::bonesOutside(clip.root, *node);
-            if (outside.empty()) break;
+        for (int l_iGuard = 0; l_iGuard < 64; l_iGuard++) {
+            l_pNode = f_NodeAt(l_oClip.m_oRoot, l_vCur);
+            const std::vector<std::string> l_vOutside = animed::f_BonesOutside(l_oClip.m_oRoot, *l_pNode);
+            if (l_vOutside.empty()) break;
             // The outermost of them: one whose parent is not itself an outside bone.
-            NodePath bonePath;
-            for (const std::string& b : outside) {
-                NodePath p;
-                std::function<bool(const Node&, NodePath&)> find = [&](const Node& n, NodePath& at) {
-                    if (n.name == b) return true;
-                    for (size_t i = 0; i < n.children.size(); i++) {
-                        at.push_back(int(i));
-                        if (find(n.children[i], at)) return true;
-                        at.pop_back();
+            NodePath l_vBonePath;
+            for (const std::string& l_strB : l_vOutside) {
+                NodePath l_vP;
+                std::function<bool(const Node&, NodePath&)> l_fnFind = [&](const Node& l_oN, NodePath& l_vAt) {
+                    if (l_oN.m_strName == l_strB) return true;
+                    for (size_t l_nI = 0; l_nI < l_oN.m_vChildren.size(); l_nI++) {
+                        l_vAt.push_back(int(l_nI));
+                        if (l_fnFind(l_oN.m_vChildren[l_nI], l_vAt)) return true;
+                        l_vAt.pop_back();
                     }
                     return false;
                 };
-                if (!find(clip.root, p)) continue;
-                const Node* parent = p.empty() ? nullptr : nodeAt(clip.root, NodePath(p.begin(), p.end() - 1));
-                if (parent && std::find(outside.begin(), outside.end(), parent->name) != outside.end()) continue;
-                bonePath = p;
+                if (!l_fnFind(l_oClip.m_oRoot, l_vP)) continue;
+                const Node* l_pParent = l_vP.empty() ? nullptr : f_NodeAt(l_oClip.m_oRoot, NodePath(l_vP.begin(), l_vP.end() - 1));
+                if (l_pParent && std::find(l_vOutside.begin(), l_vOutside.end(), l_pParent->m_strName) != l_vOutside.end()) continue;
+                l_vBonePath = l_vP;
                 break;
             }
-            if (bonePath.empty()) { why = tr("the bones hold the sprite node: move the sprite out of them first"); return false; }
-            if (bonePath.size() <= cur.size() && std::equal(bonePath.begin(), bonePath.end(), cur.begin())) {
-                why = tr("bone '%1' holds the sprite node: move the sprite out of it first").arg(qs(nodeAt(clip.root, bonePath)->name));
+            if (l_vBonePath.empty()) { l_oWhy = tr("the bones hold the sprite node: move the sprite out of them first"); return false; }
+            if (l_vBonePath.size() <= l_vCur.size() && std::equal(l_vBonePath.begin(), l_vBonePath.end(), l_vCur.begin())) {
+                l_oWhy = tr("bone '%1' holds the sprite node: move the sprite out of it first").arg(f_Qs(f_NodeAt(l_oClip.m_oRoot, l_vBonePath)->m_strName));
                 return false;
             }
             // The offset between the bone's old parent and the node, at rest: it must be a move only.
-            std::vector<std::pair<const Node*, glm::mat4>> rest;
-            toms::anim::restWorlds(clip, rest);
-            auto restOf = [&](const Node* n) {
-                for (const auto& r : rest) if (r.first == n) return r.second;
+            std::vector<std::pair<const Node*, glm::mat4>> l_vRest;
+            toms::anim::f_RestWorlds(l_oClip, l_vRest);
+            auto l_fnRestOf = [&](const Node* l_pN) {
+                for (const auto& l_pairR : l_vRest) if (l_pairR.first == l_pN) return l_pairR.second;
                 return glm::mat4(1.0f);
             };
-            const NodePath parentPath(bonePath.begin(), bonePath.end() - 1);
-            const glm::mat4 t = glm::inverse(restOf(nodeAt(clip.root, cur))) * restOf(nodeAt(clip.root, parentPath));
-            for (int c = 0; c < 3; c++)
-                for (int r = 0; r < 3; r++)
-                    if (std::fabs(t[c][r] - (c == r ? 1.0f : 0.0f)) > 1e-4f) {
-                        why = tr("the sprite node is rotated or scaled against the parent of bone '%1': move it by hand")
-                                  .arg(qs(nodeAt(clip.root, bonePath)->name));
+            const NodePath l_vParentPath(l_vBonePath.begin(), l_vBonePath.end() - 1);
+            const glm::mat4 l_mat4T = glm::inverse(l_fnRestOf(f_NodeAt(l_oClip.m_oRoot, l_vCur))) * l_fnRestOf(f_NodeAt(l_oClip.m_oRoot, l_vParentPath));
+            for (int l_iC = 0; l_iC < 3; l_iC++)
+                for (int l_iR = 0; l_iR < 3; l_iR++)
+                    if (std::fabs(l_mat4T[l_iC][l_iR] - (l_iC == l_iR ? 1.0f : 0.0f)) > 1e-4f) {
+                        l_oWhy = tr("the sprite node is rotated or scaled against the parent of bone '%1': move it by hand")
+                                  .arg(f_Qs(f_NodeAt(l_oClip.m_oRoot, l_vBonePath)->m_strName));
                         return false;
                     }
-            const glm::vec3 shift(t[3]);
-            Node* oldParent = nodeAt(clip.root, parentPath);
-            Node bone = std::move(oldParent->children[size_t(bonePath.back())]);
-            oldParent->children.erase(oldParent->children.begin() + bonePath.back());
-            bone.pos += shift;
-            for (auto& k : bone.posKeys) k.v += shift;
+            const glm::vec3 l_v3Shift(l_mat4T[3]);
+            Node* l_pOldParent = f_NodeAt(l_oClip.m_oRoot, l_vParentPath);
+            Node l_oBone = std::move(l_pOldParent->m_vChildren[size_t(l_vBonePath.back())]);
+            l_pOldParent->m_vChildren.erase(l_pOldParent->m_vChildren.begin() + l_vBonePath.back());
+            l_oBone.m_v3Pos += l_v3Shift;
+            for (auto& l_oK : l_oBone.m_vPosKeys) l_oK.m_oV += l_v3Shift;
             // The node's path may have moved up if the bone came before it under the same parent.
-            if (cur.size() >= bonePath.size() && std::equal(parentPath.begin(), parentPath.end(), cur.begin()) &&
-                cur[parentPath.size()] > bonePath.back())
-                cur[parentPath.size()]--;
-            nodeAt(clip.root, cur)->children.push_back(std::move(bone));
-            moved = true;
+            if (l_vCur.size() >= l_vBonePath.size() && std::equal(l_vParentPath.begin(), l_vParentPath.end(), l_vCur.begin()) &&
+                l_vCur[l_vParentPath.size()] > l_vBonePath.back())
+                l_vCur[l_vParentPath.size()]--;
+            f_NodeAt(l_oClip.m_oRoot, l_vCur)->m_vChildren.push_back(std::move(l_oBone));
+            l_bMoved = true;
         }
-        s.node = cur;   // the skinned node stays selected
-        return moved;
+        l_oS.m_vNode = l_vCur;   // the skinned node stays selected
+        return l_bMoved;
     });
-    if (!why.isEmpty()) emit message(tr("Move bones under the sprite: %1").arg(why));
-    return done;
+    if (!l_oWhy.isEmpty()) emit f_Message(tr("Move bones under the sprite: %1").arg(l_oWhy));
+    return l_bDone;
 }
 
-bool AnimDocument::setLatticeSize(int cols, int rows)
+bool AnimDocument::f_SetLatticeSize(int l_iCols, int l_iRows)
 {
-    cols = std::clamp(cols, 2, toms::anim::kMaxLattice);
-    rows = std::clamp(rows, 2, toms::anim::kMaxLattice);
-    const Node* sel = selectedNode();
-    if (!sel || (sel->latticeCols() == cols && sel->latticeRows() == rows && sel->lattice[0] >= 2)) return false;
-    return editSelected(tr("Lattice"), [cols, rows](Node& n) {
-        const int oc = n.latticeCols(), orows = n.latticeRows();
-        for (auto& k : n.deformKeys) {
-            toms::anim::Deform moved;
-            for (const auto& [i, off] : k.v) {
-                const int c = i % oc, r = i / oc;
-                const int nc = (int)std::lround(float(c) / (oc - 1) * (cols - 1)), nr = (int)std::lround(float(r) / (orows - 1) * (rows - 1));
-                moved[nr * cols + nc] = off;
+    l_iCols = std::clamp(l_iCols, 2, toms::anim::g_iMaxLattice);
+    l_iRows = std::clamp(l_iRows, 2, toms::anim::g_iMaxLattice);
+    const Node* l_pSel = f_SelectedNode();
+    if (!l_pSel || (l_pSel->f_LatticeCols() == l_iCols && l_pSel->f_LatticeRows() == l_iRows && l_pSel->m_arrLattice[0] >= 2)) return false;
+    return f_EditSelected(tr("Lattice"), [l_iCols, l_iRows](Node& l_oN) {
+        const int l_iOc = l_oN.f_LatticeCols(), l_iOrows = l_oN.f_LatticeRows();
+        for (auto& l_oK : l_oN.m_vDeformKeys) {
+            toms::anim::Deform l_mapMoved;
+            for (const auto& [l_iI, l_v2Off] : l_oK.m_oV) {
+                const int l_iC = l_iI % l_iOc, l_iR = l_iI / l_iOc;
+                const int l_iNc = (int)std::lround(float(l_iC) / (l_iOc - 1) * (l_iCols - 1)), l_iNr = (int)std::lround(float(l_iR) / (l_iOrows - 1) * (l_iRows - 1));
+                l_mapMoved[l_iNr * l_iCols + l_iNc] = l_v2Off;
             }
-            k.v = std::move(moved);
+            l_oK.m_oV = std::move(l_mapMoved);
         }
-        n.lattice[0] = cols;
-        n.lattice[1] = rows;
+        l_oN.m_arrLattice[0] = l_iCols;
+        l_oN.m_arrLattice[1] = l_iRows;
     });
 }
 
-void AnimDocument::updateMeshes()
+void AnimDocument::f_UpdateMeshes()
 {
     // Each atlas: its mesh file as on disk, with every mesh this file's clips need added -- cut from its pixels (cached
     // by key), or the file's own when it is marked "hand".
-    for (const auto& a : m_atlases) {
-        a->meshes = a->meshesOnDisk;
-        a->neededKeys.clear();
+    for (const auto& l_spA : m_vAtlases) {
+        l_spA->m_oMeshes = l_spA->m_oMeshesOnDisk;
+        l_spA->m_setNeededKeys.clear();
     }
-    for (const toms::anim::MeshNeed& need : toms::anim::meshesNeeded(m_state.file, m_atlasSet)) {
-        const int doc = need.entry >= 0 && need.entry < int(m_setToDoc.size()) ? m_setToDoc[size_t(need.entry)] : -1;
-        if (doc < 0) continue;
-        LoadedAtlas& a = *m_atlases[size_t(doc)];
-        a.neededKeys.insert(need.key);
-        if (const toms::SpriteMesh* hand = a.meshesOnDisk.find(need.key); hand && hand->source == "hand") continue;
-        auto cached = a.cut.find(need.key);
-        if (cached == a.cut.end()) {
-            toms::SpriteMesh m;
-            const toms::AtlasRegion* r = need.region;
-            if (r->page >= 0 && r->page < int(a.rgba.size())) {
-                const QImage& page = a.rgba[size_t(r->page)];
-                if (r->x >= 0 && r->y >= 0 && r->x + r->w <= page.width() && r->y + r->h <= page.height())
-                    m = toms::anim::cutMesh(need, page.constBits() + size_t(r->y) * page.bytesPerLine() + size_t(r->x) * 4,
-                                            page.bytesPerLine() / 4);
+    for (const toms::anim::MeshNeed& l_oNeed : toms::anim::f_MeshesNeeded(m_oState.m_oFile, m_oAtlasSet)) {
+        const int l_iDoc = l_oNeed.m_iEntry >= 0 && l_oNeed.m_iEntry < int(m_vSetToDoc.size()) ? m_vSetToDoc[size_t(l_oNeed.m_iEntry)] : -1;
+        if (l_iDoc < 0) continue;
+        LoadedAtlas& l_oA = *m_vAtlases[size_t(l_iDoc)];
+        l_oA.m_setNeededKeys.insert(l_oNeed.m_strKey);
+        if (const toms::SpriteMesh* l_pHand = l_oA.m_oMeshesOnDisk.f_Find(l_oNeed.m_strKey); l_pHand && l_pHand->m_strSource == "hand") continue;
+        auto l_itCached = l_oA.m_mapCut.find(l_oNeed.m_strKey);
+        if (l_itCached == l_oA.m_mapCut.end()) {
+            toms::SpriteMesh l_oM;
+            const toms::AtlasRegion* l_pR = l_oNeed.m_pRegion;
+            if (l_pR->m_iPage >= 0 && l_pR->m_iPage < int(l_oA.m_vRgba.size())) {
+                const QImage& l_oPage = l_oA.m_vRgba[size_t(l_pR->m_iPage)];
+                if (l_pR->m_iX >= 0 && l_pR->m_iY >= 0 && l_pR->m_iX + l_pR->m_iW <= l_oPage.width() && l_pR->m_iY + l_pR->m_iH <= l_oPage.height())
+                    l_oM = toms::anim::f_CutMesh(l_oNeed, l_oPage.constBits() + size_t(l_pR->m_iY) * l_oPage.bytesPerLine() + size_t(l_pR->m_iX) * 4,
+                                            l_oPage.bytesPerLine() / 4);
             }
-            cached = a.cut.emplace(need.key, std::move(m)).first;
+            l_itCached = l_oA.m_mapCut.emplace(l_oNeed.m_strKey, std::move(l_oM)).first;
         }
-        if (!cached->second.triangles.empty()) a.meshes.meshes[need.key] = cached->second;
+        if (!l_itCached->second.m_vTriangles.empty()) l_oA.m_oMeshes.m_mapMeshes[l_oNeed.m_strKey] = l_itCached->second;
     }
-    for (size_t e = 0; e < m_atlasSet.entries.size() && e < m_setToDoc.size(); e++) {
-        const LoadedAtlas& a = *m_atlases[size_t(m_setToDoc[e])];
-        m_atlasSet.entries[e].meshes = a.meshes.meshes.empty() ? nullptr : &a.meshes;
+    for (size_t l_nE = 0; l_nE < m_oAtlasSet.m_vEntries.size() && l_nE < m_vSetToDoc.size(); l_nE++) {
+        const LoadedAtlas& l_oA = *m_vAtlases[size_t(m_vSetToDoc[l_nE])];
+        m_oAtlasSet.m_vEntries[l_nE].m_pMeshes = l_oA.m_oMeshes.m_mapMeshes.empty() ? nullptr : &l_oA.m_oMeshes;
     }
 }
 
-bool AnimDocument::saveMeshes(QString* error)
+bool AnimDocument::f_SaveMeshes(QString* l_pError)
 {
     // Each atlas's mesh file gets this file's meshes; the others in it (other clips') stay. It is read again first, so
     // what another clip saved meanwhile is kept.
-    for (const auto& ap : m_atlases) {
-        LoadedAtlas& a = *ap;
-        if (!a.ok || a.neededKeys.empty()) continue;
-        const std::string meshPath = toms::spriteMeshPath(u8(a.path));
-        toms::SpriteMeshFile now;
-        std::string err;
-        if (!animed::readMeshFile(meshPath, now, nullptr, &err)) now = toms::SpriteMeshFile();   // broken: made again
-        toms::SpriteMeshFile merged = now;
-        for (const std::string& key : a.neededKeys)
-            if (const toms::SpriteMesh* m = a.meshes.find(key)) merged.meshes[key] = *m;
-        if (merged.meshes == now.meshes && err.empty()) {
-            a.meshesOnDisk = std::move(now);
+    for (const auto& l_spAp : m_vAtlases) {
+        LoadedAtlas& l_oA = *l_spAp;
+        if (!l_oA.m_bOk || l_oA.m_setNeededKeys.empty()) continue;
+        const std::string l_strMeshPath = toms::f_SpriteMeshPath(f_U8(l_oA.m_oPath));
+        toms::SpriteMeshFile l_oNow;
+        std::string l_strErr;
+        if (!animed::f_ReadMeshFile(l_strMeshPath, l_oNow, nullptr, &l_strErr)) l_oNow = toms::SpriteMeshFile();   // broken: made again
+        toms::SpriteMeshFile l_oMerged = l_oNow;
+        for (const std::string& l_strKey : l_oA.m_setNeededKeys)
+            if (const toms::SpriteMesh* l_pM = l_oA.m_oMeshes.f_Find(l_strKey)) l_oMerged.m_mapMeshes[l_strKey] = *l_pM;
+        if (l_oMerged.m_mapMeshes == l_oNow.m_mapMeshes && l_strErr.empty()) {
+            l_oA.m_oMeshesOnDisk = std::move(l_oNow);
             continue;
         }
-        if (!animed::writeMeshFile(meshPath, merged, a.meshesBinary, &err)) {
-            if (error) *error = tr("The .anim was saved, but the mesh file %1 was not: %2").arg(QDir::toNativeSeparators(qs(meshPath)), qs(err));
+        if (!animed::f_WriteMeshFile(l_strMeshPath, l_oMerged, l_oA.m_bMeshesBinary, &l_strErr)) {
+            if (l_pError) *l_pError = tr("The .anim was saved, but the mesh file %1 was not: %2").arg(QDir::toNativeSeparators(f_Qs(l_strMeshPath)), f_Qs(l_strErr));
             return false;
         }
-        a.meshesOnDisk = std::move(merged);
+        l_oA.m_oMeshesOnDisk = std::move(l_oMerged);
     }
-    updateMeshes();
+    f_UpdateMeshes();
     return true;
 }
 
-bool AnimDocument::applyMotionRecipe(const std::string& id, float start, float period, float strength)
+bool AnimDocument::f_ApplyMotionRecipe(const std::string& l_strId, float l_fStart, float l_fPeriod, float l_fStrength)
 {
-    const Node* sel = selectedNode();
-    const animed::MotionRecipe* recipe = animed::findMotionRecipe(id);
-    if (!sel || !recipe) return false;
-    animed::RecipeParams p;
-    p.start = start;
-    p.period = period;
-    p.strength = strength;
-    if (const toms::AtlasRegion* r = findSprite(toms::anim::spriteAt(*sel, start))) {
-        p.spriteW = float(r->origW);
-        p.spriteH = float(r->origH);
+    const Node* l_pSel = f_SelectedNode();
+    const animed::MotionRecipe* l_pRecipe = animed::f_FindMotionRecipe(l_strId);
+    if (!l_pSel || !l_pRecipe) return false;
+    animed::RecipeParams l_oP;
+    l_oP.m_fStart = l_fStart;
+    l_oP.m_fPeriod = l_fPeriod;
+    l_oP.m_fStrength = l_fStrength;
+    if (const toms::AtlasRegion* l_pR = f_FindSprite(toms::anim::f_SpriteAt(*l_pSel, l_fStart))) {
+        l_oP.m_fSpriteW = float(l_pR->m_iOrigW);
+        l_oP.m_fSpriteH = float(l_pR->m_iOrigH);
     }
-    const NodePath path = m_state.node;
-    std::string err;
-    const bool ok = edit(tr("Recipe: %1").arg(qs(recipe->title)), [&](AnimState& s) {
-        if (s.file.clips.empty()) return false;
-        return animed::applyMotionRecipe(s.file.clips[size_t(s.clip)], path, id, p, &err);
+    const NodePath l_vPath = m_oState.m_vNode;
+    std::string l_strErr;
+    const bool l_bOk = f_Edit(tr("Recipe: %1").arg(f_Qs(l_pRecipe->m_strTitle)), [&](AnimState& l_oS) {
+        if (l_oS.m_oFile.m_vClips.empty()) return false;
+        return animed::f_ApplyMotionRecipe(l_oS.m_oFile.m_vClips[size_t(l_oS.m_iClip)], l_vPath, l_strId, l_oP, &l_strErr);
     });
-    if (!ok && !err.empty()) emit message(tr("Motion recipe: %1").arg(qs(err)));
-    return ok;
+    if (!l_bOk && !l_strErr.empty()) emit f_Message(tr("Motion recipe: %1").arg(f_Qs(l_strErr)));
+    return l_bOk;
 }
 
-bool AnimDocument::meshGridOf(const Node& n, int& cols, int& rows) const
+bool AnimDocument::f_MeshGridOf(const Node& l_oN, int& l_iCols, int& l_iRows) const
 {
-    const toms::AtlasRegion* r = findSprite(toms::anim::spriteAt(n, m_time));
-    if (!r) return false;
-    if (n.hasMeshGrid()) {
-        cols = n.meshGrid[0];
-        rows = n.meshGrid[1];
+    const toms::AtlasRegion* l_pR = f_FindSprite(toms::anim::f_SpriteAt(l_oN, m_fTime));
+    if (!l_pR) return false;
+    if (l_oN.f_HasMeshGrid()) {
+        l_iCols = l_oN.m_arrMeshGrid[0];
+        l_iRows = l_oN.m_arrMeshGrid[1];
     } else {   // 8-pixel cells
-        cols = std::max(1, (r->w + toms::anim::kMeshCell - 1) / toms::anim::kMeshCell);
-        rows = std::max(1, (r->h + toms::anim::kMeshCell - 1) / toms::anim::kMeshCell);
+        l_iCols = std::max(1, (l_pR->m_iW + toms::anim::g_iMeshCell - 1) / toms::anim::g_iMeshCell);
+        l_iRows = std::max(1, (l_pR->m_iH + toms::anim::g_iMeshCell - 1) / toms::anim::g_iMeshCell);
     }
     return true;
 }
 
-bool AnimDocument::setMeshGrid(int cols, int rows)
+bool AnimDocument::f_SetMeshGrid(int l_iCols, int l_iRows)
 {
-    cols = std::clamp(cols, 0, toms::anim::kMaxMeshGrid);
-    rows = std::clamp(rows, 0, toms::anim::kMaxMeshGrid);
-    if (cols == 0 || rows == 0) cols = rows = 0;
-    return editSelected(tr("Mesh grid"), [&](Node& n) {
-        n.meshGrid[0] = cols;
-        n.meshGrid[1] = rows;
+    l_iCols = std::clamp(l_iCols, 0, toms::anim::g_iMaxMeshGrid);
+    l_iRows = std::clamp(l_iRows, 0, toms::anim::g_iMaxMeshGrid);
+    if (l_iCols == 0 || l_iRows == 0) l_iCols = l_iRows = 0;
+    return f_EditSelected(tr("Mesh grid"), [&](Node& l_oN) {
+        l_oN.m_arrMeshGrid[0] = l_iCols;
+        l_oN.m_arrMeshGrid[1] = l_iRows;
     });
 }
 
-QString AnimDocument::copyNodeText(const NodePath& path) const
+QString AnimDocument::f_CopyNodeText(const NodePath& l_vPath) const
 {
-    const toms::anim::Clip* c = clip();
-    const Node* n = c ? animed::nodeAt(c->root, path) : nullptr;
-    return n ? qs(animed::nodeClipboardText(*n)) : QString();
+    const toms::anim::Clip* l_pC = f_Clip();
+    const Node* l_pN = l_pC ? animed::f_NodeAt(l_pC->m_oRoot, l_vPath) : nullptr;
+    return l_pN ? f_Qs(animed::f_NodeClipboardText(*l_pN)) : QString();
 }
 
-bool AnimDocument::pasteNode(const NodePath& parent, int index, const QString& text)
+bool AnimDocument::f_PasteNode(const NodePath& l_vParent, int l_iIndex, const QString& l_oText)
 {
-    Node node;
-    std::string err;
-    if (!animed::nodeFromClipboardText(u8(text), node, &err)) {
-        emit message(tr("Paste: %1").arg(qs(err)));
+    Node l_oNode;
+    std::string l_strErr;
+    if (!animed::f_NodeFromClipboardText(f_U8(l_oText), l_oNode, &l_strErr)) {
+        emit f_Message(tr("Paste: %1").arg(f_Qs(l_strErr)));
         return false;
     }
-    return edit(tr("Paste node"), [&](AnimState& s) {
-        if (s.file.clips.empty()) return false;
-        Node& root = s.file.clips[size_t(s.clip)].root;
-        Node* p = nodeAt(root, parent);
-        if (!p) return false;
-        animed::renameForPaste(root, node);
-        const int at = index < 0 || index > int(p->children.size()) ? int(p->children.size()) : index;
-        p->children.insert(p->children.begin() + at, std::move(node));
-        s.node = parent;
-        s.node.push_back(at);
+    return f_Edit(tr("Paste node"), [&](AnimState& l_oS) {
+        if (l_oS.m_oFile.m_vClips.empty()) return false;
+        Node& l_oRoot = l_oS.m_oFile.m_vClips[size_t(l_oS.m_iClip)].m_oRoot;
+        Node* l_pP = f_NodeAt(l_oRoot, l_vParent);
+        if (!l_pP) return false;
+        animed::f_RenameForPaste(l_oRoot, l_oNode);
+        const int l_iAt = l_iIndex < 0 || l_iIndex > int(l_pP->m_vChildren.size()) ? int(l_pP->m_vChildren.size()) : l_iIndex;
+        l_pP->m_vChildren.insert(l_pP->m_vChildren.begin() + l_iAt, std::move(l_oNode));
+        l_oS.m_vNode = l_vParent;
+        l_oS.m_vNode.push_back(l_iAt);
         return true;
     });
 }
 
-bool AnimDocument::renameNode(const NodePath& path, const QString& name)
+bool AnimDocument::f_RenameNode(const NodePath& l_vPath, const QString& l_oName)
 {
-    const QString n = name.trimmed();
-    if (n.isEmpty()) return false;
-    return editNode(path, tr("Rename node"), [&](Node& node) { node.name = u8(n); });
+    const QString l_oN = l_oName.trimmed();
+    if (l_oN.isEmpty()) return false;
+    return f_EditNode(l_vPath, tr("Rename node"), [&](Node& l_oNode) { l_oNode.m_strName = f_U8(l_oN); });
 }
 
-bool AnimDocument::moveNode(const NodePath& from, const NodePath& toParent, int index)
+bool AnimDocument::f_MoveNode(const NodePath& l_vFrom, const NodePath& l_vToParent, int l_iIndex)
 {
-    if (from.empty()) return false;
-    if (toParent.size() >= from.size() && std::equal(from.begin(), from.end(), toParent.begin())) {
-        emit message(tr("A node cannot be moved into itself."));
+    if (l_vFrom.empty()) return false;
+    if (l_vToParent.size() >= l_vFrom.size() && std::equal(l_vFrom.begin(), l_vFrom.end(), l_vToParent.begin())) {
+        emit f_Message(tr("A node cannot be moved into itself."));
         return false;
     }
-    return edit(tr("Move node"), [&](AnimState& s) {
-        if (s.file.clips.empty()) return false;
-        Node& root = s.file.clips[size_t(s.clip)].root;
-        const NodePath fromParent(from.begin(), from.end() - 1);
-        Node* fp = nodeAt(root, fromParent);
-        if (!fp || from.back() >= int(fp->children.size()) || !nodeAt(root, toParent)) return false;
-        Node moving = std::move(fp->children[size_t(from.back())]);
-        fp->children.erase(fp->children.begin() + from.back());
-        NodePath tp = toParent;
-        const size_t d = fromParent.size();
-        if (tp.size() > d && std::equal(fromParent.begin(), fromParent.end(), tp.begin()) && tp[d] > from.back()) tp[d]--;
-        if (tp == fromParent && index > from.back()) index--;
-        Node* np = nodeAt(root, tp);
-        index = std::clamp(index, 0, int(np->children.size()));
-        np->children.insert(np->children.begin() + index, std::move(moving));
-        s.node = tp;
-        s.node.push_back(index);
+    return f_Edit(tr("Move node"), [&](AnimState& l_oS) {
+        if (l_oS.m_oFile.m_vClips.empty()) return false;
+        Node& l_oRoot = l_oS.m_oFile.m_vClips[size_t(l_oS.m_iClip)].m_oRoot;
+        const NodePath l_vFromParent(l_vFrom.begin(), l_vFrom.end() - 1);
+        Node* l_pFp = f_NodeAt(l_oRoot, l_vFromParent);
+        if (!l_pFp || l_vFrom.back() >= int(l_pFp->m_vChildren.size()) || !f_NodeAt(l_oRoot, l_vToParent)) return false;
+        Node l_oMoving = std::move(l_pFp->m_vChildren[size_t(l_vFrom.back())]);
+        l_pFp->m_vChildren.erase(l_pFp->m_vChildren.begin() + l_vFrom.back());
+        NodePath l_vTp = l_vToParent;
+        const size_t l_nD = l_vFromParent.size();
+        if (l_vTp.size() > l_nD && std::equal(l_vFromParent.begin(), l_vFromParent.end(), l_vTp.begin()) && l_vTp[l_nD] > l_vFrom.back()) l_vTp[l_nD]--;
+        if (l_vTp == l_vFromParent && l_iIndex > l_vFrom.back()) l_iIndex--;
+        Node* l_pNp = f_NodeAt(l_oRoot, l_vTp);
+        l_iIndex = std::clamp(l_iIndex, 0, int(l_pNp->m_vChildren.size()));
+        l_pNp->m_vChildren.insert(l_pNp->m_vChildren.begin() + l_iIndex, std::move(l_oMoving));
+        l_oS.m_vNode = l_vTp;
+        l_oS.m_vNode.push_back(l_iIndex);
         return true;
     });
 }
 
-bool AnimDocument::addClip(const QString& name)
+bool AnimDocument::f_AddClip(const QString& l_oName)
 {
-    return edit(tr("Add clip"), [&](AnimState& s) {
-        Clip c;
-        c.name = u8(uniqueClipName(s.file, name));
-        c.root.name = "root";
-        s.file.clips.push_back(c);
-        s.clip = int(s.file.clips.size()) - 1;
-        s.node.clear();
+    return f_Edit(tr("Add clip"), [&](AnimState& l_oS) {
+        Clip l_oC;
+        l_oC.m_strName = f_U8(f_UniqueClipName(l_oS.m_oFile, l_oName));
+        l_oC.m_oRoot.m_strName = "root";
+        l_oS.m_oFile.m_vClips.push_back(l_oC);
+        l_oS.m_iClip = int(l_oS.m_oFile.m_vClips.size()) - 1;
+        l_oS.m_vNode.clear();
         return true;
     });
 }
 
-bool AnimDocument::duplicateClip(int index)
+bool AnimDocument::f_DuplicateClip(int l_iIndex)
 {
-    return edit(tr("Duplicate clip"), [&](AnimState& s) {
-        if (index < 0 || index >= int(s.file.clips.size())) return false;
-        Clip c = s.file.clips[size_t(index)];
-        c.name = u8(uniqueClipName(s.file, qs(c.name)));
-        s.file.clips.insert(s.file.clips.begin() + index + 1, c);
-        s.clip = index + 1;
-        s.node.clear();
+    return f_Edit(tr("Duplicate clip"), [&](AnimState& l_oS) {
+        if (l_iIndex < 0 || l_iIndex >= int(l_oS.m_oFile.m_vClips.size())) return false;
+        Clip l_oC = l_oS.m_oFile.m_vClips[size_t(l_iIndex)];
+        l_oC.m_strName = f_U8(f_UniqueClipName(l_oS.m_oFile, f_Qs(l_oC.m_strName)));
+        l_oS.m_oFile.m_vClips.insert(l_oS.m_oFile.m_vClips.begin() + l_iIndex + 1, l_oC);
+        l_oS.m_iClip = l_iIndex + 1;
+        l_oS.m_vNode.clear();
         return true;
     });
 }
 
-bool AnimDocument::renameClip(int index, const QString& name)
+bool AnimDocument::f_RenameClip(int l_iIndex, const QString& l_oName)
 {
-    const QString n = name.trimmed();
-    if (n.isEmpty() || index < 0 || index >= int(m_state.file.clips.size())) return false;
-    const Clip* other = m_state.file.find(u8(n));
-    if (other && other != &m_state.file.clips[size_t(index)]) {
-        emit message(tr("There is already a clip called '%1'.").arg(n));
+    const QString l_oN = l_oName.trimmed();
+    if (l_oN.isEmpty() || l_iIndex < 0 || l_iIndex >= int(m_oState.m_oFile.m_vClips.size())) return false;
+    const Clip* l_pOther = m_oState.m_oFile.f_Find(f_U8(l_oN));
+    if (l_pOther && l_pOther != &m_oState.m_oFile.m_vClips[size_t(l_iIndex)]) {
+        emit f_Message(tr("There is already a clip called '%1'.").arg(l_oN));
         return false;
     }
-    return edit(tr("Rename clip"), [&](AnimState& s) {
-        s.file.clips[size_t(index)].name = u8(n);
+    return f_Edit(tr("Rename clip"), [&](AnimState& l_oS) {
+        l_oS.m_oFile.m_vClips[size_t(l_iIndex)].m_strName = f_U8(l_oN);
         return true;
     });
 }
 
-bool AnimDocument::deleteClip(int index)
+bool AnimDocument::f_DeleteClip(int l_iIndex)
 {
-    if (m_state.file.clips.size() <= 1) {
-        emit message(tr("A file keeps at least one clip."));
+    if (m_oState.m_oFile.m_vClips.size() <= 1) {
+        emit f_Message(tr("A file keeps at least one clip."));
         return false;
     }
-    return edit(tr("Delete clip"), [&](AnimState& s) {
-        if (index < 0 || index >= int(s.file.clips.size())) return false;
-        s.file.clips.erase(s.file.clips.begin() + index);
-        if (index < s.clip) s.clip--;   // another clip: the current one stays current
-        else if (index == s.clip) {
-            s.clip = std::min(index, int(s.file.clips.size()) - 1);
-            s.node.clear();
+    return f_Edit(tr("Delete clip"), [&](AnimState& l_oS) {
+        if (l_iIndex < 0 || l_iIndex >= int(l_oS.m_oFile.m_vClips.size())) return false;
+        l_oS.m_oFile.m_vClips.erase(l_oS.m_oFile.m_vClips.begin() + l_iIndex);
+        if (l_iIndex < l_oS.m_iClip) l_oS.m_iClip--;   // another clip: the current one stays current
+        else if (l_iIndex == l_oS.m_iClip) {
+            l_oS.m_iClip = std::min(l_iIndex, int(l_oS.m_oFile.m_vClips.size()) - 1);
+            l_oS.m_vNode.clear();
         }
         return true;
     });

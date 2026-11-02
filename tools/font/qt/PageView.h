@@ -10,27 +10,27 @@
 class PageView : public QWidget {
     Q_OBJECT
 public:
-    explicit PageView(QWidget* parent = nullptr);
+    explicit PageView(QWidget* l_pParent = nullptr);
 
     // rects: one per glyph, in page pixels (an empty rect for a glyph with no picture, a space).
-    void setPage(const QImage& page, const QVector<QRect>& rects);
-    void setHighlight(int glyph);              // -1: none
-    int highlight() const { return highlight_; }
+    void f_SetPage(const QImage& l_oPage, const QVector<QRect>& l_oRects);
+    void f_SetHighlight(int l_iGlyph);              // -1: none
+    int f_Highlight() const { return m_iHighlight; }
     // The glyph under a point in page pixels, or -1.
-    int glyphAt(const QPoint& pagePos) const;
+    int f_GlyphAt(const QPoint& l_oPagePos) const;
 
 signals:
-    void glyphClicked(int glyph);
+    void f_GlyphClicked(int l_iGlyph);
 
 protected:
     void paintEvent(QPaintEvent*) override;
-    void mousePressEvent(QMouseEvent* e) override;
+    void mousePressEvent(QMouseEvent* l_pE) override;
     QSize sizeHint() const override { return {480, 220}; }
 
 private:
-    QRectF target() const;                     // where the page is drawn in the widget
+    QRectF f_Target() const;                     // where the page is drawn in the widget
 
-    QImage page_;
-    QVector<QRect> rects_;
-    int highlight_ = -1;
+    QImage m_oPage;
+    QVector<QRect> m_oRects;
+    int m_iHighlight = -1;
 };

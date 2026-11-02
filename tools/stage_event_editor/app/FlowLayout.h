@@ -7,22 +7,22 @@
 
 class FlowLayout : public QLayout {
 public:
-    explicit FlowLayout(QWidget* parent = nullptr, int spacing = 4);
+    explicit FlowLayout(QWidget* l_pParent = nullptr, int l_iSpacing = 4);
     ~FlowLayout() override;
 
-    void addItem(QLayoutItem* item) override { m_items.append(item); }
-    int count() const override { return int(m_items.size()); }
-    QLayoutItem* itemAt(int i) const override { return m_items.value(i); }
-    QLayoutItem* takeAt(int i) override { return i >= 0 && i < m_items.size() ? m_items.takeAt(i) : nullptr; }
+    void addItem(QLayoutItem* l_pItem) override { m_oItems.append(l_pItem); }
+    int count() const override { return int(m_oItems.size()); }
+    QLayoutItem* itemAt(int l_iI) const override { return m_oItems.value(l_iI); }
+    QLayoutItem* takeAt(int l_iI) override { return l_iI >= 0 && l_iI < m_oItems.size() ? m_oItems.takeAt(l_iI) : nullptr; }
     Qt::Orientations expandingDirections() const override { return {}; }
     bool hasHeightForWidth() const override { return true; }
-    int heightForWidth(int width) const override { return doLayout(QRect(0, 0, width, 0), true); }
-    void setGeometry(const QRect& r) override { QLayout::setGeometry(r); doLayout(r, false); }
+    int heightForWidth(int l_iWidth) const override { return f_DoLayout(QRect(0, 0, l_iWidth, 0), true); }
+    void setGeometry(const QRect& l_oR) override { QLayout::setGeometry(l_oR); f_DoLayout(l_oR, false); }
     QSize sizeHint() const override { return minimumSize(); }
     QSize minimumSize() const override;
 
 private:
-    int doLayout(const QRect& r, bool testOnly) const;
-    QList<QLayoutItem*> m_items;
-    int m_spacing;
+    int f_DoLayout(const QRect& l_oR, bool l_bTestOnly) const;
+    QList<QLayoutItem*> m_oItems;
+    int m_iSpacing;
 };

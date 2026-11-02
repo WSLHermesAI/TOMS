@@ -12,16 +12,16 @@ class ParticleMainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit ParticleMainWindow(QWidget* parent = nullptr);
-    ParticleEditor* editor() const { return m_editor; }
-    void setDarkTheme(bool dark);
+    explicit ParticleMainWindow(QWidget* l_pParent = nullptr);
+    ParticleEditor* f_Editor() const { return m_pEditor; }
+    void f_SetDarkTheme(bool l_bDark);
 
 protected:
-    void closeEvent(QCloseEvent* e) override;
+    void closeEvent(QCloseEvent* l_pE) override;
 
 private:
-    void updateTitle();
+    void f_UpdateTitle();
 
-    ParticleEditor* m_editor;
-    QAction *m_darkAct, *m_lightAct;
+    ParticleEditor* m_pEditor;
+    QAction *m_pDarkAct, *m_pLightAct;
 };

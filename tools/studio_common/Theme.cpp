@@ -18,135 +18,135 @@ namespace {
 // The mouse wheel changes a value field (spin box, combo box, slider) only once it has focus (clicked or tabbed
 // into). Over an unfocused field the wheel scrolls the panel around it (its scroll area) instead of changing a value
 // as the pointer passes over it. Every widget of the application, every editor (installed by apply()).
-bool isValueField(QObject* o) {
+bool f_IsValueField(QObject* l_pO) {
     // A scroll bar is a slider too, but it is how a panel scrolls: it always takes the wheel (a scroll area hands it
     // the wheel; treating it as a field would hand the wheel back, round and round).
-    if (qobject_cast<QScrollBar*>(o)) return false;
-    return qobject_cast<QAbstractSpinBox*>(o) || qobject_cast<QComboBox*>(o) || qobject_cast<QAbstractSlider*>(o);
+    if (qobject_cast<QScrollBar*>(l_pO)) return false;
+    return qobject_cast<QAbstractSpinBox*>(l_pO) || qobject_cast<QComboBox*>(l_pO) || qobject_cast<QAbstractSlider*>(l_pO);
 }
 // The field the wheel is over: the widget itself, or the field whose line edit it is (a spin box's, an editable combo
 // box's). Not further up: an open combo box's list is a popup whose parents lead to the combo box, and it must scroll.
-QWidget* valueField(QObject* o) {
-    if (isValueField(o)) return static_cast<QWidget*>(o);
-    auto* w = qobject_cast<QWidget*>(o);
-    if (w && !w->isWindow() && isValueField(w->parentWidget())) return w->parentWidget();
+QWidget* f_ValueField(QObject* l_pO) {
+    if (f_IsValueField(l_pO)) return static_cast<QWidget*>(l_pO);
+    auto* l_pW = qobject_cast<QWidget*>(l_pO);
+    if (l_pW && !l_pW->isWindow() && f_IsValueField(l_pW->parentWidget())) return l_pW->parentWidget();
     return nullptr;
 }
 
 class WheelNeedsFocus : public QObject {
 public:
     using QObject::QObject;
-    bool eventFilter(QObject* o, QEvent* e) override {
-        if (e->type() == QEvent::Polish) {
+    bool eventFilter(QObject* l_pO, QEvent* l_pE) override {
+        if (l_pE->type() == QEvent::Polish) {
             // Qt gives these fields focus on a wheel turn (Qt::WheelFocus), before any filter sees it: click or Tab only.
-            if (QWidget* f = valueField(o); f == o && (f->focusPolicy() & Qt::WheelFocus) == Qt::WheelFocus)
-                f->setFocusPolicy(Qt::StrongFocus);
-        } else if (e->type() == QEvent::Wheel) {
-            QWidget* f = valueField(o);
-            if (f && !f->hasFocus() && !(QApplication::focusWidget() && f->isAncestorOf(QApplication::focusWidget()))) {
+            if (QWidget* l_pF = f_ValueField(l_pO); l_pF == l_pO && (l_pF->focusPolicy() & Qt::WheelFocus) == Qt::WheelFocus)
+                l_pF->setFocusPolicy(Qt::StrongFocus);
+        } else if (l_pE->type() == QEvent::Wheel) {
+            QWidget* l_pF = f_ValueField(l_pO);
+            if (l_pF && !l_pF->hasFocus() && !(QApplication::focusWidget() && l_pF->isAncestorOf(QApplication::focusWidget()))) {
                 // The panel the field sits in scrolls: the nearest scroll area around it (a Properties dock), through
                 // its viewport. A field in no scroll area: the wheel does nothing.
-                QAbstractScrollArea* area = nullptr;
-                for (QWidget* up = f->parentWidget(); up && !area; up = up->isWindow() ? nullptr : up->parentWidget())
-                    area = qobject_cast<QAbstractScrollArea*>(up);
-                if (area && area->viewport()) {
-                    auto* w = static_cast<QWheelEvent*>(e);
-                    QWheelEvent copy(area->viewport()->mapFromGlobal(w->globalPosition()), w->globalPosition(), w->pixelDelta(),
-                                     w->angleDelta(), w->buttons(), w->modifiers(), w->phase(), w->inverted(), w->source());
-                    QApplication::sendEvent(area->viewport(), &copy);
+                QAbstractScrollArea* l_pArea = nullptr;
+                for (QWidget* l_pUp = l_pF->parentWidget(); l_pUp && !l_pArea; l_pUp = l_pUp->isWindow() ? nullptr : l_pUp->parentWidget())
+                    l_pArea = qobject_cast<QAbstractScrollArea*>(l_pUp);
+                if (l_pArea && l_pArea->viewport()) {
+                    auto* l_pW = static_cast<QWheelEvent*>(l_pE);
+                    QWheelEvent l_oCopy(l_pArea->viewport()->mapFromGlobal(l_pW->globalPosition()), l_pW->globalPosition(), l_pW->pixelDelta(),
+                                     l_pW->angleDelta(), l_pW->buttons(), l_pW->modifiers(), l_pW->phase(), l_pW->inverted(), l_pW->source());
+                    QApplication::sendEvent(l_pArea->viewport(), &l_oCopy);
                 }
                 return true;
             }
         }
-        return QObject::eventFilter(o, e);
+        return QObject::eventFilter(l_pO, l_pE);
     }
 };
 
 
-Mode g_mode = Mode::Dark;
+Mode g_eMode = Mode::Dark;
 
-Colors makeColors(Mode m)
+Colors f_MakeColors(Mode l_eM)
 {
-    Colors c;
-    const bool dark = m == Mode::Dark;
-    c.canvasBackground = dark ? QColor(0x1b, 0x1c, 0x1f) : QColor(0xd4, 0xd7, 0xdc);
+    Colors l_oC;
+    const bool l_bDark = l_eM == Mode::Dark;
+    l_oC.m_oCanvasBackground = l_bDark ? QColor(0x1b, 0x1c, 0x1f) : QColor(0xd4, 0xd7, 0xdc);
     // The checkerboard stays mid-grey in both themes: sprites must read the same everywhere.
-    c.checkerLight = dark ? QColor(0x4a, 0x4c, 0x50) : QColor(0xfa, 0xfa, 0xfa);
-    c.checkerDark = dark ? QColor(0x3a, 0x3c, 0x40) : QColor(0xe4, 0xe6, 0xe9);
-    c.pageBorder = dark ? QColor(0x70, 0x74, 0x7a) : QColor(0x8a, 0x8f, 0x96);
-    c.imageOutline = dark ? QColor(0x4f, 0x9c, 0xff, 170) : QColor(0x1f, 0x6f, 0xe0, 170);
-    c.childOutline = dark ? QColor(0xff, 0xa8, 0x3a, 210) : QColor(0xd9, 0x7a, 0x00, 220);
-    c.aliasOutline = QColor(0xb0, 0x7c, 0xff, 200);
-    c.selection = dark ? QColor(0x3d, 0xd6, 0xff) : QColor(0x00, 0x8c, 0xd6);
-    c.hover = dark ? QColor(0xff, 0xff, 0xff, 40) : QColor(0x00, 0x00, 0x00, 28);
-    c.pin = QColor(0xf0, 0x4a, 0x5a);
-    c.pivot = QColor(0x50, 0xe0, 0x7a);
-    c.slice = QColor(0xff, 0x5c, 0xc8);
-    c.label = QColor(0xf2, 0xf2, 0xf2);
-    c.labelBackground = QColor(0x10, 0x10, 0x12, 200);
-    c.grid = dark ? QColor(0xff, 0xff, 0xff, 22) : QColor(0x00, 0x00, 0x00, 24);
-    c.gridAxis = dark ? QColor(0xff, 0xff, 0xff, 90) : QColor(0x00, 0x00, 0x00, 90);
-    c.gizmoX = QColor(0xf0, 0x55, 0x5a);
-    c.gizmoY = QColor(0x5c, 0xd0, 0x6e);
-    c.gizmoRotate = QColor(0x4f, 0x9c, 0xff);
-    c.key = QColor(0xf2, 0xc1, 0x3d);
-    return c;
+    l_oC.m_oCheckerLight = l_bDark ? QColor(0x4a, 0x4c, 0x50) : QColor(0xfa, 0xfa, 0xfa);
+    l_oC.m_oCheckerDark = l_bDark ? QColor(0x3a, 0x3c, 0x40) : QColor(0xe4, 0xe6, 0xe9);
+    l_oC.m_oPageBorder = l_bDark ? QColor(0x70, 0x74, 0x7a) : QColor(0x8a, 0x8f, 0x96);
+    l_oC.m_oImageOutline = l_bDark ? QColor(0x4f, 0x9c, 0xff, 170) : QColor(0x1f, 0x6f, 0xe0, 170);
+    l_oC.m_oChildOutline = l_bDark ? QColor(0xff, 0xa8, 0x3a, 210) : QColor(0xd9, 0x7a, 0x00, 220);
+    l_oC.m_oAliasOutline = QColor(0xb0, 0x7c, 0xff, 200);
+    l_oC.m_oSelection = l_bDark ? QColor(0x3d, 0xd6, 0xff) : QColor(0x00, 0x8c, 0xd6);
+    l_oC.m_oHover = l_bDark ? QColor(0xff, 0xff, 0xff, 40) : QColor(0x00, 0x00, 0x00, 28);
+    l_oC.m_oPin = QColor(0xf0, 0x4a, 0x5a);
+    l_oC.m_oPivot = QColor(0x50, 0xe0, 0x7a);
+    l_oC.m_oSlice = QColor(0xff, 0x5c, 0xc8);
+    l_oC.m_oLabel = QColor(0xf2, 0xf2, 0xf2);
+    l_oC.m_oLabelBackground = QColor(0x10, 0x10, 0x12, 200);
+    l_oC.m_oGrid = l_bDark ? QColor(0xff, 0xff, 0xff, 22) : QColor(0x00, 0x00, 0x00, 24);
+    l_oC.m_oGridAxis = l_bDark ? QColor(0xff, 0xff, 0xff, 90) : QColor(0x00, 0x00, 0x00, 90);
+    l_oC.m_oGizmoX = QColor(0xf0, 0x55, 0x5a);
+    l_oC.m_oGizmoY = QColor(0x5c, 0xd0, 0x6e);
+    l_oC.m_oGizmoRotate = QColor(0x4f, 0x9c, 0xff);
+    l_oC.m_oKey = QColor(0xf2, 0xc1, 0x3d);
+    return l_oC;
 }
 
-Colors g_colors = makeColors(Mode::Dark);
+Colors g_oColors = f_MakeColors(Mode::Dark);
 
-QPalette darkPalette()
+QPalette f_DarkPalette()
 {
-    QPalette p;
-    const QColor window(0x2b, 0x2d, 0x30), base(0x1f, 0x20, 0x23), text(0xdf, 0xe1, 0xe5);
-    const QColor disabled(0x7a, 0x7d, 0x82), highlight(0x2f, 0x6f, 0xd6);
-    p.setColor(QPalette::Window, window);
-    p.setColor(QPalette::WindowText, text);
-    p.setColor(QPalette::Base, base);
-    p.setColor(QPalette::AlternateBase, QColor(0x26, 0x28, 0x2b));
-    p.setColor(QPalette::ToolTipBase, QColor(0x3a, 0x3d, 0x41));
-    p.setColor(QPalette::ToolTipText, text);
-    p.setColor(QPalette::PlaceholderText, disabled);
-    p.setColor(QPalette::Text, text);
-    p.setColor(QPalette::Button, QColor(0x35, 0x37, 0x3b));
-    p.setColor(QPalette::ButtonText, text);
-    p.setColor(QPalette::BrightText, QColor(0xff, 0x55, 0x55));
-    p.setColor(QPalette::Light, QColor(0x45, 0x48, 0x4c));
-    p.setColor(QPalette::Midlight, QColor(0x3a, 0x3c, 0x40));
-    p.setColor(QPalette::Mid, QColor(0x25, 0x27, 0x2a));
-    p.setColor(QPalette::Dark, QColor(0x1a, 0x1b, 0x1d));
-    p.setColor(QPalette::Shadow, QColor(0x0e, 0x0e, 0x10));
-    p.setColor(QPalette::Highlight, highlight);
-    p.setColor(QPalette::HighlightedText, Qt::white);
-    p.setColor(QPalette::Link, QColor(0x6c, 0xa8, 0xff));
-    p.setColor(QPalette::Disabled, QPalette::Text, disabled);
-    p.setColor(QPalette::Disabled, QPalette::WindowText, disabled);
-    p.setColor(QPalette::Disabled, QPalette::ButtonText, disabled);
-    p.setColor(QPalette::Disabled, QPalette::Highlight, QColor(0x45, 0x48, 0x4c));
-    return p;
+    QPalette l_oP;
+    const QColor l_oWindow(0x2b, 0x2d, 0x30), l_oBase(0x1f, 0x20, 0x23), l_oText(0xdf, 0xe1, 0xe5);
+    const QColor l_oDisabled(0x7a, 0x7d, 0x82), l_oHighlight(0x2f, 0x6f, 0xd6);
+    l_oP.setColor(QPalette::Window, l_oWindow);
+    l_oP.setColor(QPalette::WindowText, l_oText);
+    l_oP.setColor(QPalette::Base, l_oBase);
+    l_oP.setColor(QPalette::AlternateBase, QColor(0x26, 0x28, 0x2b));
+    l_oP.setColor(QPalette::ToolTipBase, QColor(0x3a, 0x3d, 0x41));
+    l_oP.setColor(QPalette::ToolTipText, l_oText);
+    l_oP.setColor(QPalette::PlaceholderText, l_oDisabled);
+    l_oP.setColor(QPalette::Text, l_oText);
+    l_oP.setColor(QPalette::Button, QColor(0x35, 0x37, 0x3b));
+    l_oP.setColor(QPalette::ButtonText, l_oText);
+    l_oP.setColor(QPalette::BrightText, QColor(0xff, 0x55, 0x55));
+    l_oP.setColor(QPalette::Light, QColor(0x45, 0x48, 0x4c));
+    l_oP.setColor(QPalette::Midlight, QColor(0x3a, 0x3c, 0x40));
+    l_oP.setColor(QPalette::Mid, QColor(0x25, 0x27, 0x2a));
+    l_oP.setColor(QPalette::Dark, QColor(0x1a, 0x1b, 0x1d));
+    l_oP.setColor(QPalette::Shadow, QColor(0x0e, 0x0e, 0x10));
+    l_oP.setColor(QPalette::Highlight, l_oHighlight);
+    l_oP.setColor(QPalette::HighlightedText, Qt::white);
+    l_oP.setColor(QPalette::Link, QColor(0x6c, 0xa8, 0xff));
+    l_oP.setColor(QPalette::Disabled, QPalette::Text, l_oDisabled);
+    l_oP.setColor(QPalette::Disabled, QPalette::WindowText, l_oDisabled);
+    l_oP.setColor(QPalette::Disabled, QPalette::ButtonText, l_oDisabled);
+    l_oP.setColor(QPalette::Disabled, QPalette::Highlight, QColor(0x45, 0x48, 0x4c));
+    return l_oP;
 }
 
 }  // namespace
 
-void apply(Mode m)
+void f_Apply(Mode l_eM)
 {
-    static WheelNeedsFocus* wheel = nullptr;   // once per application
-    if (!wheel && qApp) {
-        wheel = new WheelNeedsFocus(qApp);
-        qApp->installEventFilter(wheel);
+    static WheelNeedsFocus* l_pWheel = nullptr;   // once per application
+    if (!l_pWheel && qApp) {
+        l_pWheel = new WheelNeedsFocus(qApp);
+        qApp->installEventFilter(l_pWheel);
     }
-    g_mode = m;
-    g_colors = makeColors(m);
+    g_eMode = l_eM;
+    g_oColors = f_MakeColors(l_eM);
     // Fusion draws consistently with any palette; the native Windows style ignores dark palettes.
-    if (QStyle* fusion = QStyleFactory::create(QStringLiteral("Fusion")))
-        QApplication::setStyle(fusion);
-    QPalette p = m == Mode::Dark ? darkPalette() : QApplication::style()->standardPalette();
-    if (m == Mode::Light) p.setColor(QPalette::Highlight, QColor(0x2f, 0x6f, 0xd6));
-    QApplication::setPalette(p);
+    if (QStyle* l_pFusion = QStyleFactory::create(QStringLiteral("Fusion")))
+        QApplication::setStyle(l_pFusion);
+    QPalette l_oP = l_eM == Mode::Dark ? f_DarkPalette() : QApplication::style()->standardPalette();
+    if (l_eM == Mode::Light) l_oP.setColor(QPalette::Highlight, QColor(0x2f, 0x6f, 0xd6));
+    QApplication::setPalette(l_oP);
 }
 
-Mode mode() { return g_mode; }
+Mode f_Mode() { return g_eMode; }
 
-const Colors& colors() { return g_colors; }
+const Colors& f_Colors() { return g_oColors; }
 
 }  // namespace Theme

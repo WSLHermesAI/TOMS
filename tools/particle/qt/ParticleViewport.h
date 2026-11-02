@@ -33,75 +33,75 @@ public:
     enum class Background { Checker, Dark, Light, Image };
 
     // gameRenderer: draw with the game's renderer (bgfx); false = QPainter.
-    ParticleViewport(ParticleDocument* doc, ParticlePlayback* playback, bool gameRenderer, QWidget* parent = nullptr);
+    ParticleViewport(ParticleDocument* l_pDoc, ParticlePlayback* l_pPlayback, bool l_bGameRenderer, QWidget* l_pParent = nullptr);
     ~ParticleViewport() override;
 
-    void setBackground(Background b);
-    Background background() const { return m_background; }
-    bool setBackgroundImage(const QString& path);   // also switches to Background::Image
-    QString backgroundImagePath() const { return m_bgPath; }
-    void setGridVisible(bool on) { m_grid = on; update(); }
-    bool gridVisible() const { return m_grid; }
-    void setGizmoVisible(bool on) { m_gizmo = on; update(); }
+    void f_SetBackground(Background l_eB);
+    Background f_Background() const { return m_eBackground; }
+    bool f_SetBackgroundImage(const QString& l_oPath);   // also switches to Background::Image
+    QString f_BackgroundImagePath() const { return m_oBgPath; }
+    void f_SetGridVisible(bool l_bOn) { m_bGrid = l_bOn; update(); }
+    bool f_GridVisible() const { return m_bGrid; }
+    void f_SetGizmoVisible(bool l_bOn) { m_bGizmo = l_bOn; update(); }
 
     // Paints quads as the game would, `view` mapping content to the painter (the headless
     // renderer uses this too).
-    static void drawQuads(QPainter& p, const std::vector<Quad>& quads, const ParticleDocument& doc, const QTransform& view);
-    static int batches(const std::vector<Quad>& quads);   // texture / blend changes + 1
+    static void f_DrawQuads(QPainter& l_oP, const std::vector<Quad>& l_vQuads, const ParticleDocument& l_oDoc, const QTransform& l_oView);
+    static int f_Batches(const std::vector<Quad>& l_vQuads);   // texture / blend changes + 1
 
     // For the selftest: where a gizmo handle is now (widget coordinates; invalid = not shown).
     enum class Handle { None, Move, Direction, SpreadA, SpreadB, Shape };
-    QPointF handlePos(Handle h) const;
-    const std::vector<Quad>& lastQuads() const { return m_quads; }
+    QPointF f_HandlePos(Handle l_eH) const;
+    const std::vector<Quad>& f_LastQuads() const { return m_vQuads; }
 
 signals:
-    void spritesDropped(const QStringList& refs, const QPointF& effectPos);
+    void f_SpritesDropped(const QStringList& l_oRefs, const QPointF& l_oEffectPos);
 
 protected:
     // A 320x240 stage around the origin: fits at 2x, near the game's pixel scale. Effects may spill out.
-    QSize contentSize() const override { return QSize(320, 240); }
-    QRectF contentRect() const override { return QRectF(-160, -120, 320, 240); }
-    void paintContent(QPainter& p) override;
+    QSize f_ContentSize() const override { return QSize(320, 240); }
+    QRectF f_ContentRect() const override { return QRectF(-160, -120, 320, 240); }
+    void f_PaintContent(QPainter& l_oP) override;
     // The game renderer (ParticleViewportGpu.cpp): background, grid, origin and the effect, as the game draws it.
-    void paintGameScene(const GameScene& s) override;
-    void gameRendererChanged(toms::next::BgfxRenderer* ren) override;
-    bool drawCheckerboard() const override { return m_background == Background::Checker; }
-    void mousePressEvent(QMouseEvent* e) override;
-    void mouseMoveEvent(QMouseEvent* e) override;
-    void mouseReleaseEvent(QMouseEvent* e) override;
-    void mouseDoubleClickEvent(QMouseEvent* e) override;
-    void dragEnterEvent(QDragEnterEvent* e) override;
-    void dragMoveEvent(QDragMoveEvent* e) override;
-    void dropEvent(QDropEvent* e) override;
+    void f_PaintGameScene(const GameScene& l_oS) override;
+    void f_GameRendererChanged(toms::next::BgfxRenderer* l_pRen) override;
+    bool f_DrawCheckerboard() const override { return m_eBackground == Background::Checker; }
+    void mousePressEvent(QMouseEvent* l_pE) override;
+    void mouseMoveEvent(QMouseEvent* l_pE) override;
+    void mouseReleaseEvent(QMouseEvent* l_pE) override;
+    void mouseDoubleClickEvent(QMouseEvent* l_pE) override;
+    void dragEnterEvent(QDragEnterEvent* l_pE) override;
+    void dragMoveEvent(QDragMoveEvent* l_pE) override;
+    void dropEvent(QDropEvent* l_pE) override;
 
 private:
-    QPointF emitterPos() const;          // content coordinates of the selected emitter
-    Handle hitHandle(const QPointF& widgetPos) const;
-    void dragTo(const QPointF& contentPos, Qt::KeyboardModifiers mods);
-    void paintGizmo(QPainter& p);
-    QString statusText() const;
+    QPointF f_EmitterPos() const;          // content coordinates of the selected emitter
+    Handle f_HitHandle(const QPointF& l_oWidgetPos) const;
+    void f_DragTo(const QPointF& l_oContentPos, Qt::KeyboardModifiers l_oMods);
+    void f_PaintGizmo(QPainter& l_oP);
+    QString f_StatusText() const;
 
-    ParticleDocument* m_doc;
-    ParticlePlayback* m_play;
-    std::vector<Quad> m_quads;
-    Background m_background = Background::Checker;
-    QImage m_bgImage;
-    QString m_bgPath;
-    bool m_grid = false;
-    bool m_gizmo = true;
+    ParticleDocument* m_pDoc;
+    ParticlePlayback* m_pPlay;
+    std::vector<Quad> m_vQuads;
+    Background m_eBackground = Background::Checker;
+    QImage m_oBgImage;
+    QString m_oBgPath;
+    bool m_bGrid = false;
+    bool m_bGizmo = true;
 
-    Handle m_drag = Handle::None;
-    Handle m_hover = Handle::None;
-    bool m_movingOrigin = false;
-    bool m_pressedEmpty = false;
-    QPointF m_pressWidget, m_pressContent, m_startOffset, m_startOrigin;
-    int m_gesture = 0;                   // merge key serial: one undo step per drag
+    Handle m_eDrag = Handle::None;
+    Handle m_eHover = Handle::None;
+    bool m_bMovingOrigin = false;
+    bool m_bPressedEmpty = false;
+    QPointF m_oPressWidget, m_oPressContent, m_oStartOffset, m_oStartOrigin;
+    int m_iGesture = 0;                   // merge key serial: one undo step per drag
 
     // Game renderer mode.
-    GameTextures m_tex;                  // the document's atlases and the background picture, as GPU textures
-    bool m_atlasDirty = true;
-    QPointer<ParticlePlayback> m_playGuard;   // the playback may go first at shutdown
-    QElapsedTimer m_fpsClock;
-    int m_fpsFrames = 0;
-    double m_fps = 0;
+    GameTextures m_oTex;                  // the document's atlases and the background picture, as GPU textures
+    bool m_bAtlasDirty = true;
+    QPointer<ParticlePlayback> m_oPlayGuard;   // the playback may go first at shutdown
+    QElapsedTimer m_oFpsClock;
+    int m_iFpsFrames = 0;
+    double m_dFps = 0;
 };

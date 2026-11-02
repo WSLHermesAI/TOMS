@@ -14,65 +14,65 @@ namespace fs = std::filesystem;
 
 namespace stage {
 
-const char* const kLangs[6] = {"zh_TW", "en", "zh_CN", "ja", "ko", "es"};
+const char* const g_arrLangs[6] = {"zh_TW", "en", "zh_CN", "ja", "ko", "es"};
 
 namespace {
 
-bool startsWith(const std::string& s, const char* p) { return s.rfind(p, 0) == 0; }
-bool endsWith(const std::string& s, const std::string& p) { return s.size() >= p.size() && s.compare(s.size() - p.size(), p.size(), p) == 0; }
+bool f_StartsWith(const std::string& l_strS, const char* l_pszP) { return l_strS.rfind(l_pszP, 0) == 0; }
+bool f_EndsWith(const std::string& l_strS, const std::string& l_strP) { return l_strS.size() >= l_strP.size() && l_strS.compare(l_strS.size() - l_strP.size(), l_strP.size(), l_strP) == 0; }
 
-std::vector<std::string> names(const std::string& dir, const std::string& prefix, const std::string& suffix) {
-    std::vector<std::string> out;
-    std::error_code ec;
-    for (const auto& e : fs::directory_iterator(fs::u8path(dir), ec)) {
-        if (!e.is_regular_file(ec)) continue;
-        const std::string n = e.path().filename().u8string();
-        if (startsWith(n, prefix.c_str()) && endsWith(n, suffix)) out.push_back(n);
+std::vector<std::string> f_Names(const std::string& l_strDir, const std::string& l_strPrefix, const std::string& l_strSuffix) {
+    std::vector<std::string> l_vOut;
+    std::error_code l_oEc;
+    for (const auto& l_oE : fs::directory_iterator(fs::u8path(l_strDir), l_oEc)) {
+        if (!l_oE.is_regular_file(l_oEc)) continue;
+        const std::string l_strN = l_oE.path().filename().u8string();
+        if (f_StartsWith(l_strN, l_strPrefix.c_str()) && f_EndsWith(l_strN, l_strSuffix)) l_vOut.push_back(l_strN);
     }
-    std::sort(out.begin(), out.end());
-    return out;
+    std::sort(l_vOut.begin(), l_vOut.end());
+    return l_vOut;
 }
 
-const Json* member(const Json& j, const char* key) {
-    if (!j.is_object()) return nullptr;
-    auto it = j.find(key);
-    return it == j.end() ? nullptr : &*it;
+const Json* f_Member(const Json& l_jJ, const char* l_pszKey) {
+    if (!l_jJ.is_object()) return nullptr;
+    auto l_oIt = l_jJ.find(l_pszKey);
+    return l_oIt == l_jJ.end() ? nullptr : &*l_oIt;
 }
-std::string str(const Json& j, const char* key, const std::string& def = std::string()) {
-    const Json* v = member(j, key);
-    return v && v->is_string() ? v->get<std::string>() : def;
+std::string f_Str(const Json& l_jJ, const char* l_pszKey, const std::string& l_strDef = std::string()) {
+    const Json* l_pV = f_Member(l_jJ, l_pszKey);
+    return l_pV && l_pV->is_string() ? l_pV->get<std::string>() : l_strDef;
 }
-Json noUnderscore(const Json& o) {
-    Json out = Json::object();
-    if (o.is_object())
-        for (auto& [k, v] : o.items()) if (!startsWith(k, "_")) out[k] = v;
-    return out;
+Json f_NoUnderscore(const Json& l_jO) {
+    Json l_jOut = Json::object();
+    if (l_jO.is_object())
+        for (auto& [l_strK, l_jV] : l_jO.items()) if (!f_StartsWith(l_strK, "_")) l_jOut[l_strK] = l_jV;
+    return l_jOut;
 }
-bool contains(const Json& arr, const std::string& s) {
-    return arr.is_array() && std::find(arr.begin(), arr.end(), Json(s)) != arr.end();
+bool f_Contains(const Json& l_jArr, const std::string& l_strS) {
+    return l_jArr.is_array() && std::find(l_jArr.begin(), l_jArr.end(), Json(l_strS)) != l_jArr.end();
 }
-bool contains(const std::vector<std::string>& v, const std::string& s) { return std::find(v.begin(), v.end(), s) != v.end(); }
-double num(const Json& v) {   // JS +v, with true -> 1
-    if (v.is_boolean()) return v.get<bool>() ? 1 : 0;
-    if (v.is_number()) return v.get<double>();
-    if (v.is_string()) { try { return std::stod(v.get<std::string>()); } catch (...) { return 0; } }
+bool f_Contains(const std::vector<std::string>& l_vV, const std::string& l_strS) { return std::find(l_vV.begin(), l_vV.end(), l_strS) != l_vV.end(); }
+double f_Num(const Json& l_jV) {   // JS +v, with true -> 1
+    if (l_jV.is_boolean()) return l_jV.get<bool>() ? 1 : 0;
+    if (l_jV.is_number()) return l_jV.get<double>();
+    if (l_jV.is_string()) { try { return std::stod(l_jV.get<std::string>()); } catch (...) { return 0; } }
     return 0;
 }
-bool truthy(const Json& v) {
-    if (v.is_null()) return false;
-    if (v.is_boolean()) return v.get<bool>();
-    if (v.is_string()) return !v.get_ref<const std::string&>().empty();
-    if (v.is_number()) return v.get<double>() != 0;
+bool f_Truthy(const Json& l_jV) {
+    if (l_jV.is_null()) return false;
+    if (l_jV.is_boolean()) return l_jV.get<bool>();
+    if (l_jV.is_string()) return !l_jV.get_ref<const std::string&>().empty();
+    if (l_jV.is_number()) return l_jV.get<double>() != 0;
     return true;
 }
-std::string join(const std::vector<std::string>& v, const char* sep) {
-    std::string out;
-    for (size_t i = 0; i < v.size(); i++) out += (i ? sep : "") + v[i];
-    return out;
+std::string f_Join(const std::vector<std::string>& l_vV, const char* l_pszSep) {
+    std::string l_strOut;
+    for (size_t l_nI = 0; l_nI < l_vV.size(); l_nI++) l_strOut += (l_nI ? l_pszSep : "") + l_vV[l_nI];
+    return l_strOut;
 }
 
-const Json& defaultKinds() {
-    static const Json k = Json::parse(R"({
+const Json& f_DefaultKinds() {
+    static const Json l_jK = Json::parse(R"({
   "relic":         { "name": { "zh_TW": "遺物", "en": "Relic" },          "color": "#e0b44c" },
   "whisper":       { "name": { "zh_TW": "低語", "en": "Whisper" },        "color": "#a98bff" },
   "cache":         { "name": { "zh_TW": "補給", "en": "Cache" },          "color": "#3fc2b5" },
@@ -81,1207 +81,1207 @@ const Json& defaultKinds() {
   "merchant_echo": { "name": { "zh_TW": "商人殘影", "en": "Merchant echo" }, "color": "#ff8fc7" },
   "memory_shard":  { "name": { "zh_TW": "記憶碎片", "en": "Memory shard" }, "color": "#74c6ff" }
 })");
-    return k;
+    return l_jK;
 }
 
 // event logic in the editor's shape (logicFrom)
-void logicInto(Json& out, const Json& e) {
-    const Json* rq = member(e, "requires");
-    Json req = Json::array(), reqRaw = nullptr;
-    if (rq && rq->is_object() && rq->contains("type")) req.push_back(*rq);
-    else if (rq && rq->is_object() && rq->contains("all") && (*rq)["all"].is_array()
-             && std::all_of((*rq)["all"].begin(), (*rq)["all"].end(), [](const Json& x) { return x.is_object() && x.contains("type"); }))
-        req = (*rq)["all"];
-    else if (rq && !rq->is_null()) reqRaw = *rq;
-    out["trigger"] = member(e, "trigger") ? e["trigger"] : Json{{"on", "step"}};
-    out["req"] = req;
-    out["reqRaw"] = reqRaw;
-    out["actions"] = member(e, "actions") && e["actions"].is_array() ? e["actions"] : Json::array();
-    out["next"] = member(e, "next") && e["next"].is_array() ? e["next"] : Json::array();
-    out["dialogue"] = str(e, "dialogue");
-    out["afterDialogue"] = str(e, "afterDialogue");
-    out["topicOrder"] = member(e, "topicOrder") && e["topicOrder"].is_number_integer() ? e["topicOrder"] : Json();
-    out["once"] = !(member(e, "once") && e["once"] == false);
-    out["maxTimes"] = member(e, "maxTimes") && e["maxTimes"].is_number_integer() ? e["maxTimes"].get<int>() : 0;
+void f_LogicInto(Json& l_jOut, const Json& l_jE) {
+    const Json* l_pRq = f_Member(l_jE, "requires");
+    Json l_jReq = Json::array(), l_jReqRaw = nullptr;
+    if (l_pRq && l_pRq->is_object() && l_pRq->contains("type")) l_jReq.push_back(*l_pRq);
+    else if (l_pRq && l_pRq->is_object() && l_pRq->contains("all") && (*l_pRq)["all"].is_array()
+             && std::all_of((*l_pRq)["all"].begin(), (*l_pRq)["all"].end(), [](const Json& l_jX) { return l_jX.is_object() && l_jX.contains("type"); }))
+        l_jReq = (*l_pRq)["all"];
+    else if (l_pRq && !l_pRq->is_null()) l_jReqRaw = *l_pRq;
+    l_jOut["trigger"] = f_Member(l_jE, "trigger") ? l_jE["trigger"] : Json{{"on", "step"}};
+    l_jOut["req"] = l_jReq;
+    l_jOut["reqRaw"] = l_jReqRaw;
+    l_jOut["actions"] = f_Member(l_jE, "actions") && l_jE["actions"].is_array() ? l_jE["actions"] : Json::array();
+    l_jOut["next"] = f_Member(l_jE, "next") && l_jE["next"].is_array() ? l_jE["next"] : Json::array();
+    l_jOut["dialogue"] = f_Str(l_jE, "dialogue");
+    l_jOut["afterDialogue"] = f_Str(l_jE, "afterDialogue");
+    l_jOut["topicOrder"] = f_Member(l_jE, "topicOrder") && l_jE["topicOrder"].is_number_integer() ? l_jE["topicOrder"] : Json();
+    l_jOut["once"] = !(f_Member(l_jE, "once") && l_jE["once"] == false);
+    l_jOut["maxTimes"] = f_Member(l_jE, "maxTimes") && l_jE["maxTimes"].is_number_integer() ? l_jE["maxTimes"].get<int>() : 0;
 }
 
 // the line of a record in flags.json / counters.json (hand-aligned: each record on one line)
-std::string oneLine(const Json& v) {
-    if (v.is_array()) {
-        std::string s = "[";
-        for (size_t i = 0; i < v.size(); i++) s += (i ? ", " : "") + oneLine(v[i]);
-        return s + "]";
+std::string f_OneLine(const Json& l_jV) {
+    if (l_jV.is_array()) {
+        std::string l_strS = "[";
+        for (size_t l_nI = 0; l_nI < l_jV.size(); l_nI++) l_strS += (l_nI ? ", " : "") + f_OneLine(l_jV[l_nI]);
+        return l_strS + "]";
     }
-    if (v.is_object()) {
-        if (v.empty()) return "{}";
-        std::string s = "{ ";
-        bool first = true;
-        for (auto& [k, x] : v.items()) { s += (first ? "" : ", ") + Json(k).dump() + ": " + oneLine(x); first = false; }
-        return s + " }";
+    if (l_jV.is_object()) {
+        if (l_jV.empty()) return "{}";
+        std::string l_strS = "{ ";
+        bool l_bFirst = true;
+        for (auto& [l_strK, l_jX] : l_jV.items()) { l_strS += (l_bFirst ? "" : ", ") + Json(l_strK).dump() + ": " + f_OneLine(l_jX); l_bFirst = false; }
+        return l_strS + " }";
     }
-    return v.dump(-1, ' ', false, Json::error_handler_t::replace);
+    return l_jV.dump(-1, ' ', false, Json::error_handler_t::replace);
 }
 
-std::string asText(const Json& obj, const std::string* before) {
-    std::string s = obj.dump(2, ' ', false, Json::error_handler_t::replace) + "\n";
-    if (before && before->find("\r\n") != std::string::npos) {
-        std::string out;
-        for (char c : s) { if (c == '\n') out += '\r'; out += c; }
-        return out;
+std::string f_AsText(const Json& l_jObj, const std::string* l_pBefore) {
+    std::string l_strS = l_jObj.dump(2, ' ', false, Json::error_handler_t::replace) + "\n";
+    if (l_pBefore && l_pBefore->find("\r\n") != std::string::npos) {
+        std::string l_strOut;
+        for (char l_cC : l_strS) { if (l_cC == '\n') l_strOut += '\r'; l_strOut += l_cC; }
+        return l_strOut;
     }
-    return s;
+    return l_strS;
 }
 
-std::string regexEscape(const std::string& s) {
-    static const std::string special = R"(.^$|()[]{}*+?\)";
-    std::string out;
-    for (char c : s) { if (special.find(c) != std::string::npos) out += '\\'; out += c; }
-    return out;
+std::string f_RegexEscape(const std::string& l_strS) {
+    static const std::string l_strSpecial = R"(.^$|()[]{}*+?\)";
+    std::string l_strOut;
+    for (char l_cC : l_strS) { if (l_strSpecial.find(l_cC) != std::string::npos) l_strOut += '\\'; l_strOut += l_cC; }
+    return l_strOut;
 }
 
 // flags.json / counters.json: replace the changed entries' one-line records, add new ones before the closing brace;
 // "" when the file cannot be patched that way (the caller rewrites it)
-std::string patchEntries(const std::string& raw, const Json& obj, const std::vector<std::pair<std::string, Json>>& changes) {
-    const std::string nl = raw.find("\r\n") != std::string::npos ? "\r\n" : "\n";
-    std::vector<std::string> lines;
+std::string f_PatchEntries(const std::string& l_strRaw, const Json& l_jObj, const std::vector<std::pair<std::string, Json>>& l_vChanges) {
+    const std::string l_strNl = l_strRaw.find("\r\n") != std::string::npos ? "\r\n" : "\n";
+    std::vector<std::string> l_vLines;
     {
-        std::string cur;
-        for (size_t i = 0; i < raw.size(); i++) {
-            if (raw[i] == '\r' && i + 1 < raw.size() && raw[i + 1] == '\n') continue;
-            if (raw[i] == '\n') { lines.push_back(cur); cur.clear(); } else cur += raw[i];
+        std::string l_strCur;
+        for (size_t l_nI = 0; l_nI < l_strRaw.size(); l_nI++) {
+            if (l_strRaw[l_nI] == '\r' && l_nI + 1 < l_strRaw.size() && l_strRaw[l_nI + 1] == '\n') continue;
+            if (l_strRaw[l_nI] == '\n') { l_vLines.push_back(l_strCur); l_strCur.clear(); } else l_strCur += l_strRaw[l_nI];
         }
-        lines.push_back(cur);
+        l_vLines.push_back(l_strCur);
     }
-    auto trim = [](const std::string& s) { size_t a = s.find_first_not_of(" \t"), b = s.find_last_not_of(" \t"); return a == std::string::npos ? std::string() : s.substr(a, b - a + 1); };
-    for (const auto& [k, v] : changes) {
-        const std::regex re("^(\\s*)" + regexEscape(Json(k).dump()) + "\\s*:\\s*\\{.*\\}(,?)\\s*$");
-        bool done = false;
-        for (std::string& l : lines) {
-            std::smatch m;
-            if (std::regex_match(l, m, re)) { l = m[1].str() + Json(k).dump() + ": " + oneLine(v) + m[2].str(); done = true; break; }
+    auto l_fnTrim = [](const std::string& l_strS) { size_t l_nA = l_strS.find_first_not_of(" \t"), l_nB = l_strS.find_last_not_of(" \t"); return l_nA == std::string::npos ? std::string() : l_strS.substr(l_nA, l_nB - l_nA + 1); };
+    for (const auto& [l_strK, l_jV] : l_vChanges) {
+        const std::regex l_oRe("^(\\s*)" + f_RegexEscape(Json(l_strK).dump()) + "\\s*:\\s*\\{.*\\}(,?)\\s*$");
+        bool l_bDone = false;
+        for (std::string& l_strL : l_vLines) {
+            std::smatch l_oM;
+            if (std::regex_match(l_strL, l_oM, l_oRe)) { l_strL = l_oM[1].str() + Json(l_strK).dump() + ": " + f_OneLine(l_jV) + l_oM[2].str(); l_bDone = true; break; }
         }
-        if (done) continue;
-        if (obj.contains(k)) return std::string();   // a multi-line record: rewrite the file
-        int j = (int)lines.size() - 1;
-        while (j >= 0 && trim(lines[(size_t)j]) != "}") j--;
-        int p = j - 1;
-        while (p >= 0 && trim(lines[(size_t)p]).empty()) p--;
-        if (j < 0 || p < 0) return std::string();
-        const std::string lp = trim(lines[(size_t)p]);
-        if (!lp.empty() && lp.back() != ',' && lp.back() != '{' && lp.back() != '[') lines[(size_t)p] += ",";
-        lines.insert(lines.begin() + j, "  " + Json(k).dump() + ": " + oneLine(v));
+        if (l_bDone) continue;
+        if (l_jObj.contains(l_strK)) return std::string();   // a multi-line record: rewrite the file
+        int l_iJ = (int)l_vLines.size() - 1;
+        while (l_iJ >= 0 && l_fnTrim(l_vLines[(size_t)l_iJ]) != "}") l_iJ--;
+        int l_iP = l_iJ - 1;
+        while (l_iP >= 0 && l_fnTrim(l_vLines[(size_t)l_iP]).empty()) l_iP--;
+        if (l_iJ < 0 || l_iP < 0) return std::string();
+        const std::string l_strLp = l_fnTrim(l_vLines[(size_t)l_iP]);
+        if (!l_strLp.empty() && l_strLp.back() != ',' && l_strLp.back() != '{' && l_strLp.back() != '[') l_vLines[(size_t)l_iP] += ",";
+        l_vLines.insert(l_vLines.begin() + l_iJ, "  " + Json(l_strK).dump() + ": " + f_OneLine(l_jV));
     }
-    std::string out;
-    for (size_t i = 0; i < lines.size(); i++) out += (i ? nl : "") + lines[i];
-    Json want = obj;
-    for (const auto& [k, v] : changes) want[k] = v;
-    const Json got = Json::parse(out, nullptr, false);
-    return !got.is_discarded() && got == want ? out : std::string();
+    std::string l_strOut;
+    for (size_t l_nI = 0; l_nI < l_vLines.size(); l_nI++) l_strOut += (l_nI ? l_strNl : "") + l_vLines[l_nI];
+    Json l_jWant = l_jObj;
+    for (const auto& [l_strK, l_jV] : l_vChanges) l_jWant[l_strK] = l_jV;
+    const Json l_jGot = Json::parse(l_strOut, nullptr, false);
+    return !l_jGot.is_discarded() && l_jGot == l_jWant ? l_strOut : std::string();
 }
 
 }  // namespace
 
 // ---- rules and condition rows --------------------------------------------------------------------------------------
 
-const std::vector<std::pair<std::string, int>>& evRules() {
-    static const std::vector<std::pair<std::string, int>> r = {
+const std::vector<std::pair<std::string, int>>& f_EvRules() {
+    static const std::vector<std::pair<std::string, int>> l_vR = {
         {"missing_event", 0}, {"missing_text", 0}, {"orphan", 1}, {"no_kind", 1}, {"placeholder", 1}, {"missing_floor", 0},
         {"bad_unlock", 0}, {"unreachable", 1}, {"unknown_kind", 1}, {"unknown_ref", 0}, {"bad_next", 0}, {"never_fires", 1},
         {"never_active", 1}, {"logic_cycle", 1}, {"unused_var", 2}, {"untranslated", 2}, {"missing_title", 1},
         {"missing_dialogue", 0}, {"bad_dialogue", 0}};
-    return r;
+    return l_vR;
 }
 
-int ruleSev(const std::string& rule) {
-    for (const auto& [k, s] : evRules()) if (k == rule) return s;
+int f_RuleSev(const std::string& l_strRule) {
+    for (const auto& [l_strK, l_iS] : f_EvRules()) if (l_strK == l_strRule) return l_iS;
     return 1;
 }
 
-std::string leafRef(const Json& l) {
-    const std::string t = str(l, "type");
-    if (t == "varAtLeast" || t == "varEquals") return "var:" + str(l, "var");
-    if (t == "counterAtLeast") return "counter:" + str(l, "counter");
-    if (t == "runFlagSet") { const std::string f = str(l, "flag"); return startsWith(f, "event_") ? "event:" + f.substr(6) : "flag:" + f; }
+std::string f_LeafRef(const Json& l_jL) {
+    const std::string l_strT = f_Str(l_jL, "type");
+    if (l_strT == "varAtLeast" || l_strT == "varEquals") return "var:" + f_Str(l_jL, "var");
+    if (l_strT == "counterAtLeast") return "counter:" + f_Str(l_jL, "counter");
+    if (l_strT == "runFlagSet") { const std::string l_strF = f_Str(l_jL, "flag"); return f_StartsWith(l_strF, "event_") ? "event:" + l_strF.substr(6) : "flag:" + l_strF; }
     return std::string();
 }
 
-std::string actRef(const Json& a) {
-    const std::string t = str(a, "type");
-    if (t == "addVar" || t == "setVar") return "var:" + str(a, "var");
-    if (t == "addCounter") return "counter:" + str(a, "counter");
-    if (t == "setFlag") return "flag:" + str(a, "flag");
-    if (t == "give") return "item:" + str(a, "itemId");
+std::string f_ActRef(const Json& l_jA) {
+    const std::string l_strT = f_Str(l_jA, "type");
+    if (l_strT == "addVar" || l_strT == "setVar") return "var:" + f_Str(l_jA, "var");
+    if (l_strT == "addCounter") return "counter:" + f_Str(l_jA, "counter");
+    if (l_strT == "setFlag") return "flag:" + f_Str(l_jA, "flag");
+    if (l_strT == "give") return "item:" + f_Str(l_jA, "itemId");
     return std::string();
 }
 
-std::vector<std::pair<std::string, std::string>> opsFor(const std::string& k) {
-    if (k == "var") return {{">=", "≥"}, {"=", "="}};
-    if (k == "flag") return {{"set", "opSet"}, {"not", "opNotSet"}};
-    if (k == "event") return {{"set", "opDone"}, {"not", "opNotDone"}};
-    if (k == "floor") return {{"set", "opCleared"}, {"not", "opNotCleared"}};
-    if (k == "stage") return {{"set", "opOnStage"}, {"not", "opNotOnStage"}};
-    if (k == "choice") return {{"=", "opChose"}};
+std::vector<std::pair<std::string, std::string>> f_OpsFor(const std::string& l_strK) {
+    if (l_strK == "var") return {{">=", "≥"}, {"=", "="}};
+    if (l_strK == "flag") return {{"set", "opSet"}, {"not", "opNotSet"}};
+    if (l_strK == "event") return {{"set", "opDone"}, {"not", "opNotDone"}};
+    if (l_strK == "floor") return {{"set", "opCleared"}, {"not", "opNotCleared"}};
+    if (l_strK == "stage") return {{"set", "opOnStage"}, {"not", "opNotOnStage"}};
+    if (l_strK == "choice") return {{"=", "opChose"}};
     return {{">=", "≥"}};
 }
 
-CondRow leafToRow(const Json& l) {
-    CondRow r;
-    if (l.is_object() && l.contains("not") && l["not"].is_object()) {
-        CondRow in = leafToRow(l["not"]);
-        const std::string k = in.subj.substr(0, in.subj.find(':'));
-        for (const auto& [op, lb] : opsFor(k)) { (void)lb; if (op == "not" && !in.subj.empty()) { in.op = "not"; return in; } }
+CondRow f_LeafToRow(const Json& l_jL) {
+    CondRow l_oR;
+    if (l_jL.is_object() && l_jL.contains("not") && l_jL["not"].is_object()) {
+        CondRow l_oIn = f_LeafToRow(l_jL["not"]);
+        const std::string l_strK = l_oIn.m_strSubj.substr(0, l_oIn.m_strSubj.find(':'));
+        for (const auto& [l_strOp, l_strLb] : f_OpsFor(l_strK)) { (void)l_strLb; if (l_strOp == "not" && !l_oIn.m_strSubj.empty()) { l_oIn.m_strOp = "not"; return l_oIn; } }
         return CondRow{};
     }
-    const std::string t = str(l, "type");
-    auto v = [&](const char* key, const Json& def) { return l.contains(key) ? l[key] : def; };
-    const auto varNum = [](const Json& x) { return Json(x.is_boolean() ? (x.get<bool>() ? 1 : 0) : (int)num(x)); };
-    if (t == "varAtLeast") return {"var:" + str(l, "var"), ">=", varNum(v("value", 0))};
-    if (t == "varEquals") return {"var:" + str(l, "var"), "=", varNum(v("value", 0))};
-    if (t == "counterAtLeast") return {"counter:" + str(l, "counter"), ">=", v("min", 0)};
-    if (t == "runFlagSet") {
-        const std::string f = str(l, "flag");
-        return startsWith(f, "event_") ? CondRow{"event:" + f.substr(6), "set", Json()} : CondRow{"flag:" + f, "set", Json()};
+    const std::string l_strT = f_Str(l_jL, "type");
+    auto l_fnV = [&](const char* l_pszKey, const Json& l_jDef) { return l_jL.contains(l_pszKey) ? l_jL[l_pszKey] : l_jDef; };
+    const auto l_fnVarNum = [](const Json& l_jX) { return Json(l_jX.is_boolean() ? (l_jX.get<bool>() ? 1 : 0) : (int)f_Num(l_jX)); };
+    if (l_strT == "varAtLeast") return {"var:" + f_Str(l_jL, "var"), ">=", l_fnVarNum(l_fnV("value", 0))};
+    if (l_strT == "varEquals") return {"var:" + f_Str(l_jL, "var"), "=", l_fnVarNum(l_fnV("value", 0))};
+    if (l_strT == "counterAtLeast") return {"counter:" + f_Str(l_jL, "counter"), ">=", l_fnV("min", 0)};
+    if (l_strT == "runFlagSet") {
+        const std::string l_strF = f_Str(l_jL, "flag");
+        return f_StartsWith(l_strF, "event_") ? CondRow{"event:" + l_strF.substr(6), "set", Json()} : CondRow{"flag:" + l_strF, "set", Json()};
     }
-    if (t == "talkCountAtLeast") return {"talks:" + str(l, "npc"), ">=", v("value", 0)};
-    if (t == "statAtLeast") return {"stat:" + str(l, "stat"), ">=", v("value", 0)};
-    if (t == "stageCleared") return {"floor:" + str(l, "stageId"), "set", Json()};
-    if (t == "itemHeld") return {"item:" + str(l, "itemId"), ">=", v("count", 1)};
-    if (t == "onStage") return {"stage:" + str(l, "stageId"), "set", Json()};
-    if (t == "choiceMade") return {"choice:" + str(l, "choiceId"), "=", v("optionId", "")};
-    return r;
+    if (l_strT == "talkCountAtLeast") return {"talks:" + f_Str(l_jL, "npc"), ">=", l_fnV("value", 0)};
+    if (l_strT == "statAtLeast") return {"stat:" + f_Str(l_jL, "stat"), ">=", l_fnV("value", 0)};
+    if (l_strT == "stageCleared") return {"floor:" + f_Str(l_jL, "stageId"), "set", Json()};
+    if (l_strT == "itemHeld") return {"item:" + f_Str(l_jL, "itemId"), ">=", l_fnV("count", 1)};
+    if (l_strT == "onStage") return {"stage:" + f_Str(l_jL, "stageId"), "set", Json()};
+    if (l_strT == "choiceMade") return {"choice:" + f_Str(l_jL, "choiceId"), "=", l_fnV("optionId", "")};
+    return l_oR;
 }
 
-Json rowToLeaf(const std::string& subj, const std::string& op, const Json& val) {
-    const size_t c = subj.find(':');
-    const std::string k = subj.substr(0, c), n = c == std::string::npos ? std::string() : subj.substr(c + 1);
-    const int v = val.is_number() ? (int)val.get<double>() : val.is_string() ? (int)num(val) : 0;
-    Json leaf;
-    if (k == "var") leaf = op == "=" ? Json{{"type", "varEquals"}, {"var", n}, {"value", v}} : Json{{"type", "varAtLeast"}, {"var", n}, {"value", v}};
-    else if (k == "counter") leaf = Json{{"type", "counterAtLeast"}, {"counter", n}, {"min", v}};
-    else if (k == "flag") leaf = Json{{"type", "runFlagSet"}, {"flag", n}};
-    else if (k == "event") leaf = Json{{"type", "runFlagSet"}, {"flag", "event_" + n}};
-    else if (k == "talks") leaf = Json{{"type", "talkCountAtLeast"}, {"npc", n}, {"value", v}};
-    else if (k == "stat") leaf = Json{{"type", "statAtLeast"}, {"stat", n}, {"value", v}};
-    else if (k == "floor") leaf = Json{{"type", "stageCleared"}, {"stageId", n}};
-    else if (k == "item") leaf = Json{{"type", "itemHeld"}, {"itemId", n}, {"count", std::max(1, v)}};
-    else if (k == "stage") leaf = Json{{"type", "onStage"}, {"stageId", n}};
-    else leaf = Json{{"type", "choiceMade"}, {"choiceId", n}, {"optionId", val.is_string() ? val.get<std::string>() : val.is_null() ? std::string() : val.dump()}};
-    return op == "not" ? Json{{"not", leaf}} : leaf;
+Json f_RowToLeaf(const std::string& l_strSubj, const std::string& l_strOp, const Json& l_jVal) {
+    const size_t l_nC = l_strSubj.find(':');
+    const std::string l_strK = l_strSubj.substr(0, l_nC), l_strN = l_nC == std::string::npos ? std::string() : l_strSubj.substr(l_nC + 1);
+    const int l_iV = l_jVal.is_number() ? (int)l_jVal.get<double>() : l_jVal.is_string() ? (int)f_Num(l_jVal) : 0;
+    Json l_jLeaf;
+    if (l_strK == "var") l_jLeaf = l_strOp == "=" ? Json{{"type", "varEquals"}, {"var", l_strN}, {"value", l_iV}} : Json{{"type", "varAtLeast"}, {"var", l_strN}, {"value", l_iV}};
+    else if (l_strK == "counter") l_jLeaf = Json{{"type", "counterAtLeast"}, {"counter", l_strN}, {"min", l_iV}};
+    else if (l_strK == "flag") l_jLeaf = Json{{"type", "runFlagSet"}, {"flag", l_strN}};
+    else if (l_strK == "event") l_jLeaf = Json{{"type", "runFlagSet"}, {"flag", "event_" + l_strN}};
+    else if (l_strK == "talks") l_jLeaf = Json{{"type", "talkCountAtLeast"}, {"npc", l_strN}, {"value", l_iV}};
+    else if (l_strK == "stat") l_jLeaf = Json{{"type", "statAtLeast"}, {"stat", l_strN}, {"value", l_iV}};
+    else if (l_strK == "floor") l_jLeaf = Json{{"type", "stageCleared"}, {"stageId", l_strN}};
+    else if (l_strK == "item") l_jLeaf = Json{{"type", "itemHeld"}, {"itemId", l_strN}, {"count", std::max(1, l_iV)}};
+    else if (l_strK == "stage") l_jLeaf = Json{{"type", "onStage"}, {"stageId", l_strN}};
+    else l_jLeaf = Json{{"type", "choiceMade"}, {"choiceId", l_strN}, {"optionId", l_jVal.is_string() ? l_jVal.get<std::string>() : l_jVal.is_null() ? std::string() : l_jVal.dump()}};
+    return l_strOp == "not" ? Json{{"not", l_jLeaf}} : l_jLeaf;
 }
 
-CondRows condToRows(const Json& c) {
-    CondRows r;
-    if (c.is_null()) return r;
-    auto rowable = [](const Json& x) { return x.is_object() && !leafToRow(x).subj.empty(); };
-    if (rowable(c)) { r.rows.push_back(c); return r; }
-    for (const char* m : {"all", "any"})
-        if (c.is_object() && c.contains(m) && c[m].is_array() && std::all_of(c[m].begin(), c[m].end(), rowable)) {
-            r.mode = m;
-            r.rows.assign(c[m].begin(), c[m].end());
-            return r;
+CondRows f_CondToRows(const Json& l_jC) {
+    CondRows l_oR;
+    if (l_jC.is_null()) return l_oR;
+    auto l_fnRowable = [](const Json& l_jX) { return l_jX.is_object() && !f_LeafToRow(l_jX).m_strSubj.empty(); };
+    if (l_fnRowable(l_jC)) { l_oR.m_vRows.push_back(l_jC); return l_oR; }
+    for (const char* l_pszM : {"all", "any"})
+        if (l_jC.is_object() && l_jC.contains(l_pszM) && l_jC[l_pszM].is_array() && std::all_of(l_jC[l_pszM].begin(), l_jC[l_pszM].end(), l_fnRowable)) {
+            l_oR.m_strMode = l_pszM;
+            l_oR.m_vRows.assign(l_jC[l_pszM].begin(), l_jC[l_pszM].end());
+            return l_oR;
         }
-    r.raw = true;
-    return r;
+    l_oR.m_bRaw = true;
+    return l_oR;
 }
 
-Json rowsToCond(const std::string& mode, const std::vector<Json>& rows) {
-    if (rows.empty()) return Json();
-    if (rows.size() == 1) return rows[0];
-    Json o = Json::object();
-    o[mode] = rows;
-    return o;
+Json f_RowsToCond(const std::string& l_strMode, const std::vector<Json>& l_vRows) {
+    if (l_vRows.empty()) return Json();
+    if (l_vRows.size() == 1) return l_vRows[0];
+    Json l_jO = Json::object();
+    l_jO[l_strMode] = l_vRows;
+    return l_jO;
 }
 
-Json makeAction(const std::string& type, const std::string& target, const Json& val) {
-    int n = 1;
-    if (val.is_number()) n = (int)val.get<double>();
-    else if (val.is_boolean()) n = val.get<bool>() ? 1 : 0;
-    else if (val.is_string()) { try { n = std::stoi(val.get<std::string>()); } catch (...) { n = 1; } }
-    if (type == "addVar") return Json{{"type", type}, {"var", target}, {"delta", n}};
-    if (type == "setVar") return Json{{"type", type}, {"var", target}, {"value", n}};
-    if (type == "addCounter") return Json{{"type", type}, {"counter", target}, {"delta", n}};
-    if (type == "setFlag") return Json{{"type", type}, {"flag", target}};
-    if (type == "addStat") return Json{{"type", type}, {"stat", target}, {"delta", n}};
-    if (type == "take") return Json{{"type", type}, {"itemId", target}};
-    return Json{{"type", "give"}, {"itemId", target}};
+Json f_MakeAction(const std::string& l_strType, const std::string& l_strTarget, const Json& l_jVal) {
+    int l_iN = 1;
+    if (l_jVal.is_number()) l_iN = (int)l_jVal.get<double>();
+    else if (l_jVal.is_boolean()) l_iN = l_jVal.get<bool>() ? 1 : 0;
+    else if (l_jVal.is_string()) { try { l_iN = std::stoi(l_jVal.get<std::string>()); } catch (...) { l_iN = 1; } }
+    if (l_strType == "addVar") return Json{{"type", l_strType}, {"var", l_strTarget}, {"delta", l_iN}};
+    if (l_strType == "setVar") return Json{{"type", l_strType}, {"var", l_strTarget}, {"value", l_iN}};
+    if (l_strType == "addCounter") return Json{{"type", l_strType}, {"counter", l_strTarget}, {"delta", l_iN}};
+    if (l_strType == "setFlag") return Json{{"type", l_strType}, {"flag", l_strTarget}};
+    if (l_strType == "addStat") return Json{{"type", l_strType}, {"stat", l_strTarget}, {"delta", l_iN}};
+    if (l_strType == "take") return Json{{"type", l_strType}, {"itemId", l_strTarget}};
+    return Json{{"type", "give"}, {"itemId", l_strTarget}};
 }
 
-std::string actTarget(const Json& a) {
-    for (const char* k : {"var", "counter", "flag", "stat", "itemId"})
-        if (a.contains(k) && a[k].is_string()) return a[k].get<std::string>();
+std::string f_ActTarget(const Json& l_jA) {
+    for (const char* l_pszK : {"var", "counter", "flag", "stat", "itemId"})
+        if (l_jA.contains(l_pszK) && l_jA[l_pszK].is_string()) return l_jA[l_pszK].get<std::string>();
     return std::string();
 }
 
-Json actValue(const Json& a) {
-    if (a.contains("delta")) return a["delta"];
-    if (a.contains("value")) return a["value"];
+Json f_ActValue(const Json& l_jA) {
+    if (l_jA.contains("delta")) return l_jA["delta"];
+    if (l_jA.contains("value")) return l_jA["value"];
     return Json("");
 }
 
-bool nameOk(const std::string& s, bool file) {
-    if (s.empty() || s.front() == ' ' || s.back() == ' ') return false;
-    for (unsigned char c : s) {
-        if (c < 0x20 || std::string("\"'<>&|\\/").find((char)c) != std::string::npos) return false;
-        if (file && std::string(":*?").find((char)c) != std::string::npos) return false;
+bool f_NameOk(const std::string& l_strS, bool l_bFile) {
+    if (l_strS.empty() || l_strS.front() == ' ' || l_strS.back() == ' ') return false;
+    for (unsigned char l_u8C : l_strS) {
+        if (l_u8C < 0x20 || std::string("\"'<>&|\\/").find((char)l_u8C) != std::string::npos) return false;
+        if (l_bFile && std::string(":*?").find((char)l_u8C) != std::string::npos) return false;
     }
     return true;
 }
 
-bool idOk(const std::string& s) {
-    return !s.empty() && std::all_of(s.begin(), s.end(), [](unsigned char c) { return std::isalnum(c) || c == '_' || c == '-'; });
+bool f_IdOk(const std::string& l_strS) {
+    return !l_strS.empty() && std::all_of(l_strS.begin(), l_strS.end(), [](unsigned char l_u8C) { return std::isalnum(l_u8C) || l_u8C == '_' || l_u8C == '-'; });
 }
 
 // ---- loading -------------------------------------------------------------------------------------------------------
 
-bool EventProject::load(const std::string& tomsRoot, std::string& err) {
-    root = tomsRoot;
-    while (!root.empty() && (root.back() == '/' || root.back() == '\\')) root.pop_back();
-    std::replace(root.begin(), root.end(), '\\', '/');
-    const std::string A = root + "/assets/data/";
-    Json pools = Json::array(), events = Json::array(), floors = Json::array();
-    Json j;
-    for (const std::string& name : names(A + "events", "pool_", ".json")) {
-        if (!readJson(A + "events/" + name, j, nullptr, &err)) return false;
-        const std::string pid = name.substr(0, name.size() - 5);
-        pools.push_back(pid);
-        if (const Json* evs = member(j, "events"); evs && evs->is_array())
-            for (const Json& e : *evs) {
-                const std::string id = str(e, "eventId");
-                Json rec = Json::object();
-                rec["id"] = id;
-                rec["kind"] = str(e, "kind");
-                rec["pool"] = pid;
-                rec["text"] = str(e, "text");
-                rec["title"] = str(e, "title", id + ".title");
-                rec["desc"] = str(e, "desc", id + ".desc");
-                if (e.contains("inLog")) rec["inLog"] = e["inLog"];
-                logicInto(rec, e);
-                events.push_back(rec);
+bool EventProject::f_Load(const std::string& l_strTomsRoot, std::string& l_strErr) {
+    m_strRoot = l_strTomsRoot;
+    while (!m_strRoot.empty() && (m_strRoot.back() == '/' || m_strRoot.back() == '\\')) m_strRoot.pop_back();
+    std::replace(m_strRoot.begin(), m_strRoot.end(), '\\', '/');
+    const std::string l_strA = m_strRoot + "/assets/data/";
+    Json l_jPools = Json::array(), l_jEvents = Json::array(), l_jFloors = Json::array();
+    Json l_jJ;
+    for (const std::string& l_strName : f_Names(l_strA + "events", "pool_", ".json")) {
+        if (!f_ReadJson(l_strA + "events/" + l_strName, l_jJ, nullptr, &l_strErr)) return false;
+        const std::string l_strPid = l_strName.substr(0, l_strName.size() - 5);
+        l_jPools.push_back(l_strPid);
+        if (const Json* l_pEvs = f_Member(l_jJ, "events"); l_pEvs && l_pEvs->is_array())
+            for (const Json& l_jE : *l_pEvs) {
+                const std::string l_strId = f_Str(l_jE, "eventId");
+                Json l_jRec = Json::object();
+                l_jRec["id"] = l_strId;
+                l_jRec["kind"] = f_Str(l_jE, "kind");
+                l_jRec["pool"] = l_strPid;
+                l_jRec["text"] = f_Str(l_jE, "text");
+                l_jRec["title"] = f_Str(l_jE, "title", l_strId + ".title");
+                l_jRec["desc"] = f_Str(l_jE, "desc", l_strId + ".desc");
+                if (l_jE.contains("inLog")) l_jRec["inLog"] = l_jE["inLog"];
+                f_LogicInto(l_jRec, l_jE);
+                l_jEvents.push_back(l_jRec);
             }
     }
-    std::map<std::string, std::string> prev;   // a floor without a stairs list: up to its next, down to the floor whose next it is
-    std::vector<Json> specs;
-    for (const std::string& name : names(A + "story/floors", "", ".json")) {
-        if (endsWith(name, ".stage.json")) continue;
-        Json d;
-        if (!readJson(A + "story/floors/" + name, d, nullptr, &err)) return false;
-        specs.push_back(d);
-        if (const std::string nx = str(d, "nextFloor"); !nx.empty()) prev[nx] = str(d, "id");
+    std::map<std::string, std::string> l_mapPrev;   // a floor without a stairs list: up to its next, down to the floor whose next it is
+    std::vector<Json> l_vSpecs;
+    for (const std::string& l_strName : f_Names(l_strA + "story/floors", "", ".json")) {
+        if (f_EndsWith(l_strName, ".stage.json")) continue;
+        Json l_jD;
+        if (!f_ReadJson(l_strA + "story/floors/" + l_strName, l_jD, nullptr, &l_strErr)) return false;
+        l_vSpecs.push_back(l_jD);
+        if (const std::string l_strNx = f_Str(l_jD, "nextFloor"); !l_strNx.empty()) l_mapPrev[l_strNx] = f_Str(l_jD, "id");
     }
-    for (const Json& d : specs) {
-        Json f = Json::object();
-        const std::string id = str(d, "id");
-        f["id"] = id;
-        f["act"] = str(d, "act");
-        f["role"] = str(d, "role", "normal");
-        f["events"] = Json::array();
-        if (const Json* evs = member(d, "events"); evs && evs->is_array())
-            for (const Json& x : *evs) f["events"].push_back(x);
-        const std::string nx = str(d, "nextFloor");
-        f["next"] = nx.empty() ? Json() : Json(nx);
-        const bool has = d.contains("stairs") && d["stairs"].is_array();
-        f["derived"] = !has;
-        if (has) f["stairs"] = d["stairs"];
+    for (const Json& l_jD : l_vSpecs) {
+        Json l_jF = Json::object();
+        const std::string l_strId = f_Str(l_jD, "id");
+        l_jF["id"] = l_strId;
+        l_jF["act"] = f_Str(l_jD, "act");
+        l_jF["role"] = f_Str(l_jD, "role", "normal");
+        l_jF["events"] = Json::array();
+        if (const Json* l_pEvs = f_Member(l_jD, "events"); l_pEvs && l_pEvs->is_array())
+            for (const Json& l_jX : *l_pEvs) l_jF["events"].push_back(l_jX);
+        const std::string l_strNx = f_Str(l_jD, "nextFloor");
+        l_jF["next"] = l_strNx.empty() ? Json() : Json(l_strNx);
+        const bool l_bHas = l_jD.contains("stairs") && l_jD["stairs"].is_array();
+        l_jF["derived"] = !l_bHas;
+        if (l_bHas) l_jF["stairs"] = l_jD["stairs"];
         else {
-            Json st = Json::array();
-            if (!nx.empty()) st.push_back(Json{{"dir", "up"}, {"to", nx}});
-            if (prev.count(id)) st.push_back(Json{{"dir", "down"}, {"to", prev[id]}});
-            f["stairs"] = st;
+            Json l_jSt = Json::array();
+            if (!l_strNx.empty()) l_jSt.push_back(Json{{"dir", "up"}, {"to", l_strNx}});
+            if (l_mapPrev.count(l_strId)) l_jSt.push_back(Json{{"dir", "down"}, {"to", l_mapPrev[l_strId]}});
+            l_jF["stairs"] = l_jSt;
         }
-        floors.push_back(f);
+        l_jFloors.push_back(l_jF);
     }
-    Json strings;
-    if (!readJson(A + "text.json", j, nullptr, &err)) return false;
-    strings = member(j, "strings") ? j["strings"] : Json::object();
-    std::set<std::string> known, wanted;
-    for (const Json& e : events) known.insert(e["id"].get<std::string>());
-    for (const Json& e : events) for (const char* k : {"text", "title", "desc"}) wanted.insert(e[k].get<std::string>());
-    for (const Json& f : floors) for (const Json& x : f["events"]) if (x.is_string() && !known.count(x.get<std::string>())) wanted.insert(x.get<std::string>());
-    Json npcFiles = Json::object();
-    for (const std::string& n : names(A + "npcs", "", ".json"))
-        if (readJson(A + "npcs/" + n, j)) npcFiles[n.substr(0, n.size() - 5)] = j;
-    for (auto& [k, n] : npcFiles.items()) { (void)k; for (const char* f : {"name", "greeting"}) if (!str(n, f).empty()) wanted.insert(str(n, f)); }
-    Json texts = Json::object();
-    for (const std::string& k : wanted) if (strings.contains(k)) texts[k] = strings[k];
-    auto opt = [&](const std::string& p) { Json o; return readJson(A + p, o) ? noUnderscore(o) : Json::object(); };
-    Json varsRaw;
-    Json cats = Json::array();
-    if (readJson(A + "story/vars.json", varsRaw) && varsRaw.contains("_categories") && varsRaw["_categories"].is_array()) cats = varsRaw["_categories"];
-    Json kinds = opt("events/kinds.json");
-    Json dialogues = Json::object();
-    for (const std::string& n : names(A + "dialogue", "", ".json"))
-        if (readJson(A + "dialogue/" + n, j)) dialogues[n.substr(0, n.size() - 5)] = j;
+    Json l_jStrings;
+    if (!f_ReadJson(l_strA + "text.json", l_jJ, nullptr, &l_strErr)) return false;
+    l_jStrings = f_Member(l_jJ, "strings") ? l_jJ["strings"] : Json::object();
+    std::set<std::string> l_setKnown, l_setWanted;
+    for (const Json& l_jE : l_jEvents) l_setKnown.insert(l_jE["id"].get<std::string>());
+    for (const Json& l_jE : l_jEvents) for (const char* l_pszK : {"text", "title", "desc"}) l_setWanted.insert(l_jE[l_pszK].get<std::string>());
+    for (const Json& l_jF : l_jFloors) for (const Json& l_jX : l_jF["events"]) if (l_jX.is_string() && !l_setKnown.count(l_jX.get<std::string>())) l_setWanted.insert(l_jX.get<std::string>());
+    Json l_jNpcFiles = Json::object();
+    for (const std::string& l_strN : f_Names(l_strA + "npcs", "", ".json"))
+        if (f_ReadJson(l_strA + "npcs/" + l_strN, l_jJ)) l_jNpcFiles[l_strN.substr(0, l_strN.size() - 5)] = l_jJ;
+    for (auto& [l_strK, l_jN] : l_jNpcFiles.items()) { (void)l_strK; for (const char* l_pszF : {"name", "greeting"}) if (!f_Str(l_jN, l_pszF).empty()) l_setWanted.insert(f_Str(l_jN, l_pszF)); }
+    Json l_jTexts = Json::object();
+    for (const std::string& l_strK : l_setWanted) if (l_jStrings.contains(l_strK)) l_jTexts[l_strK] = l_jStrings[l_strK];
+    auto l_fnOpt = [&](const std::string& l_strP) { Json l_jO; return f_ReadJson(l_strA + l_strP, l_jO) ? f_NoUnderscore(l_jO) : Json::object(); };
+    Json l_jVarsRaw;
+    Json l_jCats = Json::array();
+    if (f_ReadJson(l_strA + "story/vars.json", l_jVarsRaw) && l_jVarsRaw.contains("_categories") && l_jVarsRaw["_categories"].is_array()) l_jCats = l_jVarsRaw["_categories"];
+    Json l_jKinds = l_fnOpt("events/kinds.json");
+    Json l_jDialogues = Json::object();
+    for (const std::string& l_strN : f_Names(l_strA + "dialogue", "", ".json"))
+        if (f_ReadJson(l_strA + "dialogue/" + l_strN, l_jJ)) l_jDialogues[l_strN.substr(0, l_strN.size() - 5)] = l_jJ;
 
-    items.clear();
-    const Json itemsJ = opt("items.json");   // a named value: items() of a temporary would dangle
-    for (auto& [k, v] : itemsJ.items()) { (void)v; items.push_back(k); }
-    std::sort(items.begin(), items.end());
-    stats = {"hp", "maxhp", "atk", "def", "gold", "exp", "lv"};
-    if (readJson(A + "stats.json", j) && j.contains("attributes") && j["attributes"].is_array())
-        for (const Json& a : j["attributes"]) if (!str(a, "id").empty()) stats.push_back(str(a, "id"));
-    sprites.clear();
+    m_vItems.clear();
+    const Json l_jItemsJ = l_fnOpt("items.json");   // a named value: items() of a temporary would dangle
+    for (auto& [l_strK, l_jV] : l_jItemsJ.items()) { (void)l_jV; m_vItems.push_back(l_strK); }
+    std::sort(m_vItems.begin(), m_vItems.end());
+    m_vStats = {"hp", "maxhp", "atk", "def", "gold", "exp", "lv"};
+    if (f_ReadJson(l_strA + "stats.json", l_jJ) && l_jJ.contains("attributes") && l_jJ["attributes"].is_array())
+        for (const Json& l_jA : l_jJ["attributes"]) if (!f_Str(l_jA, "id").empty()) m_vStats.push_back(f_Str(l_jA, "id"));
+    m_vSprites.clear();
     {
-        std::string atlas;
-        if (readText(root + "/assets/media/atlas/game.atlas", atlas)) {
-            std::string line;
-            size_t pos = 0, li = 0;
-            while (pos <= atlas.size()) {
-                const size_t e = atlas.find('\n', pos);
-                line = atlas.substr(pos, (e == std::string::npos ? atlas.size() : e) - pos);
-                if (!line.empty() && line.back() == '\r') line.pop_back();
-                if (li++ > 0 && !line.empty() && line[0] != ' ' && line[0] != '\t' && line.find(':') == std::string::npos && !endsWith(line, ".png"))
-                    sprites.push_back(line);
-                if (e == std::string::npos) break;
-                pos = e + 1;
+        std::string l_strAtlas;
+        if (f_ReadText(m_strRoot + "/assets/media/atlas/game.atlas", l_strAtlas)) {
+            std::string l_strLine;
+            size_t l_nPos = 0, l_nLi = 0;
+            while (l_nPos <= l_strAtlas.size()) {
+                const size_t l_nE = l_strAtlas.find('\n', l_nPos);
+                l_strLine = l_strAtlas.substr(l_nPos, (l_nE == std::string::npos ? l_strAtlas.size() : l_nE) - l_nPos);
+                if (!l_strLine.empty() && l_strLine.back() == '\r') l_strLine.pop_back();
+                if (l_nLi++ > 0 && !l_strLine.empty() && l_strLine[0] != ' ' && l_strLine[0] != '\t' && l_strLine.find(':') == std::string::npos && !f_EndsWith(l_strLine, ".png"))
+                    m_vSprites.push_back(l_strLine);
+                if (l_nE == std::string::npos) break;
+                l_nPos = l_nE + 1;
             }
-            std::sort(sprites.begin(), sprites.end());
+            std::sort(m_vSprites.begin(), m_vSprites.end());
         }
     }
     // who can be talked to, and where: npc ids placed on each floor's grid (boss floors: stages/<handAuthoredStage>)
-    npcPlaces.clear();
-    for (const std::string& name : names(A + "story/floors", "", ".json")) {
-        if (endsWith(name, ".stage.json")) continue;
-        Json spec, grid;
-        if (!readJson(A + "story/floors/" + name, spec)) continue;
-        const std::string hand = str(spec, "handAuthoredStage");
-        const std::string gp = hand.empty() ? A + "story/floors/" + name.substr(0, name.size() - 5) + ".stage.json" : A + "stages/" + hand;
-        if (!readJson(gp, grid)) continue;
-        std::string cells;
-        if (grid.contains("tiles")) for (const Json& r : grid["tiles"]) if (r.is_string()) cells += r.get<std::string>();
-        if (grid.contains("legend") && grid["legend"].is_object())
-            for (auto& [ch, sem] : grid["legend"].items())
-                if (sem.is_string() && startsWith(sem.get<std::string>(), "npc:") && ch.size() == 1 && cells.find(ch[0]) != std::string::npos)
-                    npcPlaces[sem.get<std::string>().substr(4)].push_back(str(spec, "id"));
+    m_mapNpcPlaces.clear();
+    for (const std::string& l_strName : f_Names(l_strA + "story/floors", "", ".json")) {
+        if (f_EndsWith(l_strName, ".stage.json")) continue;
+        Json l_jSpec, l_jGrid;
+        if (!f_ReadJson(l_strA + "story/floors/" + l_strName, l_jSpec)) continue;
+        const std::string l_strHand = f_Str(l_jSpec, "handAuthoredStage");
+        const std::string l_strGp = l_strHand.empty() ? l_strA + "story/floors/" + l_strName.substr(0, l_strName.size() - 5) + ".stage.json" : l_strA + "stages/" + l_strHand;
+        if (!f_ReadJson(l_strGp, l_jGrid)) continue;
+        std::string l_strCells;
+        if (l_jGrid.contains("tiles")) for (const Json& l_jR : l_jGrid["tiles"]) if (l_jR.is_string()) l_strCells += l_jR.get<std::string>();
+        if (l_jGrid.contains("legend") && l_jGrid["legend"].is_object())
+            for (auto& [l_strCh, l_jSem] : l_jGrid["legend"].items())
+                if (l_jSem.is_string() && f_StartsWith(l_jSem.get<std::string>(), "npc:") && l_strCh.size() == 1 && l_strCells.find(l_strCh[0]) != std::string::npos)
+                    m_mapNpcPlaces[l_jSem.get<std::string>().substr(4)].push_back(f_Str(l_jSpec, "id"));
     }
 
-    S = Json::object();
-    S["pools"] = pools;
-    S["events"] = events;
-    S["vars"] = opt("story/vars.json");
-    S["cats"] = cats;
-    S["counters"] = opt("story/counters.json");
-    S["flags"] = opt("story/flags.json");
-    S["kinds"] = kinds.empty() ? defaultKinds() : kinds;
-    S["floors"] = floors;
-    S["texts"] = texts;
-    S["npcs"] = npcFiles;
-    S["dialogues"] = dialogues;
-    base = S;
-    undoStack.clear();
-    selected.clear();
+    m_jS = Json::object();
+    m_jS["pools"] = l_jPools;
+    m_jS["events"] = l_jEvents;
+    m_jS["vars"] = l_fnOpt("story/vars.json");
+    m_jS["cats"] = l_jCats;
+    m_jS["counters"] = l_fnOpt("story/counters.json");
+    m_jS["flags"] = l_fnOpt("story/flags.json");
+    m_jS["kinds"] = l_jKinds.empty() ? f_DefaultKinds() : l_jKinds;
+    m_jS["floors"] = l_jFloors;
+    m_jS["texts"] = l_jTexts;
+    m_jS["npcs"] = l_jNpcFiles;
+    m_jS["dialogues"] = l_jDialogues;
+    m_jBase = m_jS;
+    m_vUndoStack.clear();
+    m_strSelected.clear();
     return true;
 }
 
 // ---- edits ---------------------------------------------------------------------------------------------------------
 
-void EventProject::edit(const std::string& label, const std::function<void()>& fn) {
-    undoStack.push_back({S, selected, label});
-    if (undoStack.size() > 300) undoStack.erase(undoStack.begin());
-    fn();
+void EventProject::f_Edit(const std::string& l_strLabel, const std::function<void()>& l_fnFn) {
+    m_vUndoStack.push_back({m_jS, m_strSelected, l_strLabel});
+    if (m_vUndoStack.size() > 300) m_vUndoStack.erase(m_vUndoStack.begin());
+    l_fnFn();
 }
 
-bool EventProject::undo(std::string* label) {
-    if (undoStack.empty()) return false;
-    Step u = std::move(undoStack.back());
-    undoStack.pop_back();
-    S = std::move(u.s);
-    selected = u.sel;
-    if (label) *label = u.label;
+bool EventProject::f_Undo(std::string* l_pLabel) {
+    if (m_vUndoStack.empty()) return false;
+    Step l_oU = std::move(m_vUndoStack.back());
+    m_vUndoStack.pop_back();
+    m_jS = std::move(l_oU.m_jS);
+    m_strSelected = l_oU.m_strSel;
+    if (l_pLabel) *l_pLabel = l_oU.m_strLabel;
     return true;
 }
 
 // ---- lookups -------------------------------------------------------------------------------------------------------
 
-Json* EventProject::ev(const std::string& id) {
-    for (Json& e : S["events"]) if (e["id"] == id) return &e;
+Json* EventProject::f_Ev(const std::string& l_strId) {
+    for (Json& l_jE : m_jS["events"]) if (l_jE["id"] == l_strId) return &l_jE;
     return nullptr;
 }
 
-Json* EventProject::flo(const std::string& id) {
-    for (Json& f : S["floors"]) if (f["id"] == id) return &f;
+Json* EventProject::f_Flo(const std::string& l_strId) {
+    for (Json& l_jF : m_jS["floors"]) if (l_jF["id"] == l_strId) return &l_jF;
     return nullptr;
 }
 
-std::vector<const Json*> EventProject::floorsOf(const std::string& id) const {
-    std::vector<const Json*> out;
-    for (const Json& f : S["floors"]) if (contains(f["events"], id)) out.push_back(&f);
-    return out;
+std::vector<const Json*> EventProject::f_FloorsOf(const std::string& l_strId) const {
+    std::vector<const Json*> l_vOut;
+    for (const Json& l_jF : m_jS["floors"]) if (f_Contains(l_jF["events"], l_strId)) l_vOut.push_back(&l_jF);
+    return l_vOut;
 }
 
-bool EventProject::isMissing(const std::string& id) const { return !ev(id) && !floorsOf(id).empty(); }
+bool EventProject::f_IsMissing(const std::string& l_strId) const { return !f_Ev(l_strId) && !f_FloorsOf(l_strId).empty(); }
 
-bool EventProject::isNewEvent(const std::string& id) const {
-    for (const Json& e : base["events"]) if (e["id"] == id) return false;
+bool EventProject::f_IsNewEvent(const std::string& l_strId) const {
+    for (const Json& l_jE : m_jBase["events"]) if (l_jE["id"] == l_strId) return false;
     return true;
 }
-bool EventProject::isNewPool(const std::string& pool) const { return !contains(base["pools"], pool); }
-bool EventProject::isNewFloor(const std::string& id) const {
-    for (const Json& f : base["floors"]) if (f["id"] == id) return false;
+bool EventProject::f_IsNewPool(const std::string& l_strPool) const { return !f_Contains(m_jBase["pools"], l_strPool); }
+bool EventProject::f_IsNewFloor(const std::string& l_strId) const {
+    for (const Json& l_jF : m_jBase["floors"]) if (l_jF["id"] == l_strId) return false;
     return true;
 }
 
 // which floors the player can reach from F01: open stairs always, locked ones once their event can be done on a reached floor
-std::set<std::string> EventProject::reachable() const {
-    std::set<std::string> seen, done;
-    const Json* start = flo("F01");
-    if (!start) { if (S["floors"].empty()) return seen; start = &S["floors"][0]; }
-    seen.insert((*start)["id"].get<std::string>());
-    for (bool changed = true; changed;) {
-        changed = false;
-        for (const Json& f : S["floors"]) {
-            if (!seen.count(f["id"].get<std::string>())) continue;
-            for (const Json& e : f["events"]) if (e.is_string()) done.insert(e.get<std::string>());
-            for (const Json& st : f["stairs"]) {
-                const std::string to = str(st, "to");
-                bool open = true;   // every event of its lock can be done (W38: all of them)
-                for (const std::string& lock : stairUnlockEvents(st)) if (!done.count(lock)) open = false;
-                if (!to.empty() && flo(to) && !seen.count(to) && open) { seen.insert(to); changed = true; }
+std::set<std::string> EventProject::f_Reachable() const {
+    std::set<std::string> l_setSeen, l_setDone;
+    const Json* l_pStart = f_Flo("F01");
+    if (!l_pStart) { if (m_jS["floors"].empty()) return l_setSeen; l_pStart = &m_jS["floors"][0]; }
+    l_setSeen.insert((*l_pStart)["id"].get<std::string>());
+    for (bool l_bChanged = true; l_bChanged;) {
+        l_bChanged = false;
+        for (const Json& l_jF : m_jS["floors"]) {
+            if (!l_setSeen.count(l_jF["id"].get<std::string>())) continue;
+            for (const Json& l_jE : l_jF["events"]) if (l_jE.is_string()) l_setDone.insert(l_jE.get<std::string>());
+            for (const Json& l_jSt : l_jF["stairs"]) {
+                const std::string l_strTo = f_Str(l_jSt, "to");
+                bool l_bOpen = true;   // every event of its lock can be done (W38: all of them)
+                for (const std::string& l_strLock : f_StairUnlockEvents(l_jSt)) if (!l_setDone.count(l_strLock)) l_bOpen = false;
+                if (!l_strTo.empty() && f_Flo(l_strTo) && !l_setSeen.count(l_strTo) && l_bOpen) { l_setSeen.insert(l_strTo); l_bChanged = true; }
             }
         }
     }
-    return seen;
+    return l_setSeen;
 }
 
-Json EventProject::text(const std::string& key) const {
-    const Json* t = member(S["texts"], key.c_str());
-    return t && t->is_object() ? *t : Json::object();
+Json EventProject::f_Text(const std::string& l_strKey) const {
+    const Json* l_pT = f_Member(m_jS["texts"], l_strKey.c_str());
+    return l_pT && l_pT->is_object() ? *l_pT : Json::object();
 }
 
-bool EventProject::isPlaceholder(const std::string& key) const {
-    const Json* t = member(S["texts"], key.c_str());
-    if (!t || !t->is_object()) return true;
-    if (t->contains("_todo") && truthy((*t)["_todo"])) return true;
-    const std::string zh = str(*t, "zh_TW");
-    std::string bare = key;
-    if (endsWith(bare, ".text")) bare.resize(bare.size() - 5);
-    return zh.empty() || zh == key || zh == bare;
+bool EventProject::f_IsPlaceholder(const std::string& l_strKey) const {
+    const Json* l_pT = f_Member(m_jS["texts"], l_strKey.c_str());
+    if (!l_pT || !l_pT->is_object()) return true;
+    if (l_pT->contains("_todo") && f_Truthy((*l_pT)["_todo"])) return true;
+    const std::string l_strZh = f_Str(*l_pT, "zh_TW");
+    std::string l_strBare = l_strKey;
+    if (f_EndsWith(l_strBare, ".text")) l_strBare.resize(l_strBare.size() - 5);
+    return l_strZh.empty() || l_strZh == l_strKey || l_strZh == l_strBare;
 }
 
-Json EventProject::reqJson(const Json& e) const {
-    if (!e["reqRaw"].is_null()) return e["reqRaw"];
-    const Json& r = e["req"];
-    if (r.size() == 1) return r[0];
-    if (!r.empty()) return Json{{"all", r}};
+Json EventProject::f_ReqJson(const Json& l_jE) const {
+    if (!l_jE["reqRaw"].is_null()) return l_jE["reqRaw"];
+    const Json& l_jR = l_jE["req"];
+    if (l_jR.size() == 1) return l_jR[0];
+    if (!l_jR.empty()) return Json{{"all", l_jR}};
     return Json();
 }
 
-bool EventProject::hasLogic(const Json& e) const {
-    return e["trigger"].value("on", std::string("step")) != "step" || !e["req"].empty() || !e["reqRaw"].is_null() || !e["actions"].empty() || !e["next"].empty();
+bool EventProject::f_HasLogic(const Json& l_jE) const {
+    return l_jE["trigger"].value("on", std::string("step")) != "step" || !l_jE["req"].empty() || !l_jE["reqRaw"].is_null() || !l_jE["actions"].empty() || !l_jE["next"].empty();
 }
 
-std::vector<std::string> EventProject::pools() const {
-    std::vector<std::string> out;
-    for (const Json& p : S["pools"]) out.push_back(p.get<std::string>());
-    std::sort(out.begin(), out.end());
-    return out;
+std::vector<std::string> EventProject::f_Pools() const {
+    std::vector<std::string> l_vOut;
+    for (const Json& l_jP : m_jS["pools"]) l_vOut.push_back(l_jP.get<std::string>());
+    std::sort(l_vOut.begin(), l_vOut.end());
+    return l_vOut;
 }
 
-std::vector<std::string> EventProject::kindsList() const {
-    std::vector<std::string> out;
-    for (auto& [k, v] : S["kinds"].items()) { (void)v; out.push_back(k); }
-    return out;
+std::vector<std::string> EventProject::f_KindsList() const {
+    std::vector<std::string> l_vOut;
+    for (auto& [l_strK, l_jV] : m_jS["kinds"].items()) { (void)l_jV; l_vOut.push_back(l_strK); }
+    return l_vOut;
 }
 
-std::string EventProject::kindName(const std::string& k, const std::string& lang) const {
-    const Json* r = member(S["kinds"], k.c_str());
-    if (!r || !r->contains("name")) return std::string();
-    const Json& n = (*r)["name"];
-    for (const std::string& l : {lang, std::string("en"), std::string("zh_TW")}) if (!str(n, l.c_str()).empty()) return str(n, l.c_str());
+std::string EventProject::f_KindName(const std::string& l_strK, const std::string& l_strLang) const {
+    const Json* l_pR = f_Member(m_jS["kinds"], l_strK.c_str());
+    if (!l_pR || !l_pR->contains("name")) return std::string();
+    const Json& l_jN = (*l_pR)["name"];
+    for (const std::string& l_strL : {l_strLang, std::string("en"), std::string("zh_TW")}) if (!f_Str(l_jN, l_strL.c_str()).empty()) return f_Str(l_jN, l_strL.c_str());
     return std::string();
 }
 
-std::string EventProject::kindColor(const std::string& k) const {
-    const Json* r = member(S["kinds"], k.c_str());
-    if (r && !str(*r, "color").empty()) return str(*r, "color");
-    const Json* d = member(defaultKinds(), k.c_str());
-    return d ? str(*d, "color") : std::string("#777777");
+std::string EventProject::f_KindColor(const std::string& l_strK) const {
+    const Json* l_pR = f_Member(m_jS["kinds"], l_strK.c_str());
+    if (l_pR && !f_Str(*l_pR, "color").empty()) return f_Str(*l_pR, "color");
+    const Json* l_pD = f_Member(f_DefaultKinds(), l_strK.c_str());
+    return l_pD ? f_Str(*l_pD, "color") : std::string("#777777");
 }
 
-std::vector<std::string> EventProject::dialogueList() const {
-    std::vector<std::string> out;
-    for (auto& [k, v] : S["dialogues"].items()) { (void)v; out.push_back(k); }
-    std::sort(out.begin(), out.end());
-    return out;
+std::vector<std::string> EventProject::f_DialogueList() const {
+    std::vector<std::string> l_vOut;
+    for (auto& [l_strK, l_jV] : m_jS["dialogues"].items()) { (void)l_jV; l_vOut.push_back(l_strK); }
+    std::sort(l_vOut.begin(), l_vOut.end());
+    return l_vOut;
 }
 
-std::vector<Json> EventProject::dialogueActs(const std::string& id) const {
-    std::vector<Json> out;
-    const Json* d = member(S["dialogues"], id.c_str());
-    if (!d || !d->contains("nodes")) return out;
-    for (auto& [k, n] : (*d)["nodes"].items()) {
-        (void)k;
-        if (!n.is_object() || !n.contains("choices")) continue;
-        for (const Json& c : n["choices"]) {
-            if (!c.contains("actions")) continue;
-            if (c["actions"].is_array()) for (const Json& a : c["actions"]) out.push_back(a);
-            else if (c["actions"].is_object()) out.push_back(c["actions"]);
+std::vector<Json> EventProject::f_DialogueActs(const std::string& l_strId) const {
+    std::vector<Json> l_vOut;
+    const Json* l_pD = f_Member(m_jS["dialogues"], l_strId.c_str());
+    if (!l_pD || !l_pD->contains("nodes")) return l_vOut;
+    for (auto& [l_strK, l_jN] : (*l_pD)["nodes"].items()) {
+        (void)l_strK;
+        if (!l_jN.is_object() || !l_jN.contains("choices")) continue;
+        for (const Json& l_jC : l_jN["choices"]) {
+            if (!l_jC.contains("actions")) continue;
+            if (l_jC["actions"].is_array()) for (const Json& l_jA : l_jC["actions"]) l_vOut.push_back(l_jA);
+            else if (l_jC["actions"].is_object()) l_vOut.push_back(l_jC["actions"]);
         }
     }
-    return out;
+    return l_vOut;
 }
 
-std::vector<const Json*> EventProject::changers(const std::string& ref) const {
-    std::vector<const Json*> out;
-    for (const Json& e : S["events"]) {
-        bool hit = std::any_of(e["actions"].begin(), e["actions"].end(), [&](const Json& a) { return actRef(a) == ref; });
-        if (!hit && startsWith(ref, "flag:")) { const Json* f = member(S["flags"], ref.substr(5).c_str()); hit = f && str(*f, "setBy") == e["id"].get<std::string>(); }
-        if (!hit && e["trigger"].value("on", std::string()) == "talk" && !e["dialogue"].get<std::string>().empty())
-            for (const Json& a : dialogueActs(e["dialogue"].get<std::string>())) if (actRef(a) == ref) { hit = true; break; }
-        if (hit) out.push_back(&e);
+std::vector<const Json*> EventProject::f_Changers(const std::string& l_strRef) const {
+    std::vector<const Json*> l_vOut;
+    for (const Json& l_jE : m_jS["events"]) {
+        bool l_bHit = std::any_of(l_jE["actions"].begin(), l_jE["actions"].end(), [&](const Json& l_jA) { return f_ActRef(l_jA) == l_strRef; });
+        if (!l_bHit && f_StartsWith(l_strRef, "flag:")) { const Json* l_pF = f_Member(m_jS["flags"], l_strRef.substr(5).c_str()); l_bHit = l_pF && f_Str(*l_pF, "setBy") == l_jE["id"].get<std::string>(); }
+        if (!l_bHit && l_jE["trigger"].value("on", std::string()) == "talk" && !l_jE["dialogue"].get<std::string>().empty())
+            for (const Json& l_jA : f_DialogueActs(l_jE["dialogue"].get<std::string>())) if (f_ActRef(l_jA) == l_strRef) { l_bHit = true; break; }
+        if (l_bHit) l_vOut.push_back(&l_jE);
     }
-    return out;
+    return l_vOut;
 }
 
-std::vector<const Json*> EventProject::readersOnly(const std::string& ref) const {
-    std::vector<const Json*> out;
-    for (const Json& e : S["events"])
-        if (std::any_of(e["req"].begin(), e["req"].end(), [&](const Json& l) { return leafRef(l) == ref; })) out.push_back(&e);
-    return out;
+std::vector<const Json*> EventProject::f_ReadersOnly(const std::string& l_strRef) const {
+    std::vector<const Json*> l_vOut;
+    for (const Json& l_jE : m_jS["events"])
+        if (std::any_of(l_jE["req"].begin(), l_jE["req"].end(), [&](const Json& l_jL) { return f_LeafRef(l_jL) == l_strRef; })) l_vOut.push_back(&l_jE);
+    return l_vOut;
 }
 
-std::vector<const Json*> EventProject::watchers(const std::string& ref) const {
-    std::vector<const Json*> out;
-    if (!startsWith(ref, "var:")) return out;
-    for (const Json& e : S["events"])
-        if (e["trigger"].value("on", std::string()) == "varChanged" && "var:" + e["trigger"].value("var", std::string()) == ref) out.push_back(&e);
-    return out;
+std::vector<const Json*> EventProject::f_Watchers(const std::string& l_strRef) const {
+    std::vector<const Json*> l_vOut;
+    if (!f_StartsWith(l_strRef, "var:")) return l_vOut;
+    for (const Json& l_jE : m_jS["events"])
+        if (l_jE["trigger"].value("on", std::string()) == "varChanged" && "var:" + l_jE["trigger"].value("var", std::string()) == l_strRef) l_vOut.push_back(&l_jE);
+    return l_vOut;
 }
 
-std::vector<const Json*> EventProject::readers(const std::string& ref) const {
-    std::vector<const Json*> out;
-    for (const Json& e : S["events"]) {
-        const bool r = std::any_of(e["req"].begin(), e["req"].end(), [&](const Json& l) { return leafRef(l) == ref; });
-        const bool w = e["trigger"].value("on", std::string()) == "varChanged" && "var:" + e["trigger"].value("var", std::string()) == ref;
-        if (r || w) out.push_back(&e);
+std::vector<const Json*> EventProject::f_Readers(const std::string& l_strRef) const {
+    std::vector<const Json*> l_vOut;
+    for (const Json& l_jE : m_jS["events"]) {
+        const bool l_bR = std::any_of(l_jE["req"].begin(), l_jE["req"].end(), [&](const Json& l_jL) { return f_LeafRef(l_jL) == l_strRef; });
+        const bool l_bW = l_jE["trigger"].value("on", std::string()) == "varChanged" && "var:" + l_jE["trigger"].value("var", std::string()) == l_strRef;
+        if (l_bR || l_bW) l_vOut.push_back(&l_jE);
     }
-    return out;
+    return l_vOut;
 }
 
-std::vector<std::string> EventProject::linkedValues(const std::string& ref) const {
-    std::vector<std::string> out;
-    std::vector<const Json*> evs = changers(ref);
-    for (const Json* e : readers(ref)) evs.push_back(e);
-    for (const Json* e : evs) {
-        std::vector<std::string> refs;
-        for (const Json& a : (*e)["actions"]) refs.push_back(actRef(a));
-        for (const Json& l : (*e)["req"]) refs.push_back(leafRef(l));
-        if ((*e)["trigger"].value("on", std::string()) == "varChanged") refs.push_back("var:" + (*e)["trigger"].value("var", std::string()));
-        for (const std::string& r : refs)
-            if (!r.empty() && r != ref && (startsWith(r, "var:") || startsWith(r, "counter:") || startsWith(r, "flag:")) && !contains(out, r)) out.push_back(r);
+std::vector<std::string> EventProject::f_LinkedValues(const std::string& l_strRef) const {
+    std::vector<std::string> l_vOut;
+    std::vector<const Json*> l_vEvs = f_Changers(l_strRef);
+    for (const Json* l_pE : f_Readers(l_strRef)) l_vEvs.push_back(l_pE);
+    for (const Json* l_pE : l_vEvs) {
+        std::vector<std::string> l_vRefs;
+        for (const Json& l_jA : (*l_pE)["actions"]) l_vRefs.push_back(f_ActRef(l_jA));
+        for (const Json& l_jL : (*l_pE)["req"]) l_vRefs.push_back(f_LeafRef(l_jL));
+        if ((*l_pE)["trigger"].value("on", std::string()) == "varChanged") l_vRefs.push_back("var:" + (*l_pE)["trigger"].value("var", std::string()));
+        for (const std::string& l_strR : l_vRefs)
+            if (!l_strR.empty() && l_strR != l_strRef && (f_StartsWith(l_strR, "var:") || f_StartsWith(l_strR, "counter:") || f_StartsWith(l_strR, "flag:")) && !f_Contains(l_vOut, l_strR)) l_vOut.push_back(l_strR);
     }
-    return out;
+    return l_vOut;
 }
 
-bool EventProject::refExists(const std::string& r) const {
-    const size_t c = r.find(':');
-    const std::string k = r.substr(0, c), n = r.substr(c + 1);
-    if (k == "var") return S["vars"].contains(n);
-    if (k == "counter") return S["counters"].contains(n);
-    if (k == "flag") return S["flags"].contains(n);
-    if (k == "event") return ev(n) != nullptr;
-    if (k == "item") return contains(items, n);
+bool EventProject::f_RefExists(const std::string& l_strR) const {
+    const size_t l_nC = l_strR.find(':');
+    const std::string l_strK = l_strR.substr(0, l_nC), l_strN = l_strR.substr(l_nC + 1);
+    if (l_strK == "var") return m_jS["vars"].contains(l_strN);
+    if (l_strK == "counter") return m_jS["counters"].contains(l_strN);
+    if (l_strK == "flag") return m_jS["flags"].contains(l_strN);
+    if (l_strK == "event") return f_Ev(l_strN) != nullptr;
+    if (l_strK == "item") return f_Contains(m_vItems, l_strN);
     return true;
 }
 
-std::vector<std::string> EventProject::valueRefs() const {
-    std::vector<std::string> out;
-    for (auto& [k, v] : S["vars"].items()) { (void)v; out.push_back("var:" + k); }
-    for (auto& [k, v] : S["counters"].items()) { (void)v; out.push_back("counter:" + k); }
-    for (auto& [k, v] : S["flags"].items()) { (void)v; out.push_back("flag:" + k); }
-    return out;
+std::vector<std::string> EventProject::f_ValueRefs() const {
+    std::vector<std::string> l_vOut;
+    for (auto& [l_strK, l_jV] : m_jS["vars"].items()) { (void)l_jV; l_vOut.push_back("var:" + l_strK); }
+    for (auto& [l_strK, l_jV] : m_jS["counters"].items()) { (void)l_jV; l_vOut.push_back("counter:" + l_strK); }
+    for (auto& [l_strK, l_jV] : m_jS["flags"].items()) { (void)l_jV; l_vOut.push_back("flag:" + l_strK); }
+    return l_vOut;
 }
 
-Json* EventProject::recOf(const std::string& ref) {
-    const size_t c = ref.find(':');
-    const std::string k = ref.substr(0, c), n = ref.substr(c + 1);
-    Json& o = S[k == "var" ? "vars" : k == "counter" ? "counters" : "flags"];
-    auto it = o.find(n);
-    return it == o.end() ? nullptr : &*it;
+Json* EventProject::f_RecOf(const std::string& l_strRef) {
+    const size_t l_nC = l_strRef.find(':');
+    const std::string l_strK = l_strRef.substr(0, l_nC), l_strN = l_strRef.substr(l_nC + 1);
+    Json& l_jO = m_jS[l_strK == "var" ? "vars" : l_strK == "counter" ? "counters" : "flags"];
+    auto l_oIt = l_jO.find(l_strN);
+    return l_oIt == l_jO.end() ? nullptr : &*l_oIt;
 }
 
-std::vector<std::string> EventProject::npcIds() const {
-    std::set<std::string> ids;
-    for (auto& [k, v] : S["npcs"].items()) { (void)v; ids.insert(k); }
-    for (const auto& [k, v] : npcPlaces) { (void)v; ids.insert(k); }
-    for (const Json& e : S["events"])
-        if (e["trigger"].value("on", std::string()) == "talk" && !e["trigger"].value("npc", std::string()).empty()) ids.insert(e["trigger"]["npc"].get<std::string>());
-    return std::vector<std::string>(ids.begin(), ids.end());
+std::vector<std::string> EventProject::f_NpcIds() const {
+    std::set<std::string> l_setIds;
+    for (auto& [l_strK, l_jV] : m_jS["npcs"].items()) { (void)l_jV; l_setIds.insert(l_strK); }
+    for (const auto& [l_strK, l_vV] : m_mapNpcPlaces) { (void)l_vV; l_setIds.insert(l_strK); }
+    for (const Json& l_jE : m_jS["events"])
+        if (l_jE["trigger"].value("on", std::string()) == "talk" && !l_jE["trigger"].value("npc", std::string()).empty()) l_setIds.insert(l_jE["trigger"]["npc"].get<std::string>());
+    return std::vector<std::string>(l_setIds.begin(), l_setIds.end());
 }
 
 // the NPC's talk events in menu order: topicOrder first (lower first), then pool order
-std::vector<Json*> EventProject::topicsOf(const std::string& npc) {
-    std::vector<std::pair<size_t, Json*>> list;
-    Json& evs = S["events"];
-    for (size_t i = 0; i < evs.size(); i++)
-        if (evs[i]["trigger"].value("on", std::string()) == "talk" && evs[i]["trigger"].value("npc", std::string()) == npc) list.push_back({i, &evs[i]});
-    const std::vector<std::string> ps = pools();
-    auto order = [](const Json* e) { return (*e)["topicOrder"].is_number() ? (*e)["topicOrder"].get<double>() : 1e9; };
-    auto pi = [&](const Json* e) { return std::find(ps.begin(), ps.end(), (*e)["pool"].get<std::string>()) - ps.begin(); };
-    std::stable_sort(list.begin(), list.end(), [&](const auto& a, const auto& b) {
-        if (order(a.second) != order(b.second)) return order(a.second) < order(b.second);
-        if (pi(a.second) != pi(b.second)) return pi(a.second) < pi(b.second);
-        return a.first < b.first;
+std::vector<Json*> EventProject::f_TopicsOf(const std::string& l_strNpc) {
+    std::vector<std::pair<size_t, Json*>> l_vList;
+    Json& l_jEvs = m_jS["events"];
+    for (size_t l_nI = 0; l_nI < l_jEvs.size(); l_nI++)
+        if (l_jEvs[l_nI]["trigger"].value("on", std::string()) == "talk" && l_jEvs[l_nI]["trigger"].value("npc", std::string()) == l_strNpc) l_vList.push_back({l_nI, &l_jEvs[l_nI]});
+    const std::vector<std::string> l_vPs = f_Pools();
+    auto l_fnOrder = [](const Json* l_pE) { return (*l_pE)["topicOrder"].is_number() ? (*l_pE)["topicOrder"].get<double>() : 1e9; };
+    auto l_fnPi = [&](const Json* l_pE) { return std::find(l_vPs.begin(), l_vPs.end(), (*l_pE)["pool"].get<std::string>()) - l_vPs.begin(); };
+    std::stable_sort(l_vList.begin(), l_vList.end(), [&](const auto& l_oA, const auto& l_oB) {
+        if (l_fnOrder(l_oA.second) != l_fnOrder(l_oB.second)) return l_fnOrder(l_oA.second) < l_fnOrder(l_oB.second);
+        if (l_fnPi(l_oA.second) != l_fnPi(l_oB.second)) return l_fnPi(l_oA.second) < l_fnPi(l_oB.second);
+        return l_oA.first < l_oB.first;
     });
-    std::vector<Json*> out;
-    for (auto& x : list) out.push_back(x.second);
-    return out;
+    std::vector<Json*> l_vOut;
+    for (auto& l_pairX : l_vList) l_vOut.push_back(l_pairX.second);
+    return l_vOut;
 }
 
-bool EventProject::woken(const std::string& id) const {
-    for (const Json& o : S["events"]) if (contains(o["next"], id)) return true;
+bool EventProject::f_Woken(const std::string& l_strId) const {
+    for (const Json& l_jO : m_jS["events"]) if (f_Contains(l_jO["next"], l_strId)) return true;
     return false;
 }
 
-std::string EventProject::talkFloorOf(const Json& e, bool* conditional) const {
-    const CondRows r = condToRows(reqJson(e));
-    if (conditional) *conditional = r.raw || (r.mode == "any" && r.rows.size() > 1);
-    if (r.raw || (r.mode == "any" && r.rows.size() > 1)) return std::string();
-    for (const Json& l : r.rows) if (str(l, "type") == "onStage") return str(l, "stageId");
+std::string EventProject::f_TalkFloorOf(const Json& l_jE, bool* l_pConditional) const {
+    const CondRows l_oR = f_CondToRows(f_ReqJson(l_jE));
+    if (l_pConditional) *l_pConditional = l_oR.m_bRaw || (l_oR.m_strMode == "any" && l_oR.m_vRows.size() > 1);
+    if (l_oR.m_bRaw || (l_oR.m_strMode == "any" && l_oR.m_vRows.size() > 1)) return std::string();
+    for (const Json& l_jL : l_oR.m_vRows) if (f_Str(l_jL, "type") == "onStage") return f_Str(l_jL, "stageId");
     return std::string();
 }
 
-void EventProject::setEventReq(Json& e, const Json& c) {
-    Json tmp = Json::object();
-    if (!c.is_null()) tmp["requires"] = c;
-    Json parsed = Json::object();
-    logicInto(parsed, tmp);
-    e["req"] = parsed["req"];
-    e["reqRaw"] = parsed["reqRaw"];
+void EventProject::f_SetEventReq(Json& l_jE, const Json& l_jC) {
+    Json l_jTmp = Json::object();
+    if (!l_jC.is_null()) l_jTmp["requires"] = l_jC;
+    Json l_jParsed = Json::object();
+    f_LogicInto(l_jParsed, l_jTmp);
+    l_jE["req"] = l_jParsed["req"];
+    l_jE["reqRaw"] = l_jParsed["reqRaw"];
 }
 
-void EventProject::setTalkFloor(Json& e, const std::string& floor) {
-    const CondRows r = condToRows(reqJson(e));
-    std::vector<Json> keep;
-    for (const Json& l : r.rows) if (str(l, "type") != "onStage") keep.push_back(l);
-    if (!floor.empty()) keep.push_back(Json{{"type", "onStage"}, {"stageId", floor}});
-    setEventReq(e, rowsToCond(r.mode, keep));
+void EventProject::f_SetTalkFloor(Json& l_jE, const std::string& l_strFloor) {
+    const CondRows l_oR = f_CondToRows(f_ReqJson(l_jE));
+    std::vector<Json> l_vKeep;
+    for (const Json& l_jL : l_oR.m_vRows) if (f_Str(l_jL, "type") != "onStage") l_vKeep.push_back(l_jL);
+    if (!l_strFloor.empty()) l_vKeep.push_back(Json{{"type", "onStage"}, {"stageId", l_strFloor}});
+    f_SetEventReq(l_jE, f_RowsToCond(l_oR.m_strMode, l_vKeep));
 }
 
-std::string EventProject::guessKind(const std::string& id) const {
-    static const std::regex variant("_v\\d+$");
-    const std::string baseId = std::regex_replace(id, variant, "");
-    if (baseId != id) if (const Json* b = ev(baseId)) return (*b)["kind"].get<std::string>();
-    for (const std::string& k : kindsList()) {
-        std::string w = k;
-        if (startsWith(w, "memory_")) w = w.substr(7);
-        if (id.find(w) != std::string::npos) return k;
+std::string EventProject::f_GuessKind(const std::string& l_strId) const {
+    static const std::regex l_oVariant("_v\\d+$");
+    const std::string l_strBaseId = std::regex_replace(l_strId, l_oVariant, "");
+    if (l_strBaseId != l_strId) if (const Json* l_pB = f_Ev(l_strBaseId)) return (*l_pB)["kind"].get<std::string>();
+    for (const std::string& l_strK : f_KindsList()) {
+        std::string l_strW = l_strK;
+        if (f_StartsWith(l_strW, "memory_")) l_strW = l_strW.substr(7);
+        if (l_strId.find(l_strW) != std::string::npos) return l_strK;
     }
     return std::string();
 }
 
-std::vector<std::string> EventProject::choiceIdsOf(const std::string& evId) const {
-    std::vector<std::string> out;
-    const Json* e = ev(evId);
-    const Json* d = e ? member(S["dialogues"], (*e)["dialogue"].get<std::string>().c_str()) : nullptr;
-    if (!d || !d->contains("nodes")) return out;
-    for (auto& [k, n] : (*d)["nodes"].items()) {
-        (void)k;
-        if (!n.contains("choices")) continue;
-        for (const Json& c : n["choices"]) { const std::string id = str(c, "id"); if (!id.empty() && !contains(out, id)) out.push_back(id); }
+std::vector<std::string> EventProject::f_ChoiceIdsOf(const std::string& l_strEvId) const {
+    std::vector<std::string> l_vOut;
+    const Json* l_pE = f_Ev(l_strEvId);
+    const Json* l_pD = l_pE ? f_Member(m_jS["dialogues"], (*l_pE)["dialogue"].get<std::string>().c_str()) : nullptr;
+    if (!l_pD || !l_pD->contains("nodes")) return l_vOut;
+    for (auto& [l_strK, l_jN] : (*l_pD)["nodes"].items()) {
+        (void)l_strK;
+        if (!l_jN.contains("choices")) continue;
+        for (const Json& l_jC : l_jN["choices"]) { const std::string l_strId = f_Str(l_jC, "id"); if (!l_strId.empty() && !f_Contains(l_vOut, l_strId)) l_vOut.push_back(l_strId); }
     }
-    return out;
+    return l_vOut;
 }
 
 // ---- problems ------------------------------------------------------------------------------------------------------
 
-std::vector<EvProblem> EventProject::problems() const {
-    std::vector<EvProblem> out;
-    auto add = [&](const std::string& rule, const std::string& id, const std::string& code, std::vector<std::string> args) {
-        EvProblem p;
-        p.rule = rule;
-        p.id = id;
-        p.whereCode = code;
-        p.whereArgs = std::move(args);
-        out.push_back(p);
-        return &out.back();
+std::vector<EvProblem> EventProject::f_Problems() const {
+    std::vector<EvProblem> l_vOut;
+    auto l_fnAdd = [&](const std::string& l_strRule, const std::string& l_strId, const std::string& l_strCode, std::vector<std::string> l_vArgs) {
+        EvProblem l_oP;
+        l_oP.m_strRule = l_strRule;
+        l_oP.m_strId = l_strId;
+        l_oP.m_strWhereCode = l_strCode;
+        l_oP.m_vWhereArgs = std::move(l_vArgs);
+        l_vOut.push_back(l_oP);
+        return &l_vOut.back();
     };
-    std::set<std::string> seen;
-    for (const Json& f : S["floors"])
-        for (const Json& x : f["events"]) {
-            const std::string id = x.get<std::string>();
-            if (ev(id) || seen.count(id)) continue;
-            seen.insert(id);
-            std::vector<std::string> fl;
-            const auto fs2 = floorsOf(id);
-            for (const Json* g : fs2) fl.push_back((*g)["id"].get<std::string>());
-            add("missing_event", id, "", {join(fl, ", ")})->act = (*fs2[0])["act"].get<std::string>();
+    std::set<std::string> l_setSeen;
+    for (const Json& l_jF : m_jS["floors"])
+        for (const Json& l_jX : l_jF["events"]) {
+            const std::string l_strId = l_jX.get<std::string>();
+            if (f_Ev(l_strId) || l_setSeen.count(l_strId)) continue;
+            l_setSeen.insert(l_strId);
+            std::vector<std::string> l_vFl;
+            const auto l_vFs2 = f_FloorsOf(l_strId);
+            for (const Json* l_pG : l_vFs2) l_vFl.push_back((*l_pG)["id"].get<std::string>());
+            l_fnAdd("missing_event", l_strId, "", {f_Join(l_vFl, ", ")})->m_strAct = (*l_vFs2[0])["act"].get<std::string>();
         }
-    const std::vector<std::string> dlgs = dialogueList();
-    for (const Json& e : S["events"]) {
-        const std::string id = e["id"].get<std::string>(), on = e["trigger"].value("on", std::string("step"));
-        const Json* tx = member(S["texts"], e["text"].get<std::string>().c_str());
-        if (floorsOf(id).empty() && on == "step") add("orphan", id, "", {e["pool"].get<std::string>()});
-        if (on == "talk" && !dlgs.empty())
-            for (const char* k : {"dialogue", "afterDialogue"}) {
-                const std::string d = e[k].get<std::string>();
-                if (!d.empty() && !contains(dlgs, d)) add("missing_dialogue", id, "", {"dialogue/" + d + ".json"});
+    const std::vector<std::string> l_vDlgs = f_DialogueList();
+    for (const Json& l_jE : m_jS["events"]) {
+        const std::string l_strId = l_jE["id"].get<std::string>(), l_strOn = l_jE["trigger"].value("on", std::string("step"));
+        const Json* l_pTx = f_Member(m_jS["texts"], l_jE["text"].get<std::string>().c_str());
+        if (f_FloorsOf(l_strId).empty() && l_strOn == "step") l_fnAdd("orphan", l_strId, "", {l_jE["pool"].get<std::string>()});
+        if (l_strOn == "talk" && !l_vDlgs.empty())
+            for (const char* l_pszK : {"dialogue", "afterDialogue"}) {
+                const std::string l_strD = l_jE[l_pszK].get<std::string>();
+                if (!l_strD.empty() && !f_Contains(l_vDlgs, l_strD)) l_fnAdd("missing_dialogue", l_strId, "", {"dialogue/" + l_strD + ".json"});
             }
-        if (!tx) add("missing_text", id, "", {e["text"].get<std::string>()});
-        else if (isPlaceholder(e["text"].get<std::string>())) add("placeholder", id, "", {e["text"].get<std::string>()});
-        else if (str(*tx, "en").empty() || str(*tx, "en") == str(*tx, "zh_TW")) add("untranslated", id, "", {e["text"].get<std::string>()});
-        const bool noTi = str(text(e["title"].get<std::string>()), "zh_TW").empty(), noDe = str(text(e["desc"].get<std::string>()), "zh_TW").empty();
-        if (noTi || noDe) add("missing_title", id, "wNoTitle", {noTi && noDe ? "title / desc" : noTi ? "title" : "desc"});
-        const std::string kind = e["kind"].get<std::string>();
-        if (kind.empty()) add("no_kind", id, "", {e["pool"].get<std::string>()});
-        else if (!S["kinds"].contains(kind)) add("unknown_kind", id, "wUnknownKind", {kind});
+        if (!l_pTx) l_fnAdd("missing_text", l_strId, "", {l_jE["text"].get<std::string>()});
+        else if (f_IsPlaceholder(l_jE["text"].get<std::string>())) l_fnAdd("placeholder", l_strId, "", {l_jE["text"].get<std::string>()});
+        else if (f_Str(*l_pTx, "en").empty() || f_Str(*l_pTx, "en") == f_Str(*l_pTx, "zh_TW")) l_fnAdd("untranslated", l_strId, "", {l_jE["text"].get<std::string>()});
+        const bool l_bNoTi = f_Str(f_Text(l_jE["title"].get<std::string>()), "zh_TW").empty(), l_bNoDe = f_Str(f_Text(l_jE["desc"].get<std::string>()), "zh_TW").empty();
+        if (l_bNoTi || l_bNoDe) l_fnAdd("missing_title", l_strId, "wNoTitle", {l_bNoTi && l_bNoDe ? "title / desc" : l_bNoTi ? "title" : "desc"});
+        const std::string l_strKind = l_jE["kind"].get<std::string>();
+        if (l_strKind.empty()) l_fnAdd("no_kind", l_strId, "", {l_jE["pool"].get<std::string>()});
+        else if (!m_jS["kinds"].contains(l_strKind)) l_fnAdd("unknown_kind", l_strId, "wUnknownKind", {l_strKind});
     }
     // event logic: every reference must exist, every event must be able to fire, and links must not loop
-    std::set<std::string> linked;
-    for (const Json& e : S["events"]) for (const Json& n : e["next"]) linked.insert(n.get<std::string>());
-    for (const Json& e : S["events"]) {
-        const std::string id = e["id"].get<std::string>(), on = e["trigger"].value("on", std::string("step"));
-        std::vector<std::string> refs;
-        for (const Json& l : e["req"]) if (const std::string r = leafRef(l); !r.empty()) refs.push_back(r);
-        for (const Json& a : e["actions"]) if (const std::string r = actRef(a); !r.empty()) refs.push_back(r);
-        if (on == "varChanged") refs.push_back("var:" + e["trigger"].value("var", std::string()));
-        std::vector<std::string> uniq;
-        for (const std::string& r : refs) if (!contains(uniq, r)) uniq.push_back(r);
-        for (const std::string& r : uniq)
-            if (!refExists(r)) add("unknown_ref", id, "wUnknown", {r.substr(0, r.find(':')), r.substr(r.find(':') + 1)});
-        for (const Json& n : e["next"]) if (!ev(n.get<std::string>())) add("bad_next", id, "wBadNext", {n.get<std::string>()});
-        if (on == "chain" && !linked.count(id)) add("never_fires", id, "wNoIncoming", {});
-        if (on == "talk" && !npcPlaces.count(e["trigger"].value("npc", std::string()))) add("never_fires", id, "wNpcNowhere", {e["trigger"].value("npc", std::string())});
-        for (const Json& l : e["req"]) {
-            if (str(l, "type") != "varAtLeast") continue;
-            const std::string v = str(l, "var");
-            const Json* rec = member(S["vars"], v.c_str());
-            if (rec && changers("var:" + v).empty() && num(rec->value("default", Json(0))) < num(l.value("value", Json(0))))
-                add("never_active", id, "wNeverActive", {v, l.value("value", Json(0)).dump()});
+    std::set<std::string> l_setLinked;
+    for (const Json& l_jE : m_jS["events"]) for (const Json& l_jN : l_jE["next"]) l_setLinked.insert(l_jN.get<std::string>());
+    for (const Json& l_jE : m_jS["events"]) {
+        const std::string l_strId = l_jE["id"].get<std::string>(), l_strOn = l_jE["trigger"].value("on", std::string("step"));
+        std::vector<std::string> l_vRefs;
+        for (const Json& l_jL : l_jE["req"]) if (const std::string l_strR = f_LeafRef(l_jL); !l_strR.empty()) l_vRefs.push_back(l_strR);
+        for (const Json& l_jA : l_jE["actions"]) if (const std::string l_strR = f_ActRef(l_jA); !l_strR.empty()) l_vRefs.push_back(l_strR);
+        if (l_strOn == "varChanged") l_vRefs.push_back("var:" + l_jE["trigger"].value("var", std::string()));
+        std::vector<std::string> l_vUniq;
+        for (const std::string& l_strR : l_vRefs) if (!f_Contains(l_vUniq, l_strR)) l_vUniq.push_back(l_strR);
+        for (const std::string& l_strR : l_vUniq)
+            if (!f_RefExists(l_strR)) l_fnAdd("unknown_ref", l_strId, "wUnknown", {l_strR.substr(0, l_strR.find(':')), l_strR.substr(l_strR.find(':') + 1)});
+        for (const Json& l_jN : l_jE["next"]) if (!f_Ev(l_jN.get<std::string>())) l_fnAdd("bad_next", l_strId, "wBadNext", {l_jN.get<std::string>()});
+        if (l_strOn == "chain" && !l_setLinked.count(l_strId)) l_fnAdd("never_fires", l_strId, "wNoIncoming", {});
+        if (l_strOn == "talk" && !m_mapNpcPlaces.count(l_jE["trigger"].value("npc", std::string()))) l_fnAdd("never_fires", l_strId, "wNpcNowhere", {l_jE["trigger"].value("npc", std::string())});
+        for (const Json& l_jL : l_jE["req"]) {
+            if (f_Str(l_jL, "type") != "varAtLeast") continue;
+            const std::string l_strV = f_Str(l_jL, "var");
+            const Json* l_pRec = f_Member(m_jS["vars"], l_strV.c_str());
+            if (l_pRec && f_Changers("var:" + l_strV).empty() && f_Num(l_pRec->value("default", Json(0))) < f_Num(l_jL.value("value", Json(0))))
+                l_fnAdd("never_active", l_strId, "wNeverActive", {l_strV, l_jL.value("value", Json(0)).dump()});
         }
     }
-    std::set<std::string> onLoop;
-    for (const Json& e0 : S["events"]) {
-        const std::string id0 = e0["id"].get<std::string>();
-        std::vector<std::pair<std::string, std::vector<std::string>>> stack{{id0, {id0}}};
-        std::set<std::string> vis;
-        while (!stack.empty()) {
-            auto [id, path] = stack.back();
-            stack.pop_back();
-            const Json* e = ev(id);
-            if (!e) continue;
-            for (const Json& nj : (*e)["next"]) {
-                const std::string n = nj.get<std::string>();
-                if (n == id0 && !onLoop.count(id0)) {
-                    onLoop.insert(id0);
-                    std::vector<std::string> p2 = path;
-                    p2.push_back(n);
-                    add("logic_cycle", id0, "", {join(p2, " → ")});
-                } else if (!vis.count(n)) {
-                    vis.insert(n);
-                    std::vector<std::string> p2 = path;
-                    p2.push_back(n);
-                    stack.push_back({n, p2});
+    std::set<std::string> l_setOnLoop;
+    for (const Json& l_jE0 : m_jS["events"]) {
+        const std::string l_strId0 = l_jE0["id"].get<std::string>();
+        std::vector<std::pair<std::string, std::vector<std::string>>> l_vStack{{l_strId0, {l_strId0}}};
+        std::set<std::string> l_setVis;
+        while (!l_vStack.empty()) {
+            auto [l_strId, l_vPath] = l_vStack.back();
+            l_vStack.pop_back();
+            const Json* l_pE = f_Ev(l_strId);
+            if (!l_pE) continue;
+            for (const Json& l_jNj : (*l_pE)["next"]) {
+                const std::string l_strN = l_jNj.get<std::string>();
+                if (l_strN == l_strId0 && !l_setOnLoop.count(l_strId0)) {
+                    l_setOnLoop.insert(l_strId0);
+                    std::vector<std::string> l_vP2 = l_vPath;
+                    l_vP2.push_back(l_strN);
+                    l_fnAdd("logic_cycle", l_strId0, "", {f_Join(l_vP2, " → ")});
+                } else if (!l_setVis.count(l_strN)) {
+                    l_setVis.insert(l_strN);
+                    std::vector<std::string> l_vP2 = l_vPath;
+                    l_vP2.push_back(l_strN);
+                    l_vStack.push_back({l_strN, l_vP2});
                 }
             }
         }
     }
-    for (auto& [v, rec] : S["vars"].items()) {
-        (void)rec;
-        if (changers("var:" + v).empty() && readers("var:" + v).empty()) add("unused_var", v, "wUnusedVar", {});
+    for (auto& [l_strV, l_jRec] : m_jS["vars"].items()) {
+        (void)l_jRec;
+        if (f_Changers("var:" + l_strV).empty() && f_Readers("var:" + l_strV).empty()) l_fnAdd("unused_var", l_strV, "wUnusedVar", {});
     }
     // floors: every stair must lead to a floor that exists, a lock must name a real event, every floor must be reachable
-    for (const Json& f : S["floors"])
-        for (const Json& st : f["stairs"]) {
-            const std::string fid = f["id"].get<std::string>(), to = str(st, "to");
-            if (!to.empty() && !flo(to)) add("missing_floor", fid, "stairWhere", {fid, str(st, "dir", "up"), to})->to = to;
-            for (const std::string& lock : stairUnlockEvents(st))
-                if (!ev(lock)) add("bad_unlock", fid, "badUnlockWhere", {fid, to, lock})->to = to;
+    for (const Json& l_jF : m_jS["floors"])
+        for (const Json& l_jSt : l_jF["stairs"]) {
+            const std::string l_strFid = l_jF["id"].get<std::string>(), l_strTo = f_Str(l_jSt, "to");
+            if (!l_strTo.empty() && !f_Flo(l_strTo)) l_fnAdd("missing_floor", l_strFid, "stairWhere", {l_strFid, f_Str(l_jSt, "dir", "up"), l_strTo})->m_strTo = l_strTo;
+            for (const std::string& l_strLock : f_StairUnlockEvents(l_jSt))
+                if (!f_Ev(l_strLock)) l_fnAdd("bad_unlock", l_strFid, "badUnlockWhere", {l_strFid, l_strTo, l_strLock})->m_strTo = l_strTo;
         }
-    const std::set<std::string> reach = reachable();
-    for (const Json& f : S["floors"]) if (!reach.count(f["id"].get<std::string>())) add("unreachable", f["id"].get<std::string>(), "unreachWhere", {});
+    const std::set<std::string> l_setReach = f_Reachable();
+    for (const Json& l_jF : m_jS["floors"]) if (!l_setReach.count(l_jF["id"].get<std::string>())) l_fnAdd("unreachable", l_jF["id"].get<std::string>(), "unreachWhere", {});
     // dialogues: a start / next naming a node the file lacks
-    for (auto& [id, d] : S["dialogues"].items()) {
-        const Json nodes = d.value("nodes", Json::object());
-        std::vector<std::string> starts;
-        if (d.contains("start") && d["start"].is_array()) { for (const Json& s : d["start"]) starts.push_back(str(s, "node")); }
-        else starts.push_back(str(d, "start"));
-        for (const std::string& s : starts) if (!nodes.contains(s)) add("bad_dialogue", id, "wDlgStart", {s});
-        for (auto& [nid, n] : nodes.items())
-            if (n.is_object() && n.contains("choices"))
-                for (const Json& c : n["choices"]) {
-                    const std::string nx = str(c, "next");
-                    if (!nx.empty() && !nodes.contains(nx)) add("bad_dialogue", id, "wDlgNext", {nid, nx});
+    for (auto& [l_strId, l_jD] : m_jS["dialogues"].items()) {
+        const Json l_jNodes = l_jD.value("nodes", Json::object());
+        std::vector<std::string> l_vStarts;
+        if (l_jD.contains("start") && l_jD["start"].is_array()) { for (const Json& l_jS : l_jD["start"]) l_vStarts.push_back(f_Str(l_jS, "node")); }
+        else l_vStarts.push_back(f_Str(l_jD, "start"));
+        for (const std::string& l_strS : l_vStarts) if (!l_jNodes.contains(l_strS)) l_fnAdd("bad_dialogue", l_strId, "wDlgStart", {l_strS});
+        for (auto& [l_strNid, l_jN] : l_jNodes.items())
+            if (l_jN.is_object() && l_jN.contains("choices"))
+                for (const Json& l_jC : l_jN["choices"]) {
+                    const std::string l_strNx = f_Str(l_jC, "next");
+                    if (!l_strNx.empty() && !l_jNodes.contains(l_strNx)) l_fnAdd("bad_dialogue", l_strId, "wDlgNext", {l_strNid, l_strNx});
                 }
     }
-    return out;
+    return l_vOut;
 }
 
 // ---- event actions -------------------------------------------------------------------------------------------------
 
-std::string EventProject::newEventId() {
-    for (int n = 1;; n++) {
-        const std::string id = "ev_new_event_" + std::to_string(n);
-        if (!ev(id) && !S["texts"].contains(id + ".text")) return id;
+std::string EventProject::f_NewEventId() {
+    for (int l_iN = 1;; l_iN++) {
+        const std::string l_strId = "ev_new_event_" + std::to_string(l_iN);
+        if (!f_Ev(l_strId) && !m_jS["texts"].contains(l_strId + ".text")) return l_strId;
     }
 }
 
-static Json emptyText() {
-    Json t = Json::object();
-    for (const char* l : kLangs) t[l] = "";
-    return t;
+static Json f_EmptyText() {
+    Json l_jT = Json::object();
+    for (const char* l_pszL : g_arrLangs) l_jT[l_pszL] = "";
+    return l_jT;
 }
 
-Json EventProject::blankEvent(const std::string& id, const std::string& pool) const {
-    Json e = Json::object();
-    e["id"] = id;
-    e["kind"] = "";
-    e["pool"] = pool;
-    e["text"] = id + ".text";
-    e["title"] = id + ".title";
-    e["desc"] = id + ".desc";
-    logicInto(e, Json::object());
-    return e;
+Json EventProject::f_BlankEvent(const std::string& l_strId, const std::string& l_strPool) const {
+    Json l_jE = Json::object();
+    l_jE["id"] = l_strId;
+    l_jE["kind"] = "";
+    l_jE["pool"] = l_strPool;
+    l_jE["text"] = l_strId + ".text";
+    l_jE["title"] = l_strId + ".title";
+    l_jE["desc"] = l_strId + ".desc";
+    f_LogicInto(l_jE, Json::object());
+    return l_jE;
 }
 
 // a missing id becomes a real event: ev_common_* variants go to pool_common, the rest to their chapter's pool. The text
 // key is the placeholder string that already exists under the bare id, so text.json needs no new key.
-void EventProject::makeRecord(const std::string& id, const std::string& act) {
-    const std::string pool = startsWith(id, "ev_common_") ? "pool_common" : "pool_act" + act.substr(std::min<size_t>(3, act.size()));
-    if (!contains(S["pools"], pool)) S["pools"].push_back(pool);
-    const std::string textKey = S["texts"].contains(id) ? id : id + ".text";
-    if (!S["texts"].contains(textKey)) S["texts"][textKey] = emptyText();
-    for (const char* f : {".title", ".desc"}) if (!S["texts"].contains(id + f)) S["texts"][id + f] = emptyText();
-    Json e = blankEvent(id, pool);
-    e["kind"] = guessKind(id);
-    e["text"] = textKey;
-    S["events"].push_back(e);
+void EventProject::f_MakeRecord(const std::string& l_strId, const std::string& l_strAct) {
+    const std::string l_strPool = f_StartsWith(l_strId, "ev_common_") ? "pool_common" : "pool_act" + l_strAct.substr(std::min<size_t>(3, l_strAct.size()));
+    if (!f_Contains(m_jS["pools"], l_strPool)) m_jS["pools"].push_back(l_strPool);
+    const std::string l_strTextKey = m_jS["texts"].contains(l_strId) ? l_strId : l_strId + ".text";
+    if (!m_jS["texts"].contains(l_strTextKey)) m_jS["texts"][l_strTextKey] = f_EmptyText();
+    for (const char* l_pszF : {".title", ".desc"}) if (!m_jS["texts"].contains(l_strId + l_pszF)) m_jS["texts"][l_strId + l_pszF] = f_EmptyText();
+    Json l_jE = f_BlankEvent(l_strId, l_strPool);
+    l_jE["kind"] = f_GuessKind(l_strId);
+    l_jE["text"] = l_strTextKey;
+    m_jS["events"].push_back(l_jE);
 }
 
-void EventProject::renameEvent(Json& e, const std::string& nu) {
-    const std::string old = e["id"].get<std::string>();
-    for (Json& f : S["floors"]) for (Json& x : f["events"]) if (x == old) x = nu;
-    for (Json& o : S["events"]) {
-        for (Json& n : o["next"]) if (n == old) n = nu;
-        for (Json& l : o["req"]) if (str(l, "type") == "runFlagSet" && str(l, "flag") == "event_" + old) l["flag"] = "event_" + nu;
+void EventProject::f_RenameEvent(Json& l_jE, const std::string& l_strNu) {
+    const std::string l_strOld = l_jE["id"].get<std::string>();
+    for (Json& l_jF : m_jS["floors"]) for (Json& l_jX : l_jF["events"]) if (l_jX == l_strOld) l_jX = l_strNu;
+    for (Json& l_jO : m_jS["events"]) {
+        for (Json& l_jN : l_jO["next"]) if (l_jN == l_strOld) l_jN = l_strNu;
+        for (Json& l_jL : l_jO["req"]) if (f_Str(l_jL, "type") == "runFlagSet" && f_Str(l_jL, "flag") == "event_" + l_strOld) l_jL["flag"] = "event_" + l_strNu;
     }
-    Json tx = S["texts"].contains(e["text"].get<std::string>()) ? S["texts"][e["text"].get<std::string>()] : Json::object();
-    S["texts"].erase(e["text"].get<std::string>());
-    e["id"] = nu;
-    e["text"] = nu + ".text";
-    S["texts"][nu + ".text"] = tx;
-    for (const char* f : {"title", "desc"}) {   // keys that follow the id move with it
-        if (e[f] != old + "." + f) continue;
-        const std::string ok = e[f].get<std::string>();
-        Json v = S["texts"].contains(ok) ? S["texts"][ok] : Json();
-        S["texts"].erase(ok);
-        e[f] = nu + "." + f;
-        if (!v.is_null()) S["texts"][nu + "." + f] = v;
+    Json l_jTx = m_jS["texts"].contains(l_jE["text"].get<std::string>()) ? m_jS["texts"][l_jE["text"].get<std::string>()] : Json::object();
+    m_jS["texts"].erase(l_jE["text"].get<std::string>());
+    l_jE["id"] = l_strNu;
+    l_jE["text"] = l_strNu + ".text";
+    m_jS["texts"][l_strNu + ".text"] = l_jTx;
+    for (const char* l_pszF : {"title", "desc"}) {   // keys that follow the id move with it
+        if (l_jE[l_pszF] != l_strOld + "." + l_pszF) continue;
+        const std::string l_strOk = l_jE[l_pszF].get<std::string>();
+        Json l_jV = m_jS["texts"].contains(l_strOk) ? m_jS["texts"][l_strOk] : Json();
+        m_jS["texts"].erase(l_strOk);
+        l_jE[l_pszF] = l_strNu + "." + l_pszF;
+        if (!l_jV.is_null()) m_jS["texts"][l_strNu + "." + l_pszF] = l_jV;
     }
-    selected = nu;
+    m_strSelected = l_strNu;
 }
 
-std::string EventProject::idError(const std::string& id, const Json* self) const {
-    if (!nameOk(id)) return "format";
-    for (const Json& e : S["events"]) if (e["id"] == id && &e != self) return "dup:" + e["pool"].get<std::string>();
+std::string EventProject::f_IdError(const std::string& l_strId, const Json* l_pSelf) const {
+    if (!f_NameOk(l_strId)) return "format";
+    for (const Json& l_jE : m_jS["events"]) if (l_jE["id"] == l_strId && &l_jE != l_pSelf) return "dup:" + l_jE["pool"].get<std::string>();
     return std::string();
 }
 
 // ---- save ----------------------------------------------------------------------------------------------------------
 
-static Json poolRec(const EventProject& p, const Json& e) {
-    Json o = Json::object();
-    o["eventId"] = e["id"];
-    o["kind"] = e["kind"];
-    o["text"] = e["text"];
-    o["title"] = e["title"];
-    o["desc"] = e["desc"];
-    if (e.contains("inLog")) o["inLog"] = e["inLog"];
-    if (e["trigger"].value("on", std::string("step")) != "step") o["trigger"] = e["trigger"];
-    const Json rq = p.reqJson(e);
-    if (!rq.is_null()) o["requires"] = rq;
-    if (!e["actions"].empty()) o["actions"] = e["actions"];
-    if (!e["next"].empty()) o["next"] = e["next"];
-    if (e["once"] == false) { o["once"] = false; if (e["maxTimes"].get<int>() > 0) o["maxTimes"] = e["maxTimes"]; }
-    if (e["trigger"].value("on", std::string()) == "talk") {
-        if (!e["dialogue"].get<std::string>().empty()) o["dialogue"] = e["dialogue"];
-        if (!e["afterDialogue"].get<std::string>().empty()) o["afterDialogue"] = e["afterDialogue"];
-        if (e["topicOrder"].is_number_integer()) o["topicOrder"] = e["topicOrder"];
+static Json f_PoolRec(const EventProject& l_oP, const Json& l_jE) {
+    Json l_jO = Json::object();
+    l_jO["eventId"] = l_jE["id"];
+    l_jO["kind"] = l_jE["kind"];
+    l_jO["text"] = l_jE["text"];
+    l_jO["title"] = l_jE["title"];
+    l_jO["desc"] = l_jE["desc"];
+    if (l_jE.contains("inLog")) l_jO["inLog"] = l_jE["inLog"];
+    if (l_jE["trigger"].value("on", std::string("step")) != "step") l_jO["trigger"] = l_jE["trigger"];
+    const Json l_jRq = l_oP.f_ReqJson(l_jE);
+    if (!l_jRq.is_null()) l_jO["requires"] = l_jRq;
+    if (!l_jE["actions"].empty()) l_jO["actions"] = l_jE["actions"];
+    if (!l_jE["next"].empty()) l_jO["next"] = l_jE["next"];
+    if (l_jE["once"] == false) { l_jO["once"] = false; if (l_jE["maxTimes"].get<int>() > 0) l_jO["maxTimes"] = l_jE["maxTimes"]; }
+    if (l_jE["trigger"].value("on", std::string()) == "talk") {
+        if (!l_jE["dialogue"].get<std::string>().empty()) l_jO["dialogue"] = l_jE["dialogue"];
+        if (!l_jE["afterDialogue"].get<std::string>().empty()) l_jO["afterDialogue"] = l_jE["afterDialogue"];
+        if (l_jE["topicOrder"].is_number_integer()) l_jO["topicOrder"] = l_jE["topicOrder"];
     }
-    return o;
+    return l_jO;
 }
 
-std::vector<EventProject::FileWrite> EventProject::liveWrites(const std::map<std::string, std::string>& comments) const {
-    const std::string A = "assets/data/";
-    std::vector<FileWrite> out;
-    auto put = [&](const std::string& path, const std::string* before, const std::string& text) {
-        if (before && *before == text) return;
-        out.push_back({path, before ? *before : std::string(), text, before != nullptr});
+std::vector<EventProject::FileWrite> EventProject::f_LiveWrites(const std::map<std::string, std::string>& l_mapComments) const {
+    const std::string l_strA = "assets/data/";
+    std::vector<FileWrite> l_vOut;
+    auto l_fnPut = [&](const std::string& l_strPath, const std::string* l_pBefore, const std::string& l_strText) {
+        if (l_pBefore && *l_pBefore == l_strText) return;
+        l_vOut.push_back({l_strPath, l_pBefore ? *l_pBefore : std::string(), l_strText, l_pBefore != nullptr});
     };
-    auto read = [&](const std::string& path, std::string& s) { return readText(root + "/" + path, s); };
+    auto l_fnRead = [&](const std::string& l_strPath, std::string& l_strS) { return f_ReadText(m_strRoot + "/" + l_strPath, l_strS); };
     // pools
-    std::set<std::string> allPools;
-    for (const Json& p : base["pools"]) allPools.insert(p.get<std::string>());
-    for (const Json& p : S["pools"]) allPools.insert(p.get<std::string>());
-    for (const std::string& pid : allPools) {
-        std::vector<const Json*> bEv, sEv;
-        for (const Json& e : base["events"]) if (e["pool"] == pid) bEv.push_back(&e);
-        for (const Json& e : S["events"]) if (e["pool"] == pid) sEv.push_back(&e);
-        Json a = Json::array(), b = Json::array();
-        for (const Json* e : bEv) a.push_back(poolRec(*this, *e));
-        for (const Json* e : sEv) b.push_back(poolRec(*this, *e));
-        if (a == b && contains(base["pools"], pid)) continue;
-        const std::string path = A + "events/" + pid + ".json";
-        std::string before;
-        const bool had = read(path, before);
-        Json obj = had ? Json::parse(before, nullptr, false) : Json{{"events", Json::array()}};
-        if (obj.is_discarded()) obj = Json{{"events", Json::array()}};
-        Json disk = obj.value("events", Json::array());
-        std::set<std::string> mine;
-        for (const Json* e : bEv) mine.insert((*e)["id"].get<std::string>());
-        for (const Json* e : sEv) mine.insert((*e)["id"].get<std::string>());
-        Json evs = Json::array();
-        for (const Json* e : sEv) {
-            Json r = Json::object();
-            for (const Json& d : disk) if (d.value("eventId", std::string()) == (*e)["id"].get<std::string>()) { r = d; break; }
-            for (const char* k : {"trigger", "requires", "actions", "next", "inLog", "dialogue", "afterDialogue", "topicOrder", "once", "maxTimes"}) r.erase(k);
-            const Json rec = poolRec(*this, *e);
-            for (auto& [k, v] : rec.items()) r[k] = v;   // the editor's fields win; a removed inLog goes
-            evs.push_back(r);
+    std::set<std::string> l_setAllPools;
+    for (const Json& l_jP : m_jBase["pools"]) l_setAllPools.insert(l_jP.get<std::string>());
+    for (const Json& l_jP : m_jS["pools"]) l_setAllPools.insert(l_jP.get<std::string>());
+    for (const std::string& l_strPid : l_setAllPools) {
+        std::vector<const Json*> l_vBEv, l_vSEv;
+        for (const Json& l_jE : m_jBase["events"]) if (l_jE["pool"] == l_strPid) l_vBEv.push_back(&l_jE);
+        for (const Json& l_jE : m_jS["events"]) if (l_jE["pool"] == l_strPid) l_vSEv.push_back(&l_jE);
+        Json l_jA = Json::array(), l_jB = Json::array();
+        for (const Json* l_pE : l_vBEv) l_jA.push_back(f_PoolRec(*this, *l_pE));
+        for (const Json* l_pE : l_vSEv) l_jB.push_back(f_PoolRec(*this, *l_pE));
+        if (l_jA == l_jB && f_Contains(m_jBase["pools"], l_strPid)) continue;
+        const std::string l_strPath = l_strA + "events/" + l_strPid + ".json";
+        std::string l_strBefore;
+        const bool l_bHad = l_fnRead(l_strPath, l_strBefore);
+        Json l_jObj = l_bHad ? Json::parse(l_strBefore, nullptr, false) : Json{{"events", Json::array()}};
+        if (l_jObj.is_discarded()) l_jObj = Json{{"events", Json::array()}};
+        Json l_jDisk = l_jObj.value("events", Json::array());
+        std::set<std::string> l_setMine;
+        for (const Json* l_pE : l_vBEv) l_setMine.insert((*l_pE)["id"].get<std::string>());
+        for (const Json* l_pE : l_vSEv) l_setMine.insert((*l_pE)["id"].get<std::string>());
+        Json l_jEvs = Json::array();
+        for (const Json* l_pE : l_vSEv) {
+            Json l_jR = Json::object();
+            for (const Json& l_jD : l_jDisk) if (l_jD.value("eventId", std::string()) == (*l_pE)["id"].get<std::string>()) { l_jR = l_jD; break; }
+            for (const char* l_pszK : {"trigger", "requires", "actions", "next", "inLog", "dialogue", "afterDialogue", "topicOrder", "once", "maxTimes"}) l_jR.erase(l_pszK);
+            const Json l_jRec = f_PoolRec(*this, *l_pE);
+            for (auto& [l_strK, l_jV] : l_jRec.items()) l_jR[l_strK] = l_jV;   // the editor's fields win; a removed inLog goes
+            l_jEvs.push_back(l_jR);
         }
-        for (const Json& d : disk) if (!mine.count(d.value("eventId", std::string()))) evs.push_back(d);   // added by someone else since
-        obj["events"] = evs;
-        put(path, had ? &before : nullptr, asText(obj, had ? &before : nullptr));
+        for (const Json& l_jD : l_jDisk) if (!l_setMine.count(l_jD.value("eventId", std::string()))) l_jEvs.push_back(l_jD);   // added by someone else since
+        l_jObj["events"] = l_jEvs;
+        l_fnPut(l_strPath, l_bHad ? &l_strBefore : nullptr, f_AsText(l_jObj, l_bHad ? &l_strBefore : nullptr));
     }
     // floors
-    for (const Json& f : S["floors"]) {
-        const std::string id = f["id"].get<std::string>();
-        const Json* bf = nullptr;
-        for (const Json& x : base["floors"]) if (x["id"] == id) bf = &x;
-        const bool stairsChanged = !f["derived"].get<bool>() && (!bf || (*bf)["derived"].get<bool>() || (*bf)["stairs"] != f["stairs"]);
-        if (bf && (*bf)["events"] == f["events"] && (*bf)["act"] == f["act"] && !stairsChanged) continue;
-        const std::string path = A + "story/floors/" + id + ".json";
-        std::string before;
-        const bool had = read(path, before);
-        Json obj = had ? Json::parse(before, nullptr, false) : Json();
-        if (!had || obj.is_discarded()) obj = Json{{"id", id}, {"act", f["act"]}, {"role", f["role"]}, {"events", Json::array()}};
-        if (!bf || !had) obj["events"] = f["events"];
-        else if ((*bf)["events"] != f["events"]) {
-            const Json diskEv = obj.value("events", Json::array());
-            std::vector<std::string> add, del;
-            for (const Json& x : f["events"]) if (!contains((*bf)["events"], x.get<std::string>())) add.push_back(x.get<std::string>());
-            for (const Json& x : (*bf)["events"]) if (!contains(f["events"], x.get<std::string>())) del.push_back(x.get<std::string>());
-            if (diskEv == (*bf)["events"]) obj["events"] = f["events"];
+    for (const Json& l_jF : m_jS["floors"]) {
+        const std::string l_strId = l_jF["id"].get<std::string>();
+        const Json* l_pBf = nullptr;
+        for (const Json& l_jX : m_jBase["floors"]) if (l_jX["id"] == l_strId) l_pBf = &l_jX;
+        const bool l_bStairsChanged = !l_jF["derived"].get<bool>() && (!l_pBf || (*l_pBf)["derived"].get<bool>() || (*l_pBf)["stairs"] != l_jF["stairs"]);
+        if (l_pBf && (*l_pBf)["events"] == l_jF["events"] && (*l_pBf)["act"] == l_jF["act"] && !l_bStairsChanged) continue;
+        const std::string l_strPath = l_strA + "story/floors/" + l_strId + ".json";
+        std::string l_strBefore;
+        const bool l_bHad = l_fnRead(l_strPath, l_strBefore);
+        Json l_jObj = l_bHad ? Json::parse(l_strBefore, nullptr, false) : Json();
+        if (!l_bHad || l_jObj.is_discarded()) l_jObj = Json{{"id", l_strId}, {"act", l_jF["act"]}, {"role", l_jF["role"]}, {"events", Json::array()}};
+        if (!l_pBf || !l_bHad) l_jObj["events"] = l_jF["events"];
+        else if ((*l_pBf)["events"] != l_jF["events"]) {
+            const Json l_jDiskEv = l_jObj.value("events", Json::array());
+            std::vector<std::string> l_vAdd, l_vDel;
+            for (const Json& l_jX : l_jF["events"]) if (!f_Contains((*l_pBf)["events"], l_jX.get<std::string>())) l_vAdd.push_back(l_jX.get<std::string>());
+            for (const Json& l_jX : (*l_pBf)["events"]) if (!f_Contains(l_jF["events"], l_jX.get<std::string>())) l_vDel.push_back(l_jX.get<std::string>());
+            if (l_jDiskEv == (*l_pBf)["events"]) l_jObj["events"] = l_jF["events"];
             else {
-                Json m = Json::array();
-                for (const Json& x : diskEv) if (!x.is_string() || !contains(del, x.get<std::string>())) m.push_back(x);
-                for (const std::string& x : add) if (!contains(diskEv, x)) m.push_back(x);
-                obj["events"] = m;
+                Json l_jM = Json::array();
+                for (const Json& l_jX : l_jDiskEv) if (!l_jX.is_string() || !f_Contains(l_vDel, l_jX.get<std::string>())) l_jM.push_back(l_jX);
+                for (const std::string& l_strX : l_vAdd) if (!f_Contains(l_jDiskEv, l_strX)) l_jM.push_back(l_strX);
+                l_jObj["events"] = l_jM;
             }
         }
-        if (!bf || (*bf)["act"] != f["act"]) obj["act"] = f["act"];
-        if (stairsChanged) obj["stairs"] = f["stairs"];
-        put(path, had ? &before : nullptr, asText(obj, had ? &before : nullptr));
+        if (!l_pBf || (*l_pBf)["act"] != l_jF["act"]) l_jObj["act"] = l_jF["act"];
+        if (l_bStairsChanged) l_jObj["stairs"] = l_jF["stairs"];
+        l_fnPut(l_strPath, l_bHad ? &l_strBefore : nullptr, f_AsText(l_jObj, l_bHad ? &l_strBefore : nullptr));
     }
     // text.json
     {
-        std::set<std::string> keys;
-        for (auto& [k, v] : base["texts"].items()) { (void)v; keys.insert(k); }
-        for (auto& [k, v] : S["texts"].items()) { (void)v; keys.insert(k); }
-        std::vector<std::string> changed;
-        for (const std::string& k : keys) {
-            const Json a = base["texts"].contains(k) ? base["texts"][k] : Json(), b = S["texts"].contains(k) ? S["texts"][k] : Json();
-            if (a != b) changed.push_back(k);
+        std::set<std::string> l_setKeys;
+        for (auto& [l_strK, l_jV] : m_jBase["texts"].items()) { (void)l_jV; l_setKeys.insert(l_strK); }
+        for (auto& [l_strK, l_jV] : m_jS["texts"].items()) { (void)l_jV; l_setKeys.insert(l_strK); }
+        std::vector<std::string> l_vChanged;
+        for (const std::string& l_strK : l_setKeys) {
+            const Json l_jA = m_jBase["texts"].contains(l_strK) ? m_jBase["texts"][l_strK] : Json(), l_jB = m_jS["texts"].contains(l_strK) ? m_jS["texts"][l_strK] : Json();
+            if (l_jA != l_jB) l_vChanged.push_back(l_strK);
         }
-        if (!changed.empty()) {
-            const std::string path = A + "text.json";
-            std::string before;
-            if (read(path, before)) {
-                Json obj = Json::parse(before, nullptr, false);
-                if (!obj.is_discarded()) {
-                    for (const std::string& k : changed) {
-                        if (S["texts"].contains(k) && !S["texts"][k].is_null()) obj["strings"][k] = S["texts"][k];
-                        else obj["strings"].erase(k);
+        if (!l_vChanged.empty()) {
+            const std::string l_strPath = l_strA + "text.json";
+            std::string l_strBefore;
+            if (l_fnRead(l_strPath, l_strBefore)) {
+                Json l_jObj = Json::parse(l_strBefore, nullptr, false);
+                if (!l_jObj.is_discarded()) {
+                    for (const std::string& l_strK : l_vChanged) {
+                        if (m_jS["texts"].contains(l_strK) && !m_jS["texts"][l_strK].is_null()) l_jObj["strings"][l_strK] = m_jS["texts"][l_strK];
+                        else l_jObj["strings"].erase(l_strK);
                     }
-                    put(path, &before, asText(obj, &before));
+                    l_fnPut(l_strPath, &l_strBefore, f_AsText(l_jObj, &l_strBefore));
                 }
             }
         }
     }
     // vars.json, kinds.json: a head of "_" keys, then the records
-    for (const auto& [key, file] : std::vector<std::pair<std::string, std::string>>{{"vars", "story/vars.json"}, {"kinds", "events/kinds.json"}}) {
-        const bool catsChanged = key == "vars" && base["cats"] != S["cats"];
-        if (base[key] == S[key] && !catsChanged) continue;
-        const std::string path = A + file;
-        std::string before;
-        const bool had = read(path, before);
-        Json old = had ? Json::parse(before, nullptr, false) : Json::object();
-        if (old.is_discarded()) old = Json::object();
-        Json o = Json::object();
-        if (had) { for (auto& [k, v] : old.items()) if (startsWith(k, "_")) o[k] = v; }
-        else { auto c = comments.find(key); o["_comment"] = Json::array({c != comments.end() ? c->second : std::string()}); }
-        if (key == "vars") { if (!S["cats"].empty()) o["_categories"] = S["cats"]; else o.erase("_categories"); }
-        for (auto& [k, v] : S[key].items()) o[k] = v;
-        put(path, had ? &before : nullptr, asText(o, had ? &before : nullptr));
+    for (const auto& [l_strKey, l_strFile] : std::vector<std::pair<std::string, std::string>>{{"vars", "story/vars.json"}, {"kinds", "events/kinds.json"}}) {
+        const bool l_bCatsChanged = l_strKey == "vars" && m_jBase["cats"] != m_jS["cats"];
+        if (m_jBase[l_strKey] == m_jS[l_strKey] && !l_bCatsChanged) continue;
+        const std::string l_strPath = l_strA + l_strFile;
+        std::string l_strBefore;
+        const bool l_bHad = l_fnRead(l_strPath, l_strBefore);
+        Json l_jOld = l_bHad ? Json::parse(l_strBefore, nullptr, false) : Json::object();
+        if (l_jOld.is_discarded()) l_jOld = Json::object();
+        Json l_jO = Json::object();
+        if (l_bHad) { for (auto& [l_strK, l_jV] : l_jOld.items()) if (f_StartsWith(l_strK, "_")) l_jO[l_strK] = l_jV; }
+        else { auto l_itC = l_mapComments.find(l_strKey); l_jO["_comment"] = Json::array({l_itC != l_mapComments.end() ? l_itC->second : std::string()}); }
+        if (l_strKey == "vars") { if (!m_jS["cats"].empty()) l_jO["_categories"] = m_jS["cats"]; else l_jO.erase("_categories"); }
+        for (auto& [l_strK, l_jV] : m_jS[l_strKey].items()) l_jO[l_strK] = l_jV;
+        l_fnPut(l_strPath, l_bHad ? &l_strBefore : nullptr, f_AsText(l_jO, l_bHad ? &l_strBefore : nullptr));
     }
     // NPC and dialogue files: whole files
-    for (const auto& [key, folder] : std::vector<std::pair<std::string, std::string>>{{"npcs", "npcs"}, {"dialogues", "dialogue"}})
-        for (auto& [id, v] : S[key].items()) {
-            if (base[key].contains(id) && base[key][id] == v) continue;
-            const std::string path = A + folder + "/" + id + ".json";
-            std::string before;
-            const bool had = read(path, before);
-            put(path, had ? &before : nullptr, asText(v, had ? &before : nullptr));
+    for (const auto& [l_strKey, l_strFolder] : std::vector<std::pair<std::string, std::string>>{{"npcs", "npcs"}, {"dialogues", "dialogue"}})
+        for (auto& [l_strId, l_jV] : m_jS[l_strKey].items()) {
+            if (m_jBase[l_strKey].contains(l_strId) && m_jBase[l_strKey][l_strId] == l_jV) continue;
+            const std::string l_strPath = l_strA + l_strFolder + "/" + l_strId + ".json";
+            std::string l_strBefore;
+            const bool l_bHad = l_fnRead(l_strPath, l_strBefore);
+            l_fnPut(l_strPath, l_bHad ? &l_strBefore : nullptr, f_AsText(l_jV, l_bHad ? &l_strBefore : nullptr));
         }
     // flags.json, counters.json: hand-aligned, so only the changed entries' lines are replaced
-    for (const std::string key : {"flags", "counters"}) {
-        std::vector<std::pair<std::string, Json>> changes;
-        for (auto& [k, v] : S[key].items()) if (!base[key].contains(k) || base[key][k] != v) changes.push_back({k, v});
-        if (changes.empty()) continue;
-        const std::string path = A + "story/" + key + ".json";
-        std::string before;
-        if (!read(path, before)) continue;
-        Json obj = Json::parse(before, nullptr, false);
-        if (obj.is_discarded()) continue;
-        std::string text = patchEntries(before, obj, changes);
-        if (text.empty()) { for (auto& [k, v] : changes) obj[k] = v; text = asText(obj, &before); }
-        put(path, &before, text);
+    for (const std::string l_strKey : {"flags", "counters"}) {
+        std::vector<std::pair<std::string, Json>> l_vChanges;
+        for (auto& [l_strK, l_jV] : m_jS[l_strKey].items()) if (!m_jBase[l_strKey].contains(l_strK) || m_jBase[l_strKey][l_strK] != l_jV) l_vChanges.push_back({l_strK, l_jV});
+        if (l_vChanges.empty()) continue;
+        const std::string l_strPath = l_strA + "story/" + l_strKey + ".json";
+        std::string l_strBefore;
+        if (!l_fnRead(l_strPath, l_strBefore)) continue;
+        Json l_jObj = Json::parse(l_strBefore, nullptr, false);
+        if (l_jObj.is_discarded()) continue;
+        std::string l_strText = f_PatchEntries(l_strBefore, l_jObj, l_vChanges);
+        if (l_strText.empty()) { for (auto& [l_strK, l_jV] : l_vChanges) l_jObj[l_strK] = l_jV; l_strText = f_AsText(l_jObj, &l_strBefore); }
+        l_fnPut(l_strPath, &l_strBefore, l_strText);
     }
-    return out;
+    return l_vOut;
 }
 
-bool EventProject::writeAll(const std::vector<FileWrite>& files, const std::string& stamp, std::string& err) {
-    for (const FileWrite& f : files)
-        if (f.existed && !writeText(root + "/Build/editor_backups/" + stamp + "/" + f.path, f.before)) {
-            err = "Build/editor_backups/" + stamp + "/" + f.path + ": cannot write the backup";
+bool EventProject::f_WriteAll(const std::vector<FileWrite>& l_vFiles, const std::string& l_strStamp, std::string& l_strErr) {
+    for (const FileWrite& l_oF : l_vFiles)
+        if (l_oF.m_bExisted && !f_WriteText(m_strRoot + "/Build/editor_backups/" + l_strStamp + "/" + l_oF.m_strPath, l_oF.m_strBefore)) {
+            l_strErr = "Build/editor_backups/" + l_strStamp + "/" + l_oF.m_strPath + ": cannot write the backup";
             return false;
         }
-    for (const FileWrite& f : files)
-        if (!writeText(root + "/" + f.path, f.text)) { err = f.path + ": cannot write"; return false; }
-    base = S;
+    for (const FileWrite& l_oF : l_vFiles)
+        if (!f_WriteText(m_strRoot + "/" + l_oF.m_strPath, l_oF.m_strText)) { l_strErr = l_oF.m_strPath + ": cannot write"; return false; }
+    m_jBase = m_jS;
     return true;
 }
 
 // ---- the talk preview ----------------------------------------------------------------------------------------------
 
-void TalkPreview::reset(EventProject& p, const std::string& id) {
+void TalkPreview::f_Reset(EventProject& l_oP, const std::string& l_strId) {
     *this = TalkPreview();
-    npc = id;
-    for (auto& [k, v] : p.S["vars"].items()) vars[k] = num(v.value("default", Json(0)));
-    stats = {{"hp", 100}, {"atk", 10}, {"def", 5}, {"gold", 0}, {"lv", 1}};
-    auto it = p.npcPlaces.find(id);
-    stage = it != p.npcPlaces.end() && !it->second.empty() ? it->second[0] : std::string();
+    m_strNpc = l_strId;
+    for (auto& [l_strK, l_jV] : l_oP.m_jS["vars"].items()) m_mapVars[l_strK] = f_Num(l_jV.value("default", Json(0)));
+    m_mapStats = {{"hp", 100}, {"atk", 10}, {"def", 5}, {"gold", 0}, {"lv", 1}};
+    auto l_itIt = l_oP.m_mapNpcPlaces.find(l_strId);
+    m_strStage = l_itIt != l_oP.m_mapNpcPlaces.end() && !l_itIt->second.empty() ? l_itIt->second[0] : std::string();
 }
 
-bool TalkPreview::eval(const Json& c) const {
-    if (c.is_null()) return true;
-    if (c.contains("all") && c["all"].is_array()) return std::all_of(c["all"].begin(), c["all"].end(), [&](const Json& x) { return eval(x); });
-    if (c.contains("any") && c["any"].is_array()) return std::any_of(c["any"].begin(), c["any"].end(), [&](const Json& x) { return eval(x); });
-    if (c.contains("not")) return !eval(c["not"]);
-    const std::string t = str(c, "type");
-    auto get = [](const std::map<std::string, double>& m, const std::string& k) { auto it = m.find(k); return it == m.end() ? 0.0 : it->second; };
-    if (t == "runFlagSet") { const std::string f = str(c, "flag"); return startsWith(f, "event_") && finished.count(f.substr(6)); }
-    if (t == "varAtLeast") return get(vars, str(c, "var")) >= num(c.value("value", Json(0)));
-    if (t == "varEquals") return get(vars, str(c, "var")) == num(c.value("value", Json(0)));
-    if (t == "counterAtLeast") return get(counters, str(c, "counter")) >= num(c.value("min", Json(0)));
-    if (t == "talkCountAtLeast") { auto it = talks.find(str(c, "npc")); return (it == talks.end() ? 0 : it->second.count) >= num(c.value("value", Json(0))); }
-    if (t == "stageCleared") return cleared.count(str(c, "stageId")) > 0;
-    if (t == "statAtLeast") return get(stats, str(c, "stat")) >= num(c.value("value", Json(0)));
-    if (t == "always") return true;
-    if (t == "onStage") return stage == str(c, "stageId");
+bool TalkPreview::f_Eval(const Json& l_jC) const {
+    if (l_jC.is_null()) return true;
+    if (l_jC.contains("all") && l_jC["all"].is_array()) return std::all_of(l_jC["all"].begin(), l_jC["all"].end(), [&](const Json& l_jX) { return f_Eval(l_jX); });
+    if (l_jC.contains("any") && l_jC["any"].is_array()) return std::any_of(l_jC["any"].begin(), l_jC["any"].end(), [&](const Json& l_jX) { return f_Eval(l_jX); });
+    if (l_jC.contains("not")) return !f_Eval(l_jC["not"]);
+    const std::string l_strT = f_Str(l_jC, "type");
+    auto l_fnGet = [](const std::map<std::string, double>& l_mapM, const std::string& l_strK) { auto l_itIt = l_mapM.find(l_strK); return l_itIt == l_mapM.end() ? 0.0 : l_itIt->second; };
+    if (l_strT == "runFlagSet") { const std::string l_strF = f_Str(l_jC, "flag"); return f_StartsWith(l_strF, "event_") && m_setFinished.count(l_strF.substr(6)); }
+    if (l_strT == "varAtLeast") return l_fnGet(m_mapVars, f_Str(l_jC, "var")) >= f_Num(l_jC.value("value", Json(0)));
+    if (l_strT == "varEquals") return l_fnGet(m_mapVars, f_Str(l_jC, "var")) == f_Num(l_jC.value("value", Json(0)));
+    if (l_strT == "counterAtLeast") return l_fnGet(m_mapCounters, f_Str(l_jC, "counter")) >= f_Num(l_jC.value("min", Json(0)));
+    if (l_strT == "talkCountAtLeast") { auto l_itIt = m_mapTalks.find(f_Str(l_jC, "npc")); return (l_itIt == m_mapTalks.end() ? 0 : l_itIt->second.m_iCount) >= f_Num(l_jC.value("value", Json(0))); }
+    if (l_strT == "stageCleared") return m_setCleared.count(f_Str(l_jC, "stageId")) > 0;
+    if (l_strT == "statAtLeast") return l_fnGet(m_mapStats, f_Str(l_jC, "stat")) >= f_Num(l_jC.value("value", Json(0)));
+    if (l_strT == "always") return true;
+    if (l_strT == "onStage") return m_strStage == f_Str(l_jC, "stageId");
     return false;   // as the game: an unknown leaf (or one the preview cannot know, e.g. itemHeld) fails
 }
 
-std::vector<TalkPreview::MenuItem> TalkPreview::menu(EventProject& p, const std::string& id) {
-    std::vector<MenuItem> open, done;
-    for (Json* e : p.topicsOf(id)) {
-        const std::string eid = (*e)["id"].get<std::string>();
-        const int cnt = std::max(counts.count(eid) ? counts[eid] : 0, finished.count(eid) ? 1 : 0);
-        const bool left = (*e)["once"] == false && ((*e)["maxTimes"].get<int>() == 0 || cnt < (*e)["maxTimes"].get<int>());
-        if (finished.count(eid) && !left) { if (!(*e)["afterDialogue"].get<std::string>().empty()) done.push_back({eid, true}); }
-        else if ((!p.woken(eid) || started.count(eid) || finished.count(eid)) && eval(p.reqJson(*e))) open.push_back({eid, false});
+std::vector<TalkPreview::MenuItem> TalkPreview::f_Menu(EventProject& l_oP, const std::string& l_strId) {
+    std::vector<MenuItem> l_vOpen, l_vDone;
+    for (Json* l_pE : l_oP.f_TopicsOf(l_strId)) {
+        const std::string l_strEid = (*l_pE)["id"].get<std::string>();
+        const int l_iCnt = std::max(m_mapCounts.count(l_strEid) ? m_mapCounts[l_strEid] : 0, m_setFinished.count(l_strEid) ? 1 : 0);
+        const bool l_bLeft = (*l_pE)["once"] == false && ((*l_pE)["maxTimes"].get<int>() == 0 || l_iCnt < (*l_pE)["maxTimes"].get<int>());
+        if (m_setFinished.count(l_strEid) && !l_bLeft) { if (!(*l_pE)["afterDialogue"].get<std::string>().empty()) l_vDone.push_back({l_strEid, true}); }
+        else if ((!l_oP.f_Woken(l_strEid) || m_setStarted.count(l_strEid) || m_setFinished.count(l_strEid)) && f_Eval(l_oP.f_ReqJson(*l_pE))) l_vOpen.push_back({l_strEid, false});
     }
-    open.insert(open.end(), done.begin(), done.end());
-    return open;
+    l_vOpen.insert(l_vOpen.end(), l_vDone.begin(), l_vDone.end());
+    return l_vOpen;
 }
 
-int TalkPreview::chat(const Json& f) {
-    const std::string id = str(f, "npcId");
-    TalkState& st = talks[id];
-    std::vector<Json> lines;
-    if (f.contains("chat") && f["chat"].contains("lines"))
-        for (const Json& l : f["chat"]["lines"]) lines.push_back(l.is_string() ? Json{{"dialogue", l}} : l);
-    std::vector<int> avail;
-    for (size_t i = 0; i < lines.size(); i++) if (eval(lines[i].value("requires", Json()))) avail.push_back((int)i);
-    if (avail.empty()) return -1;
-    const std::string order = f.contains("chat") ? str(f["chat"], "order", "loop") : std::string("loop");
-    const int n = (int)avail.size();
-    if (n == 1) { if (order == "loop") st.index++; return avail[0]; }
-    if (order == "random") {
-        static std::mt19937 rng{std::random_device{}()};
-        int p = (int)(rng() % (unsigned)n);
-        if (avail[(size_t)p] == st.last) p = (p + 1) % n;
-        st.last = avail[(size_t)p];
-        return avail[(size_t)p];
+int TalkPreview::f_Chat(const Json& l_jF) {
+    const std::string l_strId = f_Str(l_jF, "npcId");
+    TalkState& l_oSt = m_mapTalks[l_strId];
+    std::vector<Json> l_vLines;
+    if (l_jF.contains("chat") && l_jF["chat"].contains("lines"))
+        for (const Json& l_jL : l_jF["chat"]["lines"]) l_vLines.push_back(l_jL.is_string() ? Json{{"dialogue", l_jL}} : l_jL);
+    std::vector<int> l_vAvail;
+    for (size_t l_nI = 0; l_nI < l_vLines.size(); l_nI++) if (f_Eval(l_vLines[l_nI].value("requires", Json()))) l_vAvail.push_back((int)l_nI);
+    if (l_vAvail.empty()) return -1;
+    const std::string l_strOrder = l_jF.contains("chat") ? f_Str(l_jF["chat"], "order", "loop") : std::string("loop");
+    const int l_iN = (int)l_vAvail.size();
+    if (l_iN == 1) { if (l_strOrder == "loop") l_oSt.m_iIndex++; return l_vAvail[0]; }
+    if (l_strOrder == "random") {
+        static std::mt19937 l_oRng{std::random_device{}()};
+        int l_iP = (int)(l_oRng() % (unsigned)l_iN);
+        if (l_vAvail[(size_t)l_iP] == l_oSt.m_iLast) l_iP = (l_iP + 1) % l_iN;
+        l_oSt.m_iLast = l_vAvail[(size_t)l_iP];
+        return l_vAvail[(size_t)l_iP];
     }
-    const int at = order == "stay" ? std::min(st.index, n - 1) : st.index;
-    const int line = avail[(size_t)(at % n)];
-    if (order == "loop" || st.index < n - 1) st.index++;
-    return line;
+    const int l_iAt = l_strOrder == "stay" ? std::min(l_oSt.m_iIndex, l_iN - 1) : l_oSt.m_iIndex;
+    const int l_iLine = l_vAvail[(size_t)(l_iAt % l_iN)];
+    if (l_strOrder == "loop" || l_oSt.m_iIndex < l_iN - 1) l_oSt.m_iIndex++;
+    return l_iLine;
 }
 
-std::string TalkPreview::firstText(const EventProject& p, const std::string& dlg, const std::string& lang, bool* missing) const {
-    const Json* d = member(p.S["dialogues"], dlg.c_str());
-    if (missing) *missing = !d;
-    if (!d) return std::string();
-    std::string start;
-    if (d->contains("start") && (*d)["start"].is_array()) {
-        for (const Json& s : (*d)["start"]) if (eval(s.value("requires", Json()))) { start = str(s, "node"); break; }
-    } else start = str(*d, "start");
-    const Json* node = d->contains("nodes") ? member((*d)["nodes"], start.c_str()) : nullptr;
-    if (!node) return "?";
-    const Json t = node->value("text", Json());
-    if (t.is_string()) return t.get<std::string>();
-    for (const std::string& l : {lang, std::string("en")}) if (!str(t, l.c_str()).empty()) return str(t, l.c_str());
+std::string TalkPreview::f_FirstText(const EventProject& l_oP, const std::string& l_strDlg, const std::string& l_strLang, bool* l_pMissing) const {
+    const Json* l_pD = f_Member(l_oP.m_jS["dialogues"], l_strDlg.c_str());
+    if (l_pMissing) *l_pMissing = !l_pD;
+    if (!l_pD) return std::string();
+    std::string l_strStart;
+    if (l_pD->contains("start") && (*l_pD)["start"].is_array()) {
+        for (const Json& l_jS : (*l_pD)["start"]) if (f_Eval(l_jS.value("requires", Json()))) { l_strStart = f_Str(l_jS, "node"); break; }
+    } else l_strStart = f_Str(*l_pD, "start");
+    const Json* l_pNode = l_pD->contains("nodes") ? f_Member((*l_pD)["nodes"], l_strStart.c_str()) : nullptr;
+    if (!l_pNode) return "?";
+    const Json l_jT = l_pNode->value("text", Json());
+    if (l_jT.is_string()) return l_jT.get<std::string>();
+    for (const std::string& l_strL : {l_strLang, std::string("en")}) if (!f_Str(l_jT, l_strL.c_str()).empty()) return f_Str(l_jT, l_strL.c_str());
     return std::string();
 }
 
-void TalkPreview::talk(EventProject& p, const std::string& id, const std::string& lang) {
-    Json f = p.S["npcs"].contains(id) ? p.S["npcs"][id] : Json{{"npcId", id}, {"chat", Json{{"lines", Json::array({Json{{"dialogue", id}}})}}}};
-    if (!f.contains("npcId")) f["npcId"] = id;
-    TalkState& st = talks[id];
-    const std::vector<MenuItem> m = menu(p, id);
-    int open = 0;
-    for (const MenuItem& x : m) if (!x.finished) open++;
-    Entry e;
-    e.n = st.count + 1;
-    const bool always = f.contains("topics") && str(f["topics"], "menu") == "always";
-    if (m.empty()) {
-        const int l = chat(f);
-        e.kind = "chat";
-        if (l >= 0) {
-            const Json& line = f["chat"]["lines"][(size_t)l];
-            e.dialogue = line.is_string() ? line.get<std::string>() : str(line, "dialogue");
-            bool miss = false;
-            e.text = firstText(p, e.dialogue, lang, &miss);
-            if (miss) e.text = "\x01missing";
+void TalkPreview::f_Talk(EventProject& l_oP, const std::string& l_strId, const std::string& l_strLang) {
+    Json l_jF = l_oP.m_jS["npcs"].contains(l_strId) ? l_oP.m_jS["npcs"][l_strId] : Json{{"npcId", l_strId}, {"chat", Json{{"lines", Json::array({Json{{"dialogue", l_strId}}})}}}};
+    if (!l_jF.contains("npcId")) l_jF["npcId"] = l_strId;
+    TalkState& l_oSt = m_mapTalks[l_strId];
+    const std::vector<MenuItem> l_vM = f_Menu(l_oP, l_strId);
+    int l_iOpen = 0;
+    for (const MenuItem& l_oX : l_vM) if (!l_oX.m_bFinished) l_iOpen++;
+    Entry l_oE;
+    l_oE.m_iN = l_oSt.m_iCount + 1;
+    const bool l_bAlways = l_jF.contains("topics") && f_Str(l_jF["topics"], "menu") == "always";
+    if (l_vM.empty()) {
+        const int l_iL = f_Chat(l_jF);
+        l_oE.m_strKind = "chat";
+        if (l_iL >= 0) {
+            const Json& l_jLine = l_jF["chat"]["lines"][(size_t)l_iL];
+            l_oE.m_strDialogue = l_jLine.is_string() ? l_jLine.get<std::string>() : f_Str(l_jLine, "dialogue");
+            bool l_bMiss = false;
+            l_oE.m_strText = f_FirstText(l_oP, l_oE.m_strDialogue, l_strLang, &l_bMiss);
+            if (l_bMiss) l_oE.m_strText = "\x01missing";
         }
-    } else if (m.size() == 1 && open == 1 && !always) { e.kind = "topic"; e.menu = m; }
-    else { e.kind = "menu"; e.menu = m; }
-    talks[id].count++;
-    log.insert(log.begin(), e);
+    } else if (l_vM.size() == 1 && l_iOpen == 1 && !l_bAlways) { l_oE.m_strKind = "topic"; l_oE.m_vMenu = l_vM; }
+    else { l_oE.m_strKind = "menu"; l_oE.m_vMenu = l_vM; }
+    m_mapTalks[l_strId].m_iCount++;
+    m_vLog.insert(m_vLog.begin(), l_oE);
 }
 
-void TalkPreview::finish(EventProject& p, const std::string& id) {
-    const Json* e = p.ev(id);
-    if (!e) return;
-    const bool again = finished.count(id) > 0;
-    counts[id] = std::max(counts.count(id) ? counts[id] : 0, again ? 1 : 0) + 1;
-    finished.insert(id);
-    started.insert(id);
-    if (!again) for (const Json& x : (*e)["next"]) started.insert(x.get<std::string>());
-    for (const Json& a : (*e)["actions"]) {
-        const std::string t = str(a, "type");
-        if (t == "setVar") vars[str(a, "var")] = num(a.value("value", Json(0)));
-        if (t == "addVar") vars[str(a, "var")] += num(a.value("delta", Json(0)));
-        if (t == "addCounter") counters[str(a, "counter")] += num(a.value("delta", Json(0)));
+void TalkPreview::f_Finish(EventProject& l_oP, const std::string& l_strId) {
+    const Json* l_pE = l_oP.f_Ev(l_strId);
+    if (!l_pE) return;
+    const bool l_bAgain = m_setFinished.count(l_strId) > 0;
+    m_mapCounts[l_strId] = std::max(m_mapCounts.count(l_strId) ? m_mapCounts[l_strId] : 0, l_bAgain ? 1 : 0) + 1;
+    m_setFinished.insert(l_strId);
+    m_setStarted.insert(l_strId);
+    if (!l_bAgain) for (const Json& l_jX : (*l_pE)["next"]) m_setStarted.insert(l_jX.get<std::string>());
+    for (const Json& l_jA : (*l_pE)["actions"]) {
+        const std::string l_strT = f_Str(l_jA, "type");
+        if (l_strT == "setVar") m_mapVars[f_Str(l_jA, "var")] = f_Num(l_jA.value("value", Json(0)));
+        if (l_strT == "addVar") m_mapVars[f_Str(l_jA, "var")] += f_Num(l_jA.value("delta", Json(0)));
+        if (l_strT == "addCounter") m_mapCounters[f_Str(l_jA, "counter")] += f_Num(l_jA.value("delta", Json(0)));
     }
 }
 
-void TalkPreview::tick(EventProject& p, const std::string& id, bool on) {
-    if (!on) { finished.erase(id); return; }
-    finished.insert(id);
-    started.insert(id);
-    if (const Json* e = p.ev(id)) for (const Json& x : (*e)["next"]) started.insert(x.get<std::string>());
+void TalkPreview::f_Tick(EventProject& l_oP, const std::string& l_strId, bool l_bOn) {
+    if (!l_bOn) { m_setFinished.erase(l_strId); return; }
+    m_setFinished.insert(l_strId);
+    m_setStarted.insert(l_strId);
+    if (const Json* l_pE = l_oP.f_Ev(l_strId)) for (const Json& l_jX : (*l_pE)["next"]) m_setStarted.insert(l_jX.get<std::string>());
 }
 
 }  // namespace stage

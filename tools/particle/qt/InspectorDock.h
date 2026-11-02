@@ -29,77 +29,77 @@ class InspectorDock : public QDockWidget
     Q_OBJECT
 
 public:
-    explicit InspectorDock(ParticleDocument* doc, QWidget* parent = nullptr);
+    explicit InspectorDock(ParticleDocument* l_pDoc, QWidget* l_pParent = nullptr);
 
     // For the selftest and the editor.
-    QDoubleSpinBox* rateSpin() const { return m_rate; }
-    RangeEdit* sizeEdit() const { return m_size; }
-    CurveEdit* sizeCurve() const { return m_sizeCurve; }
-    GradientEdit* colorCurve() const { return m_colorCurve; }
-    QComboBox* blendCombo() const { return m_blend; }
-    QComboBox* shapeCombo() const { return m_shapeType; }
-    QListWidget* framesList() const { return m_frames; }
-    QTableWidget* burstsTable() const { return m_bursts; }
-    QComboBox* spriteCombo() const { return m_sprite; }
-    QComboBox* simulationCombo() const { return m_simulation; }
+    QDoubleSpinBox* f_RateSpin() const { return m_pRate; }
+    RangeEdit* f_SizeEdit() const { return m_pSize; }
+    CurveEdit* f_SizeCurve() const { return m_pSizeCurve; }
+    GradientEdit* f_ColorCurve() const { return m_pColorCurve; }
+    QComboBox* f_BlendCombo() const { return m_pBlend; }
+    QComboBox* f_ShapeCombo() const { return m_pShapeType; }
+    QListWidget* f_FramesList() const { return m_pFrames; }
+    QTableWidget* f_BurstsTable() const { return m_pBursts; }
+    QComboBox* f_SpriteCombo() const { return m_pSprite; }
+    QComboBox* f_SimulationCombo() const { return m_pSimulation; }
 
 private:
-    QWidget* section(QVBoxLayout* into, const QString& title, QFormLayout** form);
-    QString mergeKey(const QString& field);
-    void refresh();
-    void refreshSprites();
-    void updateShapeRows();
-    void commitBursts();
-    void commitFrames();
+    QWidget* f_Section(QVBoxLayout* l_pInto, const QString& l_oTitle, QFormLayout** l_pForm);
+    QString f_MergeKey(const QString& l_oField);
+    void f_Refresh();
+    void f_RefreshSprites();
+    void f_UpdateShapeRows();
+    void f_CommitBursts();
+    void f_CommitFrames();
 
-    ParticleDocument* m_doc;
-    bool m_updating = false;
-    QString m_lastField;
-    int m_serial = 0;
-    QElapsedTimer m_fieldClock;
+    ParticleDocument* m_pDoc;
+    bool m_bUpdating = false;
+    QString m_oLastField;
+    int m_iSerial = 0;
+    QElapsedTimer m_oFieldClock;
 
-    QWidget *m_emitterSections = nullptr, *m_effectSection = nullptr;
-    QLabel* m_none;
+    QWidget *m_pEmitterSections = nullptr, *m_pEffectSection = nullptr;
+    QLabel* m_pNone;
     // effect
-    QLineEdit* m_effectName;
-    QDoubleSpinBox *m_duration, *m_prewarm;
-    QCheckBox* m_loop;
-    QSpinBox* m_seed;
+    QLineEdit* m_pEffectName;
+    QDoubleSpinBox *m_pDuration, *m_pPrewarm;
+    QCheckBox* m_pLoop;
+    QSpinBox* m_pSeed;
     // emitter
-    QLineEdit* m_emitterName;
-    Vec2Edit* m_offset;
-    QDoubleSpinBox *m_start, *m_stop;
-    QComboBox* m_space;
-    QSpinBox* m_max;
+    QLineEdit* m_pEmitterName;
+    Vec2Edit* m_pOffset;
+    QDoubleSpinBox *m_pStart, *m_pStop;
+    QComboBox* m_pSpace;
+    QSpinBox* m_pMax;
     // emission
-    QDoubleSpinBox* m_rate;
-    QTableWidget* m_bursts;
+    QDoubleSpinBox* m_pRate;
+    QTableWidget* m_pBursts;
     // shape
-    QFormLayout* m_shapeForm = nullptr;
-    QComboBox* m_shapeType;
-    QDoubleSpinBox *m_length, *m_angle, *m_width, *m_height, *m_radius, *m_thickness, *m_arcFrom, *m_arcTo;
-    QCheckBox *m_edge, *m_outward;
+    QFormLayout* m_pShapeForm = nullptr;
+    QComboBox* m_pShapeType;
+    QDoubleSpinBox *m_pLength, *m_pAngle, *m_pWidth, *m_pHeight, *m_pRadius, *m_pThickness, *m_pArcFrom, *m_pArcTo;
+    QCheckBox *m_pEdge, *m_pOutward;
     // start values
-    RangeEdit *m_life, *m_speed, *m_size, *m_rotation, *m_spin;
-    QDoubleSpinBox *m_direction, *m_spread;
-    ColorButton *m_color, *m_color2;
-    QCheckBox* m_randomColor;
-    QComboBox* m_sprite;
+    RangeEdit *m_pLife, *m_pSpeed, *m_pSize, *m_pRotation, *m_pSpin;
+    QDoubleSpinBox *m_pDirection, *m_pSpread;
+    ColorButton *m_pColor, *m_pColor2;
+    QCheckBox* m_pRandomColor;
+    QComboBox* m_pSprite;
     // over life
-    GradientEdit* m_colorCurve;
-    CurveEdit *m_sizeCurve, *m_speedCurve, *m_spinCurve;
+    GradientEdit* m_pColorCurve;
+    CurveEdit *m_pSizeCurve, *m_pSpeedCurve, *m_pSpinCurve;
     // forces
-    Vec2Edit* m_gravity;
-    QDoubleSpinBox* m_drag;
-    RangeEdit *m_radial, *m_tangential;
+    Vec2Edit* m_pGravity;
+    QDoubleSpinBox* m_pDrag;
+    RangeEdit *m_pRadial, *m_pTangential;
     // flipbook
-    QListWidget* m_frames;
-    QComboBox* m_frameMode;
-    QDoubleSpinBox* m_fps;
-    QCheckBox* m_randomFrame;
+    QListWidget* m_pFrames;
+    QComboBox* m_pFrameMode;
+    QDoubleSpinBox* m_pFps;
+    QCheckBox* m_pRandomFrame;
     // render
-    QComboBox *m_blend, *m_src, *m_dst;
-    QSpinBox* m_order;
-    QCheckBox *m_align, *m_oldestOnTop;
-    QComboBox* m_simulation;   // where the game simulates it: auto / CPU / GPU
+    QComboBox *m_pBlend, *m_pSrc, *m_pDst;
+    QSpinBox* m_pOrder;
+    QCheckBox *m_pAlign, *m_pOldestOnTop;
+    QComboBox* m_pSimulation;   // where the game simulates it: auto / CPU / GPU
 };

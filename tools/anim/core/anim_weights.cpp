@@ -3,150 +3,150 @@
 #include <algorithm>
 #include <numeric>
 
-using toms::anim::kSkinInfluences;
+using toms::anim::g_iSkinInfluences;
 
 namespace animed {
 
 namespace {
 
-constexpr size_t kStride = 2 * kSkinInfluences;
+constexpr size_t g_nStride = 2 * g_iSkinInfluences;
 
 // Vertex v's weights as one share per bone.
-void expand(const std::vector<float>& weights, size_t v, int boneCount, std::vector<float>& dense)
+void f_Expand(const std::vector<float>& l_vWeights, size_t l_nV, int l_iBoneCount, std::vector<float>& l_vDense)
 {
-    dense.assign(size_t(boneCount), 0.0f);
-    for (int k = 0; k < kSkinInfluences; k++) {
-        const size_t at = v * kStride + 2 * size_t(k);
-        if (at + 1 >= weights.size()) break;
-        const int b = int(weights[at]);
-        const float w = weights[at + 1];
-        if (w > 0 && b >= 0 && b < boneCount) dense[size_t(b)] += w;
+    l_vDense.assign(size_t(l_iBoneCount), 0.0f);
+    for (int l_iK = 0; l_iK < g_iSkinInfluences; l_iK++) {
+        const size_t l_nAt = l_nV * g_nStride + 2 * size_t(l_iK);
+        if (l_nAt + 1 >= l_vWeights.size()) break;
+        const int l_iB = int(l_vWeights[l_nAt]);
+        const float l_fW = l_vWeights[l_nAt + 1];
+        if (l_fW > 0 && l_iB >= 0 && l_iB < l_iBoneCount) l_vDense[size_t(l_iB)] += l_fW;
     }
 }
 
-// Back to (bone, weight) pairs: the strongest kSkinInfluences, scaled to sum to 1; none left = bone 0.
-void compact(const std::vector<float>& dense, size_t v, std::vector<float>& weights)
+// Back to (bone, weight) pairs: the strongest g_iSkinInfluences, scaled to sum to 1; none left = bone 0.
+void f_Compact(const std::vector<float>& l_vDense, size_t l_nV, std::vector<float>& l_vWeights)
 {
-    std::vector<int> order(dense.size());
-    std::iota(order.begin(), order.end(), 0);
-    std::stable_sort(order.begin(), order.end(), [&](int a, int b) { return dense[size_t(a)] > dense[size_t(b)]; });
-    float sum = 0;
-    int kept = 0;
-    for (int b : order) {
-        if (kept == kSkinInfluences || dense[size_t(b)] <= 1e-4f) break;
-        sum += dense[size_t(b)];
-        kept++;
+    std::vector<int> l_vOrder(l_vDense.size());
+    std::iota(l_vOrder.begin(), l_vOrder.end(), 0);
+    std::stable_sort(l_vOrder.begin(), l_vOrder.end(), [&](int l_iA, int l_iB) { return l_vDense[size_t(l_iA)] > l_vDense[size_t(l_iB)]; });
+    float l_fSum = 0;
+    int l_iKept = 0;
+    for (int l_iB : l_vOrder) {
+        if (l_iKept == g_iSkinInfluences || l_vDense[size_t(l_iB)] <= 1e-4f) break;
+        l_fSum += l_vDense[size_t(l_iB)];
+        l_iKept++;
     }
-    for (int k = 0; k < kSkinInfluences; k++) {
-        const size_t at = v * kStride + 2 * size_t(k);
-        if (k < kept) {
-            weights[at] = float(order[size_t(k)]);
-            weights[at + 1] = dense[size_t(order[size_t(k)])] / sum;
+    for (int l_iK = 0; l_iK < g_iSkinInfluences; l_iK++) {
+        const size_t l_nAt = l_nV * g_nStride + 2 * size_t(l_iK);
+        if (l_iK < l_iKept) {
+            l_vWeights[l_nAt] = float(l_vOrder[size_t(l_iK)]);
+            l_vWeights[l_nAt + 1] = l_vDense[size_t(l_vOrder[size_t(l_iK)])] / l_fSum;
         } else {
-            weights[at] = 0.0f;
-            weights[at + 1] = (kept == 0 && k == 0) ? 1.0f : 0.0f;
+            l_vWeights[l_nAt] = 0.0f;
+            l_vWeights[l_nAt + 1] = (l_iKept == 0 && l_iK == 0) ? 1.0f : 0.0f;
         }
     }
 }
 
 // The bone's share set to `target`, the others scaled to fill the rest (keeping their proportions). False when the
 // others have nothing to scale and the target is below 1 (Subtract with no other bone).
-bool setShare(std::vector<float>& dense, int bone, float target)
+bool f_SetShare(std::vector<float>& l_vDense, int l_iBone, float l_fTarget)
 {
-    float others = 0;
-    for (size_t b = 0; b < dense.size(); b++)
-        if (int(b) != bone) others += dense[b];
-    if (others <= 1e-6f) {
-        if (target < 1.0f - 1e-6f) return false;
-        dense[size_t(bone)] = 1.0f;
+    float l_fOthers = 0;
+    for (size_t l_nB = 0; l_nB < l_vDense.size(); l_nB++)
+        if (int(l_nB) != l_iBone) l_fOthers += l_vDense[l_nB];
+    if (l_fOthers <= 1e-6f) {
+        if (l_fTarget < 1.0f - 1e-6f) return false;
+        l_vDense[size_t(l_iBone)] = 1.0f;
         return true;
     }
-    const float f = (1.0f - target) / others;
-    for (size_t b = 0; b < dense.size(); b++)
-        if (int(b) != bone) dense[b] *= f;
-    dense[size_t(bone)] = target;
+    const float l_fF = (1.0f - l_fTarget) / l_fOthers;
+    for (size_t l_nB = 0; l_nB < l_vDense.size(); l_nB++)
+        if (int(l_nB) != l_iBone) l_vDense[l_nB] *= l_fF;
+    l_vDense[size_t(l_iBone)] = l_fTarget;
     return true;
 }
 
 }  // namespace
 
-float brushFalloff(float dist, float radius)
+float f_BrushFalloff(float l_fDist, float l_fRadius)
 {
-    if (radius <= 0 || dist >= radius) return 0.0f;
-    const float q = 1.0f - (dist / radius) * (dist / radius);
-    return q * q;
+    if (l_fRadius <= 0 || l_fDist >= l_fRadius) return 0.0f;
+    const float l_fQ = 1.0f - (l_fDist / l_fRadius) * (l_fDist / l_fRadius);
+    return l_fQ * l_fQ;
 }
 
-float boneWeight(const std::vector<float>& weights, size_t v, int bone)
+float f_BoneWeight(const std::vector<float>& l_vWeights, size_t l_nV, int l_iBone)
 {
-    float w = 0;
-    for (int k = 0; k < kSkinInfluences; k++) {
-        const size_t at = v * kStride + 2 * size_t(k);
-        if (at + 1 >= weights.size()) break;
-        if (int(weights[at]) == bone) w += weights[at + 1];
+    float l_fW = 0;
+    for (int l_iK = 0; l_iK < g_iSkinInfluences; l_iK++) {
+        const size_t l_nAt = l_nV * g_nStride + 2 * size_t(l_iK);
+        if (l_nAt + 1 >= l_vWeights.size()) break;
+        if (int(l_vWeights[l_nAt]) == l_iBone) l_fW += l_vWeights[l_nAt + 1];
     }
-    return w;
+    return l_fW;
 }
 
-void paintWeights(std::vector<float>& weights, int boneCount, int bone, WeightBrush mode, const std::vector<float>& amount,
-                  const std::vector<uint16_t>& triangles, const std::vector<float>* fallback)
+void f_PaintWeights(std::vector<float>& l_vWeights, int l_iBoneCount, int l_iBone, WeightBrush l_eMode, const std::vector<float>& l_vAmount,
+                  const std::vector<uint16_t>& l_vTriangles, const std::vector<float>* l_pFallback)
 {
-    const size_t verts = amount.size();
-    if (boneCount <= 0 || bone < 0 || bone >= boneCount) return;
-    if (weights.size() != verts * kStride) {   // none yet: every vertex on bone 0
-        weights.assign(verts * kStride, 0.0f);
-        for (size_t v = 0; v < verts; v++) weights[v * kStride + 1] = 1.0f;
+    const size_t l_nVerts = l_vAmount.size();
+    if (l_iBoneCount <= 0 || l_iBone < 0 || l_iBone >= l_iBoneCount) return;
+    if (l_vWeights.size() != l_nVerts * g_nStride) {   // none yet: every vertex on bone 0
+        l_vWeights.assign(l_nVerts * g_nStride, 0.0f);
+        for (size_t l_nV = 0; l_nV < l_nVerts; l_nV++) l_vWeights[l_nV * g_nStride + 1] = 1.0f;
     }
 
-    std::vector<std::vector<uint16_t>> neighbours;
-    if (mode == WeightBrush::Smooth) {
-        neighbours.resize(verts);
-        for (size_t t = 0; t + 2 < triangles.size(); t += 3)
-            for (int e = 0; e < 3; e++) {
-                const uint16_t a = triangles[t + size_t(e)], b = triangles[t + size_t((e + 1) % 3)];
-                if (a >= verts || b >= verts) continue;
-                neighbours[a].push_back(b);
-                neighbours[b].push_back(a);
+    std::vector<std::vector<uint16_t>> l_vNeighbours;
+    if (l_eMode == WeightBrush::Smooth) {
+        l_vNeighbours.resize(l_nVerts);
+        for (size_t l_nT = 0; l_nT + 2 < l_vTriangles.size(); l_nT += 3)
+            for (int l_iE = 0; l_iE < 3; l_iE++) {
+                const uint16_t l_u16A = l_vTriangles[l_nT + size_t(l_iE)], l_u16B = l_vTriangles[l_nT + size_t((l_iE + 1) % 3)];
+                if (l_u16A >= l_nVerts || l_u16B >= l_nVerts) continue;
+                l_vNeighbours[l_u16A].push_back(l_u16B);
+                l_vNeighbours[l_u16B].push_back(l_u16A);
             }
     }
-    const std::vector<float> before = weights;   // Smooth averages the weights as they were before this dab
+    const std::vector<float> l_vBefore = l_vWeights;   // Smooth averages the weights as they were before this dab
 
-    std::vector<float> dense, other;
-    for (size_t v = 0; v < verts; v++) {
-        const float a = std::clamp(amount[v], 0.0f, 1.0f);
-        if (a <= 0) continue;
-        expand(before, v, boneCount, dense);
-        const float w = dense[size_t(bone)];
-        switch (mode) {
+    std::vector<float> l_vDense, l_vOther;
+    for (size_t l_nV = 0; l_nV < l_nVerts; l_nV++) {
+        const float l_fA = std::clamp(l_vAmount[l_nV], 0.0f, 1.0f);
+        if (l_fA <= 0) continue;
+        f_Expand(l_vBefore, l_nV, l_iBoneCount, l_vDense);
+        const float l_fW = l_vDense[size_t(l_iBone)];
+        switch (l_eMode) {
         case WeightBrush::Add:
-            setShare(dense, bone, w + (1.0f - w) * a);
+            f_SetShare(l_vDense, l_iBone, l_fW + (1.0f - l_fW) * l_fA);
             break;
         case WeightBrush::Subtract: {
-            const float target = w * (1.0f - a);
-            if (!setShare(dense, bone, target) && fallback) {
+            const float l_fTarget = l_fW * (1.0f - l_fA);
+            if (!f_SetShare(l_vDense, l_iBone, l_fTarget) && l_pFallback) {
                 // Only this bone moves the vertex: the removed share goes to the fallback's other bones.
-                expand(*fallback, v, boneCount, other);
-                other[size_t(bone)] = 0.0f;
-                const float sum = std::accumulate(other.begin(), other.end(), 0.0f);
-                if (sum > 1e-6f) {
-                    for (size_t b = 0; b < dense.size(); b++) dense[b] = other[b] / sum * (1.0f - target);
-                    dense[size_t(bone)] = target;
+                f_Expand(*l_pFallback, l_nV, l_iBoneCount, l_vOther);
+                l_vOther[size_t(l_iBone)] = 0.0f;
+                const float l_fSum = std::accumulate(l_vOther.begin(), l_vOther.end(), 0.0f);
+                if (l_fSum > 1e-6f) {
+                    for (size_t l_nB = 0; l_nB < l_vDense.size(); l_nB++) l_vDense[l_nB] = l_vOther[l_nB] / l_fSum * (1.0f - l_fTarget);
+                    l_vDense[size_t(l_iBone)] = l_fTarget;
                 }
             }
             break;
         }
         case WeightBrush::Smooth: {
-            if (neighbours[v].empty()) break;
-            std::vector<float> avg(size_t(boneCount), 0.0f);
-            for (uint16_t n : neighbours[v]) {
-                expand(before, n, boneCount, other);
-                for (size_t b = 0; b < avg.size(); b++) avg[b] += other[b];
+            if (l_vNeighbours[l_nV].empty()) break;
+            std::vector<float> l_vAvg(size_t(l_iBoneCount), 0.0f);
+            for (uint16_t l_u16N : l_vNeighbours[l_nV]) {
+                f_Expand(l_vBefore, l_u16N, l_iBoneCount, l_vOther);
+                for (size_t l_nB = 0; l_nB < l_vAvg.size(); l_nB++) l_vAvg[l_nB] += l_vOther[l_nB];
             }
-            for (size_t b = 0; b < avg.size(); b++) dense[b] += (avg[b] / float(neighbours[v].size()) - dense[b]) * a;
+            for (size_t l_nB = 0; l_nB < l_vAvg.size(); l_nB++) l_vDense[l_nB] += (l_vAvg[l_nB] / float(l_vNeighbours[l_nV].size()) - l_vDense[l_nB]) * l_fA;
             break;
         }
         }
-        compact(dense, v, weights);
+        f_Compact(l_vDense, l_nV, l_vWeights);
     }
 }
 

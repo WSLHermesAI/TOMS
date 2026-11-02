@@ -11,139 +11,139 @@
 namespace {
 // After an edit an endless effect is replayed at most this far: it looks the same by then, and
 // replaying minutes of simulation on every key press would make editing slow.
-constexpr float kMaxReplay = 6.0f;
+constexpr float g_fMaxReplay = 6.0f;
 }
 
-ParticlePlayback::ParticlePlayback(ParticleDocument* doc, QObject* parent)
-    : QObject(parent)
-    , m_doc(doc)
-    , m_timer(new QTimer(this))
+ParticlePlayback::ParticlePlayback(ParticleDocument* l_pDoc, QObject* l_pParent)
+    : QObject(l_pParent)
+    , m_pDoc(l_pDoc)
+    , m_pTimer(new QTimer(this))
 {
-    m_timer->setTimerType(Qt::PreciseTimer);
-    m_timer->setInterval(16);
-    connect(m_timer, &QTimer::timeout, this, &ParticlePlayback::tick);
-    connect(doc, &ParticleDocument::fileChanged, this, [this] { rebuild(true); });
-    connect(doc, &ParticleDocument::atlasChanged, this, [this] { emit ticked(); });
-    connect(doc, &ParticleDocument::selectionChanged, this, [this] {
-        if (m_doc->effectIndex() != m_effect) {
-            m_hidden.clear();
-            rebuild(false);
+    m_pTimer->setTimerType(Qt::PreciseTimer);
+    m_pTimer->setInterval(16);
+    connect(m_pTimer, &QTimer::timeout, this, &ParticlePlayback::f_Tick);
+    connect(l_pDoc, &ParticleDocument::f_FileChanged, this, [this] { f_Rebuild(true); });
+    connect(l_pDoc, &ParticleDocument::f_AtlasChanged, this, [this] { emit f_Ticked(); });
+    connect(l_pDoc, &ParticleDocument::f_SelectionChanged, this, [this] {
+        if (m_pDoc->f_EffectIndex() != m_iEffect) {
+            m_oHidden.clear();
+            f_Rebuild(false);
         }
     });
-    rebuild(false);
-    m_clock.start();
-    m_timer->start();
+    f_Rebuild(false);
+    m_oClock.start();
+    m_pTimer->start();
 }
 
-void ParticlePlayback::rebuild(bool keepTime)
+void ParticlePlayback::f_Rebuild(bool l_bKeepTime)
 {
-    const float t = keepTime && m_effect == m_doc->effectIndex() ? m_fx.time() : 0.0f;
-    m_effect = m_doc->effectIndex();
-    const toms::fx::Effect* e = m_doc->effect();
-    if (!e) {
-        m_fx.play(nullptr);
-        emit ticked();
+    const float l_fT = l_bKeepTime && m_iEffect == m_pDoc->f_EffectIndex() ? m_oFx.f_Time() : 0.0f;
+    m_iEffect = m_pDoc->f_EffectIndex();
+    const toms::fx::Effect* l_pE = m_pDoc->f_Effect();
+    if (!l_pE) {
+        m_oFx.f_Play(nullptr);
+        emit f_Ticked();
         return;
     }
-    m_preview = *e;
-    for (int i = 0; i < int(m_preview.emitters.size()); i++)
-        if (m_hidden.contains(i)) {
-            m_preview.emitters[size_t(i)].rate = 0;
-            m_preview.emitters[size_t(i)].bursts.clear();
+    m_oPreview = *l_pE;
+    for (int l_iI = 0; l_iI < int(m_oPreview.m_vEmitters.size()); l_iI++)
+        if (m_oHidden.contains(l_iI)) {
+            m_oPreview.m_vEmitters[size_t(l_iI)].m_fRate = 0;
+            m_oPreview.m_vEmitters[size_t(l_iI)].m_vBursts.clear();
         }
-    m_fx.setTransform(toms::anim::placement(float(m_origin.x()), float(m_origin.y())));
-    m_fx.setGpuSimulation(m_gpuRen, m_gpuThreshold);
-    m_fx.play(&m_preview, m_seed);
-    if (t > 0) m_fx.seek(m_preview.duration > 0 ? t : std::min(t, kMaxReplay));
-    m_idle = 0;
-    emit ticked();
+    m_oFx.f_SetTransform(toms::anim::f_Placement(float(m_oOrigin.x()), float(m_oOrigin.y())));
+    m_oFx.f_SetGpuSimulation(m_pGpuRen, m_iGpuThreshold);
+    m_oFx.f_Play(&m_oPreview, m_uSeed);
+    if (l_fT > 0) m_oFx.f_Seek(m_oPreview.m_fDuration > 0 ? l_fT : std::min(l_fT, g_fMaxReplay));
+    m_fIdle = 0;
+    emit f_Ticked();
 }
 
-void ParticlePlayback::play()
+void ParticlePlayback::f_Play()
 {
-    if (m_playing) return;
-    if (m_fx.finished()) rebuild(false);
-    m_playing = true;
-    m_clock.restart();
-    emit stateChanged();
+    if (m_bPlaying) return;
+    if (m_oFx.f_Finished()) f_Rebuild(false);
+    m_bPlaying = true;
+    m_oClock.restart();
+    emit f_StateChanged();
 }
 
-void ParticlePlayback::pause()
+void ParticlePlayback::f_Pause()
 {
-    if (!m_playing) return;
-    m_playing = false;
-    emit stateChanged();
+    if (!m_bPlaying) return;
+    m_bPlaying = false;
+    emit f_StateChanged();
 }
 
-void ParticlePlayback::togglePlay() { m_playing ? pause() : play(); }
+void ParticlePlayback::f_TogglePlay() { m_bPlaying ? f_Pause() : f_Play(); }
 
-void ParticlePlayback::restart()
+void ParticlePlayback::f_Restart()
 {
-    rebuild(false);
-    m_playing = true;
-    m_clock.restart();
-    emit stateChanged();
+    f_Rebuild(false);
+    m_bPlaying = true;
+    m_oClock.restart();
+    emit f_StateChanged();
 }
 
-void ParticlePlayback::stepFrame()
+void ParticlePlayback::f_StepFrame()
 {
-    pause();
-    advance(toms::fx::EffectInstance::kStep);
+    f_Pause();
+    f_Advance(toms::fx::EffectInstance::m_fStep);
 }
 
-void ParticlePlayback::seek(float t)
+void ParticlePlayback::f_Seek(float l_fT)
 {
-    pause();
-    rebuild(false);
-    if (t > 0) m_fx.seek(t);
-    emit ticked();
+    f_Pause();
+    f_Rebuild(false);
+    if (l_fT > 0) m_oFx.f_Seek(l_fT);
+    emit f_Ticked();
 }
 
-void ParticlePlayback::setSeed(uint32_t s)
+void ParticlePlayback::f_SetSeed(uint32_t l_uS)
 {
-    m_seed = s ? s : 1;
-    rebuild(true);
-    emit stateChanged();
+    m_uSeed = l_uS ? l_uS : 1;
+    f_Rebuild(true);
+    emit f_StateChanged();
 }
 
-void ParticlePlayback::randomizeSeed() { setSeed(QRandomGenerator::global()->bounded(1u, 1000000u)); }
+void ParticlePlayback::f_RandomizeSeed() { f_SetSeed(QRandomGenerator::global()->bounded(1u, 1000000u)); }
 
-void ParticlePlayback::setOrigin(const QPointF& p, bool restart)
+void ParticlePlayback::f_SetOrigin(const QPointF& l_oP, bool l_bRestart)
 {
-    m_origin = p;
-    m_fx.setTransform(toms::anim::placement(float(p.x()), float(p.y())));
-    if (restart) this->restart();
-    else emit ticked();
+    m_oOrigin = l_oP;
+    m_oFx.f_SetTransform(toms::anim::f_Placement(float(l_oP.x()), float(l_oP.y())));
+    if (l_bRestart) this->f_Restart();
+    else emit f_Ticked();
 }
 
-void ParticlePlayback::setGpuRenderer(IRenderer* ren, int threshold)
+void ParticlePlayback::f_SetGpuRenderer(IRenderer* l_pRen, int l_iThreshold)
 {
-    if (ren == m_gpuRen && threshold == m_gpuThreshold) return;
-    m_gpuRen = ren;
-    m_gpuThreshold = threshold;
-    rebuild(true);   // the same moment, now with its GPU emitters (or without them)
+    if (l_pRen == m_pGpuRen && l_iThreshold == m_iGpuThreshold) return;
+    m_pGpuRen = l_pRen;
+    m_iGpuThreshold = l_iThreshold;
+    f_Rebuild(true);   // the same moment, now with its GPU emitters (or without them)
 }
 
-void ParticlePlayback::setHidden(int emitter, bool hidden)
+void ParticlePlayback::f_SetHidden(int l_iEmitter, bool l_bHidden)
 {
-    if (hidden) m_hidden.insert(emitter);
-    else m_hidden.remove(emitter);
-    rebuild(true);
+    if (l_bHidden) m_oHidden.insert(l_iEmitter);
+    else m_oHidden.remove(l_iEmitter);
+    f_Rebuild(true);
 }
 
-void ParticlePlayback::advance(float seconds)
+void ParticlePlayback::f_Advance(float l_fSeconds)
 {
-    if (!m_fx.effect()) return;
-    const auto t0 = std::chrono::steady_clock::now();
-    m_fx.update(seconds);
-    m_lastStepMs = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
-    if (m_autoRestart && m_fx.finished() && (m_idle += seconds) >= 0.5f) rebuild(false);   // a one-shot plays again
-    emit ticked();
+    if (!m_oFx.f_Effect()) return;
+    const auto l_oT0 = std::chrono::steady_clock::now();
+    m_oFx.f_Update(l_fSeconds);
+    m_dLastStepMs = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - l_oT0).count();
+    if (m_bAutoRestart && m_oFx.f_Finished() && (m_fIdle += l_fSeconds) >= 0.5f) f_Rebuild(false);   // a one-shot plays again
+    emit f_Ticked();
 }
 
-void ParticlePlayback::tick()
+void ParticlePlayback::f_Tick()
 {
-    const double dt = m_clock.restart() / 1000.0;
-    if (!m_playing) return;
-    advance(float(std::min(dt, 0.1) * m_speed));
+    const double l_dDt = m_oClock.restart() / 1000.0;
+    if (!m_bPlaying) return;
+    f_Advance(float(std::min(l_dDt, 0.1) * m_fSpeed));
 }

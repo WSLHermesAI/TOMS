@@ -28,73 +28,73 @@ class ParticleEditor : public QObject
     Q_OBJECT
 
 public:
-    explicit ParticleEditor(QMainWindow* host);
-    void install();
+    explicit ParticleEditor(QMainWindow* l_pHost);
+    void f_Install();
 
-    QString title() const;
-    QMenu* viewMenu() const { return m_viewMenu; }
-    ParticleDocument* document() const { return m_doc; }
-    ParticlePlayback* playback() const { return m_play; }
-    ParticleViewport* viewport() const { return m_viewport; }
-    EffectsDock* effectsDock() const { return m_effects; }
-    InspectorDock* inspector() const { return m_inspector; }
-    TimelineDock* timeline() const { return m_timeline; }
-    FxSpritesDock* spritesDock() const { return m_sprites; }
-    QListWidget* problemsList() const { return m_problems; }
+    QString f_Title() const;
+    QMenu* f_ViewMenu() const { return m_pViewMenu; }
+    ParticleDocument* f_Document() const { return m_pDoc; }
+    ParticlePlayback* f_Playback() const { return m_pPlay; }
+    ParticleViewport* f_Viewport() const { return m_pViewport; }
+    EffectsDock* f_EffectsDock() const { return m_pEffects; }
+    InspectorDock* f_Inspector() const { return m_pInspector; }
+    TimelineDock* f_Timeline() const { return m_pTimeline; }
+    FxSpritesDock* f_SpritesDock() const { return m_pSprites; }
+    QListWidget* f_ProblemsList() const { return m_pProblems; }
 
-    bool openFile(const QString& path);
-    bool maybeSave();
-    bool save();
-    bool saveAs();
-    bool saveTo(const QString& path);
+    bool f_OpenFile(const QString& l_oPath);
+    bool f_MaybeSave();
+    bool f_Save();
+    bool f_SaveAs();
+    bool f_SaveTo(const QString& l_oPath);
     // The preset effects (docs/examples/fx_recipes.particle, built in) and adding one: atlases it
     // needs that the file does not have yet are added too (the TOMS fx / game atlases).
-    QStringList presetNames() const;
-    bool addPreset(const QString& name);
+    QStringList f_PresetNames() const;
+    bool f_AddPreset(const QString& l_oName);
     // Sprites dropped into the viewport: a new emitter at `pos` (several = a flipbook).
-    void addEmitterFromSprites(const QStringList& refs, const QPointF& pos);
+    void f_AddEmitterFromSprites(const QStringList& l_oRefs, const QPointF& l_oPos);
 
     // The preview draws with the game's renderer (bgfx) unless this is off (View menu; the setting
     // "preview/gameRenderer") or the platform has no windows (the offscreen selftest).
-    static bool gameRendererWanted();
-    void setGpuThreshold(int n);   // the preview's particleGpuThreshold (as the game's setting)
+    static bool f_GameRendererWanted();
+    void f_SetGpuThreshold(int l_iN);   // the preview's particleGpuThreshold (as the game's setting)
 
-    static QSettings settings();
-    void readSettings();
-    void writeSettings() const;
+    static QSettings f_Settings();
+    void f_ReadSettings();
+    void f_WriteSettings() const;
 
 signals:
-    void titleChanged();
+    void f_TitleChanged();
 
 private:
-    void createActions();
-    void createDocks();
-    void createMenus();
-    void createToolBars();
-    void refreshProblems();
-    void onAddAtlas();
-    void addRecentFile(const QString& path);
-    void rebuildRecentMenu();
-    void updatePlayButton();
+    void f_CreateActions();
+    void f_CreateDocks();
+    void f_CreateMenus();
+    void f_CreateToolBars();
+    void f_RefreshProblems();
+    void f_OnAddAtlas();
+    void f_AddRecentFile(const QString& l_oPath);
+    void f_RebuildRecentMenu();
+    void f_UpdatePlayButton();
 
-    QMainWindow* m_host;
-    ParticleDocument* m_doc;
-    class AutoBackup* m_backup = nullptr;
-    QDockWidget* m_history = nullptr;
-    ParticlePlayback* m_play;
-    ParticleViewport* m_viewport;
-    EffectsDock* m_effects = nullptr;
-    InspectorDock* m_inspector = nullptr;
-    TimelineDock* m_timeline = nullptr;
-    FxSpritesDock* m_sprites = nullptr;
-    QDockWidget* m_problemsDock = nullptr;
-    QListWidget* m_problems = nullptr;
+    QMainWindow* m_pHost;
+    ParticleDocument* m_pDoc;
+    class AutoBackup* m_pBackup = nullptr;
+    QDockWidget* m_pHistory = nullptr;
+    ParticlePlayback* m_pPlay;
+    ParticleViewport* m_pViewport;
+    EffectsDock* m_pEffects = nullptr;
+    InspectorDock* m_pInspector = nullptr;
+    TimelineDock* m_pTimeline = nullptr;
+    FxSpritesDock* m_pSprites = nullptr;
+    QDockWidget* m_pProblemsDock = nullptr;
+    QListWidget* m_pProblems = nullptr;
 
-    QMenu *m_viewMenu = nullptr, *m_recentMenu = nullptr, *m_presetMenu = nullptr;
-    QAction *m_newAct, *m_openAct, *m_saveAct, *m_saveAsAct, *m_addAtlasAct, *m_quitAct, *m_undoAct, *m_redoAct;
-    QAction *m_playAct, *m_restartAct, *m_stepAct, *m_autoRestartAct, *m_gridAct, *m_centerAct, *m_fitAct, *m_diceAct;
-    QComboBox *m_speed = nullptr, *m_background = nullptr;
-    QSpinBox* m_seed = nullptr;
-    QSpinBox* m_gpuThreshold = nullptr;
-    QAction* m_gameRendererAct = nullptr;
+    QMenu *m_pViewMenu = nullptr, *m_pRecentMenu = nullptr, *m_pPresetMenu = nullptr;
+    QAction *m_pNewAct, *m_pOpenAct, *m_pSaveAct, *m_pSaveAsAct, *m_pAddAtlasAct, *m_pQuitAct, *m_pUndoAct, *m_pRedoAct;
+    QAction *m_pPlayAct, *m_pRestartAct, *m_pStepAct, *m_pAutoRestartAct, *m_pGridAct, *m_pCenterAct, *m_pFitAct, *m_pDiceAct;
+    QComboBox *m_pSpeed = nullptr, *m_pBackground = nullptr;
+    QSpinBox* m_pSeed = nullptr;
+    QSpinBox* m_pGpuThreshold = nullptr;
+    QAction* m_pGameRendererAct = nullptr;
 };

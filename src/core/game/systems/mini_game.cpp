@@ -6,42 +6,42 @@
 
 namespace toms {
 
-MiniGameDef miniGameFromJson(const std::string& id, const nlohmann::json& j) {
-    MiniGameDef g;
-    g.id = id;
-    if (!j.is_object()) return g;
-    g.title = j.value("title", nlohmann::json());
-    g.text = j.value("text", nlohmann::json());
-    const std::string cur = j.value("currency", std::string("gold"));
-    g.currency = cur == "crystals" ? cur : "gold";
-    g.perHit = std::max(0, j.value("perHit", g.perHit));
-    g.bonusAll = std::max(0, j.value("bonusAll", g.bonusAll));
-    g.limit = std::max(0, j.value("limit", g.limit));
-    g.play.points = std::clamp(j.value("points", 4), 1, kMaxComboPoints);
-    g.play.sweepMs = std::max(200, j.value("sweepMs", 1600));
-    g.play.turnBack = j.value("turnBack", true);
-    g.play.maxSweeps = std::max(1, j.value("maxSweeps", 2));
-    g.play.hitWindow = std::clamp(j.value("hitWindow", 0.07f), 0.01f, 0.25f);
-    g.play.speedUp = 0;     // no charge in a mini-game
-    g.play.missBack = 0;    // a miss loses nothing already hit (two in a row still end it)
-    g.play.missWaitMs = 0;
-    return g;
+MiniGameDef f_MiniGameFromJson(const std::string& l_strId, const nlohmann::json& l_jJ) {
+    MiniGameDef l_oG;
+    l_oG.m_strId = l_strId;
+    if (!l_jJ.is_object()) return l_oG;
+    l_oG.m_jTitle = l_jJ.value("title", nlohmann::json());
+    l_oG.m_jText = l_jJ.value("text", nlohmann::json());
+    const std::string l_strCur = l_jJ.value("currency", std::string("gold"));
+    l_oG.m_strCurrency = l_strCur == "crystals" ? l_strCur : "gold";
+    l_oG.m_iPerHit = std::max(0, l_jJ.value("perHit", l_oG.m_iPerHit));
+    l_oG.m_iBonusAll = std::max(0, l_jJ.value("bonusAll", l_oG.m_iBonusAll));
+    l_oG.m_iLimit = std::max(0, l_jJ.value("limit", l_oG.m_iLimit));
+    l_oG.m_oPlay.m_iPoints = std::clamp(l_jJ.value("points", 4), 1, g_iMaxComboPoints);
+    l_oG.m_oPlay.m_iSweepMs = std::max(200, l_jJ.value("sweepMs", 1600));
+    l_oG.m_oPlay.m_bTurnBack = l_jJ.value("turnBack", true);
+    l_oG.m_oPlay.m_iMaxSweeps = std::max(1, l_jJ.value("maxSweeps", 2));
+    l_oG.m_oPlay.m_fHitWindow = std::clamp(l_jJ.value("hitWindow", 0.07f), 0.01f, 0.25f);
+    l_oG.m_oPlay.m_fSpeedUp = 0;     // no charge in a mini-game
+    l_oG.m_oPlay.m_iMissBack = 0;    // a miss loses nothing already hit (two in a row still end it)
+    l_oG.m_oPlay.m_iMissWaitMs = 0;
+    return l_oG;
 }
 
-MiniGameTable loadMiniGames(const std::string& path) {
-    MiniGameTable t;
-    const nlohmann::json j = readJsonFileSafe(path);
-    if (!j.is_object()) return t;
-    for (auto it = j.begin(); it != j.end(); ++it) {
-        if (it.key().empty() || it.key()[0] == '_' || !it.value().is_object()) continue;   // "_comment"
-        t.games[it.key()] = miniGameFromJson(it.key(), it.value());
+MiniGameTable f_LoadMiniGames(const std::string& l_strPath) {
+    MiniGameTable l_oT;
+    const nlohmann::json l_jJ = f_ReadJsonFileSafe(l_strPath);
+    if (!l_jJ.is_object()) return l_oT;
+    for (auto l_oIt = l_jJ.begin(); l_oIt != l_jJ.end(); ++l_oIt) {
+        if (l_oIt.key().empty() || l_oIt.key()[0] == '_' || !l_oIt.value().is_object()) continue;   // "_comment"
+        l_oT.m_mapGames[l_oIt.key()] = f_MiniGameFromJson(l_oIt.key(), l_oIt.value());
     }
-    return t;
+    return l_oT;
 }
 
-int miniGameReward(const MiniGameDef& g, const ComboResult& r) {
-    if (r.failed) return 0;
-    return r.hits * g.perHit + (r.points > 0 && r.hits == r.points ? g.bonusAll : 0);
+int f_MiniGameReward(const MiniGameDef& l_oG, const ComboResult& l_oR) {
+    if (l_oR.m_bFailed) return 0;
+    return l_oR.m_iHits * l_oG.m_iPerHit + (l_oR.m_iPoints > 0 && l_oR.m_iHits == l_oR.m_iPoints ? l_oG.m_iBonusAll : 0);
 }
 
 } // namespace toms

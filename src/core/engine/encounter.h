@@ -20,11 +20,11 @@ enum class EncounterKind {
     Merchant,       // tile enter -> opens the shop
 };
 
-const char* toString(EncounterKind k);
+const char* f_ToString(EncounterKind l_eK);
 // Returns false (out left unchanged) if `s` doesn't match a known encounter-kind string.
-bool tryParseEncounterKind(const std::string& s, EncounterKind& out);
+bool f_TryParseEncounterKind(const std::string& l_strS, EncounterKind& l_eOut);
 // Convenience: unrecognized/empty input defaults to DirectBattle.
-EncounterKind encounterKindFromString(const std::string& s);
+EncounterKind f_EncounterKindFromString(const std::string& l_strS);
 
 // Resolves the effective encounter kind for an entity on a stage tile:
 //  - a recognized `overrideStr` (from the stage JSON's optional per-tile "encounter_overrides"
@@ -34,6 +34,6 @@ EncounterKind encounterKindFromString(const std::string& s);
 // An unrecognized (e.g. misspelled) overrideStr is treated the same as "no override" — it
 // falls through to the kind-derived default rather than silently becoming DirectBattle
 // regardless of entity type.
-EncounterKind resolveEncounterKind(const std::string& entityKind, const std::string& overrideStr);
+EncounterKind f_ResolveEncounterKind(const std::string& l_strEntityKind, const std::string& l_strOverrideStr);
 
 } // namespace toms

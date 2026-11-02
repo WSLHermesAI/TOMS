@@ -39,8 +39,9 @@
   `sp`, `up`, `o`, ... the table in §2), e.g. `m_strName`, `l_iCount`, `g_bQuit`.
 - **Every function is `f_<Name>`** (free, member, static): `f_LoadBattleRig`. Not constructors, destructors,
   operators, entry points, third-party virtual overrides, or names found by lookup (`to_json`, `begin`, `swap`; §3).
-- **New files follow it now.** Existing files keep their style until the owner asks for the conversion (no file half
-  and half). Never touch third-party code (`src/third_party/`, the libraries CMake downloads, `AIGamestyle`).
+- **All the project's C++ follows it** (converted 2026-11-02 with `tools/naming/rename_cpp.py`); write new code the
+  same way, and `python tools/naming/rename_cpp.py plan` reports names that do not. Never touch third-party code
+  (`src/third_party/`, the libraries CMake downloads, `AIGamestyle`).
 
 ### Files: by key, never a path in code
 

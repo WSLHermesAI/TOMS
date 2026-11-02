@@ -39,699 +39,699 @@
 
 using toms::next::RmlUi;
 
-UiEditorWindow::UiEditorWindow(QWidget* parent) : QMainWindow(parent) {
+UiEditorWindow::UiEditorWindow(QWidget* l_pParent) : QMainWindow(l_pParent) {
     setWindowTitle(tr("TOMS UI Editor"));
     resize(1600, 900);
-    previewTimer_.setSingleShot(true);
-    previewTimer_.setInterval(300);
-    connect(&previewTimer_, &QTimer::timeout, this, &UiEditorWindow::previewNow);
-    buildUi();
-    uiDir_ = QDir(view_->assetDir()).filePath(QStringLiteral("ui"));
-    scenariosDir_ = QDir::cleanPath(QDir(view_->assetDir()).filePath(QStringLiteral("../../tests/scenarios")));
-    docsDir_ = QDir::cleanPath(QDir(view_->assetDir()).filePath(QStringLiteral("../../docs")));
-    tutorialDir_ = QDir(docsDir_).filePath(QStringLiteral("examples/ui_tutorial"));
-    tutorialFiles_ = uied::uiFiles(tutorialDir_);
-    practiceTimer_.setInterval(200);
-    connect(&practiceTimer_, &QTimer::timeout, this, &UiEditorWindow::loadPractice);
-    refreshFileList();
-    fillPreviewList();
-    watcher_ = new QFileSystemWatcher(this);
-    for (const QString& f : uied::uiFiles(uiDir_) + tutorialFiles_) watcher_->addPath(pathOf(f));
-    connect(watcher_, &QFileSystemWatcher::fileChanged, this, &UiEditorWindow::diskChanged);
+    m_oPreviewTimer.setSingleShot(true);
+    m_oPreviewTimer.setInterval(300);
+    connect(&m_oPreviewTimer, &QTimer::timeout, this, &UiEditorWindow::f_PreviewNow);
+    f_BuildUi();
+    m_oUiDir = QDir(m_pView->f_AssetDir()).filePath(QStringLiteral("ui"));
+    m_oScenariosDir = QDir::cleanPath(QDir(m_pView->f_AssetDir()).filePath(QStringLiteral("../../tests/scenarios")));
+    m_oDocsDir = QDir::cleanPath(QDir(m_pView->f_AssetDir()).filePath(QStringLiteral("../../docs")));
+    m_oTutorialDir = QDir(m_oDocsDir).filePath(QStringLiteral("examples/ui_tutorial"));
+    m_oTutorialFiles = uied::f_UiFiles(m_oTutorialDir);
+    m_oPracticeTimer.setInterval(200);
+    connect(&m_oPracticeTimer, &QTimer::timeout, this, &UiEditorWindow::f_LoadPractice);
+    f_RefreshFileList();
+    f_FillPreviewList();
+    m_pWatcher = new QFileSystemWatcher(this);
+    for (const QString& l_oF : uied::f_UiFiles(m_oUiDir) + m_oTutorialFiles) m_pWatcher->addPath(f_PathOf(l_oF));
+    connect(m_pWatcher, &QFileSystemWatcher::fileChanged, this, &UiEditorWindow::f_DiskChanged);
     // RmlUi's warnings and errors: the Problems list (queued: RmlUi may log in the middle of a reload).
-    RmlUi::setLogListener([this](int level, const std::string& message) {
-        if (level < 1) return;
-        const QString m = QString::fromStdString(message);
-        QMetaObject::invokeMethod(this, [this, level, m] { addProblem(level, m); }, Qt::QueuedConnection);
+    RmlUi::f_SetLogListener([this](int l_iLevel, const std::string& l_strMessage) {
+        if (l_iLevel < 1) return;
+        const QString l_oM = QString::fromStdString(l_strMessage);
+        QMetaObject::invokeMethod(this, [this, l_iLevel, l_oM] { f_AddProblem(l_iLevel, l_oM); }, Qt::QueuedConnection);
     });
     // The languages are known once the game runs.
-    langTimer_.setInterval(500);
-    connect(&langTimer_, &QTimer::timeout, this, &UiEditorWindow::fillLanguages);
-    langTimer_.start();
+    m_oLangTimer.setInterval(500);
+    connect(&m_oLangTimer, &QTimer::timeout, this, &UiEditorWindow::f_FillLanguages);
+    m_oLangTimer.start();
     // The hint: what the text cursor is on glows in the game (updateHint), re-placed as things move.
-    hintTimer_.setInterval(60);
-    connect(&hintTimer_, &QTimer::timeout, this, &UiEditorWindow::updateHint);
-    connect(edit_, &QPlainTextEdit::cursorPositionChanged, this, &UiEditorWindow::cursorMoved);
+    m_oHintTimer.setInterval(60);
+    connect(&m_oHintTimer, &QTimer::timeout, this, &UiEditorWindow::f_UpdateHint);
+    connect(m_pEdit, &QPlainTextEdit::cursorPositionChanged, this, &UiEditorWindow::f_CursorMoved);
     // What the preview shows: its documents and their style sheets, at the top of the file list.
-    relatedTimer_.setInterval(500);
-    connect(&relatedTimer_, &QTimer::timeout, this, &UiEditorWindow::updateRelated);
-    relatedTimer_.start();
-    const QStringList all = uied::uiFiles(uiDir_);
-    if (all.contains(QStringLiteral("battle.rml"))) openFile(QStringLiteral("battle.rml"));
-    else if (!all.isEmpty()) openFile(all.first());
+    m_oRelatedTimer.setInterval(500);
+    connect(&m_oRelatedTimer, &QTimer::timeout, this, &UiEditorWindow::f_UpdateRelated);
+    m_oRelatedTimer.start();
+    const QStringList l_oAll = uied::f_UiFiles(m_oUiDir);
+    if (l_oAll.contains(QStringLiteral("battle.rml"))) f_OpenFile(QStringLiteral("battle.rml"));
+    else if (!l_oAll.isEmpty()) f_OpenFile(l_oAll.first());
 }
 
 UiEditorWindow::~UiEditorWindow() {
-    RmlUi::setLogListener(nullptr);
-    for (auto it = buffers_.begin(); it != buffers_.end(); ++it) RmlUi::clearVirtualFile(it.key().toStdString());
+    RmlUi::f_SetLogListener(nullptr);
+    for (auto l_oIt = m_oBuffers.begin(); l_oIt != m_oBuffers.end(); ++l_oIt) RmlUi::f_ClearVirtualFile(l_oIt.key().toStdString());
 }
 
-void UiEditorWindow::buildUi() {
-    files_ = new QListWidget;
-    edit_ = new UiCodeEdit;
-    edit_->setPlaceholderText(tr("Pick a file on the left"));
-    view_ = new BgfxViewport;
-    view_->setMinimumSize(512, 384);
+void UiEditorWindow::f_BuildUi() {
+    m_pFiles = new QListWidget;
+    m_pEdit = new UiCodeEdit;
+    m_pEdit->setPlaceholderText(tr("Pick a file on the left"));
+    m_pView = new BgfxViewport;
+    m_pView->setMinimumSize(512, 384);
 
-    auto* split = new QSplitter(Qt::Horizontal);
-    split->addWidget(files_);
-    split->addWidget(edit_);
-    split->addWidget(view_);
-    split->setStretchFactor(0, 0);
-    split->setStretchFactor(1, 3);
-    split->setStretchFactor(2, 4);
-    split->setSizes({180, 620, 800});
-    setCentralWidget(split);
+    auto* l_pSplit = new QSplitter(Qt::Horizontal);
+    l_pSplit->addWidget(m_pFiles);
+    l_pSplit->addWidget(m_pEdit);
+    l_pSplit->addWidget(m_pView);
+    l_pSplit->setStretchFactor(0, 0);
+    l_pSplit->setStretchFactor(1, 3);
+    l_pSplit->setStretchFactor(2, 4);
+    l_pSplit->setSizes({180, 620, 800});
+    setCentralWidget(l_pSplit);
 
-    problems_ = new QListWidget;
-    auto* problemsDock = new QDockWidget(tr("Problems"), this);
-    problemsDock->setObjectName(QStringLiteral("ProblemsDock"));
-    problemsDock->setWidget(problems_);
-    addDockWidget(Qt::BottomDockWidgetArea, problemsDock);
+    m_pProblems = new QListWidget;
+    auto* l_pProblemsDock = new QDockWidget(tr("Problems"), this);
+    l_pProblemsDock->setObjectName(QStringLiteral("ProblemsDock"));
+    l_pProblemsDock->setWidget(m_pProblems);
+    addDockWidget(Qt::BottomDockWidgetArea, l_pProblemsDock);
 
-    auto* inspector = new QWidget;
-    auto* il = new QVBoxLayout(inspector);
-    il->setContentsMargins(4, 4, 4, 4);
-    inspectLabel_ = new QLabel(tr("Inspect (Ctrl+I), then click an element in the game."));
-    inspectLabel_->setWordWrap(true);
-    inspectLabel_->setTextInteractionFlags(Qt::TextSelectableByMouse);
-    rules_ = new QListWidget;
-    il->addWidget(inspectLabel_);
-    il->addWidget(rules_);
-    auto* inspectDock = new QDockWidget(tr("Inspector"), this);
-    inspectDock->setObjectName(QStringLiteral("InspectorDock"));
-    inspectDock->setWidget(inspector);
-    addDockWidget(Qt::BottomDockWidgetArea, inspectDock);
-    splitDockWidget(problemsDock, inspectDock, Qt::Horizontal);
+    auto* l_pInspector = new QWidget;
+    auto* l_pIl = new QVBoxLayout(l_pInspector);
+    l_pIl->setContentsMargins(4, 4, 4, 4);
+    m_pInspectLabel = new QLabel(tr("Inspect (Ctrl+I), then click an element in the game."));
+    m_pInspectLabel->setWordWrap(true);
+    m_pInspectLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    m_pRules = new QListWidget;
+    l_pIl->addWidget(m_pInspectLabel);
+    l_pIl->addWidget(m_pRules);
+    auto* l_pInspectDock = new QDockWidget(tr("Inspector"), this);
+    l_pInspectDock->setObjectName(QStringLiteral("InspectorDock"));
+    l_pInspectDock->setWidget(l_pInspector);
+    addDockWidget(Qt::BottomDockWidgetArea, l_pInspectDock);
+    splitDockWidget(l_pProblemsDock, l_pInspectDock, Qt::Horizontal);
 
     // ---- actions ----
-    auto* saveAct = new QAction(tr("&Save"), this);
-    saveAct->setShortcut(QKeySequence::Save);
-    connect(saveAct, &QAction::triggered, this, [this] { if (!current_.isEmpty()) save(current_); });
-    auto* saveAllAct = new QAction(tr("Save &All"), this);
-    saveAllAct->setShortcut(QKeySequence(tr("Ctrl+Shift+S")));
-    connect(saveAllAct, &QAction::triggered, this, &UiEditorWindow::saveAll);
-    auto* revertAct = new QAction(tr("&Revert File"), this);
-    revertAct->setToolTip(tr("Drop this file's changes: back to the text on disk"));
-    connect(revertAct, &QAction::triggered, this, [this] { if (!current_.isEmpty()) revert(current_); });
-    auto* inspectAct = new QAction(tr("&Inspect"), this);
-    inspectAct->setCheckable(true);
-    inspectAct->setShortcut(QKeySequence(tr("Ctrl+I")));
-    inspectAct->setToolTip(tr("A click in the game picks the UI element under the mouse instead of pressing it (Ctrl+I)"));
-    connect(inspectAct, &QAction::toggled, this, [this](bool on) {
-        view_->setInspectMode(on);
-        statusBar()->showMessage(on ? tr("Inspect: click an element in the game") : tr("Inspect off: clicks go to the game"), 4000);
+    auto* l_pSaveAct = new QAction(tr("&Save"), this);
+    l_pSaveAct->setShortcut(QKeySequence::Save);
+    connect(l_pSaveAct, &QAction::triggered, this, [this] { if (!m_oCurrent.isEmpty()) f_Save(m_oCurrent); });
+    auto* l_pSaveAllAct = new QAction(tr("Save &All"), this);
+    l_pSaveAllAct->setShortcut(QKeySequence(tr("Ctrl+Shift+S")));
+    connect(l_pSaveAllAct, &QAction::triggered, this, &UiEditorWindow::f_SaveAll);
+    auto* l_pRevertAct = new QAction(tr("&Revert File"), this);
+    l_pRevertAct->setToolTip(tr("Drop this file's changes: back to the text on disk"));
+    connect(l_pRevertAct, &QAction::triggered, this, [this] { if (!m_oCurrent.isEmpty()) f_Revert(m_oCurrent); });
+    auto* l_pInspectAct = new QAction(tr("&Inspect"), this);
+    l_pInspectAct->setCheckable(true);
+    l_pInspectAct->setShortcut(QKeySequence(tr("Ctrl+I")));
+    l_pInspectAct->setToolTip(tr("A click in the game picks the UI element under the mouse instead of pressing it (Ctrl+I)"));
+    connect(l_pInspectAct, &QAction::toggled, this, [this](bool l_bOn) {
+        m_pView->f_SetInspectMode(l_bOn);
+        statusBar()->showMessage(l_bOn ? tr("Inspect: click an element in the game") : tr("Inspect off: clicks go to the game"), 4000);
     });
-    connect(view_, &BgfxViewport::inspectClicked, this, &UiEditorWindow::inspectNow);
-    auto* debuggerAct = new QAction(tr("RmlUi &Debugger"), this);
-    debuggerAct->setShortcut(QKeySequence(Qt::Key_F8));
-    debuggerAct->setToolTip(tr("RmlUi's own inspector over the game: the element tree, computed styles, layout boxes (F8)"));
-    connect(debuggerAct, &QAction::triggered, this, [this] {
-        if (RmlUi* r = view_->session().rml()) r->toggleDebugger();
+    connect(m_pView, &BgfxViewport::f_InspectClicked, this, &UiEditorWindow::f_InspectNow);
+    auto* l_pDebuggerAct = new QAction(tr("RmlUi &Debugger"), this);
+    l_pDebuggerAct->setShortcut(QKeySequence(Qt::Key_F8));
+    l_pDebuggerAct->setToolTip(tr("RmlUi's own inspector over the game: the element tree, computed styles, layout boxes (F8)"));
+    connect(l_pDebuggerAct, &QAction::triggered, this, [this] {
+        if (RmlUi* l_pR = m_pView->f_Session().f_Rml()) l_pR->f_ToggleDebugger();
     });
-    auto* restartAct = new QAction(tr("Restart &Preview"), this);
-    restartAct->setShortcut(QKeySequence(Qt::Key_F5));
-    restartAct->setToolTip(tr("Start the chosen preview again (F5)"));
-    connect(restartAct, &QAction::triggered, this, [this] { startPreview(preview_->currentIndex()); });
+    auto* l_pRestartAct = new QAction(tr("Restart &Preview"), this);
+    l_pRestartAct->setShortcut(QKeySequence(Qt::Key_F5));
+    l_pRestartAct->setToolTip(tr("Start the chosen preview again (F5)"));
+    connect(l_pRestartAct, &QAction::triggered, this, [this] { f_StartPreview(m_pPreview->currentIndex()); });
 
-    preview_ = new QComboBox;
-    preview_->setToolTip(tr("What the game shows: the title, or a test scenario (tests/scenarios: a battle, a dialogue, the store, ...)"));
-    preview_->setMinimumContentsLength(28);
-    connect(preview_, qOverload<int>(&QComboBox::activated), this, &UiEditorWindow::startPreview);
-    lang_ = new QComboBox;
-    lang_->setToolTip(tr("The game's text in this language (only here: the game's own setting is not changed)"));
-    connect(lang_, qOverload<int>(&QComboBox::activated), this, [this](int i) {
-        if (Game* g = view_->session().game()) g->previewLanguage(lang_->itemData(i).toString().toStdString());
+    m_pPreview = new QComboBox;
+    m_pPreview->setToolTip(tr("What the game shows: the title, or a test scenario (tests/scenarios: a battle, a dialogue, the store, ...)"));
+    m_pPreview->setMinimumContentsLength(28);
+    connect(m_pPreview, qOverload<int>(&QComboBox::activated), this, &UiEditorWindow::f_StartPreview);
+    m_pLang = new QComboBox;
+    m_pLang->setToolTip(tr("The game's text in this language (only here: the game's own setting is not changed)"));
+    connect(m_pLang, qOverload<int>(&QComboBox::activated), this, [this](int l_iI) {
+        if (Game* l_pG = m_pView->f_Session().f_Game()) l_pG->f_PreviewLanguage(m_pLang->itemData(l_iI).toString().toStdString());
     });
 
-    QMenu* file = menuBar()->addMenu(tr("&File"));
-    file->addAction(saveAct);
-    file->addAction(saveAllAct);
-    file->addAction(revertAct);
-    file->addSeparator();
-    file->addAction(tr("&Quit"), QKeySequence::Quit, this, &QWidget::close);
-    QMenu* viewMenu = menuBar()->addMenu(tr("&Preview"));
-    viewMenu->addAction(restartAct);
-    viewMenu->addAction(inspectAct);
-    auto* hintAct = new QAction(tr("&Glow What the Cursor Is On"), this);
-    hintAct->setCheckable(true);
-    hintAct->setChecked(true);
-    hintAct->setShortcut(QKeySequence(tr("Ctrl+G")));
-    hintAct->setToolTip(tr("The element (in an .rml) or the rule's elements (in an .rcss) under the text cursor glow in the game (Ctrl+G)"));
-    connect(hintAct, &QAction::toggled, this, [this](bool on) {
-        hintOn_ = on;
-        if (on) cursorMoved();
-        else { dropHint(); hintTimer_.stop(); }
+    QMenu* l_pFile = menuBar()->addMenu(tr("&File"));
+    l_pFile->addAction(l_pSaveAct);
+    l_pFile->addAction(l_pSaveAllAct);
+    l_pFile->addAction(l_pRevertAct);
+    l_pFile->addSeparator();
+    l_pFile->addAction(tr("&Quit"), QKeySequence::Quit, this, &QWidget::close);
+    QMenu* l_pViewMenu = menuBar()->addMenu(tr("&Preview"));
+    l_pViewMenu->addAction(l_pRestartAct);
+    l_pViewMenu->addAction(l_pInspectAct);
+    auto* l_pHintAct = new QAction(tr("&Glow What the Cursor Is On"), this);
+    l_pHintAct->setCheckable(true);
+    l_pHintAct->setChecked(true);
+    l_pHintAct->setShortcut(QKeySequence(tr("Ctrl+G")));
+    l_pHintAct->setToolTip(tr("The element (in an .rml) or the rule's elements (in an .rcss) under the text cursor glow in the game (Ctrl+G)"));
+    connect(l_pHintAct, &QAction::toggled, this, [this](bool l_bOn) {
+        m_bHintOn = l_bOn;
+        if (l_bOn) f_CursorMoved();
+        else { f_DropHint(); m_oHintTimer.stop(); }
     });
-    viewMenu->addAction(hintAct);
-    viewMenu->addAction(debuggerAct);
-    viewMenu->addSeparator();
-    viewMenu->addAction(problemsDock->toggleViewAction());
-    viewMenu->addAction(inspectDock->toggleViewAction());
-    QMenu* help = menuBar()->addMenu(tr("&Help"));
-    help->addAction(tr("UI Editor &Tutorial"), QKeySequence(Qt::Key_F1), this, &UiEditorWindow::openTutorial);
-    help->addAction(tr("Open &Practice Screen"), this, &UiEditorWindow::openPracticeScreen);
+    l_pViewMenu->addAction(l_pHintAct);
+    l_pViewMenu->addAction(l_pDebuggerAct);
+    l_pViewMenu->addSeparator();
+    l_pViewMenu->addAction(l_pProblemsDock->toggleViewAction());
+    l_pViewMenu->addAction(l_pInspectDock->toggleViewAction());
+    QMenu* l_pHelp = menuBar()->addMenu(tr("&Help"));
+    l_pHelp->addAction(tr("UI Editor &Tutorial"), QKeySequence(Qt::Key_F1), this, &UiEditorWindow::f_OpenTutorial);
+    l_pHelp->addAction(tr("Open &Practice Screen"), this, &UiEditorWindow::f_OpenPracticeScreen);
 
-    auto* bar = addToolBar(tr("Main"));
-    bar->setObjectName(QStringLiteral("UiEditorToolBar"));
-    bar->setMovable(false);
-    bar->addAction(saveAct);
-    bar->addAction(revertAct);
-    bar->addSeparator();
-    bar->addWidget(new QLabel(tr(" Preview ")));
-    bar->addWidget(preview_);
-    bar->addAction(restartAct);
-    bar->addSeparator();
-    bar->addWidget(new QLabel(tr(" Language ")));
-    bar->addWidget(lang_);
-    bar->addSeparator();
-    bar->addAction(inspectAct);
-    bar->addAction(debuggerAct);
+    auto* l_pBar = addToolBar(tr("Main"));
+    l_pBar->setObjectName(QStringLiteral("UiEditorToolBar"));
+    l_pBar->setMovable(false);
+    l_pBar->addAction(l_pSaveAct);
+    l_pBar->addAction(l_pRevertAct);
+    l_pBar->addSeparator();
+    l_pBar->addWidget(new QLabel(tr(" Preview ")));
+    l_pBar->addWidget(m_pPreview);
+    l_pBar->addAction(l_pRestartAct);
+    l_pBar->addSeparator();
+    l_pBar->addWidget(new QLabel(tr(" Language ")));
+    l_pBar->addWidget(m_pLang);
+    l_pBar->addSeparator();
+    l_pBar->addAction(l_pInspectAct);
+    l_pBar->addAction(l_pDebuggerAct);
 
-    connect(files_, &QListWidget::currentRowChanged, this, [this](int row) {
-        if (row >= 0) openFile(files_->item(row)->data(Qt::UserRole).toString());
+    connect(m_pFiles, &QListWidget::currentRowChanged, this, [this](int l_iRow) {
+        if (l_iRow >= 0) f_OpenFile(m_pFiles->item(l_iRow)->data(Qt::UserRole).toString());
     });
-    connect(problems_, &QListWidget::itemDoubleClicked, this, [this](QListWidgetItem* it) { openProblem(problems_->row(it)); });
-    connect(rules_, &QListWidget::itemDoubleClicked, this, [this](QListWidgetItem* it) { openRule(rules_->row(it)); });
-    connect(view_, &BgfxViewport::statusMessage, this, [this](const QString& m) { statusBar()->showMessage(m, 4000); });
-    connect(view_, &BgfxViewport::startFailed, this, [this](const QString& title, const QString& text) {
-        if (quiet_) { statusBar()->showMessage(title + QStringLiteral(": ") + text); return; }
-        QMessageBox::warning(this, title, text);
+    connect(m_pProblems, &QListWidget::itemDoubleClicked, this, [this](QListWidgetItem* l_pIt) { f_OpenProblem(m_pProblems->row(l_pIt)); });
+    connect(m_pRules, &QListWidget::itemDoubleClicked, this, [this](QListWidgetItem* l_pIt) { f_OpenRule(m_pRules->row(l_pIt)); });
+    connect(m_pView, &BgfxViewport::f_StatusMessage, this, [this](const QString& l_oM) { statusBar()->showMessage(l_oM, 4000); });
+    connect(m_pView, &BgfxViewport::f_StartFailed, this, [this](const QString& l_oTitle, const QString& l_oText) {
+        if (m_bQuiet) { statusBar()->showMessage(l_oTitle + QStringLiteral(": ") + l_oText); return; }
+        QMessageBox::warning(this, l_oTitle, l_oText);
     });
     statusBar()->showMessage(tr("Type to see the change in the game. Ctrl+S saves; nothing on disk changes before that."));
 }
 
 // ---- files ----
 
-QString UiEditorWindow::pathOf(const QString& name) const {
-    return QDir(tutorialFiles_.contains(name) ? tutorialDir_ : uiDir_).filePath(name);
+QString UiEditorWindow::f_PathOf(const QString& l_oName) const {
+    return QDir(m_oTutorialFiles.contains(l_oName) ? m_oTutorialDir : m_oUiDir).filePath(l_oName);
 }
 
-QString UiEditorWindow::readDisk(const QString& name, bool* crlf) const {
-    QFile f(pathOf(name));
-    if (!f.open(QIODevice::ReadOnly)) return QString();
-    QString t = QString::fromUtf8(f.readAll());
-    if (crlf) *crlf = t.contains(QStringLiteral("\r\n"));
-    t.replace(QStringLiteral("\r\n"), QStringLiteral("\n"));
-    return t;
+QString UiEditorWindow::f_ReadDisk(const QString& l_oName, bool* l_pCrlf) const {
+    QFile l_oF(f_PathOf(l_oName));
+    if (!l_oF.open(QIODevice::ReadOnly)) return QString();
+    QString l_oT = QString::fromUtf8(l_oF.readAll());
+    if (l_pCrlf) *l_pCrlf = l_oT.contains(QStringLiteral("\r\n"));
+    l_oT.replace(QStringLiteral("\r\n"), QStringLiteral("\n"));
+    return l_oT;
 }
 
-void UiEditorWindow::refreshFileList() {
-    const QSignalBlocker block(files_);
-    const QStringList all = uied::uiFiles(uiDir_);
-    files_->clear();
-    auto header = [this](const QString& title) {   // a group's title: not a file, not selectable
-        auto* it = new QListWidgetItem(title);
-        it->setFlags(Qt::NoItemFlags);
-        QFont f = it->font();
-        f.setBold(true);
-        it->setFont(f);
-        files_->addItem(it);
+void UiEditorWindow::f_RefreshFileList() {
+    const QSignalBlocker l_oBlock(m_pFiles);
+    const QStringList l_oAll = uied::f_UiFiles(m_oUiDir);
+    m_pFiles->clear();
+    auto l_fnHeader = [this](const QString& l_oTitle) {   // a group's title: not a file, not selectable
+        auto* l_pIt = new QListWidgetItem(l_oTitle);
+        l_pIt->setFlags(Qt::NoItemFlags);
+        QFont l_oF = l_pIt->font();
+        l_oF.setBold(true);
+        l_pIt->setFont(l_oF);
+        m_pFiles->addItem(l_pIt);
     };
-    auto addFile = [this](const QString& f) {
-        auto* it = new QListWidgetItem((isModified(f) ? QStringLiteral("● ") : QStringLiteral("   ")) + f);
-        it->setData(Qt::UserRole, f);
-        const QString why = relatedWhy_.value(f);
-        if (why == QStringLiteral("shown")) it->setToolTip(tr("The game shows this document now"));
-        else if (!why.isEmpty()) it->setToolTip(tr("A style sheet %1 links").arg(why));
-        files_->addItem(it);
-        if (f == current_) files_->setCurrentItem(it);
+    auto l_fnAddFile = [this](const QString& l_oF) {
+        auto* l_pIt = new QListWidgetItem((f_IsModified(l_oF) ? QStringLiteral("● ") : QStringLiteral("   ")) + l_oF);
+        l_pIt->setData(Qt::UserRole, l_oF);
+        const QString l_oWhy = m_oRelatedWhy.value(l_oF);
+        if (l_oWhy == QStringLiteral("shown")) l_pIt->setToolTip(tr("The game shows this document now"));
+        else if (!l_oWhy.isEmpty()) l_pIt->setToolTip(tr("A style sheet %1 links").arg(l_oWhy));
+        m_pFiles->addItem(l_pIt);
+        if (l_oF == m_oCurrent) m_pFiles->setCurrentItem(l_pIt);
     };
-    QStringList shown;
-    for (const QString& f : related_)
-        if (all.contains(f)) shown << f;
-    if (!shown.isEmpty()) {
-        header(tr("In this preview"));
-        for (const QString& f : shown) addFile(f);
-        header(tr("Other files"));
+    QStringList l_oShown;
+    for (const QString& l_oF : m_oRelated)
+        if (l_oAll.contains(l_oF)) l_oShown << l_oF;
+    if (!l_oShown.isEmpty()) {
+        l_fnHeader(tr("In this preview"));
+        for (const QString& l_oF : l_oShown) l_fnAddFile(l_oF);
+        l_fnHeader(tr("Other files"));
     }
-    for (const QString& f : all)
-        if (!shown.contains(f)) addFile(f);
-    for (const QString& f : tutorialFiles_) {   // the tutorial's practice screen, after the game's own files
-        auto* it = new QListWidgetItem((isModified(f) ? QStringLiteral("● ") : QStringLiteral("   ")) + f + tr("  (tutorial)"));
-        it->setData(Qt::UserRole, f);
-        it->setToolTip(tr("The UI editor tutorial's practice screen (docs/examples/ui_tutorial): Preview \"Practice screen\" shows it"));
-        files_->addItem(it);
-        if (f == current_) files_->setCurrentItem(it);
+    for (const QString& l_oF : l_oAll)
+        if (!l_oShown.contains(l_oF)) l_fnAddFile(l_oF);
+    for (const QString& l_oF : m_oTutorialFiles) {   // the tutorial's practice screen, after the game's own files
+        auto* l_pIt = new QListWidgetItem((f_IsModified(l_oF) ? QStringLiteral("● ") : QStringLiteral("   ")) + l_oF + tr("  (tutorial)"));
+        l_pIt->setData(Qt::UserRole, l_oF);
+        l_pIt->setToolTip(tr("The UI editor tutorial's practice screen (docs/examples/ui_tutorial): Preview \"Practice screen\" shows it"));
+        m_pFiles->addItem(l_pIt);
+        if (l_oF == m_oCurrent) m_pFiles->setCurrentItem(l_pIt);
     }
 }
 
-int UiEditorWindow::fileCount() const { return files_->count(); }
+int UiEditorWindow::f_FileCount() const { return m_pFiles->count(); }
 
-bool UiEditorWindow::openFile(const QString& name) {
-    if (!QFileInfo::exists(pathOf(name))) return false;
-    if (!buffers_.contains(name)) {
-        Buffer b;
-        b.disk = readDisk(name, &b.crlf);
-        b.doc = new QTextDocument(this);
-        b.doc->setDocumentLayout(new QPlainTextDocumentLayout(b.doc));
-        b.doc->setDefaultFont(edit_->font());
-        loading_ = true;
-        b.doc->setPlainText(b.disk);
-        loading_ = false;
-        b.doc->setModified(false);
-        b.highlighter = new UiHighlighter(b.doc, name.endsWith(QStringLiteral(".rcss")) ? UiHighlighter::Kind::Rcss
+bool UiEditorWindow::f_OpenFile(const QString& l_oName) {
+    if (!QFileInfo::exists(f_PathOf(l_oName))) return false;
+    if (!m_oBuffers.contains(l_oName)) {
+        Buffer l_oB;
+        l_oB.m_oDisk = f_ReadDisk(l_oName, &l_oB.m_bCrlf);
+        l_oB.m_pDoc = new QTextDocument(this);
+        l_oB.m_pDoc->setDocumentLayout(new QPlainTextDocumentLayout(l_oB.m_pDoc));
+        l_oB.m_pDoc->setDefaultFont(m_pEdit->font());
+        m_bLoading = true;
+        l_oB.m_pDoc->setPlainText(l_oB.m_oDisk);
+        m_bLoading = false;
+        l_oB.m_pDoc->setModified(false);
+        l_oB.m_pHighlighter = new UiHighlighter(l_oB.m_pDoc, l_oName.endsWith(QStringLiteral(".rcss")) ? UiHighlighter::Kind::Rcss
                                                                                       : UiHighlighter::Kind::Rml);
-        connect(b.doc, &QTextDocument::contentsChanged, this, [this, name] { if (!loading_) edited(name); });
-        buffers_.insert(name, b);
+        connect(l_oB.m_pDoc, &QTextDocument::contentsChanged, this, [this, l_oName] { if (!m_bLoading) f_Edited(l_oName); });
+        m_oBuffers.insert(l_oName, l_oB);
     }
-    current_ = name;
-    edit_->setDocument(buffers_[name].doc);
-    refreshFileList();
-    setWindowTitle(tr("TOMS UI Editor — %1").arg(name));
+    m_oCurrent = l_oName;
+    m_pEdit->setDocument(m_oBuffers[l_oName].m_pDoc);
+    f_RefreshFileList();
+    setWindowTitle(tr("TOMS UI Editor — %1").arg(l_oName));
     return true;
 }
 
-QString UiEditorWindow::text(const QString& name) const {
-    return buffers_.contains(name) ? buffers_[name].doc->toPlainText() : QString();
+QString UiEditorWindow::f_Text(const QString& l_oName) const {
+    return m_oBuffers.contains(l_oName) ? m_oBuffers[l_oName].m_pDoc->toPlainText() : QString();
 }
 
-void UiEditorWindow::setText(const QString& name, const QString& t) {
-    if (!openFile(name)) return;
-    QTextCursor c(buffers_[name].doc);
-    c.select(QTextCursor::Document);
-    c.insertText(t);   // one undo step, like a paste
+void UiEditorWindow::f_SetText(const QString& l_oName, const QString& l_oT) {
+    if (!f_OpenFile(l_oName)) return;
+    QTextCursor l_oC(m_oBuffers[l_oName].m_pDoc);
+    l_oC.select(QTextCursor::Document);
+    l_oC.insertText(l_oT);   // one undo step, like a paste
 }
 
-bool UiEditorWindow::isModified(const QString& name) const {
-    return buffers_.contains(name) && buffers_[name].doc->toPlainText() != buffers_[name].disk;
+bool UiEditorWindow::f_IsModified(const QString& l_oName) const {
+    return m_oBuffers.contains(l_oName) && m_oBuffers[l_oName].m_pDoc->toPlainText() != m_oBuffers[l_oName].m_oDisk;
 }
 
-void UiEditorWindow::edited(const QString& name) {
-    Q_UNUSED(name);
-    refreshFileList();
-    previewTimer_.start();   // a pause in typing previews it
+void UiEditorWindow::f_Edited(const QString& l_oName) {
+    Q_UNUSED(l_oName);
+    f_RefreshFileList();
+    m_oPreviewTimer.start();   // a pause in typing previews it
 }
 
-void UiEditorWindow::previewNow() {
-    previewTimer_.stop();
-    for (auto it = buffers_.begin(); it != buffers_.end(); ++it) {
-        if (isModified(it.key())) RmlUi::setVirtualFile(it.key().toStdString(), it.value().doc->toPlainText().toStdString());
-        else RmlUi::clearVirtualFile(it.key().toStdString());
+void UiEditorWindow::f_PreviewNow() {
+    m_oPreviewTimer.stop();
+    for (auto l_oIt = m_oBuffers.begin(); l_oIt != m_oBuffers.end(); ++l_oIt) {
+        if (f_IsModified(l_oIt.key())) RmlUi::f_SetVirtualFile(l_oIt.key().toStdString(), l_oIt.value().m_pDoc->toPlainText().toStdString());
+        else RmlUi::f_ClearVirtualFile(l_oIt.key().toStdString());
     }
-    problems_->clear();
-    problemTargets_.clear();
-    dropHint();   // ours, not the game's: made again over the reloaded documents
-    view_->session().reloadUi();
-    if (practiceOn_) {   // the game reloads its own documents; the practice screen is ours
-        RmlUi* r = view_->session().rml();
-        if (practiceDoc_ && r && r->context() == practiceCtx_) practiceDoc_->Close();
-        practiceDoc_ = nullptr;
-        loadPractice();
+    m_pProblems->clear();
+    m_oProblemTargets.clear();
+    f_DropHint();   // ours, not the game's: made again over the reloaded documents
+    m_pView->f_Session().f_ReloadUi();
+    if (m_bPracticeOn) {   // the game reloads its own documents; the practice screen is ours
+        RmlUi* l_pR = m_pView->f_Session().f_Rml();
+        if (m_pPracticeDoc && l_pR && l_pR->f_Context() == m_pPracticeCtx) m_pPracticeDoc->Close();
+        m_pPracticeDoc = nullptr;
+        f_LoadPractice();
     }
 }
 
-bool UiEditorWindow::save(const QString& name) {
-    if (!buffers_.contains(name)) return false;
-    Buffer& b = buffers_[name];
-    QString t = b.doc->toPlainText();
-    QString out = b.crlf ? QString(t).replace(QStringLiteral("\n"), QStringLiteral("\r\n")) : t;
-    ownWrite_ = name;
-    QSaveFile f(pathOf(name));
-    const bool ok = f.open(QIODevice::WriteOnly) && f.write(out.toUtf8()) >= 0 && f.commit();
-    if (!ok) {
-        ownWrite_.clear();
-        const QString msg = tr("%1 could not be saved: %2").arg(name, f.errorString());
-        if (quiet_) statusBar()->showMessage(msg);
-        else QMessageBox::warning(this, tr("Save"), msg);
+bool UiEditorWindow::f_Save(const QString& l_oName) {
+    if (!m_oBuffers.contains(l_oName)) return false;
+    Buffer& l_oB = m_oBuffers[l_oName];
+    QString l_oT = l_oB.m_pDoc->toPlainText();
+    QString l_oOut = l_oB.m_bCrlf ? QString(l_oT).replace(QStringLiteral("\n"), QStringLiteral("\r\n")) : l_oT;
+    m_oOwnWrite = l_oName;
+    QSaveFile l_oF(f_PathOf(l_oName));
+    const bool l_bOk = l_oF.open(QIODevice::WriteOnly) && l_oF.write(l_oOut.toUtf8()) >= 0 && l_oF.commit();
+    if (!l_bOk) {
+        m_oOwnWrite.clear();
+        const QString l_oMsg = tr("%1 could not be saved: %2").arg(l_oName, l_oF.errorString());
+        if (m_bQuiet) statusBar()->showMessage(l_oMsg);
+        else QMessageBox::warning(this, tr("Save"), l_oMsg);
         return false;
     }
-    b.disk = t;
-    b.doc->setModified(false);
+    l_oB.m_oDisk = l_oT;
+    l_oB.m_pDoc->setModified(false);
     // QSaveFile replaces the file: watch the new one
-    const QString path = pathOf(name);
-    watcher_->removePath(path);
-    watcher_->addPath(path);
-    previewNow();   // the file on disk is the preview now
-    refreshFileList();
-    statusBar()->showMessage(tr("Saved %1").arg(name), 3000);
+    const QString l_oPath = f_PathOf(l_oName);
+    m_pWatcher->removePath(l_oPath);
+    m_pWatcher->addPath(l_oPath);
+    f_PreviewNow();   // the file on disk is the preview now
+    f_RefreshFileList();
+    statusBar()->showMessage(tr("Saved %1").arg(l_oName), 3000);
     return true;
 }
 
-bool UiEditorWindow::saveAll() {
-    bool ok = true;
-    for (const QString& n : buffers_.keys())
-        if (isModified(n)) ok = save(n) && ok;
-    return ok;
+bool UiEditorWindow::f_SaveAll() {
+    bool l_bOk = true;
+    for (const QString& l_oN : m_oBuffers.keys())
+        if (f_IsModified(l_oN)) l_bOk = f_Save(l_oN) && l_bOk;
+    return l_bOk;
 }
 
-void UiEditorWindow::revert(const QString& name) {
-    if (!buffers_.contains(name)) return;
-    Buffer& b = buffers_[name];
-    b.disk = readDisk(name, &b.crlf);
-    QTextCursor c(b.doc);
-    c.select(QTextCursor::Document);
-    c.insertText(b.disk);
-    b.doc->setModified(false);
-    previewNow();
-    refreshFileList();
+void UiEditorWindow::f_Revert(const QString& l_oName) {
+    if (!m_oBuffers.contains(l_oName)) return;
+    Buffer& l_oB = m_oBuffers[l_oName];
+    l_oB.m_oDisk = f_ReadDisk(l_oName, &l_oB.m_bCrlf);
+    QTextCursor l_oC(l_oB.m_pDoc);
+    l_oC.select(QTextCursor::Document);
+    l_oC.insertText(l_oB.m_oDisk);
+    l_oB.m_pDoc->setModified(false);
+    f_PreviewNow();
+    f_RefreshFileList();
 }
 
-void UiEditorWindow::diskChanged(const QString& path) {
-    const QString name = QFileInfo(path).fileName();
-    if (name == ownWrite_) { ownWrite_.clear(); return; }
-    if (!watcher_->files().contains(path) && QFileInfo::exists(path)) watcher_->addPath(path);
-    if (!buffers_.contains(name)) return;
-    Buffer& b = buffers_[name];
-    const QString now = readDisk(name, &b.crlf);
-    if (now == b.disk) return;
-    if (!isModified(name)) {   // not changed here: take the new text
-        b.disk = now;
-        loading_ = true;
-        b.doc->setPlainText(now);
-        loading_ = false;
-        b.doc->setModified(false);
-        statusBar()->showMessage(tr("%1 changed on disk: reloaded").arg(name), 4000);
+void UiEditorWindow::f_DiskChanged(const QString& l_oPath) {
+    const QString l_oName = QFileInfo(l_oPath).fileName();
+    if (l_oName == m_oOwnWrite) { m_oOwnWrite.clear(); return; }
+    if (!m_pWatcher->files().contains(l_oPath) && QFileInfo::exists(l_oPath)) m_pWatcher->addPath(l_oPath);
+    if (!m_oBuffers.contains(l_oName)) return;
+    Buffer& l_oB = m_oBuffers[l_oName];
+    const QString l_oNow = f_ReadDisk(l_oName, &l_oB.m_bCrlf);
+    if (l_oNow == l_oB.m_oDisk) return;
+    if (!f_IsModified(l_oName)) {   // not changed here: take the new text
+        l_oB.m_oDisk = l_oNow;
+        m_bLoading = true;
+        l_oB.m_pDoc->setPlainText(l_oNow);
+        m_bLoading = false;
+        l_oB.m_pDoc->setModified(false);
+        statusBar()->showMessage(tr("%1 changed on disk: reloaded").arg(l_oName), 4000);
     } else {
-        b.disk = now;   // ours stays; saving it replaces theirs
-        statusBar()->showMessage(tr("%1 changed on disk, and here too: your text is kept (Revert File takes theirs)").arg(name));
+        l_oB.m_oDisk = l_oNow;   // ours stays; saving it replaces theirs
+        statusBar()->showMessage(tr("%1 changed on disk, and here too: your text is kept (Revert File takes theirs)").arg(l_oName));
     }
-    refreshFileList();
+    f_RefreshFileList();
 }
 
-bool UiEditorWindow::askToSave() {
-    QStringList changed;
-    for (const QString& n : buffers_.keys())
-        if (isModified(n)) changed << n;
-    if (changed.isEmpty() || quiet_) return true;
-    const auto r = QMessageBox::question(this, tr("Unsaved changes"),
-                                         tr("These files have changes that are not saved:\n%1\n\nSave them?").arg(changed.join(QLatin1Char('\n'))),
+bool UiEditorWindow::f_AskToSave() {
+    QStringList l_oChanged;
+    for (const QString& l_oN : m_oBuffers.keys())
+        if (f_IsModified(l_oN)) l_oChanged << l_oN;
+    if (l_oChanged.isEmpty() || m_bQuiet) return true;
+    const auto l_eR = QMessageBox::question(this, tr("Unsaved changes"),
+                                         tr("These files have changes that are not saved:\n%1\n\nSave them?").arg(l_oChanged.join(QLatin1Char('\n'))),
                                          QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
-    if (r == QMessageBox::Cancel) return false;
-    return r == QMessageBox::Discard || saveAll();
+    if (l_eR == QMessageBox::Cancel) return false;
+    return l_eR == QMessageBox::Discard || f_SaveAll();
 }
 
-void UiEditorWindow::closeEvent(QCloseEvent* e) {
-    if (!askToSave()) { e->ignore(); return; }
-    e->accept();
+void UiEditorWindow::closeEvent(QCloseEvent* l_pE) {
+    if (!f_AskToSave()) { l_pE->ignore(); return; }
+    l_pE->accept();
 }
 
 // ---- the preview ----
 
-void UiEditorWindow::fillPreviewList() {
-    preview_->clear();
-    previewPaths_.clear();
-    preview_->addItem(tr("Title screen"));
-    previewPaths_ << QString();
-    if (!tutorialFiles_.isEmpty()) {
-        preview_->addItem(tr("Practice screen (tutorial)"));
-        previewPaths_ << QStringLiteral("practice");
+void UiEditorWindow::f_FillPreviewList() {
+    m_pPreview->clear();
+    m_oPreviewPaths.clear();
+    m_pPreview->addItem(tr("Title screen"));
+    m_oPreviewPaths << QString();
+    if (!m_oTutorialFiles.isEmpty()) {
+        m_pPreview->addItem(tr("Practice screen (tutorial)"));
+        m_oPreviewPaths << QStringLiteral("practice");
     }
     // the test scenarios by screen (the player menu's tabs each their own), in the game's order
-    QDir d(scenariosDir_);
-    struct Entry { int order; QString label, path; };
-    QList<Entry> entries;
-    for (const QString& name : d.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name)) {
-        const QString file = d.filePath(name + QStringLiteral("/scenario.json"));
-        if (!QFileInfo::exists(file)) continue;
-        int order = 0;
-        const QString label = uied::previewLabel(uied::readScenario(file), name, &order);
-        entries.push_back({order, label, d.filePath(name)});
+    QDir l_oD(m_oScenariosDir);
+    struct Entry { int m_iOrder; QString m_oLabel, m_oPath; };
+    QList<Entry> l_oEntries;
+    for (const QString& l_oName : l_oD.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name)) {
+        const QString l_oFile = l_oD.filePath(l_oName + QStringLiteral("/scenario.json"));
+        if (!QFileInfo::exists(l_oFile)) continue;
+        int l_iOrder = 0;
+        const QString l_oLabel = uied::f_PreviewLabel(uied::f_ReadScenario(l_oFile), l_oName, &l_iOrder);
+        l_oEntries.push_back({l_iOrder, l_oLabel, l_oD.filePath(l_oName)});
     }
-    std::stable_sort(entries.begin(), entries.end(), [](const Entry& a, const Entry& b) { return a.order < b.order; });
-    for (const Entry& e : entries) {
-        preview_->addItem(e.label);
-        previewPaths_ << e.path;
+    std::stable_sort(l_oEntries.begin(), l_oEntries.end(), [](const Entry& l_oA, const Entry& l_oB) { return l_oA.m_iOrder < l_oB.m_iOrder; });
+    for (const Entry& l_oE : l_oEntries) {
+        m_pPreview->addItem(l_oE.m_oLabel);
+        m_oPreviewPaths << l_oE.m_oPath;
     }
 }
 
-void UiEditorWindow::startPreviewAt(int index) {
-    preview_->setCurrentIndex(index);
-    startPreview(index);
+void UiEditorWindow::f_StartPreviewAt(int l_iIndex) {
+    m_pPreview->setCurrentIndex(l_iIndex);
+    f_StartPreview(l_iIndex);
 }
 
-void UiEditorWindow::startPreview(int index) {
-    if (index < 0 || index >= previewPaths_.size()) return;
-    openRelated_ = true;   // its first document opens once the game shows it (updateRelated)
-    practiceOn_ = previewPaths_[index] == QStringLiteral("practice");
-    practiceDoc_ = nullptr;   // a restarted game has a new UI context: the old document went with the old one
-    practiceCtx_ = nullptr;
-    previewNow();
-    if (practiceOn_) {   // over the map of a new game, so the HUD's values ({{hud.res_line}}) are real
-        QString err;
-        if (!view_->startScenario(QDir(scenariosDir_).filePath(QStringLiteral("stage_new_game")), err))
-            statusBar()->showMessage(err);
-        practiceTimer_.start();
+void UiEditorWindow::f_StartPreview(int l_iIndex) {
+    if (l_iIndex < 0 || l_iIndex >= m_oPreviewPaths.size()) return;
+    m_bOpenRelated = true;   // its first document opens once the game shows it (updateRelated)
+    m_bPracticeOn = m_oPreviewPaths[l_iIndex] == QStringLiteral("practice");
+    m_pPracticeDoc = nullptr;   // a restarted game has a new UI context: the old document went with the old one
+    m_pPracticeCtx = nullptr;
+    f_PreviewNow();
+    if (m_bPracticeOn) {   // over the map of a new game, so the HUD's values ({{hud.res_line}}) are real
+        QString l_oErr;
+        if (!m_pView->f_StartScenario(QDir(m_oScenariosDir).filePath(QStringLiteral("stage_new_game")), l_oErr))
+            statusBar()->showMessage(l_oErr);
+        m_oPracticeTimer.start();
         return;
     }
-    if (previewPaths_[index].isEmpty()) {
-        view_->restartGame();
+    if (m_oPreviewPaths[l_iIndex].isEmpty()) {
+        m_pView->f_RestartGame();
         return;
     }
-    QString err;
-    if (!view_->startScenario(previewPaths_[index], err)) {
-        if (quiet_) statusBar()->showMessage(err);
-        else QMessageBox::warning(this, tr("Preview"), tr("The scenario could not start:\n%1").arg(err));
+    QString l_oErr;
+    if (!m_pView->f_StartScenario(m_oPreviewPaths[l_iIndex], l_oErr)) {
+        if (m_bQuiet) statusBar()->showMessage(l_oErr);
+        else QMessageBox::warning(this, tr("Preview"), tr("The scenario could not start:\n%1").arg(l_oErr));
     }
 }
 
-void UiEditorWindow::loadPractice() {
-    RmlUi* r = view_->session().rml();
-    if (!practiceOn_) { practiceTimer_.stop(); return; }
-    if (!r || !r->ready() || !view_->session().game() || practiceDoc_) return;   // not up yet: the timer tries again
-    practiceTimer_.stop();
-    Rml::Context* ctx = r->context();
-    practiceDoc_ = ctx->LoadDocument(pathOf(QStringLiteral("practice.rml")).toStdString());
-    practiceCtx_ = ctx;
-    if (practiceDoc_) practiceDoc_->Show();
+void UiEditorWindow::f_LoadPractice() {
+    RmlUi* l_pR = m_pView->f_Session().f_Rml();
+    if (!m_bPracticeOn) { m_oPracticeTimer.stop(); return; }
+    if (!l_pR || !l_pR->f_Ready() || !m_pView->f_Session().f_Game() || m_pPracticeDoc) return;   // not up yet: the timer tries again
+    m_oPracticeTimer.stop();
+    Rml::Context* l_pCtx = l_pR->f_Context();
+    m_pPracticeDoc = l_pCtx->LoadDocument(f_PathOf(QStringLiteral("practice.rml")).toStdString());
+    m_pPracticeCtx = l_pCtx;
+    if (m_pPracticeDoc) m_pPracticeDoc->Show();
     else statusBar()->showMessage(tr("practice.rml could not be loaded: see Problems"));
 }
 
-void UiEditorWindow::openPracticeScreen() {
-    const int i = previewPaths_.indexOf(QStringLiteral("practice"));
-    if (i < 0) {
+void UiEditorWindow::f_OpenPracticeScreen() {
+    const int l_iI = m_oPreviewPaths.indexOf(QStringLiteral("practice"));
+    if (l_iI < 0) {
         statusBar()->showMessage(tr("The practice screen (docs/examples/ui_tutorial) is not in this copy of the editor's repo"));
         return;
     }
-    startPreviewAt(i);
-    openFile(QStringLiteral("practice.rcss"));
+    f_StartPreviewAt(l_iI);
+    f_OpenFile(QStringLiteral("practice.rcss"));
 }
 
-void UiEditorWindow::openTutorial() {
-    const QString doc = QDir(docsDir_).filePath(Language::current() == Language::Lang::Chinese ? QStringLiteral("zh_TW/37_UI_EDITOR.md")
+void UiEditorWindow::f_OpenTutorial() {
+    const QString l_oDoc = QDir(m_oDocsDir).filePath(Language::f_Current() == Language::Lang::Chinese ? QStringLiteral("zh_TW/37_UI_EDITOR.md")
                                                                                                 : QStringLiteral("10_UI_EDITOR.md"));
-    if (!QFileInfo::exists(doc) || !QDesktopServices::openUrl(QUrl::fromLocalFile(doc))) {
-        const QString msg = tr("The tutorial is docs/gameplay/10_UI_EDITOR.md in the TOMS repo; it could not be opened from here.");
-        if (quiet_) statusBar()->showMessage(msg);
-        else QMessageBox::information(this, tr("UI Editor Tutorial"), msg);
+    if (!QFileInfo::exists(l_oDoc) || !QDesktopServices::openUrl(QUrl::fromLocalFile(l_oDoc))) {
+        const QString l_oMsg = tr("The tutorial is docs/gameplay/10_UI_EDITOR.md in the TOMS repo; it could not be opened from here.");
+        if (m_bQuiet) statusBar()->showMessage(l_oMsg);
+        else QMessageBox::information(this, tr("UI Editor Tutorial"), l_oMsg);
     }
 }
 
-void UiEditorWindow::fillLanguages() {
-    Game* g = view_->session().game();
-    if (!g) return;
-    langTimer_.stop();
-    const QSignalBlocker block(lang_);
-    lang_->clear();
-    for (const auto& li : g->locale().languages())
-        lang_->addItem(QStringLiteral("%1  (%2)").arg(QString::fromStdString(li.name), QString::fromStdString(li.code)),
-                       QString::fromStdString(li.code));
-    lang_->setCurrentIndex(lang_->findData(QString::fromStdString(g->locale().languageCode())));
+void UiEditorWindow::f_FillLanguages() {
+    Game* l_pG = m_pView->f_Session().f_Game();
+    if (!l_pG) return;
+    m_oLangTimer.stop();
+    const QSignalBlocker l_oBlock(m_pLang);
+    m_pLang->clear();
+    for (const auto& l_oLi : l_pG->f_Locale().f_Languages())
+        m_pLang->addItem(QStringLiteral("%1  (%2)").arg(QString::fromStdString(l_oLi.m_strName), QString::fromStdString(l_oLi.m_strCode)),
+                       QString::fromStdString(l_oLi.m_strCode));
+    m_pLang->setCurrentIndex(m_pLang->findData(QString::fromStdString(l_pG->f_Locale().f_LanguageCode())));
 }
 
 // ---- problems and the inspector ----
 
-void UiEditorWindow::addProblem(int level, const QString& message) {
-    const uied::Problem p = uied::parseProblem(level, message);
-    QString where = p.file.isEmpty() ? QString() : p.line ? QStringLiteral("%1:%2  ").arg(p.file).arg(p.line) : p.file + QStringLiteral("  ");
-    auto* it = new QListWidgetItem((level >= 2 ? QStringLiteral("⛔ ") : QStringLiteral("⚠ ")) + where + p.text);
-    problems_->addItem(it);
-    problemTargets_ << (p.file.isEmpty() ? QString() : QStringLiteral("%1:%2").arg(p.file).arg(p.line));
+void UiEditorWindow::f_AddProblem(int l_iLevel, const QString& l_oMessage) {
+    const uied::Problem l_oP = uied::f_ParseProblem(l_iLevel, l_oMessage);
+    QString l_oWhere = l_oP.m_oFile.isEmpty() ? QString() : l_oP.m_iLine ? QStringLiteral("%1:%2  ").arg(l_oP.m_oFile).arg(l_oP.m_iLine) : l_oP.m_oFile + QStringLiteral("  ");
+    auto* l_pIt = new QListWidgetItem((l_iLevel >= 2 ? QStringLiteral("⛔ ") : QStringLiteral("⚠ ")) + l_oWhere + l_oP.m_oText);
+    m_pProblems->addItem(l_pIt);
+    m_oProblemTargets << (l_oP.m_oFile.isEmpty() ? QString() : QStringLiteral("%1:%2").arg(l_oP.m_oFile).arg(l_oP.m_iLine));
 }
 
-int UiEditorWindow::problemCount() const { return problems_->count(); }
+int UiEditorWindow::f_ProblemCount() const { return m_pProblems->count(); }
 
-int UiEditorWindow::problemAt(const QString& file) const {
-    for (const QString& t : problemTargets_)
-        if (t.startsWith(file + QLatin1Char(':'))) return t.section(QLatin1Char(':'), 1).toInt();
+int UiEditorWindow::f_ProblemAt(const QString& l_oFile) const {
+    for (const QString& l_oT : m_oProblemTargets)
+        if (l_oT.startsWith(l_oFile + QLatin1Char(':'))) return l_oT.section(QLatin1Char(':'), 1).toInt();
     return 0;
 }
 
-void UiEditorWindow::openProblem(int row) {
-    if (row < 0 || row >= problemTargets_.size() || problemTargets_[row].isEmpty()) return;
-    const QStringList parts = problemTargets_[row].split(QLatin1Char(':'));
-    if (openFile(parts[0]) && parts.size() > 1 && parts[1].toInt() > 0) edit_->goToLine(parts[1].toInt());
+void UiEditorWindow::f_OpenProblem(int l_iRow) {
+    if (l_iRow < 0 || l_iRow >= m_oProblemTargets.size() || m_oProblemTargets[l_iRow].isEmpty()) return;
+    const QStringList l_oParts = m_oProblemTargets[l_iRow].split(QLatin1Char(':'));
+    if (f_OpenFile(l_oParts[0]) && l_oParts.size() > 1 && l_oParts[1].toInt() > 0) m_pEdit->f_GoToLine(l_oParts[1].toInt());
 }
 
-void UiEditorWindow::openRule(int row) {
-    if (row < 0 || row >= ruleTargets_.size()) return;
-    const QStringList parts = ruleTargets_[row].split(QLatin1Char(':'));
-    if (parts.size() == 2 && openFile(parts[0])) edit_->goToLine(parts[1].toInt());
+void UiEditorWindow::f_OpenRule(int l_iRow) {
+    if (l_iRow < 0 || l_iRow >= m_oRuleTargets.size()) return;
+    const QStringList l_oParts = m_oRuleTargets[l_iRow].split(QLatin1Char(':'));
+    if (l_oParts.size() == 2 && f_OpenFile(l_oParts[0])) m_pEdit->f_GoToLine(l_oParts[1].toInt());
 }
 
-void UiEditorWindow::inspectNow() {
-    rules_->clear();
-    ruleTargets_.clear();
-    RmlUi* r = view_->session().rml();
-    Rml::Context* ctx = r ? r->context() : nullptr;
-    Rml::Element* el = ctx ? ctx->GetHoverElement() : nullptr;
-    if (!el || el == el->GetOwnerDocument()) {
-        inspectLabel_->setText(tr("Nothing under the mouse: point at a part of the screen and click again."));
+void UiEditorWindow::f_InspectNow() {
+    m_pRules->clear();
+    m_oRuleTargets.clear();
+    RmlUi* l_pR = m_pView->f_Session().f_Rml();
+    Rml::Context* l_pCtx = l_pR ? l_pR->f_Context() : nullptr;
+    Rml::Element* l_pEl = l_pCtx ? l_pCtx->GetHoverElement() : nullptr;
+    if (!l_pEl || l_pEl == l_pEl->GetOwnerDocument()) {
+        m_pInspectLabel->setText(tr("Nothing under the mouse: point at a part of the screen and click again."));
         return;
     }
-    auto describe = [](Rml::Element* e) {
-        QString s = QString::fromStdString(e->GetTagName());
-        if (!e->GetId().empty()) s += QLatin1Char('#') + QString::fromStdString(e->GetId());
-        for (const QString& c : QString::fromStdString(e->GetClassNames()).split(QLatin1Char(' '), Qt::SkipEmptyParts))
-            s += QLatin1Char('.') + c;
-        return s;
+    auto l_fnDescribe = [](Rml::Element* l_pE) {
+        QString l_oS = QString::fromStdString(l_pE->GetTagName());
+        if (!l_pE->GetId().empty()) l_oS += QLatin1Char('#') + QString::fromStdString(l_pE->GetId());
+        for (const QString& l_oC : QString::fromStdString(l_pE->GetClassNames()).split(QLatin1Char(' '), Qt::SkipEmptyParts))
+            l_oS += QLatin1Char('.') + l_oC;
+        return l_oS;
     };
-    QStringList chain;
-    for (Rml::Element* e = el; e && e != el->GetOwnerDocument(); e = e->GetParentNode()) chain.prepend(describe(e));
-    const QString docFile = QFileInfo(QString::fromStdString(el->GetOwnerDocument()->GetSourceURL())).fileName();
-    inspectLabel_->setText(tr("<b>%1</b> in %2<br>%3").arg(describe(el).toHtmlEscaped(), docFile, chain.join(QStringLiteral(" › ")).toHtmlEscaped()));
+    QStringList l_oChain;
+    for (Rml::Element* l_pE = l_pEl; l_pE && l_pE != l_pEl->GetOwnerDocument(); l_pE = l_pE->GetParentNode()) l_oChain.prepend(l_fnDescribe(l_pE));
+    const QString l_oDocFile = QFileInfo(QString::fromStdString(l_pEl->GetOwnerDocument()->GetSourceURL())).fileName();
+    m_pInspectLabel->setText(tr("<b>%1</b> in %2<br>%3").arg(l_fnDescribe(l_pEl).toHtmlEscaped(), l_oDocFile, l_oChain.join(QStringLiteral(" › ")).toHtmlEscaped()));
 
     // its line in the .rml: its id, else the first element like it, else the nearest parent with an id
-    if (openFile(docFile)) {
-        const QString rml = text(docFile);
-        int line = 0;
-        for (Rml::Element* e = el; e && !line && e != el->GetOwnerDocument(); e = e->GetParentNode()) {
-            line = uied::lineOfId(rml, QString::fromStdString(e->GetId()));
-            if (!line && e == el)
-                line = uied::lineOfTagWithClasses(rml, QString::fromStdString(e->GetTagName()),
-                                                   QString::fromStdString(e->GetClassNames()).split(QLatin1Char(' '), Qt::SkipEmptyParts));
+    if (f_OpenFile(l_oDocFile)) {
+        const QString l_oRml = f_Text(l_oDocFile);
+        int l_iLine = 0;
+        for (Rml::Element* l_pE = l_pEl; l_pE && !l_iLine && l_pE != l_pEl->GetOwnerDocument(); l_pE = l_pE->GetParentNode()) {
+            l_iLine = uied::f_LineOfId(l_oRml, QString::fromStdString(l_pE->GetId()));
+            if (!l_iLine && l_pE == l_pEl)
+                l_iLine = uied::f_LineOfTagWithClasses(l_oRml, QString::fromStdString(l_pE->GetTagName()),
+                                                   QString::fromStdString(l_pE->GetClassNames()).split(QLatin1Char(' '), Qt::SkipEmptyParts));
         }
-        if (line) edit_->goToLine(line);
+        if (l_iLine) m_pEdit->f_GoToLine(l_iLine);
         // the rules of the sheets this document links that name it
-        const QString id = QString::fromStdString(el->GetId());
-        const QStringList classes = QString::fromStdString(el->GetClassNames()).split(QLatin1Char(' '), Qt::SkipEmptyParts);
-        const QString tag = QString::fromStdString(el->GetTagName());
-        for (const QString& href : uied::linkedStyleSheets(rml)) {
-            const QString sheet = QFileInfo(href).fileName();
-            const QString css = buffers_.contains(sheet) ? text(sheet) : readDisk(sheet);
-            for (const uied::RuleHit& h : uied::rulesFor(sheet, css, id, classes, tag)) {
-                rules_->addItem(QStringLiteral("%1:%2   %3").arg(h.file).arg(h.line).arg(h.text));
-                ruleTargets_ << QStringLiteral("%1:%2").arg(h.file).arg(h.line);
+        const QString l_oId = QString::fromStdString(l_pEl->GetId());
+        const QStringList l_oClasses = QString::fromStdString(l_pEl->GetClassNames()).split(QLatin1Char(' '), Qt::SkipEmptyParts);
+        const QString l_oTag = QString::fromStdString(l_pEl->GetTagName());
+        for (const QString& l_oHref : uied::f_LinkedStyleSheets(l_oRml)) {
+            const QString l_oSheet = QFileInfo(l_oHref).fileName();
+            const QString l_oCss = m_oBuffers.contains(l_oSheet) ? f_Text(l_oSheet) : f_ReadDisk(l_oSheet);
+            for (const uied::RuleHit& l_oH : uied::f_RulesFor(l_oSheet, l_oCss, l_oId, l_oClasses, l_oTag)) {
+                m_pRules->addItem(QStringLiteral("%1:%2   %3").arg(l_oH.m_oFile).arg(l_oH.m_iLine).arg(l_oH.m_oText));
+                m_oRuleTargets << QStringLiteral("%1:%2").arg(l_oH.m_oFile).arg(l_oH.m_iLine);
             }
         }
-        if (rules_->count() == 0) rules_->addItem(tr("(no rule names it: it takes only what it inherits)"));
+        if (m_pRules->count() == 0) m_pRules->addItem(tr("(no rule names it: it takes only what it inherits)"));
     }
 }
 
-QString UiEditorWindow::inspectSummary() const { return inspectLabel_->text(); }
+QString UiEditorWindow::f_InspectSummary() const { return m_pInspectLabel->text(); }
 
-void UiEditorWindow::placeCursor(int pos) {
-    QTextCursor c = edit_->textCursor();
-    c.setPosition(std::clamp(pos, 0, edit_->document()->characterCount() - 1));
-    edit_->setTextCursor(c);
+void UiEditorWindow::f_PlaceCursor(int l_iPos) {
+    QTextCursor l_oC = m_pEdit->textCursor();
+    l_oC.setPosition(std::clamp(l_iPos, 0, m_pEdit->document()->characterCount() - 1));
+    m_pEdit->setTextCursor(l_oC);
 }
 
 // ---- the hint: what the text cursor is on, glowing in the game ----
 
-void UiEditorWindow::cursorMoved() {
-    if (!hintOn_ || current_.isEmpty()) return;
-    const QString t = edit_->toPlainText();
-    const int pos = edit_->textCursor().position();
-    QStringList sel;
-    if (current_.endsWith(QStringLiteral(".rml"))) sel = uied::selectorsAtRml(t, pos);
-    else if (current_.endsWith(QStringLiteral(".rcss"))) sel = uied::selectorsAtRcss(t, pos);
-    hintFile_ = current_.endsWith(QStringLiteral(".rml")) ? current_ : QString();
-    if (sel == hintSelectors_) return;
-    hintSelectors_ = sel;
-    updateHint();
-    if (sel.isEmpty()) hintTimer_.stop();
-    else hintTimer_.start();
+void UiEditorWindow::f_CursorMoved() {
+    if (!m_bHintOn || m_oCurrent.isEmpty()) return;
+    const QString l_oT = m_pEdit->toPlainText();
+    const int l_iPos = m_pEdit->textCursor().position();
+    QStringList l_oSel;
+    if (m_oCurrent.endsWith(QStringLiteral(".rml"))) l_oSel = uied::f_SelectorsAtRml(l_oT, l_iPos);
+    else if (m_oCurrent.endsWith(QStringLiteral(".rcss"))) l_oSel = uied::f_SelectorsAtRcss(l_oT, l_iPos);
+    m_oHintFile = m_oCurrent.endsWith(QStringLiteral(".rml")) ? m_oCurrent : QString();
+    if (l_oSel == m_oHintSelectors) return;
+    m_oHintSelectors = l_oSel;
+    f_UpdateHint();
+    if (l_oSel.isEmpty()) m_oHintTimer.stop();
+    else m_oHintTimer.start();
 }
 
-void UiEditorWindow::dropHint() {
-    RmlUi* r = view_->session().rml();
-    if (hintDoc_ && r && r->context() == hintCtx_) hintDoc_->Close();
-    hintDoc_ = nullptr;
-    hintCtx_ = nullptr;
+void UiEditorWindow::f_DropHint() {
+    RmlUi* l_pR = m_pView->f_Session().f_Rml();
+    if (m_pHintDoc && l_pR && l_pR->f_Context() == m_pHintCtx) m_pHintDoc->Close();
+    m_pHintDoc = nullptr;
+    m_pHintCtx = nullptr;
 }
 
-void UiEditorWindow::updateHint() {
-    RmlUi* r = view_->session().rml();
-    Rml::Context* ctx = r && r->ready() ? r->context() : nullptr;
-    if (!ctx) return;
-    if (ctx != hintCtx_) { hintDoc_ = nullptr; hintCtx_ = ctx; }   // a restarted game: its old document went with it
+void UiEditorWindow::f_UpdateHint() {
+    RmlUi* l_pR = m_pView->f_Session().f_Rml();
+    Rml::Context* l_pCtx = l_pR && l_pR->f_Ready() ? l_pR->f_Context() : nullptr;
+    if (!l_pCtx) return;
+    if (l_pCtx != m_pHintCtx) { m_pHintDoc = nullptr; m_pHintCtx = l_pCtx; }   // a restarted game: its old document went with it
     // the elements: in the shown documents (an .rml's hint only in its own), each selector of the cursor's
-    std::vector<Rml::Element*> found;
-    for (int i = 0; i < ctx->GetNumDocuments() && !hintSelectors_.isEmpty(); i++) {
-        Rml::ElementDocument* d = ctx->GetDocument(i);
-        if (!d || d == hintDoc_ || !d->IsVisible()) continue;
-        if (!hintFile_.isEmpty() && QFileInfo(QString::fromStdString(d->GetSourceURL())).fileName() != hintFile_) continue;
-        for (const QString& s : hintSelectors_) {
-            Rml::ElementList els;
-            d->QuerySelectorAll(els, s.toStdString());
-            for (Rml::Element* e : els)
-                if (e->IsVisible() && found.size() < 64 && std::find(found.begin(), found.end(), e) == found.end()) found.push_back(e);
+    std::vector<Rml::Element*> l_vFound;
+    for (int l_iI = 0; l_iI < l_pCtx->GetNumDocuments() && !m_oHintSelectors.isEmpty(); l_iI++) {
+        Rml::ElementDocument* l_pD = l_pCtx->GetDocument(l_iI);
+        if (!l_pD || l_pD == m_pHintDoc || !l_pD->IsVisible()) continue;
+        if (!m_oHintFile.isEmpty() && QFileInfo(QString::fromStdString(l_pD->GetSourceURL())).fileName() != m_oHintFile) continue;
+        for (const QString& l_oS : m_oHintSelectors) {
+            Rml::ElementList l_vEls;
+            l_pD->QuerySelectorAll(l_vEls, l_oS.toStdString());
+            for (Rml::Element* l_pE : l_vEls)
+                if (l_pE->IsVisible() && l_vFound.size() < 64 && std::find(l_vFound.begin(), l_vFound.end(), l_pE) == l_vFound.end()) l_vFound.push_back(l_pE);
         }
     }
-    hintCount_ = (int)found.size();
-    if (found.empty()) {   // nothing on screen: no frame (the status says why)
-        if (hintDoc_) while (hintDoc_->GetNumChildren() > 0) hintDoc_->RemoveChild(hintDoc_->GetChild(0));
-        if (!hintSelectors_.isEmpty())
-            statusBar()->showMessage(tr("%1: nothing on screen now (hidden, or another screen)").arg(hintSelectors_.join(QStringLiteral(", "))), 2000);
+    m_iHintCount = (int)l_vFound.size();
+    if (l_vFound.empty()) {   // nothing on screen: no frame (the status says why)
+        if (m_pHintDoc) while (m_pHintDoc->GetNumChildren() > 0) m_pHintDoc->RemoveChild(m_pHintDoc->GetChild(0));
+        if (!m_oHintSelectors.isEmpty())
+            statusBar()->showMessage(tr("%1: nothing on screen now (hidden, or another screen)").arg(m_oHintSelectors.join(QStringLiteral(", "))), 2000);
         return;
     }
-    if (!hintDoc_) {
-        hintDoc_ = ctx->LoadDocumentFromMemory(R"RML(<rml><head><style>
+    if (!m_pHintDoc) {
+        m_pHintDoc = l_pCtx->LoadDocumentFromMemory(R"RML(<rml><head><style>
 body { position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 100000; pointer-events: none; }
 .uied-hint { position: absolute; border-width: 3px; border-color: #ffd54a; background-color: #ffd54a2c;
              pointer-events: none; animation: 0.7s cubic-in-out infinite alternate uied-pulse; }
 @keyframes uied-pulse { from { opacity: 0.25; } to { opacity: 1; } }
 </style></head><body></body></rml>)RML", "[ui_editor hint]");
-        if (!hintDoc_) return;
-        hintDoc_->Show(Rml::ModalFlag::None, Rml::FocusFlag::None);
-        statusBar()->showMessage(tr("Glowing %1 (%2 on screen)").arg(hintSelectors_.join(QStringLiteral(", "))).arg(found.size()), 3000);
+        if (!m_pHintDoc) return;
+        m_pHintDoc->Show(Rml::ModalFlag::None, Rml::FocusFlag::None);
+        statusBar()->showMessage(tr("Glowing %1 (%2 on screen)").arg(m_oHintSelectors.join(QStringLiteral(", "))).arg(l_vFound.size()), 3000);
     }
-    hintDoc_->PullToFront();
+    m_pHintDoc->PullToFront();
     // one frame per element, where it is now (things move: a damage number, a rotated screen)
-    while (hintDoc_->GetNumChildren() > (int)found.size()) hintDoc_->RemoveChild(hintDoc_->GetChild(hintDoc_->GetNumChildren() - 1));
-    while (hintDoc_->GetNumChildren() < (int)found.size()) {
-        Rml::ElementPtr box = hintDoc_->CreateElement("div");
-        box->SetClass("uied-hint", true);
-        hintDoc_->AppendChild(std::move(box));
+    while (m_pHintDoc->GetNumChildren() > (int)l_vFound.size()) m_pHintDoc->RemoveChild(m_pHintDoc->GetChild(m_pHintDoc->GetNumChildren() - 1));
+    while (m_pHintDoc->GetNumChildren() < (int)l_vFound.size()) {
+        Rml::ElementPtr l_upBox = m_pHintDoc->CreateElement("div");
+        l_upBox->SetClass("uied-hint", true);
+        m_pHintDoc->AppendChild(std::move(l_upBox));
     }
-    for (size_t k = 0; k < found.size(); k++) {
-        const Rml::Vector2f o = found[k]->GetAbsoluteOffset(Rml::BoxArea::Border);
-        const Rml::Vector2f sz = found[k]->GetBox().GetSize(Rml::BoxArea::Border);
-        Rml::Element* box = hintDoc_->GetChild((int)k);
-        box->SetProperty("left", std::to_string(o.x - 3.0f) + "px");
-        box->SetProperty("top", std::to_string(o.y - 3.0f) + "px");
-        box->SetProperty("width", std::to_string(std::max(sz.x, 2.0f)) + "px");
-        box->SetProperty("height", std::to_string(std::max(sz.y, 2.0f)) + "px");
+    for (size_t l_nK = 0; l_nK < l_vFound.size(); l_nK++) {
+        const Rml::Vector2f l_oO = l_vFound[l_nK]->GetAbsoluteOffset(Rml::BoxArea::Border);
+        const Rml::Vector2f l_oSz = l_vFound[l_nK]->GetBox().GetSize(Rml::BoxArea::Border);
+        Rml::Element* l_pBox = m_pHintDoc->GetChild((int)l_nK);
+        l_pBox->SetProperty("left", std::to_string(l_oO.x - 3.0f) + "px");
+        l_pBox->SetProperty("top", std::to_string(l_oO.y - 3.0f) + "px");
+        l_pBox->SetProperty("width", std::to_string(std::max(l_oSz.x, 2.0f)) + "px");
+        l_pBox->SetProperty("height", std::to_string(std::max(l_oSz.y, 2.0f)) + "px");
     }
 }
 
 // The documents the game's UI shows now (each .rml), then the style sheets each links, in that order without repeats.
-void UiEditorWindow::updateRelated() {
-    RmlUi* r = view_->session().rml();
-    Rml::Context* ctx = r && r->ready() ? r->context() : nullptr;
-    if (!ctx) return;
-    QStringList files;
-    QMap<QString, QString> why;
-    for (int i = 0; i < ctx->GetNumDocuments(); i++) {
-        Rml::ElementDocument* d = ctx->GetDocument(i);
-        if (!d || !d->IsVisible() || d == hintDoc_) continue;   // (the hint is ours, not a screen of the game)
-        const QString rml = QFileInfo(QString::fromStdString(d->GetSourceURL())).fileName();
-        if (rml.isEmpty() || files.contains(rml)) continue;
-        files << rml;
-        why[rml] = QStringLiteral("shown");
-        const QString src = buffers_.contains(rml) ? text(rml) : readDisk(rml);
-        for (const QString& href : uied::linkedStyleSheets(src)) {
-            const QString sheet = QFileInfo(href).fileName();
-            if (files.contains(sheet)) continue;
-            files << sheet;
-            why[sheet] = rml;
+void UiEditorWindow::f_UpdateRelated() {
+    RmlUi* l_pR = m_pView->f_Session().f_Rml();
+    Rml::Context* l_pCtx = l_pR && l_pR->f_Ready() ? l_pR->f_Context() : nullptr;
+    if (!l_pCtx) return;
+    QStringList l_oFiles;
+    QMap<QString, QString> l_oWhy;
+    for (int l_iI = 0; l_iI < l_pCtx->GetNumDocuments(); l_iI++) {
+        Rml::ElementDocument* l_pD = l_pCtx->GetDocument(l_iI);
+        if (!l_pD || !l_pD->IsVisible() || l_pD == m_pHintDoc) continue;   // (the hint is ours, not a screen of the game)
+        const QString l_oRml = QFileInfo(QString::fromStdString(l_pD->GetSourceURL())).fileName();
+        if (l_oRml.isEmpty() || l_oFiles.contains(l_oRml)) continue;
+        l_oFiles << l_oRml;
+        l_oWhy[l_oRml] = QStringLiteral("shown");
+        const QString l_oSrc = m_oBuffers.contains(l_oRml) ? f_Text(l_oRml) : f_ReadDisk(l_oRml);
+        for (const QString& l_oHref : uied::f_LinkedStyleSheets(l_oSrc)) {
+            const QString l_oSheet = QFileInfo(l_oHref).fileName();
+            if (l_oFiles.contains(l_oSheet)) continue;
+            l_oFiles << l_oSheet;
+            l_oWhy[l_oSheet] = l_oRml;
         }
     }
     // the .rml files first (what is on screen), then the sheets
-    std::stable_partition(files.begin(), files.end(), [](const QString& f) { return f.endsWith(QStringLiteral(".rml")); });
-    if (files == related_) return;
-    related_ = files;
-    relatedWhy_ = why;
-    refreshFileList();
-    QStringList rmls;
-    for (const QString& f : files)
-        if (f.endsWith(QStringLiteral(".rml"))) rmls << f;
-    if (!rmls.isEmpty())
-        statusBar()->showMessage(tr("This preview shows %1 (its files are at the top of the list)").arg(rmls.join(QStringLiteral(", "))), 6000);
+    std::stable_partition(l_oFiles.begin(), l_oFiles.end(), [](const QString& l_oF) { return l_oF.endsWith(QStringLiteral(".rml")); });
+    if (l_oFiles == m_oRelated) return;
+    m_oRelated = l_oFiles;
+    m_oRelatedWhy = l_oWhy;
+    f_RefreshFileList();
+    QStringList l_oRmls;
+    for (const QString& l_oF : l_oFiles)
+        if (l_oF.endsWith(QStringLiteral(".rml"))) l_oRmls << l_oF;
+    if (!l_oRmls.isEmpty())
+        statusBar()->showMessage(tr("This preview shows %1 (its files are at the top of the list)").arg(l_oRmls.join(QStringLiteral(", "))), 6000);
     // a new preview: open its document, unless the file being edited is already one of its files
-    if (openRelated_ && !rmls.isEmpty()) {
-        openRelated_ = false;
-        if (!related_.contains(current_)) openFile(rmls.last());   // the last shown is the one on top
+    if (m_bOpenRelated && !l_oRmls.isEmpty()) {
+        m_bOpenRelated = false;
+        if (!m_oRelated.contains(m_oCurrent)) f_OpenFile(l_oRmls.last());   // the last shown is the one on top
     }
 }
-int UiEditorWindow::inspectRuleCount() const { return ruleTargets_.size(); }
+int UiEditorWindow::f_InspectRuleCount() const { return m_oRuleTargets.size(); }

@@ -17,30 +17,30 @@ class CanvasPanel : public QWidget
     Q_OBJECT
 
 public:
-    explicit CanvasPanel(AtlasDocument* doc, QWidget* parent = nullptr);
+    explicit CanvasPanel(AtlasDocument* l_pDoc, QWidget* l_pParent = nullptr);
 
-    AtlasCanvas* atlasCanvas() const { return m_atlas; }
-    SpriteEditCanvas* editCanvas() const { return m_edit; }
-    CanvasView* currentView() const;
-    bool isEditMode() const;
+    AtlasCanvas* f_AtlasCanvas() const { return m_pAtlas; }
+    SpriteEditCanvas* f_EditCanvas() const { return m_pEdit; }
+    CanvasView* f_CurrentView() const;
+    bool f_IsEditMode() const;
 
 public slots:
-    void enterEditMode(const QString& sprite);
-    void exitEditMode();
+    void f_EnterEditMode(const QString& l_oSprite);
+    void f_ExitEditMode();
 
 signals:
-    void editModeChanged(bool editMode);
-    void zoomChanged(double zoom);
+    void f_EditModeChanged(bool l_bEditMode);
+    void f_ZoomChanged(double l_dZoom);
 
 private:
-    void refreshTabs();
-    void refreshBreadcrumb();
+    void f_RefreshTabs();
+    void f_RefreshBreadcrumb();
 
-    AtlasDocument* m_doc;
-    QTabBar* m_tabs;
-    QWidget* m_editBar;
-    QLabel* m_breadcrumb;
-    QStackedWidget* m_stack;
-    AtlasCanvas* m_atlas;
-    SpriteEditCanvas* m_edit;
+    AtlasDocument* m_pDoc;
+    QTabBar* m_pTabs;
+    QWidget* m_pEditBar;
+    QLabel* m_pBreadcrumb;
+    QStackedWidget* m_pStack;
+    AtlasCanvas* m_pAtlas;
+    SpriteEditCanvas* m_pEdit;
 };

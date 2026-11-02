@@ -11,64 +11,64 @@
 #include <QStatusBar>
 
 namespace {
-constexpr int kStateVersion = 1;   // bump when the dock layout changes incompatibly
+constexpr int g_iStateVersion = 1;   // bump when the dock layout changes incompatibly
 }
 
-ParticleMainWindow::ParticleMainWindow(QWidget* parent)
-    : QMainWindow(parent)
-    , m_editor(new ParticleEditor(this))
+ParticleMainWindow::ParticleMainWindow(QWidget* l_pParent)
+    : QMainWindow(l_pParent)
+    , m_pEditor(new ParticleEditor(this))
 {
     setObjectName(QStringLiteral("ParticleEditorMainWindow"));
-    m_editor->install();
+    m_pEditor->f_Install();
     statusBar();
 
-    m_darkAct = new QAction(tr("&Dark Theme"), this);
-    m_lightAct = new QAction(tr("&Light Theme"), this);
-    auto* themes = new QActionGroup(this);
-    for (QAction* a : {m_darkAct, m_lightAct}) {
-        a->setCheckable(true);
-        themes->addAction(a);
-        m_editor->viewMenu()->addAction(a);
+    m_pDarkAct = new QAction(tr("&Dark Theme"), this);
+    m_pLightAct = new QAction(tr("&Light Theme"), this);
+    auto* l_pThemes = new QActionGroup(this);
+    for (QAction* l_pA : {m_pDarkAct, m_pLightAct}) {
+        l_pA->setCheckable(true);
+        l_pThemes->addAction(l_pA);
+        m_pEditor->f_ViewMenu()->addAction(l_pA);
     }
-    connect(m_darkAct, &QAction::triggered, this, [this] { setDarkTheme(true); });
-    connect(m_lightAct, &QAction::triggered, this, [this] { setDarkTheme(false); });
-    connect(m_editor, &ParticleEditor::titleChanged, this, &ParticleMainWindow::updateTitle);
+    connect(m_pDarkAct, &QAction::triggered, this, [this] { f_SetDarkTheme(true); });
+    connect(m_pLightAct, &QAction::triggered, this, [this] { f_SetDarkTheme(false); });
+    connect(m_pEditor, &ParticleEditor::f_TitleChanged, this, &ParticleMainWindow::f_UpdateTitle);
 
     if (!qApp->property("toms.selftest").toBool()) {
-        QSettings s = ParticleEditor::settings();
-        setDarkTheme(s.value(QStringLiteral("theme"), QStringLiteral("dark")).toString() != QLatin1String("light"));
-        if (!restoreGeometry(s.value(QStringLiteral("geometry")).toByteArray())) resize(1500, 920);
-        restoreState(s.value(QStringLiteral("windowState")).toByteArray(), kStateVersion);
-        m_editor->readSettings();
+        QSettings l_oS = ParticleEditor::f_Settings();
+        f_SetDarkTheme(l_oS.value(QStringLiteral("theme"), QStringLiteral("dark")).toString() != QLatin1String("light"));
+        if (!restoreGeometry(l_oS.value(QStringLiteral("geometry")).toByteArray())) resize(1500, 920);
+        restoreState(l_oS.value(QStringLiteral("windowState")).toByteArray(), g_iStateVersion);
+        m_pEditor->f_ReadSettings();
     }
-    updateTitle();
+    f_UpdateTitle();
 }
 
-void ParticleMainWindow::setDarkTheme(bool dark)
+void ParticleMainWindow::f_SetDarkTheme(bool l_bDark)
 {
-    Theme::apply(dark ? Theme::Mode::Dark : Theme::Mode::Light);
-    (dark ? m_darkAct : m_lightAct)->setChecked(true);
-    for (QWidget* w : QApplication::allWidgets()) w->update();
+    Theme::f_Apply(l_bDark ? Theme::Mode::Dark : Theme::Mode::Light);
+    (l_bDark ? m_pDarkAct : m_pLightAct)->setChecked(true);
+    for (QWidget* l_pW : QApplication::allWidgets()) l_pW->update();
 }
 
-void ParticleMainWindow::updateTitle()
+void ParticleMainWindow::f_UpdateTitle()
 {
-    setWindowTitle(m_editor->title());
-    setWindowModified(m_editor->document()->isDirty());
+    setWindowTitle(m_pEditor->f_Title());
+    setWindowModified(m_pEditor->f_Document()->f_IsDirty());
 }
 
-void ParticleMainWindow::closeEvent(QCloseEvent* e)
+void ParticleMainWindow::closeEvent(QCloseEvent* l_pE)
 {
-    if (!m_editor->maybeSave()) {
-        e->ignore();
+    if (!m_pEditor->f_MaybeSave()) {
+        l_pE->ignore();
         return;
     }
     if (!qApp->property("toms.selftest").toBool()) {
-        QSettings s = ParticleEditor::settings();
-        s.setValue(QStringLiteral("geometry"), saveGeometry());
-        s.setValue(QStringLiteral("windowState"), saveState(kStateVersion));
-        s.setValue(QStringLiteral("theme"), Theme::mode() == Theme::Mode::Dark ? QStringLiteral("dark") : QStringLiteral("light"));
-        m_editor->writeSettings();
+        QSettings l_oS = ParticleEditor::f_Settings();
+        l_oS.setValue(QStringLiteral("geometry"), saveGeometry());
+        l_oS.setValue(QStringLiteral("windowState"), saveState(g_iStateVersion));
+        l_oS.setValue(QStringLiteral("theme"), Theme::f_Mode() == Theme::Mode::Dark ? QStringLiteral("dark") : QStringLiteral("light"));
+        m_pEditor->f_WriteSettings();
     }
-    e->accept();
+    l_pE->accept();
 }

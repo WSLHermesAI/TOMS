@@ -13,89 +13,89 @@ using namespace toms::game_detail;
 // itself): media/atlas/game.atlas + game.png for the original art, media/styles/<id>/atlas/ for each art style.
 // Sprites keep their own sizes; the .atlas carries child sprites, pivots, 9-slices and tags (spriteAtlas_). Every
 // sprite in SPRITE_ORDER must be in it, on its first page.
-bool Game::loadPrebuiltSpriteAtlas(int style) {
-    const std::string dir = toms::res::ResourceManager::dirOf(style > 0 ? pathFor(toms::pattern::kStyleAtlas, artStyles_[style].id)
-                                                                   : pathOf(toms::key::kAtlasGame));
-    std::string text;
-    if (!toms::vfsReadAll(dir + "game.atlas", text)) return false;
-    toms::AtlasFile atlas;
-    std::string err;
-    if (!toms::parseAtlas(text, atlas, &err) || atlas.pages.empty()) {
-        std::fprintf(stderr, "[assets] %sgame.atlas: %s\n", dir.c_str(), err.empty() ? "no pages" : err.c_str());
+bool Game::f_LoadPrebuiltSpriteAtlas(int l_iStyle) {
+    const std::string l_strDir = toms::res::ResourceManager::f_DirOf(l_iStyle > 0 ? f_PathFor(toms::pattern::g_pszStyleAtlas, m_vArtStyles[l_iStyle].m_strId)
+                                                                   : f_PathOf(toms::key::g_pszAtlasGame));
+    std::string l_strText;
+    if (!toms::f_VfsReadAll(l_strDir + "game.atlas", l_strText)) return false;
+    toms::AtlasFile l_oAtlas;
+    std::string l_strErr;
+    if (!toms::f_ParseAtlas(l_strText, l_oAtlas, &l_strErr) || l_oAtlas.m_vPages.empty()) {
+        std::fprintf(stderr, "[assets] %sgame.atlas: %s\n", l_strDir.c_str(), l_strErr.empty() ? "no pages" : l_strErr.c_str());
         return false;
     }
-    for (int i = 0; i < N_SPRITES; i++) {
-        const toms::AtlasRegion* r = atlas.find(SPRITE_ORDER[i]);
-        if (!r || r->page != 0) {
-            std::fprintf(stderr, "[assets] %sgame.atlas has no sprite '%s'%s\n", dir.c_str(),
-                         SPRITE_ORDER[i], r ? " on its first page" : "");
+    for (int l_iI = 0; l_iI < g_iNSPRITES; l_iI++) {
+        const toms::AtlasRegion* l_pR = l_oAtlas.f_Find(g_arrSPRITEORDER[l_iI]);
+        if (!l_pR || l_pR->m_iPage != 0) {
+            std::fprintf(stderr, "[assets] %sgame.atlas has no sprite '%s'%s\n", l_strDir.c_str(),
+                         g_arrSPRITEORDER[l_iI], l_pR ? " on its first page" : "");
             return false;
         }
     }
-    std::string file;
-    int w = 0, h = 0, ch = 0;
-    unsigned char* d = nullptr;
-    if (toms::vfsReadAll(dir + atlas.pages[0].file, file))
-        d = stbi_load_from_memory((const stbi_uc*)file.data(), (int)file.size(), &w, &h, &ch, 4);
-    if (!d) {
-        std::fprintf(stderr, "[assets] cannot load %s%s\n", dir.c_str(), atlas.pages[0].file.c_str());
+    std::string l_strFile;
+    int l_iW = 0, l_iH = 0, l_iCh = 0;
+    unsigned char* l_pD = nullptr;
+    if (toms::f_VfsReadAll(l_strDir + l_oAtlas.m_vPages[0].m_strFile, l_strFile))
+        l_pD = stbi_load_from_memory((const stbi_uc*)l_strFile.data(), (int)l_strFile.size(), &l_iW, &l_iH, &l_iCh, 4);
+    if (!l_pD) {
+        std::fprintf(stderr, "[assets] cannot load %s%s\n", l_strDir.c_str(), l_oAtlas.m_vPages[0].m_strFile.c_str());
         return false;
     }
-    std::vector<uint8_t> px(d, d + (size_t)w * h * 4);
-    stbi_image_free(d);
-    if (atlas.pages[0].w != w || atlas.pages[0].h != h) {   // the image wins; UVs follow it
-        std::fprintf(stderr, "[assets] %s is %dx%d, game.atlas says %dx%d\n", atlas.pages[0].file.c_str(), w, h,
-                     atlas.pages[0].w, atlas.pages[0].h);
-        atlas.pages[0].w = w;
-        atlas.pages[0].h = h;
-        atlas.computeUVs();
+    std::vector<uint8_t> l_vPx(l_pD, l_pD + (size_t)l_iW * l_iH * 4);
+    stbi_image_free(l_pD);
+    if (l_oAtlas.m_vPages[0].m_iW != l_iW || l_oAtlas.m_vPages[0].m_iH != l_iH) {   // the image wins; UVs follow it
+        std::fprintf(stderr, "[assets] %s is %dx%d, game.atlas says %dx%d\n", l_oAtlas.m_vPages[0].m_strFile.c_str(), l_iW, l_iH,
+                     l_oAtlas.m_vPages[0].m_iW, l_oAtlas.m_vPages[0].m_iH);
+        l_oAtlas.m_vPages[0].m_iW = l_iW;
+        l_oAtlas.m_vPages[0].m_iH = l_iH;
+        l_oAtlas.f_ComputeUVs();
     }
-    idToLayer.clear();   // rebuilt for this atlas (an art style's may hold other sprites than the last one)
-    spriteUVs_.assign(N_SPRITES, {});
-    spriteTrim_.assign(N_SPRITES, {0.0f, 0.0f, 1.0f, 1.0f});
-    for (int i = 0; i < N_SPRITES; i++) {
-        const toms::AtlasRegion* r = atlas.find(SPRITE_ORDER[i]);
-        std::copy(r->uv, r->uv + 4, spriteUVs_[i].begin());
-        if (r->origW > 0 && r->origH > 0)
-            spriteTrim_[i] = {(float)r->offX / r->origW, (float)r->offY / r->origH, (float)r->w / r->origW, (float)r->h / r->origH};
-        idToLayer[SPRITE_ORDER[i]] = i;
+    m_mapIdToLayer.clear();   // rebuilt for this atlas (an art style's may hold other sprites than the last one)
+    m_vSpriteUVs.assign(g_iNSPRITES, {});
+    m_vSpriteTrim.assign(g_iNSPRITES, {0.0f, 0.0f, 1.0f, 1.0f});
+    for (int l_iI = 0; l_iI < g_iNSPRITES; l_iI++) {
+        const toms::AtlasRegion* l_pR = l_oAtlas.f_Find(g_arrSPRITEORDER[l_iI]);
+        std::copy(l_pR->m_arrUv, l_pR->m_arrUv + 4, m_vSpriteUVs[l_iI].begin());
+        if (l_pR->m_iOrigW > 0 && l_pR->m_iOrigH > 0)
+            m_vSpriteTrim[l_iI] = {(float)l_pR->m_iOffX / l_pR->m_iOrigW, (float)l_pR->m_iOffY / l_pR->m_iOrigH, (float)l_pR->m_iW / l_pR->m_iOrigW, (float)l_pR->m_iH / l_pR->m_iOrigH};
+        m_mapIdToLayer[g_arrSPRITEORDER[l_iI]] = l_iI;
     }
     // Every sprite's visible box (its pixels with alpha): how character clips are fitted to a character
     // (anim_clip.h fitCharacter, docs/engine/05_ANIMATION.md "Characters").
-    spriteBoxes_.clear();
-    for (const toms::AtlasRegion& r : atlas.regions) {
-        if (r.page != 0 || r.child || r.rotated || r.x < 0 || r.y < 0 || r.x + r.w > w || r.y + r.h > h) continue;
-        spriteBoxes_[r.name] = toms::visibleBox(px.data() + ((size_t)r.y * w + r.x) * 4, w, r.w, r.h, r.offX, r.offY,
-                                                r.origW, r.origH);
+    m_mapSpriteBoxes.clear();
+    for (const toms::AtlasRegion& l_oR : l_oAtlas.m_vRegions) {
+        if (l_oR.m_iPage != 0 || l_oR.m_bChild || l_oR.m_bRotated || l_oR.m_iX < 0 || l_oR.m_iY < 0 || l_oR.m_iX + l_oR.m_iW > l_iW || l_oR.m_iY + l_oR.m_iH > l_iH) continue;
+        m_mapSpriteBoxes[l_oR.m_strName] = toms::f_VisibleBox(l_vPx.data() + ((size_t)l_oR.m_iY * l_iW + l_oR.m_iX) * 4, l_iW, l_oR.m_iW, l_oR.m_iH, l_oR.m_iOffX, l_oR.m_iOffY,
+                                                l_oR.m_iOrigW, l_oR.m_iOrigH);
     }
     // Every other sprite on the page (the new monsters, NPCs, items, doors, floor themes ...) is drawable by its name
     // too: a type's or an object's "sprite" can be any of them (docs/engine/14_AI_SPRITES.md). Only the first page is the
     // renderer's sprite texture, so sprites on a further page are not.
-    for (const toms::AtlasRegion& r : atlas.regions) {
-        if (r.page != 0 || idToLayer.count(r.name)) continue;
-        idToLayer[r.name] = (int)spriteUVs_.size();
-        spriteUVs_.push_back({r.uv[0], r.uv[1], r.uv[2], r.uv[3]});
-        spriteTrim_.push_back(r.origW > 0 && r.origH > 0
-            ? std::array<float, 4>{(float)r.offX / r.origW, (float)r.offY / r.origH, (float)r.w / r.origW, (float)r.h / r.origH}
+    for (const toms::AtlasRegion& l_oR : l_oAtlas.m_vRegions) {
+        if (l_oR.m_iPage != 0 || m_mapIdToLayer.count(l_oR.m_strName)) continue;
+        m_mapIdToLayer[l_oR.m_strName] = (int)m_vSpriteUVs.size();
+        m_vSpriteUVs.push_back({l_oR.m_arrUv[0], l_oR.m_arrUv[1], l_oR.m_arrUv[2], l_oR.m_arrUv[3]});
+        m_vSpriteTrim.push_back(l_oR.m_iOrigW > 0 && l_oR.m_iOrigH > 0
+            ? std::array<float, 4>{(float)l_oR.m_iOffX / l_oR.m_iOrigW, (float)l_oR.m_iOffY / l_oR.m_iOrigH, (float)l_oR.m_iW / l_oR.m_iOrigW, (float)l_oR.m_iH / l_oR.m_iOrigH}
             : std::array<float, 4>{0.0f, 0.0f, 1.0f, 1.0f});
     }
-    ren->loadSpriteAtlas(px, (uint32_t)w, (uint32_t)h, dir + atlas.pages[0].file);
-    std::fprintf(stderr, "[assets] sprites: prebuilt atlas %sgame.atlas, %dx%d, %zu region(s), art style '%s'\n", dir.c_str(),
-                 w, h, atlas.regions.size(), artStyles_[style].id.empty() ? "original" : artStyles_[style].id.c_str());
-    spriteAtlas_ = std::move(atlas);
+    m_pRen->f_LoadSpriteAtlas(l_vPx, (uint32_t)l_iW, (uint32_t)l_iH, l_strDir + l_oAtlas.m_vPages[0].m_strFile);
+    std::fprintf(stderr, "[assets] sprites: prebuilt atlas %sgame.atlas, %dx%d, %zu region(s), art style '%s'\n", l_strDir.c_str(),
+                 l_iW, l_iH, l_oAtlas.m_vRegions.size(), m_vArtStyles[l_iStyle].m_strId.empty() ? "original" : m_vArtStyles[l_iStyle].m_strId.c_str());
+    m_oSpriteAtlas = std::move(l_oAtlas);
     {   // its meshes (docs/engine/16_MESH_ANIMATION.md): beside the style's atlas, else the original art's (cut from the same
         // sprites; drawn inside each region, so a different packing only changes how closely they follow the shape)
-        std::string meshError;
-        const std::string base = pathOf(toms::key::kAtlasGame);
-        const std::string own = dir + "game.atlas";
-        if (!toms::res::readMeshFile(toms::spriteMeshPath(own), spriteMeshes_, meshError))
-            std::fprintf(stderr, "[assets] %s\n", meshError.c_str());
-        if (spriteMeshes_.meshes.empty() && own != base && !toms::res::readMeshFile(toms::spriteMeshPath(base), spriteMeshes_, meshError))
-            std::fprintf(stderr, "[assets] %s\n", meshError.c_str());
+        std::string l_strMeshError;
+        const std::string l_strBase = f_PathOf(toms::key::g_pszAtlasGame);
+        const std::string l_strOwn = l_strDir + "game.atlas";
+        if (!toms::res::f_ReadMeshFile(toms::f_SpriteMeshPath(l_strOwn), m_oSpriteMeshes, l_strMeshError))
+            std::fprintf(stderr, "[assets] %s\n", l_strMeshError.c_str());
+        if (m_oSpriteMeshes.m_mapMeshes.empty() && l_strOwn != l_strBase && !toms::res::f_ReadMeshFile(toms::f_SpriteMeshPath(l_strBase), m_oSpriteMeshes, l_strMeshError))
+            std::fprintf(stderr, "[assets] %s\n", l_strMeshError.c_str());
     }
-    provideSpriteAtlas();
-    spriteAtlasRevision_++;   // the UI's sprite sheet (uiSpritesheet) follows from the next frame
-    loadedArtStyle_ = style;
+    f_ProvideSpriteAtlas();
+    m_iSpriteAtlasRevision++;   // the UI's sprite sheet (uiSpritesheet) follows from the next frame
+    m_iLoadedArtStyle = l_iStyle;
     return true;
 }
 
@@ -105,197 +105,197 @@ bool Game::loadPrebuiltSpriteAtlas(int style) {
 // (refreshArtStyle). The atlases are cooked from art_raw/ by tools/atlas (art_raw/atlas/game.atlasproj); the game
 // ships only them, never the raw PNGs. A style whose atlas is missing falls back to the original art. On failure
 // the previous atlas and loadedArtStyle_ stay as they were.
-bool Game::loadSpriteAtlas(int style) {
-    if (style < 0 || style >= (int)artStyles_.size()) style = 0;
-    if (loadPrebuiltSpriteAtlas(style)) return true;
-    if (style > 0) {
-        std::fprintf(stderr, "[assets] art style '%s' has no usable atlas: using the original art\n", artStyles_[style].id.c_str());
-        return loadPrebuiltSpriteAtlas(0);
+bool Game::f_LoadSpriteAtlas(int l_iStyle) {
+    if (l_iStyle < 0 || l_iStyle >= (int)m_vArtStyles.size()) l_iStyle = 0;
+    if (f_LoadPrebuiltSpriteAtlas(l_iStyle)) return true;
+    if (l_iStyle > 0) {
+        std::fprintf(stderr, "[assets] art style '%s' has no usable atlas: using the original art\n", m_vArtStyles[l_iStyle].m_strId.c_str());
+        return f_LoadPrebuiltSpriteAtlas(0);
     }
     std::fprintf(stderr, "[assets] %s/atlas/game.atlas is missing or lacks the map sprites: rebuild it with\n"
-                         "  atlaspack build art_raw/atlas/game.atlasproj --all-variants\n", dataDir.c_str());
+                         "  atlaspack build art_raw/atlas/game.atlasproj --all-variants\n", m_strDataDir.c_str());
     return false;
 }
 
 // The chosen style (Settings) takes effect only while the title screen is up -- nothing from a run
 // is on screen then. Called when the title reopens (returnToTitle) and right after the choice was
 // made on the title's own Settings page (applyArtStyle). Restarting the game also applies it.
-void Game::refreshArtStyle() {
-    if (!ren || !title_.isOpen()) return;
-    const int chosen = chosenArtStyle();
-    if (chosen != loadedArtStyle_) loadSpriteAtlas(chosen);
+void Game::f_RefreshArtStyle() {
+    if (!m_pRen || !m_oTitle.f_IsOpen()) return;
+    const int l_iChosen = f_ChosenArtStyle();
+    if (l_iChosen != m_iLoadedArtStyle) f_LoadSpriteAtlas(l_iChosen);
 }
 
-bool Game::loadAssets(const std::string& assetDir) {
-    dataDir = assetDir;
+bool Game::f_LoadAssets(const std::string& l_strAssetDir) {
+    m_strDataDir = l_strAssetDir;
     // Create the renderer: bgfx on every platform (src/game/compat/renderer.h). The host
     // (GameSession) owns the window and frees the renderer.
-    ren = new Renderer();
-    ren->init(1280, 720);   // size ignored by the bgfx renderer: the host sets the backbuffer size
+    m_pRen = new Renderer();
+    m_pRen->f_Init(1280, 720);   // size ignored by the bgfx renderer: the host sets the backbuffer size
     // The resource cache (docs/engine/12_RESOURCE_MANAGER.md). Any ".../atlas/game.atlas" a clip or effect names -- the
     // original art's or a style's -- is the sprite atlas loaded now (provideSpriteAtlas), so they follow the art style.
-    res_ = std::make_unique<toms::res::ResourceManager>(ren);
+    m_upRes = std::make_unique<toms::res::ResourceManager>(m_pRen);
     // Every file the game needs by key (assets/media/resources.json); a key or a path under assets/media is how code
     // asks for one (res_->get<T>). A missing one is said on screen.
-    res_->setRoot(assetDir);
-    res_->setOnMissing([this](const std::string& name, const std::string& path, const std::string& error) { resourceMissing(name, path, error); });
-    res_->loadManifest("resources.json");
-    toms::registerBuiltinRenderObjects(renderFactory_);   // sprite, clip, particle, text, group (the floor's looks)
-    res_->setPathMapper([](const std::string& path) {
-        const size_t slash = path.find_last_of("/\\");
-        const std::string name = path.substr(slash == std::string::npos ? 0 : slash + 1);
-        const std::string parent = slash == std::string::npos ? std::string() : path.substr(0, slash);
-        if (name == "game.atlas" && parent.size() >= 5 && parent.compare(parent.size() - 5, 5, "atlas") == 0)
-            return std::string(toms::res::ResourceManager::kSpriteAtlas);
-        return path;
+    m_upRes->f_SetRoot(l_strAssetDir);
+    m_upRes->f_SetOnMissing([this](const std::string& l_strName, const std::string& l_strPath, const std::string& l_strError) { f_ResourceMissing(l_strName, l_strPath, l_strError); });
+    m_upRes->f_LoadManifest("resources.json");
+    toms::f_RegisterBuiltinRenderObjects(m_oRenderFactory);   // sprite, clip, particle, text, group (the floor's looks)
+    m_upRes->f_SetPathMapper([](const std::string& l_strPath) {
+        const size_t l_nSlash = l_strPath.find_last_of("/\\");
+        const std::string l_strName = l_strPath.substr(l_nSlash == std::string::npos ? 0 : l_nSlash + 1);
+        const std::string l_strParent = l_nSlash == std::string::npos ? std::string() : l_strPath.substr(0, l_nSlash);
+        if (l_strName == "game.atlas" && l_strParent.size() >= 5 && l_strParent.compare(l_strParent.size() - 5, 5, "atlas") == 0)
+            return std::string(toms::res::ResourceManager::m_pszSpriteAtlas);
+        return l_strPath;
     });
     // Art styles (Settings > art style; art_styles.h): start with the one settings.json names.
-    artStyles_ = toms::artStylesFromJson(readJsonFile(pathOf(toms::key::kStylesIndex)));
-    if (!loadSpriteAtlas(toms::artStyleIndex(artStyles_,
-            toms::loadGameSettings(toms::settingsPath()).artStyle)))
+    m_vArtStyles = toms::f_ArtStylesFromJson(f_ReadJsonFile(f_PathOf(toms::key::g_pszStylesIndex)));
+    if (!f_LoadSpriteAtlas(toms::f_ArtStyleIndex(m_vArtStyles,
+            toms::f_LoadGameSettings(toms::f_SettingsPath()).m_strArtStyle)))
         return false;
     // (Text is RmlUi's: see assets/media/fonts/NotoSansCJKtc-TOMS.otf and tools/make_ui_font.py.)
     // The manifest's "preload" entries (the map's clips and their atlases), now that the sprite atlas is provided.
-    if (const int failed = res_->preload()) std::fprintf(stderr, "[res] %d preloaded resource(s) missing\n", failed);
+    if (const int l_iFailed = m_upRes->f_Preload()) std::fprintf(stderr, "[res] %d preloaded resource(s) missing\n", l_iFailed);
 
     // S1: character-level 佔格 table (docs/design/ART_AND_ABILITY_DESIGN.md F8). An absent file leaves
     // every entity at 1x1, i.e. exactly the pre-S1 behavior -- the table is purely additive.
     {
-        nlohmann::json fpj = readJsonFile(pathOf(toms::key::kDataFootprints));
-        if (fpj.is_object()) {
-            int n = 0;
-            for (auto it = fpj.begin(); it != fpj.end(); ++it) {
-                if (it.key().empty() || it.key()[0] == '_') continue;   // "_comment"
-                typeFootprints_[it.key()] = toms::footprintSpecFromJson(it.value(), it.key());
-                if (typeFootprints_[it.key()].fp.big()) ++n;
+        nlohmann::json l_jFpj = f_ReadJsonFile(f_PathOf(toms::key::g_pszDataFootprints));
+        if (l_jFpj.is_object()) {
+            int l_iN = 0;
+            for (auto l_oIt = l_jFpj.begin(); l_oIt != l_jFpj.end(); ++l_oIt) {
+                if (l_oIt.key().empty() || l_oIt.key()[0] == '_') continue;   // "_comment"
+                m_mapTypeFootprints[l_oIt.key()] = toms::f_FootprintSpecFromJson(l_oIt.value(), l_oIt.key());
+                if (m_mapTypeFootprints[l_oIt.key()].m_oFp.f_Big()) ++l_iN;
             }
-            fprintf(stderr, "[assets] footprints.json: %d type(s) bigger than 1x1\n", n);
+            fprintf(stderr, "[assets] footprints.json: %d type(s) bigger than 1x1\n", l_iN);
         }
     }
     // the battle scene's tuning (data/battle.json): bar speed and the wait after a tap
     {
-        nlohmann::json bj = readJsonFile(pathOf(toms::key::kDataBattle));
-        if (bj.is_object()) {
-            barSlowScale_ = std::max(0.0f, bj.value("bar_slow_speed_scale", 1.0f));
-            barFastScale_ = std::max(0.05f, bj.value("bar_fast_speed_scale", 1.0f));
-            barCooldownMs_ = std::max(0, bj.value("bar_cooldown_ms", (int)CombatState::kBarCooldownMs));
-            attackPauseMs_ = std::max(0, bj.value("attack_pause_ms", attackPauseMs_));
-            hitNumberDelayMs_ = std::max(0, bj.value("hit_number_delay_ms", hitNumberDelayMs_));
-            battleJson_ = bj;
-            paceSettings_ = toms::paceFromJson(bj);     // docs/gameplay/13 §6.3
-            feel_ = toms::feelFromJson(bj);             // docs/gameplay/15 §3.8
-            touchSettings_ = toms::touchPlayFromJson(bj);   // the plays' numbers (docs/gameplay/16 §3)
-            grade_ = toms::gradeFromJson(bj);           // §3.6
-            guard_ = toms::guardFromJson(bj);           // §3.2
-            comboHoldsMonsters_ = bj.value("combo_holds_monsters", false);
-            comboRunsThroughAttacks_ = bj.value("combo_runs_through_attacks", true);
-            breakSettings_ = toms::breakFromJson(bj);   // §6.4
-            fprintf(stderr, "[assets] battle.json: bars start x%.2f, top speed x%.2f, %d ms after a tap\n", barSlowScale_,
-                    barFastScale_, barCooldownMs_);
+        nlohmann::json l_jBj = f_ReadJsonFile(f_PathOf(toms::key::g_pszDataBattle));
+        if (l_jBj.is_object()) {
+            m_fBarSlowScale = std::max(0.0f, l_jBj.value("bar_slow_speed_scale", 1.0f));
+            m_fBarFastScale = std::max(0.05f, l_jBj.value("bar_fast_speed_scale", 1.0f));
+            m_iBarCooldownMs = std::max(0, l_jBj.value("bar_cooldown_ms", (int)CombatState::m_iBarCooldownMs));
+            m_iAttackPauseMs = std::max(0, l_jBj.value("attack_pause_ms", m_iAttackPauseMs));
+            m_iHitNumberDelayMs = std::max(0, l_jBj.value("hit_number_delay_ms", m_iHitNumberDelayMs));
+            m_jBattleJson = l_jBj;
+            m_oPaceSettings = toms::f_PaceFromJson(l_jBj);     // docs/gameplay/13 §6.3
+            m_oFeel = toms::f_FeelFromJson(l_jBj);             // docs/gameplay/15 §3.8
+            m_oTouchSettings = toms::f_TouchPlayFromJson(l_jBj);   // the plays' numbers (docs/gameplay/16 §3)
+            m_oGrade = toms::f_GradeFromJson(l_jBj);           // §3.6
+            m_oGuard = toms::f_GuardFromJson(l_jBj);           // §3.2
+            m_bComboHoldsMonsters = l_jBj.value("combo_holds_monsters", false);
+            m_bComboRunsThroughAttacks = l_jBj.value("combo_runs_through_attacks", true);
+            m_oBreakSettings = toms::f_BreakFromJson(l_jBj);   // §6.4
+            fprintf(stderr, "[assets] battle.json: bars start x%.2f, top speed x%.2f, %d ms after a tap\n", m_fBarSlowScale,
+                    m_fBarFastScale, m_iBarCooldownMs);
         }
     }
-    weaponPlay_ = toms::loadWeaponPlay(pathOf(toms::key::kDataWeaponPlay));   // docs/gameplay/07_GAMEPLAY_PLAN.md §5.6
-    looks_ = toms::looksFromJson(readJsonFile(pathOf(toms::key::kDataLooks)));   // the status map (docs/gameplay/11 §4.2)
-    moves_ = toms::movesFromJson(readJsonFile(pathOf(toms::key::kDataMoves)));   // the monsters' moves (docs/gameplay/13 §6.1)
-    specialMoves_ = toms::specialMovesFromJson(readJsonFile(pathOf(toms::key::kDataSpecialMoves)));   // moves and special guards (docs/gameplay/16 §6)
-    miniGames_ = toms::loadMiniGames(pathOf(toms::key::kDataMinigames));      // docs/gameplay/07 phase 6
-    characterFit_ = readJsonFile(pathOf(toms::key::kDataCharacterFit));      // character clips' nudges (docs/engine/05)
-    fprintf(stderr, "[assets] weapon_play.json: %d weapon(s)\n", (int)weaponPlay_.weapons.size());
+    m_oWeaponPlay = toms::f_LoadWeaponPlay(f_PathOf(toms::key::g_pszDataWeaponPlay));   // docs/gameplay/07_GAMEPLAY_PLAN.md §5.6
+    m_oLooks = toms::f_LooksFromJson(f_ReadJsonFile(f_PathOf(toms::key::g_pszDataLooks)));   // the status map (docs/gameplay/11 §4.2)
+    m_oMoves = toms::f_MovesFromJson(f_ReadJsonFile(f_PathOf(toms::key::g_pszDataMoves)));   // the monsters' moves (docs/gameplay/13 §6.1)
+    m_oSpecialMoves = toms::f_SpecialMovesFromJson(f_ReadJsonFile(f_PathOf(toms::key::g_pszDataSpecialMoves)));   // moves and special guards (docs/gameplay/16 §6)
+    m_oMiniGames = toms::f_LoadMiniGames(f_PathOf(toms::key::g_pszDataMinigames));      // docs/gameplay/07 phase 6
+    m_jCharacterFit = f_ReadJsonFile(f_PathOf(toms::key::g_pszDataCharacterFit));      // character clips' nudges (docs/engine/05)
+    fprintf(stderr, "[assets] weapon_play.json: %d weapon(s)\n", (int)m_oWeaponPlay.m_mapWeapons.size());
     // load enemy templates
-    nlohmann::json ej = readJsonFile(pathOf(toms::key::kDataEnemies));
-    for (auto& [k,v] : ej.items()) enemyTpl[k] = v;
+    nlohmann::json l_jEj = f_ReadJsonFile(f_PathOf(toms::key::g_pszDataEnemies));
+    for (auto& [l_strK,l_jV] : l_jEj.items()) m_mapEnemyTpl[l_strK] = l_jV;
     // data/items.json: every item in the game, one record each ("_comment" and other "_" keys are notes).
     // Its weapons, armor and talents are also the Equipment System's content (equipment_system.h).
-    nlohmann::json ij = readJsonFile(pathOf(toms::key::kDataItems));
-    for (auto& [k,v] : ij.items()) {
-        if (k.empty() || k[0] == '_' || !v.is_object()) continue;
-        itemDefs[k] = v;
-        if (isGearType(v.value("type", std::string()))) {
-            toms::EquipmentDefinition d = toms::equipmentFromJson(v);
-            d.id = k;
-            equipmentDefs_[k] = d;
+    nlohmann::json l_jIj = f_ReadJsonFile(f_PathOf(toms::key::g_pszDataItems));
+    for (auto& [l_strK,l_jV] : l_jIj.items()) {
+        if (l_strK.empty() || l_strK[0] == '_' || !l_jV.is_object()) continue;
+        m_mapItemDefs[l_strK] = l_jV;
+        if (f_IsGearType(l_jV.value("type", std::string()))) {
+            toms::EquipmentDefinition l_oD = toms::f_EquipmentFromJson(l_jV);
+            l_oD.m_strId = l_strK;
+            m_mapEquipmentDefs[l_strK] = l_oD;
         }
     }
     // data/story/counters.json: the story counters' state words, shown on the Status tab once a
     // counter reaches its displayAt (the run state keeps the numbers).
     {
-        nlohmann::json cj = readJsonFile(pathOf(toms::key::kDataStoryCounters));
-        if (cj.is_object())
-            for (auto& [k, v] : cj.items())
-                if (!k.empty() && k[0] != '_' && v.is_object() && v.contains("label")) counterLabels_[k] = v["label"];
+        nlohmann::json l_jCj = f_ReadJsonFile(f_PathOf(toms::key::g_pszDataStoryCounters));
+        if (l_jCj.is_object())
+            for (auto& [l_strK, l_jV] : l_jCj.items())
+                if (!l_strK.empty() && l_strK[0] != '_' && l_jV.is_object() && l_jV.contains("label")) m_mapCounterLabels[l_strK] = l_jV["label"];
     }
-    loadEventDefs();
-    loadNpcs();   // NPC files and event variables (docs/gameplay/event_editor/08_NPC_DIALOGUE.md)
+    f_LoadEventDefs();
+    f_LoadNpcs();   // NPC files and event variables (docs/gameplay/event_editor/08_NPC_DIALOGUE.md)
     // data/store.json: which of those items the store sells, and how prices grow
-    loadStore();
+    f_LoadStore();
     // data/stats.json: the player's attributes and the level-up numbers (docs/gameplay/03_PLAYER_MENU.md section 3).
     {
-        nlohmann::json sj = readJsonFile(pathOf(toms::key::kDataStats));
-        if (sj.contains("attributes") && sj["attributes"].is_array())
-            for (const auto& a : sj["attributes"]) {
-                AttrDef d;
-                d.id = a.value("id", std::string());
-                if (d.id.empty()) continue;
-                d.shortName = a.value("short", d.id);
-                d.nameKey = a.value("name", d.id);
-                d.descKey = a.value("desc", std::string());
-                d.base = a.value("base", 5);
-                d.perLevel = a.value("perLevel", 1);
-                if (a.contains("effects") && a["effects"].is_array())
-                    for (const auto& e : a["effects"])
-                        if (e.is_object() && e.contains("stat")) d.effects.push_back({e.value("stat", std::string()), e.value("per", 0.0f)});
-                attrDefs_.push_back(d);
+        nlohmann::json l_jSj = f_ReadJsonFile(f_PathOf(toms::key::g_pszDataStats));
+        if (l_jSj.contains("attributes") && l_jSj["attributes"].is_array())
+            for (const auto& l_jA : l_jSj["attributes"]) {
+                AttrDef l_oD;
+                l_oD.m_strId = l_jA.value("id", std::string());
+                if (l_oD.m_strId.empty()) continue;
+                l_oD.m_strShortName = l_jA.value("short", l_oD.m_strId);
+                l_oD.m_strNameKey = l_jA.value("name", l_oD.m_strId);
+                l_oD.m_strDescKey = l_jA.value("desc", std::string());
+                l_oD.m_iBase = l_jA.value("base", 5);
+                l_oD.m_iPerLevel = l_jA.value("perLevel", 1);
+                if (l_jA.contains("effects") && l_jA["effects"].is_array())
+                    for (const auto& l_jE : l_jA["effects"])
+                        if (l_jE.is_object() && l_jE.contains("stat")) l_oD.m_vEffects.push_back({l_jE.value("stat", std::string()), l_jE.value("per", 0.0f)});
+                m_vAttrDefs.push_back(l_oD);
             }
-        if (sj.contains("levelUp") && sj["levelUp"].is_object()) {
-            const auto& l = sj["levelUp"];
-            levelUp_.expPerLevel = std::max(1, l.value("expPerLevel", levelUp_.expPerLevel));
-            levelUp_.atk = l.value("atk", levelUp_.atk);
-            levelUp_.def = l.value("def", levelUp_.def);
-            levelUp_.maxhp = l.value("maxhp", levelUp_.maxhp);
-            levelUp_.freePoints = l.value("freePoints", levelUp_.freePoints);
-            levelUp_.maxLevel = std::max(1, l.value("maxLevel", levelUp_.maxLevel));
-            if (l.contains("points") && l["points"].is_array())
-                for (const auto& r : l["points"])
-                    if (r.is_object()) levelUp_.points.push_back({std::max(2, r.value("from", 2)), r.value("points", 0)});
+        if (l_jSj.contains("levelUp") && l_jSj["levelUp"].is_object()) {
+            const auto& l_jL = l_jSj["levelUp"];
+            m_oLevelUp.m_iExpPerLevel = std::max(1, l_jL.value("expPerLevel", m_oLevelUp.m_iExpPerLevel));
+            m_oLevelUp.m_iAtk = l_jL.value("atk", m_oLevelUp.m_iAtk);
+            m_oLevelUp.m_iDef = l_jL.value("def", m_oLevelUp.m_iDef);
+            m_oLevelUp.m_iMaxhp = l_jL.value("maxhp", m_oLevelUp.m_iMaxhp);
+            m_oLevelUp.m_iFreePoints = l_jL.value("freePoints", m_oLevelUp.m_iFreePoints);
+            m_oLevelUp.m_iMaxLevel = std::max(1, l_jL.value("maxLevel", m_oLevelUp.m_iMaxLevel));
+            if (l_jL.contains("points") && l_jL["points"].is_array())
+                for (const auto& l_jR : l_jL["points"])
+                    if (l_jR.is_object()) m_oLevelUp.m_vPoints.push_back({std::max(2, l_jR.value("from", 2)), l_jR.value("points", 0)});
         }
     }
     // Milestone 8: load the Mission System's content (schema/logic built in Milestone 4 --
     // mission_system.h -- but missionDefs_ stayed empty until this content-authoring pass).
     {
-        nlohmann::json mj = readJsonFile(pathOf(toms::key::kDataMissions));
-        for (auto& [k, v] : mj.items()) missionDefs_[k] = toms::missionDefinitionFromJson(v);
+        nlohmann::json l_jMj = f_ReadJsonFile(f_PathOf(toms::key::g_pszDataMissions));
+        for (auto& [l_strK, l_jV] : l_jMj.items()) m_mapMissionDefs[l_strK] = toms::f_MissionDefinitionFromJson(l_jV);
     }
     // S4: the skill tree's content (data/skills.json) -- same "load once at boot" shape as
     // equipment/missions above.
-    skillDefs_ = toms::loadSkillDefs(pathOf(toms::key::kDataSkills));
+    m_mapSkillDefs = toms::f_LoadSkillDefs(f_PathOf(toms::key::g_pszDataSkills));
     // S5: the forge's content (data/forge.json) -- same "load once at boot" shape as skillDefs_.
-    forgeDefs_ = toms::loadForgeRecipes(pathOf(toms::key::kDataForge));
+    m_mapForgeDefs = toms::f_LoadForgeRecipes(f_PathOf(toms::key::g_pszDataForge));
     // S6: the village hub's content (data/hub.json) -- same "load once at boot" shape as skillDefs_/
     // forgeDefs_ above.
-    hubDefs_ = toms::loadHubLocations(pathOf(toms::key::kDataHub));
+    m_mapHubDefs = toms::f_LoadHubLocations(f_PathOf(toms::key::g_pszDataHub));
     // S7 (equipment actives, first slice): same "load once at boot" shape as skillDefs_/forgeDefs_/
     // hubDefs_ above.
-    activeDefs_ = toms::loadActiveDefinitions(pathOf(toms::key::kDataActives));
+    m_mapActiveDefs = toms::f_LoadActiveDefinitions(f_PathOf(toms::key::g_pszDataActives));
     // M7 (first slice): the 15-ending table, same "load once at boot" shape as the above.
-    endingsTable_ = toms::loadEndings(pathOf(toms::key::kDataStoryEndings));
+    m_oEndingsTable = toms::f_LoadEndings(f_PathOf(toms::key::g_pszDataStoryEndings));
     // M8 (first slice): the rebirth config, same "load once at boot" shape as the above.
-    cyclesConfig_ = toms::loadCyclesConfig(pathOf(toms::key::kDataStoryCycles));
+    m_oCyclesConfig = toms::f_LoadCyclesConfig(f_PathOf(toms::key::g_pszDataStoryCycles));
     // init player
-    pl.maxhp = kStartingHp; pl.hp = kStartingHp; pl.atk = kStartingAtk; pl.def = kStartingDef; pl.gold = 0; pl.exp = 0; pl.lv = 1;
-    pl.inv = {"potion_red", "potion_blue", "exp_up"};
-    resetAttrs();
+    m_oPl.m_iMaxhp = m_iStartingHp; m_oPl.m_iHp = m_iStartingHp; m_oPl.m_iAtk = m_iStartingAtk; m_oPl.m_iDef = m_iStartingDef; m_oPl.m_iGold = 0; m_oPl.m_iExp = 0; m_oPl.m_iLv = 1;
+    m_oPl.m_vInv = {"potion_red", "potion_blue", "exp_up"};
+    f_ResetAttrs();
 
     // S3.5: the 70-floor tower (data/story/floors/*.json) as the run's progression source. Loaded
     // once here; empty when the data is absent, and every use is guarded, so such a checkout plays
     // the eleven hand-authored stages exactly as before.
-    floors_ = toms::FloorTable::loadFromDirectory(pathOf(toms::key::kFolderFloors));
-    loadStairLocks();   // Q7: the stairs the floors lock behind events (needs the event pools, loaded above)
-    if (floors_.empty()) {
+    m_oFloors = toms::FloorTable::f_LoadFromDirectory(f_PathOf(toms::key::g_pszFolderFloors));
+    f_LoadStairLocks();   // Q7: the stairs the floors lock behind events (needs the event pools, loaded above)
+    if (m_oFloors.f_Empty()) {
         fprintf(stderr, "[assets] floor table: absent -- playing the hand-authored stages only\n");
     } else {
         fprintf(stderr, "[assets] floor table: %d floors across %d acts (first %s, last %s)\n",
-                floors_.size(), floors_.at(floors_.size()).actIndex,
-                floors_.at(1).id.c_str(), floors_.at(floors_.size()).id.c_str());
+                m_oFloors.size(), m_oFloors.f_At(m_oFloors.size()).m_iActIndex,
+                m_oFloors.f_At(1).m_strId.c_str(), m_oFloors.f_At(m_oFloors.size()).m_strId.c_str());
     }
 
     // ---- Title phase boot ----
@@ -305,151 +305,151 @@ bool Game::loadAssets(const std::string& assetDir) {
     // TTF codepoint collector above already globs, so its glyphs are in the atlas before this
     // runs -- on both desktop and web, since the atlas is now built the same way on both.
     {
-        toms::ensureSaveDir(toms::defaultSaveDir());
-        bool haveSettings = false;
-        settings_ = toms::loadGameSettings(toms::settingsPath(), &haveSettings);
-        locale_.loadFromFile(pathOf(toms::key::kDataText));
+        toms::f_EnsureSaveDir(toms::f_DefaultSaveDir());
+        bool l_bHaveSettings = false;
+        m_oSettings = toms::f_LoadGameSettings(toms::f_SettingsPath(), &l_bHaveSettings);
+        m_oLocale.f_LoadFromFile(f_PathOf(toms::key::g_pszDataText));
         // TOMS_LANGUAGE (the test runners: "en") picks the language without saving it; a saved language that is not
         // offered (text.json "offered") plays in English
-        const char* forced = std::getenv("TOMS_LANGUAGE");
-        if (!locale_.setLanguage(forced && *forced ? std::string(forced) : settings_.language)) locale_.setLanguage("en");
-        if (!(forced && *forced)) settings_.language = locale_.languageCode();
-        cam_.setMode(toms::Camera::modeFromIndex(settings_.cameraMode));
-        cam_.setViewCols(settings_.viewCols);
-        title_.setSlotCount(settings_.slotCount);
-        title_.setLanguageCount(locale_.languageCount());
-        title_.setLanguageIndex(locale_.languageIndex());
-        title_.setStyleCount((int)artStyles_.size());
-        title_.setStyleIndex(chosenArtStyle());
-        title_.open();
-        refreshSlots();
-        if (!haveSettings) applyLanguage();   // write defaults once, so the file exists
+        const char* l_pszForced = std::getenv("TOMS_LANGUAGE");
+        if (!m_oLocale.f_SetLanguage(l_pszForced && *l_pszForced ? std::string(l_pszForced) : m_oSettings.m_strLanguage)) m_oLocale.f_SetLanguage("en");
+        if (!(l_pszForced && *l_pszForced)) m_oSettings.m_strLanguage = m_oLocale.f_LanguageCode();
+        m_oCam.f_SetMode(toms::Camera::f_ModeFromIndex(m_oSettings.m_iCameraMode));
+        m_oCam.f_SetViewCols(m_oSettings.m_iViewCols);
+        m_oTitle.f_SetSlotCount(m_oSettings.m_iSlotCount);
+        m_oTitle.f_SetLanguageCount(m_oLocale.f_LanguageCount());
+        m_oTitle.f_SetLanguageIndex(m_oLocale.f_LanguageIndex());
+        m_oTitle.f_SetStyleCount((int)m_vArtStyles.size());
+        m_oTitle.f_SetStyleIndex(f_ChosenArtStyle());
+        m_oTitle.f_Open();
+        f_RefreshSlots();
+        if (!l_bHaveSettings) f_ApplyLanguage();   // write defaults once, so the file exists
     }
     // init SFX subsystem (no-op if no audio device/context; headless-safe).
-    audio.init(pathOf(toms::key::kFolderSfx));
-    wireMissionEvents(); // Milestone 4: subscribe mission-progress handlers once per session
-    rollDailyMissions(); // Milestone 5: daily-mission reset check, once per session start
+    m_oAudio.f_Init(f_PathOf(toms::key::g_pszFolderSfx));
+    f_WireMissionEvents(); // Milestone 4: subscribe mission-progress handlers once per session
+    f_RollDailyMissions(); // Milestone 5: daily-mission reset check, once per session start
     return true;
 }
 
-void Game::resourceMissing(const std::string& name, const std::string& path, const std::string& error) {
-    std::fprintf(stderr, "[res] missing: %s (%s): %s\n", name.c_str(), path.c_str(), error.c_str());
-    std::string msg = locale_.tr("res.missing");
-    msg = msg == "res.missing" || msg.empty() ? "Missing file: " + name : toms::fillText(msg, {{"file", name}});
-    if (std::find(resourceMessages_.begin(), resourceMessages_.end(), msg) == resourceMessages_.end()) resourceMessages_.push_back(msg);
+void Game::f_ResourceMissing(const std::string& l_strName, const std::string& l_strPath, const std::string& l_strError) {
+    std::fprintf(stderr, "[res] missing: %s (%s): %s\n", l_strName.c_str(), l_strPath.c_str(), l_strError.c_str());
+    std::string l_strMsg = m_oLocale.f_Tr("res.missing");
+    l_strMsg = l_strMsg == "res.missing" || l_strMsg.empty() ? "Missing file: " + l_strName : toms::f_FillText(l_strMsg, {{"file", l_strName}});
+    if (std::find(m_vResourceMessages.begin(), m_vResourceMessages.end(), l_strMsg) == m_vResourceMessages.end()) m_vResourceMessages.push_back(l_strMsg);
 }
 
-int Game::spriteLayer(const std::string& id) const {
-    auto it = idToLayer.find(id);
-    if (it == idToLayer.end()) it = idToLayer.find("floor");   // a sprite the atlas lacks draws as floor, as before
-    return it == idToLayer.end() ? 0 : it->second;
+int Game::f_SpriteLayer(const std::string& l_strId) const {
+    auto l_itIt = m_mapIdToLayer.find(l_strId);
+    if (l_itIt == m_mapIdToLayer.end()) l_itIt = m_mapIdToLayer.find("floor");   // a sprite the atlas lacks draws as floor, as before
+    return l_itIt == m_mapIdToLayer.end() ? 0 : l_itIt->second;
 }
 
 // UV rect for a sprite: from the prebuilt atlas, or its cell in the uniform grid atlas.
-void Game::spriteUV(int layer, float uv[4]) const {
-    if (layer >= 0 && layer < (int)spriteUVs_.size()) {
-        std::copy(spriteUVs_[layer].begin(), spriteUVs_[layer].end(), uv);
+void Game::f_SpriteUV(int l_iLayer, float l_arrUv[4]) const {
+    if (l_iLayer >= 0 && l_iLayer < (int)m_vSpriteUVs.size()) {
+        std::copy(m_vSpriteUVs[l_iLayer].begin(), m_vSpriteUVs[l_iLayer].end(), l_arrUv);
         return;
     }
-    int cols = spriteGridCols;
-    int gx = layer % cols, gy = layer / cols;
-    float u0 = (float)gx / cols, v0 = (float)gy / (float)((N_SPRITES + cols - 1) / cols);
-    float u1 = (float)(gx + 1) / cols, v1 = (float)(gy + 1) / (float)((N_SPRITES + cols - 1) / cols);
-    uv[0]=u0; uv[1]=v0; uv[2]=u1; uv[3]=v1;
+    int l_iCols = m_iSpriteGridCols;
+    int l_iGx = l_iLayer % l_iCols, l_iGy = l_iLayer / l_iCols;
+    float l_fU0 = (float)l_iGx / l_iCols, l_fV0 = (float)l_iGy / (float)((g_iNSPRITES + l_iCols - 1) / l_iCols);
+    float l_fU1 = (float)(l_iGx + 1) / l_iCols, l_fV1 = (float)(l_iGy + 1) / (float)((g_iNSPRITES + l_iCols - 1) / l_iCols);
+    l_arrUv[0]=l_fU0; l_arrUv[1]=l_fV0; l_arrUv[2]=l_fU1; l_arrUv[3]=l_fV1;
 }
 
-std::string Game::statusKeyAt(int x, int y) const {
-    for (const Entity& e : st.entities)
-        if (e.x == x && e.y == y && !e.uid.empty()) return toms::entityStatusKey(st.id, x, y, e.uid);
-    return toms::entityStatusKey(st.id, x, y);
+std::string Game::f_StatusKeyAt(int l_iX, int l_iY) const {
+    for (const Entity& l_oE : m_oSt.m_vEntities)
+        if (l_oE.m_iX == l_iX && l_oE.m_iY == l_iY && !l_oE.m_strUid.empty()) return toms::f_EntityStatusKey(m_oSt.m_strId, l_iX, l_iY, l_oE.m_strUid);
+    return toms::f_EntityStatusKey(m_oSt.m_strId, l_iX, l_iY);
 }
 
-void Game::migrateStatusKeys() {
-    for (const Entity& e : st.entities) {
-        const std::string now = toms::entityStatusKey(st.id, e.x, e.y, e.uid);
-        if (entityStatus_.count(now)) continue;
+void Game::f_MigrateStatusKeys() {
+    for (const Entity& l_oE : m_oSt.m_vEntities) {
+        const std::string l_strNow = toms::f_EntityStatusKey(m_oSt.m_strId, l_oE.m_iX, l_oE.m_iY, l_oE.m_strUid);
+        if (m_mapEntityStatus.count(l_strNow)) continue;
         // the keys this object may have been saved under: its position, by the floor id or by the stage file's name
-        for (const std::string& old : {toms::entityStatusKey(st.id, e.x, e.y), toms::entityStatusKey(curStage, e.x, e.y)}) {
-            if (old == now) continue;
-            auto it = entityStatus_.find(old);
-            if (it == entityStatus_.end()) continue;
-            entityStatus_[now] = it->second;
-            entityStatus_.erase(it);
+        for (const std::string& l_strOld : {toms::f_EntityStatusKey(m_oSt.m_strId, l_oE.m_iX, l_oE.m_iY), toms::f_EntityStatusKey(m_strCurStage, l_oE.m_iX, l_oE.m_iY)}) {
+            if (l_strOld == l_strNow) continue;
+            auto l_itIt = m_mapEntityStatus.find(l_strOld);
+            if (l_itIt == m_mapEntityStatus.end()) continue;
+            m_mapEntityStatus[l_strNow] = l_itIt->second;
+            m_mapEntityStatus.erase(l_itIt);
             break;
         }
     }
 }
 
-void Game::loadStage(const std::string& id, StageArrival arrival) {
-    const std::string fromStage = st.id;   // the floor being left: arriving by stairs lands on the stair back to it
-    floor_.clear();   // the objects of the floor being left (a door opening on it stops)
-    cancelWalk();   // a click-to-move route belongs to the old floor
-    curStage = id;
+void Game::f_LoadStage(const std::string& l_strId, StageArrival l_eArrival) {
+    const std::string l_strFromStage = m_oSt.m_strId;   // the floor being left: arriving by stairs lands on the stair back to it
+    m_oFloor.f_Clear();   // the objects of the floor being left (a door opening on it stops)
+    f_CancelWalk();   // a click-to-move route belongs to the old floor
+    m_strCurStage = l_strId;
     // Resolve the stage JSON. Data ids in connect.up/down use "stage_02" (underscore)
     // while the shipped files are named "stage02.json" (no underscore) — and the
     // initial load uses "stage01". Normalize so both forms resolve instead of
     // opening a non-existent path (which makes ifstream fail -> parse throw -> crash
     // when the player steps on stairs / a warp tile).
-    std::string path = pathFor(toms::pattern::kStage, id);
-    if (!toms::vfsExists(path)) {
-        std::string noUs = id;
-        noUs.erase(std::remove(noUs.begin(), noUs.end(), '_'), noUs.end());
-        std::string alt = pathFor(toms::pattern::kStage, noUs);
-        if (toms::vfsExists(alt)) path = alt;
+    std::string l_strPath = f_PathFor(toms::pattern::g_pszStage, l_strId);
+    if (!toms::f_VfsExists(l_strPath)) {
+        std::string l_strNoUs = l_strId;
+        l_strNoUs.erase(std::remove(l_strNoUs.begin(), l_strNoUs.end(), '_'), l_strNoUs.end());
+        std::string l_strAlt = f_PathFor(toms::pattern::g_pszStage, l_strNoUs);
+        if (toms::f_VfsExists(l_strAlt)) l_strPath = l_strAlt;
     }
     // a stage file by its path (tests: toms_game --stage=tests/stage/objects.stage.json)
-    if (id.size() > 5 && id.compare(id.size() - 5, 5, ".json") == 0 && toms::vfsExists(id)) path = id;
+    if (l_strId.size() > 5 && l_strId.compare(l_strId.size() - 5, 5, ".json") == 0 && toms::f_VfsExists(l_strId)) l_strPath = l_strId;
     // S3.5 (a): a floor id the tower knows (F01..F70) resolves through the floor table instead of
     // the bare data/stages/ path -- a normal floor to its generated grid, a boss floor to the
     // hand-authored map the spec names (section 3.2). Ids that are not floors (the eleven
     // hand-authored stages, e.g. when the floor data is absent) keep the old behaviour below.
-    const toms::FloorInfo* floor = floors_.find(id);
-    bool isFloor = (floor != nullptr);
-    if (isFloor) {
-        std::string rel = floors_.mapRelPath(id);
-        std::string candidate = pathOf(toms::key::kFolderAssets) + "/" + rel;   // rel is under assets/
-        if (toms::vfsExists(candidate)) path = candidate;
+    const toms::FloorInfo* l_pFloor = m_oFloors.f_Find(l_strId);
+    bool l_bIsFloor = (l_pFloor != nullptr);
+    if (l_bIsFloor) {
+        std::string l_strRel = m_oFloors.f_MapRelPath(l_strId);
+        std::string l_strCandidate = f_PathOf(toms::key::g_pszFolderAssets) + "/" + l_strRel;   // rel is under assets/
+        if (toms::f_VfsExists(l_strCandidate)) l_strPath = l_strCandidate;
     }
-    if (!isFloor) {
+    if (!l_bIsFloor) {
         // S2 fallback: generated floors also live in data/story/floors/<id>.stage.json (the file
         // layout docs/story/STORY_DATA_SCHEMA.md section 1.2 asks for); tried last so the hand-authored
         // data/stages/*.json files always win.
-        if (!toms::vfsExists(path)) {
-            std::string floorPath = pathFor(toms::pattern::kFloorStage, id);
-            if (toms::vfsExists(floorPath)) path = floorPath;
+        if (!toms::f_VfsExists(l_strPath)) {
+            std::string l_strFloorPath = f_PathFor(toms::pattern::g_pszFloorStage, l_strId);
+            if (toms::f_VfsExists(l_strFloorPath)) l_strPath = l_strFloorPath;
         }
     }
-    st = parseStage(path, locale_);
-    curFloorId_ = isFloor ? id : std::string();
-    if (floor) {
+    m_oSt = f_ParseStage(l_strPath, m_oLocale);
+    m_strCurFloorId = l_bIsFloor ? l_strId : std::string();
+    if (l_pFloor) {
         // The floor -- not the map file -- is the unit the run counts and names. A boss floor's map
         // is hand-authored and carries the act's own index/name (stage01 has index 1), so without
         // this the HUD would show the wrong floor number on every boss stage.
-        st.id = floor->id;
-        st.index = floor->seq;                       // 1..70 -> the HUD's "n/totalStages"
-        std::string resolved = floor->nameKey;
-        if (resolved.rfind("story.", 0) == 0) {
-            std::string tr = locale_.tr(resolved);
-            if (!tr.empty() && tr != resolved) resolved = tr;   // missing key -> keep the map's name
-            else resolved = st.name;
+        m_oSt.m_strId = l_pFloor->m_strId;
+        m_oSt.m_iIndex = l_pFloor->m_iSeq;                       // 1..70 -> the HUD's "n/totalStages"
+        std::string l_strResolved = l_pFloor->m_strNameKey;
+        if (l_strResolved.rfind("story.", 0) == 0) {
+            std::string l_strTr = m_oLocale.f_Tr(l_strResolved);
+            if (!l_strTr.empty() && l_strTr != l_strResolved) l_strResolved = l_strTr;   // missing key -> keep the map's name
+            else l_strResolved = m_oSt.m_strName;
         }
-        if (!resolved.empty()) st.name = resolved;
+        if (!l_strResolved.empty()) m_oSt.m_strName = l_strResolved;
         // Progression lives here (S3.5 a): the specs' nextFloor chain, translated into the two
         // fields the existing stair logic already reads. The generated grids place the goal on 'U'
         // (far from the entrance) and the way back on 'D' (beside it), which is exactly this.
-        st.up = floor->nextFloor;
-        st.down = floors_.prev(floor->id);
+        m_oSt.m_strUp = l_pFloor->m_strNextFloor;
+        m_oSt.m_strDown = m_oFloors.f_Prev(l_pFloor->m_strId);
         // S3.5 (c)/(e): the floor's story keys, and the act whose palette this floor renders in.
-        storyIntroKey_ = floor->introKey;
-        storyAmbientKeys_ = floor->ambientKeys;
-        storyTurns_ = 0;
-        themeActIndex_ = floor->actIndex;
-        chapterCardMs_ = 0.0f;
-        if (floor->indexInAct == 1 && !floor->act.empty()) {   // first floor of an act -> act card
-            std::string title = locale_.tr("story." + floor->actKey + ".title");
-            if (title.rfind("story.", 0) != 0) {               // resolved (missing key -> the key)
-                chapterCardTitle_ = title;
-                chapterCardMs_ = 2600.0f;
+        m_strStoryIntroKey = l_pFloor->m_strIntroKey;
+        m_vStoryAmbientKeys = l_pFloor->m_vAmbientKeys;
+        m_iStoryTurns = 0;
+        m_iThemeActIndex = l_pFloor->m_iActIndex;
+        m_fChapterCardMs = 0.0f;
+        if (l_pFloor->m_iIndexInAct == 1 && !l_pFloor->m_strAct.empty()) {   // first floor of an act -> act card
+            std::string l_strTitle = m_oLocale.f_Tr("story." + l_pFloor->m_strActKey + ".title");
+            if (l_strTitle.rfind("story.", 0) != 0) {               // resolved (missing key -> the key)
+                m_strChapterCardTitle = l_strTitle;
+                m_fChapterCardMs = 2600.0f;
             }
         }
         // S4: the chapter's own grants (skills/skillPoints/hub/unlocks). Deliberately NOT gated on
@@ -458,62 +458,62 @@ void Game::loadStage(const std::string& id, StageArrival arrival) {
         // "the first floor of an act". applyChapterGrants' own flag makes this a no-op once already
         // granted, so calling it on every floor of every chapter is correct, just occasionally
         // (once per chapter per run) does real work instead of none.
-        if (!floor->act.empty()) applyChapterGrants(floor->act);
+        if (!l_pFloor->m_strAct.empty()) f_ApplyChapterGrants(l_pFloor->m_strAct);
     } else {
-        storyIntroKey_.clear();
-        storyAmbientKeys_.clear();
-        storyTurns_ = 0;
-        themeActIndex_ = 1;
-        chapterCardMs_ = 0.0f;
+        m_strStoryIntroKey.clear();
+        m_vStoryAmbientKeys.clear();
+        m_iStoryTurns = 0;
+        m_iThemeActIndex = 1;
+        m_fChapterCardMs = 0.0f;
     }
     // Q7 / 05_FLOOR_LINKS: every stair as a list with its tile and lock. A floor's own `stairs` list wins over the
     // chain; st.up / st.down stay the first stair up / down.
-    if (floor && floor->hasStairs) {
-        st.stairs = floor->stairs;
-        st.up.clear();
-        st.down.clear();
-        for (const toms::StairLink& s : st.stairs) {
-            std::string& first = s.up ? st.up : st.down;
-            if (first.empty()) first = s.to;
+    if (l_pFloor && l_pFloor->m_bHasStairs) {
+        m_oSt.m_vStairs = l_pFloor->m_vStairs;
+        m_oSt.m_strUp.clear();
+        m_oSt.m_strDown.clear();
+        for (const toms::StairLink& l_oS : m_oSt.m_vStairs) {
+            std::string& l_strFirst = l_oS.m_bUp ? m_oSt.m_strUp : m_oSt.m_strDown;
+            if (l_strFirst.empty()) l_strFirst = l_oS.m_strTo;
         }
     } else {
-        st.stairs = toms::defaultStairLinks(st.up, st.down);
+        m_oSt.m_vStairs = toms::f_DefaultStairLinks(m_oSt.m_strUp, m_oSt.m_strDown);
     }
-    toms::placeStairLinks(st.stairs, st.tiles, st.legend);
-    for (const toms::StairLink& s : st.stairs)   // W38: remembered, so the Events tab can say where a stair is from any floor
-        if (s.x >= 0) stairSpots_[st.id + ">" + s.to] = {s.x, s.y};
-    for (auto& e : st.entities)   // a "stairs_up:F96" tile is a plain stair tile now
-        for (const char* k : {"stairs_up", "stairs_down"})
-            if (e.kind.rfind(std::string(k) + ":", 0) == 0) e.kind = k;
+    toms::f_PlaceStairLinks(m_oSt.m_vStairs, m_oSt.m_vTiles, m_oSt.m_mapLegend);
+    for (const toms::StairLink& l_oS : m_oSt.m_vStairs)   // W38: remembered, so the Events tab can say where a stair is from any floor
+        if (l_oS.m_iX >= 0) m_mapStairSpots[m_oSt.m_strId + ">" + l_oS.m_strTo] = {l_oS.m_iX, l_oS.m_iY};
+    for (auto& l_oE : m_oSt.m_vEntities)   // a "stairs_up:F96" tile is a plain stair tile now
+        for (const char* l_pszK : {"stairs_up", "stairs_down"})
+            if (l_oE.m_strKind.rfind(std::string(l_pszK) + ":", 0) == 0) l_oE.m_strKind = l_pszK;
     // Milestone 7: parseStage() rebuilds every entity fresh from JSON on every call (stairs,
     // Stage Select, etc.), so re-apply any previously-persisted Defeated/Collected status here --
     // otherwise a monster the player already beat or an item they already picked up would come
     // back the next time this floor loads, contradicting the "cleared floors stay cleared"
     // decision. Doors are intentionally not covered (see entityStatus_'s declaration in game.h).
     // A door opened earlier stays open (openDoor): its tile is floor and its "door:" entry no longer blocks.
-    migrateStatusKeys();
-    for (int y = 0; y < (int)st.tiles.size(); ++y)
-        for (int x = 0; x < (int)st.tiles[y].size(); ++x) {
-            const char c = st.tiles[y][x];
-            if ((c == 'y' || c == 'b' || c == 'r') &&
-                toms::getEntityStatus(entityStatus_, statusKeyAt(x, y)) == toms::EntityStatus::Opened) {
-                st.tiles[y][x] = '.';
-                for (auto& e : st.entities) if (e.x == x && e.y == y && e.kind.rfind("door:", 0) == 0) e.consumed = true;
+    f_MigrateStatusKeys();
+    for (int l_iY = 0; l_iY < (int)m_oSt.m_vTiles.size(); ++l_iY)
+        for (int l_iX = 0; l_iX < (int)m_oSt.m_vTiles[l_iY].size(); ++l_iX) {
+            const char l_cC = m_oSt.m_vTiles[l_iY][l_iX];
+            if ((l_cC == 'y' || l_cC == 'b' || l_cC == 'r') &&
+                toms::f_GetEntityStatus(m_mapEntityStatus, f_StatusKeyAt(l_iX, l_iY)) == toms::EntityStatus::Opened) {
+                m_oSt.m_vTiles[l_iY][l_iX] = '.';
+                for (auto& l_oE : m_oSt.m_vEntities) if (l_oE.m_iX == l_iX && l_oE.m_iY == l_iY && l_oE.m_strKind.rfind("door:", 0) == 0) l_oE.m_bConsumed = true;
             }
         }
-    for (auto& e : st.entities) {
-        bool isMonster = e.kind.rfind("monster:", 0) == 0;
+    for (auto& l_oE : m_oSt.m_vEntities) {
+        bool l_bIsMonster = l_oE.m_strKind.rfind("monster:", 0) == 0;
         // an event fired on this tile does not come back (it would fire, and give its items, again); the same
         // event id may sit on other floors, so this goes by the tile, like items
-        bool isItem = e.kind.rfind("item:", 0) == 0 || e.kind.rfind("event:", 0) == 0;
-        const bool isGate = e.kind.rfind("gate:", 0) == 0;   // a gate opened with its key stays open
-        if (!isMonster && !isItem && !isGate) continue;
-        toms::EntityStatus want = isMonster ? toms::EntityStatus::Defeated : isGate ? toms::EntityStatus::Opened
+        bool l_bIsItem = l_oE.m_strKind.rfind("item:", 0) == 0 || l_oE.m_strKind.rfind("event:", 0) == 0;
+        const bool l_bIsGate = l_oE.m_strKind.rfind("gate:", 0) == 0;   // a gate opened with its key stays open
+        if (!l_bIsMonster && !l_bIsItem && !l_bIsGate) continue;
+        toms::EntityStatus l_eWant = l_bIsMonster ? toms::EntityStatus::Defeated : l_bIsGate ? toms::EntityStatus::Opened
                                                                                      : toms::EntityStatus::Collected;
-        toms::EntityStatus have = toms::getEntityStatus(entityStatus_, toms::entityStatusKey(st.id, e.x, e.y, e.uid));
-        if (have == want) {
-            e.consumed = true;
-            st.tiles[e.y][e.x] = '.';
+        toms::EntityStatus l_eHave = toms::f_GetEntityStatus(m_mapEntityStatus, toms::f_EntityStatusKey(m_oSt.m_strId, l_oE.m_iX, l_oE.m_iY, l_oE.m_strUid));
+        if (l_eHave == l_eWant) {
+            l_oE.m_bConsumed = true;
+            m_oSt.m_vTiles[l_oE.m_iY][l_oE.m_iX] = '.';
         }
     }
     // S1: resolve every entity's 佔格 now that both sources are known: the stage file's own
@@ -521,68 +521,68 @@ void Game::loadStage(const std::string& id, StageArrival arrival) {
     // which beats 1x1. Done here rather than in parseStage() because parseStage() knows nothing
     // about the type table -- and routed through the shared helper so footprint_test.cpp's data
     // validator resolves exactly the way the game does at runtime.
-    int bigCount = 0;
-    for (auto& e : st.entities) {
-        auto it = typeFootprints_.find(e.kind);
-        toms::FootprintSpec typeSpec = (it == typeFootprints_.end()) ? toms::FootprintSpec{} : it->second;
-        toms::FootprintSpec spec = toms::resolveFootprint(
-            toms::FootprintSpec{e.fp, e.roamer, e.displayName}, e.fpExplicit, typeSpec);
-        e.fp = spec.fp;
-        e.roamer = spec.roamer;
-        e.displayName = spec.name;
-        if (e.fp.big()) ++bigCount;
+    int l_iBigCount = 0;
+    for (auto& l_oE : m_oSt.m_vEntities) {
+        auto l_itIt = m_mapTypeFootprints.find(l_oE.m_strKind);
+        toms::FootprintSpec l_oTypeSpec = (l_itIt == m_mapTypeFootprints.end()) ? toms::FootprintSpec{} : l_itIt->second;
+        toms::FootprintSpec l_oSpec = toms::f_ResolveFootprint(
+            toms::FootprintSpec{l_oE.m_oFp, l_oE.m_bRoamer, l_oE.m_strDisplayName}, l_oE.m_bFpExplicit, l_oTypeSpec);
+        l_oE.m_oFp = l_oSpec.m_oFp;
+        l_oE.m_bRoamer = l_oSpec.m_bRoamer;
+        l_oE.m_strDisplayName = l_oSpec.m_strName;
+        if (l_oE.m_oFp.f_Big()) ++l_iBigCount;
     }
-    if (bigCount)
-        fprintf(stderr, "[stage] %s: %d entity(ies) occupy more than 1 grid\n", st.id.c_str(), bigCount);
+    if (l_iBigCount)
+        fprintf(stderr, "[stage] %s: %d entity(ies) occupy more than 1 grid\n", m_oSt.m_strId.c_str(), l_iBigCount);
 
     // S1: (re)build the roamer brains for this floor. Always cleared -- the entity vector was just
     // rebuilt from JSON, so a stale index would drive a different monster. Seeds are derived from
     // the stage id + entity index, never from the clock: reloading a floor (stairs up/down, Stage
     // Select) reproduces the same wander, so a chase stays reproducible instead of being noise.
-    roamers_.clear();
-    for (int i = 0; i < (int)st.entities.size(); ++i) {
-        const Entity& e = st.entities[i];
-        if (!e.roamer || e.consumed) continue;
-        uint32_t h = 2166136261u;   // FNV-1a over the stage id
-        for (char ch : st.id) { h ^= (unsigned char)ch; h *= 16777619u; }
-        roamers_.emplace_back(i, toms::Roamer(e.x, e.y, e.fp, h ^ (uint32_t)(i * 2654435761u)));
+    m_vRoamers.clear();
+    for (int l_iI = 0; l_iI < (int)m_oSt.m_vEntities.size(); ++l_iI) {
+        const Entity& l_oE = m_oSt.m_vEntities[l_iI];
+        if (!l_oE.m_bRoamer || l_oE.m_bConsumed) continue;
+        uint32_t l_uH = 2166136261u;   // FNV-1a over the stage id
+        for (char l_cCh : m_oSt.m_strId) { l_uH ^= (unsigned char)l_cCh; l_uH *= 16777619u; }
+        m_vRoamers.emplace_back(l_iI, toms::Roamer(l_oE.m_iX, l_oE.m_iY, l_oE.m_oFp, l_uH ^ (uint32_t)(l_iI * 2654435761u)));
         fprintf(stderr, "[stage] roamer '%s' (%dx%d) at (%d,%d) on %s\n",
-                e.id.c_str(), e.fp.w, e.fp.h, e.x, e.y, st.id.c_str());
+                l_oE.m_strId.c_str(), l_oE.m_oFp.m_iW, l_oE.m_oFp.m_iH, l_oE.m_iX, l_oE.m_iY, m_oSt.m_strId.c_str());
     }
     // Milestone 3: entering a floor for the first time advances the main-story beat — this is
     // exactly what connect.up already does today (docs/design/GAME_DESIGN_DOCUMENT.md §5's 1:1 floor<->beat
     // mapping); now it's also written into persisted story state instead of being purely
     // implicit in "which floor am I standing on."
-    toms::advanceStoryBeat(meta_, st.index);
+    toms::f_AdvanceStoryBeat(m_oMeta, m_oSt.m_iIndex);
     // Milestone 5: reaching a floor unlocks it as a Stage Select entry (architecture-doc §10 /
     // §5.2's stageCleared) -- every floor the player has ever reached becomes individually
     // re-selectable from the hub. Uses st.id (the parsed, canonical id) rather than the raw
     // `id` argument, since the two can differ by underscore normalization above.
-    if (std::find(meta_.unlockedStages.begin(), meta_.unlockedStages.end(), st.id) == meta_.unlockedStages.end())
-        meta_.unlockedStages.push_back(st.id);
+    if (std::find(m_oMeta.m_vUnlockedStages.begin(), m_oMeta.m_vUnlockedStages.end(), m_oSt.m_strId) == m_oMeta.m_vUnlockedStages.end())
+        m_oMeta.m_vUnlockedStages.push_back(m_oSt.m_strId);
     // derive total stage count: the 70-floor tower when its data is present (S3.5 b, so the HUD
     // counter is honest), else the historical max index over data/stages/.
-    if (floorMode()) {
-        totalStages = floors_.size();
+    if (f_FloorMode()) {
+        m_iTotalStages = m_oFloors.size();
     } else {
-    totalStages = 1;
-    std::string dir = pathOf(toms::key::kFolderStages) + "/";
+    m_iTotalStages = 1;
+    std::string l_strDir = f_PathOf(toms::key::g_pszFolderStages) + "/";
     {
-        for (const std::string& name : toms::vfsListDir(dir)) {
+        for (const std::string& l_strName : toms::f_VfsListDir(l_strDir)) {
             try {
-                nlohmann::json j = readJsonFile(dir + name);
-                int idx = j.value("index", 0);
-                if (idx > totalStages) totalStages = idx;
+                nlohmann::json l_jJ = f_ReadJsonFile(l_strDir + l_strName);
+                int l_iIdx = l_jJ.value("index", 0);
+                if (l_iIdx > m_iTotalStages) m_iTotalStages = l_iIdx;
             } catch (...) {}
         }
     }
     }
     // store unlock: when entering the configured unlock stage for the first time,
     // mark the shop as unlocked and pop a one-time "shop unlocked!" dialog.
-    if (st.index >= storeUnlockStage_ && !storeUnlocked_) {
-        storeUnlocked_ = true;
-        storeUnlockDlg = true;
-        newsStore_ = true;   // a dot on ≡ until the store is opened
+    if (m_oSt.m_iIndex >= m_iStoreUnlockStage && !m_bStoreUnlocked) {
+        m_bStoreUnlocked = true;
+        m_bStoreUnlockDlg = true;
+        m_bNewsStore = true;   // a dot on ≡ until the store is opened
     }
 
     // M9 (stair alignment): arriving via a specific staircase lands exactly on the matching
@@ -591,26 +591,26 @@ void Game::loadStage(const std::string& id, StageArrival arrival) {
     // spot, not a guess. Fresh loads (new game, Stage Select, rebirth, a debug jump) keep the old
     // '@'-or-default behavior -- falling back to whichever stair the floor does have if it has
     // no '@' (true for every floor except F01, the chain's head).
-    pl.x = 1; pl.y = (int)st.height - 2;
-    const char* wantKind = (arrival == StageArrival::FromBelow) ? "stairs_down"
-                         : (arrival == StageArrival::FromAbove) ? "stairs_up" : nullptr;
-    bool placed = false;
-    if (arrival != StageArrival::Fresh) {   // the stair that leads back to the floor just left (05 section 3.3)
-        const int i = toms::arrivalStair(st.stairs, fromStage, arrival == StageArrival::FromBelow);
-        if (i >= 0) { pl.x = st.stairs[i].x; pl.y = st.stairs[i].y; placed = true; }
+    m_oPl.m_iX = 1; m_oPl.m_iY = (int)m_oSt.m_iHeight - 2;
+    const char* l_pszWantKind = (l_eArrival == StageArrival::FromBelow) ? "stairs_down"
+                         : (l_eArrival == StageArrival::FromAbove) ? "stairs_up" : nullptr;
+    bool l_bPlaced = false;
+    if (l_eArrival != StageArrival::Fresh) {   // the stair that leads back to the floor just left (05 section 3.3)
+        const int l_iI = toms::f_ArrivalStair(m_oSt.m_vStairs, l_strFromStage, l_eArrival == StageArrival::FromBelow);
+        if (l_iI >= 0) { m_oPl.m_iX = m_oSt.m_vStairs[l_iI].m_iX; m_oPl.m_iY = m_oSt.m_vStairs[l_iI].m_iY; l_bPlaced = true; }
     }
-    if (!placed && wantKind) {
-        for (auto& e : st.entities)
-            if (e.kind == wantKind) { pl.x = e.x; pl.y = e.y; placed = true; break; }
+    if (!l_bPlaced && l_pszWantKind) {
+        for (auto& l_oE : m_oSt.m_vEntities)
+            if (l_oE.m_strKind == l_pszWantKind) { m_oPl.m_iX = l_oE.m_iX; m_oPl.m_iY = l_oE.m_iY; l_bPlaced = true; break; }
     }
-    if (!placed && st.startX >= 0) { pl.x = st.startX; pl.y = st.startY; placed = true; }   // '@' (parseStage)
-    if (!placed) {
-        for (auto& e : st.entities)
-            if (e.kind == "stairs_down" || e.kind == "stairs_up") { pl.x = e.x; pl.y = e.y; break; }
+    if (!l_bPlaced && m_oSt.m_iStartX >= 0) { m_oPl.m_iX = m_oSt.m_iStartX; m_oPl.m_iY = m_oSt.m_iStartY; l_bPlaced = true; }   // '@' (parseStage)
+    if (!l_bPlaced) {
+        for (auto& l_oE : m_oSt.m_vEntities)
+            if (l_oE.m_strKind == "stairs_down" || l_oE.m_strKind == "stairs_up") { m_oPl.m_iX = l_oE.m_iX; m_oPl.m_iY = l_oE.m_iY; break; }
     }
-    floor_.build(*this);   // a class per thing on the floor, with its looks (map_objects.h)
+    m_oFloor.f_Build(*this);   // a class per thing on the floor, with its looks (map_objects.h)
     // A floor change must never visibly pan in from wherever the camera was on the PREVIOUS
     // floor (different grid, different scale of "makes sense") -- jump straight to the new
     // floor's starting view instead of easing into it.
-    cam_.snap();
+    m_oCam.f_Snap();
 }

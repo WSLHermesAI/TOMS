@@ -30,114 +30,114 @@ class EventBus;
 class Subscription {
 public:
     Subscription() = default;
-    Subscription(EventBus* bus, uint64_t id) : bus_(bus), id_(id) {}
-    Subscription(Subscription&& o) noexcept : bus_(o.bus_), id_(o.id_) { o.bus_ = nullptr; o.id_ = 0; }
-    Subscription& operator=(Subscription&& o) noexcept {
-        if (this != &o) { reset(); bus_ = o.bus_; id_ = o.id_; o.bus_ = nullptr; o.id_ = 0; }
+    Subscription(EventBus* l_pBus, uint64_t l_u64Id) : m_pBus(l_pBus), m_u64Id(l_u64Id) {}
+    Subscription(Subscription&& l_oO) noexcept : m_pBus(l_oO.m_pBus), m_u64Id(l_oO.m_u64Id) { l_oO.m_pBus = nullptr; l_oO.m_u64Id = 0; }
+    Subscription& operator=(Subscription&& l_oO) noexcept {
+        if (this != &l_oO) { f_Reset(); m_pBus = l_oO.m_pBus; m_u64Id = l_oO.m_u64Id; l_oO.m_pBus = nullptr; l_oO.m_u64Id = 0; }
         return *this;
     }
     Subscription(const Subscription&) = delete;
     Subscription& operator=(const Subscription&) = delete;
-    ~Subscription() { reset(); }
-    inline void reset();
-    bool active() const { return bus_ != nullptr; }
+    ~Subscription() { f_Reset(); }
+    inline void f_Reset();
+    bool f_Active() const { return m_pBus != nullptr; }
 private:
-    EventBus* bus_ = nullptr;
-    uint64_t id_ = 0;
+    EventBus* m_pBus = nullptr;
+    uint64_t m_u64Id = 0;
 };
 
 class EventBus {
 public:
     template <typename Event>
-    void subscribe(std::function<void(const Event&)> handler) {
-        add<Event>(std::move(handler));
+    void f_Subscribe(std::function<void(const Event&)> l_fnHandler) {
+        f_Add<Event>(std::move(l_fnHandler));
     }
 
     template <typename Event>
-    [[nodiscard]] Subscription listen(std::function<void(const Event&)> handler) {
-        return Subscription(this, add<Event>(std::move(handler)));
+    [[nodiscard]] Subscription f_Listen(std::function<void(const Event&)> l_fnHandler) {
+        return Subscription(this, f_Add<Event>(std::move(l_fnHandler)));
     }
 
     template <typename Event>
-    void publish(const Event& evt) {
-        auto it = handlers_.find(std::type_index(typeid(Event)));
-        if (it == handlers_.end()) return;
-        std::any boxed = evt;
-        ++publishing_;
+    void f_Publish(const Event& l_oEvt) {
+        auto l_itIt = m_mapHandlers.find(std::type_index(typeid(Event)));
+        if (l_itIt == m_mapHandlers.end()) return;
+        std::any l_oBoxed = l_oEvt;
+        ++m_iPublishing;
         // by index: a handler may subscribe more (they wait for the next event) or remove some (skipped from now on)
-        const size_t n = it->second.size();
-        for (size_t i = 0; i < n; ++i) {
-            Entry& e = it->second[i];
-            if (e.fn) { auto fn = e.fn; fn(boxed); }   // a copy: the handler may remove itself
+        const size_t l_nN = l_itIt->second.size();
+        for (size_t l_nI = 0; l_nI < l_nN; ++l_nI) {
+            Entry& l_oE = l_itIt->second[l_nI];
+            if (l_oE.m_fnFn) { auto l_fnFn = l_oE.m_fnFn; l_fnFn(l_oBoxed); }   // a copy: the handler may remove itself
         }
-        if (--publishing_ == 0 && dirty_) compact();
+        if (--m_iPublishing == 0 && m_bDirty) f_Compact();
     }
 
     template <typename Event>
-    size_t subscriberCount() const {
-        auto it = handlers_.find(std::type_index(typeid(Event)));
-        if (it == handlers_.end()) return 0;
-        size_t n = 0;
-        for (const Entry& e : it->second) if (e.fn) ++n;
-        return n;
+    size_t f_SubscriberCount() const {
+        auto l_itIt = m_mapHandlers.find(std::type_index(typeid(Event)));
+        if (l_itIt == m_mapHandlers.end()) return 0;
+        size_t l_nN = 0;
+        for (const Entry& l_oE : l_itIt->second) if (l_oE.m_fnFn) ++l_nN;
+        return l_nN;
     }
 
-    void unsubscribe(uint64_t id) {
-        for (auto& [type, list] : handlers_)
-            for (Entry& e : list)
-                if (e.id == id && e.fn) {
-                    e.fn = nullptr;   // removed now; erased once no delivery is running
-                    dirty_ = true;
-                    if (publishing_ == 0) compact();
+    void f_Unsubscribe(uint64_t l_u64Id) {
+        for (auto& [l_oType, l_vList] : m_mapHandlers)
+            for (Entry& l_oE : l_vList)
+                if (l_oE.m_u64Id == l_u64Id && l_oE.m_fnFn) {
+                    l_oE.m_fnFn = nullptr;   // removed now; erased once no delivery is running
+                    m_bDirty = true;
+                    if (m_iPublishing == 0) f_Compact();
                     return;
                 }
     }
 
 private:
-    struct Entry { uint64_t id; std::function<void(const std::any&)> fn; };
+    struct Entry { uint64_t m_u64Id; std::function<void(const std::any&)> m_fnFn; };
 
     template <typename Event>
-    uint64_t add(std::function<void(const Event&)> handler) {
-        const uint64_t id = nextId_++;
-        handlers_[std::type_index(typeid(Event))].push_back({id, [handler = std::move(handler)](const std::any& e) {
-            handler(std::any_cast<const Event&>(e));
+    uint64_t f_Add(std::function<void(const Event&)> l_fnHandler) {
+        const uint64_t l_u64Id = m_u64NextId++;
+        m_mapHandlers[std::type_index(typeid(Event))].push_back({l_u64Id, [handler = std::move(l_fnHandler)](const std::any& l_oE) {
+            handler(std::any_cast<const Event&>(l_oE));
         }});
-        return id;
+        return l_u64Id;
     }
-    void compact() {
-        for (auto& [type, list] : handlers_) {
-            std::vector<Entry> kept;
-            kept.reserve(list.size());
-            for (Entry& e : list) if (e.fn) kept.push_back(std::move(e));
-            list.swap(kept);
+    void f_Compact() {
+        for (auto& [l_oType, l_vList] : m_mapHandlers) {
+            std::vector<Entry> l_vKept;
+            l_vKept.reserve(l_vList.size());
+            for (Entry& l_oE : l_vList) if (l_oE.m_fnFn) l_vKept.push_back(std::move(l_oE));
+            l_vList.swap(l_vKept);
         }
-        dirty_ = false;
+        m_bDirty = false;
     }
 
-    std::unordered_map<std::type_index, std::vector<Entry>> handlers_;
-    uint64_t nextId_ = 1;
-    int publishing_ = 0;
-    bool dirty_ = false;
+    std::unordered_map<std::type_index, std::vector<Entry>> m_mapHandlers;
+    uint64_t m_u64NextId = 1;
+    int m_iPublishing = 0;
+    bool m_bDirty = false;
 };
 
-inline void Subscription::reset() {
-    if (bus_) bus_->unsubscribe(id_);
-    bus_ = nullptr;
-    id_ = 0;
+inline void Subscription::f_Reset() {
+    if (m_pBus) m_pBus->f_Unsubscribe(m_u64Id);
+    m_pBus = nullptr;
+    m_u64Id = 0;
 }
 
 // Process-wide bus for real gameplay code (mirrors TextureManager's singleton convention).
-inline EventBus& globalEventBus() {
-    static EventBus bus;
-    return bus;
+inline EventBus& f_GlobalEventBus() {
+    static EventBus l_oBus;
+    return l_oBus;
 }
 
 // --- Concrete event payloads. Grows as new systems need them (architecture doc §8.4). ---
-struct EnemyDefeated { std::string enemyId; std::string stageId; };
-struct ItemCollected { std::string itemId; std::string stageId; };
+struct EnemyDefeated { std::string m_strEnemyId; std::string m_strStageId; };
+struct ItemCollected { std::string m_strItemId; std::string m_strStageId; };
 // Fired whenever a dialogue choice is confirmed (Milestone 4) — npcId identifies the
 // conversation, choiceLabel identifies which choice (dialogue choices have no stable id in the
 // current data/dialogue/*.json schema, so the label is the closest thing to one).
-struct ChoiceMade { std::string npcId; std::string choiceLabel; };
+struct ChoiceMade { std::string m_strNpcId; std::string m_strChoiceLabel; };
 
 } // namespace toms

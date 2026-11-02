@@ -52,7 +52,7 @@ void Game::f_PopDamage(int l_iDmg, int l_iWho) {
 | `c` | `char` |
 | `str` | `std::string` |
 | `sv` | `std::string_view` |
-| `psz` | C 字串：`const char*`、`char*` |
+| `psz` | C 字串：`const char*`、`char*`、存放文字的 `char` 陣列（`const char g_pszName[] = "..."`） |
 | `v` | `std::vector` |
 | `arr` | `std::array`、C 陣列 |
 | `map` | `std::map`、`std::unordered_map` |
@@ -112,5 +112,37 @@ void Game::f_PopDamage(int l_iDmg, int l_iWho) {
 
 ## 5. 狀態
 
-- 2026-11-02：規則寫成（先是變數，再是函式）。現有程式碼在擁有者要求時再轉換。
-- 在那之前，每個檔案維持它現有的風格，避免一個檔案一半新一半舊。**新檔案**遵守這條規則。
+- 2026-11-02：規則寫成（先是變數，再是函式）。
+- 2026-11-02：**專案所有的 C++ 已轉換**（擁有者：「make this project's c++ files to match my rule」）：417 個檔案、約 19.1 萬
+  個名稱（4.24 萬個宣告），用 §6 的工具完成。第三方程式碼未更動。Windows 建置（遊戲、引擎、編輯器、工具、測試）沒有錯誤；
+  20 個遊戲情境與動畫編輯器的無介面檢查照常執行。Web 與 Android 的程式碼（`#ifdef __EMSCRIPTEN__` / `__ANDROID__` 之內）
+  依各自的解析改名，但沒有建置（Web 與 Android 只在擁有者要求時建置）。
+- **保留的名稱**（367 個宣告）：覆寫第三方 virtual 函式的（Qt 的 `paintEvent`、RmlUi 的 `LoadTexture`、Jolt 的
+  `OnContactAdded`、bgfx 的回呼）、依名稱尋找的（`begin`、`end`、`size`、`swap`、`to_json`、運算子、`main`）、JavaScript
+  呼叫的 `extern "C"` 函式（`jsFlushSave`……），以及巨集宣告的（單元測試的 `TOMS_TEST` 函式、Qt 的 moc 程式碼）。改名工具的
+  報告列出全部（`Build/naming/report.txt`）。
+- **沒有改的：** 提到舊名稱的註解與文件（註解中的 `loadBattleRig` 現在是 `f_LoadBattleRig`）。
+
+## 6. 工具：tools/naming/rename_cpp.py
+
+```
+pip install libclang                                   （一次；Python 綁定）
+python tools/naming/rename_cpp.py plan                 Build/naming/plan.json + report.txt（約 1 分鐘）
+python tools/naming/rename_cpp.py apply                套用計畫
+```
+
+- 它用 libclang（Visual Studio 的 clang 22；Android 用 NDK 的 clang 18）讀每個 C++ 檔，各用自己的編譯參數，來自
+  `Build/windows-release`、`Build/web-release-windows`、`Build/android-debug` 與 `Build/atlas-web`
+  （`ninja -C Build/atlas-web -t compdb`）。
+- 每個宣告與它的所有參照以 clang USR 找出（樣板的具現化以樣板在原始碼中的位置對應）；新名稱來自它的範圍與實際型別。樣板內
+  clang 無法解析的名稱依名稱對應，只在安全時才改。
+- **當作檢查器：** 在遵守規則的程式碼上，`plan` 幾乎找不到要改的（轉換後：9 個，都是誤報，在一個 Web 專用檔，它的解析缺一個
+  標頭檔）。寫了大量新程式碼後執行一次。
+- **只在 Debug 的程式碼：** `assert(...)` 的內容與 `#ifdef _DEBUG` / `#ifndef NDEBUG` 區塊只在 Debug 參數下存在。這類檔案用
+  `TOMS_NAMING_WIN_DB=windows-debug` 執行（`--only <檔案>`）；轉換後 `leak_check.cpp`（只在 Debug）就是這樣改名，並以 Debug
+  建置檢查（`toolsuild.cmd windows-debug`）。
+- STL allocator 的 `allocate` / `deallocate`（成員）保留原名：容器依名稱呼叫它們。
+- 它做不到、由手動完成的（`Build/naming/postfix.py`，本機）：被許多類別使用的巨集內容中的名稱（`TOMS_OBJECT` 的 `f_Type`、
+  `f_StaticType`），以及少數經由泛型 lambda 存取的成員。
+- **只差大小寫的兩個名稱**會變成同一個（`setName` 與 `SetName` 都是 `f_SetName`）。`Node` 的 `name()`/`setName()` 原本只呼叫
+  `Object` 的 `Name()`/`SetName()`，改名後會呼叫自己；已刪除。報告的衝突段落只檢查同一個範圍；類別與其基底類別要手動檢查。

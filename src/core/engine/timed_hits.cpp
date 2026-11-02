@@ -6,87 +6,87 @@
 
 namespace toms {
 
-int TimedTrack::add(int appearMs, int dueMs) {
-    Point p;
-    p.appearMs = std::min(appearMs, dueMs);
-    p.dueMs = dueMs;
-    points_.push_back(p);
-    return (int)points_.size() - 1;
+int TimedTrack::f_Add(int l_iAppearMs, int l_iDueMs) {
+    Point l_oP;
+    l_oP.m_iAppearMs = std::min(l_iAppearMs, l_iDueMs);
+    l_oP.m_iDueMs = l_iDueMs;
+    m_vPoints.push_back(l_oP);
+    return (int)m_vPoints.size() - 1;
 }
 
-int TimedTrack::nextOpen() const {
-    for (size_t i = 0; i < points_.size(); ++i) if (open(points_[i])) return (int)i;
+int TimedTrack::f_NextOpen() const {
+    for (size_t l_nI = 0; l_nI < m_vPoints.size(); ++l_nI) if (f_Open(m_vPoints[l_nI])) return (int)l_nI;
     return -1;
 }
 
-void TimedTrack::update(int dtMs) {
-    nowMs_ += std::max(0, dtMs);
-    for (size_t i = 0; i < points_.size(); ++i) {
-        Point& p = points_[i];
-        if (open(p) && nowMs_ > p.dueMs + goodMs_) {
-            p.result = Grade::Miss;
-            p.offsetMs = nowMs_ - p.dueMs;
-            missedQueue_.push_back((int)i);
+void TimedTrack::f_Update(int l_iDtMs) {
+    m_iNowMs += std::max(0, l_iDtMs);
+    for (size_t l_nI = 0; l_nI < m_vPoints.size(); ++l_nI) {
+        Point& l_oP = m_vPoints[l_nI];
+        if (f_Open(l_oP) && m_iNowMs > l_oP.m_iDueMs + m_iGoodMs) {
+            l_oP.m_eResult = Grade::Miss;
+            l_oP.m_iOffsetMs = m_iNowMs - l_oP.m_iDueMs;
+            m_vMissedQueue.push_back((int)l_nI);
         }
     }
 }
 
-TimedTrack::Tap TimedTrack::tap() {
-    Tap t;
-    int best = -1, bestDist = 0;
-    if (ordered_) {
-        best = nextOpen();
-        if (best >= 0) bestDist = std::abs(nowMs_ - points_[best].dueMs);
+TimedTrack::Tap TimedTrack::f_Tap() {
+    Tap l_oT;
+    int l_iBest = -1, l_iBestDist = 0;
+    if (m_bOrdered) {
+        l_iBest = f_NextOpen();
+        if (l_iBest >= 0) l_iBestDist = std::abs(m_iNowMs - m_vPoints[l_iBest].m_iDueMs);
     } else {
-        for (size_t i = 0; i < points_.size(); ++i) {
-            if (!open(points_[i]) || nowMs_ < points_[i].appearMs) continue;
-            const int d = std::abs(nowMs_ - points_[i].dueMs);
-            if (best < 0 || d < bestDist) { best = (int)i; bestDist = d; }
+        for (size_t l_nI = 0; l_nI < m_vPoints.size(); ++l_nI) {
+            if (!f_Open(m_vPoints[l_nI]) || m_iNowMs < m_vPoints[l_nI].m_iAppearMs) continue;
+            const int l_iD = std::abs(m_iNowMs - m_vPoints[l_nI].m_iDueMs);
+            if (l_iBest < 0 || l_iD < l_iBestDist) { l_iBest = (int)l_nI; l_iBestDist = l_iD; }
         }
     }
-    if (best < 0 || bestDist > goodMs_) {
+    if (l_iBest < 0 || l_iBestDist > m_iGoodMs) {
         // nothing in reach: a wasted tap. An ordered track counts it against its next point (too early / mashing).
-        if (ordered_ && best >= 0 && nowMs_ >= points_[best].appearMs) {
-            points_[best].result = Grade::Miss;
-            points_[best].offsetMs = nowMs_ - points_[best].dueMs;
-            t.index = best;
-            t.offsetMs = points_[best].offsetMs;
+        if (m_bOrdered && l_iBest >= 0 && m_iNowMs >= m_vPoints[l_iBest].m_iAppearMs) {
+            m_vPoints[l_iBest].m_eResult = Grade::Miss;
+            m_vPoints[l_iBest].m_iOffsetMs = m_iNowMs - m_vPoints[l_iBest].m_iDueMs;
+            l_oT.m_iIndex = l_iBest;
+            l_oT.m_iOffsetMs = m_vPoints[l_iBest].m_iOffsetMs;
         }
-        t.grade = Grade::Miss;
-        return t;
+        l_oT.m_eGrade = Grade::Miss;
+        return l_oT;
     }
-    Point& p = points_[best];
-    p.offsetMs = nowMs_ - p.dueMs;
-    p.result = bestDist <= perfectMs_ ? Grade::Perfect : Grade::Good;
-    t.grade = p.result;
-    t.index = best;
-    t.offsetMs = p.offsetMs;
-    return t;
+    Point& l_oP = m_vPoints[l_iBest];
+    l_oP.m_iOffsetMs = m_iNowMs - l_oP.m_iDueMs;
+    l_oP.m_eResult = l_iBestDist <= m_iPerfectMs ? Grade::Perfect : Grade::Good;
+    l_oT.m_eGrade = l_oP.m_eResult;
+    l_oT.m_iIndex = l_iBest;
+    l_oT.m_iOffsetMs = l_oP.m_iOffsetMs;
+    return l_oT;
 }
 
-std::vector<int> TimedTrack::takeMissed() {
-    std::vector<int> out;
-    out.swap(missedQueue_);
-    return out;
+std::vector<int> TimedTrack::f_TakeMissed() {
+    std::vector<int> l_vOut;
+    l_vOut.swap(m_vMissedQueue);
+    return l_vOut;
 }
 
-float TimedTrack::growth(int i) const {
-    if (i < 0 || i >= (int)points_.size()) return 0.0f;
-    const Point& p = points_[i];
-    if (nowMs_ <= p.appearMs) return 0.0f;
-    const int span = std::max(1, p.dueMs - p.appearMs);
-    return (float)(nowMs_ - p.appearMs) / (float)span;
+float TimedTrack::f_Growth(int l_iI) const {
+    if (l_iI < 0 || l_iI >= (int)m_vPoints.size()) return 0.0f;
+    const Point& l_oP = m_vPoints[l_iI];
+    if (m_iNowMs <= l_oP.m_iAppearMs) return 0.0f;
+    const int l_iSpan = std::max(1, l_oP.m_iDueMs - l_oP.m_iAppearMs);
+    return (float)(m_iNowMs - l_oP.m_iAppearMs) / (float)l_iSpan;
 }
 
-bool TimedTrack::finished() const { return nextOpen() < 0; }
+bool TimedTrack::f_Finished() const { return f_NextOpen() < 0; }
 
-int TimedTrack::hits() const {
-    return (int)std::count_if(points_.begin(), points_.end(),
-                              [](const Point& p) { return p.result == Grade::Perfect || p.result == Grade::Good; });
+int TimedTrack::f_Hits() const {
+    return (int)std::count_if(m_vPoints.begin(), m_vPoints.end(),
+                              [](const Point& l_oP) { return l_oP.m_eResult == Grade::Perfect || l_oP.m_eResult == Grade::Good; });
 }
 
-int TimedTrack::perfects() const {
-    return (int)std::count_if(points_.begin(), points_.end(), [](const Point& p) { return p.result == Grade::Perfect; });
+int TimedTrack::f_Perfects() const {
+    return (int)std::count_if(m_vPoints.begin(), m_vPoints.end(), [](const Point& l_oP) { return l_oP.m_eResult == Grade::Perfect; });
 }
 
 } // namespace toms

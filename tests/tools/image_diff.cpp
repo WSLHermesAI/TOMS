@@ -20,71 +20,71 @@
 
 namespace {
 
-constexpr int kChannelTolerance = 40;
+constexpr int g_iChannelTolerance = 40;
 
-struct Image { int w = 0, h = 0; std::vector<unsigned char> px; };   // RGBA8
+struct Image { int m_iW = 0, m_iH = 0; std::vector<unsigned char> m_vPx; };   // RGBA8
 
-bool load(const char* path, Image& img) {
-    int n = 0;
-    unsigned char* d = stbi_load(path, &img.w, &img.h, &n, 4);
-    if (!d) return false;
-    img.px.assign(d, d + (size_t)img.w * img.h * 4);
-    stbi_image_free(d);
+bool f_Load(const char* l_pszPath, Image& l_oImg) {
+    int l_iN = 0;
+    unsigned char* l_pD = stbi_load(l_pszPath, &l_oImg.m_iW, &l_oImg.m_iH, &l_iN, 4);
+    if (!l_pD) return false;
+    l_oImg.m_vPx.assign(l_pD, l_pD + (size_t)l_oImg.m_iW * l_oImg.m_iH * 4);
+    stbi_image_free(l_pD);
     return true;
 }
 
-Image resample(const Image& src, int w, int h) {   // bilinear
-    Image out; out.w = w; out.h = h; out.px.resize((size_t)w * h * 4);
-    for (int y = 0; y < h; ++y) {
-        const float sy = (y + 0.5f) * src.h / h - 0.5f;
-        const int y0 = std::max(0, (int)std::floor(sy)), y1 = std::min(src.h - 1, y0 + 1);
-        const float fy = std::min(1.0f, std::max(0.0f, sy - y0));
-        for (int x = 0; x < w; ++x) {
-            const float sx = (x + 0.5f) * src.w / w - 0.5f;
-            const int x0 = std::max(0, (int)std::floor(sx)), x1 = std::min(src.w - 1, x0 + 1);
-            const float fx = std::min(1.0f, std::max(0.0f, sx - x0));
-            for (int c = 0; c < 4; ++c) {
-                auto at = [&](int xx, int yy) { return (float)src.px[((size_t)yy * src.w + xx) * 4 + c]; };
-                const float v = (at(x0, y0) * (1 - fx) + at(x1, y0) * fx) * (1 - fy) + (at(x0, y1) * (1 - fx) + at(x1, y1) * fx) * fy;
-                out.px[((size_t)y * w + x) * 4 + c] = (unsigned char)std::lround(v);
+Image f_Resample(const Image& l_oSrc, int l_iW, int l_iH) {   // bilinear
+    Image l_oOut; l_oOut.m_iW = l_iW; l_oOut.m_iH = l_iH; l_oOut.m_vPx.resize((size_t)l_iW * l_iH * 4);
+    for (int l_iY = 0; l_iY < l_iH; ++l_iY) {
+        const float l_fSy = (l_iY + 0.5f) * l_oSrc.m_iH / l_iH - 0.5f;
+        const int l_iY0 = std::max(0, (int)std::floor(l_fSy)), l_iY1 = std::min(l_oSrc.m_iH - 1, l_iY0 + 1);
+        const float l_fFy = std::min(1.0f, std::max(0.0f, l_fSy - l_iY0));
+        for (int l_iX = 0; l_iX < l_iW; ++l_iX) {
+            const float l_fSx = (l_iX + 0.5f) * l_oSrc.m_iW / l_iW - 0.5f;
+            const int l_iX0 = std::max(0, (int)std::floor(l_fSx)), l_iX1 = std::min(l_oSrc.m_iW - 1, l_iX0 + 1);
+            const float l_fFx = std::min(1.0f, std::max(0.0f, l_fSx - l_iX0));
+            for (int l_iC = 0; l_iC < 4; ++l_iC) {
+                auto l_fnAt = [&](int l_iXx, int l_iYy) { return (float)l_oSrc.m_vPx[((size_t)l_iYy * l_oSrc.m_iW + l_iXx) * 4 + l_iC]; };
+                const float l_fV = (l_fnAt(l_iX0, l_iY0) * (1 - l_fFx) + l_fnAt(l_iX1, l_iY0) * l_fFx) * (1 - l_fFy) + (l_fnAt(l_iX0, l_iY1) * (1 - l_fFx) + l_fnAt(l_iX1, l_iY1) * l_fFx) * l_fFy;
+                l_oOut.m_vPx[((size_t)l_iY * l_iW + l_iX) * 4 + l_iC] = (unsigned char)std::lround(l_fV);
             }
         }
     }
-    return out;
+    return l_oOut;
 }
 
 }  // namespace
 
-int main(int argc, char** argv) {
-    if (argc < 3) { std::fprintf(stderr, "usage: image_diff actual.png golden.png [max_bad_percent] [diff.png]\n"); return 2; }
-    const double maxBad = argc > 3 ? std::atof(argv[3]) : 1.0;
-    Image actual, golden;
-    if (!load(argv[1], actual)) { std::fprintf(stderr, "image_diff: cannot read %s\n", argv[1]); return 2; }
-    if (!load(argv[2], golden)) { std::fprintf(stderr, "image_diff: cannot read %s\n", argv[2]); return 2; }
-    if (actual.w != golden.w || actual.h != golden.h) {
-        const double a = (double)actual.w / actual.h, g = (double)golden.w / golden.h;
-        if (std::fabs(a - g) > 0.01) {
-            std::fprintf(stderr, "image_diff: size %dx%d does not match the reference %dx%d\n", actual.w, actual.h, golden.w, golden.h);
+int main(int l_iArgc, char** l_pArgv) {
+    if (l_iArgc < 3) { std::fprintf(stderr, "usage: image_diff actual.png golden.png [max_bad_percent] [diff.png]\n"); return 2; }
+    const double l_dMaxBad = l_iArgc > 3 ? std::atof(l_pArgv[3]) : 1.0;
+    Image l_oActual, l_oGolden;
+    if (!f_Load(l_pArgv[1], l_oActual)) { std::fprintf(stderr, "image_diff: cannot read %s\n", l_pArgv[1]); return 2; }
+    if (!f_Load(l_pArgv[2], l_oGolden)) { std::fprintf(stderr, "image_diff: cannot read %s\n", l_pArgv[2]); return 2; }
+    if (l_oActual.m_iW != l_oGolden.m_iW || l_oActual.m_iH != l_oGolden.m_iH) {
+        const double l_dA = (double)l_oActual.m_iW / l_oActual.m_iH, l_dG = (double)l_oGolden.m_iW / l_oGolden.m_iH;
+        if (std::fabs(l_dA - l_dG) > 0.01) {
+            std::fprintf(stderr, "image_diff: size %dx%d does not match the reference %dx%d\n", l_oActual.m_iW, l_oActual.m_iH, l_oGolden.m_iW, l_oGolden.m_iH);
             return 1;
         }
-        std::printf("image_diff: resampling %dx%d to the reference size %dx%d\n", actual.w, actual.h, golden.w, golden.h);
-        actual = resample(actual, golden.w, golden.h);
+        std::printf("image_diff: resampling %dx%d to the reference size %dx%d\n", l_oActual.m_iW, l_oActual.m_iH, l_oGolden.m_iW, l_oGolden.m_iH);
+        l_oActual = f_Resample(l_oActual, l_oGolden.m_iW, l_oGolden.m_iH);
     }
-    size_t bad = 0;
-    std::vector<unsigned char> diff(golden.px.size());
-    for (size_t i = 0; i < golden.px.size(); i += 4) {
-        int worst = 0;
-        for (int c = 0; c < 3; ++c) worst = std::max(worst, std::abs((int)actual.px[i + c] - (int)golden.px[i + c]));
-        const bool isBad = worst > kChannelTolerance;
-        bad += isBad;
-        for (int c = 0; c < 3; ++c) diff[i + c] = (unsigned char)(golden.px[i + c] / 4);
-        if (isBad) { diff[i] = 255; diff[i + 1] = 0; diff[i + 2] = 0; }
-        diff[i + 3] = 255;
+    size_t l_nBad = 0;
+    std::vector<unsigned char> l_vDiff(l_oGolden.m_vPx.size());
+    for (size_t l_nI = 0; l_nI < l_oGolden.m_vPx.size(); l_nI += 4) {
+        int l_iWorst = 0;
+        for (int l_iC = 0; l_iC < 3; ++l_iC) l_iWorst = std::max(l_iWorst, std::abs((int)l_oActual.m_vPx[l_nI + l_iC] - (int)l_oGolden.m_vPx[l_nI + l_iC]));
+        const bool l_bIsBad = l_iWorst > g_iChannelTolerance;
+        l_nBad += l_bIsBad;
+        for (int l_iC = 0; l_iC < 3; ++l_iC) l_vDiff[l_nI + l_iC] = (unsigned char)(l_oGolden.m_vPx[l_nI + l_iC] / 4);
+        if (l_bIsBad) { l_vDiff[l_nI] = 255; l_vDiff[l_nI + 1] = 0; l_vDiff[l_nI + 2] = 0; }
+        l_vDiff[l_nI + 3] = 255;
     }
-    const double pct = 100.0 * bad / ((double)golden.w * golden.h);
-    const bool pass = pct <= maxBad;
-    std::printf("image_diff: %.3f%% of pixels differ (limit %.3f%%) -> %s\n", pct, maxBad, pass ? "PASS" : "FAIL");
-    if (!pass && argc > 4 && stbi_write_png(argv[4], golden.w, golden.h, 4, diff.data(), golden.w * 4))
-        std::printf("image_diff: bad pixels marked in %s\n", argv[4]);
-    return pass ? 0 : 1;
+    const double l_dPct = 100.0 * l_nBad / ((double)l_oGolden.m_iW * l_oGolden.m_iH);
+    const bool l_bPass = l_dPct <= l_dMaxBad;
+    std::printf("image_diff: %.3f%% of pixels differ (limit %.3f%%) -> %s\n", l_dPct, l_dMaxBad, l_bPass ? "PASS" : "FAIL");
+    if (!l_bPass && l_iArgc > 4 && stbi_write_png(l_pArgv[4], l_oGolden.m_iW, l_oGolden.m_iH, 4, l_vDiff.data(), l_oGolden.m_iW * 4))
+        std::printf("image_diff: bad pixels marked in %s\n", l_pArgv[4]);
+    return l_bPass ? 0 : 1;
 }

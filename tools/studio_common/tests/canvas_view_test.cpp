@@ -12,67 +12,67 @@
 
 #include <cstdio>
 
-static int g_checks = 0, g_failed = 0;
-#define CHECK(cond, msg) do { ++g_checks; if (!(cond)) { ++g_failed; std::printf("  FAIL %s:%d  %s\n", __FILE__, __LINE__, msg); } } while (0)
+static int g_iChecks = 0, g_iFailed = 0;
+#define CHECK(cond, msg) do { ++g_iChecks; if (!(cond)) { ++g_iFailed; std::printf("  FAIL %s:%d  %s\n", __FILE__, __LINE__, msg); } } while (0)
 
 class TestCanvas : public CanvasView {
 public:
     using CanvasView::CanvasView;
 protected:
-    QSize contentSize() const override { return QSize(200, 150); }
-    void paintContent(QPainter& p) override { paintBackground(p); }
+    QSize f_ContentSize() const override { return QSize(200, 150); }
+    void f_PaintContent(QPainter& l_oP) override { f_PaintBackground(l_oP); }
 };
 
 // Pixels of `c` (within a small tolerance) inside a rectangle of the image.
-static int countColour(const QImage& img, const QRect& r, const QColor& c) {
-    int n = 0;
-    const QRect a = r.intersected(img.rect());
-    for (int y = a.top(); y <= a.bottom(); y++)
-        for (int x = a.left(); x <= a.right(); x++) {
-            const QColor p = img.pixelColor(x, y);
-            if (std::abs(p.red() - c.red()) < 8 && std::abs(p.green() - c.green()) < 8 && std::abs(p.blue() - c.blue()) < 8) n++;
+static int f_CountColour(const QImage& l_oImg, const QRect& l_oR, const QColor& l_oC) {
+    int l_iN = 0;
+    const QRect l_oA = l_oR.intersected(l_oImg.rect());
+    for (int l_iY = l_oA.top(); l_iY <= l_oA.bottom(); l_iY++)
+        for (int l_iX = l_oA.left(); l_iX <= l_oA.right(); l_iX++) {
+            const QColor l_oP = l_oImg.pixelColor(l_iX, l_iY);
+            if (std::abs(l_oP.red() - l_oC.red()) < 8 && std::abs(l_oP.green() - l_oC.green()) < 8 && std::abs(l_oP.blue() - l_oC.blue()) < 8) l_iN++;
         }
-    return n;
+    return l_iN;
 }
 
-int main(int argc, char** argv) {
+int main(int l_iArgc, char** l_pArgv) {
     qputenv("QT_QPA_PLATFORM", "offscreen");
-    QApplication app(argc, argv);
+    QApplication l_oApp(l_iArgc, l_pArgv);
     QApplication::setOrganizationName(QStringLiteral("TOMS-tests"));
     QApplication::setApplicationName(QStringLiteral("canvas_view_test"));
-    CanvasView::setCoordinatesShown(true);
+    CanvasView::f_SetCoordinatesShown(true);
 
-    TestCanvas view;
-    view.resize(400, 300);
-    view.show();
+    TestCanvas l_oView;
+    l_oView.resize(400, 300);
+    l_oView.show();
     QApplication::processEvents();
-    const QColor mark = Theme::colors().selection;
+    const QColor l_oMark = Theme::f_Colors().m_oSelection;
 
-    auto render = [&] { QImage img(view.size(), QImage::Format_ARGB32); img.fill(Qt::black); view.render(&img); return img; };
-    const QImage before = render();
-    CHECK(countColour(before, QRect(0, 280, 400, 20), mark) == 0, "no cursor tag before the mouse comes in");
+    auto l_fnRender = [&] { QImage l_oImg(l_oView.size(), QImage::Format_ARGB32); l_oImg.fill(Qt::black); l_oView.render(&l_oImg); return l_oImg; };
+    const QImage l_oBefore = l_fnRender();
+    CHECK(f_CountColour(l_oBefore, QRect(0, 280, 400, 20), l_oMark) == 0, "no cursor tag before the mouse comes in");
 
-    const QPointF at(150, 120);
-    QMouseEvent move(QEvent::MouseMove, at, view.mapToGlobal(at.toPoint()), Qt::NoButton, Qt::NoButton, Qt::NoModifier);
-    QApplication::sendEvent(&view, &move);
-    const QImage img = render();
-    if (argc > 1) img.save(QString::fromLocal8Bit(argv[1]));   // optional: the frame with the readout, to look at
-    CHECK(countColour(img, QRect(120, 280, 60, 20), mark) > 30, "the x tag on the bottom edge, under the cursor");
-    CHECK(countColour(img, QRect(0, 108, 40, 24), mark) > 30, "the y tag on the left edge, beside the cursor");
-    int changed = 0;   // the label is translucent: look for the region it darkens, against the frame before
-    for (int y = 136; y < 152; y++)
-        for (int x = 166; x < 200; x++) changed += img.pixelColor(x, y) != before.pixelColor(x, y);
-    CHECK(changed > 300, "the x, y label next to the cursor");
+    const QPointF l_oAt(150, 120);
+    QMouseEvent l_oMove(QEvent::MouseMove, l_oAt, l_oView.mapToGlobal(l_oAt.toPoint()), Qt::NoButton, Qt::NoButton, Qt::NoModifier);
+    QApplication::sendEvent(&l_oView, &l_oMove);
+    const QImage l_oImg = l_fnRender();
+    if (l_iArgc > 1) l_oImg.save(QString::fromLocal8Bit(l_pArgv[1]));   // optional: the frame with the readout, to look at
+    CHECK(f_CountColour(l_oImg, QRect(120, 280, 60, 20), l_oMark) > 30, "the x tag on the bottom edge, under the cursor");
+    CHECK(f_CountColour(l_oImg, QRect(0, 108, 40, 24), l_oMark) > 30, "the y tag on the left edge, beside the cursor");
+    int l_iChanged = 0;   // the label is translucent: look for the region it darkens, against the frame before
+    for (int l_iY = 136; l_iY < 152; l_iY++)
+        for (int l_iX = 166; l_iX < 200; l_iX++) l_iChanged += l_oImg.pixelColor(l_iX, l_iY) != l_oBefore.pixelColor(l_iX, l_iY);
+    CHECK(l_iChanged > 300, "the x, y label next to the cursor");
 
-    QEvent leave(QEvent::Leave);
-    QApplication::sendEvent(&view, &leave);
-    CHECK(countColour(render(), QRect(0, 280, 400, 20), mark) == 0, "the tags go when the mouse leaves");
+    QEvent l_oLeave(QEvent::Leave);
+    QApplication::sendEvent(&l_oView, &l_oLeave);
+    CHECK(f_CountColour(l_fnRender(), QRect(0, 280, 400, 20), l_oMark) == 0, "the tags go when the mouse leaves");
 
-    QApplication::sendEvent(&view, &move);
-    CanvasView::setCoordinatesShown(false);
-    CHECK(countColour(render(), QRect(0, 280, 400, 20), mark) == 0, "nothing with Show Coordinates off");
-    CanvasView::setCoordinatesShown(true);
+    QApplication::sendEvent(&l_oView, &l_oMove);
+    CanvasView::f_SetCoordinatesShown(false);
+    CHECK(f_CountColour(l_fnRender(), QRect(0, 280, 400, 20), l_oMark) == 0, "nothing with Show Coordinates off");
+    CanvasView::f_SetCoordinatesShown(true);
 
-    std::printf("canvas_view_test: %d checks, %d failed\n", g_checks, g_failed);
-    return g_failed == 0 ? 0 : 1;
+    std::printf("canvas_view_test: %d checks, %d failed\n", g_iChecks, g_iFailed);
+    return g_iFailed == 0 ? 0 : 1;
 }

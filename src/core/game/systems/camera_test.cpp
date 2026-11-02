@@ -9,150 +9,150 @@
 
 using namespace toms;
 
-static int g_fail = 0;
-#define CHECK(cond, msg) do { if(!(cond)){ printf("FAIL: %s\n", msg); g_fail++; } } while(0)
-static bool near(float a, float b, float eps = 0.01f) { return std::fabs(a - b) < eps; }
+static int g_iFail = 0;
+#define CHECK(cond, msg) do { if(!(cond)){ printf("FAIL: %s\n", msg); g_iFail++; } } while(0)
+static bool f_Near(float l_fA, float l_fB, float l_fEps = 0.01f) { return std::fabs(l_fA - l_fB) < l_fEps; }
 
 int main() {
     // Design canvas the walking scene uses, and a typical floor grid (stage10 is 27x22).
-    const float W = 1024.0f, H = 768.0f;
-    const int   gridW = 27, gridH = 22;
+    const float l_fW = 1024.0f, l_fH = 768.0f;
+    const int   l_iGridW = 27, l_iGridH = 22;
 
     // 1. Zoom knob -> tile size: viewCols tiles always span the full width, whatever the height.
     {
-        Camera cam;
-        cam.setViewCols(16);
-        float ts; int cols, rows;
-        cam.viewportTiles(W, H, ts, cols, rows);
-        CHECK(near(ts, W / 16.0f), "tile size = viewport width / viewCols");
-        CHECK(cols == 16, "cols equals the zoom level");
-        CHECK(rows == (int)((H - Camera::kTopMarginPx - Camera::kBottomMarginPx) / ts),
+        Camera l_oCam;
+        l_oCam.f_SetViewCols(16);
+        float l_fTs; int l_iCols, l_iRows;
+        l_oCam.f_ViewportTiles(l_fW, l_fH, l_fTs, l_iCols, l_iRows);
+        CHECK(f_Near(l_fTs, l_fW / 16.0f), "tile size = viewport width / viewCols");
+        CHECK(l_iCols == 16, "cols equals the zoom level");
+        CHECK(l_iRows == (int)((l_fH - Camera::m_fTopMarginPx - Camera::m_fBottomMarginPx) / l_fTs),
               "rows come from the usable height (top/bottom HUD margins removed)");
     }
 
     // 1b. Other canvases (canvas.h): the same tile size, more columns on a wide one, fewer and more rows in portrait.
     {
-        Camera cam;
-        cam.setViewCols(16);
-        float ts; int cols, rows;
-        cam.viewportTiles(1365.0f, 768.0f, ts, cols, rows);
-        CHECK(near(ts, 64.0f) && cols == 21, "16:9: the same tiles, 21 columns");
-        float ts2; int cols2, rows2;
-        cam.viewportTiles(768.0f, 1707.0f, ts2, cols2, rows2);
-        CHECK(near(ts2, 64.0f) && cols2 == 12 && rows2 > 20, "portrait: 12 columns, many rows");
-        Camera z;   // the default zoom: 13 across 1024, so a 768 canvas holds 9.75 tiles
-        z.setViewCols(13);
-        z.retarget(18, 5, 19, 30, 768.0f, 1707.0f);   // at the grid's right edge
-        CHECK(near(z.targetX(), 19.0f - 9.75f), "portrait: the view stops at the grid's real right edge (part of a tile shows)");
+        Camera l_oCam;
+        l_oCam.f_SetViewCols(16);
+        float l_fTs; int l_iCols, l_iRows;
+        l_oCam.f_ViewportTiles(1365.0f, 768.0f, l_fTs, l_iCols, l_iRows);
+        CHECK(f_Near(l_fTs, 64.0f) && l_iCols == 21, "16:9: the same tiles, 21 columns");
+        float l_fTs2; int l_iCols2, l_iRows2;
+        l_oCam.f_ViewportTiles(768.0f, 1707.0f, l_fTs2, l_iCols2, l_iRows2);
+        CHECK(f_Near(l_fTs2, 64.0f) && l_iCols2 == 12 && l_iRows2 > 20, "portrait: 12 columns, many rows");
+        Camera l_oZ;   // the default zoom: 13 across 1024, so a 768 canvas holds 9.75 tiles
+        l_oZ.f_SetViewCols(13);
+        l_oZ.f_Retarget(18, 5, 19, 30, 768.0f, 1707.0f);   // at the grid's right edge
+        CHECK(f_Near(l_oZ.f_TargetX(), 19.0f - 9.75f), "portrait: the view stops at the grid's real right edge (part of a tile shows)");
     }
 
     // 2. A corrupt/absurd persisted zoom can never produce a degenerate viewport.
     {
-        Camera cam;
-        cam.setViewCols(0);
-        float ts; int cols, rows;
-        cam.viewportTiles(W, H, ts, cols, rows);
-        CHECK(cols >= Camera::kMinViewCols, "viewCols is clamped to kMinViewCols");
-        CHECK(rows >= 1, "rows is at least 1 even for a tiny drawing area");
-        Camera tiny;
-        float ts2; int c2, r2;
-        tiny.viewportTiles(W, 40.0f, ts2, c2, r2);   // height smaller than the margins
-        CHECK(r2 >= 1, "rows stays >= 1 when the height is smaller than the HUD margins");
+        Camera l_oCam;
+        l_oCam.f_SetViewCols(0);
+        float l_fTs; int l_iCols, l_iRows;
+        l_oCam.f_ViewportTiles(l_fW, l_fH, l_fTs, l_iCols, l_iRows);
+        CHECK(l_iCols >= Camera::m_iMinViewCols, "viewCols is clamped to kMinViewCols");
+        CHECK(l_iRows >= 1, "rows is at least 1 even for a tiny drawing area");
+        Camera l_oTiny;
+        float l_fTs2; int l_iC2, l_iR2;
+        l_oTiny.f_ViewportTiles(l_fW, 40.0f, l_fTs2, l_iC2, l_iR2);   // height smaller than the margins
+        CHECK(l_iR2 >= 1, "rows stays >= 1 when the height is smaller than the HUD margins");
     }
 
     // 3. Follow mode centres the player and clamps at the grid edges.
     {
-        Camera cam;                                  // Follow is the default mode
-        cam.retarget(10, 10, gridW, gridH, W, H);
-        float ts; int cols, rows;
-        cam.viewportTiles(W, H, ts, cols, rows);
-        CHECK(near(cam.targetX(), 10 - cols * 0.5f), "Follow centres the player horizontally");
-        CHECK(near(cam.targetY(), 10 - rows * 0.5f), "Follow centres the player vertically");
+        Camera l_oCam;                                  // Follow is the default mode
+        l_oCam.f_Retarget(10, 10, l_iGridW, l_iGridH, l_fW, l_fH);
+        float l_fTs; int l_iCols, l_iRows;
+        l_oCam.f_ViewportTiles(l_fW, l_fH, l_fTs, l_iCols, l_iRows);
+        CHECK(f_Near(l_oCam.f_TargetX(), 10 - l_iCols * 0.5f), "Follow centres the player horizontally");
+        CHECK(f_Near(l_oCam.f_TargetY(), 10 - l_iRows * 0.5f), "Follow centres the player vertically");
 
-        cam.retarget(0, 0, gridW, gridH, W, H);       // top-left corner -> clamp to 0
-        CHECK(near(cam.targetX(), 0.0f) && near(cam.targetY(), 0.0f),
+        l_oCam.f_Retarget(0, 0, l_iGridW, l_iGridH, l_fW, l_fH);       // top-left corner -> clamp to 0
+        CHECK(f_Near(l_oCam.f_TargetX(), 0.0f) && f_Near(l_oCam.f_TargetY(), 0.0f),
               "Follow clamps to the grid's top-left corner");
-        cam.retarget(gridW - 1, gridH - 1, gridW, gridH, W, H);
-        CHECK(cam.targetX() <= (float)(gridW - cols) + 0.01f, "Follow clamps at the right edge");
-        CHECK(cam.targetY() <= (float)(gridH - rows) + 0.01f, "Follow clamps at the bottom edge");
+        l_oCam.f_Retarget(l_iGridW - 1, l_iGridH - 1, l_iGridW, l_iGridH, l_fW, l_fH);
+        CHECK(l_oCam.f_TargetX() <= (float)(l_iGridW - l_iCols) + 0.01f, "Follow clamps at the right edge");
+        CHECK(l_oCam.f_TargetY() <= (float)(l_iGridH - l_iRows) + 0.01f, "Follow clamps at the bottom edge");
     }
 
     // 4. A grid smaller than the viewport is centred, not pinned to the corner.
     {
-        Camera cam;
-        cam.setViewCols(40);
-        cam.retarget(2, 2, 8, 6, W, H);
-        float ts; int cols, rows;
-        cam.viewportTiles(W, H, ts, cols, rows);
-        CHECK(cols > 8, "test premise: the viewport is wider than this grid");
-        CHECK(near(cam.targetX(), -(cols - 8) * 0.5f), "a narrow grid is centred horizontally");
-        CHECK(near(cam.targetY(), -(rows - 6) * 0.5f), "a short grid is centred vertically");
+        Camera l_oCam;
+        l_oCam.f_SetViewCols(40);
+        l_oCam.f_Retarget(2, 2, 8, 6, l_fW, l_fH);
+        float l_fTs; int l_iCols, l_iRows;
+        l_oCam.f_ViewportTiles(l_fW, l_fH, l_fTs, l_iCols, l_iRows);
+        CHECK(l_iCols > 8, "test premise: the viewport is wider than this grid");
+        CHECK(f_Near(l_oCam.f_TargetX(), -(l_iCols - 8) * 0.5f), "a narrow grid is centred horizontally");
+        CHECK(f_Near(l_oCam.f_TargetY(), -(l_iRows - 6) * 0.5f), "a short grid is centred vertically");
     }
 
     // 5. Rooms mode: the target only moves when the player crosses a section boundary, and lands
     //    on section-aligned coordinates.
     {
-        Camera cam;
-        cam.setMode(Camera::Mode::Rooms);
-        float ts; int cols, rows;
-        cam.viewportTiles(W, H, ts, cols, rows);
+        Camera l_oCam;
+        l_oCam.f_SetMode(Camera::Mode::Rooms);
+        float l_fTs; int l_iCols, l_iRows;
+        l_oCam.f_ViewportTiles(l_fW, l_fH, l_fTs, l_iCols, l_iRows);
 
-        cam.retarget(1, 1, gridW, gridH, W, H);
-        CHECK(near(cam.targetX(), 0.0f) && near(cam.targetY(), 0.0f), "Rooms: first section is 0,0");
-        const float keepX = cam.targetX(), keepY = cam.targetY();
-        cam.retarget(std::min(gridW - 1, cols - 1), std::min(gridH - 1, rows - 1), gridW, gridH, W, H);
-        CHECK(near(cam.targetX(), keepX) && near(cam.targetY(), keepY),
+        l_oCam.f_Retarget(1, 1, l_iGridW, l_iGridH, l_fW, l_fH);
+        CHECK(f_Near(l_oCam.f_TargetX(), 0.0f) && f_Near(l_oCam.f_TargetY(), 0.0f), "Rooms: first section is 0,0");
+        const float l_fKeepX = l_oCam.f_TargetX(), l_fKeepY = l_oCam.f_TargetY();
+        l_oCam.f_Retarget(std::min(l_iGridW - 1, l_iCols - 1), std::min(l_iGridH - 1, l_iRows - 1), l_iGridW, l_iGridH, l_fW, l_fH);
+        CHECK(f_Near(l_oCam.f_TargetX(), l_fKeepX) && f_Near(l_oCam.f_TargetY(), l_fKeepY),
               "Rooms: moving inside the same section does not move the camera");
 
-        cam.retarget(std::min(gridW - 1, cols), std::min(gridH - 1, rows), gridW, gridH, W, H);
-        CHECK(cam.targetX() > keepX || cam.targetY() > keepY,
+        l_oCam.f_Retarget(std::min(l_iGridW - 1, l_iCols), std::min(l_iGridH - 1, l_iRows), l_iGridW, l_iGridH, l_fW, l_fH);
+        CHECK(l_oCam.f_TargetX() > l_fKeepX || l_oCam.f_TargetY() > l_fKeepY,
               "Rooms: crossing into the next section moves the camera");
-        CHECK(near(std::fmod(cam.targetX(), (float)cols), 0.0f), "Rooms: target is column-aligned");
+        CHECK(f_Near(std::fmod(l_oCam.f_TargetX(), (float)l_iCols), 0.0f), "Rooms: target is column-aligned");
     }
 
     // 6. Mode round-trip through the persisted integer (game_settings.json stores 0/1).
     {
-        for (int i = 0; i <= 1; i++) {
-            Camera cam;
-            cam.setMode(Camera::modeFromIndex(i));
-            CHECK(cam.modeIndex() == i, "camera mode survives an int round-trip");
+        for (int l_iI = 0; l_iI <= 1; l_iI++) {
+            Camera l_oCam;
+            l_oCam.f_SetMode(Camera::f_ModeFromIndex(l_iI));
+            CHECK(l_oCam.f_ModeIndex() == l_iI, "camera mode survives an int round-trip");
         }
     }
 
     // 7. snap() jumps; update() eases, never overshoots, settles exactly, and is a no-op for dt<=0.
     {
-        Camera cam;
-        cam.retarget(20, 20, gridW, gridH, W, H);
-        const float tx = cam.targetX(), ty = cam.targetY();
-        cam.update(0.0f);
-        CHECK(cam.x() == 0.0f && cam.y() == 0.0f, "update(0) does not move the camera");
+        Camera l_oCam;
+        l_oCam.f_Retarget(20, 20, l_iGridW, l_iGridH, l_fW, l_fH);
+        const float l_fTx = l_oCam.f_TargetX(), l_fTy = l_oCam.f_TargetY();
+        l_oCam.f_Update(0.0f);
+        CHECK(l_oCam.f_X() == 0.0f && l_oCam.f_Y() == 0.0f, "update(0) does not move the camera");
 
-        float prevDist = std::fabs(cam.x() - tx);
-        for (int i = 0; i < 200; i++) {
-            cam.update(1.0f / 60.0f);
-            const float d = std::fabs(cam.x() - tx);
-            CHECK(d <= prevDist + 0.0001f, "ease never overshoots / never moves away from target");
-            prevDist = d;
+        float l_fPrevDist = std::fabs(l_oCam.f_X() - l_fTx);
+        for (int l_iI = 0; l_iI < 200; l_iI++) {
+            l_oCam.f_Update(1.0f / 60.0f);
+            const float l_fD = std::fabs(l_oCam.f_X() - l_fTx);
+            CHECK(l_fD <= l_fPrevDist + 0.0001f, "ease never overshoots / never moves away from target");
+            l_fPrevDist = l_fD;
         }
-        CHECK(cam.x() == tx && cam.y() == ty, "the ease settles exactly on the target");
+        CHECK(l_oCam.f_X() == l_fTx && l_oCam.f_Y() == l_fTy, "the ease settles exactly on the target");
 
-        cam.snap();
-        CHECK(cam.x() == cam.targetX() && cam.y() == cam.targetY(), "snap() jumps to the target");
+        l_oCam.f_Snap();
+        CHECK(l_oCam.f_X() == l_oCam.f_TargetX() && l_oCam.f_Y() == l_oCam.f_TargetY(), "snap() jumps to the target");
     }
 
     // 8. Frame-rate independence: the same total time gives the same result whether it arrives as
     //    one big step or many small ones (exponential smoothing composes multiplicatively).
     {
-        Camera a, b;
-        a.retarget(20, 20, gridW, gridH, W, H);
-        b.retarget(20, 20, gridW, gridH, W, H);
-        a.update(0.1f);
-        for (int i = 0; i < 10; i++) b.update(0.01f);
-        CHECK(near(a.x(), b.x(), 0.001f) && near(a.y(), b.y(), 0.001f),
+        Camera l_oA, l_oB;
+        l_oA.f_Retarget(20, 20, l_iGridW, l_iGridH, l_fW, l_fH);
+        l_oB.f_Retarget(20, 20, l_iGridW, l_iGridH, l_fW, l_fH);
+        l_oA.f_Update(0.1f);
+        for (int l_iI = 0; l_iI < 10; l_iI++) l_oB.f_Update(0.01f);
+        CHECK(f_Near(l_oA.f_X(), l_oB.f_X(), 0.001f) && f_Near(l_oA.f_Y(), l_oB.f_Y(), 0.001f),
               "ease is frame-rate independent for the same elapsed time");
     }
 
-    if (g_fail == 0) printf("camera_test: ALL PASS\n");
-    else             printf("camera_test: %d FAILED\n", g_fail);
-    return g_fail == 0 ? 0 : 1;
+    if (g_iFail == 0) printf("camera_test: ALL PASS\n");
+    else             printf("camera_test: %d FAILED\n", g_iFail);
+    return g_iFail == 0 ? 0 : 1;
 }

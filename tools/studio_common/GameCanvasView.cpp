@@ -24,368 +24,368 @@ namespace {
 
 // The one bgfx and renderer of the process, shared by its game canvases.
 struct Host {
-    std::unique_ptr<BgfxRenderer> ren;
-    GameCanvasView* current = nullptr;   // the canvas bgfx renders into now
-    int canvases = 0;                    // game canvases alive
-    bool failed = false;
+    std::unique_ptr<BgfxRenderer> m_upRen;
+    GameCanvasView* m_pCurrent = nullptr;   // the canvas bgfx renders into now
+    int m_iCanvases = 0;                    // game canvases alive
+    bool m_bFailed = false;
 };
-Host& host()
+Host& f_Host()
 {
-    static Host h;
-    return h;
+    static Host l_oH;
+    return l_oH;
 }
 
-std::vector<uint8_t> straightRgba(const QImage& img, int& w, int& h)
+std::vector<uint8_t> f_StraightRgba(const QImage& l_oImg, int& l_iW, int& l_iH)
 {
-    const QImage s = img.convertToFormat(QImage::Format_RGBA8888);   // un-premultiplied, as the game's PNGs
-    w = s.width();
-    h = s.height();
-    std::vector<uint8_t> out(size_t(w) * h * 4);
-    for (int y = 0; y < h; y++) std::memcpy(out.data() + size_t(y) * w * 4, s.constScanLine(y), size_t(w) * 4);
-    return out;
+    const QImage l_oS = l_oImg.convertToFormat(QImage::Format_RGBA8888);   // un-premultiplied, as the game's PNGs
+    l_iW = l_oS.width();
+    l_iH = l_oS.height();
+    std::vector<uint8_t> l_vOut(size_t(l_iW) * l_iH * 4);
+    for (int l_iY = 0; l_iY < l_iH; l_iY++) std::memcpy(l_vOut.data() + size_t(l_iY) * l_iW * 4, l_oS.constScanLine(l_iY), size_t(l_iW) * 4);
+    return l_vOut;
 }
 
 }  // namespace
 
 // ---- GameScene -------------------------------------------------------------------------------------
 
-glm::mat3 GameScene::placement(const QTransform& t)
+glm::mat3 GameScene::f_Placement(const QTransform& l_oT)
 {
-    glm::mat3 m(1.0f);
-    m[0][0] = float(t.m11());
-    m[0][1] = float(t.m12());
-    m[1][0] = float(t.m21());
-    m[1][1] = float(t.m22());
-    m[2][0] = float(t.dx());
-    m[2][1] = float(t.dy());
-    return m;
+    glm::mat3 l_mat3M(1.0f);
+    l_mat3M[0][0] = float(l_oT.m11());
+    l_mat3M[0][1] = float(l_oT.m12());
+    l_mat3M[1][0] = float(l_oT.m21());
+    l_mat3M[1][1] = float(l_oT.m22());
+    l_mat3M[2][0] = float(l_oT.dx());
+    l_mat3M[2][1] = float(l_oT.dy());
+    return l_mat3M;
 }
 
-void GameScene::quad(const QPointF& a, const QPointF& b, const QPointF& c, const QPointF& d, const QColor& col) const
+void GameScene::f_Quad(const QPointF& l_oA, const QPointF& l_oB, const QPointF& l_oC, const QPointF& l_oD, const QColor& l_oCol) const
 {
-    Quad q;
-    q.solid = true;
-    q.hasCorners = true;
-    const QPointF p[4] = {a, b, c, d};
-    double x0 = a.x(), y0 = a.y(), x1 = x0, y1 = y0;
-    for (int i = 0; i < 4; i++) {
-        q.corners[i * 2] = float(p[i].x());
-        q.corners[i * 2 + 1] = float(p[i].y());
-        x0 = std::min(x0, p[i].x()); x1 = std::max(x1, p[i].x());
-        y0 = std::min(y0, p[i].y()); y1 = std::max(y1, p[i].y());
+    Quad l_oQ;
+    l_oQ.m_bSolid = true;
+    l_oQ.m_bHasCorners = true;
+    const QPointF l_arrP[4] = {l_oA, l_oB, l_oC, l_oD};
+    double l_dX0 = l_oA.x(), l_dY0 = l_oA.y(), l_dX1 = l_dX0, l_dY1 = l_dY0;
+    for (int l_iI = 0; l_iI < 4; l_iI++) {
+        l_oQ.m_arrCorners[l_iI * 2] = float(l_arrP[l_iI].x());
+        l_oQ.m_arrCorners[l_iI * 2 + 1] = float(l_arrP[l_iI].y());
+        l_dX0 = std::min(l_dX0, l_arrP[l_iI].x()); l_dX1 = std::max(l_dX1, l_arrP[l_iI].x());
+        l_dY0 = std::min(l_dY0, l_arrP[l_iI].y()); l_dY1 = std::max(l_dY1, l_arrP[l_iI].y());
     }
-    q.rect[0] = float(x0); q.rect[1] = float(y0); q.rect[2] = float(x1 - x0); q.rect[3] = float(y1 - y0);
-    q.uv[0] = q.uv[1] = q.uv[2] = q.uv[3] = 0;
-    q.tint[0] = float(col.redF()); q.tint[1] = float(col.greenF()); q.tint[2] = float(col.blueF()); q.tint[3] = float(col.alphaF());
-    ren.drawSprite(q);
+    l_oQ.m_arrRect[0] = float(l_dX0); l_oQ.m_arrRect[1] = float(l_dY0); l_oQ.m_arrRect[2] = float(l_dX1 - l_dX0); l_oQ.m_arrRect[3] = float(l_dY1 - l_dY0);
+    l_oQ.m_arrUv[0] = l_oQ.m_arrUv[1] = l_oQ.m_arrUv[2] = l_oQ.m_arrUv[3] = 0;
+    l_oQ.m_arrTint[0] = float(l_oCol.redF()); l_oQ.m_arrTint[1] = float(l_oCol.greenF()); l_oQ.m_arrTint[2] = float(l_oCol.blueF()); l_oQ.m_arrTint[3] = float(l_oCol.alphaF());
+    m_oRen.f_DrawSprite(l_oQ);
 }
 
-void GameScene::rect(const QRectF& r, const QColor& col) const { quad(r.topLeft(), r.topRight(), r.bottomRight(), r.bottomLeft(), col); }
+void GameScene::f_Rect(const QRectF& l_oR, const QColor& l_oCol) const { f_Quad(l_oR.topLeft(), l_oR.topRight(), l_oR.bottomRight(), l_oR.bottomLeft(), l_oCol); }
 
-void GameScene::line(const QPointF& a, const QPointF& b, double w, const QColor& col) const
+void GameScene::f_Line(const QPointF& l_oA, const QPointF& l_oB, double l_dW, const QColor& l_oCol) const
 {
-    const QPointF v = b - a;
-    const double len = std::hypot(v.x(), v.y());
-    if (len < 1e-6) return;
-    const QPointF n(-v.y() / len * w / 2, v.x() / len * w / 2);
-    quad(a + n, b + n, b - n, a - n, col);
+    const QPointF l_oV = l_oB - l_oA;
+    const double l_dLen = std::hypot(l_oV.x(), l_oV.y());
+    if (l_dLen < 1e-6) return;
+    const QPointF l_oN(-l_oV.y() / l_dLen * l_dW / 2, l_oV.x() / l_dLen * l_dW / 2);
+    f_Quad(l_oA + l_oN, l_oB + l_oN, l_oB - l_oN, l_oA - l_oN, l_oCol);
 }
 
-void GameScene::image(uint16_t texture, const QRectF& r, const QRectF& uv, float alpha) const
+void GameScene::f_Image(uint16_t l_u16Texture, const QRectF& l_oR, const QRectF& l_oUv, float l_fAlpha) const
 {
-    if (texture == kSpriteAtlasTexture) return;
-    Quad q;
-    q.rect[0] = float(r.x()); q.rect[1] = float(r.y()); q.rect[2] = float(r.width()); q.rect[3] = float(r.height());
-    q.uv[0] = float(uv.left()); q.uv[1] = float(uv.top()); q.uv[2] = float(uv.right()); q.uv[3] = float(uv.bottom());
-    q.tint[0] = q.tint[1] = q.tint[2] = 1;
-    q.tint[3] = alpha;
-    q.texture = texture;
-    ren.drawSprite(q);
+    if (l_u16Texture == g_u16SpriteAtlasTexture) return;
+    Quad l_oQ;
+    l_oQ.m_arrRect[0] = float(l_oR.x()); l_oQ.m_arrRect[1] = float(l_oR.y()); l_oQ.m_arrRect[2] = float(l_oR.width()); l_oQ.m_arrRect[3] = float(l_oR.height());
+    l_oQ.m_arrUv[0] = float(l_oUv.left()); l_oQ.m_arrUv[1] = float(l_oUv.top()); l_oQ.m_arrUv[2] = float(l_oUv.right()); l_oQ.m_arrUv[3] = float(l_oUv.bottom());
+    l_oQ.m_arrTint[0] = l_oQ.m_arrTint[1] = l_oQ.m_arrTint[2] = 1;
+    l_oQ.m_arrTint[3] = l_fAlpha;
+    l_oQ.m_u16Texture = l_u16Texture;
+    m_oRen.f_DrawSprite(l_oQ);
 }
 
 // ---- GameTextures ----------------------------------------------------------------------------------
 
-void GameTextures::attach(BgfxRenderer* ren)
+void GameTextures::f_Attach(BgfxRenderer* l_pRen)
 {
-    if (ren == m_ren) return;
-    clear();
-    m_ren = ren;
+    if (l_pRen == m_pRen) return;
+    f_Clear();
+    m_pRen = l_pRen;
 }
 
-void GameTextures::clear()
+void GameTextures::f_Clear()
 {
-    if (m_ren)
-        for (uint16_t t : m_all) m_ren->releaseTexture(t);
-    m_all.clear();
-    m_cached.clear();
-    m_atlases.clear();
-    m_set.reset();
+    if (m_pRen)
+        for (uint16_t l_u16T : m_vAll) m_pRen->f_ReleaseTexture(l_u16T);
+    m_vAll.clear();
+    m_vCached.clear();
+    m_vAtlases.clear();
+    m_upSet.reset();
 }
 
-uint16_t GameTextures::upload(const QImage& img)
+uint16_t GameTextures::f_Upload(const QImage& l_oImg)
 {
-    if (!m_ren || img.isNull()) return kSpriteAtlasTexture;
-    int w = 0, h = 0;
-    const std::vector<uint8_t> rgba = straightRgba(img, w, h);
-    const uint16_t t = m_ren->loadTexture(rgba, uint32_t(w), uint32_t(h));
-    if (t != kSpriteAtlasTexture) m_all.push_back(t);
-    return t;
+    if (!m_pRen || l_oImg.isNull()) return g_u16SpriteAtlasTexture;
+    int l_iW = 0, l_iH = 0;
+    const std::vector<uint8_t> l_vRgba = f_StraightRgba(l_oImg, l_iW, l_iH);
+    const uint16_t l_u16T = m_pRen->f_LoadTexture(l_vRgba, uint32_t(l_iW), uint32_t(l_iH));
+    if (l_u16T != g_u16SpriteAtlasTexture) m_vAll.push_back(l_u16T);
+    return l_u16T;
 }
 
-uint16_t GameTextures::cached(const QString& key, const QImage& img)
+uint16_t GameTextures::f_Cached(const QString& l_oKey, const QImage& l_oImg)
 {
-    for (Cached& c : m_cached)
-        if (c.key == key) {
-            if (c.cacheKey == img.cacheKey()) return c.tex;
-            if (m_ren && c.tex != kSpriteAtlasTexture) {
-                m_ren->releaseTexture(c.tex);
-                m_all.erase(std::remove(m_all.begin(), m_all.end(), c.tex), m_all.end());
+    for (Cached& l_oC : m_vCached)
+        if (l_oC.m_oKey == l_oKey) {
+            if (l_oC.m_i64CacheKey == l_oImg.cacheKey()) return l_oC.m_u16Tex;
+            if (m_pRen && l_oC.m_u16Tex != g_u16SpriteAtlasTexture) {
+                m_pRen->f_ReleaseTexture(l_oC.m_u16Tex);
+                m_vAll.erase(std::remove(m_vAll.begin(), m_vAll.end(), l_oC.m_u16Tex), m_vAll.end());
             }
-            c.tex = upload(img);
-            c.cacheKey = img.cacheKey();
-            return c.tex;
+            l_oC.m_u16Tex = f_Upload(l_oImg);
+            l_oC.m_i64CacheKey = l_oImg.cacheKey();
+            return l_oC.m_u16Tex;
         }
-    m_cached.push_back({key, img.cacheKey(), upload(img)});
-    return m_cached.back().tex;
+    m_vCached.push_back({l_oKey, l_oImg.cacheKey(), f_Upload(l_oImg)});
+    return m_vCached.back().m_u16Tex;
 }
 
-void GameTextures::setAtlases(const std::vector<std::tuple<std::string, std::string, const toms::AtlasFile*>>& atlases)
+void GameTextures::f_SetAtlases(const std::vector<std::tuple<std::string, std::string, const toms::AtlasFile*>>& l_vAtlases)
 {
     // Only the atlas textures go; cached images stay.
-    std::vector<uint16_t> keep;
-    for (const Cached& c : m_cached) keep.push_back(c.tex);
-    if (m_ren)
-        for (uint16_t t : m_all)
-            if (std::find(keep.begin(), keep.end(), t) == keep.end()) m_ren->releaseTexture(t);
-    m_all = keep;
-    m_atlases.clear();
-    m_set = std::make_unique<toms::anim::AtlasSet>();
-    if (!m_ren) return;
-    for (const auto& [id, path, parsed] : atlases) {
-        if (!parsed) continue;
-        auto atlas = std::make_unique<toms::AtlasFile>(*parsed);
-        const QDir dir = QFileInfo(QString::fromStdString(path)).absoluteDir();
-        std::vector<uint16_t> pages;
-        for (toms::AtlasPage& pg : atlas->pages) {
-            const QImage img(dir.filePath(QString::fromStdString(pg.file)));
-            const uint16_t t = upload(img);
-            if (pg.filter.rfind("Linear", 0) == 0) m_ren->setTextureFilter(t, true);
-            if (!img.isNull()) {
-                pg.w = img.width();
-                pg.h = img.height();
+    std::vector<uint16_t> l_vKeep;
+    for (const Cached& l_oC : m_vCached) l_vKeep.push_back(l_oC.m_u16Tex);
+    if (m_pRen)
+        for (uint16_t l_u16T : m_vAll)
+            if (std::find(l_vKeep.begin(), l_vKeep.end(), l_u16T) == l_vKeep.end()) m_pRen->f_ReleaseTexture(l_u16T);
+    m_vAll = l_vKeep;
+    m_vAtlases.clear();
+    m_upSet = std::make_unique<toms::anim::AtlasSet>();
+    if (!m_pRen) return;
+    for (const auto& [l_strId, l_strPath, l_pParsed] : l_vAtlases) {
+        if (!l_pParsed) continue;
+        auto l_upAtlas = std::make_unique<toms::AtlasFile>(*l_pParsed);
+        const QDir l_oDir = QFileInfo(QString::fromStdString(l_strPath)).absoluteDir();
+        std::vector<uint16_t> l_vPages;
+        for (toms::AtlasPage& l_oPg : l_upAtlas->m_vPages) {
+            const QImage l_oImg(l_oDir.filePath(QString::fromStdString(l_oPg.m_strFile)));
+            const uint16_t l_u16T = f_Upload(l_oImg);
+            if (l_oPg.m_strFilter.rfind("Linear", 0) == 0) m_pRen->f_SetTextureFilter(l_u16T, true);
+            if (!l_oImg.isNull()) {
+                l_oPg.m_iW = l_oImg.width();
+                l_oPg.m_iH = l_oImg.height();
             }
-            pages.push_back(t);
+            l_vPages.push_back(l_u16T);
         }
-        atlas->computeUVs();
-        m_set->add(*atlas, id, pages);
-        m_atlases.push_back(std::move(atlas));
+        l_upAtlas->f_ComputeUVs();
+        m_upSet->f_Add(*l_upAtlas, l_strId, l_vPages);
+        m_vAtlases.push_back(std::move(l_upAtlas));
     }
 }
 
 // ---- GameCanvasView --------------------------------------------------------------------------------
 
-GameCanvasView::GameCanvasView(bool gameRenderer, QWidget* parent)
-    : CanvasView(parent)
-    , m_wanted(gameRenderer && !host().failed)
+GameCanvasView::GameCanvasView(bool l_bGameRenderer, QWidget* l_pParent)
+    : CanvasView(l_pParent)
+    , m_bWanted(l_bGameRenderer && !f_Host().m_bFailed)
 {
-    if (m_wanted) {   // bgfx renders into this widget's own native window
+    if (m_bWanted) {   // bgfx renders into this widget's own native window
         setAttribute(Qt::WA_NativeWindow);
         setAttribute(Qt::WA_PaintOnScreen);
         setAttribute(Qt::WA_NoSystemBackground);
-        host().canvases++;
+        f_Host().m_iCanvases++;
     }
 }
 
 GameCanvasView::~GameCanvasView()
 {
-    if (!m_wanted) return;
-    releaseGameRenderer();
-    Host& h = host();
-    if (--h.canvases == 0 && h.ren) {   // the last game canvas: bgfx goes, while a native window still exists
-        h.ren->destroy();
-        h.ren.reset();
-        toms::next::bgfxHostShutdown();
+    if (!m_bWanted) return;
+    f_ReleaseGameRenderer();
+    Host& l_oH = f_Host();
+    if (--l_oH.m_iCanvases == 0 && l_oH.m_upRen) {   // the last game canvas: bgfx goes, while a native window still exists
+        l_oH.m_upRen->f_Destroy();
+        l_oH.m_upRen.reset();
+        toms::next::f_BgfxHostShutdown();
     }
 }
 
-bool GameCanvasView::gameRendererWanted(const QString& app)
+bool GameCanvasView::f_GameRendererWanted(const QString& l_oApp)
 {
-    const QString platform = QGuiApplication::platformName();
-    if (platform == QLatin1String("offscreen") || platform == QLatin1String("minimal")) return false;
-    return QSettings(QStringLiteral("TOMS"), app).value(QStringLiteral("preview/gameRenderer"), true).toBool();
+    const QString l_oPlatform = QGuiApplication::platformName();
+    if (l_oPlatform == QLatin1String("offscreen") || l_oPlatform == QLatin1String("minimal")) return false;
+    return QSettings(QStringLiteral("TOMS"), l_oApp).value(QStringLiteral("preview/gameRenderer"), true).toBool();
 }
 
-QString GameCanvasView::rendererName() const
+QString GameCanvasView::f_RendererName() const
 {
-    return m_active ? tr("%1 (game renderer)").arg(QString::fromStdString(toms::next::bgfxHostRendererName())) : tr("QPainter");
+    return m_bActive ? tr("%1 (game renderer)").arg(QString::fromStdString(toms::next::f_BgfxHostRendererName())) : tr("QPainter");
 }
 
-QPaintEngine* GameCanvasView::paintEngine() const { return m_wanted && !m_failed ? nullptr : CanvasView::paintEngine(); }
+QPaintEngine* GameCanvasView::paintEngine() const { return m_bWanted && !m_bFailed ? nullptr : CanvasView::paintEngine(); }
 
-BgfxRenderer* GameCanvasView::gameRenderer() const { return m_active ? host().ren.get() : nullptr; }
+BgfxRenderer* GameCanvasView::f_GameRenderer() const { return m_bActive ? f_Host().m_upRen.get() : nullptr; }
 
-bool GameCanvasView::saveGameRendererShot(const QString& path)
+bool GameCanvasView::f_SaveGameRendererShot(const QString& l_oPath)
 {
-    if (!m_active) return false;
-    m_shotPath = path;
+    if (!m_bActive) return false;
+    m_oShotPath = l_oPath;
     update();
     return true;
 }
 
-QImage GameCanvasView::renderOffscreen(int w, int h, const std::function<void(const GameScene&)>& draw)
+QImage GameCanvasView::f_RenderOffscreen(int l_iW, int l_iH, const std::function<void(const GameScene&)>& l_fnDraw)
 {
-    if (!attach() || w <= 0 || h <= 0 || w > 4096 || h > 4096) return QImage();
-    BgfxRenderer& ren = *host().ren;
-    ren.setCapture(uint16_t(w), uint16_t(h));
-    BgfxRenderer::setDesignSizeExact(uint32_t(w), uint32_t(h));
-    ren.setDeviceSize(uint32_t(w), uint32_t(h));
-    ren.begin();
-    draw(GameScene{ren, double(w), double(h)});
-    ren.end();
-    const uint32_t ready = ren.captureFrame();
-    QImage out;
-    if (ready) {
-        uint32_t frame = 0;
-        for (int i = 0; i < 16 && frame < ready; i++) frame = toms::next::bgfxHostFrame();
-        if (frame >= ready) {
-            out = QImage(w, h, QImage::Format_RGBA8888_Premultiplied);
-            const std::vector<uint8_t>& px = ren.capturePixels();
-            for (int y = 0; y < h; y++) std::memcpy(out.scanLine(y), px.data() + size_t(y) * size_t(w) * 4, size_t(w) * 4);
-            out = out.convertToFormat(QImage::Format_RGBA8888);   // straight alpha
+    if (!f_Attach() || l_iW <= 0 || l_iH <= 0 || l_iW > 4096 || l_iH > 4096) return QImage();
+    BgfxRenderer& l_oRen = *f_Host().m_upRen;
+    l_oRen.f_SetCapture(uint16_t(l_iW), uint16_t(l_iH));
+    BgfxRenderer::f_SetDesignSizeExact(uint32_t(l_iW), uint32_t(l_iH));
+    l_oRen.f_SetDeviceSize(uint32_t(l_iW), uint32_t(l_iH));
+    l_oRen.begin();
+    l_fnDraw(GameScene{l_oRen, double(l_iW), double(l_iH)});
+    l_oRen.end();
+    const uint32_t l_uReady = l_oRen.f_CaptureFrame();
+    QImage l_oOut;
+    if (l_uReady) {
+        uint32_t l_uFrame = 0;
+        for (int l_iI = 0; l_iI < 16 && l_uFrame < l_uReady; l_iI++) l_uFrame = toms::next::f_BgfxHostFrame();
+        if (l_uFrame >= l_uReady) {
+            l_oOut = QImage(l_iW, l_iH, QImage::Format_RGBA8888_Premultiplied);
+            const std::vector<uint8_t>& l_vPx = l_oRen.f_CapturePixels();
+            for (int l_iY = 0; l_iY < l_iH; l_iY++) std::memcpy(l_oOut.scanLine(l_iY), l_vPx.data() + size_t(l_iY) * size_t(l_iW) * 4, size_t(l_iW) * 4);
+            l_oOut = l_oOut.convertToFormat(QImage::Format_RGBA8888);   // straight alpha
         }
     }
-    ren.setCapture(0, 0);
+    l_oRen.f_SetCapture(0, 0);
     update();   // the window's own picture again
-    return out;
+    return l_oOut;
 }
 
-bool GameCanvasView::event(QEvent* e)
+bool GameCanvasView::event(QEvent* l_pE)
 {
-    if (e->type() == QEvent::WinIdChange && m_active && host().current == this) {
-        host().current = nullptr;   // attach() points bgfx at the new window handle
+    if (l_pE->type() == QEvent::WinIdChange && m_bActive && f_Host().m_pCurrent == this) {
+        f_Host().m_pCurrent = nullptr;   // attach() points bgfx at the new window handle
         update();
     }
-    return CanvasView::event(e);
+    return CanvasView::event(l_pE);
 }
 
-void GameCanvasView::showEvent(QShowEvent* e)
+void GameCanvasView::showEvent(QShowEvent* l_pE)
 {
-    CanvasView::showEvent(e);
-    if (m_wanted && !m_failed) update();
+    CanvasView::showEvent(l_pE);
+    if (m_bWanted && !m_bFailed) update();
 }
 
-void GameCanvasView::resizeEvent(QResizeEvent* e)
+void GameCanvasView::resizeEvent(QResizeEvent* l_pE)
 {
-    CanvasView::resizeEvent(e);
-    if (m_active && host().current == this)
-        toms::next::bgfxHostReset(uint32_t(std::lround(width() * devicePixelRatioF())), uint32_t(std::lround(height() * devicePixelRatioF())));
+    CanvasView::resizeEvent(l_pE);
+    if (m_bActive && f_Host().m_pCurrent == this)
+        toms::next::f_BgfxHostReset(uint32_t(std::lround(width() * devicePixelRatioF())), uint32_t(std::lround(height() * devicePixelRatioF())));
 }
 
 // Starts bgfx on this window (the first canvas), or moves it here (another canvas was current).
-bool GameCanvasView::attach()
+bool GameCanvasView::f_Attach()
 {
-    Host& h = host();
-    if (!m_wanted || m_failed || !isVisible()) return false;
-    const uint32_t pw = uint32_t(std::lround(width() * devicePixelRatioF())), ph = uint32_t(std::lround(height() * devicePixelRatioF()));
-    if (!h.ren) {
-        toms::next::BgfxHostConfig cfg;
-        cfg.nativeWindow = reinterpret_cast<void*>(winId());
-        cfg.width = pw;
-        cfg.height = ph;
-        cfg.flipAfterRender = true;   // drawn on demand (a click, an edit): show this frame now, not with the next one
-        if (const char* r = std::getenv("TOMS_RENDERER")) cfg.renderer = r;
-        std::string err;
-        if (!toms::next::bgfxHostInit(cfg, err)) {   // QPainter from now on, for every canvas
-            h.failed = m_failed = true;
+    Host& l_oH = f_Host();
+    if (!m_bWanted || m_bFailed || !isVisible()) return false;
+    const uint32_t l_uPw = uint32_t(std::lround(width() * devicePixelRatioF())), l_uPh = uint32_t(std::lround(height() * devicePixelRatioF()));
+    if (!l_oH.m_upRen) {
+        toms::next::BgfxHostConfig l_oCfg;
+        l_oCfg.m_pNativeWindow = reinterpret_cast<void*>(winId());
+        l_oCfg.m_uWidth = l_uPw;
+        l_oCfg.m_uHeight = l_uPh;
+        l_oCfg.m_bFlipAfterRender = true;   // drawn on demand (a click, an edit): show this frame now, not with the next one
+        if (const char* l_pszR = std::getenv("TOMS_RENDERER")) l_oCfg.m_strRenderer = l_pszR;
+        std::string l_strErr;
+        if (!toms::next::f_BgfxHostInit(l_oCfg, l_strErr)) {   // QPainter from now on, for every canvas
+            l_oH.m_bFailed = m_bFailed = true;
             setAttribute(Qt::WA_PaintOnScreen, false);
-            std::fprintf(stderr, "[editor] the game renderer did not start (%s): QPainter\n", err.c_str());
-            emit rendererChanged();
+            std::fprintf(stderr, "[editor] the game renderer did not start (%s): QPainter\n", l_strErr.c_str());
+            emit f_RendererChanged();
             return false;
         }
-        h.ren = std::make_unique<BgfxRenderer>();
-        h.ren->init(pw, ph);
-        h.current = this;
-    } else if (h.current != this) {
-        toms::next::bgfxHostSetWindow(reinterpret_cast<void*>(winId()), pw, ph);
-        h.current = this;
+        l_oH.m_upRen = std::make_unique<BgfxRenderer>();
+        l_oH.m_upRen->f_Init(l_uPw, l_uPh);
+        l_oH.m_pCurrent = this;
+    } else if (l_oH.m_pCurrent != this) {
+        toms::next::f_BgfxHostSetWindow(reinterpret_cast<void*>(winId()), l_uPw, l_uPh);
+        l_oH.m_pCurrent = this;
     }
-    if (!m_active) {
-        m_active = true;
-        gameRendererChanged(h.ren.get());
-        emit rendererChanged();
+    if (!m_bActive) {
+        m_bActive = true;
+        f_GameRendererChanged(l_oH.m_upRen.get());
+        emit f_RendererChanged();
     }
     return true;
 }
 
-void GameCanvasView::releaseGameRenderer()
+void GameCanvasView::f_ReleaseGameRenderer()
 {
-    if (!m_active) return;
-    Host& h = host();
-    gameRendererChanged(nullptr);   // the subclass releases its textures (and GPU particle emitters)
-    if (m_overlay != kSpriteAtlasTexture) h.ren->releaseTexture(m_overlay);
-    m_overlay = kSpriteAtlasTexture;
-    if (h.current == this) h.current = nullptr;
-    m_active = false;
+    if (!m_bActive) return;
+    Host& l_oH = f_Host();
+    f_GameRendererChanged(nullptr);   // the subclass releases its textures (and GPU particle emitters)
+    if (m_u16Overlay != g_u16SpriteAtlasTexture) l_oH.m_upRen->f_ReleaseTexture(m_u16Overlay);
+    m_u16Overlay = g_u16SpriteAtlasTexture;
+    if (l_oH.m_pCurrent == this) l_oH.m_pCurrent = nullptr;
+    m_bActive = false;
 }
 
-void GameCanvasView::paintEvent(QPaintEvent* e)
+void GameCanvasView::paintEvent(QPaintEvent* l_pE)
 {
-    if (!m_wanted || m_failed || !attach()) {
-        CanvasView::paintEvent(e);
+    if (!m_bWanted || m_bFailed || !f_Attach()) {
+        CanvasView::paintEvent(l_pE);
         return;
     }
-    if (m_hold) return;
-    BgfxRenderer& ren = *host().ren;
-    preparePaint();
-    const double dpr = devicePixelRatioF();
-    const uint32_t pw = uint32_t(std::lround(width() * dpr)), ph = uint32_t(std::lround(height() * dpr));
-    BgfxRenderer::setDesignSizeExact(uint32_t(width()), uint32_t(height()));   // design space = the widget
-    ren.setDeviceSize(pw, ph);
-    ren.begin();
-    const GameScene s{ren, double(width()), double(height())};
+    if (m_bHold) return;
+    BgfxRenderer& l_oRen = *f_Host().m_upRen;
+    f_PreparePaint();
+    const double l_dDpr = devicePixelRatioF();
+    const uint32_t l_uPw = uint32_t(std::lround(width() * l_dDpr)), l_uPh = uint32_t(std::lround(height() * l_dDpr));
+    BgfxRenderer::f_SetDesignSizeExact(uint32_t(width()), uint32_t(height()));   // design space = the widget
+    l_oRen.f_SetDeviceSize(l_uPw, l_uPh);
+    l_oRen.begin();
+    const GameScene l_oS{l_oRen, double(width()), double(height())};
 
     // The background, as CanvasView::paintBackground.
-    const Theme::Colors& tc = Theme::colors();
-    s.rect(QRectF(0, 0, width(), height()), tc.canvasBackground);
-    const QRectF area = toWidget(contentRect()).intersected(QRectF(0, 0, width(), height()));
-    if (drawCheckerboard() && !area.isEmpty()) {
-        s.rect(area, tc.checkerLight);
-        const double cell = 8;   // screen pixels, from the widget's corner (as the QPainter brush)
-        for (double y = std::floor(area.top() / cell) * cell; y < area.bottom(); y += cell)
-            for (double x = std::floor(area.left() / cell) * cell; x < area.right(); x += cell)
-                if ((int(x / cell) + int(y / cell)) % 2 == 0) s.rect(QRectF(x, y, cell, cell).intersected(area), tc.checkerDark);
+    const Theme::Colors& l_oTc = Theme::f_Colors();
+    l_oS.f_Rect(QRectF(0, 0, width(), height()), l_oTc.m_oCanvasBackground);
+    const QRectF l_oArea = f_ToWidget(f_ContentRect()).intersected(QRectF(0, 0, width(), height()));
+    if (f_DrawCheckerboard() && !l_oArea.isEmpty()) {
+        l_oS.f_Rect(l_oArea, l_oTc.m_oCheckerLight);
+        const double l_dCell = 8;   // screen pixels, from the widget's corner (as the QPainter brush)
+        for (double l_dY = std::floor(l_oArea.top() / l_dCell) * l_dCell; l_dY < l_oArea.bottom(); l_dY += l_dCell)
+            for (double l_dX = std::floor(l_oArea.left() / l_dCell) * l_dCell; l_dX < l_oArea.right(); l_dX += l_dCell)
+                if ((int(l_dX / l_dCell) + int(l_dY / l_dCell)) % 2 == 0) l_oS.f_Rect(QRectF(l_dX, l_dY, l_dCell, l_dCell).intersected(l_oArea), l_oTc.m_oCheckerDark);
     }
-    paintGameScene(s);
+    f_PaintGameScene(l_oS);
 
     // The subclass's QPainter drawing (outlines, handles, labels) over it, through a texture.
-    QImage overlay(int(pw), int(ph), QImage::Format_ARGB32_Premultiplied);
-    overlay.setDevicePixelRatio(dpr);
-    overlay.fill(Qt::transparent);
+    QImage l_oOverlay(int(l_uPw), int(l_uPh), QImage::Format_ARGB32_Premultiplied);
+    l_oOverlay.setDevicePixelRatio(l_dDpr);
+    l_oOverlay.fill(Qt::transparent);
     {
-        QPainter p(&overlay);
-        if (drawCheckerboard()) {   // the content's border, as paintBackground draws it
-            p.setPen(QPen(tc.pageBorder, 1));
-            p.drawRect(toWidget(contentRect()).adjusted(-0.5, -0.5, 0.5, 0.5));
+        QPainter l_oP(&l_oOverlay);
+        if (f_DrawCheckerboard()) {   // the content's border, as paintBackground draws it
+            l_oP.setPen(QPen(l_oTc.m_oPageBorder, 1));
+            l_oP.drawRect(f_ToWidget(f_ContentRect()).adjusted(-0.5, -0.5, 0.5, 0.5));
         }
-        m_overGame = true;
-        paintContent(p);
-        m_overGame = false;
-        paintCoordinates(p);
+        m_bOverGame = true;
+        f_PaintContent(l_oP);
+        m_bOverGame = false;
+        f_PaintCoordinates(l_oP);
     }
-    if (m_overlaySize != overlay.size()) {
-        if (m_overlay != kSpriteAtlasTexture) ren.releaseTexture(m_overlay);
-        m_overlay = ren.createDynamicTexture(pw, ph);
-        m_overlaySize = overlay.size();
+    if (m_oOverlaySize != l_oOverlay.size()) {
+        if (m_u16Overlay != g_u16SpriteAtlasTexture) l_oRen.f_ReleaseTexture(m_u16Overlay);
+        m_u16Overlay = l_oRen.f_CreateDynamicTexture(l_uPw, l_uPh);
+        m_oOverlaySize = l_oOverlay.size();
     }
-    int w = 0, h = 0;
-    const std::vector<uint8_t> rgba = straightRgba(overlay, w, h);
-    ren.updateTexture(m_overlay, rgba.data(), uint32_t(w), uint32_t(h));
-    s.image(m_overlay, QRectF(0, 0, width(), height()));
-    ren.end();
-    if (!m_shotPath.isEmpty()) {
-        ren.savePNG(m_shotPath.toStdString());
-        m_shotPath.clear();
+    int l_iW = 0, l_iH = 0;
+    const std::vector<uint8_t> l_vRgba = f_StraightRgba(l_oOverlay, l_iW, l_iH);
+    l_oRen.f_UpdateTexture(m_u16Overlay, l_vRgba.data(), uint32_t(l_iW), uint32_t(l_iH));
+    l_oS.f_Image(m_u16Overlay, QRectF(0, 0, width(), height()));
+    l_oRen.end();
+    if (!m_oShotPath.isEmpty()) {
+        l_oRen.f_SavePNG(m_oShotPath.toStdString());
+        m_oShotPath.clear();
     }
-    toms::next::bgfxHostFrame();
-    m_frames++;
+    toms::next::f_BgfxHostFrame();
+    m_iFrames++;
 }

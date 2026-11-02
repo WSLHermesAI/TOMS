@@ -18,100 +18,100 @@ using toms::anim::Key;
 namespace {
 
 // Calls f(keys) with the channel's key vector (const or not, following NodeT).
-template <class NodeT, class F> auto visit(NodeT& n, Channel c, F&& f) {
-    switch (c) {
-    case Channel::Pos: return f(n.posKeys);
-    case Channel::Rot: return f(n.rotKeys);
-    case Channel::Scale: return f(n.scaleKeys);
-    case Channel::Color: return f(n.colorKeys);
-    case Channel::Sprite: return f(n.spriteKeys);
-    case Channel::Visible: return f(n.visibleKeys);
-    case Channel::Deform: return f(n.deformKeys);
-    case Channel::Fx: return f(n.fxKeys);
-    case Channel::Trail: return f(n.trailKeys);
+template <class NodeT, class F> auto f_Visit(NodeT& l_oN, Channel l_eC, F&& l_oF) {
+    switch (l_eC) {
+    case Channel::Pos: return l_oF(l_oN.m_vPosKeys);
+    case Channel::Rot: return l_oF(l_oN.m_vRotKeys);
+    case Channel::Scale: return l_oF(l_oN.m_vScaleKeys);
+    case Channel::Color: return l_oF(l_oN.m_vColorKeys);
+    case Channel::Sprite: return l_oF(l_oN.m_vSpriteKeys);
+    case Channel::Visible: return l_oF(l_oN.m_vVisibleKeys);
+    case Channel::Deform: return l_oF(l_oN.m_vDeformKeys);
+    case Channel::Fx: return l_oF(l_oN.m_vFxKeys);
+    case Channel::Trail: return l_oF(l_oN.m_vTrailKeys);
     case Channel::Event: break;
     }
-    return f(n.eventKeys);
+    return l_oF(l_oN.m_vEventKeys);
 }
 
 template <class T> struct Conv;
 template <> struct Conv<glm::vec3> {
-    static glm::vec3 from(const Value& v) { return {v.v.x, v.v.y, v.v.z}; }
-    static Value to(const glm::vec3& x) { Value v; v.v = {x.x, x.y, x.z, 0}; return v; }
+    static glm::vec3 f_From(const Value& l_oV) { return {l_oV.m_v4V.x, l_oV.m_v4V.y, l_oV.m_v4V.z}; }
+    static Value f_To(const glm::vec3& l_v3X) { Value l_oV; l_oV.m_v4V = {l_v3X.x, l_v3X.y, l_v3X.z, 0}; return l_oV; }
 };
 template <> struct Conv<glm::vec4> {
-    static glm::vec4 from(const Value& v) { return v.v; }
-    static Value to(const glm::vec4& x) { Value v; v.v = x; return v; }
+    static glm::vec4 f_From(const Value& l_oV) { return l_oV.m_v4V; }
+    static Value f_To(const glm::vec4& l_v4X) { Value l_oV; l_oV.m_v4V = l_v4X; return l_oV; }
 };
 template <> struct Conv<std::string> {
-    static std::string from(const Value& v) { return v.s; }
-    static Value to(const std::string& x) { Value v; v.s = x; return v; }
+    static std::string f_From(const Value& l_oV) { return l_oV.m_strS; }
+    static Value f_To(const std::string& l_strX) { Value l_oV; l_oV.m_strS = l_strX; return l_oV; }
 };
 template <> struct Conv<bool> {
-    static bool from(const Value& v) { return v.b; }
-    static Value to(bool x) { Value v; v.b = x; return v; }
+    static bool f_From(const Value& l_oV) { return l_oV.m_bB; }
+    static Value f_To(bool l_bX) { Value l_oV; l_oV.m_bB = l_bX; return l_oV; }
 };
 template <> struct Conv<float> {
-    static float from(const Value& v) { return v.v.x; }
-    static Value to(float x) { Value v; v.v = {x, 0, 0, 0}; return v; }
+    static float f_From(const Value& l_oV) { return l_oV.m_v4V.x; }
+    static Value f_To(float l_fX) { Value l_oV; l_oV.m_v4V = {l_fX, 0, 0, 0}; return l_oV; }
 };
 template <> struct Conv<toms::anim::Deform> {
-    static toms::anim::Deform from(const Value& v) { return v.d; }
-    static Value to(const toms::anim::Deform& x) { Value v; v.d = x; return v; }
+    static toms::anim::Deform f_From(const Value& l_oV) { return l_oV.m_mapD; }
+    static Value f_To(const toms::anim::Deform& l_mapX) { Value l_oV; l_oV.m_mapD = l_mapX; return l_oV; }
 };
 
-template <class T> int findKey(const std::vector<Key<T>>& keys, float t) {
-    for (size_t i = 0; i < keys.size(); i++)
-        if (sameTime(keys[i].t, t)) return (int)i;
+template <class T> int f_FindKey(const std::vector<Key<T>>& l_vKeys, float l_fT) {
+    for (size_t l_nI = 0; l_nI < l_vKeys.size(); l_nI++)
+        if (f_SameTime(l_vKeys[l_nI].m_fT, l_fT)) return (int)l_nI;
     return -1;
 }
 
-template <class T> void sortKeys(std::vector<Key<T>>& keys) {
-    std::stable_sort(keys.begin(), keys.end(), [](const Key<T>& a, const Key<T>& b) { return a.t < b.t; });
+template <class T> void f_SortKeys(std::vector<Key<T>>& l_vKeys) {
+    std::stable_sort(l_vKeys.begin(), l_vKeys.end(), [](const Key<T>& l_oA, const Key<T>& l_oB) { return l_oA.m_fT < l_oB.m_fT; });
 }
 
-std::string num(float f) {
-    char buf[32];
-    std::snprintf(buf, sizeof buf, "%.3f", f);
-    std::string s = buf;
-    while (!s.empty() && s.back() == '0') s.pop_back();
-    if (!s.empty() && s.back() == '.') s.pop_back();
-    if (s == "-0") s = "0";
-    return s;
+std::string f_Num(float l_fF) {
+    char l_pszBuf[32];
+    std::snprintf(l_pszBuf, sizeof l_pszBuf, "%.3f", l_fF);
+    std::string l_strS = l_pszBuf;
+    while (!l_strS.empty() && l_strS.back() == '0') l_strS.pop_back();
+    if (!l_strS.empty() && l_strS.back() == '.') l_strS.pop_back();
+    if (l_strS == "-0") l_strS = "0";
+    return l_strS;
 }
 
-std::string trim(const std::string& s) {
-    size_t a = 0, b = s.size();
-    while (a < b && std::isspace((unsigned char)s[a])) a++;
-    while (b > a && std::isspace((unsigned char)s[b - 1])) b--;
-    return s.substr(a, b - a);
+std::string f_Trim(const std::string& l_strS) {
+    size_t l_nA = 0, l_nB = l_strS.size();
+    while (l_nA < l_nB && std::isspace((unsigned char)l_strS[l_nA])) l_nA++;
+    while (l_nB > l_nA && std::isspace((unsigned char)l_strS[l_nB - 1])) l_nB--;
+    return l_strS.substr(l_nA, l_nB - l_nA);
 }
 
 // "1, 2" / "1 2" / "(1; 2)" -> numbers.
-bool parseNumbers(const std::string& text, std::vector<float>& out) {
-    std::string t;
-    for (char ch : text) t += (ch == ',' || ch == ';' || ch == '(' || ch == ')' || ch == '[' || ch == ']') ? ' ' : ch;
-    std::istringstream in(t);
-    std::string tok;
-    out.clear();
-    while (in >> tok) {
-        char* end = nullptr;
-        const float f = std::strtof(tok.c_str(), &end);
-        if (!end || *end != '\0' || !std::isfinite(f)) return false;
-        out.push_back(f);
+bool f_ParseNumbers(const std::string& l_strText, std::vector<float>& l_vOut) {
+    std::string l_strT;
+    for (char l_cCh : l_strText) l_strT += (l_cCh == ',' || l_cCh == ';' || l_cCh == '(' || l_cCh == ')' || l_cCh == '[' || l_cCh == ']') ? ' ' : l_cCh;
+    std::istringstream l_oIn(l_strT);
+    std::string l_strTok;
+    l_vOut.clear();
+    while (l_oIn >> l_strTok) {
+        char* l_pszEnd = nullptr;
+        const float l_fF = std::strtof(l_strTok.c_str(), &l_pszEnd);
+        if (!l_pszEnd || *l_pszEnd != '\0' || !std::isfinite(l_fF)) return false;
+        l_vOut.push_back(l_fF);
     }
     return true;
 }
 
 }  // namespace
 
-bool isInterpolated(Channel c) {
-    return c == Channel::Pos || c == Channel::Rot || c == Channel::Scale || c == Channel::Color || c == Channel::Deform ||
-           c == Channel::Fx || c == Channel::Trail;
+bool f_IsInterpolated(Channel l_eC) {
+    return l_eC == Channel::Pos || l_eC == Channel::Rot || l_eC == Channel::Scale || l_eC == Channel::Color || l_eC == Channel::Deform ||
+           l_eC == Channel::Fx || l_eC == Channel::Trail;
 }
 
-const char* channelName(Channel c) {
-    switch (c) {
+const char* f_ChannelName(Channel l_eC) {
+    switch (l_eC) {
     case Channel::Pos: return "pos";
     case Channel::Rot: return "rot";
     case Channel::Scale: return "scale";
@@ -126,465 +126,465 @@ const char* channelName(Channel c) {
     return "event";
 }
 
-int keyCount(const Node& n, Channel c) {
-    return visit(n, c, [](const auto& keys) { return (int)keys.size(); });
+int f_KeyCount(const Node& l_oN, Channel l_eC) {
+    return f_Visit(l_oN, l_eC, [](const auto& l_oKeys) { return (int)l_oKeys.size(); });
 }
 
-std::vector<float> keyTimes(const Node& n, Channel c) {
-    return visit(n, c, [](const auto& keys) {
-        std::vector<float> out;
-        for (const auto& k : keys) out.push_back(k.t);
-        return out;
+std::vector<float> f_KeyTimes(const Node& l_oN, Channel l_eC) {
+    return f_Visit(l_oN, l_eC, [](const auto& l_oKeys) {
+        std::vector<float> l_vOut;
+        for (const auto& l_oK : l_oKeys) l_vOut.push_back(l_oK.m_fT);
+        return l_vOut;
     });
 }
 
-std::vector<float> unionKeyTimes(const Node& n) {
-    std::vector<float> all;
-    for (Channel c : kAllChannels) {
-        const std::vector<float> t = keyTimes(n, c);
-        all.insert(all.end(), t.begin(), t.end());
+std::vector<float> f_UnionKeyTimes(const Node& l_oN) {
+    std::vector<float> l_vAll;
+    for (Channel l_eC : g_arrAllChannels) {
+        const std::vector<float> l_vT = f_KeyTimes(l_oN, l_eC);
+        l_vAll.insert(l_vAll.end(), l_vT.begin(), l_vT.end());
     }
-    std::sort(all.begin(), all.end());
-    std::vector<float> out;
-    for (float t : all)
-        if (out.empty() || !sameTime(out.back(), t)) out.push_back(t);
-    return out;
+    std::sort(l_vAll.begin(), l_vAll.end());
+    std::vector<float> l_vOut;
+    for (float l_fT : l_vAll)
+        if (l_vOut.empty() || !f_SameTime(l_vOut.back(), l_fT)) l_vOut.push_back(l_fT);
+    return l_vOut;
 }
 
-bool hasKeyAt(const Node& n, Channel c, float t) {
-    return visit(n, c, [t](const auto& keys) { return findKey(keys, t) >= 0; });
+bool f_HasKeyAt(const Node& l_oN, Channel l_eC, float l_fT) {
+    return f_Visit(l_oN, l_eC, [l_fT](const auto& l_oKeys) { return f_FindKey(l_oKeys, l_fT) >= 0; });
 }
 
-bool keyAt(const Node& n, Channel c, float t, Value& out) {
-    return visit(n, c, [&](const auto& keys) {
-        using T = decltype(keys.front().v);
-        const int i = findKey(keys, t);
-        if (i < 0) return false;
-        out = Conv<std::decay_t<T>>::to(keys[(size_t)i].v);
+bool f_KeyAt(const Node& l_oN, Channel l_eC, float l_fT, Value& l_oOut) {
+    return f_Visit(l_oN, l_eC, [&](const auto& l_oKeys) {
+        using T = decltype(l_oKeys.front().m_oV);
+        const int l_iI = f_FindKey(l_oKeys, l_fT);
+        if (l_iI < 0) return false;
+        l_oOut = Conv<std::decay_t<T>>::f_To(l_oKeys[(size_t)l_iI].m_oV);
         return true;
     });
 }
 
-Value restValue(const Node& n, Channel c) {
-    switch (c) {
-    case Channel::Pos: return Conv<glm::vec3>::to(n.pos);
-    case Channel::Rot: return Conv<glm::vec3>::to(n.rot);
-    case Channel::Scale: return Conv<glm::vec3>::to(n.scale);
-    case Channel::Color: return Conv<glm::vec4>::to(n.color);
-    case Channel::Sprite: return Conv<std::string>::to(n.sprite);
-    case Channel::Visible: return Conv<bool>::to(n.visible);
-    case Channel::Fx: return Conv<glm::vec4>::to(n.fx.params);
-    case Channel::Trail: return Conv<float>::to(1.0f);   // no keys: full strength
+Value f_RestValue(const Node& l_oN, Channel l_eC) {
+    switch (l_eC) {
+    case Channel::Pos: return Conv<glm::vec3>::f_To(l_oN.m_v3Pos);
+    case Channel::Rot: return Conv<glm::vec3>::f_To(l_oN.m_v3Rot);
+    case Channel::Scale: return Conv<glm::vec3>::f_To(l_oN.m_v3Scale);
+    case Channel::Color: return Conv<glm::vec4>::f_To(l_oN.m_v4Color);
+    case Channel::Sprite: return Conv<std::string>::f_To(l_oN.m_strSprite);
+    case Channel::Visible: return Conv<bool>::f_To(l_oN.m_bVisible);
+    case Channel::Fx: return Conv<glm::vec4>::f_To(l_oN.m_oFx.m_v4Params);
+    case Channel::Trail: return Conv<float>::f_To(1.0f);   // no keys: full strength
     case Channel::Deform:   // no rest: the lattice's points sit on the image
     case Channel::Event: break;
     }
     return Value();
 }
 
-Value valueAt(const Node& n, Channel c, float t) {
+Value f_ValueAt(const Node& l_oN, Channel l_eC, float l_fT) {
     using namespace toms::anim;
-    switch (c) {
-    case Channel::Pos: return Conv<glm::vec3>::to(positionAt(n, t));
-    case Channel::Rot: return Conv<glm::vec3>::to(rotationAt(n, t));
-    case Channel::Scale: return Conv<glm::vec3>::to(scaleAt(n, t));
+    switch (l_eC) {
+    case Channel::Pos: return Conv<glm::vec3>::f_To(f_PositionAt(l_oN, l_fT));
+    case Channel::Rot: return Conv<glm::vec3>::f_To(f_RotationAt(l_oN, l_fT));
+    case Channel::Scale: return Conv<glm::vec3>::f_To(f_ScaleAt(l_oN, l_fT));
     case Channel::Color: {
         // Unclamped would be the raw track; the runtime clamps, and so does what the user sees.
-        return Conv<glm::vec4>::to(colorAt(n, t));
+        return Conv<glm::vec4>::f_To(f_ColorAt(l_oN, l_fT));
     }
-    case Channel::Sprite: return Conv<std::string>::to(spriteAt(n, t));
-    case Channel::Visible: return Conv<bool>::to(visibleAt(n, t));
-    case Channel::Fx: return Conv<glm::vec4>::to(fxParamsAt(n, t));
-    case Channel::Trail: return Conv<float>::to(trailAt(n, t));
+    case Channel::Sprite: return Conv<std::string>::f_To(f_SpriteAt(l_oN, l_fT));
+    case Channel::Visible: return Conv<bool>::f_To(f_VisibleAt(l_oN, l_fT));
+    case Channel::Fx: return Conv<glm::vec4>::f_To(f_FxParamsAt(l_oN, l_fT));
+    case Channel::Trail: return Conv<float>::f_To(f_TrailAt(l_oN, l_fT));
     case Channel::Deform: {   // the points that are off their place at t
-        Value v;
-        const std::vector<glm::vec2> all = deformAt(n, t);
-        for (size_t i = 0; i < all.size(); i++)
-            if (all[i] != glm::vec2(0.0f)) v.d[(int)i] = all[i];
-        return v;
+        Value l_oV;
+        const std::vector<glm::vec2> l_vAll = f_DeformAt(l_oN, l_fT);
+        for (size_t l_nI = 0; l_nI < l_vAll.size(); l_nI++)
+            if (l_vAll[l_nI] != glm::vec2(0.0f)) l_oV.m_mapD[(int)l_nI] = l_vAll[l_nI];
+        return l_oV;
     }
     case Channel::Event: break;
     }
-    Value v;
-    keyAt(n, c, t, v);
-    return v;
+    Value l_oV;
+    f_KeyAt(l_oN, l_eC, l_fT, l_oV);
+    return l_oV;
 }
 
-bool easeAt(const Node& n, Channel c, float t, Ease& out) {
-    if (!isInterpolated(c)) return false;
-    return visit(n, c, [&](const auto& keys) {
-        const int i = findKey(keys, t);
-        if (i < 0) return false;
-        out = keys[(size_t)i].ease;
+bool f_EaseAt(const Node& l_oN, Channel l_eC, float l_fT, Ease& l_oOut) {
+    if (!f_IsInterpolated(l_eC)) return false;
+    return f_Visit(l_oN, l_eC, [&](const auto& l_oKeys) {
+        const int l_iI = f_FindKey(l_oKeys, l_fT);
+        if (l_iI < 0) return false;
+        l_oOut = l_oKeys[(size_t)l_iI].m_oEase;
         return true;
     });
 }
 
-bool easeAtOrBefore(const Node& n, Channel c, float t, Ease& out, float* keyTime) {
-    if (!isInterpolated(c)) return false;
-    return visit(n, c, [&](const auto& keys) {
-        int best = -1;
-        for (size_t i = 0; i < keys.size(); i++)
-            if (keys[i].t <= t + kTimeEps) best = (int)i;
-        if (best < 0) return false;
-        out = keys[(size_t)best].ease;
-        if (keyTime) *keyTime = keys[(size_t)best].t;
+bool f_EaseAtOrBefore(const Node& l_oN, Channel l_eC, float l_fT, Ease& l_oOut, float* l_pKeyTime) {
+    if (!f_IsInterpolated(l_eC)) return false;
+    return f_Visit(l_oN, l_eC, [&](const auto& l_oKeys) {
+        int l_iBest = -1;
+        for (size_t l_nI = 0; l_nI < l_oKeys.size(); l_nI++)
+            if (l_oKeys[l_nI].m_fT <= l_fT + g_fTimeEps) l_iBest = (int)l_nI;
+        if (l_iBest < 0) return false;
+        l_oOut = l_oKeys[(size_t)l_iBest].m_oEase;
+        if (l_pKeyTime) *l_pKeyTime = l_oKeys[(size_t)l_iBest].m_fT;
         return true;
     });
 }
 
-int overlappingKeys(const Node& n, Channel c) {
-    return visit(n, c, [](const auto& keys) {
-        int count = 0;
-        for (size_t i = 1; i < keys.size(); i++)
-            if (sameTime(keys[i - 1].t, keys[i].t)) count++;
-        return count;
+int f_OverlappingKeys(const Node& l_oN, Channel l_eC) {
+    return f_Visit(l_oN, l_eC, [](const auto& l_oKeys) {
+        int l_iCount = 0;
+        for (size_t l_nI = 1; l_nI < l_oKeys.size(); l_nI++)
+            if (f_SameTime(l_oKeys[l_nI - 1].m_fT, l_oKeys[l_nI].m_fT)) l_iCount++;
+        return l_iCount;
     });
 }
 
-void setKey(Node& n, Channel c, float t, const Value& v) {
-    visit(n, c, [&](auto& keys) {
-        using T = std::decay_t<decltype(keys.front().v)>;
-        const int i = findKey(keys, t);
-        if (i >= 0) {
-            keys[(size_t)i].v = Conv<T>::from(v);
+void f_SetKey(Node& l_oN, Channel l_eC, float l_fT, const Value& l_oV) {
+    f_Visit(l_oN, l_eC, [&](auto& l_oKeys) {
+        using T = std::decay_t<decltype(l_oKeys.front().m_oV)>;
+        const int l_iI = f_FindKey(l_oKeys, l_fT);
+        if (l_iI >= 0) {
+            l_oKeys[(size_t)l_iI].m_oV = Conv<T>::f_From(l_oV);
             return 0;
         }
-        Key<T> k;
-        k.t = std::max(0.0f, t);
-        k.v = Conv<T>::from(v);
+        Key<T> l_oK;
+        l_oK.m_fT = std::max(0.0f, l_fT);
+        l_oK.m_oV = Conv<T>::f_From(l_oV);
         // A key dropped inside a segment keeps that segment's easing on both halves.
-        for (const auto& other : keys)
-            if (other.t < t) k.ease = other.ease;
-        keys.push_back(k);
-        sortKeys(keys);
+        for (const auto& l_oOther : l_oKeys)
+            if (l_oOther.m_fT < l_fT) l_oK.m_oEase = l_oOther.m_oEase;
+        l_oKeys.push_back(l_oK);
+        f_SortKeys(l_oKeys);
         return 0;
     });
 }
 
-bool removeKey(Node& n, Channel c, float t) {
-    return visit(n, c, [&](auto& keys) {
-        const int i = findKey(keys, t);
-        if (i < 0) return false;
-        keys.erase(keys.begin() + i);
+bool f_RemoveKey(Node& l_oN, Channel l_eC, float l_fT) {
+    return f_Visit(l_oN, l_eC, [&](auto& l_oKeys) {
+        const int l_iI = f_FindKey(l_oKeys, l_fT);
+        if (l_iI < 0) return false;
+        l_oKeys.erase(l_oKeys.begin() + l_iI);
         return true;
     });
 }
 
-void setRest(Node& n, Channel c, const Value& v) {
-    switch (c) {
-    case Channel::Pos: n.pos = Conv<glm::vec3>::from(v); break;
-    case Channel::Rot: n.rot = Conv<glm::vec3>::from(v); break;
-    case Channel::Scale: n.scale = Conv<glm::vec3>::from(v); break;
-    case Channel::Color: n.color = v.v; break;
-    case Channel::Sprite: n.sprite = v.s; break;
-    case Channel::Visible: n.visible = v.b; break;
-    case Channel::Fx: n.fx.params = v.v; break;
+void f_SetRest(Node& l_oN, Channel l_eC, const Value& l_oV) {
+    switch (l_eC) {
+    case Channel::Pos: l_oN.m_v3Pos = Conv<glm::vec3>::f_From(l_oV); break;
+    case Channel::Rot: l_oN.m_v3Rot = Conv<glm::vec3>::f_From(l_oV); break;
+    case Channel::Scale: l_oN.m_v3Scale = Conv<glm::vec3>::f_From(l_oV); break;
+    case Channel::Color: l_oN.m_v4Color = l_oV.m_v4V; break;
+    case Channel::Sprite: l_oN.m_strSprite = l_oV.m_strS; break;
+    case Channel::Visible: l_oN.m_bVisible = l_oV.m_bB; break;
+    case Channel::Fx: l_oN.m_oFx.m_v4Params = l_oV.m_v4V; break;
     case Channel::Trail:    // keys only (no keys = 1)
     case Channel::Deform:   // keys only
     case Channel::Event: break;
     }
 }
 
-bool setEase(Node& n, Channel c, float t, const Ease& e) {
-    if (!isInterpolated(c)) return false;
-    return visit(n, c, [&](auto& keys) {
-        const int i = findKey(keys, t);
-        if (i < 0) return false;
-        keys[(size_t)i].ease = e;
+bool f_SetEase(Node& l_oN, Channel l_eC, float l_fT, const Ease& l_oE) {
+    if (!f_IsInterpolated(l_eC)) return false;
+    return f_Visit(l_oN, l_eC, [&](auto& l_oKeys) {
+        const int l_iI = f_FindKey(l_oKeys, l_fT);
+        if (l_iI < 0) return false;
+        l_oKeys[(size_t)l_iI].m_oEase = l_oE;
         return true;
     });
 }
 
-bool moveKeyTimes(Node& n, const std::vector<float>& from, const std::vector<float>& to, std::string* conflict) {
-    if (from.size() != to.size()) return false;
-    for (float t : to)
-        if (t < -kTimeEps) {
-            if (conflict) *conflict = "time " + num(t) + " is negative";
+bool f_MoveKeyTimes(Node& l_oN, const std::vector<float>& l_vFrom, const std::vector<float>& l_vTo, std::string* l_pConflict) {
+    if (l_vFrom.size() != l_vTo.size()) return false;
+    for (float l_fT : l_vTo)
+        if (l_fT < -g_fTimeEps) {
+            if (l_pConflict) *l_pConflict = "time " + f_Num(l_fT) + " is negative";
             return false;
         }
-    Node work = n;
-    for (Channel c : kAllChannels) {
-        const bool ok = visit(work, c, [&](auto& keys) {
-            std::vector<bool> moved(keys.size(), false);
-            for (size_t r = 0; r < from.size(); r++) {
-                const int i = findKey(keys, from[r]);
-                if (i >= 0 && !moved[(size_t)i]) {
-                    keys[(size_t)i].t = std::max(0.0f, to[r]);
-                    moved[(size_t)i] = true;
+    Node l_oWork = l_oN;
+    for (Channel l_eC : g_arrAllChannels) {
+        const bool l_bOk = f_Visit(l_oWork, l_eC, [&](auto& l_oKeys) {
+            std::vector<bool> l_vMoved(l_oKeys.size(), false);
+            for (size_t l_nR = 0; l_nR < l_vFrom.size(); l_nR++) {
+                const int l_iI = f_FindKey(l_oKeys, l_vFrom[l_nR]);
+                if (l_iI >= 0 && !l_vMoved[(size_t)l_iI]) {
+                    l_oKeys[(size_t)l_iI].m_fT = std::max(0.0f, l_vTo[l_nR]);
+                    l_vMoved[(size_t)l_iI] = true;
                 }
             }
-            for (size_t i = 0; i < keys.size(); i++)
-                for (size_t j = i + 1; j < keys.size(); j++)
-                    if ((moved[i] || moved[j]) && sameTime(keys[i].t, keys[j].t)) {
-                        if (conflict) *conflict = std::string(channelName(c)) + " already has a key at " + num(keys[i].t);
+            for (size_t l_nI = 0; l_nI < l_oKeys.size(); l_nI++)
+                for (size_t l_nJ = l_nI + 1; l_nJ < l_oKeys.size(); l_nJ++)
+                    if ((l_vMoved[l_nI] || l_vMoved[l_nJ]) && f_SameTime(l_oKeys[l_nI].m_fT, l_oKeys[l_nJ].m_fT)) {
+                        if (l_pConflict) *l_pConflict = std::string(f_ChannelName(l_eC)) + " already has a key at " + f_Num(l_oKeys[l_nI].m_fT);
                         return false;
                     }
-            sortKeys(keys);
+            f_SortKeys(l_oKeys);
             return true;
         });
-        if (!ok) return false;
+        if (!l_bOk) return false;
     }
-    n = std::move(work);
+    l_oN = std::move(l_oWork);
     return true;
 }
 
-void scaleKeyTimes(Node& n, float factor, bool recursive) {
-    for (Channel c : kAllChannels)
-        visit(n, c, [&](auto& keys) {
-            for (auto& k : keys) k.t *= factor;
-            sortKeys(keys);
+void f_ScaleKeyTimes(Node& l_oN, float l_fFactor, bool l_bRecursive) {
+    for (Channel l_eC : g_arrAllChannels)
+        f_Visit(l_oN, l_eC, [&](auto& l_oKeys) {
+            for (auto& l_oK : l_oKeys) l_oK.m_fT *= l_fFactor;
+            f_SortKeys(l_oKeys);
             return 0;
         });
-    if (recursive)
-        for (Node& ch : n.children) scaleKeyTimes(ch, factor, true);
+    if (l_bRecursive)
+        for (Node& l_oCh : l_oN.m_vChildren) f_ScaleKeyTimes(l_oCh, l_fFactor, true);
 }
 
-std::string formatValue(Channel c, const Value& v) {
-    switch (c) {
+std::string f_FormatValue(Channel l_eC, const Value& l_oV) {
+    switch (l_eC) {
     case Channel::Pos:
     case Channel::Rot:
-    case Channel::Scale: return num(v.v.x) + ", " + num(v.v.y) + ", " + num(v.v.z);
+    case Channel::Scale: return f_Num(l_oV.m_v4V.x) + ", " + f_Num(l_oV.m_v4V.y) + ", " + f_Num(l_oV.m_v4V.z);
     case Channel::Color:
-    case Channel::Fx: return num(v.v.x) + ", " + num(v.v.y) + ", " + num(v.v.z) + ", " + num(v.v.w);
-    case Channel::Trail: return num(v.v.x);
-    case Channel::Sprite: return v.s.empty() ? std::string("(none)") : v.s;
-    case Channel::Visible: return v.b ? "true" : "false";
+    case Channel::Fx: return f_Num(l_oV.m_v4V.x) + ", " + f_Num(l_oV.m_v4V.y) + ", " + f_Num(l_oV.m_v4V.z) + ", " + f_Num(l_oV.m_v4V.w);
+    case Channel::Trail: return f_Num(l_oV.m_v4V.x);
+    case Channel::Sprite: return l_oV.m_strS.empty() ? std::string("(none)") : l_oV.m_strS;
+    case Channel::Visible: return l_oV.m_bB ? "true" : "false";
     case Channel::Deform: {   // "5: 0, -2; 6: 0, -2"
-        if (v.d.empty()) return "(none)";
-        std::string s;
-        for (const auto& [i, off] : v.d) s += (s.empty() ? "" : "; ") + std::to_string(i) + ": " + num(off.x) + ", " + num(off.y);
-        return s;
+        if (l_oV.m_mapD.empty()) return "(none)";
+        std::string l_strS;
+        for (const auto& [l_iI, l_v2Off] : l_oV.m_mapD) l_strS += (l_strS.empty() ? "" : "; ") + std::to_string(l_iI) + ": " + f_Num(l_v2Off.x) + ", " + f_Num(l_v2Off.y);
+        return l_strS;
     }
     case Channel::Event: break;
     }
-    return v.s;
+    return l_oV.m_strS;
 }
 
-bool parseValue(Channel c, const std::string& text, Value& out, std::string* err) {
-    const std::string t = trim(text);
-    out = Value();
-    std::vector<float> f;
-    auto fail = [&](const std::string& m) {
-        if (err) *err = m;
+bool f_ParseValue(Channel l_eC, const std::string& l_strText, Value& l_oOut, std::string* l_pErr) {
+    const std::string l_strT = f_Trim(l_strText);
+    l_oOut = Value();
+    std::vector<float> l_vF;
+    auto l_fnFail = [&](const std::string& l_strM) {
+        if (l_pErr) *l_pErr = l_strM;
         return false;
     };
-    switch (c) {
+    switch (l_eC) {
     case Channel::Pos:
-        if (!parseNumbers(t, f) || (f.size() != 2 && f.size() != 3)) return fail("expected x, y[, z]");
-        out.v = {f[0], f[1], f.size() == 3 ? f[2] : 0.0f, 0};
+        if (!f_ParseNumbers(l_strT, l_vF) || (l_vF.size() != 2 && l_vF.size() != 3)) return l_fnFail("expected x, y[, z]");
+        l_oOut.m_v4V = {l_vF[0], l_vF[1], l_vF.size() == 3 ? l_vF[2] : 0.0f, 0};
         return true;
     case Channel::Scale:
-        if (!parseNumbers(t, f) || f.empty() || f.size() > 3) return fail("expected x, y[, z] (one number = uniform)");
-        if (f.size() == 1) out.v = {f[0], f[0], f[0], 0};   // uniform
-        else out.v = {f[0], f[1], f.size() == 3 ? f[2] : 1.0f, 0};
+        if (!f_ParseNumbers(l_strT, l_vF) || l_vF.empty() || l_vF.size() > 3) return l_fnFail("expected x, y[, z] (one number = uniform)");
+        if (l_vF.size() == 1) l_oOut.m_v4V = {l_vF[0], l_vF[0], l_vF[0], 0};   // uniform
+        else l_oOut.m_v4V = {l_vF[0], l_vF[1], l_vF.size() == 3 ? l_vF[2] : 1.0f, 0};
         return true;
     case Channel::Rot:
-        if (!parseNumbers(t, f) || (f.size() != 1 && f.size() != 3)) return fail("expected x, y, z degrees (one number = z)");
-        if (f.size() == 1) out.v = {0, 0, f[0], 0};   // the screen-plane turn
-        else out.v = {f[0], f[1], f[2], 0};
+        if (!f_ParseNumbers(l_strT, l_vF) || (l_vF.size() != 1 && l_vF.size() != 3)) return l_fnFail("expected x, y, z degrees (one number = z)");
+        if (l_vF.size() == 1) l_oOut.m_v4V = {0, 0, l_vF[0], 0};   // the screen-plane turn
+        else l_oOut.m_v4V = {l_vF[0], l_vF[1], l_vF[2], 0};
         return true;
     case Channel::Color:
-        if (!parseNumbers(t, f) || (f.size() != 3 && f.size() != 4)) return fail("expected r, g, b[, a] (0..1)");
-        out.v = {f[0], f[1], f[2], f.size() == 4 ? f[3] : 1.0f};
+        if (!f_ParseNumbers(l_strT, l_vF) || (l_vF.size() != 3 && l_vF.size() != 4)) return l_fnFail("expected r, g, b[, a] (0..1)");
+        l_oOut.m_v4V = {l_vF[0], l_vF[1], l_vF[2], l_vF.size() == 4 ? l_vF[3] : 1.0f};
         return true;
     case Channel::Fx:
-        if (!parseNumbers(t, f) || f.empty() || f.size() > 4) return fail("expected up to four numbers (the effect's params)");
-        f.resize(4, 0.0f);
-        out.v = {f[0], f[1], f[2], f[3]};
+        if (!f_ParseNumbers(l_strT, l_vF) || l_vF.empty() || l_vF.size() > 4) return l_fnFail("expected up to four numbers (the effect's params)");
+        l_vF.resize(4, 0.0f);
+        l_oOut.m_v4V = {l_vF[0], l_vF[1], l_vF[2], l_vF[3]};
         return true;
     case Channel::Trail:
-        if (!parseNumbers(t, f) || f.size() != 1) return fail("expected one number, 0..1 (the afterimages' strength)");
-        out.v = {std::clamp(f[0], 0.0f, 1.0f), 0, 0, 0};
+        if (!f_ParseNumbers(l_strT, l_vF) || l_vF.size() != 1) return l_fnFail("expected one number, 0..1 (the afterimages' strength)");
+        l_oOut.m_v4V = {std::clamp(l_vF[0], 0.0f, 1.0f), 0, 0, 0};
         return true;
     case Channel::Sprite:
-        out.s = t == "(none)" ? std::string() : t;
+        l_oOut.m_strS = l_strT == "(none)" ? std::string() : l_strT;
         return true;
     case Channel::Visible:
-        if (t == "true" || t == "1" || t == "yes" || t == "on") out.b = true;
-        else if (t == "false" || t == "0" || t == "no" || t == "off") out.b = false;
-        else return fail("expected true or false");
+        if (l_strT == "true" || l_strT == "1" || l_strT == "yes" || l_strT == "on") l_oOut.m_bB = true;
+        else if (l_strT == "false" || l_strT == "0" || l_strT == "no" || l_strT == "off") l_oOut.m_bB = false;
+        else return l_fnFail("expected true or false");
         return true;
     case Channel::Deform: {   // "point: dx, dy; ..." ; "(none)" or nothing = every point in place
-        if (t.empty() || t == "(none)") return true;
-        std::istringstream parts(t);
-        std::string part;
-        while (std::getline(parts, part, ';')) {
-            part = trim(part);
-            if (part.empty()) continue;
-            const size_t colon = part.find(':');
-            char* end = nullptr;
-            const long i = colon == std::string::npos ? -1 : std::strtol(part.c_str(), &end, 10);
-            if (colon == std::string::npos || !end || trim(std::string(static_cast<const char*>(end), part.c_str() + colon)).size() || i < 0 ||
-                !parseNumbers(part.substr(colon + 1), f) || f.size() != 2)
-                return fail("expected point: dx, dy; ... (e.g. 5: 0, -2; 6: 0, -2)");
-            out.d[(int)i] = {f[0], f[1]};
+        if (l_strT.empty() || l_strT == "(none)") return true;
+        std::istringstream l_oParts(l_strT);
+        std::string l_strPart;
+        while (std::getline(l_oParts, l_strPart, ';')) {
+            l_strPart = f_Trim(l_strPart);
+            if (l_strPart.empty()) continue;
+            const size_t l_nColon = l_strPart.find(':');
+            char* l_pszEnd = nullptr;
+            const long l_iI = l_nColon == std::string::npos ? -1 : std::strtol(l_strPart.c_str(), &l_pszEnd, 10);
+            if (l_nColon == std::string::npos || !l_pszEnd || f_Trim(std::string(static_cast<const char*>(l_pszEnd), l_strPart.c_str() + l_nColon)).size() || l_iI < 0 ||
+                !f_ParseNumbers(l_strPart.substr(l_nColon + 1), l_vF) || l_vF.size() != 2)
+                return l_fnFail("expected point: dx, dy; ... (e.g. 5: 0, -2; 6: 0, -2)");
+            l_oOut.m_mapD[(int)l_iI] = {l_vF[0], l_vF[1]};
         }
         return true;
     }
     case Channel::Event: break;
     }
-    if (t.empty()) return fail("an event needs a name");
-    out.s = t;
+    if (l_strT.empty()) return l_fnFail("an event needs a name");
+    l_oOut.m_strS = l_strT;
     return true;
 }
 
-std::string formatEase(const Ease& e) {
-    if (e.kind == Ease::kBezier)
-        return "bezier(" + num(e.bezier[0]) + ", " + num(e.bezier[1]) + ", " + num(e.bezier[2]) + ", " + num(e.bezier[3]) + ")";
-    return toms::anim::easeName(e);
+std::string f_FormatEase(const Ease& l_oE) {
+    if (l_oE.m_iKind == Ease::m_iBezier)
+        return "bezier(" + f_Num(l_oE.m_arrBezier[0]) + ", " + f_Num(l_oE.m_arrBezier[1]) + ", " + f_Num(l_oE.m_arrBezier[2]) + ", " + f_Num(l_oE.m_arrBezier[3]) + ")";
+    return toms::anim::f_EaseName(l_oE);
 }
 
-bool parseEaseText(const std::string& text, Ease& out) {
-    const std::string t = trim(text);
-    if (toms::anim::parseEase(t, out)) return true;
-    std::string body = t;
-    if (body.rfind("bezier", 0) == 0) body = body.substr(6);
-    std::vector<float> f;
-    if (parseNumbers(body, f) && f.size() == 4) {
-        out.kind = Ease::kBezier;
-        for (int i = 0; i < 4; i++) out.bezier[i] = f[(size_t)i];
-        out.bezier[0] = std::min(1.0f, std::max(0.0f, out.bezier[0]));   // x must stay in 0..1
-        out.bezier[2] = std::min(1.0f, std::max(0.0f, out.bezier[2]));
+bool f_ParseEaseText(const std::string& l_strText, Ease& l_oOut) {
+    const std::string l_strT = f_Trim(l_strText);
+    if (toms::anim::f_ParseEase(l_strT, l_oOut)) return true;
+    std::string l_strBody = l_strT;
+    if (l_strBody.rfind("bezier", 0) == 0) l_strBody = l_strBody.substr(6);
+    std::vector<float> l_vF;
+    if (f_ParseNumbers(l_strBody, l_vF) && l_vF.size() == 4) {
+        l_oOut.m_iKind = Ease::m_iBezier;
+        for (int l_iI = 0; l_iI < 4; l_iI++) l_oOut.m_arrBezier[l_iI] = l_vF[(size_t)l_iI];
+        l_oOut.m_arrBezier[0] = std::min(1.0f, std::max(0.0f, l_oOut.m_arrBezier[0]));   // x must stay in 0..1
+        l_oOut.m_arrBezier[2] = std::min(1.0f, std::max(0.0f, l_oOut.m_arrBezier[2]));
         return true;
     }
     return false;
 }
 
-const Node* nodeAt(const Node& root, const std::vector<int>& path) {
-    const Node* n = &root;
-    for (int i : path) {
-        if (i < 0 || i >= (int)n->children.size()) return nullptr;
-        n = &n->children[(size_t)i];
+const Node* f_NodeAt(const Node& l_oRoot, const std::vector<int>& l_vPath) {
+    const Node* l_pN = &l_oRoot;
+    for (int l_iI : l_vPath) {
+        if (l_iI < 0 || l_iI >= (int)l_pN->m_vChildren.size()) return nullptr;
+        l_pN = &l_pN->m_vChildren[(size_t)l_iI];
     }
-    return n;
+    return l_pN;
 }
 
-Node* nodeAt(Node& root, const std::vector<int>& path) {
-    return const_cast<Node*>(nodeAt(static_cast<const Node&>(root), path));
+Node* f_NodeAt(Node& l_oRoot, const std::vector<int>& l_vPath) {
+    return const_cast<Node*>(f_NodeAt(static_cast<const Node&>(l_oRoot), l_vPath));
 }
 
-bool findPath(const Node& root, const Node* target, std::vector<int>& path) {
-    if (&root == target) return true;
-    for (size_t i = 0; i < root.children.size(); i++) {
-        path.push_back((int)i);
-        if (findPath(root.children[i], target, path)) return true;
-        path.pop_back();
+bool f_FindPath(const Node& l_oRoot, const Node* l_pTarget, std::vector<int>& l_vPath) {
+    if (&l_oRoot == l_pTarget) return true;
+    for (size_t l_nI = 0; l_nI < l_oRoot.m_vChildren.size(); l_nI++) {
+        l_vPath.push_back((int)l_nI);
+        if (f_FindPath(l_oRoot.m_vChildren[l_nI], l_pTarget, l_vPath)) return true;
+        l_vPath.pop_back();
     }
     return false;
 }
 
-void collectNames(const Node& root, std::vector<std::string>& out) {
-    out.push_back(root.name);
-    for (const Node& c : root.children) collectNames(c, out);
+void f_CollectNames(const Node& l_oRoot, std::vector<std::string>& l_vOut) {
+    l_vOut.push_back(l_oRoot.m_strName);
+    for (const Node& l_oC : l_oRoot.m_vChildren) f_CollectNames(l_oC, l_vOut);
 }
 
-std::string uniqueNodeName(const Node& root, const std::string& base) {
-    std::vector<std::string> names;
-    collectNames(root, names);
-    const std::set<std::string> taken(names.begin(), names.end());
-    const std::string b = base.empty() ? std::string("node") : base;
-    if (!taken.count(b)) return b;
-    for (int i = 2;; i++) {
-        const std::string s = b + "_" + std::to_string(i);
-        if (!taken.count(s)) return s;
+std::string f_UniqueNodeName(const Node& l_oRoot, const std::string& l_strBase) {
+    std::vector<std::string> l_vNames;
+    f_CollectNames(l_oRoot, l_vNames);
+    const std::set<std::string> l_setTaken(l_vNames.begin(), l_vNames.end());
+    const std::string l_strB = l_strBase.empty() ? std::string("node") : l_strBase;
+    if (!l_setTaken.count(l_strB)) return l_strB;
+    for (int l_iI = 2;; l_iI++) {
+        const std::string l_strS = l_strB + "_" + std::to_string(l_iI);
+        if (!l_setTaken.count(l_strS)) return l_strS;
     }
 }
 
-std::string nodeClipboardText(const Node& n) {
+std::string f_NodeClipboardText(const Node& l_oN) {
     // The node's own JSON, wrapped so a paste can tell it from any other text.
-    std::string node = toms::anim::nodeToJsonText(n);
-    while (!node.empty() && (node.back() == '\n' || node.back() == ' ')) node.pop_back();
-    return "{\"toms\": \"anim-node\", \"version\": 3, \"node\": " + node + "}\n";
+    std::string l_strNode = toms::anim::f_NodeToJsonText(l_oN);
+    while (!l_strNode.empty() && (l_strNode.back() == '\n' || l_strNode.back() == ' ')) l_strNode.pop_back();
+    return "{\"toms\": \"anim-node\", \"version\": 3, \"node\": " + l_strNode + "}\n";
 }
 
-bool nodeFromClipboardText(const std::string& text, Node& out, std::string* err) {
+bool f_NodeFromClipboardText(const std::string& l_strText, Node& l_oOut, std::string* l_pErr) {
     try {
-        const nlohmann::json j = nlohmann::json::parse(text);
-        if (!j.is_object() || j.value("toms", std::string()) != "anim-node" || !j.contains("node"))
+        const nlohmann::json l_jJ = nlohmann::json::parse(l_strText);
+        if (!l_jJ.is_object() || l_jJ.value("toms", std::string()) != "anim-node" || !l_jJ.contains("node"))
             throw std::runtime_error("the clipboard holds no copied node");
-        return toms::anim::parseNodeJson(j["node"].dump(), out, err);
-    } catch (const std::exception& e) {
-        if (err) *err = dynamic_cast<const nlohmann::json::exception*>(&e) ? "the clipboard holds no copied node" : e.what();
+        return toms::anim::f_ParseNodeJson(l_jJ["node"].dump(), l_oOut, l_pErr);
+    } catch (const std::exception& l_oE) {
+        if (l_pErr) *l_pErr = dynamic_cast<const nlohmann::json::exception*>(&l_oE) ? "the clipboard holds no copied node" : l_oE.what();
         return false;
     }
 }
 
 namespace {
-void renameWalk(Node& n, std::set<std::string>& taken, std::map<std::string, std::string>& renamed, int& count) {
-    const std::string base = n.name.empty() ? std::string("node") : n.name;
-    std::string name = base;
-    for (int i = 2; taken.count(name); i++) name = base + "_" + std::to_string(i);
-    if (name != n.name) {
-        if (!renamed.count(n.name)) renamed[n.name] = name;   // a skin names the first node with a name
-        n.name = name;
-        count++;
+void f_RenameWalk(Node& l_oN, std::set<std::string>& l_setTaken, std::map<std::string, std::string>& l_mapRenamed, int& l_iCount) {
+    const std::string l_strBase = l_oN.m_strName.empty() ? std::string("node") : l_oN.m_strName;
+    std::string l_strName = l_strBase;
+    for (int l_iI = 2; l_setTaken.count(l_strName); l_iI++) l_strName = l_strBase + "_" + std::to_string(l_iI);
+    if (l_strName != l_oN.m_strName) {
+        if (!l_mapRenamed.count(l_oN.m_strName)) l_mapRenamed[l_oN.m_strName] = l_strName;   // a skin names the first node with a name
+        l_oN.m_strName = l_strName;
+        l_iCount++;
     }
-    taken.insert(name);
-    for (Node& c : n.children) renameWalk(c, taken, renamed, count);
+    l_setTaken.insert(l_strName);
+    for (Node& l_oC : l_oN.m_vChildren) f_RenameWalk(l_oC, l_setTaken, l_mapRenamed, l_iCount);
 }
-void remapSkins(Node& n, const std::map<std::string, std::string>& renamed) {
-    for (std::string& b : n.skinBones) {
-        auto it = renamed.find(b);
-        if (it != renamed.end()) b = it->second;
+void f_RemapSkins(Node& l_oN, const std::map<std::string, std::string>& l_mapRenamed) {
+    for (std::string& l_strB : l_oN.m_vSkinBones) {
+        auto l_itIt = l_mapRenamed.find(l_strB);
+        if (l_itIt != l_mapRenamed.end()) l_strB = l_itIt->second;
     }
-    for (Node& c : n.children) remapSkins(c, renamed);
+    for (Node& l_oC : l_oN.m_vChildren) f_RemapSkins(l_oC, l_mapRenamed);
 }
 }  // namespace
 
-int renameForPaste(const Node& root, Node& pasted) {
-    std::vector<std::string> names;
-    collectNames(root, names);
-    std::set<std::string> taken(names.begin(), names.end());
-    std::map<std::string, std::string> renamed;
-    int count = 0;
-    renameWalk(pasted, taken, renamed, count);
-    remapSkins(pasted, renamed);
-    return count;
+int f_RenameForPaste(const Node& l_oRoot, Node& l_oPasted) {
+    std::vector<std::string> l_vNames;
+    f_CollectNames(l_oRoot, l_vNames);
+    std::set<std::string> l_setTaken(l_vNames.begin(), l_vNames.end());
+    std::map<std::string, std::string> l_mapRenamed;
+    int l_iCount = 0;
+    f_RenameWalk(l_oPasted, l_setTaken, l_mapRenamed, l_iCount);
+    f_RemapSkins(l_oPasted, l_mapRenamed);
+    return l_iCount;
 }
 
 namespace {
-const Node* firstNamed(const Node& n, const std::string& name) {   // depth first, as the skin's lookup
-    if (n.name == name) return &n;
-    for (const Node& c : n.children)
-        if (const Node* f = firstNamed(c, name)) return f;
+const Node* f_FirstNamed(const Node& l_oN, const std::string& l_strName) {   // depth first, as the skin's lookup
+    if (l_oN.m_strName == l_strName) return &l_oN;
+    for (const Node& l_oC : l_oN.m_vChildren)
+        if (const Node* l_pF = f_FirstNamed(l_oC, l_strName)) return l_pF;
     return nullptr;
 }
-bool inside(const Node& top, const Node* n) {
-    if (&top == n) return true;
-    for (const Node& c : top.children) if (inside(c, n)) return true;
+bool f_Inside(const Node& l_oTop, const Node* l_pN) {
+    if (&l_oTop == l_pN) return true;
+    for (const Node& l_oC : l_oTop.m_vChildren) if (f_Inside(l_oC, l_pN)) return true;
     return false;
 }
 }  // namespace
 
-std::vector<std::string> bonesOutside(const Node& root, const Node& skinned) {
-    std::vector<std::string> out;
-    for (const std::string& b : skinned.skinBones)
-        if (const Node* bn = firstNamed(root, b))
-            if (!inside(skinned, bn)) out.push_back(b);
-    return out;
+std::vector<std::string> f_BonesOutside(const Node& l_oRoot, const Node& l_oSkinned) {
+    std::vector<std::string> l_vOut;
+    for (const std::string& l_strB : l_oSkinned.m_vSkinBones)
+        if (const Node* l_pBn = f_FirstNamed(l_oRoot, l_strB))
+            if (!f_Inside(l_oSkinned, l_pBn)) l_vOut.push_back(l_strB);
+    return l_vOut;
 }
 
-void collectSpriteRefs(const Node& root, std::vector<std::string>& out) {
-    if (!root.sprite.empty()) out.push_back(root.sprite);
-    for (const auto& k : root.spriteKeys)
-        if (!k.v.empty()) out.push_back(k.v);
-    for (const Node& c : root.children) collectSpriteRefs(c, out);
+void f_CollectSpriteRefs(const Node& l_oRoot, std::vector<std::string>& l_vOut) {
+    if (!l_oRoot.m_strSprite.empty()) l_vOut.push_back(l_oRoot.m_strSprite);
+    for (const auto& l_oK : l_oRoot.m_vSpriteKeys)
+        if (!l_oK.m_oV.empty()) l_vOut.push_back(l_oK.m_oV);
+    for (const Node& l_oC : l_oRoot.m_vChildren) f_CollectSpriteRefs(l_oC, l_vOut);
 }
 
-int rewriteSpriteRefs(Node& root, const std::function<std::string(const std::string&)>& f) {
-    int changed = 0;
-    auto one = [&](std::string& s) {
-        if (s.empty()) return;
-        std::string r = f(s);
-        if (r != s) {
-            s = std::move(r);
-            changed++;
+int f_RewriteSpriteRefs(Node& l_oRoot, const std::function<std::string(const std::string&)>& l_fnF) {
+    int l_iChanged = 0;
+    auto l_fnOne = [&](std::string& l_strS) {
+        if (l_strS.empty()) return;
+        std::string l_strR = l_fnF(l_strS);
+        if (l_strR != l_strS) {
+            l_strS = std::move(l_strR);
+            l_iChanged++;
         }
     };
-    one(root.sprite);
-    for (auto& k : root.spriteKeys) one(k.v);
-    for (Node& c : root.children) changed += rewriteSpriteRefs(c, f);
-    return changed;
+    l_fnOne(l_oRoot.m_strSprite);
+    for (auto& l_oK : l_oRoot.m_vSpriteKeys) l_fnOne(l_oK.m_oV);
+    for (Node& l_oC : l_oRoot.m_vChildren) l_iChanged += f_RewriteSpriteRefs(l_oC, l_fnF);
+    return l_iChanged;
 }
 
 }  // namespace animed

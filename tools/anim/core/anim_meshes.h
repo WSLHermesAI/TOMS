@@ -14,30 +14,30 @@
 namespace animed {
 
 // The pixels of an atlas page: AtlasSet entry, page -> RGBA8 rows `stride` pixels apart (false: not loaded).
-using PagePixels = std::function<bool(int entry, int page, const uint8_t*& rgba, int& w, int& h, int& stride)>;
+using PagePixels = std::function<bool(int l_iEntry, int l_iPage, const uint8_t*& l_pRgba, int& l_iW, int& l_iH, int& l_iStride)>;
 
 struct MeshReport {
-    int made = 0;                     // cut from alpha
-    int kept = 0;                     // "hand" meshes, kept as they are
-    std::vector<std::string> skipped; // "sprite: why" (a rotated or child region, no pixels, an empty sprite)
+    int m_iMade = 0;                     // cut from alpha
+    int m_iKept = 0;                     // "hand" meshes, kept as they are
+    std::vector<std::string> m_vSkipped; // "sprite: why" (a rotated or child region, no pixels, an empty sprite)
 };
 
 // Adds every mesh the file's clips need to its atlas's mesh file in `perEntry` (one per AtlasSet entry; resized to fit):
 // cut from the sprite's alpha, or left as it is when the file has it marked "hand". The other meshes in the files
 // (other clips') stay. `needed` (optional) gets "entry|key" of each.
-void addAnimMeshes(const toms::anim::AnimFile& file, const toms::anim::AtlasSet& atlases, const PagePixels& pixels,
-                   std::vector<toms::SpriteMeshFile>& perEntry, MeshReport* report = nullptr,
-                   std::vector<std::pair<int, std::string>>* needed = nullptr);
+void f_AddAnimMeshes(const toms::anim::AnimFile& l_oFile, const toms::anim::AtlasSet& l_oAtlases, const PagePixels& l_fnPixels,
+                   std::vector<toms::SpriteMeshFile>& l_vPerEntry, MeshReport* l_pReport = nullptr,
+                   std::vector<std::pair<int, std::string>>* l_pNeeded = nullptr);
 
 // Reads a mesh file (and the .mesh.bin it names). No file: true, `out` empty, *binary false. `binary` (optional): the
 // file keeps its numbers in a .mesh.bin.
-bool readMeshFile(const std::string& meshPath, toms::SpriteMeshFile& out, bool* binary, std::string* err);
+bool f_ReadMeshFile(const std::string& l_strMeshPath, toms::SpriteMeshFile& l_oOut, bool* l_pBinary, std::string* l_pErr);
 // Writes a mesh file: binary = JSON header + <name>.mesh.bin, else all in the JSON. An empty file removes the files
 // instead. Unchanged files are left alone. `written` (optional) gets the files written or removed.
-bool writeMeshFile(const std::string& meshPath, const toms::SpriteMeshFile& f, bool binary, std::string* err,
-                   std::vector<std::string>* written = nullptr);
+bool f_WriteMeshFile(const std::string& l_strMeshPath, const toms::SpriteMeshFile& l_oF, bool l_bBinary, std::string* l_pErr,
+                   std::vector<std::string>* l_pWritten = nullptr);
 // "dir/game.mesh.json" -> "dir/game.mesh.bin".
-std::string meshBinPath(const std::string& meshPath);
+std::string f_MeshBinPath(const std::string& l_strMeshPath);
 
 // `anim_editor --headless meshes <file.anim>... [--atlas [<id>=]<file.atlas>]... [--default-atlas [<id>=]<file.atlas>]
 //  [--map <from.atlas>=<to.atlas>]... [--bin|--text] [--check] [--prune]`:
@@ -48,6 +48,6 @@ std::string meshBinPath(const std::string& meshPath);
 // files need (meshes no one of them uses go). --check writes nothing: exit 1 when
 // a mesh file lacks a needed mesh, has a stale one, or (with --prune) has others. Exit 0 / 1 / 2 (a file could not be
 // read) / 3 (usage).
-int headlessMeshes(const std::vector<std::string>& args);
+int f_HeadlessMeshes(const std::vector<std::string>& l_vArgs);
 
 }  // namespace animed

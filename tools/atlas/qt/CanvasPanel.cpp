@@ -12,113 +12,113 @@
 #include <QToolButton>
 #include <QVBoxLayout>
 
-CanvasPanel::CanvasPanel(AtlasDocument* doc, QWidget* parent)
-    : QWidget(parent)
-    , m_doc(doc)
-    , m_tabs(new QTabBar(this))
-    , m_editBar(new QWidget(this))
-    , m_breadcrumb(new QLabel(m_editBar))
-    , m_stack(new QStackedWidget(this))
-    , m_atlas(new AtlasCanvas(doc, m_stack))
-    , m_edit(new SpriteEditCanvas(doc, m_stack))
+CanvasPanel::CanvasPanel(AtlasDocument* l_pDoc, QWidget* l_pParent)
+    : QWidget(l_pParent)
+    , m_pDoc(l_pDoc)
+    , m_pTabs(new QTabBar(this))
+    , m_pEditBar(new QWidget(this))
+    , m_pBreadcrumb(new QLabel(m_pEditBar))
+    , m_pStack(new QStackedWidget(this))
+    , m_pAtlas(new AtlasCanvas(l_pDoc, m_pStack))
+    , m_pEdit(new SpriteEditCanvas(l_pDoc, m_pStack))
 {
-    m_tabs->setDocumentMode(true);
-    m_tabs->setExpanding(false);
-    m_tabs->setDrawBase(false);
+    m_pTabs->setDocumentMode(true);
+    m_pTabs->setExpanding(false);
+    m_pTabs->setDrawBase(false);
 
-    auto* back = new QToolButton(m_editBar);
-    back->setIcon(Icons::icon(Icons::Id::Back));
-    back->setText(tr("Atlas"));
-    back->setToolTip(tr("Back to the atlas (Esc)"));
-    back->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    back->setAutoRaise(true);
-    auto* hint = new QLabel(tr("drag: new child · handles: resize · arrows: nudge · double-click: edit inside · Esc: up"), m_editBar);
-    hint->setForegroundRole(QPalette::PlaceholderText);
-    auto* barLayout = new QHBoxLayout(m_editBar);
-    barLayout->setContentsMargins(4, 2, 8, 2);
-    barLayout->addWidget(back);
-    barLayout->addWidget(m_breadcrumb, 1);
-    barLayout->addWidget(hint);
-    m_editBar->hide();
+    auto* l_pBack = new QToolButton(m_pEditBar);
+    l_pBack->setIcon(Icons::f_Icon(Icons::Id::Back));
+    l_pBack->setText(tr("Atlas"));
+    l_pBack->setToolTip(tr("Back to the atlas (Esc)"));
+    l_pBack->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    l_pBack->setAutoRaise(true);
+    auto* l_pHint = new QLabel(tr("drag: new child · handles: resize · arrows: nudge · double-click: edit inside · Esc: up"), m_pEditBar);
+    l_pHint->setForegroundRole(QPalette::PlaceholderText);
+    auto* l_pBarLayout = new QHBoxLayout(m_pEditBar);
+    l_pBarLayout->setContentsMargins(4, 2, 8, 2);
+    l_pBarLayout->addWidget(l_pBack);
+    l_pBarLayout->addWidget(m_pBreadcrumb, 1);
+    l_pBarLayout->addWidget(l_pHint);
+    m_pEditBar->hide();
 
-    m_stack->addWidget(m_atlas);
-    m_stack->addWidget(m_edit);
+    m_pStack->addWidget(m_pAtlas);
+    m_pStack->addWidget(m_pEdit);
 
-    auto* layout = new QVBoxLayout(this);
-    layout->setContentsMargins(0, 0, 0, 0);
-    layout->setSpacing(0);
-    layout->addWidget(m_tabs);
-    layout->addWidget(m_editBar);
-    layout->addWidget(m_stack, 1);
+    auto* l_pLayout = new QVBoxLayout(this);
+    l_pLayout->setContentsMargins(0, 0, 0, 0);
+    l_pLayout->setSpacing(0);
+    l_pLayout->addWidget(m_pTabs);
+    l_pLayout->addWidget(m_pEditBar);
+    l_pLayout->addWidget(m_pStack, 1);
 
-    connect(back, &QToolButton::clicked, this, &CanvasPanel::exitEditMode);
-    connect(m_tabs, &QTabBar::currentChanged, m_atlas, &AtlasCanvas::setPage);
-    connect(m_atlas, &AtlasCanvas::pageChanged, m_tabs, &QTabBar::setCurrentIndex);
-    connect(m_atlas, &AtlasCanvas::editSpriteRequested, this, &CanvasPanel::enterEditMode);
-    connect(m_edit, &SpriteEditCanvas::exitRequested, this, &CanvasPanel::exitEditMode);
-    connect(m_edit, &SpriteEditCanvas::targetChanged, this, &CanvasPanel::refreshBreadcrumb);
-    connect(m_atlas, &CanvasView::zoomChanged, this, [this](double z) { if (!isEditMode()) emit zoomChanged(z); });
-    connect(m_edit, &CanvasView::zoomChanged, this, [this](double z) { if (isEditMode()) emit zoomChanged(z); });
-    connect(doc, &AtlasDocument::buildFinished, this, &CanvasPanel::refreshTabs);
+    connect(l_pBack, &QToolButton::clicked, this, &CanvasPanel::f_ExitEditMode);
+    connect(m_pTabs, &QTabBar::currentChanged, m_pAtlas, &AtlasCanvas::f_SetPage);
+    connect(m_pAtlas, &AtlasCanvas::f_PageChanged, m_pTabs, &QTabBar::setCurrentIndex);
+    connect(m_pAtlas, &AtlasCanvas::f_EditSpriteRequested, this, &CanvasPanel::f_EnterEditMode);
+    connect(m_pEdit, &SpriteEditCanvas::f_ExitRequested, this, &CanvasPanel::f_ExitEditMode);
+    connect(m_pEdit, &SpriteEditCanvas::f_TargetChanged, this, &CanvasPanel::f_RefreshBreadcrumb);
+    connect(m_pAtlas, &CanvasView::f_ZoomChanged, this, [this](double l_dZ) { if (!f_IsEditMode()) emit f_ZoomChanged(l_dZ); });
+    connect(m_pEdit, &CanvasView::f_ZoomChanged, this, [this](double l_dZ) { if (f_IsEditMode()) emit f_ZoomChanged(l_dZ); });
+    connect(l_pDoc, &AtlasDocument::f_BuildFinished, this, &CanvasPanel::f_RefreshTabs);
     // A different project starts in the atlas view.
-    connect(doc, &AtlasDocument::projectReset, this, &CanvasPanel::exitEditMode);
+    connect(l_pDoc, &AtlasDocument::f_ProjectReset, this, &CanvasPanel::f_ExitEditMode);
 }
 
-CanvasView* CanvasPanel::currentView() const
+CanvasView* CanvasPanel::f_CurrentView() const
 {
-    return isEditMode() ? static_cast<CanvasView*>(m_edit) : static_cast<CanvasView*>(m_atlas);
+    return f_IsEditMode() ? static_cast<CanvasView*>(m_pEdit) : static_cast<CanvasView*>(m_pAtlas);
 }
 
-bool CanvasPanel::isEditMode() const { return m_stack->currentWidget() == m_edit; }
+bool CanvasPanel::f_IsEditMode() const { return m_pStack->currentWidget() == m_pEdit; }
 
-void CanvasPanel::enterEditMode(const QString& sprite)
+void CanvasPanel::f_EnterEditMode(const QString& l_oSprite)
 {
-    if (sprite.isEmpty()) return;
+    if (l_oSprite.isEmpty()) return;
     // Child rects are in the base art's pixels; editing them over variant art would mislead.
-    m_doc->setVariant(QString());
-    m_doc->setSelection({sprite});
-    m_edit->setTarget(sprite);
-    m_stack->setCurrentWidget(m_edit);
-    m_tabs->hide();
-    m_editBar->show();
-    m_edit->setFocus();
-    emit editModeChanged(true);
-    emit zoomChanged(m_edit->zoom());
+    m_pDoc->f_SetVariant(QString());
+    m_pDoc->f_SetSelection({l_oSprite});
+    m_pEdit->f_SetTarget(l_oSprite);
+    m_pStack->setCurrentWidget(m_pEdit);
+    m_pTabs->hide();
+    m_pEditBar->show();
+    m_pEdit->setFocus();
+    emit f_EditModeChanged(true);
+    emit f_ZoomChanged(m_pEdit->f_Zoom());
 }
 
-void CanvasPanel::exitEditMode()
+void CanvasPanel::f_ExitEditMode()
 {
-    if (!isEditMode()) return;
-    m_stack->setCurrentWidget(m_atlas);
-    m_editBar->hide();
-    m_tabs->show();
-    m_atlas->setFocus();
-    emit editModeChanged(false);
-    emit zoomChanged(m_atlas->zoom());
+    if (!f_IsEditMode()) return;
+    m_pStack->setCurrentWidget(m_pAtlas);
+    m_pEditBar->hide();
+    m_pTabs->show();
+    m_pAtlas->setFocus();
+    emit f_EditModeChanged(false);
+    emit f_ZoomChanged(m_pAtlas->f_Zoom());
 }
 
-void CanvasPanel::refreshTabs()
+void CanvasPanel::f_RefreshTabs()
 {
-    const BuildSnapshotPtr snap = m_doc->snapshot();
-    const int count = snap ? int(snap->pages.size()) : 0;
-    const QSignalBlocker block(m_tabs);
-    while (m_tabs->count() > count) m_tabs->removeTab(m_tabs->count() - 1);
-    for (int i = 0; i < count; i++) {
-        const QImage& pg = snap->pages[i];
-        const QString text = tr("Page %1  ·  %2 × %3").arg(i + 1).arg(pg.width()).arg(pg.height());
-        if (i < m_tabs->count()) m_tabs->setTabText(i, text);
-        else m_tabs->addTab(text);
+    const BuildSnapshotPtr l_spSnap = m_pDoc->f_Snapshot();
+    const int l_iCount = l_spSnap ? int(l_spSnap->m_oPages.size()) : 0;
+    const QSignalBlocker l_oBlock(m_pTabs);
+    while (m_pTabs->count() > l_iCount) m_pTabs->removeTab(m_pTabs->count() - 1);
+    for (int l_iI = 0; l_iI < l_iCount; l_iI++) {
+        const QImage& l_oPg = l_spSnap->m_oPages[l_iI];
+        const QString l_oText = tr("Page %1  ·  %2 × %3").arg(l_iI + 1).arg(l_oPg.width()).arg(l_oPg.height());
+        if (l_iI < m_pTabs->count()) m_pTabs->setTabText(l_iI, l_oText);
+        else m_pTabs->addTab(l_oText);
     }
-    m_tabs->setCurrentIndex(m_atlas->page());
+    m_pTabs->setCurrentIndex(m_pAtlas->f_Page());
 }
 
-void CanvasPanel::refreshBreadcrumb()
+void CanvasPanel::f_RefreshBreadcrumb()
 {
     // hero › hero_head › hero_eye: the parent chain of the sprite being edited.
-    QStringList chain;
-    for (QString n = m_edit->target(); !n.isEmpty() && chain.size() < 32;) {
-        chain.prepend(n.toHtmlEscaped());
-        n = QString::fromStdString(m_doc->spriteDef(n).parent);
+    QStringList l_oChain;
+    for (QString l_oN = m_pEdit->f_Target(); !l_oN.isEmpty() && l_oChain.size() < 32;) {
+        l_oChain.prepend(l_oN.toHtmlEscaped());
+        l_oN = QString::fromStdString(m_pDoc->f_SpriteDef(l_oN).m_strParent);
     }
-    m_breadcrumb->setText(QStringLiteral("<b>%1</b>").arg(chain.join(QStringLiteral("  ›  "))));
+    m_pBreadcrumb->setText(QStringLiteral("<b>%1</b>").arg(l_oChain.join(QStringLiteral("  ›  "))));
 }

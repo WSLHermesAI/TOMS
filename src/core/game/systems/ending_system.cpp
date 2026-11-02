@@ -3,56 +3,56 @@
 
 namespace toms {
 
-nlohmann::json toJson(const EndingDefinition& d) {
-    nlohmann::json j;
-    j["id"] = d.id; j["name"] = d.nameKey; j["text"] = d.textKey; j["tone"] = d.tone;
-    j["unlocksHint"] = d.unlocksHint; j["allowsRebirth"] = d.allowsRebirth;
-    j["requires"] = d.requires_;
-    return j;
+nlohmann::json f_ToJson(const EndingDefinition& l_oD) {
+    nlohmann::json l_jJ;
+    l_jJ["id"] = l_oD.m_strId; l_jJ["name"] = l_oD.m_strNameKey; l_jJ["text"] = l_oD.m_strTextKey; l_jJ["tone"] = l_oD.m_strTone;
+    l_jJ["unlocksHint"] = l_oD.m_strUnlocksHint; l_jJ["allowsRebirth"] = l_oD.m_bAllowsRebirth;
+    l_jJ["requires"] = l_oD.m_jRequires;
+    return l_jJ;
 }
 
-EndingDefinition endingFromJson(const nlohmann::json& j) {
-    EndingDefinition d;
-    if (!j.is_object()) return d;
-    d.id = j.value("id", std::string());
-    d.nameKey = j.value("name", std::string());
-    d.textKey = j.value("text", std::string());
-    d.tone = j.value("tone", std::string());
-    d.unlocksHint = j.value("unlocksHint", std::string());
-    d.allowsRebirth = j.value("allowsRebirth", false);
-    d.requires_ = j.contains("requires") ? j["requires"] : nlohmann::json();
-    return d;
+EndingDefinition f_EndingFromJson(const nlohmann::json& l_jJ) {
+    EndingDefinition l_oD;
+    if (!l_jJ.is_object()) return l_oD;
+    l_oD.m_strId = l_jJ.value("id", std::string());
+    l_oD.m_strNameKey = l_jJ.value("name", std::string());
+    l_oD.m_strTextKey = l_jJ.value("text", std::string());
+    l_oD.m_strTone = l_jJ.value("tone", std::string());
+    l_oD.m_strUnlocksHint = l_jJ.value("unlocksHint", std::string());
+    l_oD.m_bAllowsRebirth = l_jJ.value("allowsRebirth", false);
+    l_oD.m_jRequires = l_jJ.contains("requires") ? l_jJ["requires"] : nlohmann::json();
+    return l_oD;
 }
 
-EndingsTable loadEndings(const std::string& path) {
-    EndingsTable t;
-    nlohmann::json j = readJsonFileSafe(path);
-    if (!j.is_object()) return t;
-    t.fallback = j.value("fallback", std::string());
-    if (j.contains("endings") && j["endings"].is_array())
-        for (auto& e : j["endings"]) {
-            EndingDefinition d = endingFromJson(e);
-            if (!d.id.empty()) t.endings.push_back(d);
+EndingsTable f_LoadEndings(const std::string& l_strPath) {
+    EndingsTable l_oT;
+    nlohmann::json l_jJ = f_ReadJsonFileSafe(l_strPath);
+    if (!l_jJ.is_object()) return l_oT;
+    l_oT.m_strFallback = l_jJ.value("fallback", std::string());
+    if (l_jJ.contains("endings") && l_jJ["endings"].is_array())
+        for (auto& l_jE : l_jJ["endings"]) {
+            EndingDefinition l_oD = f_EndingFromJson(l_jE);
+            if (!l_oD.m_strId.empty()) l_oT.m_vEndings.push_back(l_oD);
         }
-    return t;
+    return l_oT;
 }
 
-static const EndingDefinition* findEnding(const EndingsTable& table, const std::string& id) {
-    for (auto& e : table.endings) if (e.id == id) return &e;
+static const EndingDefinition* f_FindEnding(const EndingsTable& l_oTable, const std::string& l_strId) {
+    for (auto& l_oE : l_oTable.m_vEndings) if (l_oE.m_strId == l_strId) return &l_oE;
     return nullptr;
 }
 
-const EndingDefinition* judgeEnding(const EndingsTable& table, const ConditionContext& ctx) {
-    for (auto& e : table.endings)
-        if (evaluate(e.requires_, ctx)) return &e;
-    return findEnding(table, table.fallback);
+const EndingDefinition* f_JudgeEnding(const EndingsTable& l_oTable, const ConditionContext& l_oCtx) {
+    for (auto& l_oE : l_oTable.m_vEndings)
+        if (f_Evaluate(l_oE.m_jRequires, l_oCtx)) return &l_oE;
+    return f_FindEnding(l_oTable, l_oTable.m_strFallback);
 }
 
-const EndingDefinition* checkNamedEndings(const EndingsTable& table, const std::vector<std::string>& order,
-                                           const ConditionContext& ctx) {
-    for (auto& id : order) {
-        const EndingDefinition* e = findEnding(table, id);
-        if (e && evaluate(e->requires_, ctx)) return e;
+const EndingDefinition* f_CheckNamedEndings(const EndingsTable& l_oTable, const std::vector<std::string>& l_vOrder,
+                                           const ConditionContext& l_oCtx) {
+    for (auto& l_strId : l_vOrder) {
+        const EndingDefinition* l_pE = f_FindEnding(l_oTable, l_strId);
+        if (l_pE && f_Evaluate(l_pE->m_jRequires, l_oCtx)) return l_pE;
     }
     return nullptr;
 }

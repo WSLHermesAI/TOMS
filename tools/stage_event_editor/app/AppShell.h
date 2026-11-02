@@ -23,40 +23,40 @@ class AppShell : public QObject {
     Q_OBJECT
 public:
     // The shell's window takes both editors and deletes them with itself.
-    AppShell(StageEditor* stage, EventEditor* events, QObject* parent = nullptr);
+    AppShell(StageEditor* l_pStage, EventEditor* l_pEvents, QObject* l_pParent = nullptr);
     ~AppShell() override;
 
     // Shows the window with the saved layout; floatEvents: the event editor starts floating (--windows).
-    void start(bool floatEvents = false);
-    void showStage();
-    void showEvents();
-    void dockAsTabs();                     // both editors docked, as tabs
+    void f_Start(bool l_bFloatEvents = false);
+    void f_ShowStage();
+    void f_ShowEvents();
+    void f_DockAsTabs();                     // both editors docked, as tabs
     // Everything where it starts: the window's size and place, both editors docked as tabs, every panel docked at its
     // starting size, a details window over the middle. View > Default layout.
-    void defaultLayout();
-    void setFloating(QDockWidget* d, bool floating);
-    QDockWidget* stageDock() const { return m_stageDock; }
-    QDockWidget* eventDock() const { return m_eventDock; }
-    QStringList selfTest();                // floats and docks the editors and checks they move with it
-    QList<QWidget*> windows() const;       // the main window and any floating editor (--shot)
+    void f_DefaultLayout();
+    void f_SetFloating(QDockWidget* l_pD, bool l_bFloating);
+    QDockWidget* f_StageDock() const { return m_oStageDock; }
+    QDockWidget* f_EventDock() const { return m_oEventDock; }
+    QStringList f_SelfTest();                // floats and docks the editors and checks they move with it
+    QList<QWidget*> f_Windows() const;       // the main window and any floating editor (--shot)
 
 protected:
-    bool eventFilter(QObject* o, QEvent* e) override;
+    bool eventFilter(QObject* l_pO, QEvent* l_pE) override;
 
 private:
-    QDockWidget* makeDock(QWidget* editor, const QString& objectName, const QString& title);
-    void updateTitleBar(QDockWidget* d);
-    void raise(QDockWidget* d);
-    void buildMenus();
-    void saveLayout();
-    void updateTitles();
-    bool confirmQuit();
-    bool hasUnsaved() const;
-    void quit();
+    QDockWidget* f_MakeDock(QWidget* l_pEditor, const QString& l_oObjectName, const QString& l_oTitle);
+    void f_UpdateTitleBar(QDockWidget* l_pD);
+    void f_Raise(QDockWidget* l_pD);
+    void f_BuildMenus();
+    void f_SaveLayout();
+    void f_UpdateTitles();
+    bool f_ConfirmQuit();
+    bool f_HasUnsaved() const;
+    void f_Quit();
 
-    StageEditor* m_stage;
-    EventEditor* m_events;
-    QPointer<QMainWindow> m_main;
-    QPointer<QDockWidget> m_stageDock, m_eventDock;
-    bool m_quitting = false;
+    StageEditor* m_pStage;
+    EventEditor* m_pEvents;
+    QPointer<QMainWindow> m_oMain;
+    QPointer<QDockWidget> m_oStageDock, m_oEventDock;
+    bool m_bQuitting = false;
 };

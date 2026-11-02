@@ -17,32 +17,32 @@ class RangeEdit : public QWidget
 {
     Q_OBJECT
 public:
-    RangeEdit(double lo, double hi, int decimals, double step, const QString& suffix, QWidget* parent = nullptr);
-    void setValue(const toms::fx::Range& r);
-    toms::fx::Range value() const;
-    QDoubleSpinBox* minSpin() const { return m_min; }
-    QDoubleSpinBox* maxSpin() const { return m_max; }
+    RangeEdit(double l_dLo, double l_dHi, int l_iDecimals, double l_dStep, const QString& l_oSuffix, QWidget* l_pParent = nullptr);
+    void f_SetValue(const toms::fx::Range& l_oR);
+    toms::fx::Range f_Value() const;
+    QDoubleSpinBox* f_MinSpin() const { return m_pMin; }
+    QDoubleSpinBox* f_MaxSpin() const { return m_pMax; }
 signals:
-    void changed(const toms::fx::Range& r);
+    void f_Changed(const toms::fx::Range& l_oR);
 private:
-    void emitChanged();
-    QDoubleSpinBox *m_min, *m_max;
-    QToolButton* m_link;
-    bool m_setting = false;
+    void f_EmitChanged();
+    QDoubleSpinBox *m_pMin, *m_pMax;
+    QToolButton* m_pLink;
+    bool m_bSetting = false;
 };
 
 class Vec2Edit : public QWidget
 {
     Q_OBJECT
 public:
-    Vec2Edit(double lo, double hi, int decimals, QWidget* parent = nullptr);
-    void setValue(const glm::vec2& v);
-    glm::vec2 value() const;
+    Vec2Edit(double l_dLo, double l_dHi, int l_iDecimals, QWidget* l_pParent = nullptr);
+    void f_SetValue(const glm::vec2& l_v2V);
+    glm::vec2 f_Value() const;
 signals:
-    void changed(const glm::vec2& v);
+    void f_Changed(const glm::vec2& l_v2V);
 private:
-    QDoubleSpinBox *m_x, *m_y;
-    bool m_setting = false;
+    QDoubleSpinBox *m_pX, *m_pY;
+    bool m_bSetting = false;
 };
 
 // A colour swatch (over a checkerboard, so alpha shows); click = colour dialog with alpha.
@@ -50,17 +50,17 @@ class ColorButton : public QToolButton
 {
     Q_OBJECT
 public:
-    explicit ColorButton(QWidget* parent = nullptr);
-    void setColor(const glm::vec4& c);
-    glm::vec4 color() const { return m_color; }
-    static QColor toQColor(const glm::vec4& c);
-    static glm::vec4 fromQColor(const QColor& c);
+    explicit ColorButton(QWidget* l_pParent = nullptr);
+    void f_SetColor(const glm::vec4& l_v4C);
+    glm::vec4 f_Color() const { return m_v4Color; }
+    static QColor f_ToQColor(const glm::vec4& l_v4C);
+    static glm::vec4 f_FromQColor(const QColor& l_oC);
 signals:
-    void changed(const glm::vec4& c);
+    void f_Changed(const glm::vec4& l_v4C);
 protected:
-    void paintEvent(QPaintEvent* e) override;
+    void paintEvent(QPaintEvent* l_pE) override;
 private:
-    glm::vec4 m_color{1, 1, 1, 1};
+    glm::vec4 m_v4Color{1, 1, 1, 1};
 };
 
 // The .anim ease names (linear, stepped, quadraticIn, ...); a Bezier shows as "bezier" and is kept.
@@ -68,14 +68,14 @@ class EaseCombo : public QComboBox
 {
     Q_OBJECT
 public:
-    explicit EaseCombo(QWidget* parent = nullptr);
-    void setEase(const toms::fx::Ease& e);
-    toms::fx::Ease ease() const;
+    explicit EaseCombo(QWidget* l_pParent = nullptr);
+    void f_SetEase(const toms::fx::Ease& l_oE);
+    toms::fx::Ease f_Ease() const;
 signals:
-    void easeChanged(const toms::fx::Ease& e);
+    void f_EaseChanged(const toms::fx::Ease& l_oE);
 private:
-    toms::fx::Ease m_bezier;
-    bool m_setting = false;
+    toms::fx::Ease m_oBezier;
+    bool m_bSetting = false;
 };
 
 // A curve over the particle's life (x = 0..1) of a multiplier (size, speed, spin). Drag a key to
@@ -85,40 +85,40 @@ class CurveEdit : public QWidget
 {
     Q_OBJECT
 public:
-    explicit CurveEdit(QWidget* parent = nullptr);
-    void setCurve(const toms::fx::Curve<float>& c);
-    const toms::fx::Curve<float>& curve() const { return m_curve; }
-    int gesture() const { return m_gesture; }
-    int selected() const { return m_sel; }
+    explicit CurveEdit(QWidget* l_pParent = nullptr);
+    void f_SetCurve(const toms::fx::Curve<float>& l_oC);
+    const toms::fx::Curve<float>& f_Curve() const { return m_oCurve; }
+    int f_Gesture() const { return m_iGesture; }
+    int f_Selected() const { return m_iSel; }
     // For the selftest: a key added at (t, v) as a double-click would.
-    void addKey(float t, float v);
+    void f_AddKey(float l_fT, float l_fV);
 signals:
-    void changed(const toms::fx::Curve<float>& c);
+    void f_Changed(const toms::fx::Curve<float>& l_oC);
 protected:
-    void paintEvent(QPaintEvent* e) override;
-    void mousePressEvent(QMouseEvent* e) override;
-    void mouseMoveEvent(QMouseEvent* e) override;
-    void mouseReleaseEvent(QMouseEvent* e) override;
-    void mouseDoubleClickEvent(QMouseEvent* e) override;
+    void paintEvent(QPaintEvent* l_pE) override;
+    void mousePressEvent(QMouseEvent* l_pE) override;
+    void mouseMoveEvent(QMouseEvent* l_pE) override;
+    void mouseReleaseEvent(QMouseEvent* l_pE) override;
+    void mouseDoubleClickEvent(QMouseEvent* l_pE) override;
 private:
-    QRectF graph() const;
-    void range(float& lo, float& hi) const;
-    QPointF toPx(float t, float v) const;
-    void fromPx(const QPointF& p, float& t, float& v) const;
-    int keyAt(const QPointF& p) const;
-    void sortKeepSelection();
-    void commit();
-    void syncRow();
+    QRectF f_Graph() const;
+    void f_Range(float& l_fLo, float& l_fHi) const;
+    QPointF f_ToPx(float l_fT, float l_fV) const;
+    void f_FromPx(const QPointF& l_oP, float& l_fT, float& l_fV) const;
+    int f_KeyAt(const QPointF& l_oP) const;
+    void f_SortKeepSelection();
+    void f_Commit();
+    void f_SyncRow();
 
-    toms::fx::Curve<float> m_curve;
-    int m_sel = -1;
-    bool m_dragging = false;
-    int m_gesture = 0;
-    float m_lo = 0, m_hi = 2;    // the value range shown, fixed during a drag
-    QDoubleSpinBox* m_value;
-    EaseCombo* m_ease;
-    QToolButton* m_clear;
-    bool m_setting = false;
+    toms::fx::Curve<float> m_oCurve;
+    int m_iSel = -1;
+    bool m_bDragging = false;
+    int m_iGesture = 0;
+    float m_fLo = 0, m_fHi = 2;    // the value range shown, fixed during a drag
+    QDoubleSpinBox* m_pValue;
+    EaseCombo* m_pEase;
+    QToolButton* m_pClear;
+    bool m_bSetting = false;
 };
 
 // Colour (and alpha) over the particle's life, as stops on a bar. Click a stop to select it, drag
@@ -128,33 +128,33 @@ class GradientEdit : public QWidget
 {
     Q_OBJECT
 public:
-    explicit GradientEdit(QWidget* parent = nullptr);
-    void setCurve(const toms::fx::Curve<glm::vec4>& c);
-    const toms::fx::Curve<glm::vec4>& curve() const { return m_curve; }
-    int gesture() const { return m_gesture; }
-    void addStop(float t);   // for the selftest: as a double-click on the bar
+    explicit GradientEdit(QWidget* l_pParent = nullptr);
+    void f_SetCurve(const toms::fx::Curve<glm::vec4>& l_oC);
+    const toms::fx::Curve<glm::vec4>& f_Curve() const { return m_oCurve; }
+    int f_Gesture() const { return m_iGesture; }
+    void f_AddStop(float l_fT);   // for the selftest: as a double-click on the bar
 signals:
-    void changed(const toms::fx::Curve<glm::vec4>& c);
+    void f_Changed(const toms::fx::Curve<glm::vec4>& l_oC);
 protected:
-    void paintEvent(QPaintEvent* e) override;
-    void mousePressEvent(QMouseEvent* e) override;
-    void mouseMoveEvent(QMouseEvent* e) override;
-    void mouseReleaseEvent(QMouseEvent* e) override;
-    void mouseDoubleClickEvent(QMouseEvent* e) override;
+    void paintEvent(QPaintEvent* l_pE) override;
+    void mousePressEvent(QMouseEvent* l_pE) override;
+    void mouseMoveEvent(QMouseEvent* l_pE) override;
+    void mouseReleaseEvent(QMouseEvent* l_pE) override;
+    void mouseDoubleClickEvent(QMouseEvent* l_pE) override;
 private:
-    QRectF bar() const;
-    float tAt(double x) const;
-    int stopAt(const QPointF& p) const;
-    void sortKeepSelection();
-    void commit();
-    void syncRow();
+    QRectF f_Bar() const;
+    float f_TAt(double l_dX) const;
+    int f_StopAt(const QPointF& l_oP) const;
+    void f_SortKeepSelection();
+    void f_Commit();
+    void f_SyncRow();
 
-    toms::fx::Curve<glm::vec4> m_curve;
-    int m_sel = -1;
-    bool m_dragging = false;
-    int m_gesture = 0;
-    ColorButton* m_color;
-    EaseCombo* m_ease;
-    QToolButton* m_clear;
-    bool m_setting = false;
+    toms::fx::Curve<glm::vec4> m_oCurve;
+    int m_iSel = -1;
+    bool m_bDragging = false;
+    int m_iGesture = 0;
+    ColorButton* m_pColor;
+    EaseCombo* m_pEase;
+    QToolButton* m_pClear;
+    bool m_bSetting = false;
 };

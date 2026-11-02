@@ -17,398 +17,398 @@ namespace fs = std::filesystem;
 
 // "include" files first (each may include others), then this file's own fields on top: objects merge key by key,
 // anything else is replaced. Paths are relative to the file that names them.
-bool readScenarioJson(const fs::path& file, nlohmann::json& out, std::string& error, int depth = 0) {
-    if (depth > 8) { error = "include nested too deep at " + file.string(); return false; }
-    nlohmann::json j = toms::readJsonFileSafe(file.string());
-    if (!j.is_object()) { error = "cannot read " + file.string() + " (missing, or not a JSON object)"; return false; }
+bool f_ReadScenarioJson(const fs::path& l_oFile, nlohmann::json& l_jOut, std::string& l_strError, int l_iDepth = 0) {
+    if (l_iDepth > 8) { l_strError = "include nested too deep at " + l_oFile.string(); return false; }
+    nlohmann::json l_jJ = toms::f_ReadJsonFileSafe(l_oFile.string());
+    if (!l_jJ.is_object()) { l_strError = "cannot read " + l_oFile.string() + " (missing, or not a JSON object)"; return false; }
     // file names in this file are relative to it: made absolute here, so an included file's save or dialogue is
     // found next to that file, not next to the scenario that includes it
-    auto absolute = [&](nlohmann::json& v) { if (v.is_string()) v = (file.parent_path() / v.get<std::string>()).string(); };
-    if (j.contains("save")) absolute(j["save"]);
-    if (j.contains("dialogue") && j["dialogue"].is_object() && j["dialogue"].contains("file")) absolute(j["dialogue"]["file"]);
-    if (j.contains("stage") && j["stage"].is_string()) {
-        const std::string st = j["stage"].get<std::string>();
-        if (st.size() > 5 && st.compare(st.size() - 5, 5, ".json") == 0) absolute(j["stage"]);
+    auto l_fnAbsolute = [&](nlohmann::json& l_jV) { if (l_jV.is_string()) l_jV = (l_oFile.parent_path() / l_jV.get<std::string>()).string(); };
+    if (l_jJ.contains("save")) l_fnAbsolute(l_jJ["save"]);
+    if (l_jJ.contains("dialogue") && l_jJ["dialogue"].is_object() && l_jJ["dialogue"].contains("file")) l_fnAbsolute(l_jJ["dialogue"]["file"]);
+    if (l_jJ.contains("stage") && l_jJ["stage"].is_string()) {
+        const std::string l_strSt = l_jJ["stage"].get<std::string>();
+        if (l_strSt.size() > 5 && l_strSt.compare(l_strSt.size() - 5, 5, ".json") == 0) l_fnAbsolute(l_jJ["stage"]);
     }
-    nlohmann::json base = nlohmann::json::object();
-    if (j.contains("include")) {
-        const nlohmann::json inc = j["include"].is_array() ? j["include"] : nlohmann::json::array({j["include"]});
-        for (const auto& name : inc) {
-            if (!name.is_string()) continue;
-            nlohmann::json part;
-            if (!readScenarioJson(file.parent_path() / name.get<std::string>(), part, error, depth + 1)) return false;
-            base.merge_patch(part);
+    nlohmann::json l_jBase = nlohmann::json::object();
+    if (l_jJ.contains("include")) {
+        const nlohmann::json l_jInc = l_jJ["include"].is_array() ? l_jJ["include"] : nlohmann::json::array({l_jJ["include"]});
+        for (const auto& l_jName : l_jInc) {
+            if (!l_jName.is_string()) continue;
+            nlohmann::json l_jPart;
+            if (!f_ReadScenarioJson(l_oFile.parent_path() / l_jName.get<std::string>(), l_jPart, l_strError, l_iDepth + 1)) return false;
+            l_jBase.merge_patch(l_jPart);
         }
-        j.erase("include");
+        l_jJ.erase("include");
     }
-    base.merge_patch(j);
-    out = std::move(base);
+    l_jBase.merge_patch(l_jJ);
+    l_jOut = std::move(l_jBase);
     return true;
 }
 
-std::vector<std::string> strings(const nlohmann::json& j, const char* key) {
-    std::vector<std::string> out;
-    if (!j.contains(key)) return out;
-    const nlohmann::json& v = j[key];
-    if (v.is_string()) out.push_back(v.get<std::string>());
-    else if (v.is_array()) for (const auto& s : v) if (s.is_string()) out.push_back(s.get<std::string>());
-    return out;
+std::vector<std::string> f_Strings(const nlohmann::json& l_jJ, const char* l_pszKey) {
+    std::vector<std::string> l_vOut;
+    if (!l_jJ.contains(l_pszKey)) return l_vOut;
+    const nlohmann::json& l_jV = l_jJ[l_pszKey];
+    if (l_jV.is_string()) l_vOut.push_back(l_jV.get<std::string>());
+    else if (l_jV.is_array()) for (const auto& l_jS : l_jV) if (l_jS.is_string()) l_vOut.push_back(l_jS.get<std::string>());
+    return l_vOut;
 }
 
-int menuTabIndex(const std::string& name) {
-    static const char* tabs[] = {"status", "gear", "items", "events", "cards", "system"};   // Game::MenuTab order
-    for (int i = 0; i < 6; ++i) if (name == tabs[i]) return i;
+int f_MenuTabIndex(const std::string& l_strName) {
+    static const char* l_arrTabs[] = {"status", "gear", "items", "events", "cards", "system"};   // Game::MenuTab order
+    for (int l_iI = 0; l_iI < 6; ++l_iI) if (l_strName == l_arrTabs[l_iI]) return l_iI;
     return -1;
 }
 
 } // namespace
 
-bool Game::startScenario(const std::string& pathIn, std::string& error) {
-    fs::path file = pathIn;
-    std::error_code ec;
-    if (fs::is_directory(file, ec)) file /= "scenario.json";
-    nlohmann::json sc;
-    if (!readScenarioJson(file, sc, error)) return false;
-    return startScenarioJson(sc, file.parent_path().filename().string(), error);
+bool Game::f_StartScenario(const std::string& l_strPathIn, std::string& l_strError) {
+    fs::path l_oFile = l_strPathIn;
+    std::error_code l_oEc;
+    if (fs::is_directory(l_oFile, l_oEc)) l_oFile /= "scenario.json";
+    nlohmann::json l_jSc;
+    if (!f_ReadScenarioJson(l_oFile, l_jSc, l_strError)) return false;
+    return f_StartScenarioJson(l_jSc, l_oFile.parent_path().filename().string(), l_strError);
 }
 
-bool Game::enemyFromData(const std::string& id, const nlohmann::json& b, EnemyInst& en) const {
-    auto t = enemyTpl.find(id);
-    if (t == enemyTpl.end()) return false;
-    en = EnemyInst{};
-    en.id = id; en.name = locale_.field(t->second["name"]);
-    en.hp = b.value("hp", t->second.value("hp", 1)); en.atk = b.value("atk", t->second.value("atk", 0));
-    en.def = b.value("def", t->second.value("def", 0));
-    en.exp = t->second.value("exp", 0); en.gold = t->second.value("gold", 0);
-    en.x = en.y = -1;   // not on the map: winning removes nothing
-    en.boss = t->second.value("boss", false);
-    en.atkIntervalMs = b.value("atk_interval_ms", t->second.value("atk_interval_ms", 4000));
+bool Game::f_EnemyFromData(const std::string& l_strId, const nlohmann::json& l_jB, EnemyInst& l_oEn) const {
+    auto l_itT = m_mapEnemyTpl.find(l_strId);
+    if (l_itT == m_mapEnemyTpl.end()) return false;
+    l_oEn = EnemyInst{};
+    l_oEn.m_strId = l_strId; l_oEn.m_strName = m_oLocale.f_Field(l_itT->second["name"]);
+    l_oEn.m_iHp = l_jB.value("hp", l_itT->second.value("hp", 1)); l_oEn.m_iAtk = l_jB.value("atk", l_itT->second.value("atk", 0));
+    l_oEn.m_iDef = l_jB.value("def", l_itT->second.value("def", 0));
+    l_oEn.m_iExp = l_itT->second.value("exp", 0); l_oEn.m_iGold = l_itT->second.value("gold", 0);
+    l_oEn.m_iX = l_oEn.m_iY = -1;   // not on the map: winning removes nothing
+    l_oEn.m_bBoss = l_itT->second.value("boss", false);
+    l_oEn.m_iAtkIntervalMs = l_jB.value("atk_interval_ms", l_itT->second.value("atk_interval_ms", 4000));
     // the battle's rules for it (docs/gameplay/13), each overridable by the battle setup
-    const nlohmann::json& tp = t->second;
-    en.mapId = id;
-    en.look = b.value("look", tp.value("look", std::string("monster")));
-    en.moves = toms::moveChoicesFromJson(b.contains("moves") ? b["moves"] : tp.value("moves", nlohmann::json::array()));
-    en.breakPoints = b.value("break", tp.value("break", 0));
-    en.events = b.contains("events") ? b["events"] : tp.value("events", nlohmann::json::array());
+    const nlohmann::json& l_jTp = l_itT->second;
+    l_oEn.m_strMapId = l_strId;
+    l_oEn.m_strLook = l_jB.value("look", l_jTp.value("look", std::string("monster")));
+    l_oEn.m_vMoves = toms::f_MoveChoicesFromJson(l_jB.contains("moves") ? l_jB["moves"] : l_jTp.value("moves", nlohmann::json::array()));
+    l_oEn.m_iBreakPoints = l_jB.value("break", l_jTp.value("break", 0));
+    l_oEn.m_jEvents = l_jB.contains("events") ? l_jB["events"] : l_jTp.value("events", nlohmann::json::array());
     return true;
 }
 
-void Game::arenaNextFight() {
-    if (arena_.enemies.empty()) { arena_.on = false; return; }
-    EnemyInst en;
-    const std::string id = arena_.enemies[arena_.next % arena_.enemies.size()];
-    arena_.next++;
-    if (!enemyFromData(id, arena_.overrides, en)) { arena_.on = false; return; }
-    pl.hp = effectiveMaxHp();   // every fight starts at full health
-    arena_.fights++;
-    startCombat(en);
-    cs.log = trParam(trParam(trParam(locale_.tr("arena.summary"), "n", std::to_string(arena_.fights)),
-                             "w", std::to_string(arena_.wins)), "l", std::to_string(arena_.losses));
+void Game::f_ArenaNextFight() {
+    if (m_oArena.m_vEnemies.empty()) { m_oArena.m_bOn = false; return; }
+    EnemyInst l_oEn;
+    const std::string l_strId = m_oArena.m_vEnemies[m_oArena.m_nNext % m_oArena.m_vEnemies.size()];
+    m_oArena.m_nNext++;
+    if (!f_EnemyFromData(l_strId, m_oArena.m_jOverrides, l_oEn)) { m_oArena.m_bOn = false; return; }
+    m_oPl.m_iHp = f_EffectiveMaxHp();   // every fight starts at full health
+    m_oArena.m_iFights++;
+    f_StartCombat(l_oEn);
+    m_oCs.m_strLog = f_TrParam(f_TrParam(f_TrParam(m_oLocale.f_Tr("arena.summary"), "n", std::to_string(m_oArena.m_iFights)),
+                             "w", std::to_string(m_oArena.m_iWins)), "l", std::to_string(m_oArena.m_iLosses));
 }
 
-bool Game::arenaEndFight(bool won) {
-    if (!arena_.on) return false;
-    cs.active = false;
-    cs.won = won;   // a win waits for the player's tap; a loss shows briefly
-    if (won) { arena_.wins++; cs.log = locale_.tr("arena.won"); }
-    else { arena_.losses++; cs.log = locale_.tr("arena.lost"); cs.resultPauseMs = 1200; }
-    if (won && arena_.training) {   // the training ground (docs/gameplay/16 §5): more EXP and weapon wins
-        const nlohmann::json tr = battleJson_.value("training", nlohmann::json::object());
-        int exp = 0;
-        for (const CombatState::Foe& f : cs.foes) exp += f.enemy.exp;
-        exp = (int)std::lround(exp * std::max(0.0f, tr.value("exp", 2.0f)));
-        const int uses = std::max(0, tr.value("uses", 2));
-        gainExp(exp);
-        weaponUses_[weaponKey()] += uses;
-        arena_.expGained += exp;
-        arena_.usesGained += uses;
-        cs.log = trParam(trParam(locale_.tr("training.won"), "exp", std::to_string(exp)), "uses", std::to_string(uses));
-        markProgressDirty();
+bool Game::f_ArenaEndFight(bool l_bWon) {
+    if (!m_oArena.m_bOn) return false;
+    m_oCs.m_bActive = false;
+    m_oCs.m_bWon = l_bWon;   // a win waits for the player's tap; a loss shows briefly
+    if (l_bWon) { m_oArena.m_iWins++; m_oCs.m_strLog = m_oLocale.f_Tr("arena.won"); }
+    else { m_oArena.m_iLosses++; m_oCs.m_strLog = m_oLocale.f_Tr("arena.lost"); m_oCs.m_iResultPauseMs = 1200; }
+    if (l_bWon && m_oArena.m_bTraining) {   // the training ground (docs/gameplay/16 §5): more EXP and weapon wins
+        const nlohmann::json l_jTr = m_jBattleJson.value("training", nlohmann::json::object());
+        int l_iExp = 0;
+        for (const CombatState::Foe& l_oF : m_oCs.m_vFoes) l_iExp += l_oF.m_oEnemy.m_iExp;
+        l_iExp = (int)std::lround(l_iExp * std::max(0.0f, l_jTr.value("exp", 2.0f)));
+        const int l_iUses = std::max(0, l_jTr.value("uses", 2));
+        f_GainExp(l_iExp);
+        m_mapWeaponUses[f_WeaponKey()] += l_iUses;
+        m_oArena.m_iExpGained += l_iExp;
+        m_oArena.m_iUsesGained += l_iUses;
+        m_oCs.m_strLog = f_TrParam(f_TrParam(m_oLocale.f_Tr("training.won"), "exp", std::to_string(l_iExp)), "uses", std::to_string(l_iUses));
+        f_MarkProgressDirty();
     }
     return true;
 }
 
-bool Game::startScenarioJson(const nlohmann::json& sc, const std::string& defaultName, std::string& error) {
-    scenarioName_ = sc.value("name", defaultName);
-    arena_ = Arena{};
-    scenarioScene_ = sc.value("scene", std::string("stage"));
-    scenarioExpect_ = sc.value("expect", nlohmann::json::object());
+bool Game::f_StartScenarioJson(const nlohmann::json& l_jSc, const std::string& l_strDefaultName, std::string& l_strError) {
+    m_strScenarioName = l_jSc.value("name", l_strDefaultName);
+    m_oArena = Arena{};
+    m_strScenarioScene = l_jSc.value("scene", std::string("stage"));
+    m_jScenarioExpect = l_jSc.value("expect", nlohmann::json::object());
     // the attack's play (touch_play.h): scenarios play the track unless their battle sets "play" ("weapon": the weapon's)
-    playOverride_ = sc.value("battle", nlohmann::json::object()).value("play", std::string("track"));
-    const nlohmann::json test = sc.value("test", nlohmann::json::object());
-    scenarioTestFrames_ = test.value("frames", 0);
-    scenarioTestKeys_ = test.value("keys", std::string());
-    scenarioTestClicks_ = test.value("clicks", std::string());   // "x:y@frame,..." (design px), like --clicks
-    auto bad = [&](const std::string& what) { error = scenarioName_ + ": " + what; return false; };
+    m_strPlayOverride = l_jSc.value("battle", nlohmann::json::object()).value("play", std::string("track"));
+    const nlohmann::json l_jTest = l_jSc.value("test", nlohmann::json::object());
+    m_iScenarioTestFrames = l_jTest.value("frames", 0);
+    m_strScenarioTestKeys = l_jTest.value("keys", std::string());
+    m_strScenarioTestClicks = l_jTest.value("clicks", std::string());   // "x:y@frame,..." (design px), like --clicks
+    auto l_fnBad = [&](const std::string& l_strWhat) { l_strError = m_strScenarioName + ": " + l_strWhat; return false; };
 
     // 1. The run: from a save file in the scenario's folder, or a new game. Neither is ever written.
-    if (scenarioScene_ == "title") return true;   // the title as the game starts: nothing to set up
-    if (sc.contains("save")) {
-        toms::MetaSaveData m;
-        toms::RunSaveData r;
-        int playSec = 0;
-        const fs::path save = sc["save"].get<std::string>();   // absolute (readScenarioJson)
-        if (!toms::readSaveFile(save.string(), m, r, &playSec)) return bad("cannot read the save " + save.string());
-        applyLoadedRun(m, r, /*slot=*/0, playSec);
-        slotReadOnly_ = true;
+    if (m_strScenarioScene == "title") return true;   // the title as the game starts: nothing to set up
+    if (l_jSc.contains("save")) {
+        toms::MetaSaveData l_oM;
+        toms::RunSaveData l_oR;
+        int l_iPlaySec = 0;
+        const fs::path l_oSave = l_jSc["save"].get<std::string>();   // absolute (readScenarioJson)
+        if (!toms::f_ReadSaveFile(l_oSave.string(), l_oM, l_oR, &l_iPlaySec)) return l_fnBad("cannot read the save " + l_oSave.string());
+        f_ApplyLoadedRun(l_oM, l_oR, /*slot=*/0, l_iPlaySec);
+        m_bSlotReadOnly = true;
     } else {
-        newGame(-1);
+        f_NewGame(-1);
     }
 
     // 2. The floor: a floor id (F04), a stage id, or a stage file next to the scenario.
-    if (sc.contains("stage")) {
-        loadStage(sc["stage"].get<std::string>());   // a stage file's path is already absolute (readScenarioJson)
+    if (l_jSc.contains("stage")) {
+        f_LoadStage(l_jSc["stage"].get<std::string>());   // a stage file's path is already absolute (readScenarioJson)
     }
 
     // 3. The story so far: stair locks, finished events, flags.
-    if (sc.contains("stairLocks"))
-        for (const auto& l : sc["stairLocks"]) {   // "event": one, or "events": several (W38: all must be done)
-            for (const std::string& e : strings(l, "event")) debugLockStairs(l.value("floor", std::string()), e);
-            for (const std::string& e : strings(l, "events")) debugLockStairs(l.value("floor", std::string()), e);
+    if (l_jSc.contains("stairLocks"))
+        for (const auto& l_jL : l_jSc["stairLocks"]) {   // "event": one, or "events": several (W38: all must be done)
+            for (const std::string& l_strE : f_Strings(l_jL, "event")) f_DebugLockStairs(l_jL.value("floor", std::string()), l_strE);
+            for (const std::string& l_strE : f_Strings(l_jL, "events")) f_DebugLockStairs(l_jL.value("floor", std::string()), l_strE);
         }
-    for (const std::string& f : strings(sc, "flags")) debugSetFlag(f);
-    for (const std::string& e : strings(sc, "eventsDone")) debugFinishEvent(e);
-    if (sc.contains("cards") && sc["cards"].is_object())   // monster cards held: { "slime": 2 } (the training ground, 16 §5)
-        for (auto it = sc["cards"].begin(); it != sc["cards"].end(); ++it)
-            if (it.value().is_number_integer()) meta_.cards[it.key()].copies = std::max(0, it.value().get<int>());
+    for (const std::string& l_strF : f_Strings(l_jSc, "flags")) f_DebugSetFlag(l_strF);
+    for (const std::string& l_strE : f_Strings(l_jSc, "eventsDone")) f_DebugFinishEvent(l_strE);
+    if (l_jSc.contains("cards") && l_jSc["cards"].is_object())   // monster cards held: { "slime": 2 } (the training ground, 16 §5)
+        for (auto l_oIt = l_jSc["cards"].begin(); l_oIt != l_jSc["cards"].end(); ++l_oIt)
+            if (l_oIt.value().is_number_integer()) m_oMeta.m_mapCards[l_oIt.key()].m_iCopies = std::max(0, l_oIt.value().get<int>());
 
     // 4. The player: items and gear first (gear can change the stats), then the numbers as given. A new game starts with
     // the starting weapon (the bow) equipped; "unarmed": true takes it off.
-    const nlohmann::json p = sc.value("player", nlohmann::json::object());
-    if (p.value("unarmed", false)) equipped_.weaponId.clear();
-    for (const std::string& id : strings(p, "give")) debugGive(id);
-    for (const std::string& id : strings(p, "equip"))
-        if (!debugEquip(id)) return bad("no equipment \"" + id + "\" in data/items.json");
-    if (p.contains("x")) pl.x = p["x"].get<int>();
-    if (p.contains("y")) pl.y = p["y"].get<int>();
-    if (p.contains("maxhp")) pl.maxhp = p["maxhp"].get<int>();
-    if (p.contains("hp")) pl.hp = p["hp"].get<int>();
-    if (p.contains("atk")) pl.atk = p["atk"].get<int>();
-    if (p.contains("def")) pl.def = p["def"].get<int>();
-    if (p.contains("gold")) pl.gold = p["gold"].get<int>();
-    if (p.contains("exp")) pl.exp = p["exp"].get<int>();
-    if (p.contains("lv")) pl.lv = p["lv"].get<int>();
-    if (p.contains("attrPoints")) pl.attrPoints = std::max(0, p["attrPoints"].get<int>());   // to place on the Status tab
-    if (p.contains("keys")) {
-        const nlohmann::json& k = p["keys"];
-        pl.key_yellow = k.value("yellow", pl.key_yellow);
-        pl.key_blue = k.value("blue", pl.key_blue);
-        pl.key_red = k.value("red", pl.key_red);
+    const nlohmann::json l_jP = l_jSc.value("player", nlohmann::json::object());
+    if (l_jP.value("unarmed", false)) m_oEquipped.m_strWeaponId.clear();
+    for (const std::string& l_strId : f_Strings(l_jP, "give")) f_DebugGive(l_strId);
+    for (const std::string& l_strId : f_Strings(l_jP, "equip"))
+        if (!f_DebugEquip(l_strId)) return l_fnBad("no equipment \"" + l_strId + "\" in data/items.json");
+    if (l_jP.contains("x")) m_oPl.m_iX = l_jP["x"].get<int>();
+    if (l_jP.contains("y")) m_oPl.m_iY = l_jP["y"].get<int>();
+    if (l_jP.contains("maxhp")) m_oPl.m_iMaxhp = l_jP["maxhp"].get<int>();
+    if (l_jP.contains("hp")) m_oPl.m_iHp = l_jP["hp"].get<int>();
+    if (l_jP.contains("atk")) m_oPl.m_iAtk = l_jP["atk"].get<int>();
+    if (l_jP.contains("def")) m_oPl.m_iDef = l_jP["def"].get<int>();
+    if (l_jP.contains("gold")) m_oPl.m_iGold = l_jP["gold"].get<int>();
+    if (l_jP.contains("exp")) m_oPl.m_iExp = l_jP["exp"].get<int>();
+    if (l_jP.contains("lv")) m_oPl.m_iLv = l_jP["lv"].get<int>();
+    if (l_jP.contains("attrPoints")) m_oPl.m_iAttrPoints = std::max(0, l_jP["attrPoints"].get<int>());   // to place on the Status tab
+    if (l_jP.contains("keys")) {
+        const nlohmann::json& l_jK = l_jP["keys"];
+        m_oPl.m_iKeyYellow = l_jK.value("yellow", m_oPl.m_iKeyYellow);
+        m_oPl.m_iKeyBlue = l_jK.value("blue", m_oPl.m_iKeyBlue);
+        m_oPl.m_iKeyRed = l_jK.value("red", m_oPl.m_iKeyRed);
     }
-    if (p.contains("attrs"))
-        for (auto it = p["attrs"].begin(); it != p["attrs"].end(); ++it) pl.attrs[it.key()] = it.value().get<int>();
-    if (p.contains("inventory")) pl.inv = strings(p, "inventory");
-    if (p.contains("weaponUses") && p["weaponUses"].is_object())   // wins with each weapon: its level (docs/gameplay/07 phase 1)
-        for (auto it = p["weaponUses"].begin(); it != p["weaponUses"].end(); ++it) weaponUses_[it.key()] = it.value().get<int>();
+    if (l_jP.contains("attrs"))
+        for (auto l_oIt = l_jP["attrs"].begin(); l_oIt != l_jP["attrs"].end(); ++l_oIt) m_oPl.m_mapAttrs[l_oIt.key()] = l_oIt.value().get<int>();
+    if (l_jP.contains("inventory")) m_oPl.m_vInv = f_Strings(l_jP, "inventory");
+    if (l_jP.contains("weaponUses") && l_jP["weaponUses"].is_object())   // wins with each weapon: its level (docs/gameplay/07 phase 1)
+        for (auto l_oIt = l_jP["weaponUses"].begin(); l_oIt != l_jP["weaponUses"].end(); ++l_oIt) m_mapWeaponUses[l_oIt.key()] = l_oIt.value().get<int>();
 
     // 5. The scene.
-    const std::string& s = scenarioScene_;
-    if (s == "stage") {
+    const std::string& l_strS = m_strScenarioScene;
+    if (l_strS == "stage") {
         // the walking scene as it is now
-    } else if (s == "battle" || s == "battleWon") {
-        const nlohmann::json b = sc.value("battle", nlohmann::json::object());
-        const std::string id = b.value("enemy", std::string());
-        EnemyInst en;
-        if (!enemyFromData(id, b, en)) return bad("no enemy \"" + id + "\" in data/enemies.json");
+    } else if (l_strS == "battle" || l_strS == "battleWon") {
+        const nlohmann::json l_jB = l_jSc.value("battle", nlohmann::json::object());
+        const std::string l_strId = l_jB.value("enemy", std::string());
+        EnemyInst l_oEn;
+        if (!f_EnemyFromData(l_strId, l_jB, l_oEn)) return l_fnBad("no enemy \"" + l_strId + "\" in data/enemies.json");
         // "party": the monsters beside it (ids, or {"enemy": id, ...overrides}; docs/gameplay/13 §4.6)
-        std::vector<EnemyInst> party;
-        for (const auto& m : b.value("party", nlohmann::json::array())) {
-            const nlohmann::json o = m.is_object() ? m : nlohmann::json::object();
-            const std::string mid = m.is_string() ? m.get<std::string>() : o.value("enemy", std::string());
-            EnemyInst pm;
-            if (!enemyFromData(mid, o, pm)) return bad("no enemy \"" + mid + "\" in data/enemies.json");
-            party.push_back(pm);
+        std::vector<EnemyInst> l_vParty;
+        for (const auto& l_jM : l_jB.value("party", nlohmann::json::array())) {
+            const nlohmann::json l_jO = l_jM.is_object() ? l_jM : nlohmann::json::object();
+            const std::string l_strMid = l_jM.is_string() ? l_jM.get<std::string>() : l_jO.value("enemy", std::string());
+            EnemyInst l_oPm;
+            if (!f_EnemyFromData(l_strMid, l_jO, l_oPm)) return l_fnBad("no enemy \"" + l_strMid + "\" in data/enemies.json");
+            l_vParty.push_back(l_oPm);
         }
-        paceOverride_ = b.value("pace", std::string());   // "cooldown" / "stamina" (docs/gameplay/13 §6.3)
+        m_strPaceOverride = l_jB.value("pace", std::string());   // "cooldown" / "stamina" (docs/gameplay/13 §6.3)
         {   // "rules": data/battle.json's values for this battle ({"stamina": {...}, "break": {...}}), as the battle editor tries them
-            nlohmann::json rules = battleJson_;
-            if (b.contains("rules") && b["rules"].is_object()) rules.merge_patch(b["rules"]);
-            paceSettings_ = toms::paceFromJson(rules);
-            breakSettings_ = toms::breakFromJson(rules);
-            feel_ = toms::feelFromJson(rules);
-            touchSettings_ = toms::touchPlayFromJson(rules);
-            grade_ = toms::gradeFromJson(rules);
-            guard_ = toms::guardFromJson(rules);
-            comboHoldsMonsters_ = rules.value("combo_holds_monsters", false);
-            comboRunsThroughAttacks_ = rules.value("combo_runs_through_attacks", true);
+            nlohmann::json l_jRules = m_jBattleJson;
+            if (l_jB.contains("rules") && l_jB["rules"].is_object()) l_jRules.merge_patch(l_jB["rules"]);
+            m_oPaceSettings = toms::f_PaceFromJson(l_jRules);
+            m_oBreakSettings = toms::f_BreakFromJson(l_jRules);
+            m_oFeel = toms::f_FeelFromJson(l_jRules);
+            m_oTouchSettings = toms::f_TouchPlayFromJson(l_jRules);
+            m_oGrade = toms::f_GradeFromJson(l_jRules);
+            m_oGuard = toms::f_GuardFromJson(l_jRules);
+            m_bComboHoldsMonsters = l_jRules.value("combo_holds_monsters", false);
+            m_bComboRunsThroughAttacks = l_jRules.value("combo_runs_through_attacks", true);
         }
-        startCombat(en, party);
-        if (b.value("super", false)) cs.superCharge = run_.superMax();   // the ultimate ready (docs/gameplay/16 §6)
-        if (s == "battleWon") finishCombatWin();
-    } else if (s == "arena") {
+        f_StartCombat(l_oEn, l_vParty);
+        if (l_jB.value("super", false)) m_oCs.m_iSuperCharge = m_oRun.f_SuperMax();   // the ultimate ready (docs/gameplay/16 §6)
+        if (l_strS == "battleWon") f_FinishCombatWin();
+    } else if (l_strS == "arena") {
         // the weapon test arena: "battle": { "enemies": [...] } (or "enemy"), fought in turn; the weapon is the
         // player's ("player": { "equip": [...] }; the starting bow unless "unarmed": true)
-        const nlohmann::json b = sc.value("battle", nlohmann::json::object());
-        arena_.enemies = strings(b, "enemies");
-        if (arena_.enemies.empty()) arena_.enemies = strings(b, "enemy");
-        if (arena_.enemies.empty()) return bad("\"battle\": { \"enemies\": [...] } is missing");
-        for (const std::string& id : arena_.enemies) {
-            EnemyInst probe;
-            if (!enemyFromData(id, b, probe)) return bad("no enemy \"" + id + "\" in data/enemies.json");
+        const nlohmann::json l_jB = l_jSc.value("battle", nlohmann::json::object());
+        m_oArena.m_vEnemies = f_Strings(l_jB, "enemies");
+        if (m_oArena.m_vEnemies.empty()) m_oArena.m_vEnemies = f_Strings(l_jB, "enemy");
+        if (m_oArena.m_vEnemies.empty()) return l_fnBad("\"battle\": { \"enemies\": [...] } is missing");
+        for (const std::string& l_strId : m_oArena.m_vEnemies) {
+            EnemyInst l_oProbe;
+            if (!f_EnemyFromData(l_strId, l_jB, l_oProbe)) return l_fnBad("no enemy \"" + l_strId + "\" in data/enemies.json");
         }
-        arena_.overrides = b;
-        arena_.on = true;
-        arenaNextFight();
-    } else if (s == "miniGame") {   // a reward event (docs/gameplay/07 phase 6): "miniGame": "<id in data/minigames.json>"
-        openMiniGame(sc.value("miniGame", std::string()));
-        if (!miniGame_.open) return bad("no mini-game \"" + sc.value("miniGame", std::string()) + "\" (data/minigames.json)");
-    } else if (s == "weaponTrial") {   // the start story (docs/gameplay/07 phase 3): the weapon master's dialogue
-        startWeaponTrial();
-    } else if (s == "dialogue") {
-        const nlohmann::json d = sc.value("dialogue", nlohmann::json::object());
-        if (d.contains("file")) {
-            const fs::path f = d["file"].get<std::string>();   // absolute (readScenarioJson)
-            nlohmann::json data = toms::readJsonFileSafe(f.string());
-            if (!data.is_object()) return bad("cannot read the dialogue " + f.string());
-            dlgNpc = d.value("id", f.stem().string());
-            dlgSpeaker_.clear(); dlgTalkNpc_.clear();
-            openDialogue(data, DlgMode::Plain);
+        m_oArena.m_jOverrides = l_jB;
+        m_oArena.m_bOn = true;
+        f_ArenaNextFight();
+    } else if (l_strS == "miniGame") {   // a reward event (docs/gameplay/07 phase 6): "miniGame": "<id in data/minigames.json>"
+        f_OpenMiniGame(l_jSc.value("miniGame", std::string()));
+        if (!m_oMiniGame.m_bOpen) return l_fnBad("no mini-game \"" + l_jSc.value("miniGame", std::string()) + "\" (data/minigames.json)");
+    } else if (l_strS == "weaponTrial") {   // the start story (docs/gameplay/07 phase 3): the weapon master's dialogue
+        f_StartWeaponTrial();
+    } else if (l_strS == "dialogue") {
+        const nlohmann::json l_jD = l_jSc.value("dialogue", nlohmann::json::object());
+        if (l_jD.contains("file")) {
+            const fs::path l_oF = l_jD["file"].get<std::string>();   // absolute (readScenarioJson)
+            nlohmann::json l_jData = toms::f_ReadJsonFileSafe(l_oF.string());
+            if (!l_jData.is_object()) return l_fnBad("cannot read the dialogue " + l_oF.string());
+            m_strDlgNpc = l_jD.value("id", l_oF.stem().string());
+            m_strDlgSpeaker.clear(); m_strDlgTalkNpc.clear();
+            f_OpenDialogue(l_jData, DlgMode::Plain);
         } else {
-            const std::string id = d.value("id", std::string());
-            if (!readDialogue(id).is_object()) return bad("no dialogue \"" + id + "\" in data/dialogue/");
-            startDialogue(id);
+            const std::string l_strId = l_jD.value("id", std::string());
+            if (!f_ReadDialogue(l_strId).is_object()) return l_fnBad("no dialogue \"" + l_strId + "\" in data/dialogue/");
+            f_StartDialogue(l_strId);
         }
-        if (d.contains("node")) enterNode(d["node"].get<std::string>());
-    } else if (s == "talk") {
-        const std::string npc = sc.value("talk", nlohmann::json::object()).value("npc", std::string());
-        if (npc.empty()) return bad("\"talk\": { \"npc\": ... } is missing");
-        talkTo(npc);
-    } else if (s == "store") {
-        storeUnlocked_ = true;
-        storeUnlockDlg = false;
-        openStore();
-    } else if (s == "menu") {
-        const std::string tab = sc.value("menu", nlohmann::json::object()).value("tab", std::string("status"));
-        const int i = menuTabIndex(tab);
-        if (i < 0) return bad("menu tab \"" + tab + "\" (status, gear, items, events, cards, system)");
-        openPlayerMenu(i);
-    } else if (s == "saveLoad") {
-        const std::string mode = sc.value("saveLoad", nlohmann::json::object()).value("mode", std::string("load"));
-        openPlayerMenu((int)MenuTab::System);
-        openSaveLoad(mode == "save" ? 0 : 1);
-    } else if (s == "stageSelect") {
-        openStageSelect();
-    } else if (s == "stairsConfirm") {
-        const nlohmann::json c = sc.value("stairs", nlohmann::json::object());
-        requestStageTransition(c.value("to", std::string("F02")), c.value("up", true));
-    } else if (s == "notice") {
+        if (l_jD.contains("node")) f_EnterNode(l_jD["node"].get<std::string>());
+    } else if (l_strS == "talk") {
+        const std::string l_strNpc = l_jSc.value("talk", nlohmann::json::object()).value("npc", std::string());
+        if (l_strNpc.empty()) return l_fnBad("\"talk\": { \"npc\": ... } is missing");
+        f_TalkTo(l_strNpc);
+    } else if (l_strS == "store") {
+        m_bStoreUnlocked = true;
+        m_bStoreUnlockDlg = false;
+        f_OpenStore();
+    } else if (l_strS == "menu") {
+        const std::string l_strTab = l_jSc.value("menu", nlohmann::json::object()).value("tab", std::string("status"));
+        const int l_iI = f_MenuTabIndex(l_strTab);
+        if (l_iI < 0) return l_fnBad("menu tab \"" + l_strTab + "\" (status, gear, items, events, cards, system)");
+        f_OpenPlayerMenu(l_iI);
+    } else if (l_strS == "saveLoad") {
+        const std::string l_strMode = l_jSc.value("saveLoad", nlohmann::json::object()).value("mode", std::string("load"));
+        f_OpenPlayerMenu((int)MenuTab::System);
+        f_OpenSaveLoad(l_strMode == "save" ? 0 : 1);
+    } else if (l_strS == "stageSelect") {
+        f_OpenStageSelect();
+    } else if (l_strS == "stairsConfirm") {
+        const nlohmann::json l_jC = l_jSc.value("stairs", nlohmann::json::object());
+        f_RequestStageTransition(l_jC.value("to", std::string("F02")), l_jC.value("up", true));
+    } else if (l_strS == "notice") {
         // the notice comes from the setup (a stair lock and its event finished); nothing more to open
-    } else if (s == "ending") {
-        const std::string id = sc.value("ending", nlohmann::json::object()).value("id", std::string());
-        if (id.empty()) return bad("\"ending\": { \"id\": ... } is missing");
-        triggerEnding(id);
-    } else if (s == "hub") {
-        const std::string loc = sc.value("hub", nlohmann::json::object()).value("location", std::string());
-        if (!activateHubLocation(loc)) return bad("hub location \"" + loc + "\" is unknown or locked");
+    } else if (l_strS == "ending") {
+        const std::string l_strId = l_jSc.value("ending", nlohmann::json::object()).value("id", std::string());
+        if (l_strId.empty()) return l_fnBad("\"ending\": { \"id\": ... } is missing");
+        f_TriggerEnding(l_strId);
+    } else if (l_strS == "hub") {
+        const std::string l_strLoc = l_jSc.value("hub", nlohmann::json::object()).value("location", std::string());
+        if (!f_ActivateHubLocation(l_strLoc)) return l_fnBad("hub location \"" + l_strLoc + "\" is unknown or locked");
     } else {
-        return bad("unknown scene \"" + s + "\" (docs/gameplay/08_TEST_SCENARIOS.md lists them)");
+        return l_fnBad("unknown scene \"" + l_strS + "\" (docs/gameplay/08_TEST_SCENARIOS.md lists them)");
     }
-    std::fprintf(stderr, "[scenario] %s: scene %s started\n", scenarioName_.c_str(), s.c_str());
+    std::fprintf(stderr, "[scenario] %s: scene %s started\n", m_strScenarioName.c_str(), l_strS.c_str());
     return true;
 }
 
-bool Game::scenarioCheck(std::string& report) const {
-    const std::string scene = scenarioExpect_.value("scene", scenarioScene_);
-    bool ok = true;
-    std::string out;
-    auto fail = [&](const std::string& why) { ok = false; out += "\n  " + why; };
-    bool showing = false;
-    if (scene == "title") showing = title_.isOpen();
-    else if (scene == "stage") showing = !title_.isOpen() && !modalActive();
-    else if (scene == "battle") showing = cs.active;
-    else if (scene == "battleWon") showing = cs.won;
-    else if (scene == "arena") showing = arena_.on && (cs.active || cs.won || cs.resultPauseMs > 0);
-    else if (scene == "dialogue" || scene == "talk" || scene == "weaponTrial") showing = inDialogue;
-    else if (scene == "miniGame") showing = miniGame_.open;
-    else if (scene == "store") showing = storeOpen;
-    else if (scene == "menu") showing = inGameMenuOpen_;
-    else if (scene == "saveLoad") showing = saveLoadOpen_;
-    else if (scene == "stageSelect") showing = stageSelectOpen_;
-    else if (scene == "stairsConfirm") showing = stairsConfirmOpen_;
-    else if (scene == "notice") showing = !notices_.empty();
-    else if (scene == "ending") showing = endingActive();
-    else if (scene == "hub") showing = inDialogue;
-    if (!showing) fail("the scene \"" + scene + "\" is not showing");
-    if (scenarioExpect_.contains("menuTab")) {
-        const int want = menuTabIndex(scenarioExpect_["menuTab"].get<std::string>());
-        if ((int)menuTab_ != want) fail("the menu is not on tab " + scenarioExpect_["menuTab"].get<std::string>());
+bool Game::f_ScenarioCheck(std::string& l_strReport) const {
+    const std::string l_strScene = m_jScenarioExpect.value("scene", m_strScenarioScene);
+    bool l_bOk = true;
+    std::string l_strOut;
+    auto l_fnFail = [&](const std::string& l_strWhy) { l_bOk = false; l_strOut += "\n  " + l_strWhy; };
+    bool l_bShowing = false;
+    if (l_strScene == "title") l_bShowing = m_oTitle.f_IsOpen();
+    else if (l_strScene == "stage") l_bShowing = !m_oTitle.f_IsOpen() && !f_ModalActive();
+    else if (l_strScene == "battle") l_bShowing = m_oCs.m_bActive;
+    else if (l_strScene == "battleWon") l_bShowing = m_oCs.m_bWon;
+    else if (l_strScene == "arena") l_bShowing = m_oArena.m_bOn && (m_oCs.m_bActive || m_oCs.m_bWon || m_oCs.m_iResultPauseMs > 0);
+    else if (l_strScene == "dialogue" || l_strScene == "talk" || l_strScene == "weaponTrial") l_bShowing = m_bInDialogue;
+    else if (l_strScene == "miniGame") l_bShowing = m_oMiniGame.m_bOpen;
+    else if (l_strScene == "store") l_bShowing = m_bStoreOpen;
+    else if (l_strScene == "menu") l_bShowing = m_bInGameMenuOpen;
+    else if (l_strScene == "saveLoad") l_bShowing = m_bSaveLoadOpen;
+    else if (l_strScene == "stageSelect") l_bShowing = m_bStageSelectOpen;
+    else if (l_strScene == "stairsConfirm") l_bShowing = m_bStairsConfirmOpen;
+    else if (l_strScene == "notice") l_bShowing = !m_vNotices.empty();
+    else if (l_strScene == "ending") l_bShowing = f_EndingActive();
+    else if (l_strScene == "hub") l_bShowing = m_bInDialogue;
+    if (!l_bShowing) l_fnFail("the scene \"" + l_strScene + "\" is not showing");
+    if (m_jScenarioExpect.contains("menuTab")) {
+        const int l_iWant = f_MenuTabIndex(m_jScenarioExpect["menuTab"].get<std::string>());
+        if ((int)m_eMenuTab != l_iWant) l_fnFail("the menu is not on tab " + m_jScenarioExpect["menuTab"].get<std::string>());
     }
-    auto num = [&](const char* key, int have) {
-        if (scenarioExpect_.contains(key) && scenarioExpect_[key].get<int>() != have)
-            fail(std::string(key) + " is " + std::to_string(have) + ", expected " + std::to_string(scenarioExpect_[key].get<int>()));
+    auto l_fnNum = [&](const char* l_pszKey, int l_iHave) {
+        if (m_jScenarioExpect.contains(l_pszKey) && m_jScenarioExpect[l_pszKey].get<int>() != l_iHave)
+            l_fnFail(std::string(l_pszKey) + " is " + std::to_string(l_iHave) + ", expected " + std::to_string(m_jScenarioExpect[l_pszKey].get<int>()));
     };
-    num("gold", pl.gold); num("hp", pl.hp); num("lv", pl.lv); num("crystals", pl.crystals);
-    num("arenaFights", arena_.fights); num("arenaWins", arena_.wins);
-    if (scenarioExpect_.contains("stage") && curStage != scenarioExpect_["stage"].get<std::string>())
-        fail("the floor is " + curStage + ", expected " + scenarioExpect_["stage"].get<std::string>());
-    for (const std::string& id : strings(scenarioExpect_, "inventoryHas"))
-        if (std::find(pl.inv.begin(), pl.inv.end(), id) == pl.inv.end()) fail("the inventory has no " + id);
-    for (const std::string& f : strings(scenarioExpect_, "flags"))
-        if (!run_.flag(f)) fail("the flag " + f + " is not set");
-    if (scenarioExpect_.contains("cards") && scenarioExpect_["cards"].is_object())   // monster id -> copies held
-        for (auto it = scenarioExpect_["cards"].begin(); it != scenarioExpect_["cards"].end(); ++it) {
-            auto r = meta_.cards.find(it.key());
-            const int have = r == meta_.cards.end() ? 0 : r->second.copies;
-            if (have != it.value().get<int>())
-                fail("cards of " + it.key() + ": " + std::to_string(have) + ", expected " + std::to_string(it.value().get<int>()));
+    l_fnNum("gold", m_oPl.m_iGold); l_fnNum("hp", m_oPl.m_iHp); l_fnNum("lv", m_oPl.m_iLv); l_fnNum("crystals", m_oPl.m_iCrystals);
+    l_fnNum("arenaFights", m_oArena.m_iFights); l_fnNum("arenaWins", m_oArena.m_iWins);
+    if (m_jScenarioExpect.contains("stage") && m_strCurStage != m_jScenarioExpect["stage"].get<std::string>())
+        l_fnFail("the floor is " + m_strCurStage + ", expected " + m_jScenarioExpect["stage"].get<std::string>());
+    for (const std::string& l_strId : f_Strings(m_jScenarioExpect, "inventoryHas"))
+        if (std::find(m_oPl.m_vInv.begin(), m_oPl.m_vInv.end(), l_strId) == m_oPl.m_vInv.end()) l_fnFail("the inventory has no " + l_strId);
+    for (const std::string& l_strF : f_Strings(m_jScenarioExpect, "flags"))
+        if (!m_oRun.f_Flag(l_strF)) l_fnFail("the flag " + l_strF + " is not set");
+    if (m_jScenarioExpect.contains("cards") && m_jScenarioExpect["cards"].is_object())   // monster id -> copies held
+        for (auto l_oIt = m_jScenarioExpect["cards"].begin(); l_oIt != m_jScenarioExpect["cards"].end(); ++l_oIt) {
+            auto l_itR = m_oMeta.m_mapCards.find(l_oIt.key());
+            const int l_iHave = l_itR == m_oMeta.m_mapCards.end() ? 0 : l_itR->second.m_iCopies;
+            if (l_iHave != l_oIt.value().get<int>())
+                l_fnFail("cards of " + l_oIt.key() + ": " + std::to_string(l_iHave) + ", expected " + std::to_string(l_oIt.value().get<int>()));
         }
-    if (scenarioExpect_.contains("stairUpLocked")) {   // the current floor's first stair up (W38 tests)
-        const toms::StairLink* up = nullptr;
-        for (const toms::StairLink& l : st.stairs) if (l.up) { up = &l; break; }
-        const bool want = scenarioExpect_["stairUpLocked"].get<bool>();
-        if (!up) fail("the floor has no stair up");
-        else if (stairLocked(*up) != want) fail(std::string("the stair up is ") + (want ? "open, expected locked" : "locked, expected open"));
-        if (up && scenarioExpect_.contains("stairUpMarked") &&
-            stairJustOpened(st.id, *up) != scenarioExpect_["stairUpMarked"].get<bool>())
-            fail(std::string("the stair up is ") + (scenarioExpect_["stairUpMarked"].get<bool>() ? "not marked" : "marked") + " with the arrow");
+    if (m_jScenarioExpect.contains("stairUpLocked")) {   // the current floor's first stair up (W38 tests)
+        const toms::StairLink* l_pUp = nullptr;
+        for (const toms::StairLink& l_oL : m_oSt.m_vStairs) if (l_oL.m_bUp) { l_pUp = &l_oL; break; }
+        const bool l_bWant = m_jScenarioExpect["stairUpLocked"].get<bool>();
+        if (!l_pUp) l_fnFail("the floor has no stair up");
+        else if (f_StairLocked(*l_pUp) != l_bWant) l_fnFail(std::string("the stair up is ") + (l_bWant ? "open, expected locked" : "locked, expected open"));
+        if (l_pUp && m_jScenarioExpect.contains("stairUpMarked") &&
+            f_StairJustOpened(m_oSt.m_strId, *l_pUp) != m_jScenarioExpect["stairUpMarked"].get<bool>())
+            l_fnFail(std::string("the stair up is ") + (m_jScenarioExpect["stairUpMarked"].get<bool>() ? "not marked" : "marked") + " with the arrow");
     }
-    if (scenarioExpect_.contains("equipped") && equipped_.weaponId != scenarioExpect_["equipped"].get<std::string>())
-        fail("the worn weapon is \"" + equipped_.weaponId + "\", expected \"" + scenarioExpect_["equipped"].get<std::string>() + "\"");
-    if (scenarioExpect_.contains("gearOwned")) {   // exactly these, in any order
-        std::vector<std::string> want = scenarioExpect_["gearOwned"].get<std::vector<std::string>>(), have = gearOwned_;
-        std::sort(want.begin(), want.end());
-        std::sort(have.begin(), have.end());
-        if (want != have) fail("the owned gear is not what was expected");
+    if (m_jScenarioExpect.contains("equipped") && m_oEquipped.m_strWeaponId != m_jScenarioExpect["equipped"].get<std::string>())
+        l_fnFail("the worn weapon is \"" + m_oEquipped.m_strWeaponId + "\", expected \"" + m_jScenarioExpect["equipped"].get<std::string>() + "\"");
+    if (m_jScenarioExpect.contains("gearOwned")) {   // exactly these, in any order
+        std::vector<std::string> l_vWant = m_jScenarioExpect["gearOwned"].get<std::vector<std::string>>(), l_vHave = m_vGearOwned;
+        std::sort(l_vWant.begin(), l_vWant.end());
+        std::sort(l_vHave.begin(), l_vHave.end());
+        if (l_vWant != l_vHave) l_fnFail("the owned gear is not what was expected");
     }
-    if (scenarioExpect_.contains("dialogueNode") && (!inDialogue || dlgNode != scenarioExpect_["dialogueNode"].get<std::string>()))
-        fail("the dialogue is not at node \"" + scenarioExpect_["dialogueNode"].get<std::string>() + "\"");
-    if (scenarioExpect_.contains("weaponLevel") && scenarioExpect_["weaponLevel"].is_object())   // weapon id -> its level
-        for (auto it = scenarioExpect_["weaponLevel"].begin(); it != scenarioExpect_["weaponLevel"].end(); ++it)
-            if (weaponLevel(it.key()) != it.value().get<int>())
-                fail("the weapon \"" + it.key() + "\" is Lv " + std::to_string(weaponLevel(it.key())) + ", expected " +
-                     std::to_string(it.value().get<int>()));
-    if (scenarioExpect_.contains("battleClip") && battleRigClip_ != scenarioExpect_["battleClip"].get<std::string>())
-        fail("the battle picture plays the clip \"" + battleRigClip_ + "\", expected \"" + scenarioExpect_["battleClip"].get<std::string>() + "\"");
-    const std::string leadState = foeRigs_.empty() ? std::string() : foeRigs_[0].state;
-    const std::string leadClip = foeRigs_.empty() ? std::string() : foeRigs_[0].clip;
-    if (scenarioExpect_.contains("enemyAnim") && leadState != scenarioExpect_["enemyAnim"].get<std::string>())
-        fail("the monster shows \"" + leadState + "\", expected \"" + scenarioExpect_["enemyAnim"].get<std::string>() + "\"");
-    if (scenarioExpect_.contains("enemyClip") && leadClip != scenarioExpect_["enemyClip"].get<std::string>())
-        fail("the monster plays the clip \"" + leadClip + "\", expected \"" + scenarioExpect_["enemyClip"].get<std::string>() + "\"");
-    if (scenarioExpect_.contains("foesDown")) {   // how many of the battle's monsters have fallen
-        int down = 0;
-        for (const CombatState::Foe& f : cs.foes) down += f.down() ? 1 : 0;
-        if (down != scenarioExpect_["foesDown"].get<int>())
-            fail(std::to_string(down) + " monsters down, expected " + std::to_string(scenarioExpect_["foesDown"].get<int>()));
+    if (m_jScenarioExpect.contains("dialogueNode") && (!m_bInDialogue || m_strDlgNode != m_jScenarioExpect["dialogueNode"].get<std::string>()))
+        l_fnFail("the dialogue is not at node \"" + m_jScenarioExpect["dialogueNode"].get<std::string>() + "\"");
+    if (m_jScenarioExpect.contains("weaponLevel") && m_jScenarioExpect["weaponLevel"].is_object())   // weapon id -> its level
+        for (auto l_oIt = m_jScenarioExpect["weaponLevel"].begin(); l_oIt != m_jScenarioExpect["weaponLevel"].end(); ++l_oIt)
+            if (f_WeaponLevel(l_oIt.key()) != l_oIt.value().get<int>())
+                l_fnFail("the weapon \"" + l_oIt.key() + "\" is Lv " + std::to_string(f_WeaponLevel(l_oIt.key())) + ", expected " +
+                     std::to_string(l_oIt.value().get<int>()));
+    if (m_jScenarioExpect.contains("battleClip") && m_strBattleRigClip != m_jScenarioExpect["battleClip"].get<std::string>())
+        l_fnFail("the battle picture plays the clip \"" + m_strBattleRigClip + "\", expected \"" + m_jScenarioExpect["battleClip"].get<std::string>() + "\"");
+    const std::string l_strLeadState = m_vFoeRigs.empty() ? std::string() : m_vFoeRigs[0].m_strState;
+    const std::string l_strLeadClip = m_vFoeRigs.empty() ? std::string() : m_vFoeRigs[0].m_strClip;
+    if (m_jScenarioExpect.contains("enemyAnim") && l_strLeadState != m_jScenarioExpect["enemyAnim"].get<std::string>())
+        l_fnFail("the monster shows \"" + l_strLeadState + "\", expected \"" + m_jScenarioExpect["enemyAnim"].get<std::string>() + "\"");
+    if (m_jScenarioExpect.contains("enemyClip") && l_strLeadClip != m_jScenarioExpect["enemyClip"].get<std::string>())
+        l_fnFail("the monster plays the clip \"" + l_strLeadClip + "\", expected \"" + m_jScenarioExpect["enemyClip"].get<std::string>() + "\"");
+    if (m_jScenarioExpect.contains("foesDown")) {   // how many of the battle's monsters have fallen
+        int l_iDown = 0;
+        for (const CombatState::Foe& l_oF : m_oCs.m_vFoes) l_iDown += l_oF.f_Down() ? 1 : 0;
+        if (l_iDown != m_jScenarioExpect["foesDown"].get<int>())
+            l_fnFail(std::to_string(l_iDown) + " monsters down, expected " + std::to_string(m_jScenarioExpect["foesDown"].get<int>()));
     }
-    if (scenarioExpect_.contains("battleEvents") && scenarioExpect_["battleEvents"].is_object())   // type -> how many
-        for (auto it = scenarioExpect_["battleEvents"].begin(); it != scenarioExpect_["battleEvents"].end(); ++it) {
-            int n = 0;
-            for (const toms::BattleEvent& e : cs.events) n += e.type == it.key() ? 1 : 0;
-            if (n != it.value().get<int>())
-                fail(std::to_string(n) + " battle events \"" + it.key() + "\", expected " + std::to_string(it.value().get<int>()));
+    if (m_jScenarioExpect.contains("battleEvents") && m_jScenarioExpect["battleEvents"].is_object())   // type -> how many
+        for (auto l_oIt = m_jScenarioExpect["battleEvents"].begin(); l_oIt != m_jScenarioExpect["battleEvents"].end(); ++l_oIt) {
+            int l_iN = 0;
+            for (const toms::BattleEvent& l_oE : m_oCs.m_vEvents) l_iN += l_oE.m_strType == l_oIt.key() ? 1 : 0;
+            if (l_iN != l_oIt.value().get<int>())
+                l_fnFail(std::to_string(l_iN) + " battle events \"" + l_oIt.key() + "\", expected " + std::to_string(l_oIt.value().get<int>()));
         }
-    if (scenarioExpect_.contains("grade") && (!cs.result.valid || cs.result.grade != scenarioExpect_["grade"].get<std::string>()))
-        fail("the result's grade is " + (cs.result.valid ? cs.result.grade : std::string("(no result)")) + ", expected " +
-             scenarioExpect_["grade"].get<std::string>());   // docs/gameplay/15 §3.6
-    if (scenarioExpect_.contains("pace") && battlePace() != scenarioExpect_["pace"].get<std::string>())
-        fail("the pace is " + battlePace() + ", expected " + scenarioExpect_["pace"].get<std::string>());
-    if (scenarioExpect_.contains("target") && cs.target != scenarioExpect_["target"].get<int>())
-        fail("the target is monster " + std::to_string(cs.target) + ", expected " + std::to_string(scenarioExpect_["target"].get<int>()));
-    if (scenarioExpect_.contains("battleAnim") && battleRigState_ != scenarioExpect_["battleAnim"].get<std::string>())
-        fail("the battle picture shows \"" + battleRigState_ + "\", expected \"" + scenarioExpect_["battleAnim"].get<std::string>() + "\"");
-    if (scenarioExpect_.contains("condition") && !holds(scenarioExpect_["condition"]))
-        fail("the condition " + scenarioExpect_["condition"].dump() + " does not hold");
-    report = "[scenario] " + scenarioName_ + ": " + (ok ? "ok (" + scene + ")" : "FAILED" + out);
-    return ok;
+    if (m_jScenarioExpect.contains("grade") && (!m_oCs.m_oResult.m_bValid || m_oCs.m_oResult.m_strGrade != m_jScenarioExpect["grade"].get<std::string>()))
+        l_fnFail("the result's grade is " + (m_oCs.m_oResult.m_bValid ? m_oCs.m_oResult.m_strGrade : std::string("(no result)")) + ", expected " +
+             m_jScenarioExpect["grade"].get<std::string>());   // docs/gameplay/15 §3.6
+    if (m_jScenarioExpect.contains("pace") && f_BattlePace() != m_jScenarioExpect["pace"].get<std::string>())
+        l_fnFail("the pace is " + f_BattlePace() + ", expected " + m_jScenarioExpect["pace"].get<std::string>());
+    if (m_jScenarioExpect.contains("target") && m_oCs.m_iTarget != m_jScenarioExpect["target"].get<int>())
+        l_fnFail("the target is monster " + std::to_string(m_oCs.m_iTarget) + ", expected " + std::to_string(m_jScenarioExpect["target"].get<int>()));
+    if (m_jScenarioExpect.contains("battleAnim") && m_strBattleRigState != m_jScenarioExpect["battleAnim"].get<std::string>())
+        l_fnFail("the battle picture shows \"" + m_strBattleRigState + "\", expected \"" + m_jScenarioExpect["battleAnim"].get<std::string>() + "\"");
+    if (m_jScenarioExpect.contains("condition") && !f_Holds(m_jScenarioExpect["condition"]))
+        l_fnFail("the condition " + m_jScenarioExpect["condition"].dump() + " does not hold");
+    l_strReport = "[scenario] " + m_strScenarioName + ": " + (l_bOk ? "ok (" + l_strScene + ")" : "FAILED" + l_strOut);
+    return l_bOk;
 }

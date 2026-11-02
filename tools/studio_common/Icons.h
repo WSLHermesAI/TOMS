@@ -18,10 +18,10 @@ enum class Id {
     Duplicate, Event, Rename, AutoKey, Snap, Forward, Solo, Brush
 };
 
-QIcon icon(Id id);
+QIcon f_Icon(Id l_eId);
 
 // A sprite thumbnail as a tree icon: the image centred in a square, with a dashed frame for
 // child sprites and a pin badge for pinned ones (what the Sprites dock shows).
-QIcon spriteIcon(const QImage& thumb, bool child, bool pinned, bool excluded);
+QIcon f_SpriteIcon(const QImage& l_oThumb, bool l_bChild, bool l_bPinned, bool l_bExcluded);
 
 }  // namespace Icons

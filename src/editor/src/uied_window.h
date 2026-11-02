@@ -33,108 +33,108 @@ class UiHighlighter;
 class UiEditorWindow : public QMainWindow {
     Q_OBJECT
 public:
-    explicit UiEditorWindow(QWidget* parent = nullptr);
+    explicit UiEditorWindow(QWidget* l_pParent = nullptr);
     ~UiEditorWindow() override;
 
     // ---- for the self-test and the smoke test ----
-    void setQuiet(bool on) { quiet_ = on; }            // no message boxes (automated runs)
-    bool openFile(const QString& name);                // a file of the UI folder, by name
-    QString currentFile() const { return current_; }
-    QString text(const QString& name) const;           // the editor's text of an open file
-    void setText(const QString& name, const QString& text);   // as if typed (previews after the pause)
-    bool isModified(const QString& name) const;
-    bool save(const QString& name);
-    void revert(const QString& name);
-    void previewNow();                                  // the pause is over: preview now
-    int fileCount() const;
-    int problemCount() const;
-    int problemAt(const QString& file) const;          // the line of the first problem naming this file (0 = none)
-    BgfxViewport* viewport() const { return view_; }
-    QComboBox* previewBox() const { return preview_; }
-    void startPreviewAt(int index);                     // as picking it in the Preview list
-    QString uiDir() const { return uiDir_; }
-    void inspectNow();                                  // as a click in inspect mode
-    QString inspectSummary() const;
-    int inspectRuleCount() const;
+    void f_SetQuiet(bool l_bOn) { m_bQuiet = l_bOn; }            // no message boxes (automated runs)
+    bool f_OpenFile(const QString& l_oName);                // a file of the UI folder, by name
+    QString f_CurrentFile() const { return m_oCurrent; }
+    QString f_Text(const QString& l_oName) const;           // the editor's text of an open file
+    void f_SetText(const QString& l_oName, const QString& l_oText);   // as if typed (previews after the pause)
+    bool f_IsModified(const QString& l_oName) const;
+    bool f_Save(const QString& l_oName);
+    void f_Revert(const QString& l_oName);
+    void f_PreviewNow();                                  // the pause is over: preview now
+    int f_FileCount() const;
+    int f_ProblemCount() const;
+    int f_ProblemAt(const QString& l_oFile) const;          // the line of the first problem naming this file (0 = none)
+    BgfxViewport* f_Viewport() const { return m_pView; }
+    QComboBox* f_PreviewBox() const { return m_pPreview; }
+    void f_StartPreviewAt(int l_iIndex);                     // as picking it in the Preview list
+    QString f_UiDir() const { return m_oUiDir; }
+    void f_InspectNow();                                  // as a click in inspect mode
+    QString f_InspectSummary() const;
+    int f_InspectRuleCount() const;
     // Help: the tutorial (docs/gameplay/10_UI_EDITOR.md) and its practice screen (docs/examples/ui_tutorial/practice.rml), which
     // the game itself never shows: Preview "Practice screen" loads it over the map of a new game.
-    void openTutorial();
-    void openPracticeScreen();
-    bool practiceShown() const { return practiceDoc_ != nullptr; }
+    void f_OpenTutorial();
+    void f_OpenPracticeScreen();
+    bool f_PracticeShown() const { return m_pPracticeDoc != nullptr; }
     // The hint: the selectors the text cursor is on, and how many elements on screen glow for them.
-    QStringList hintSelectors() const { return hintSelectors_; }
-    int hintCount() const { return hintCount_; }
-    void updateHint();                                  // places the glow (a timer does it while the cursor is on something)
-    void placeCursor(int pos);                          // the text cursor at this offset of the open file (as a click there)
+    QStringList f_HintSelectors() const { return m_oHintSelectors; }
+    int f_HintCount() const { return m_iHintCount; }
+    void f_UpdateHint();                                  // places the glow (a timer does it while the cursor is on something)
+    void f_PlaceCursor(int l_iPos);                          // the text cursor at this offset of the open file (as a click there)
     // The files of what the game shows now: each shown .rml, then the .rcss files it links (the file list's top group).
-    QStringList relatedFiles() const { return related_; }
-    void updateRelated();                               // asks the game's UI which documents are shown (a timer does it)
+    QStringList f_RelatedFiles() const { return m_oRelated; }
+    void f_UpdateRelated();                               // asks the game's UI which documents are shown (a timer does it)
 
 protected:
-    void closeEvent(QCloseEvent* e) override;
+    void closeEvent(QCloseEvent* l_pE) override;
 
 private:
     struct Buffer {
-        QTextDocument* doc = nullptr;
-        UiHighlighter* highlighter = nullptr;
-        QString disk;        // the text as it is on disk
-        bool crlf = false;   // the file's line ends, kept on save
+        QTextDocument* m_pDoc = nullptr;
+        UiHighlighter* m_pHighlighter = nullptr;
+        QString m_oDisk;        // the text as it is on disk
+        bool m_bCrlf = false;   // the file's line ends, kept on save
     };
 
-    void buildUi();
-    void fillPreviewList();
-    void fillLanguages();
-    void startPreview(int index);
-    void edited(const QString& name);
-    void refreshFileList();
-    void addProblem(int level, const QString& message);
-    void openProblem(int row);
-    void openRule(int row);
-    void diskChanged(const QString& path);
-    bool saveAll();
-    bool askToSave();
-    QString readDisk(const QString& name, bool* crlf = nullptr) const;
-    QString pathOf(const QString& name) const;   // the UI folder's file, or the tutorial's
-    void loadPractice();                         // the practice screen into the running game's UI (when it is up)
+    void f_BuildUi();
+    void f_FillPreviewList();
+    void f_FillLanguages();
+    void f_StartPreview(int l_iIndex);
+    void f_Edited(const QString& l_oName);
+    void f_RefreshFileList();
+    void f_AddProblem(int l_iLevel, const QString& l_oMessage);
+    void f_OpenProblem(int l_iRow);
+    void f_OpenRule(int l_iRow);
+    void f_DiskChanged(const QString& l_oPath);
+    bool f_SaveAll();
+    bool f_AskToSave();
+    QString f_ReadDisk(const QString& l_oName, bool* l_pCrlf = nullptr) const;
+    QString f_PathOf(const QString& l_oName) const;   // the UI folder's file, or the tutorial's
+    void f_LoadPractice();                         // the practice screen into the running game's UI (when it is up)
 
-    QString uiDir_, scenariosDir_, tutorialDir_, docsDir_;
-    QStringList tutorialFiles_;   // practice.rml, practice.rcss
-    bool practiceOn_ = false;     // Preview is the practice screen
-    Rml::ElementDocument* practiceDoc_ = nullptr;
-    Rml::Context* practiceCtx_ = nullptr;   // the context it was loaded into (a restarted game has a new one)
-    QTimer practiceTimer_;
-    QMap<QString, Buffer> buffers_;
-    QString current_;
-    bool quiet_ = false;
-    bool loading_ = false;      // a buffer is being filled from disk: not an edit
-    QTimer previewTimer_;
-    QTimer langTimer_;
-    QStringList previewPaths_;  // the Preview list's scenarios ("" = the title)
-    QStringList related_;       // relatedFiles()
-    QMap<QString, QString> relatedWhy_;   // file -> "shown" or the .rml that links it (the tooltip)
-    QTimer relatedTimer_;
+    QString m_oUiDir, m_oScenariosDir, m_oTutorialDir, m_oDocsDir;
+    QStringList m_oTutorialFiles;   // practice.rml, practice.rcss
+    bool m_bPracticeOn = false;     // Preview is the practice screen
+    Rml::ElementDocument* m_pPracticeDoc = nullptr;
+    Rml::Context* m_pPracticeCtx = nullptr;   // the context it was loaded into (a restarted game has a new one)
+    QTimer m_oPracticeTimer;
+    QMap<QString, Buffer> m_oBuffers;
+    QString m_oCurrent;
+    bool m_bQuiet = false;
+    bool m_bLoading = false;      // a buffer is being filled from disk: not an edit
+    QTimer m_oPreviewTimer;
+    QTimer m_oLangTimer;
+    QStringList m_oPreviewPaths;  // the Preview list's scenarios ("" = the title)
+    QStringList m_oRelated;       // relatedFiles()
+    QMap<QString, QString> m_oRelatedWhy;   // file -> "shown" or the .rml that links it (the tooltip)
+    QTimer m_oRelatedTimer;
     // the hint (updateHint): a document of our own over the game's, a frame per element
-    void cursorMoved();
-    void dropHint();                                    // closes it (before a reload; a new context)
-    QStringList hintSelectors_;
-    QString hintFile_;                                  // an .rml hint looks only in documents loaded from this file
-    bool hintOn_ = true;
-    int hintCount_ = 0;
-    Rml::ElementDocument* hintDoc_ = nullptr;
-    Rml::Context* hintCtx_ = nullptr;
-    QTimer hintTimer_;
-    bool openRelated_ = false;  // a new preview: open its first document once it shows
-    QStringList ruleTargets_;   // the Inspector rows: "file:line"
-    QStringList problemTargets_;
+    void f_CursorMoved();
+    void f_DropHint();                                    // closes it (before a reload; a new context)
+    QStringList m_oHintSelectors;
+    QString m_oHintFile;                                  // an .rml hint looks only in documents loaded from this file
+    bool m_bHintOn = true;
+    int m_iHintCount = 0;
+    Rml::ElementDocument* m_pHintDoc = nullptr;
+    Rml::Context* m_pHintCtx = nullptr;
+    QTimer m_oHintTimer;
+    bool m_bOpenRelated = false;  // a new preview: open its first document once it shows
+    QStringList m_oRuleTargets;   // the Inspector rows: "file:line"
+    QStringList m_oProblemTargets;
 
-    QListWidget* files_ = nullptr;
-    UiCodeEdit* edit_ = nullptr;
-    BgfxViewport* view_ = nullptr;
-    QListWidget* problems_ = nullptr;
-    QLabel* inspectLabel_ = nullptr;
-    QListWidget* rules_ = nullptr;
-    QComboBox* preview_ = nullptr;
-    QComboBox* lang_ = nullptr;
-    QFileSystemWatcher* watcher_ = nullptr;
-    QString ownWrite_;          // the file this window is writing (its watcher event is ours)
+    QListWidget* m_pFiles = nullptr;
+    UiCodeEdit* m_pEdit = nullptr;
+    BgfxViewport* m_pView = nullptr;
+    QListWidget* m_pProblems = nullptr;
+    QLabel* m_pInspectLabel = nullptr;
+    QListWidget* m_pRules = nullptr;
+    QComboBox* m_pPreview = nullptr;
+    QComboBox* m_pLang = nullptr;
+    QFileSystemWatcher* m_pWatcher = nullptr;
+    QString m_oOwnWrite;          // the file this window is writing (its watcher event is ours)
 };

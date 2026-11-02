@@ -2,8 +2,8 @@
 
 namespace toms {
 
-const char* toString(EncounterKind k) {
-    switch (k) {
+const char* f_ToString(EncounterKind l_eK) {
+    switch (l_eK) {
         case EncounterKind::DirectBattle: return "direct_battle";
         case EncounterKind::DialogueGate: return "dialogue_gate";
         case EncounterKind::StoryTrigger: return "story_trigger";
@@ -12,24 +12,24 @@ const char* toString(EncounterKind k) {
     return "direct_battle";
 }
 
-bool tryParseEncounterKind(const std::string& s, EncounterKind& out) {
-    if (s == "direct_battle") { out = EncounterKind::DirectBattle; return true; }
-    if (s == "dialogue_gate") { out = EncounterKind::DialogueGate; return true; }
-    if (s == "story_trigger") { out = EncounterKind::StoryTrigger; return true; }
-    if (s == "merchant")      { out = EncounterKind::Merchant;     return true; }
+bool f_TryParseEncounterKind(const std::string& l_strS, EncounterKind& l_eOut) {
+    if (l_strS == "direct_battle") { l_eOut = EncounterKind::DirectBattle; return true; }
+    if (l_strS == "dialogue_gate") { l_eOut = EncounterKind::DialogueGate; return true; }
+    if (l_strS == "story_trigger") { l_eOut = EncounterKind::StoryTrigger; return true; }
+    if (l_strS == "merchant")      { l_eOut = EncounterKind::Merchant;     return true; }
     return false;
 }
 
-EncounterKind encounterKindFromString(const std::string& s) {
-    EncounterKind k;
-    return tryParseEncounterKind(s, k) ? k : EncounterKind::DirectBattle;
+EncounterKind f_EncounterKindFromString(const std::string& l_strS) {
+    EncounterKind l_eK;
+    return f_TryParseEncounterKind(l_strS, l_eK) ? l_eK : EncounterKind::DirectBattle;
 }
 
-EncounterKind resolveEncounterKind(const std::string& entityKind, const std::string& overrideStr) {
-    EncounterKind k;
-    if (!overrideStr.empty() && tryParseEncounterKind(overrideStr, k)) return k;
-    if (entityKind.rfind("monster:", 0) == 0) return EncounterKind::DirectBattle;
-    if (entityKind.rfind("npc:", 0) == 0)     return EncounterKind::StoryTrigger;
+EncounterKind f_ResolveEncounterKind(const std::string& l_strEntityKind, const std::string& l_strOverrideStr) {
+    EncounterKind l_eK;
+    if (!l_strOverrideStr.empty() && f_TryParseEncounterKind(l_strOverrideStr, l_eK)) return l_eK;
+    if (l_strEntityKind.rfind("monster:", 0) == 0) return EncounterKind::DirectBattle;
+    if (l_strEntityKind.rfind("npc:", 0) == 0)     return EncounterKind::StoryTrigger;
     return EncounterKind::DirectBattle;
 }
 

@@ -15,36 +15,36 @@
 namespace toms {
 
 struct CueTiming {
-    int cueMs = 1000;         // each cue's whole time (the owner: 1 s)
-    int inputMs = 500;        // of which the input window (the owner: 0.5 s, adjustable)
-    bool windowAtEnd = true;  // the window is the cue's last inputMs (see it, then answer); false: its first
-    int warnMs = 0;           // an "!" this long before the window (and during it); 0: none
-    int gapMs = 150;          // after an answer, the next cue comes this soon
+    int m_iCueMs = 1000;         // each cue's whole time (the owner: 1 s)
+    int m_iInputMs = 500;        // of which the input window (the owner: 0.5 s, adjustable)
+    bool m_bWindowAtEnd = true;  // the window is the cue's last inputMs (see it, then answer); false: its first
+    int m_iWarnMs = 0;           // an "!" this long before the window (and during it); 0: none
+    int m_iGapMs = 150;          // after an answer, the next cue comes this soon
 };
 
 class CueTrack {
 public:
     enum State { Waiting = 0, Answered = 1, Missed = 2 };
-    void start(int count, const CueTiming& t);
+    void f_Start(int l_iCount, const CueTiming& l_oT);
     // The time. Returns how many cues ran out unanswered (missed) in this step.
-    int update(int dtMs);
+    int f_Update(int l_iDtMs);
     // Answer the current cue (only while its window is open; else ignored, returns false). ok: right or wrong.
-    bool answer(bool ok);
+    bool f_Answer(bool l_bOk);
 
-    bool done() const { return index_ >= (int)states_.size(); }
-    int index() const { return index_; }
-    int count() const { return (int)states_.size(); }
-    int state(int k) const { return states_[(size_t)k]; }
-    int cueAgeMs() const { return gapLeft_ > 0 ? -1 : ageMs_; }   // since the current cue popped (-1: between cues)
-    bool open() const;                                            // its input window is open
-    bool warning() const;                                         // its "!" shows
-    float timeLeft() const;                                       // 0..1 of the current cue
+    bool f_Done() const { return m_iIndex >= (int)m_vStates.size(); }
+    int f_Index() const { return m_iIndex; }
+    int f_Count() const { return (int)m_vStates.size(); }
+    int f_State(int l_iK) const { return m_vStates[(size_t)l_iK]; }
+    int f_CueAgeMs() const { return m_iGapLeft > 0 ? -1 : m_iAgeMs; }   // since the current cue popped (-1: between cues)
+    bool f_Open() const;                                            // its input window is open
+    bool f_Warning() const;                                         // its "!" shows
+    float f_TimeLeft() const;                                       // 0..1 of the current cue
 private:
-    CueTiming t_;
-    std::vector<int> states_;
-    int index_ = 0, ageMs_ = 0, gapLeft_ = 0;
-    int windowFrom() const { return t_.windowAtEnd ? t_.cueMs - t_.inputMs : 0; }
-    int windowTo() const { return t_.windowAtEnd ? t_.cueMs : t_.inputMs; }
+    CueTiming m_oT;
+    std::vector<int> m_vStates;
+    int m_iIndex = 0, m_iAgeMs = 0, m_iGapLeft = 0;
+    int f_WindowFrom() const { return m_oT.m_bWindowAtEnd ? m_oT.m_iCueMs - m_oT.m_iInputMs : 0; }
+    int f_WindowTo() const { return m_oT.m_bWindowAtEnd ? m_oT.m_iCueMs : m_oT.m_iInputMs; }
 };
 
 } // namespace toms

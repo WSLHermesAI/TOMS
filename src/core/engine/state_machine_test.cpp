@@ -7,71 +7,71 @@
 
 using namespace toms;
 
-static int g_fail = 0;
-#define CHECK(cond, msg) do { if(!(cond)){ printf("FAIL: %s\n", msg); g_fail++; } } while(0)
+static int g_iFail = 0;
+#define CHECK(cond, msg) do { if(!(cond)){ printf("FAIL: %s\n", msg); g_iFail++; } } while(0)
 
 int main() {
     // 1. No dead ends: every real state has at least one outgoing transition.
-    bool noDeadEnds = true;
-    for (int i = 0; i < (int)GameState::Count; i++) {
-        GameState s = (GameState)i;
-        bool hasOut = false;
-        for (auto& e : transitionTable()) if (e.first == s) { hasOut = true; break; }
-        if (!hasOut) { printf("  (dead end: %s has no outgoing transition)\n", toString(s)); noDeadEnds = false; }
+    bool l_bNoDeadEnds = true;
+    for (int l_iI = 0; l_iI < (int)GameState::Count; l_iI++) {
+        GameState l_eS = (GameState)l_iI;
+        bool l_bHasOut = false;
+        for (auto& l_pairE : f_TransitionTable()) if (l_pairE.first == l_eS) { l_bHasOut = true; break; }
+        if (!l_bHasOut) { printf("  (dead end: %s has no outgoing transition)\n", f_ToString(l_eS)); l_bNoDeadEnds = false; }
     }
-    CHECK(noDeadEnds, "every state has >=1 outgoing transition (no dead ends)");
+    CHECK(l_bNoDeadEnds, "every state has >=1 outgoing transition (no dead ends)");
 
     // 2. No unreachable states: BFS from Boot must visit every state.
-    std::set<GameState> visited;
-    std::queue<GameState> q;
-    q.push(GameState::Boot);
-    visited.insert(GameState::Boot);
-    while (!q.empty()) {
-        GameState cur = q.front(); q.pop();
-        for (auto& e : transitionTable())
-            if (e.first == cur && !visited.count(e.second)) { visited.insert(e.second); q.push(e.second); }
+    std::set<GameState> l_setVisited;
+    std::queue<GameState> l_oQ;
+    l_oQ.push(GameState::Boot);
+    l_setVisited.insert(GameState::Boot);
+    while (!l_oQ.empty()) {
+        GameState l_eCur = l_oQ.front(); l_oQ.pop();
+        for (auto& l_pairE : f_TransitionTable())
+            if (l_pairE.first == l_eCur && !l_setVisited.count(l_pairE.second)) { l_setVisited.insert(l_pairE.second); l_oQ.push(l_pairE.second); }
     }
-    bool allReachable = true;
-    for (int i = 0; i < (int)GameState::Count; i++) {
-        GameState s = (GameState)i;
-        if (!visited.count(s)) { printf("  (unreachable from Boot: %s)\n", toString(s)); allReachable = false; }
+    bool l_bAllReachable = true;
+    for (int l_iI = 0; l_iI < (int)GameState::Count; l_iI++) {
+        GameState l_eS = (GameState)l_iI;
+        if (!l_setVisited.count(l_eS)) { printf("  (unreachable from Boot: %s)\n", f_ToString(l_eS)); l_bAllReachable = false; }
     }
-    CHECK(allReachable, "every state is reachable from Boot");
+    CHECK(l_bAllReachable, "every state is reachable from Boot");
 
     // 3. GameStateMachine follows the legal path and rejects illegal jumps.
-    GameStateMachine gsm;
-    CHECK(gsm.current() == GameState::Boot, "initial state is Boot");
-    CHECK(gsm.tryTransition(GameState::MainMenu), "Boot -> MainMenu is legal");
+    GameStateMachine l_oGsm;
+    CHECK(l_oGsm.f_Current() == GameState::Boot, "initial state is Boot");
+    CHECK(l_oGsm.f_TryTransition(GameState::MainMenu), "Boot -> MainMenu is legal");
 
-    CHECK(!gsm.tryTransition(GameState::DirectBattle), "MainMenu -> DirectBattle is illegal, rejected");
-    CHECK(gsm.current() == GameState::MainMenu, "state unchanged after a rejected transition");
+    CHECK(!l_oGsm.f_TryTransition(GameState::DirectBattle), "MainMenu -> DirectBattle is illegal, rejected");
+    CHECK(l_oGsm.f_Current() == GameState::MainMenu, "state unchanged after a rejected transition");
 
-    CHECK(gsm.tryTransition(GameState::StageSelect), "MainMenu -> StageSelect is legal");
-    CHECK(gsm.tryTransition(GameState::StageLoading), "StageSelect -> StageLoading is legal");
-    CHECK(gsm.tryTransition(GameState::Explore), "StageLoading -> Explore is legal");
-    CHECK(gsm.current() == GameState::Explore, "current state is now Explore");
+    CHECK(l_oGsm.f_TryTransition(GameState::StageSelect), "MainMenu -> StageSelect is legal");
+    CHECK(l_oGsm.f_TryTransition(GameState::StageLoading), "StageSelect -> StageLoading is legal");
+    CHECK(l_oGsm.f_TryTransition(GameState::Explore), "StageLoading -> Explore is legal");
+    CHECK(l_oGsm.f_Current() == GameState::Explore, "current state is now Explore");
 
     // 4. History grows only on accepted transitions.
-    size_t histBefore = gsm.history().size();
-    CHECK(!gsm.tryTransition(GameState::Ending), "Explore -> Ending is illegal, rejected");
-    CHECK(gsm.history().size() == histBefore, "history unchanged after a rejected transition");
-    CHECK(gsm.tryTransition(GameState::EncounterResolve), "Explore -> EncounterResolve is legal");
-    CHECK(gsm.history().size() == histBefore + 1, "history grows by 1 after an accepted transition");
+    size_t l_nHistBefore = l_oGsm.f_History().size();
+    CHECK(!l_oGsm.f_TryTransition(GameState::Ending), "Explore -> Ending is illegal, rejected");
+    CHECK(l_oGsm.f_History().size() == l_nHistBefore, "history unchanged after a rejected transition");
+    CHECK(l_oGsm.f_TryTransition(GameState::EncounterResolve), "Explore -> EncounterResolve is legal");
+    CHECK(l_oGsm.f_History().size() == l_nHistBefore + 1, "history grows by 1 after an accepted transition");
 
     // 5. A full lap: MainMenu -> ... -> StageComplete -> Ending -> Credits -> MainMenu.
-    GameStateMachine lap;
-    bool lapOk = lap.tryTransition(GameState::MainMenu)
-              && lap.tryTransition(GameState::StageSelect)
-              && lap.tryTransition(GameState::StageLoading)
-              && lap.tryTransition(GameState::Explore)
-              && lap.tryTransition(GameState::StageComplete)
-              && lap.tryTransition(GameState::Ending)
-              && lap.tryTransition(GameState::Credits)
-              && lap.tryTransition(GameState::MainMenu);
-    CHECK(lapOk, "full Boot->...->Ending->Credits->MainMenu lap completes");
-    CHECK(lap.current() == GameState::MainMenu, "lap ends back at MainMenu");
+    GameStateMachine l_oLap;
+    bool l_bLapOk = l_oLap.f_TryTransition(GameState::MainMenu)
+              && l_oLap.f_TryTransition(GameState::StageSelect)
+              && l_oLap.f_TryTransition(GameState::StageLoading)
+              && l_oLap.f_TryTransition(GameState::Explore)
+              && l_oLap.f_TryTransition(GameState::StageComplete)
+              && l_oLap.f_TryTransition(GameState::Ending)
+              && l_oLap.f_TryTransition(GameState::Credits)
+              && l_oLap.f_TryTransition(GameState::MainMenu);
+    CHECK(l_bLapOk, "full Boot->...->Ending->Credits->MainMenu lap completes");
+    CHECK(l_oLap.f_Current() == GameState::MainMenu, "lap ends back at MainMenu");
 
-    if (g_fail == 0) { printf("state_machine_test: ALL PASS (7 checks)\n"); return 0; }
-    printf("state_machine_test: %d CHECK(s) FAILED\n", g_fail);
+    if (g_iFail == 0) { printf("state_machine_test: ALL PASS (7 checks)\n"); return 0; }
+    printf("state_machine_test: %d CHECK(s) FAILED\n", g_iFail);
     return 1;
 }

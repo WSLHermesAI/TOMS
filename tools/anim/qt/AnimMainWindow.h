@@ -13,16 +13,16 @@ class AnimMainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit AnimMainWindow(QWidget* parent = nullptr);
-    AnimEditor* editor() const { return m_editor; }
-    void setDarkTheme(bool dark);
+    explicit AnimMainWindow(QWidget* l_pParent = nullptr);
+    AnimEditor* f_Editor() const { return m_pEditor; }
+    void f_SetDarkTheme(bool l_bDark);
 
 protected:
-    void closeEvent(QCloseEvent* e) override;
+    void closeEvent(QCloseEvent* l_pE) override;
 
 private:
-    void updateTitle();
+    void f_UpdateTitle();
 
-    AnimEditor* m_editor;
-    QAction *m_darkAct, *m_lightAct;
+    AnimEditor* m_pEditor;
+    QAction *m_pDarkAct, *m_pLightAct;
 };

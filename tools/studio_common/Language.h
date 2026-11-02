@@ -21,32 +21,32 @@ namespace Language {
 enum class Lang { English, Chinese };
 
 // Once, after QApplication and before any window is made: the saved choice, its translator.
-void init();
+void f_Init();
 // Before QApplication goes (end of main): the translators and the English <-> 中文 tables are freed (docs/engine/15).
-void shutdown();
-Lang current();
+void f_Shutdown();
+Lang f_Current();
 // Switches, saves the choice and re-translates every open window.
-void set(Lang lang);
-void toggle();
+void f_Set(Lang l_eLang);
+void f_Toggle();
 
 // The EN / 中文 toggle button in the menu bar's top-right corner (QMenuBar::setCornerWidget).
-void addToggle(QMenuBar* bar);
+void f_AddToggle(QMenuBar* l_pBar);
 
 // The Chinese of an English tr() text ("" when there is none), and the reverse.
-QString chinese(const QString& english);
-QString english(const QString& chinese);
-int dictionarySize();
+QString f_Chinese(const QString& l_oEnglish);
+QString f_English(const QString& l_oChinese);
+int f_DictionarySize();
 
 // Re-translates one widget tree to the current language (set() does every top-level window).
-void retranslate(QWidget* root);
+void f_Retranslate(QWidget* l_pRoot);
 
 // Emits changed() after set(): for windows that rebuild text with numbers in it.
 class Notifier : public QObject {
     Q_OBJECT
 public:
-    static Notifier* instance();
+    static Notifier* f_Instance();
 signals:
-    void changed();
+    void f_Changed();
 };
 
 }  // namespace Language

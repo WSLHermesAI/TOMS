@@ -21,12 +21,12 @@ class AnimSpriteList : public QListWidget
     Q_OBJECT
 public:
     using QListWidget::QListWidget;
-    static constexpr int kRefRole = Qt::UserRole + 3;   // sprite rows: "id:name"
-    static constexpr const char* kMime = "application/x-toms-sprite";   // the references, one per line
-    static QStringList refsFrom(const QMimeData* m);   // empty: not a sprite drag
+    static constexpr int m_iRefRole = Qt::UserRole + 3;   // sprite rows: "id:name"
+    static constexpr const char* m_pszMime = "application/x-toms-sprite";   // the references, one per line
+    static QStringList f_RefsFrom(const QMimeData* l_pM);   // empty: not a sprite drag
 
     QStringList mimeTypes() const override;
-    QMimeData* mimeData(const QList<QListWidgetItem*>& items) const override;   // the rows' references
+    QMimeData* mimeData(const QList<QListWidgetItem*>& l_oItems) const override;   // the rows' references
 };
 
 class AnimSpritesDock : public QDockWidget
@@ -34,28 +34,28 @@ class AnimSpritesDock : public QDockWidget
     Q_OBJECT
 
 public:
-    explicit AnimSpritesDock(AnimDocument* doc, QWidget* parent = nullptr);
+    explicit AnimSpritesDock(AnimDocument* l_pDoc, QWidget* l_pParent = nullptr);
 
     // Sprite references ("id:name") of the current tab's selected rows, in list order / of its current row.
-    QStringList selectedSprites() const;
-    QString currentSprite() const;
+    QStringList f_SelectedSprites() const;
+    QString f_CurrentSprite() const;
     // Shows the tab of the first reference and selects the rows of these references (in that
     // tab); a bare name selects the copy the lookup picks.
-    void selectSprites(const QStringList& refs);
-    void focusFilter();
-    AnimSpriteList* list() const;                    // the current tab's list (nullptr: no atlas)
-    AnimSpriteList* listFor(int atlasIndex) const;   // nullptr: no such tab
-    QListWidgetItem* spriteItem(int atlasIndex, const QString& name) const;   // nullptr: not listed
-    QTabWidget* tabs() const { return m_tabs; }
+    void f_SelectSprites(const QStringList& l_oRefs);
+    void f_FocusFilter();
+    AnimSpriteList* f_List() const;                    // the current tab's list (nullptr: no atlas)
+    AnimSpriteList* f_ListFor(int l_iAtlasIndex) const;   // nullptr: no such tab
+    QListWidgetItem* f_SpriteItem(int l_iAtlasIndex, const QString& l_oName) const;   // nullptr: not listed
+    QTabWidget* f_Tabs() const { return m_pTabs; }
 
 private:
-    void rebuild();
-    void applyFilter();
-    QString tabTitle(int atlasIndex, int shown) const;
+    void f_Rebuild();
+    void f_ApplyFilter();
+    QString f_TabTitle(int l_iAtlasIndex, int l_iShown) const;
 
-    AnimDocument* m_doc;
-    QLineEdit* m_filter;
-    QTabWidget* m_tabs;
-    QVector<AnimSpriteList*> m_lists;   // one per atlas, in tab order (nullptr: the atlas did not load)
-    QString m_currentAtlas;             // path of the atlas whose tab is shown, kept across rebuilds
+    AnimDocument* m_pDoc;
+    QLineEdit* m_pFilter;
+    QTabWidget* m_pTabs;
+    QVector<AnimSpriteList*> m_oLists;   // one per atlas, in tab order (nullptr: the atlas did not load)
+    QString m_oCurrentAtlas;             // path of the atlas whose tab is shown, kept across rebuilds
 };

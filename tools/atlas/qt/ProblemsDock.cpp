@@ -9,71 +9,71 @@
 #include <QTabWidget>
 #include <QTime>
 
-ProblemsDock::ProblemsDock(AtlasDocument* doc, QWidget* parent)
-    : QDockWidget(tr("Problems"), parent)
-    , m_doc(doc)
-    , m_tabs(new QTabWidget(this))
-    , m_table(new QTableWidget(0, 3, m_tabs))
-    , m_log(new QPlainTextEdit(m_tabs))
+ProblemsDock::ProblemsDock(AtlasDocument* l_pDoc, QWidget* l_pParent)
+    : QDockWidget(tr("Problems"), l_pParent)
+    , m_pDoc(l_pDoc)
+    , m_pTabs(new QTabWidget(this))
+    , m_pTable(new QTableWidget(0, 3, m_pTabs))
+    , m_pLog(new QPlainTextEdit(m_pTabs))
 {
     setObjectName(QStringLiteral("ProblemsDock"));
-    m_table->setHorizontalHeaderLabels({tr("Level"), tr("Sprite"), tr("Message")});
-    m_table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
-    m_table->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Interactive);
-    m_table->horizontalHeader()->setStretchLastSection(true);
-    m_table->setColumnWidth(1, 180);
-    m_table->verticalHeader()->hide();
-    m_table->verticalHeader()->setDefaultSectionSize(22);
-    m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    m_table->setSelectionBehavior(QAbstractItemView::SelectRows);
-    m_table->setShowGrid(false);
-    m_table->setAlternatingRowColors(true);
+    m_pTable->setHorizontalHeaderLabels({tr("Level"), tr("Sprite"), tr("Message")});
+    m_pTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    m_pTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Interactive);
+    m_pTable->horizontalHeader()->setStretchLastSection(true);
+    m_pTable->setColumnWidth(1, 180);
+    m_pTable->verticalHeader()->hide();
+    m_pTable->verticalHeader()->setDefaultSectionSize(22);
+    m_pTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_pTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_pTable->setShowGrid(false);
+    m_pTable->setAlternatingRowColors(true);
 
-    m_log->setReadOnly(true);
-    m_log->setMaximumBlockCount(2000);
-    m_log->setLineWrapMode(QPlainTextEdit::NoWrap);
+    m_pLog->setReadOnly(true);
+    m_pLog->setMaximumBlockCount(2000);
+    m_pLog->setLineWrapMode(QPlainTextEdit::NoWrap);
 
-    m_tabs->setDocumentMode(true);
-    m_tabs->addTab(m_table, tr("Diagnostics"));
-    m_tabs->addTab(m_log, tr("Log"));
-    setWidget(m_tabs);
+    m_pTabs->setDocumentMode(true);
+    m_pTabs->addTab(m_pTable, tr("Diagnostics"));
+    m_pTabs->addTab(m_pLog, tr("Log"));
+    setWidget(m_pTabs);
 
-    connect(doc, &AtlasDocument::buildFinished, this, &ProblemsDock::refresh);
-    connect(doc, &AtlasDocument::projectReset, this, &ProblemsDock::refresh);
-    connect(doc, &AtlasDocument::message, this, &ProblemsDock::appendLog);
-    connect(m_table, &QTableWidget::cellDoubleClicked, this, [this](int row) {
-        const QString sprite = m_table->item(row, 1)->text();
-        if (m_doc->spriteExists(sprite)) m_doc->setSelection({sprite});
+    connect(l_pDoc, &AtlasDocument::f_BuildFinished, this, &ProblemsDock::f_Refresh);
+    connect(l_pDoc, &AtlasDocument::f_ProjectReset, this, &ProblemsDock::f_Refresh);
+    connect(l_pDoc, &AtlasDocument::f_Message, this, &ProblemsDock::f_AppendLog);
+    connect(m_pTable, &QTableWidget::cellDoubleClicked, this, [this](int l_iRow) {
+        const QString l_oSprite = m_pTable->item(l_iRow, 1)->text();
+        if (m_pDoc->f_SpriteExists(l_oSprite)) m_pDoc->f_SetSelection({l_oSprite});
     });
 }
 
-void ProblemsDock::appendLog(const QString& text)
+void ProblemsDock::f_AppendLog(const QString& l_oText)
 {
-    m_log->appendPlainText(QStringLiteral("[%1] %2").arg(QTime::currentTime().toString(QStringLiteral("HH:mm:ss")), text));
+    m_pLog->appendPlainText(QStringLiteral("[%1] %2").arg(QTime::currentTime().toString(QStringLiteral("HH:mm:ss")), l_oText));
 }
 
-void ProblemsDock::refresh()
+void ProblemsDock::f_Refresh()
 {
-    const BuildSnapshotPtr snap = m_doc->snapshot();
-    const std::vector<atlas::Diagnostic> none;
-    const std::vector<atlas::Diagnostic>& diags = snap ? snap->result.diagnostics : none;
-    m_table->setRowCount(int(diags.size()));
-    int errors = 0, warnings = 0;
-    for (size_t i = 0; i < diags.size(); i++) {
-        const atlas::Diagnostic& d = diags[i];
-        errors += d.level == atlas::Diagnostic::Error;
-        warnings += d.level == atlas::Diagnostic::Warning;
-        const Icons::Id icon = d.level == atlas::Diagnostic::Error ? Icons::Id::Error
-                             : d.level == atlas::Diagnostic::Warning ? Icons::Id::Warning : Icons::Id::Info;
-        const QString level = d.level == atlas::Diagnostic::Error ? tr("error")
-                            : d.level == atlas::Diagnostic::Warning ? tr("warning") : tr("info");
-        m_table->setItem(int(i), 0, new QTableWidgetItem(Icons::icon(icon), level));
-        m_table->setItem(int(i), 1, new QTableWidgetItem(QString::fromStdString(d.sprite)));
-        auto* msg = new QTableWidgetItem(QString::fromStdString(d.message));
-        msg->setToolTip(msg->text());
-        m_table->setItem(int(i), 2, msg);
+    const BuildSnapshotPtr l_spSnap = m_pDoc->f_Snapshot();
+    const std::vector<atlas::Diagnostic> l_vNone;
+    const std::vector<atlas::Diagnostic>& l_vDiags = l_spSnap ? l_spSnap->m_oResult.m_vDiagnostics : l_vNone;
+    m_pTable->setRowCount(int(l_vDiags.size()));
+    int l_iErrors = 0, l_iWarnings = 0;
+    for (size_t l_nI = 0; l_nI < l_vDiags.size(); l_nI++) {
+        const atlas::Diagnostic& l_oD = l_vDiags[l_nI];
+        l_iErrors += l_oD.m_eLevel == atlas::Diagnostic::Error;
+        l_iWarnings += l_oD.m_eLevel == atlas::Diagnostic::Warning;
+        const Icons::Id l_eIcon = l_oD.m_eLevel == atlas::Diagnostic::Error ? Icons::Id::Error
+                             : l_oD.m_eLevel == atlas::Diagnostic::Warning ? Icons::Id::Warning : Icons::Id::Info;
+        const QString l_oLevel = l_oD.m_eLevel == atlas::Diagnostic::Error ? tr("error")
+                            : l_oD.m_eLevel == atlas::Diagnostic::Warning ? tr("warning") : tr("info");
+        m_pTable->setItem(int(l_nI), 0, new QTableWidgetItem(Icons::f_Icon(l_eIcon), l_oLevel));
+        m_pTable->setItem(int(l_nI), 1, new QTableWidgetItem(QString::fromStdString(l_oD.m_strSprite)));
+        auto* l_pMsg = new QTableWidgetItem(QString::fromStdString(l_oD.m_strMessage));
+        l_pMsg->setToolTip(l_pMsg->text());
+        m_pTable->setItem(int(l_nI), 2, l_pMsg);
     }
-    setWindowTitle(errors + warnings ? tr("Problems (%1)").arg(errors + warnings) : tr("Problems"));
-    m_tabs->setTabText(0, errors + warnings ? tr("Diagnostics (%1)").arg(errors + warnings) : tr("Diagnostics"));
-    m_tabs->setTabIcon(0, errors ? Icons::icon(Icons::Id::Error) : warnings ? Icons::icon(Icons::Id::Warning) : QIcon());
+    setWindowTitle(l_iErrors + l_iWarnings ? tr("Problems (%1)").arg(l_iErrors + l_iWarnings) : tr("Problems"));
+    m_pTabs->setTabText(0, l_iErrors + l_iWarnings ? tr("Diagnostics (%1)").arg(l_iErrors + l_iWarnings) : tr("Diagnostics"));
+    m_pTabs->setTabIcon(0, l_iErrors ? Icons::f_Icon(Icons::Id::Error) : l_iWarnings ? Icons::f_Icon(Icons::Id::Warning) : QIcon());
 }

@@ -10,10 +10,10 @@ namespace Console {
 // already redirected (a pipe or a file, as in build scripts) is kept; otherwise this borrows the
 // console of the shell that started the program, so --headless messages show up there.
 // No-op outside Windows.
-void attachParent();
+void f_AttachParent();
 
 // The program's arguments (without the program name) as UTF-8, also on Windows where argv is in
 // the ANSI code page.
-std::vector<std::string> utf8Args(int argc, char** argv);
+std::vector<std::string> f_Utf8Args(int l_iArgc, char** l_pArgv);
 
 }  // namespace Console

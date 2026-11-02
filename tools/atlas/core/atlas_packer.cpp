@@ -7,8 +7,8 @@
 
 namespace atlas {
 
-const char* heuristicName(Heuristic h) {
-    switch (h) {
+const char* f_HeuristicName(Heuristic l_eH) {
+    switch (l_eH) {
         case Heuristic::Auto: return "auto";
         case Heuristic::BestShortSideFit: return "bssf";
         case Heuristic::BestLongSideFit: return "blsf";
@@ -20,119 +20,119 @@ const char* heuristicName(Heuristic h) {
     return "auto";
 }
 
-bool parseHeuristic(const std::string& s, Heuristic& out) {
-    for (Heuristic h : {Heuristic::Auto, Heuristic::BestShortSideFit, Heuristic::BestLongSideFit,
+bool f_ParseHeuristic(const std::string& l_strS, Heuristic& l_eOut) {
+    for (Heuristic l_eH : {Heuristic::Auto, Heuristic::BestShortSideFit, Heuristic::BestLongSideFit,
                         Heuristic::BestAreaFit, Heuristic::BottomLeft, Heuristic::ContactPoint, Heuristic::Shelf})
-        if (s == heuristicName(h)) { out = h; return true; }
+        if (l_strS == f_HeuristicName(l_eH)) { l_eOut = l_eH; return true; }
     return false;
 }
 
 // ---- MaxRectsBin -------------------------------------------------------------------------------
 
-MaxRectsBin::MaxRectsBin(int w, int h) : w_(w), h_(h) { free_.push_back({0, 0, w, h}); }
+MaxRectsBin::MaxRectsBin(int l_iW, int l_iH) : m_iW(l_iW), m_iH(l_iH) { m_vFree.push_back({0, 0, l_iW, l_iH}); }
 
-static int commonInterval(int a0, int a1, int b0, int b1) {
-    return (a1 < b0 || b1 < a0) ? 0 : std::min(a1, b1) - std::max(a0, b0);
+static int f_CommonInterval(int l_iA0, int l_iA1, int l_iB0, int l_iB1) {
+    return (l_iA1 < l_iB0 || l_iB1 < l_iA0) ? 0 : std::min(l_iA1, l_iB1) - std::max(l_iA0, l_iB0);
 }
 
-int MaxRectsBin::contactScore(const IRect& r) const {
-    int s = 0;
-    if (r.x == 0 || r.right() == w_) s += r.h;
-    if (r.y == 0 || r.bottom() == h_) s += r.w;
-    for (const IRect& u : used_) {
-        if (u.x == r.right() || u.right() == r.x) s += commonInterval(u.y, u.bottom(), r.y, r.bottom());
-        if (u.y == r.bottom() || u.bottom() == r.y) s += commonInterval(u.x, u.right(), r.x, r.right());
+int MaxRectsBin::f_ContactScore(const IRect& l_oR) const {
+    int l_iS = 0;
+    if (l_oR.m_iX == 0 || l_oR.f_Right() == m_iW) l_iS += l_oR.m_iH;
+    if (l_oR.m_iY == 0 || l_oR.f_Bottom() == m_iH) l_iS += l_oR.m_iW;
+    for (const IRect& l_oU : m_vUsed) {
+        if (l_oU.m_iX == l_oR.f_Right() || l_oU.f_Right() == l_oR.m_iX) l_iS += f_CommonInterval(l_oU.m_iY, l_oU.f_Bottom(), l_oR.m_iY, l_oR.f_Bottom());
+        if (l_oU.m_iY == l_oR.f_Bottom() || l_oU.f_Bottom() == l_oR.m_iY) l_iS += f_CommonInterval(l_oU.m_iX, l_oU.f_Right(), l_oR.m_iX, l_oR.f_Right());
     }
-    return s;
+    return l_iS;
 }
 
-bool MaxRectsBin::score(int w, int h, Heuristic rule, IRect& place, int& best1, int& best2) const {
-    best1 = INT_MAX; best2 = INT_MAX;
-    bool found = false;
-    for (const IRect& f : free_) {
-        if (f.w < w || f.h < h) continue;
-        const IRect r{f.x, f.y, w, h};
-        int s1 = 0, s2 = 0;
-        const int leftW = f.w - w, leftH = f.h - h;
-        switch (rule) {
-            case Heuristic::BestShortSideFit: s1 = std::min(leftW, leftH); s2 = std::max(leftW, leftH); break;
-            case Heuristic::BestLongSideFit:  s1 = std::max(leftW, leftH); s2 = std::min(leftW, leftH); break;
-            case Heuristic::BestAreaFit:      s1 = f.w * f.h - w * h;      s2 = std::min(leftW, leftH); break;
-            case Heuristic::BottomLeft:       s1 = f.y + h;                s2 = f.x; break;
-            case Heuristic::ContactPoint:     s1 = -contactScore(r);       s2 = 0; break;
-            default:                          s1 = std::min(leftW, leftH); s2 = std::max(leftW, leftH); break;
+bool MaxRectsBin::f_Score(int l_iW, int l_iH, Heuristic l_eRule, IRect& l_oPlace, int& l_iBest1, int& l_iBest2) const {
+    l_iBest1 = INT_MAX; l_iBest2 = INT_MAX;
+    bool l_bFound = false;
+    for (const IRect& l_oF : m_vFree) {
+        if (l_oF.m_iW < l_iW || l_oF.m_iH < l_iH) continue;
+        const IRect l_oR{l_oF.m_iX, l_oF.m_iY, l_iW, l_iH};
+        int l_iS1 = 0, l_iS2 = 0;
+        const int l_iLeftW = l_oF.m_iW - l_iW, l_iLeftH = l_oF.m_iH - l_iH;
+        switch (l_eRule) {
+            case Heuristic::BestShortSideFit: l_iS1 = std::min(l_iLeftW, l_iLeftH); l_iS2 = std::max(l_iLeftW, l_iLeftH); break;
+            case Heuristic::BestLongSideFit:  l_iS1 = std::max(l_iLeftW, l_iLeftH); l_iS2 = std::min(l_iLeftW, l_iLeftH); break;
+            case Heuristic::BestAreaFit:      l_iS1 = l_oF.m_iW * l_oF.m_iH - l_iW * l_iH;      l_iS2 = std::min(l_iLeftW, l_iLeftH); break;
+            case Heuristic::BottomLeft:       l_iS1 = l_oF.m_iY + l_iH;                l_iS2 = l_oF.m_iX; break;
+            case Heuristic::ContactPoint:     l_iS1 = -f_ContactScore(l_oR);       l_iS2 = 0; break;
+            default:                          l_iS1 = std::min(l_iLeftW, l_iLeftH); l_iS2 = std::max(l_iLeftW, l_iLeftH); break;
         }
-        if (s1 < best1 || (s1 == best1 && s2 < best2)) {
-            best1 = s1; best2 = s2; place = r; found = true;
+        if (l_iS1 < l_iBest1 || (l_iS1 == l_iBest1 && l_iS2 < l_iBest2)) {
+            l_iBest1 = l_iS1; l_iBest2 = l_iS2; l_oPlace = l_oR; l_bFound = true;
         }
     }
-    return found;
+    return l_bFound;
 }
 
-void MaxRectsBin::commit(const IRect& r) {
-    split(r);
-    prune();
-    used_.push_back(r);
+void MaxRectsBin::f_Commit(const IRect& l_oR) {
+    f_Split(l_oR);
+    f_Prune();
+    m_vUsed.push_back(l_oR);
 }
 
-IRect MaxRectsBin::insert(int w, int h, Heuristic rule) {
-    IRect place; int s1, s2;
-    if (!score(w, h, rule, place, s1, s2)) return {};
-    commit(place);
-    return place;
+IRect MaxRectsBin::f_Insert(int l_iW, int l_iH, Heuristic l_eRule) {
+    IRect l_oPlace; int l_iS1, l_iS2;
+    if (!f_Score(l_iW, l_iH, l_eRule, l_oPlace, l_iS1, l_iS2)) return {};
+    f_Commit(l_oPlace);
+    return l_oPlace;
 }
 
-bool MaxRectsBin::reserve(const IRect& r) {
-    if (r.x < 0 || r.y < 0 || r.right() > w_ || r.bottom() > h_) return false;
-    for (const IRect& u : used_)
-        if (u.intersects(r)) return false;
-    commit(r);
+bool MaxRectsBin::f_Reserve(const IRect& l_oR) {
+    if (l_oR.m_iX < 0 || l_oR.m_iY < 0 || l_oR.f_Right() > m_iW || l_oR.f_Bottom() > m_iH) return false;
+    for (const IRect& l_oU : m_vUsed)
+        if (l_oU.f_Intersects(l_oR)) return false;
+    f_Commit(l_oR);
     return true;
 }
 
 // The free rects untouched by a placement never contain each other (prune keeps it so), so only
 // the pieces cut by this placement (new_) need checking -- O(free x new) instead of O(free^2).
-void MaxRectsBin::split(const IRect& u) {
-    std::vector<IRect> kept;
-    kept.reserve(free_.size());
-    new_.clear();
-    for (const IRect& f : free_) {
-        if (!f.intersects(u)) { kept.push_back(f); continue; }
-        if (u.x > f.x) new_.push_back({f.x, f.y, u.x - f.x, f.h});
-        if (u.right() < f.right()) new_.push_back({u.right(), f.y, f.right() - u.right(), f.h});
-        if (u.y > f.y) new_.push_back({f.x, f.y, f.w, u.y - f.y});
-        if (u.bottom() < f.bottom()) new_.push_back({f.x, u.bottom(), f.w, f.bottom() - u.bottom()});
+void MaxRectsBin::f_Split(const IRect& l_oU) {
+    std::vector<IRect> l_vKept;
+    l_vKept.reserve(m_vFree.size());
+    m_vNew.clear();
+    for (const IRect& l_oF : m_vFree) {
+        if (!l_oF.f_Intersects(l_oU)) { l_vKept.push_back(l_oF); continue; }
+        if (l_oU.m_iX > l_oF.m_iX) m_vNew.push_back({l_oF.m_iX, l_oF.m_iY, l_oU.m_iX - l_oF.m_iX, l_oF.m_iH});
+        if (l_oU.f_Right() < l_oF.f_Right()) m_vNew.push_back({l_oU.f_Right(), l_oF.m_iY, l_oF.f_Right() - l_oU.f_Right(), l_oF.m_iH});
+        if (l_oU.m_iY > l_oF.m_iY) m_vNew.push_back({l_oF.m_iX, l_oF.m_iY, l_oF.m_iW, l_oU.m_iY - l_oF.m_iY});
+        if (l_oU.f_Bottom() < l_oF.f_Bottom()) m_vNew.push_back({l_oF.m_iX, l_oU.f_Bottom(), l_oF.m_iW, l_oF.f_Bottom() - l_oU.f_Bottom()});
     }
-    free_.swap(kept);
+    m_vFree.swap(l_vKept);
 }
 
-void MaxRectsBin::prune() {
+void MaxRectsBin::f_Prune() {
     // A new piece inside another new piece (or an identical earlier one), or inside an old rect, goes.
-    std::vector<char> deadNew(new_.size(), 0);
-    for (size_t i = 0; i < new_.size(); i++) {
-        for (size_t j = 0; j < new_.size() && !deadNew[i]; j++)
-            if (i != j && !deadNew[j] && new_[j].contains(new_[i]) && (new_[j] != new_[i] || j < i)) deadNew[i] = 1;
-        for (size_t j = 0; j < free_.size() && !deadNew[i]; j++)
-            if (free_[j].contains(new_[i])) deadNew[i] = 1;
+    std::vector<char> l_vDeadNew(m_vNew.size(), 0);
+    for (size_t l_nI = 0; l_nI < m_vNew.size(); l_nI++) {
+        for (size_t l_nJ = 0; l_nJ < m_vNew.size() && !l_vDeadNew[l_nI]; l_nJ++)
+            if (l_nI != l_nJ && !l_vDeadNew[l_nJ] && m_vNew[l_nJ].f_Contains(m_vNew[l_nI]) && (m_vNew[l_nJ] != m_vNew[l_nI] || l_nJ < l_nI)) l_vDeadNew[l_nI] = 1;
+        for (size_t l_nJ = 0; l_nJ < m_vFree.size() && !l_vDeadNew[l_nI]; l_nJ++)
+            if (m_vFree[l_nJ].f_Contains(m_vNew[l_nI])) l_vDeadNew[l_nI] = 1;
     }
     // An old rect inside a surviving new piece goes.
-    size_t k = 0;
-    for (size_t i = 0; i < free_.size(); i++) {
-        bool dead = false;
-        for (size_t j = 0; j < new_.size() && !dead; j++)
-            if (!deadNew[j] && new_[j].contains(free_[i])) dead = true;
-        if (!dead) free_[k++] = free_[i];
+    size_t l_nK = 0;
+    for (size_t l_nI = 0; l_nI < m_vFree.size(); l_nI++) {
+        bool l_bDead = false;
+        for (size_t l_nJ = 0; l_nJ < m_vNew.size() && !l_bDead; l_nJ++)
+            if (!l_vDeadNew[l_nJ] && m_vNew[l_nJ].f_Contains(m_vFree[l_nI])) l_bDead = true;
+        if (!l_bDead) m_vFree[l_nK++] = m_vFree[l_nI];
     }
-    free_.resize(k);
-    for (size_t j = 0; j < new_.size(); j++)
-        if (!deadNew[j]) free_.push_back(new_[j]);
-    new_.clear();
+    m_vFree.resize(l_nK);
+    for (size_t l_nJ = 0; l_nJ < m_vNew.size(); l_nJ++)
+        if (!l_vDeadNew[l_nJ]) m_vFree.push_back(m_vNew[l_nJ]);
+    m_vNew.clear();
 }
 
-double MaxRectsBin::occupancy() const {
-    double a = 0;
-    for (const IRect& u : used_) a += (double)u.w * u.h;
-    return a / ((double)w_ * h_);
+double MaxRectsBin::f_Occupancy() const {
+    double l_dA = 0;
+    for (const IRect& l_oU : m_vUsed) l_dA += (double)l_oU.m_iW * l_oU.m_iH;
+    return l_dA / ((double)m_iW * m_iH);
 }
 
 // ---- one page ----------------------------------------------------------------------------------
@@ -141,246 +141,246 @@ namespace {
 
 // Up to this many items per page the packer searches all of them for the best next placement
 // (tightest, O(n^2)); above it, it places them biggest first (fast enough for live rebuilds).
-constexpr size_t kGlobalBestFitMax = 128;
+constexpr size_t g_nGlobalBestFitMax = 128;
 
 struct PageAttempt {
-    std::vector<int> placed;              // item indices placed on this page
-    std::vector<IRect> rects;             // their rects in bin space (padding included)
-    long long area = 0;
+    std::vector<int> m_vPlaced;              // item indices placed on this page
+    std::vector<IRect> m_vRects;             // their rects in bin space (padding included)
+    long long m_i64Area = 0;
 };
 
 // Packs as many of `todo` as fit into a bin of (bw, bh) after the fixed rects. Items are
 // already inflated by padding.
-PageAttempt packOne(const std::vector<PackItem>& items, const std::vector<int>& fixed,
-                    const std::vector<IRect>& fixedRects, const std::vector<int>& todo,
-                    int bw, int bh, Heuristic rule, bool& fixedOk) {
-    PageAttempt a;
-    fixedOk = true;
-    if (rule == Heuristic::Shelf) {
+PageAttempt f_PackOne(const std::vector<PackItem>& l_vItems, const std::vector<int>& l_vFixed,
+                    const std::vector<IRect>& l_vFixedRects, const std::vector<int>& l_vTodo,
+                    int l_iBw, int l_iBh, Heuristic l_eRule, bool& l_bFixedOk) {
+    PageAttempt l_oA;
+    l_bFixedOk = true;
+    if (l_eRule == Heuristic::Shelf) {
         // Rows from the top: tallest first, left to right, a new row when the current one is full.
         // Fixed rects are avoided by skipping past them.
-        std::vector<int> order = todo;
-        std::stable_sort(order.begin(), order.end(), [&](int l, int r) { return items[l].h > items[r].h; });
-        std::vector<IRect> used = fixedRects;
-        for (size_t i = 0; i < fixedRects.size(); i++) { a.placed.push_back(fixed[i]); a.rects.push_back(fixedRects[i]); }
-        int x = 0, y = 0, rowH = 0;
-        for (int idx : order) {
-            const int w = items[idx].w, h = items[idx].h;
-            bool done = false;
-            while (!done) {
-                if (x + w > bw) { y += rowH; x = 0; rowH = 0; }
-                if (y + h > bh || w > bw) break;
-                IRect r{x, y, w, h};
-                const IRect* hit = nullptr;
-                for (const IRect& u : used) if (u.intersects(r)) { hit = &u; break; }
-                if (hit) { x = hit->right(); continue; }
-                used.push_back(r); a.placed.push_back(idx); a.rects.push_back(r);
-                a.area += (long long)w * h;
-                x += w; rowH = std::max(rowH, h);
-                done = true;
+        std::vector<int> l_vOrder = l_vTodo;
+        std::stable_sort(l_vOrder.begin(), l_vOrder.end(), [&](int l_iL, int l_iR) { return l_vItems[l_iL].m_iH > l_vItems[l_iR].m_iH; });
+        std::vector<IRect> l_vUsed = l_vFixedRects;
+        for (size_t l_nI = 0; l_nI < l_vFixedRects.size(); l_nI++) { l_oA.m_vPlaced.push_back(l_vFixed[l_nI]); l_oA.m_vRects.push_back(l_vFixedRects[l_nI]); }
+        int l_iX = 0, l_iY = 0, l_iRowH = 0;
+        for (int l_iIdx : l_vOrder) {
+            const int l_iW = l_vItems[l_iIdx].m_iW, l_iH = l_vItems[l_iIdx].m_iH;
+            bool l_bDone = false;
+            while (!l_bDone) {
+                if (l_iX + l_iW > l_iBw) { l_iY += l_iRowH; l_iX = 0; l_iRowH = 0; }
+                if (l_iY + l_iH > l_iBh || l_iW > l_iBw) break;
+                IRect l_oR{l_iX, l_iY, l_iW, l_iH};
+                const IRect* l_pHit = nullptr;
+                for (const IRect& l_oU : l_vUsed) if (l_oU.f_Intersects(l_oR)) { l_pHit = &l_oU; break; }
+                if (l_pHit) { l_iX = l_pHit->f_Right(); continue; }
+                l_vUsed.push_back(l_oR); l_oA.m_vPlaced.push_back(l_iIdx); l_oA.m_vRects.push_back(l_oR);
+                l_oA.m_i64Area += (long long)l_iW * l_iH;
+                l_iX += l_iW; l_iRowH = std::max(l_iRowH, l_iH);
+                l_bDone = true;
             }
         }
-        return a;
+        return l_oA;
     }
 
-    MaxRectsBin bin(bw, bh);
-    for (size_t i = 0; i < fixed.size(); i++) {
-        if (!bin.reserve(fixedRects[i])) { fixedOk = false; continue; }
-        a.placed.push_back(fixed[i]); a.rects.push_back(fixedRects[i]);
+    MaxRectsBin l_oBin(l_iBw, l_iBh);
+    for (size_t l_nI = 0; l_nI < l_vFixed.size(); l_nI++) {
+        if (!l_oBin.f_Reserve(l_vFixedRects[l_nI])) { l_bFixedOk = false; continue; }
+        l_oA.m_vPlaced.push_back(l_vFixed[l_nI]); l_oA.m_vRects.push_back(l_vFixedRects[l_nI]);
     }
-    std::vector<int> left = todo;
-    if (left.size() > kGlobalBestFitMax) {
+    std::vector<int> l_vLeft = l_vTodo;
+    if (l_vLeft.size() > g_nGlobalBestFitMax) {
         // Many items: biggest first, each at its best place -- one pass instead of the n^2 search
         // below, a few percent looser.
-        std::stable_sort(left.begin(), left.end(), [&](int l, int r) {
-            const int ml = std::max(items[l].w, items[l].h), mr = std::max(items[r].w, items[r].h);
-            if (ml != mr) return ml > mr;
-            return items[l].w * items[l].h > items[r].w * items[r].h;
+        std::stable_sort(l_vLeft.begin(), l_vLeft.end(), [&](int l_iL, int l_iR) {
+            const int l_iMl = std::max(l_vItems[l_iL].m_iW, l_vItems[l_iL].m_iH), l_iMr = std::max(l_vItems[l_iR].m_iW, l_vItems[l_iR].m_iH);
+            if (l_iMl != l_iMr) return l_iMl > l_iMr;
+            return l_vItems[l_iL].m_iW * l_vItems[l_iL].m_iH > l_vItems[l_iR].m_iW * l_vItems[l_iR].m_iH;
         });
-        for (int idx : left) {
-            IRect r; int s1, s2;
-            if (!bin.score(items[idx].w, items[idx].h, rule, r, s1, s2)) continue;
-            bin.commit(r);
-            a.placed.push_back(idx); a.rects.push_back(r);
-            a.area += (long long)items[idx].w * items[idx].h;
+        for (int l_iIdx : l_vLeft) {
+            IRect l_oR; int l_iS1, l_iS2;
+            if (!l_oBin.f_Score(l_vItems[l_iIdx].m_iW, l_vItems[l_iIdx].m_iH, l_eRule, l_oR, l_iS1, l_iS2)) continue;
+            l_oBin.f_Commit(l_oR);
+            l_oA.m_vPlaced.push_back(l_iIdx); l_oA.m_vRects.push_back(l_oR);
+            l_oA.m_i64Area += (long long)l_vItems[l_iIdx].m_iW * l_vItems[l_iIdx].m_iH;
         }
-        return a;
+        return l_oA;
     }
     // Global best fit: each step places the item whose best placement scores best.
-    while (!left.empty()) {
-        int bestK = -1, b1 = INT_MAX, b2 = INT_MAX;
-        IRect bestR;
-        for (size_t k = 0; k < left.size(); k++) {
-            IRect r; int s1, s2;
-            if (!bin.score(items[left[k]].w, items[left[k]].h, rule, r, s1, s2)) continue;
-            if (s1 < b1 || (s1 == b1 && s2 < b2)) { b1 = s1; b2 = s2; bestK = (int)k; bestR = r; }
+    while (!l_vLeft.empty()) {
+        int l_iBestK = -1, l_iB1 = INT_MAX, l_iB2 = INT_MAX;
+        IRect l_oBestR;
+        for (size_t l_nK = 0; l_nK < l_vLeft.size(); l_nK++) {
+            IRect l_oR; int l_iS1, l_iS2;
+            if (!l_oBin.f_Score(l_vItems[l_vLeft[l_nK]].m_iW, l_vItems[l_vLeft[l_nK]].m_iH, l_eRule, l_oR, l_iS1, l_iS2)) continue;
+            if (l_iS1 < l_iB1 || (l_iS1 == l_iB1 && l_iS2 < l_iB2)) { l_iB1 = l_iS1; l_iB2 = l_iS2; l_iBestK = (int)l_nK; l_oBestR = l_oR; }
         }
-        if (bestK < 0) break;
-        bin.commit(bestR);
-        const int idx = left[bestK];
-        a.placed.push_back(idx); a.rects.push_back(bestR);
-        a.area += (long long)items[idx].w * items[idx].h;
-        left.erase(left.begin() + bestK);
+        if (l_iBestK < 0) break;
+        l_oBin.f_Commit(l_oBestR);
+        const int l_iIdx = l_vLeft[l_iBestK];
+        l_oA.m_vPlaced.push_back(l_iIdx); l_oA.m_vRects.push_back(l_oBestR);
+        l_oA.m_i64Area += (long long)l_vItems[l_iIdx].m_iW * l_vItems[l_iIdx].m_iH;
+        l_vLeft.erase(l_vLeft.begin() + l_iBestK);
     }
-    return a;
+    return l_oA;
 }
 
-int nextPow2(int v) { int p = 1; while (p < v) p <<= 1; return p; }
+int f_NextPow2(int l_iV) { int l_iP = 1; while (l_iP < l_iV) l_iP <<= 1; return l_iP; }
 
 }  // namespace
 
-PackResult packPages(const std::vector<PackItem>& items, const PackSettings& s) {
-    PackResult res;
-    res.placements.assign(items.size(), {});
-    const int pad = std::max(0, s.padding), border = std::max(0, s.border);
+PackResult f_PackPages(const std::vector<PackItem>& l_vItems, const PackSettings& l_oS) {
+    PackResult l_oRes;
+    l_oRes.m_vPlacements.assign(l_vItems.size(), {});
+    const int l_iPad = std::max(0, l_oS.m_iPadding), l_iBorder = std::max(0, l_oS.m_iBorder);
     // Bin space: the page minus its border, plus one padding on the right/bottom so the last item
     // in a row needs no trailing gap.
-    const int maxBW = s.maxWidth - 2 * border + pad, maxBH = s.maxHeight - 2 * border + pad;
+    const int l_iMaxBW = l_oS.m_iMaxWidth - 2 * l_iBorder + l_iPad, l_iMaxBH = l_oS.m_iMaxHeight - 2 * l_iBorder + l_iPad;
 
-    std::vector<PackItem> inflated = items;
-    for (PackItem& it : inflated) { it.w += pad; it.h += pad; }
+    std::vector<PackItem> l_vInflated = l_vItems;
+    for (PackItem& l_oIt : l_vInflated) { l_oIt.m_iW += l_iPad; l_oIt.m_iH += l_iPad; }
 
-    std::vector<int> todo;
-    int lastFixedPage = -1;
-    for (int i = 0; i < (int)items.size(); i++) {
-        if (items[i].fixed) { lastFixedPage = std::max(lastFixedPage, items[i].fixedPage); continue; }
-        if (inflated[i].w > maxBW || inflated[i].h > maxBH) {
-            res.errors.push_back("item " + std::to_string(i) + " (" + std::to_string(items[i].w) + "x" +
-                                 std::to_string(items[i].h) + ") is larger than the maximum page size");
+    std::vector<int> l_vTodo;
+    int l_iLastFixedPage = -1;
+    for (int l_iI = 0; l_iI < (int)l_vItems.size(); l_iI++) {
+        if (l_vItems[l_iI].m_bFixed) { l_iLastFixedPage = std::max(l_iLastFixedPage, l_vItems[l_iI].m_iFixedPage); continue; }
+        if (l_vInflated[l_iI].m_iW > l_iMaxBW || l_vInflated[l_iI].m_iH > l_iMaxBH) {
+            l_oRes.m_vErrors.push_back("item " + std::to_string(l_iI) + " (" + std::to_string(l_vItems[l_iI].m_iW) + "x" +
+                                 std::to_string(l_vItems[l_iI].m_iH) + ") is larger than the maximum page size");
             continue;
         }
-        todo.push_back(i);
+        l_vTodo.push_back(l_iI);
     }
 
-    const std::vector<Heuristic> rules = s.heuristic == Heuristic::Auto
+    const std::vector<Heuristic> l_vRules = l_oS.m_eHeuristic == Heuristic::Auto
         ? std::vector<Heuristic>{Heuristic::BestShortSideFit, Heuristic::BestLongSideFit, Heuristic::BestAreaFit,
                                  Heuristic::BottomLeft, Heuristic::ContactPoint}
-        : std::vector<Heuristic>{s.heuristic};
+        : std::vector<Heuristic>{l_oS.m_eHeuristic};
 
-    for (int page = 0; !todo.empty() || page <= lastFixedPage; page++) {
-        std::vector<int> fixed;
-        std::vector<IRect> fixedRects;
-        int needW = 0, needH = 0;
-        for (int i = 0; i < (int)items.size(); i++) {
-            if (!items[i].fixed || items[i].fixedPage != page) continue;
-            fixed.push_back(i);
-            IRect r{items[i].fixedX - border, items[i].fixedY - border, inflated[i].w, inflated[i].h};
-            fixedRects.push_back(r);
-            needW = std::max(needW, r.right()); needH = std::max(needH, r.bottom());
+    for (int l_iPage = 0; !l_vTodo.empty() || l_iPage <= l_iLastFixedPage; l_iPage++) {
+        std::vector<int> l_vFixed;
+        std::vector<IRect> l_vFixedRects;
+        int l_iNeedW = 0, l_iNeedH = 0;
+        for (int l_iI = 0; l_iI < (int)l_vItems.size(); l_iI++) {
+            if (!l_vItems[l_iI].m_bFixed || l_vItems[l_iI].m_iFixedPage != l_iPage) continue;
+            l_vFixed.push_back(l_iI);
+            IRect l_oR{l_vItems[l_iI].m_iFixedX - l_iBorder, l_vItems[l_iI].m_iFixedY - l_iBorder, l_vInflated[l_iI].m_iW, l_vInflated[l_iI].m_iH};
+            l_vFixedRects.push_back(l_oR);
+            l_iNeedW = std::max(l_iNeedW, l_oR.f_Right()); l_iNeedH = std::max(l_iNeedH, l_oR.f_Bottom());
         }
 
         // Candidate bin sizes, smallest area first. Powers of two are always tried; without the
         // power-of-two rule the final page is shrunk to what was used afterwards.
-        std::vector<IRect> cands;
-        if (s.fixedSize) {
-            cands.push_back({0, 0, maxBW, maxBH});
+        std::vector<IRect> l_vCands;
+        if (l_oS.m_bFixedSize) {
+            l_vCands.push_back({0, 0, l_iMaxBW, l_iMaxBH});
         } else {
-            long long area = 0;
-            for (int i : todo) area += (long long)inflated[i].w * inflated[i].h;
-            for (size_t i = 0; i < fixed.size(); i++) area += (long long)fixedRects[i].w * fixedRects[i].h;
-            std::vector<int> ws, hs;
-            for (int v = nextPow2(std::max(1, s.minWidth)); v < s.maxWidth; v <<= 1) ws.push_back(v);
-            ws.push_back(s.maxWidth);
-            for (int v = nextPow2(std::max(1, s.minHeight)); v < s.maxHeight; v <<= 1) hs.push_back(v);
-            hs.push_back(s.maxHeight);
-            for (int w : ws)
-                for (int h : hs) {
-                    if (s.square && w != h) continue;
-                    const int bw = w - 2 * border + pad, bh = h - 2 * border + pad;
-                    if (bw <= 0 || bh <= 0 || bw < needW || bh < needH) continue;
-                    if ((long long)bw * bh < area) continue;
-                    cands.push_back({0, 0, bw, bh});
+            long long l_i64Area = 0;
+            for (int l_iI : l_vTodo) l_i64Area += (long long)l_vInflated[l_iI].m_iW * l_vInflated[l_iI].m_iH;
+            for (size_t l_nI = 0; l_nI < l_vFixed.size(); l_nI++) l_i64Area += (long long)l_vFixedRects[l_nI].m_iW * l_vFixedRects[l_nI].m_iH;
+            std::vector<int> l_vWs, l_vHs;
+            for (int l_iV = f_NextPow2(std::max(1, l_oS.m_iMinWidth)); l_iV < l_oS.m_iMaxWidth; l_iV <<= 1) l_vWs.push_back(l_iV);
+            l_vWs.push_back(l_oS.m_iMaxWidth);
+            for (int l_iV = f_NextPow2(std::max(1, l_oS.m_iMinHeight)); l_iV < l_oS.m_iMaxHeight; l_iV <<= 1) l_vHs.push_back(l_iV);
+            l_vHs.push_back(l_oS.m_iMaxHeight);
+            for (int l_iW : l_vWs)
+                for (int l_iH : l_vHs) {
+                    if (l_oS.m_bSquare && l_iW != l_iH) continue;
+                    const int l_iBw = l_iW - 2 * l_iBorder + l_iPad, l_iBh = l_iH - 2 * l_iBorder + l_iPad;
+                    if (l_iBw <= 0 || l_iBh <= 0 || l_iBw < l_iNeedW || l_iBh < l_iNeedH) continue;
+                    if ((long long)l_iBw * l_iBh < l_i64Area) continue;
+                    l_vCands.push_back({0, 0, l_iBw, l_iBh});
                 }
-            std::stable_sort(cands.begin(), cands.end(), [](const IRect& a, const IRect& b) {
-                const long long aa = (long long)a.w * a.h, bb = (long long)b.w * b.h;
-                if (aa != bb) return aa < bb;
-                return std::abs(a.w - a.h) < std::abs(b.w - b.h);
+            std::stable_sort(l_vCands.begin(), l_vCands.end(), [](const IRect& l_oA, const IRect& l_oB) {
+                const long long l_i64Aa = (long long)l_oA.m_iW * l_oA.m_iH, l_i64Bb = (long long)l_oB.m_iW * l_oB.m_iH;
+                if (l_i64Aa != l_i64Bb) return l_i64Aa < l_i64Bb;
+                return std::abs(l_oA.m_iW - l_oA.m_iH) < std::abs(l_oB.m_iW - l_oB.m_iH);
             });
-            if (cands.empty() || cands.back().w != maxBW || cands.back().h != maxBH)
-                if (!s.square || maxBW == maxBH) cands.push_back({0, 0, maxBW, maxBH});
+            if (l_vCands.empty() || l_vCands.back().m_iW != l_iMaxBW || l_vCands.back().m_iH != l_iMaxBH)
+                if (!l_oS.m_bSquare || l_iMaxBW == l_iMaxBH) l_vCands.push_back({0, 0, l_iMaxBW, l_iMaxBH});
         }
 
-        PageAttempt chosen;
-        IRect chosenBin;
-        bool allFit = false;
-        for (const IRect& c : cands) {
-            for (Heuristic rule : rules) {
-                bool fixedOk = true;
-                PageAttempt a = packOne(inflated, fixed, fixedRects, todo, c.w, c.h, rule, fixedOk);
-                if (!fixedOk) continue;
-                if (a.placed.size() == todo.size() + fixed.size()) { chosen = a; chosenBin = c; allFit = true; break; }
-                if (c.w == maxBW && c.h == maxBH && a.area > chosen.area) { chosen = a; chosenBin = c; }
+        PageAttempt l_oChosen;
+        IRect l_oChosenBin;
+        bool l_bAllFit = false;
+        for (const IRect& l_oC : l_vCands) {
+            for (Heuristic l_eRule : l_vRules) {
+                bool l_bFixedOk = true;
+                PageAttempt l_oA = f_PackOne(l_vInflated, l_vFixed, l_vFixedRects, l_vTodo, l_oC.m_iW, l_oC.m_iH, l_eRule, l_bFixedOk);
+                if (!l_bFixedOk) continue;
+                if (l_oA.m_vPlaced.size() == l_vTodo.size() + l_vFixed.size()) { l_oChosen = l_oA; l_oChosenBin = l_oC; l_bAllFit = true; break; }
+                if (l_oC.m_iW == l_iMaxBW && l_oC.m_iH == l_iMaxBH && l_oA.m_i64Area > l_oChosen.m_i64Area) { l_oChosen = l_oA; l_oChosenBin = l_oC; }
             }
-            if (allFit) break;
+            if (l_bAllFit) break;
         }
         // Without the power-of-two rule the page may be any size: squeeze the bin that worked,
         // height first then width, by binary search (any rule that still fits everything wins).
-        if (allFit && !s.powerOfTwo && !s.fixedSize) {
-            auto fitsAll = [&](int bw, int bh, PageAttempt& out) {
-                for (Heuristic rule : rules) {
-                    bool fixedOk = true;
-                    PageAttempt a = packOne(inflated, fixed, fixedRects, todo, bw, bh, rule, fixedOk);
-                    if (fixedOk && a.placed.size() == todo.size() + fixed.size()) { out = std::move(a); return true; }
+        if (l_bAllFit && !l_oS.m_bPowerOfTwo && !l_oS.m_bFixedSize) {
+            auto l_fnFitsAll = [&](int l_iBw, int l_iBh, PageAttempt& l_oOut) {
+                for (Heuristic l_eRule : l_vRules) {
+                    bool l_bFixedOk = true;
+                    PageAttempt l_oA = f_PackOne(l_vInflated, l_vFixed, l_vFixedRects, l_vTodo, l_iBw, l_iBh, l_eRule, l_bFixedOk);
+                    if (l_bFixedOk && l_oA.m_vPlaced.size() == l_vTodo.size() + l_vFixed.size()) { l_oOut = std::move(l_oA); return true; }
                 }
                 return false;
             };
-            long long area = 0;
-            int minW = needW, minH = needH;
-            for (int i : todo) {
-                area += (long long)inflated[i].w * inflated[i].h;
-                minW = std::max(minW, inflated[i].w);
-                minH = std::max(minH, inflated[i].h);
+            long long l_i64Area = 0;
+            int l_iMinW = l_iNeedW, l_iMinH = l_iNeedH;
+            for (int l_iI : l_vTodo) {
+                l_i64Area += (long long)l_vInflated[l_iI].m_iW * l_vInflated[l_iI].m_iH;
+                l_iMinW = std::max(l_iMinW, l_vInflated[l_iI].m_iW);
+                l_iMinH = std::max(l_iMinH, l_vInflated[l_iI].m_iH);
             }
-            for (size_t i = 0; i < fixed.size(); i++) area += (long long)fixedRects[i].w * fixedRects[i].h;
-            auto squeeze = [&](bool height) {
-                int lo = height ? std::max(minH, (int)((area + chosenBin.w - 1) / chosenBin.w)) : std::max(minW, (int)((area + chosenBin.h - 1) / chosenBin.h));
-                int hi = height ? chosenBin.h : chosenBin.w;
-                if (s.square) lo = std::max(lo, std::max(minW, minH));
-                while (lo < hi) {
-                    const int mid = lo + (hi - lo) / 2;
-                    PageAttempt a;
-                    const int bw = s.square ? mid : (height ? chosenBin.w : mid), bh = s.square ? mid : (height ? mid : chosenBin.h);
-                    if (fitsAll(bw, bh, a)) { hi = mid; chosen = std::move(a); chosenBin = {0, 0, bw, bh}; }
-                    else lo = mid + 1;
+            for (size_t l_nI = 0; l_nI < l_vFixed.size(); l_nI++) l_i64Area += (long long)l_vFixedRects[l_nI].m_iW * l_vFixedRects[l_nI].m_iH;
+            auto l_fnSqueeze = [&](bool l_bHeight) {
+                int l_iLo = l_bHeight ? std::max(l_iMinH, (int)((l_i64Area + l_oChosenBin.m_iW - 1) / l_oChosenBin.m_iW)) : std::max(l_iMinW, (int)((l_i64Area + l_oChosenBin.m_iH - 1) / l_oChosenBin.m_iH));
+                int l_iHi = l_bHeight ? l_oChosenBin.m_iH : l_oChosenBin.m_iW;
+                if (l_oS.m_bSquare) l_iLo = std::max(l_iLo, std::max(l_iMinW, l_iMinH));
+                while (l_iLo < l_iHi) {
+                    const int l_iMid = l_iLo + (l_iHi - l_iLo) / 2;
+                    PageAttempt l_oA;
+                    const int l_iBw = l_oS.m_bSquare ? l_iMid : (l_bHeight ? l_oChosenBin.m_iW : l_iMid), l_iBh = l_oS.m_bSquare ? l_iMid : (l_bHeight ? l_iMid : l_oChosenBin.m_iH);
+                    if (l_fnFitsAll(l_iBw, l_iBh, l_oA)) { l_iHi = l_iMid; l_oChosen = std::move(l_oA); l_oChosenBin = {0, 0, l_iBw, l_iBh}; }
+                    else l_iLo = l_iMid + 1;
                 }
             };
-            squeeze(true);
-            if (!s.square) squeeze(false);
+            l_fnSqueeze(true);
+            if (!l_oS.m_bSquare) l_fnSqueeze(false);
         }
-        if (chosenBin.w == 0) {   // nothing usable (e.g. pinned rects overlap)
-            bool fixedOk = true;
-            chosen = packOne(inflated, fixed, fixedRects, todo, maxBW, maxBH, rules[0], fixedOk);
-            chosenBin = {0, 0, maxBW, maxBH};
-            if (!fixedOk) res.errors.push_back("pinned sprites overlap or lie outside page " + std::to_string(page));
+        if (l_oChosenBin.m_iW == 0) {   // nothing usable (e.g. pinned rects overlap)
+            bool l_bFixedOk = true;
+            l_oChosen = f_PackOne(l_vInflated, l_vFixed, l_vFixedRects, l_vTodo, l_iMaxBW, l_iMaxBH, l_vRules[0], l_bFixedOk);
+            l_oChosenBin = {0, 0, l_iMaxBW, l_iMaxBH};
+            if (!l_bFixedOk) l_oRes.m_vErrors.push_back("pinned sprites overlap or lie outside page " + std::to_string(l_iPage));
         }
-        if (chosen.placed.empty() && fixed.empty()) {
-            res.errors.push_back("could not place the remaining sprites");
+        if (l_oChosen.m_vPlaced.empty() && l_vFixed.empty()) {
+            l_oRes.m_vErrors.push_back("could not place the remaining sprites");
             break;
         }
 
         // Page size: the bin back to page space; without the power-of-two rule, shrink to the used area.
-        int usedW = 0, usedH = 0;
-        for (const IRect& r : chosen.rects) { usedW = std::max(usedW, r.right() - pad); usedH = std::max(usedH, r.bottom() - pad); }
-        int pw = chosenBin.w - pad + 2 * border, ph = chosenBin.h - pad + 2 * border;
-        if (!s.fixedSize) {
-            const int tw = usedW + 2 * border, th = usedH + 2 * border;
-            if (s.powerOfTwo) { pw = std::min(pw, nextPow2(tw)); ph = std::min(ph, nextPow2(th)); }
-            else { pw = std::min(pw, tw); ph = std::min(ph, th); }
-            pw = std::max(pw, std::min(s.minWidth, s.maxWidth)); ph = std::max(ph, std::min(s.minHeight, s.maxHeight));
-            if (s.square) pw = ph = std::max(pw, ph);
+        int l_iUsedW = 0, l_iUsedH = 0;
+        for (const IRect& l_oR : l_oChosen.m_vRects) { l_iUsedW = std::max(l_iUsedW, l_oR.f_Right() - l_iPad); l_iUsedH = std::max(l_iUsedH, l_oR.f_Bottom() - l_iPad); }
+        int l_iPw = l_oChosenBin.m_iW - l_iPad + 2 * l_iBorder, l_iPh = l_oChosenBin.m_iH - l_iPad + 2 * l_iBorder;
+        if (!l_oS.m_bFixedSize) {
+            const int l_iTw = l_iUsedW + 2 * l_iBorder, l_iTh = l_iUsedH + 2 * l_iBorder;
+            if (l_oS.m_bPowerOfTwo) { l_iPw = std::min(l_iPw, f_NextPow2(l_iTw)); l_iPh = std::min(l_iPh, f_NextPow2(l_iTh)); }
+            else { l_iPw = std::min(l_iPw, l_iTw); l_iPh = std::min(l_iPh, l_iTh); }
+            l_iPw = std::max(l_iPw, std::min(l_oS.m_iMinWidth, l_oS.m_iMaxWidth)); l_iPh = std::max(l_iPh, std::min(l_oS.m_iMinHeight, l_oS.m_iMaxHeight));
+            if (l_oS.m_bSquare) l_iPw = l_iPh = std::max(l_iPw, l_iPh);
         }
-        res.pageSizes.push_back({0, 0, pw, ph});
+        l_oRes.m_vPageSizes.push_back({0, 0, l_iPw, l_iPh});
 
-        for (size_t k = 0; k < chosen.placed.size(); k++) {
-            const int idx = chosen.placed[k];
-            res.placements[idx] = {page, chosen.rects[k].x + border, chosen.rects[k].y + border};
+        for (size_t l_nK = 0; l_nK < l_oChosen.m_vPlaced.size(); l_nK++) {
+            const int l_iIdx = l_oChosen.m_vPlaced[l_nK];
+            l_oRes.m_vPlacements[l_iIdx] = {l_iPage, l_oChosen.m_vRects[l_nK].m_iX + l_iBorder, l_oChosen.m_vRects[l_nK].m_iY + l_iBorder};
         }
-        std::vector<int> rest;
-        for (int i : todo)
-            if (res.placements[i].page < 0) rest.push_back(i);
-        todo.swap(rest);
+        std::vector<int> l_vRest;
+        for (int l_iI : l_vTodo)
+            if (l_oRes.m_vPlacements[l_iI].m_iPage < 0) l_vRest.push_back(l_iI);
+        l_vTodo.swap(l_vRest);
     }
-    return res;
+    return l_oRes;
 }
 
 }  // namespace atlas

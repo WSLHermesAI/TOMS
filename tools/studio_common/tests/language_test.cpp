@@ -16,74 +16,74 @@
 
 namespace {
 
-int g_failed = 0;
+int g_iFailed = 0;
 
-void check(bool ok, const char* what) {
-    std::printf("[%s] %s\n", ok ? "ok" : "FAILED", what);
-    if (!ok) g_failed++;
+void f_Check(bool l_bOk, const char* l_pszWhat) {
+    std::printf("[%s] %s\n", l_bOk ? "ok" : "FAILED", l_pszWhat);
+    if (!l_bOk) g_iFailed++;
 }
 
-QString tr(const char* s) { return QCoreApplication::translate("LanguageTest", s); }
+QString f_Tr(const char* l_pszS) { return QCoreApplication::translate("LanguageTest", l_pszS); }
 
 }  // namespace
 
-int main(int argc, char** argv) {
-    QApplication app(argc, argv);
-    Language::init();
-    check(Language::current() == Language::Lang::English, "starts in English (TOMS_LANGUAGE=en)");
-    check(Language::dictionarySize() > 1000, "the Chinese dictionaries are built in (> 1000 entries)");
-    check(Language::chinese(QStringLiteral("&File")) == QStringLiteral("檔案(&F)") &&
-              Language::english(QStringLiteral("檔案(&F)")) == QStringLiteral("&File"),
+int main(int l_iArgc, char** l_pArgv) {
+    QApplication l_oApp(l_iArgc, l_pArgv);
+    Language::f_Init();
+    f_Check(Language::f_Current() == Language::Lang::English, "starts in English (TOMS_LANGUAGE=en)");
+    f_Check(Language::f_DictionarySize() > 1000, "the Chinese dictionaries are built in (> 1000 entries)");
+    f_Check(Language::f_Chinese(QStringLiteral("&File")) == QStringLiteral("檔案(&F)") &&
+              Language::f_English(QStringLiteral("檔案(&F)")) == QStringLiteral("&File"),
           "a word and back: &File <-> 檔案(&F)");
 
     // A window built in English, the way the editors build theirs
-    QMainWindow w;
-    QMenu* file = w.menuBar()->addMenu(tr("&File"));
-    QAction* save = file->addAction(tr("&Save"));
-    auto* central = new QWidget;
-    auto* layout = new QVBoxLayout(central);
-    auto* label = new QLabel(tr("Name"));
-    auto* combo = new QComboBox;
-    combo->addItems({tr("Checker"), tr("Black"), QStringLiteral("my_sprite")});
-    auto* spin = new QSpinBox;
-    spin->setRange(-1, 10);
-    spin->setSpecialValueText(tr("auto"));
-    spin->setValue(-1);
-    auto* table = new QTableWidget(0, 2);
-    table->setHorizontalHeaderLabels({tr("Picture"), tr("Character")});
-    label->setToolTip(tr("Delete"));
-    for (QWidget* x : {(QWidget*)label, (QWidget*)combo, (QWidget*)spin, (QWidget*)table}) layout->addWidget(x);
-    w.setCentralWidget(central);
-    w.setWindowTitle(tr("TOMS Font Tool"));
-    w.show();
+    QMainWindow l_oW;
+    QMenu* l_pFile = l_oW.menuBar()->addMenu(f_Tr("&File"));
+    QAction* l_pSave = l_pFile->addAction(f_Tr("&Save"));
+    auto* l_pCentral = new QWidget;
+    auto* l_pLayout = new QVBoxLayout(l_pCentral);
+    auto* l_pLabel = new QLabel(f_Tr("Name"));
+    auto* l_pCombo = new QComboBox;
+    l_pCombo->addItems({f_Tr("Checker"), f_Tr("Black"), QStringLiteral("my_sprite")});
+    auto* l_pSpin = new QSpinBox;
+    l_pSpin->setRange(-1, 10);
+    l_pSpin->setSpecialValueText(f_Tr("auto"));
+    l_pSpin->setValue(-1);
+    auto* l_pTable = new QTableWidget(0, 2);
+    l_pTable->setHorizontalHeaderLabels({f_Tr("Picture"), f_Tr("Character")});
+    l_pLabel->setToolTip(f_Tr("Delete"));
+    for (QWidget* l_pX : {(QWidget*)l_pLabel, (QWidget*)l_pCombo, (QWidget*)l_pSpin, (QWidget*)l_pTable}) l_pLayout->addWidget(l_pX);
+    l_oW.setCentralWidget(l_pCentral);
+    l_oW.setWindowTitle(f_Tr("TOMS Font Tool"));
+    l_oW.show();
     QApplication::processEvents();
-    auto* toggle = qobject_cast<QToolButton*>(w.menuBar()->cornerWidget(Qt::TopRightCorner));
-    check(toggle && toggle->text() == QStringLiteral("中文"), "every main window gets the toggle, showing 中文");
-    check(toggle && toggle->isVisible() && toggle->width() > 0 && toggle->geometry().right() <= w.menuBar()->width(),
+    auto* l_pToggle = qobject_cast<QToolButton*>(l_oW.menuBar()->cornerWidget(Qt::TopRightCorner));
+    f_Check(l_pToggle && l_pToggle->text() == QStringLiteral("中文"), "every main window gets the toggle, showing 中文");
+    f_Check(l_pToggle && l_pToggle->isVisible() && l_pToggle->width() > 0 && l_pToggle->geometry().right() <= l_oW.menuBar()->width(),
           "the toggle is visible, inside the menu bar");
 
-    toggle->click();
-    check(Language::current() == Language::Lang::Chinese, "the toggle switches to Chinese");
-    check(file->title() == QStringLiteral("檔案(&F)") && save->text() == QStringLiteral("儲存(&S)"), "menus and actions");
-    check(label->text() == QStringLiteral("名稱") && label->toolTip() == QStringLiteral("刪除"), "labels and tool tips");
-    check(combo->itemText(0) == QStringLiteral("棋盤格") && combo->itemText(1) == QStringLiteral("黑") &&
-              combo->itemText(2) == QStringLiteral("my_sprite"),
+    l_pToggle->click();
+    f_Check(Language::f_Current() == Language::Lang::Chinese, "the toggle switches to Chinese");
+    f_Check(l_pFile->title() == QStringLiteral("檔案(&F)") && l_pSave->text() == QStringLiteral("儲存(&S)"), "menus and actions");
+    f_Check(l_pLabel->text() == QStringLiteral("名稱") && l_pLabel->toolTip() == QStringLiteral("刪除"), "labels and tool tips");
+    f_Check(l_pCombo->itemText(0) == QStringLiteral("棋盤格") && l_pCombo->itemText(1) == QStringLiteral("黑") &&
+              l_pCombo->itemText(2) == QStringLiteral("my_sprite"),
           "combo items (the user's own words stay)");
-    check(spin->specialValueText() == QStringLiteral("自動"), "spin box special text");
-    check(table->horizontalHeaderItem(0)->text() == QStringLiteral("圖片") &&
-              table->horizontalHeaderItem(1)->text() == QStringLiteral("字元"),
+    f_Check(l_pSpin->specialValueText() == QStringLiteral("自動"), "spin box special text");
+    f_Check(l_pTable->horizontalHeaderItem(0)->text() == QStringLiteral("圖片") &&
+              l_pTable->horizontalHeaderItem(1)->text() == QStringLiteral("字元"),
           "table headers");
-    check(w.windowTitle() == QStringLiteral("TOMS 字型工具"), "window title");
-    check(tr("Name") == QStringLiteral("名稱"), "tr() now answers in Chinese (text built after the switch)");
-    check(toggle->text() == QStringLiteral("English"), "the toggle now offers English");
+    f_Check(l_oW.windowTitle() == QStringLiteral("TOMS 字型工具"), "window title");
+    f_Check(f_Tr("Name") == QStringLiteral("名稱"), "tr() now answers in Chinese (text built after the switch)");
+    f_Check(l_pToggle->text() == QStringLiteral("English"), "the toggle now offers English");
 
-    toggle->click();
-    check(Language::current() == Language::Lang::English && file->title() == QStringLiteral("&File") &&
-              label->text() == QStringLiteral("Name") && combo->itemText(0) == QStringLiteral("Checker") &&
-              spin->specialValueText() == QStringLiteral("auto") && w.windowTitle() == QStringLiteral("TOMS Font Tool") &&
-              tr("Name") == QStringLiteral("Name"),
+    l_pToggle->click();
+    f_Check(Language::f_Current() == Language::Lang::English && l_pFile->title() == QStringLiteral("&File") &&
+              l_pLabel->text() == QStringLiteral("Name") && l_pCombo->itemText(0) == QStringLiteral("Checker") &&
+              l_pSpin->specialValueText() == QStringLiteral("auto") && l_oW.windowTitle() == QStringLiteral("TOMS Font Tool") &&
+              f_Tr("Name") == QStringLiteral("Name"),
           "and back to English, everything as it was");
 
-    std::printf("language_test: %d failed\n", g_failed);
-    return g_failed ? 1 : 0;
+    std::printf("language_test: %d failed\n", g_iFailed);
+    return g_iFailed ? 1 : 0;
 }

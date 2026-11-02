@@ -19,26 +19,26 @@ class AnimationDock : public QDockWidget
     Q_OBJECT
 
 public:
-    explicit AnimationDock(AtlasDocument* doc, QWidget* parent = nullptr);
+    explicit AnimationDock(AtlasDocument* l_pDoc, QWidget* l_pParent = nullptr);
 
 private:
-    void refresh();
-    void refreshFrames();
-    void markMissingSprites();
-    QString currentAnimation() const;
+    void f_Refresh();
+    void f_RefreshFrames();
+    void f_MarkMissingSprites();
+    QString f_CurrentAnimation() const;
     // One undo step on the current animation.
-    void editCurrent(const QString& text, const std::function<void(atlas::Animation&)>& change, const QString& mergeKey = QString());
-    void onAdd();
-    void onRemove();
-    void onAddFrames();
-    void onRemoveFrames();
-    void onMoveFrame(int delta);
+    void f_EditCurrent(const QString& l_oText, const std::function<void(atlas::Animation&)>& l_fnChange, const QString& l_oMergeKey = QString());
+    void f_OnAdd();
+    void f_OnRemove();
+    void f_OnAddFrames();
+    void f_OnRemoveFrames();
+    void f_OnMoveFrame(int l_iDelta);
 
-    AtlasDocument* m_doc;
-    QListWidget* m_list;
-    QTableWidget* m_frames;
-    QCheckBox* m_loop;
-    QToolButton *m_addFrames, *m_removeFrames, *m_up, *m_down, *m_play;
-    AnimationPreview* m_preview;
-    bool m_updating = false;
+    AtlasDocument* m_pDoc;
+    QListWidget* m_pList;
+    QTableWidget* m_pFrames;
+    QCheckBox* m_pLoop;
+    QToolButton *m_pAddFrames, *m_pRemoveFrames, *m_pUp, *m_pDown, *m_pPlay;
+    AnimationPreview* m_pPreview;
+    bool m_bUpdating = false;
 };

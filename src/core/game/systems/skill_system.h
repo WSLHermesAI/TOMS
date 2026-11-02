@@ -17,35 +17,35 @@
 namespace toms {
 
 struct SkillDefinition {
-    std::string id;
-    std::string lineage;          // "yinqi" | "yuqi" | "faqi" (data-driven, not an enum -- a
+    std::string m_strId;
+    std::string m_strLineage;          // "yinqi" | "yuqi" | "faqi" (data-driven, not an enum -- a
                                    // fourth lineage should never need an engine change)
-    int tier = 0;                 // 0 = the chapter-granted root of its lineage (see below)
-    int cost = 0;                 // skill points required to unlock (root nodes cost 0: they
+    int m_iTier = 0;                 // 0 = the chapter-granted root of its lineage (see below)
+    int m_iCost = 0;                 // skill points required to unlock (root nodes cost 0: they
                                    // arrive as a chapter grant, not a purchase)
-    std::vector<std::string> requires_;   // skill ids that must already be owned
+    std::vector<std::string> m_vRequires;   // skill ids that must already be owned
     // Raw json (plain string or {code:text} multi-language map) -- resolved via Locale::field()
     // at display time, matching every other content file's name/desc convention.
-    nlohmann::json name, desc;
+    nlohmann::json m_jName, m_jDesc;
     // Flat stat bonuses this skill contributes once owned -- deliberately the same two stats
     // equipment already grants (see applyEquipmentStats), so a skill and a weapon/armor stack in
     // the exact same combat formula rather than needing a parallel one.
-    int statAtk = 0, statDef = 0;
+    int m_iStatAtk = 0, m_iStatDef = 0;
 };
 
-nlohmann::json toJson(const SkillDefinition& d);
-SkillDefinition skillFromJson(const nlohmann::json& j);
+nlohmann::json f_ToJson(const SkillDefinition& l_oD);
+SkillDefinition f_SkillFromJson(const nlohmann::json& l_jJ);
 
 // Loads data/skills.json's {id: SkillDefinition} map. Missing/malformed file -> empty map (never
 // throws), matching readJsonFileSafe's fail-soft convention used everywhere else in this project.
-std::map<std::string, SkillDefinition> loadSkillDefs(const std::string& path);
+std::map<std::string, SkillDefinition> f_LoadSkillDefs(const std::string& l_strPath);
 
 // True if `skillId` names a real skill in `defs`, is not already owned, every id in its
 // `requires_` IS owned, and `skillPoints` covers its cost. Pure predicate -- callers (the UI, and
 // RunStoryState::unlockSkill itself) share this one rule instead of re-deriving it.
-bool canUnlockSkill(const std::map<std::string, SkillDefinition>& defs,
-                     const std::vector<std::string>& owned, int skillPoints,
-                     const std::string& skillId);
+bool f_CanUnlockSkill(const std::map<std::string, SkillDefinition>& l_mapDefs,
+                     const std::vector<std::string>& l_vOwned, int l_iSkillPoints,
+                     const std::string& l_strSkillId);
 
 // Adds every owned skill's flat stat bonus on top of already-computed atk/def -- called
 // alongside applyEquipmentStats (same two out-parameters), so skills and gear are one stack, not
@@ -57,8 +57,8 @@ bool canUnlockSkill(const std::map<std::string, SkillDefinition>& defs,
 // node's bonus is scaled (floored); a tier<=0 root (a pure-unlock grant, no purchase involved) is
 // always exempt regardless of `rebirthScale`, matching the bible's own carve-out. Defaults to 1.0
 // so every pre-M8 call site keeps compiling and behaving exactly as before.
-void applySkillEffects(const std::map<std::string, SkillDefinition>& defs,
-                        const std::vector<std::string>& owned, int& atk, int& def,
-                        float rebirthScale = 1.0f);
+void f_ApplySkillEffects(const std::map<std::string, SkillDefinition>& l_mapDefs,
+                        const std::vector<std::string>& l_vOwned, int& l_iAtk, int& l_iDef,
+                        float l_fRebirthScale = 1.0f);
 
 } // namespace toms

@@ -28,48 +28,48 @@ namespace animexport {
 enum class Format { Gif, Apng, PngFrames };
 
 struct Options {
-    Format format = Format::Gif;
-    int fps = 30;                 // GIF: at most 50 (its delays are hundredths of a second)
-    double scale = 0.5;           // of the clip's pixels
-    QColor background = QColor(0, 0, 0, 0);   // alpha 0: transparent (GIF: 1-bit, edges hard)
-    bool loop = true;             // play forever (else once)
-    int padding = 16;             // clip pixels around what the clip draws
+    Format m_eFormat = Format::Gif;
+    int m_iFps = 30;                 // GIF: at most 50 (its delays are hundredths of a second)
+    double m_dScale = 0.5;           // of the clip's pixels
+    QColor m_oBackground = QColor(0, 0, 0, 0);   // alpha 0: transparent (GIF: 1-bit, edges hard)
+    bool m_bLoop = true;             // play forever (else once)
+    int m_iPadding = 16;             // clip pixels around what the clip draws
 };
 
 // The frames of a clip: one picture per 1/fps second over its length (one loop of a looping clip; a clip that plays
 // once also gets its last frame). Its frame: what every frame draws, with the held clip at `hand` (a node bigger than
 // 1500 px -- a screen-sized backdrop -- is left out of the framing, not of the pictures).
-std::vector<QImage> renderFrames(AnimViewport* view, const AnimDocument& doc, const toms::anim::Clip& clip,
-                                 const toms::anim::Clip* held, const Options& opt, QString* error,
-                                 const std::function<bool(int done, int total)>& progress = {});
+std::vector<QImage> f_RenderFrames(AnimViewport* l_pView, const AnimDocument& l_oDoc, const toms::anim::Clip& l_oClip,
+                                 const toms::anim::Clip* l_pHeld, const Options& l_oOpt, QString* l_pError,
+                                 const std::function<bool(int l_iDone, int l_iTotal)>& l_fnProgress = {});
 
 // Writers. false and `error` on failure.
-bool writeGif(const QString& path, const std::vector<QImage>& frames, int fps, bool loop, QString* error);
-bool writeApng(const QString& path, const std::vector<QImage>& frames, int fps, bool loop, QString* error);
-bool writePngFrames(const QString& dir, const QString& base, const std::vector<QImage>& frames, QString* error);
+bool f_WriteGif(const QString& l_oPath, const std::vector<QImage>& l_vFrames, int l_iFps, bool l_bLoop, QString* l_pError);
+bool f_WriteApng(const QString& l_oPath, const std::vector<QImage>& l_vFrames, int l_iFps, bool l_bLoop, QString* l_pError);
+bool f_WritePngFrames(const QString& l_oDir, const QString& l_oBase, const std::vector<QImage>& l_vFrames, QString* l_pError);
 
 // One clip into outDir: <file>_<clip>.gif / .png / <file>_<clip>_NNN.png. Returns the path written ("" on failure).
-QString exportClip(AnimViewport* view, const AnimDocument& doc, const toms::anim::Clip& clip, const Options& opt,
-                   const QString& outDir, QString* error, const std::function<bool(int, int)>& progress = {});
+QString f_ExportClip(AnimViewport* l_pView, const AnimDocument& l_oDoc, const toms::anim::Clip& l_oClip, const Options& l_oOpt,
+                   const QString& l_oOutDir, QString* l_pError, const std::function<bool(int, int)>& l_fnProgress = {});
 
 // File > Export Clips as Animation: which clips (checked), the format, frame rate, scale, background, loop, the folder.
 class ExportDialog : public QDialog
 {
     Q_OBJECT
 public:
-    ExportDialog(AnimDocument* doc, AnimViewport* view, QWidget* parent = nullptr);
+    ExportDialog(AnimDocument* l_pDoc, AnimViewport* l_pView, QWidget* l_pParent = nullptr);
 
 private:
-    void run();
-    AnimDocument* m_doc;
-    AnimViewport* m_view;
-    QListWidget* m_clips;
-    QComboBox* m_format;
-    QSpinBox* m_fps;
-    QDoubleSpinBox* m_scale;
-    QCheckBox *m_transparent, *m_loop, *m_held;
-    QLineEdit* m_dir;
-    QPushButton* m_bg;   // the background colour (its "colour" property)
+    void f_Run();
+    AnimDocument* m_pDoc;
+    AnimViewport* m_pView;
+    QListWidget* m_pClips;
+    QComboBox* m_pFormat;
+    QSpinBox* m_pFps;
+    QDoubleSpinBox* m_pScale;
+    QCheckBox *m_pTransparent, *m_pLoop, *m_pHeld;
+    QLineEdit* m_pDir;
+    QPushButton* m_pBg;   // the background colour (its "colour" property)
 };
 
 }  // namespace animexport

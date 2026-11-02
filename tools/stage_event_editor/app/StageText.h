@@ -8,9 +8,9 @@
 
 namespace StageText {
 
-QString issue(const stage::Issue& i);
-QString keyColor(const std::string& c);   // "yellow" -> yellow / 黃
-QString q(const std::string& s);          // std::string -> QString
-std::string lang();                       // "en" | "zh_TW": the editors' language now (Language.h)
+QString f_Issue(const stage::Issue& l_oI);
+QString f_KeyColor(const std::string& l_strC);   // "yellow" -> yellow / 黃
+QString f_Q(const std::string& l_strS);          // std::string -> QString
+std::string f_Lang();                       // "en" | "zh_TW": the editors' language now (Language.h)
 
 }  // namespace StageText

@@ -29,637 +29,637 @@ using toms::fx::Shape;
 
 namespace {
 
-const char* kSpriteMime = "application/x-toms-sprite";
+const char* g_pszSpriteMime = "application/x-toms-sprite";
 
-QString qs(const std::string& s) { return QString::fromStdString(s); }
+QString f_Qs(const std::string& l_strS) { return QString::fromStdString(l_strS); }
 
-QDoubleSpinBox* dspin(double lo, double hi, int decimals, double step, const QString& suffix = QString())
+QDoubleSpinBox* f_Dspin(double l_dLo, double l_dHi, int l_iDecimals, double l_dStep, const QString& l_oSuffix = QString())
 {
-    auto* s = new QDoubleSpinBox;
-    s->setRange(lo, hi);
-    s->setDecimals(decimals);
-    s->setSingleStep(step);
-    s->setSuffix(suffix);
-    s->setKeyboardTracking(false);
-    return s;
+    auto* l_pS = new QDoubleSpinBox;
+    l_pS->setRange(l_dLo, l_dHi);
+    l_pS->setDecimals(l_iDecimals);
+    l_pS->setSingleStep(l_dStep);
+    l_pS->setSuffix(l_oSuffix);
+    l_pS->setKeyboardTracking(false);
+    return l_pS;
 }
 
 // The frames list takes sprites dropped from the Sprites dock and reorders by dragging; Delete removes.
 class FramesFilter : public QObject
 {
 public:
-    FramesFilter(QListWidget* list, std::function<void()> changed) : QObject(list), m_list(list), m_changed(std::move(changed))
+    FramesFilter(QListWidget* l_pList, std::function<void()> l_fnChanged) : QObject(l_pList), m_pList(l_pList), m_fnChanged(std::move(l_fnChanged))
     {
-        list->viewport()->installEventFilter(this);
-        list->installEventFilter(this);
+        l_pList->viewport()->installEventFilter(this);
+        l_pList->installEventFilter(this);
     }
-    bool eventFilter(QObject* o, QEvent* e) override
+    bool eventFilter(QObject* l_pO, QEvent* l_pE) override
     {
-        if (o == m_list && e->type() == QEvent::KeyPress && static_cast<QKeyEvent*>(e)->key() == Qt::Key_Delete) {
-            qDeleteAll(m_list->selectedItems());
-            m_changed();
+        if (l_pO == m_pList && l_pE->type() == QEvent::KeyPress && static_cast<QKeyEvent*>(l_pE)->key() == Qt::Key_Delete) {
+            qDeleteAll(m_pList->selectedItems());
+            m_fnChanged();
             return true;
         }
-        if (o != m_list->viewport()) return false;
-        if (e->type() == QEvent::DragEnter || e->type() == QEvent::DragMove) {
-            auto* d = static_cast<QDragMoveEvent*>(e);
-            if (!d->mimeData()->hasFormat(QLatin1String(kSpriteMime))) return false;
-            d->setDropAction(Qt::CopyAction);
-            d->accept();
+        if (l_pO != m_pList->viewport()) return false;
+        if (l_pE->type() == QEvent::DragEnter || l_pE->type() == QEvent::DragMove) {
+            auto* l_pD = static_cast<QDragMoveEvent*>(l_pE);
+            if (!l_pD->mimeData()->hasFormat(QLatin1String(g_pszSpriteMime))) return false;
+            l_pD->setDropAction(Qt::CopyAction);
+            l_pD->accept();
             return true;
         }
-        if (e->type() == QEvent::Drop) {
-            auto* d = static_cast<QDropEvent*>(e);
-            if (!d->mimeData()->hasFormat(QLatin1String(kSpriteMime))) return false;
-            const QStringList refs = QString::fromUtf8(d->mimeData()->data(QLatin1String(kSpriteMime))).split(QLatin1Char('\n'), Qt::SkipEmptyParts);
-            QListWidgetItem* at = m_list->itemAt(d->position().toPoint());
-            int row = at ? m_list->row(at) : m_list->count();
-            for (const QString& r : refs) m_list->insertItem(row++, r);
-            d->setDropAction(Qt::CopyAction);
-            d->accept();
-            m_changed();
+        if (l_pE->type() == QEvent::Drop) {
+            auto* l_pD = static_cast<QDropEvent*>(l_pE);
+            if (!l_pD->mimeData()->hasFormat(QLatin1String(g_pszSpriteMime))) return false;
+            const QStringList l_oRefs = QString::fromUtf8(l_pD->mimeData()->data(QLatin1String(g_pszSpriteMime))).split(QLatin1Char('\n'), Qt::SkipEmptyParts);
+            QListWidgetItem* l_pAt = m_pList->itemAt(l_pD->position().toPoint());
+            int l_iRow = l_pAt ? m_pList->row(l_pAt) : m_pList->count();
+            for (const QString& l_oR : l_oRefs) m_pList->insertItem(l_iRow++, l_oR);
+            l_pD->setDropAction(Qt::CopyAction);
+            l_pD->accept();
+            m_fnChanged();
             return true;
         }
         return false;
     }
 
 private:
-    QListWidget* m_list;
-    std::function<void()> m_changed;
+    QListWidget* m_pList;
+    std::function<void()> m_fnChanged;
 };
 
 }  // namespace
 
-QWidget* InspectorDock::section(QVBoxLayout* into, const QString& title, QFormLayout** form)
+QWidget* InspectorDock::f_Section(QVBoxLayout* l_pInto, const QString& l_oTitle, QFormLayout** l_pForm)
 {
-    auto* box = new QWidget;
-    auto* v = new QVBoxLayout(box);
-    v->setContentsMargins(0, 0, 0, 0);
-    v->setSpacing(2);
-    auto* head = new QToolButton;
-    head->setText(title);
-    head->setCheckable(true);
-    head->setChecked(true);
-    head->setArrowType(Qt::DownArrow);
-    head->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    head->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    head->setStyleSheet(QStringLiteral("QToolButton { font-weight: bold; text-align: left; border: none; padding: 4px; }"));
-    auto* body = new QWidget;
-    *form = new QFormLayout(body);
-    (*form)->setContentsMargins(14, 0, 4, 6);
-    (*form)->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
-    connect(head, &QToolButton::toggled, this, [head, body](bool open) {
-        body->setVisible(open);
-        head->setArrowType(open ? Qt::DownArrow : Qt::RightArrow);
+    auto* l_pBox = new QWidget;
+    auto* l_pV = new QVBoxLayout(l_pBox);
+    l_pV->setContentsMargins(0, 0, 0, 0);
+    l_pV->setSpacing(2);
+    auto* l_pHead = new QToolButton;
+    l_pHead->setText(l_oTitle);
+    l_pHead->setCheckable(true);
+    l_pHead->setChecked(true);
+    l_pHead->setArrowType(Qt::DownArrow);
+    l_pHead->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    l_pHead->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    l_pHead->setStyleSheet(QStringLiteral("QToolButton { font-weight: bold; text-align: left; border: none; padding: 4px; }"));
+    auto* l_pBody = new QWidget;
+    *l_pForm = new QFormLayout(l_pBody);
+    (*l_pForm)->setContentsMargins(14, 0, 4, 6);
+    (*l_pForm)->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
+    connect(l_pHead, &QToolButton::toggled, this, [l_pHead, l_pBody](bool l_bOpen) {
+        l_pBody->setVisible(l_bOpen);
+        l_pHead->setArrowType(l_bOpen ? Qt::DownArrow : Qt::RightArrow);
     });
-    v->addWidget(head);
-    v->addWidget(body);
-    into->addWidget(box);
-    return box;
+    l_pV->addWidget(l_pHead);
+    l_pV->addWidget(l_pBody);
+    l_pInto->addWidget(l_pBox);
+    return l_pBox;
 }
 
-QString InspectorDock::mergeKey(const QString& field)
+QString InspectorDock::f_MergeKey(const QString& l_oField)
 {
-    if (field != m_lastField || !m_fieldClock.isValid() || m_fieldClock.elapsed() > 1200) m_serial++;
-    m_lastField = field;
-    m_fieldClock.restart();
-    return field + QString::number(m_serial);
+    if (l_oField != m_oLastField || !m_oFieldClock.isValid() || m_oFieldClock.elapsed() > 1200) m_iSerial++;
+    m_oLastField = l_oField;
+    m_oFieldClock.restart();
+    return l_oField + QString::number(m_iSerial);
 }
 
-InspectorDock::InspectorDock(ParticleDocument* doc, QWidget* parent)
-    : QDockWidget(tr("Inspector"), parent)
-    , m_doc(doc)
+InspectorDock::InspectorDock(ParticleDocument* l_pDoc, QWidget* l_pParent)
+    : QDockWidget(tr("Inspector"), l_pParent)
+    , m_pDoc(l_pDoc)
 {
     setObjectName(QStringLiteral("ParticleInspectorDock"));
-    auto* scroll = new QScrollArea(this);
-    scroll->setWidgetResizable(true);
-    scroll->setFrameShape(QFrame::NoFrame);
-    auto* body = new QWidget;
-    auto* v = new QVBoxLayout(body);
-    v->setContentsMargins(4, 4, 4, 4);
-    v->setSpacing(2);
-    scroll->setWidget(body);
-    setWidget(scroll);
+    auto* l_pScroll = new QScrollArea(this);
+    l_pScroll->setWidgetResizable(true);
+    l_pScroll->setFrameShape(QFrame::NoFrame);
+    auto* l_pBody = new QWidget;
+    auto* l_pV = new QVBoxLayout(l_pBody);
+    l_pV->setContentsMargins(4, 4, 4, 4);
+    l_pV->setSpacing(2);
+    l_pScroll->setWidget(l_pBody);
+    setWidget(l_pScroll);
 
     // Shorthands: an edit of the selected emitter / effect with a merge key per field.
-    auto em = [this](const QString& field, const QString& text, std::function<void(Emitter&)> f) {
-        if (!m_updating) m_doc->editEmitter(text, f, mergeKey(field));
+    auto l_fnEm = [this](const QString& l_oField, const QString& l_oText, std::function<void(Emitter&)> l_fnF) {
+        if (!m_bUpdating) m_pDoc->f_EditEmitter(l_oText, l_fnF, f_MergeKey(l_oField));
     };
-    auto ef = [this](const QString& field, const QString& text, std::function<void(Effect&)> f) {
-        if (!m_updating) m_doc->editEffect(text, f, mergeKey(field));
+    auto l_fnEf = [this](const QString& l_oField, const QString& l_oText, std::function<void(Effect&)> l_fnF) {
+        if (!m_bUpdating) m_pDoc->f_EditEffect(l_oText, l_fnF, f_MergeKey(l_oField));
     };
-    QFormLayout* f = nullptr;
+    QFormLayout* l_pF = nullptr;
 
     // ---- Effect
-    m_effectSection = section(v, tr("Effect"), &f);
-    m_effectName = new QLineEdit;
-    m_duration = dspin(0, 600, 2, 0.1, tr(" s"));
-    m_duration->setSpecialValueText(tr("endless"));
-    m_duration->setToolTip(tr("0 = endless (until stopped). A one-shot stops making particles at its end."));
-    m_loop = new QCheckBox(tr("start over at the end"));
-    m_prewarm = dspin(0, 60, 2, 0.5, tr(" s"));
-    m_prewarm->setToolTip(tr("Simulated before the first frame: an already-burning fire"));
-    m_seed = new QSpinBox;
-    m_seed->setRange(0, 1000000000);
-    m_seed->setSpecialValueText(tr("new each play"));
-    f->addRow(tr("Name"), m_effectName);
-    f->addRow(tr("Duration"), m_duration);
-    f->addRow(tr("Loop"), m_loop);
-    f->addRow(tr("Prewarm"), m_prewarm);
-    f->addRow(tr("Seed"), m_seed);
-    connect(m_effectName, &QLineEdit::editingFinished, this, [this, ef] {
-        const QString n = m_effectName->text().trimmed();
-        if (n.isEmpty() || (m_doc->effect() && qs(m_doc->effect()->name) == n)) return;
-        ef(QStringLiteral("name"), tr("Rename effect"), [n](Effect& e) { e.name = n.toStdString(); });
+    m_pEffectSection = f_Section(l_pV, tr("Effect"), &l_pF);
+    m_pEffectName = new QLineEdit;
+    m_pDuration = f_Dspin(0, 600, 2, 0.1, tr(" s"));
+    m_pDuration->setSpecialValueText(tr("endless"));
+    m_pDuration->setToolTip(tr("0 = endless (until stopped). A one-shot stops making particles at its end."));
+    m_pLoop = new QCheckBox(tr("start over at the end"));
+    m_pPrewarm = f_Dspin(0, 60, 2, 0.5, tr(" s"));
+    m_pPrewarm->setToolTip(tr("Simulated before the first frame: an already-burning fire"));
+    m_pSeed = new QSpinBox;
+    m_pSeed->setRange(0, 1000000000);
+    m_pSeed->setSpecialValueText(tr("new each play"));
+    l_pF->addRow(tr("Name"), m_pEffectName);
+    l_pF->addRow(tr("Duration"), m_pDuration);
+    l_pF->addRow(tr("Loop"), m_pLoop);
+    l_pF->addRow(tr("Prewarm"), m_pPrewarm);
+    l_pF->addRow(tr("Seed"), m_pSeed);
+    connect(m_pEffectName, &QLineEdit::editingFinished, this, [this, l_fnEf] {
+        const QString l_oN = m_pEffectName->text().trimmed();
+        if (l_oN.isEmpty() || (m_pDoc->f_Effect() && f_Qs(m_pDoc->f_Effect()->m_strName) == l_oN)) return;
+        l_fnEf(QStringLiteral("name"), tr("Rename effect"), [l_oN](Effect& l_oE) { l_oE.m_strName = l_oN.toStdString(); });
     });
-    connect(m_duration, &QDoubleSpinBox::valueChanged, this, [ef](double x) { ef(QStringLiteral("duration"), tr("Duration"), [x](Effect& e) { e.duration = float(x); }); });
-    connect(m_loop, &QCheckBox::toggled, this, [ef](bool on) { ef(QStringLiteral("loop"), tr("Loop"), [on](Effect& e) { e.loop = on; }); });
-    connect(m_prewarm, &QDoubleSpinBox::valueChanged, this, [ef](double x) { ef(QStringLiteral("prewarm"), tr("Prewarm"), [x](Effect& e) { e.prewarm = float(x); }); });
-    connect(m_seed, &QSpinBox::valueChanged, this, [ef](int x) { ef(QStringLiteral("seed"), tr("Seed"), [x](Effect& e) { e.seed = uint32_t(x); }); });
+    connect(m_pDuration, &QDoubleSpinBox::valueChanged, this, [l_fnEf](double l_dX) { l_fnEf(QStringLiteral("duration"), tr("Duration"), [l_dX](Effect& l_oE) { l_oE.m_fDuration = float(l_dX); }); });
+    connect(m_pLoop, &QCheckBox::toggled, this, [l_fnEf](bool l_bOn) { l_fnEf(QStringLiteral("loop"), tr("Loop"), [l_bOn](Effect& l_oE) { l_oE.m_bLoop = l_bOn; }); });
+    connect(m_pPrewarm, &QDoubleSpinBox::valueChanged, this, [l_fnEf](double l_dX) { l_fnEf(QStringLiteral("prewarm"), tr("Prewarm"), [l_dX](Effect& l_oE) { l_oE.m_fPrewarm = float(l_dX); }); });
+    connect(m_pSeed, &QSpinBox::valueChanged, this, [l_fnEf](int l_iX) { l_fnEf(QStringLiteral("seed"), tr("Seed"), [l_iX](Effect& l_oE) { l_oE.m_uSeed = uint32_t(l_iX); }); });
 
-    m_none = new QLabel(tr("Select an emitter in the Effects dock to edit it."));
-    m_none->setWordWrap(true);
-    m_none->setMargin(8);
-    v->addWidget(m_none);
+    m_pNone = new QLabel(tr("Select an emitter in the Effects dock to edit it."));
+    m_pNone->setWordWrap(true);
+    m_pNone->setMargin(8);
+    l_pV->addWidget(m_pNone);
 
-    m_emitterSections = new QWidget;
-    auto* ev = new QVBoxLayout(m_emitterSections);
-    ev->setContentsMargins(0, 0, 0, 0);
-    ev->setSpacing(2);
-    v->addWidget(m_emitterSections);
-    v->addStretch(1);
+    m_pEmitterSections = new QWidget;
+    auto* l_pEv = new QVBoxLayout(m_pEmitterSections);
+    l_pEv->setContentsMargins(0, 0, 0, 0);
+    l_pEv->setSpacing(2);
+    l_pV->addWidget(m_pEmitterSections);
+    l_pV->addStretch(1);
 
     // ---- Emitter
-    section(ev, tr("Emitter"), &f);
-    m_emitterName = new QLineEdit;
-    m_offset = new Vec2Edit(-10000, 10000, 1);
-    m_start = dspin(0, 600, 2, 0.1, tr(" s"));
-    m_stop = dspin(0, 600, 2, 0.1, tr(" s"));
-    m_stop->setSpecialValueText(tr("until the end"));
-    m_space = new QComboBox;
-    m_space->addItems({tr("world: particles stay where born"), tr("local: particles move with the effect")});
-    m_max = new QSpinBox;
-    m_max->setRange(1, 100000);
-    f->addRow(tr("Name"), m_emitterName);
-    f->addRow(tr("Offset"), m_offset);
-    f->addRow(tr("Start"), m_start);
-    f->addRow(tr("Stop"), m_stop);
-    f->addRow(tr("Space"), m_space);
-    f->addRow(tr("Max particles"), m_max);
-    connect(m_emitterName, &QLineEdit::editingFinished, this, [this, em] {
-        const QString n = m_emitterName->text().trimmed();
-        if (n.isEmpty() || (m_doc->emitter() && qs(m_doc->emitter()->name) == n)) return;
-        em(QStringLiteral("ename"), tr("Rename emitter"), [n](Emitter& m) { m.name = n.toStdString(); });
+    f_Section(l_pEv, tr("Emitter"), &l_pF);
+    m_pEmitterName = new QLineEdit;
+    m_pOffset = new Vec2Edit(-10000, 10000, 1);
+    m_pStart = f_Dspin(0, 600, 2, 0.1, tr(" s"));
+    m_pStop = f_Dspin(0, 600, 2, 0.1, tr(" s"));
+    m_pStop->setSpecialValueText(tr("until the end"));
+    m_pSpace = new QComboBox;
+    m_pSpace->addItems({tr("world: particles stay where born"), tr("local: particles move with the effect")});
+    m_pMax = new QSpinBox;
+    m_pMax->setRange(1, 100000);
+    l_pF->addRow(tr("Name"), m_pEmitterName);
+    l_pF->addRow(tr("Offset"), m_pOffset);
+    l_pF->addRow(tr("Start"), m_pStart);
+    l_pF->addRow(tr("Stop"), m_pStop);
+    l_pF->addRow(tr("Space"), m_pSpace);
+    l_pF->addRow(tr("Max particles"), m_pMax);
+    connect(m_pEmitterName, &QLineEdit::editingFinished, this, [this, l_fnEm] {
+        const QString l_oN = m_pEmitterName->text().trimmed();
+        if (l_oN.isEmpty() || (m_pDoc->f_Emitter() && f_Qs(m_pDoc->f_Emitter()->m_strName) == l_oN)) return;
+        l_fnEm(QStringLiteral("ename"), tr("Rename emitter"), [l_oN](Emitter& l_oM) { l_oM.m_strName = l_oN.toStdString(); });
     });
-    connect(m_offset, &Vec2Edit::changed, this, [em](const glm::vec2& o) { em(QStringLiteral("offset"), tr("Offset"), [o](Emitter& m) { m.offset = o; }); });
-    connect(m_start, &QDoubleSpinBox::valueChanged, this, [em](double x) { em(QStringLiteral("start"), tr("Start"), [x](Emitter& m) { m.start = float(x); }); });
-    connect(m_stop, &QDoubleSpinBox::valueChanged, this, [em](double x) { em(QStringLiteral("stop"), tr("Stop"), [x](Emitter& m) { m.stop = float(x); }); });
-    connect(m_space, &QComboBox::currentIndexChanged, this, [em](int i) { em(QStringLiteral("space"), tr("Space"), [i](Emitter& m) { m.localSpace = i == 1; }); });
-    connect(m_max, &QSpinBox::valueChanged, this, [em](int x) { em(QStringLiteral("max"), tr("Max particles"), [x](Emitter& m) { m.maxParticles = x; }); });
+    connect(m_pOffset, &Vec2Edit::f_Changed, this, [l_fnEm](const glm::vec2& l_v2O) { l_fnEm(QStringLiteral("offset"), tr("Offset"), [l_v2O](Emitter& l_oM) { l_oM.m_v2Offset = l_v2O; }); });
+    connect(m_pStart, &QDoubleSpinBox::valueChanged, this, [l_fnEm](double l_dX) { l_fnEm(QStringLiteral("start"), tr("Start"), [l_dX](Emitter& l_oM) { l_oM.m_fStart = float(l_dX); }); });
+    connect(m_pStop, &QDoubleSpinBox::valueChanged, this, [l_fnEm](double l_dX) { l_fnEm(QStringLiteral("stop"), tr("Stop"), [l_dX](Emitter& l_oM) { l_oM.m_fStop = float(l_dX); }); });
+    connect(m_pSpace, &QComboBox::currentIndexChanged, this, [l_fnEm](int l_iI) { l_fnEm(QStringLiteral("space"), tr("Space"), [l_iI](Emitter& l_oM) { l_oM.m_bLocalSpace = l_iI == 1; }); });
+    connect(m_pMax, &QSpinBox::valueChanged, this, [l_fnEm](int l_iX) { l_fnEm(QStringLiteral("max"), tr("Max particles"), [l_iX](Emitter& l_oM) { l_oM.m_iMaxParticles = l_iX; }); });
 
     // ---- Emission
-    section(ev, tr("Emission"), &f);
-    m_rate = dspin(0, 10000, 2, 1, tr(" /s"));
-    f->addRow(tr("Rate"), m_rate);
-    m_bursts = new QTableWidget(0, 5);
-    m_bursts->setHorizontalHeaderLabels({tr("t (s)"), tr("min"), tr("max"), tr("repeat"), tr("every (s)")});
-    m_bursts->verticalHeader()->setVisible(false);
-    m_bursts->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    m_bursts->setMaximumHeight(110);
-    m_bursts->setToolTip(tr("A burst fires 'min..max' particles at emitter time t, then 'repeat' more times every 'every' seconds (-1 = while active)"));
-    auto* burstButtons = new QWidget;
+    f_Section(l_pEv, tr("Emission"), &l_pF);
+    m_pRate = f_Dspin(0, 10000, 2, 1, tr(" /s"));
+    l_pF->addRow(tr("Rate"), m_pRate);
+    m_pBursts = new QTableWidget(0, 5);
+    m_pBursts->setHorizontalHeaderLabels({tr("t (s)"), tr("min"), tr("max"), tr("repeat"), tr("every (s)")});
+    m_pBursts->verticalHeader()->setVisible(false);
+    m_pBursts->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    m_pBursts->setMaximumHeight(110);
+    m_pBursts->setToolTip(tr("A burst fires 'min..max' particles at emitter time t, then 'repeat' more times every 'every' seconds (-1 = while active)"));
+    auto* l_pBurstButtons = new QWidget;
     {
-        auto* h = new QHBoxLayout(burstButtons);
-        h->setContentsMargins(0, 0, 0, 0);
-        auto* add = new QToolButton;
-        add->setText(tr("+ Burst"));
-        auto* del = new QToolButton;
-        del->setText(tr("− Burst"));
-        h->addWidget(add);
-        h->addWidget(del);
-        h->addStretch(1);
-        connect(add, &QToolButton::clicked, this, [this] {
-            m_doc->editEmitter(tr("Add burst"), [](Emitter& m) {
-                Burst b;
-                b.t = m.bursts.empty() ? 0.0f : m.bursts.back().t + 0.5f;
-                m.bursts.push_back(b);
+        auto* l_pH = new QHBoxLayout(l_pBurstButtons);
+        l_pH->setContentsMargins(0, 0, 0, 0);
+        auto* l_pAdd = new QToolButton;
+        l_pAdd->setText(tr("+ Burst"));
+        auto* l_pDel = new QToolButton;
+        l_pDel->setText(tr("− Burst"));
+        l_pH->addWidget(l_pAdd);
+        l_pH->addWidget(l_pDel);
+        l_pH->addStretch(1);
+        connect(l_pAdd, &QToolButton::clicked, this, [this] {
+            m_pDoc->f_EditEmitter(tr("Add burst"), [](Emitter& l_oM) {
+                Burst l_oB;
+                l_oB.m_fT = l_oM.m_vBursts.empty() ? 0.0f : l_oM.m_vBursts.back().m_fT + 0.5f;
+                l_oM.m_vBursts.push_back(l_oB);
             });
         });
-        connect(del, &QToolButton::clicked, this, [this] {
-            const int row = m_bursts->currentRow() >= 0 ? m_bursts->currentRow() : m_bursts->rowCount() - 1;
-            if (row < 0) return;
-            m_doc->editEmitter(tr("Delete burst"), [row](Emitter& m) {
-                if (row < int(m.bursts.size())) m.bursts.erase(m.bursts.begin() + row);
+        connect(l_pDel, &QToolButton::clicked, this, [this] {
+            const int l_iRow = m_pBursts->currentRow() >= 0 ? m_pBursts->currentRow() : m_pBursts->rowCount() - 1;
+            if (l_iRow < 0) return;
+            m_pDoc->f_EditEmitter(tr("Delete burst"), [l_iRow](Emitter& l_oM) {
+                if (l_iRow < int(l_oM.m_vBursts.size())) l_oM.m_vBursts.erase(l_oM.m_vBursts.begin() + l_iRow);
             });
         });
     }
-    f->addRow(tr("Bursts"), m_bursts);
-    f->addRow(QString(), burstButtons);
-    connect(m_rate, &QDoubleSpinBox::valueChanged, this, [em](double x) { em(QStringLiteral("rate"), tr("Rate"), [x](Emitter& m) { m.rate = float(x); }); });
+    l_pF->addRow(tr("Bursts"), m_pBursts);
+    l_pF->addRow(QString(), l_pBurstButtons);
+    connect(m_pRate, &QDoubleSpinBox::valueChanged, this, [l_fnEm](double l_dX) { l_fnEm(QStringLiteral("rate"), tr("Rate"), [l_dX](Emitter& l_oM) { l_oM.m_fRate = float(l_dX); }); });
     // Queued: the refresh that follows replaces the table's items, not while one is signalling.
-    connect(m_bursts, &QTableWidget::itemChanged, this, [this] {
-        if (!m_updating) QMetaObject::invokeMethod(this, &InspectorDock::commitBursts, Qt::QueuedConnection);
+    connect(m_pBursts, &QTableWidget::itemChanged, this, [this] {
+        if (!m_bUpdating) QMetaObject::invokeMethod(this, &InspectorDock::f_CommitBursts, Qt::QueuedConnection);
     });
 
     // ---- Shape
-    section(ev, tr("Shape"), &m_shapeForm);
-    f = m_shapeForm;
-    m_shapeType = new QComboBox;
-    for (int t = 0; t <= Shape::Ring; t++) m_shapeType->addItem(QString::fromLatin1(toms::fx::shapeName(Shape::Type(t))));
-    m_length = dspin(0, 10000, 1, 1, tr(" px"));
-    m_angle = dspin(-360, 360, 1, 5, tr("°"));
-    m_width = dspin(0, 10000, 1, 1, tr(" px"));
-    m_height = dspin(0, 10000, 1, 1, tr(" px"));
-    m_radius = dspin(0, 10000, 1, 1, tr(" px"));
-    m_thickness = dspin(0, 10000, 1, 1, tr(" px"));
-    m_arcFrom = dspin(-360, 360, 0, 5, tr("°"));
-    m_arcTo = dspin(-360, 720, 0, 5, tr("°"));
-    m_edge = new QCheckBox(tr("only on the outline"));
-    m_outward = new QCheckBox(tr("fly away from the centre"));
-    m_outward->setToolTip(tr("Instead of Direction: each particle leaves away from the shape's centre (a point: every direction)"));
-    f->addRow(tr("Type"), m_shapeType);
-    f->addRow(tr("Length"), m_length);
-    f->addRow(tr("Angle"), m_angle);
-    f->addRow(tr("Width"), m_width);
-    f->addRow(tr("Height"), m_height);
-    f->addRow(tr("Radius"), m_radius);
-    f->addRow(tr("Thickness"), m_thickness);
-    f->addRow(tr("Arc from"), m_arcFrom);
-    f->addRow(tr("Arc to"), m_arcTo);
-    f->addRow(tr("Edge"), m_edge);
-    f->addRow(tr("Outward"), m_outward);
-    connect(m_shapeType, &QComboBox::currentIndexChanged, this, [this, em](int i) {
-        updateShapeRows();
-        em(QStringLiteral("shape"), tr("Shape"), [i](Emitter& m) {
-            m.shape.type = Shape::Type(i);
+    f_Section(l_pEv, tr("Shape"), &m_pShapeForm);
+    l_pF = m_pShapeForm;
+    m_pShapeType = new QComboBox;
+    for (int l_iT = 0; l_iT <= Shape::Ring; l_iT++) m_pShapeType->addItem(QString::fromLatin1(toms::fx::f_ShapeName(Shape::Type(l_iT))));
+    m_pLength = f_Dspin(0, 10000, 1, 1, tr(" px"));
+    m_pAngle = f_Dspin(-360, 360, 1, 5, tr("°"));
+    m_pWidth = f_Dspin(0, 10000, 1, 1, tr(" px"));
+    m_pHeight = f_Dspin(0, 10000, 1, 1, tr(" px"));
+    m_pRadius = f_Dspin(0, 10000, 1, 1, tr(" px"));
+    m_pThickness = f_Dspin(0, 10000, 1, 1, tr(" px"));
+    m_pArcFrom = f_Dspin(-360, 360, 0, 5, tr("°"));
+    m_pArcTo = f_Dspin(-360, 720, 0, 5, tr("°"));
+    m_pEdge = new QCheckBox(tr("only on the outline"));
+    m_pOutward = new QCheckBox(tr("fly away from the centre"));
+    m_pOutward->setToolTip(tr("Instead of Direction: each particle leaves away from the shape's centre (a point: every direction)"));
+    l_pF->addRow(tr("Type"), m_pShapeType);
+    l_pF->addRow(tr("Length"), m_pLength);
+    l_pF->addRow(tr("Angle"), m_pAngle);
+    l_pF->addRow(tr("Width"), m_pWidth);
+    l_pF->addRow(tr("Height"), m_pHeight);
+    l_pF->addRow(tr("Radius"), m_pRadius);
+    l_pF->addRow(tr("Thickness"), m_pThickness);
+    l_pF->addRow(tr("Arc from"), m_pArcFrom);
+    l_pF->addRow(tr("Arc to"), m_pArcTo);
+    l_pF->addRow(tr("Edge"), m_pEdge);
+    l_pF->addRow(tr("Outward"), m_pOutward);
+    connect(m_pShapeType, &QComboBox::currentIndexChanged, this, [this, l_fnEm](int l_iI) {
+        f_UpdateShapeRows();
+        l_fnEm(QStringLiteral("shape"), tr("Shape"), [l_iI](Emitter& l_oM) {
+            l_oM.m_oShape.m_eType = Shape::Type(l_iI);
             // A sensible size so the new shape is visible.
-            if (i == Shape::Line && m.shape.length <= 0) m.shape.length = 40;
-            if (i == Shape::Box && m.shape.width <= 0) { m.shape.width = 40; m.shape.height = 20; }
-            if ((i == Shape::Circle || i == Shape::Ring) && m.shape.radius <= 0) m.shape.radius = 20;
-            if (i == Shape::Ring && m.shape.thickness <= 0) m.shape.thickness = 4;
+            if (l_iI == Shape::Line && l_oM.m_oShape.m_fLength <= 0) l_oM.m_oShape.m_fLength = 40;
+            if (l_iI == Shape::Box && l_oM.m_oShape.m_fWidth <= 0) { l_oM.m_oShape.m_fWidth = 40; l_oM.m_oShape.m_fHeight = 20; }
+            if ((l_iI == Shape::Circle || l_iI == Shape::Ring) && l_oM.m_oShape.m_fRadius <= 0) l_oM.m_oShape.m_fRadius = 20;
+            if (l_iI == Shape::Ring && l_oM.m_oShape.m_fThickness <= 0) l_oM.m_oShape.m_fThickness = 4;
         });
     });
-    auto shapeField = [&](QDoubleSpinBox* s, const char* key, std::function<void(Shape&, float)> set) {
-        connect(s, &QDoubleSpinBox::valueChanged, this, [em, key, set](double x) {
-            em(QString::fromLatin1(key), tr("Shape"), [set, x](Emitter& m) { set(m.shape, float(x)); });
+    auto l_fnShapeField = [&](QDoubleSpinBox* l_pS, const char* l_pszKey, std::function<void(Shape&, float)> l_fnSet) {
+        connect(l_pS, &QDoubleSpinBox::valueChanged, this, [l_fnEm, l_pszKey, l_fnSet](double l_dX) {
+            l_fnEm(QString::fromLatin1(l_pszKey), tr("Shape"), [l_fnSet, l_dX](Emitter& l_oM) { l_fnSet(l_oM.m_oShape, float(l_dX)); });
         });
     };
-    shapeField(m_length, "slength", [](Shape& s, float x) { s.length = x; });
-    shapeField(m_angle, "sangle", [](Shape& s, float x) { s.angle = x; });
-    shapeField(m_width, "swidth", [](Shape& s, float x) { s.width = x; });
-    shapeField(m_height, "sheight", [](Shape& s, float x) { s.height = x; });
-    shapeField(m_radius, "sradius", [](Shape& s, float x) { s.radius = x; });
-    shapeField(m_thickness, "sthick", [](Shape& s, float x) { s.thickness = x; });
-    shapeField(m_arcFrom, "sarc0", [](Shape& s, float x) { s.arcFrom = x; });
-    shapeField(m_arcTo, "sarc1", [](Shape& s, float x) { s.arcTo = x; });
-    connect(m_edge, &QCheckBox::toggled, this, [em](bool on) { em(QStringLiteral("sedge"), tr("Shape edge"), [on](Emitter& m) { m.shape.edge = on; }); });
-    connect(m_outward, &QCheckBox::toggled, this, [em](bool on) { em(QStringLiteral("sout"), tr("Outward"), [on](Emitter& m) { m.shape.outward = on; }); });
+    l_fnShapeField(m_pLength, "slength", [](Shape& l_oS, float l_fX) { l_oS.m_fLength = l_fX; });
+    l_fnShapeField(m_pAngle, "sangle", [](Shape& l_oS, float l_fX) { l_oS.m_fAngle = l_fX; });
+    l_fnShapeField(m_pWidth, "swidth", [](Shape& l_oS, float l_fX) { l_oS.m_fWidth = l_fX; });
+    l_fnShapeField(m_pHeight, "sheight", [](Shape& l_oS, float l_fX) { l_oS.m_fHeight = l_fX; });
+    l_fnShapeField(m_pRadius, "sradius", [](Shape& l_oS, float l_fX) { l_oS.m_fRadius = l_fX; });
+    l_fnShapeField(m_pThickness, "sthick", [](Shape& l_oS, float l_fX) { l_oS.m_fThickness = l_fX; });
+    l_fnShapeField(m_pArcFrom, "sarc0", [](Shape& l_oS, float l_fX) { l_oS.m_fArcFrom = l_fX; });
+    l_fnShapeField(m_pArcTo, "sarc1", [](Shape& l_oS, float l_fX) { l_oS.m_fArcTo = l_fX; });
+    connect(m_pEdge, &QCheckBox::toggled, this, [l_fnEm](bool l_bOn) { l_fnEm(QStringLiteral("sedge"), tr("Shape edge"), [l_bOn](Emitter& l_oM) { l_oM.m_oShape.m_bEdge = l_bOn; }); });
+    connect(m_pOutward, &QCheckBox::toggled, this, [l_fnEm](bool l_bOn) { l_fnEm(QStringLiteral("sout"), tr("Outward"), [l_bOn](Emitter& l_oM) { l_oM.m_oShape.m_bOutward = l_bOn; }); });
 
     // ---- Start values
-    section(ev, tr("Start values"), &f);
-    m_life = new RangeEdit(0.01, 600, 2, 0.1, tr(" s"));
-    m_direction = dspin(-360, 360, 0, 5, tr("°"));
-    m_direction->setToolTip(tr("-90 = up, 0 = right, 90 = down"));
-    m_spread = dspin(0, 180, 0, 5, tr("°"));
-    m_spread->setPrefix(QStringLiteral("± "));
-    m_speed = new RangeEdit(0, 100000, 1, 5, tr(" px/s"));
-    m_size = new RangeEdit(0, 10000, 1, 1, tr(" px"));
-    m_rotation = new RangeEdit(-3600, 3600, 0, 5, tr("°"));
-    m_spin = new RangeEdit(-36000, 36000, 0, 10, tr("°/s"));
-    auto* colors = new QWidget;
+    f_Section(l_pEv, tr("Start values"), &l_pF);
+    m_pLife = new RangeEdit(0.01, 600, 2, 0.1, tr(" s"));
+    m_pDirection = f_Dspin(-360, 360, 0, 5, tr("°"));
+    m_pDirection->setToolTip(tr("-90 = up, 0 = right, 90 = down"));
+    m_pSpread = f_Dspin(0, 180, 0, 5, tr("°"));
+    m_pSpread->setPrefix(QStringLiteral("± "));
+    m_pSpeed = new RangeEdit(0, 100000, 1, 5, tr(" px/s"));
+    m_pSize = new RangeEdit(0, 10000, 1, 1, tr(" px"));
+    m_pRotation = new RangeEdit(-3600, 3600, 0, 5, tr("°"));
+    m_pSpin = new RangeEdit(-36000, 36000, 0, 10, tr("°/s"));
+    auto* l_pColors = new QWidget;
     {
-        auto* h = new QHBoxLayout(colors);
-        h->setContentsMargins(0, 0, 0, 0);
-        m_color = new ColorButton;
-        m_color2 = new ColorButton;
-        m_randomColor = new QCheckBox(tr("random between"));
-        h->addWidget(m_color);
-        h->addWidget(m_randomColor);
-        h->addWidget(m_color2);
-        h->addStretch(1);
+        auto* l_pH = new QHBoxLayout(l_pColors);
+        l_pH->setContentsMargins(0, 0, 0, 0);
+        m_pColor = new ColorButton;
+        m_pColor2 = new ColorButton;
+        m_pRandomColor = new QCheckBox(tr("random between"));
+        l_pH->addWidget(m_pColor);
+        l_pH->addWidget(m_pRandomColor);
+        l_pH->addWidget(m_pColor2);
+        l_pH->addStretch(1);
     }
-    m_sprite = new QComboBox;
-    m_sprite->setEditable(true);
-    m_sprite->setInsertPolicy(QComboBox::NoInsert);
-    m_sprite->setToolTip(tr("The sprite as \"atlas:name\" (or double-click one in the Sprites dock). A flipbook replaces it."));
-    f->addRow(tr("Life"), m_life);
-    f->addRow(tr("Direction"), m_direction);
-    f->addRow(tr("Spread"), m_spread);
-    f->addRow(tr("Speed"), m_speed);
-    f->addRow(tr("Size"), m_size);
-    f->addRow(tr("Rotation"), m_rotation);
-    f->addRow(tr("Spin"), m_spin);
-    f->addRow(tr("Colour"), colors);
-    f->addRow(tr("Sprite"), m_sprite);
-    auto range = [&](RangeEdit* r, const char* key, const QString& text, std::function<void(Emitter&, const Range&)> set) {
-        connect(r, &RangeEdit::changed, this, [em, key, text, set](const Range& x) {
-            em(QString::fromLatin1(key), text, [set, x](Emitter& m) { set(m, x); });
+    m_pSprite = new QComboBox;
+    m_pSprite->setEditable(true);
+    m_pSprite->setInsertPolicy(QComboBox::NoInsert);
+    m_pSprite->setToolTip(tr("The sprite as \"atlas:name\" (or double-click one in the Sprites dock). A flipbook replaces it."));
+    l_pF->addRow(tr("Life"), m_pLife);
+    l_pF->addRow(tr("Direction"), m_pDirection);
+    l_pF->addRow(tr("Spread"), m_pSpread);
+    l_pF->addRow(tr("Speed"), m_pSpeed);
+    l_pF->addRow(tr("Size"), m_pSize);
+    l_pF->addRow(tr("Rotation"), m_pRotation);
+    l_pF->addRow(tr("Spin"), m_pSpin);
+    l_pF->addRow(tr("Colour"), l_pColors);
+    l_pF->addRow(tr("Sprite"), m_pSprite);
+    auto l_fnRange = [&](RangeEdit* l_pR, const char* l_pszKey, const QString& l_oText, std::function<void(Emitter&, const Range&)> l_fnSet) {
+        connect(l_pR, &RangeEdit::f_Changed, this, [l_fnEm, l_pszKey, l_oText, l_fnSet](const Range& l_oX) {
+            l_fnEm(QString::fromLatin1(l_pszKey), l_oText, [l_fnSet, l_oX](Emitter& l_oM) { l_fnSet(l_oM, l_oX); });
         });
     };
-    range(m_life, "life", tr("Life"), [](Emitter& m, const Range& r) { m.life = r; });
-    range(m_speed, "speed", tr("Speed"), [](Emitter& m, const Range& r) { m.speed = r; });
-    range(m_size, "size", tr("Size"), [](Emitter& m, const Range& r) { m.size = r; });
-    range(m_rotation, "rotation", tr("Rotation"), [](Emitter& m, const Range& r) { m.rotation = r; });
-    range(m_spin, "spin", tr("Spin"), [](Emitter& m, const Range& r) { m.spin = r; });
-    connect(m_direction, &QDoubleSpinBox::valueChanged, this, [em](double x) { em(QStringLiteral("dir"), tr("Direction"), [x](Emitter& m) { m.direction = float(x); }); });
-    connect(m_spread, &QDoubleSpinBox::valueChanged, this, [em](double x) { em(QStringLiteral("spread"), tr("Spread"), [x](Emitter& m) { m.spread = float(x); }); });
-    connect(m_color, &ColorButton::changed, this, [this, em](const glm::vec4& c) {
-        const bool rnd = m_randomColor->isChecked();
-        em(QStringLiteral("color"), tr("Colour"), [c, rnd](Emitter& m) {
-            m.color = c;
-            if (!rnd) m.color2 = c;
+    l_fnRange(m_pLife, "life", tr("Life"), [](Emitter& l_oM, const Range& l_oR) { l_oM.m_oLife = l_oR; });
+    l_fnRange(m_pSpeed, "speed", tr("Speed"), [](Emitter& l_oM, const Range& l_oR) { l_oM.m_oSpeed = l_oR; });
+    l_fnRange(m_pSize, "size", tr("Size"), [](Emitter& l_oM, const Range& l_oR) { l_oM.m_oSize = l_oR; });
+    l_fnRange(m_pRotation, "rotation", tr("Rotation"), [](Emitter& l_oM, const Range& l_oR) { l_oM.m_oRotation = l_oR; });
+    l_fnRange(m_pSpin, "spin", tr("Spin"), [](Emitter& l_oM, const Range& l_oR) { l_oM.m_oSpin = l_oR; });
+    connect(m_pDirection, &QDoubleSpinBox::valueChanged, this, [l_fnEm](double l_dX) { l_fnEm(QStringLiteral("dir"), tr("Direction"), [l_dX](Emitter& l_oM) { l_oM.m_fDirection = float(l_dX); }); });
+    connect(m_pSpread, &QDoubleSpinBox::valueChanged, this, [l_fnEm](double l_dX) { l_fnEm(QStringLiteral("spread"), tr("Spread"), [l_dX](Emitter& l_oM) { l_oM.m_fSpread = float(l_dX); }); });
+    connect(m_pColor, &ColorButton::f_Changed, this, [this, l_fnEm](const glm::vec4& l_v4C) {
+        const bool l_bRnd = m_pRandomColor->isChecked();
+        l_fnEm(QStringLiteral("color"), tr("Colour"), [l_v4C, l_bRnd](Emitter& l_oM) {
+            l_oM.m_v4Color = l_v4C;
+            if (!l_bRnd) l_oM.m_v4Color2 = l_v4C;
         });
     });
-    connect(m_color2, &ColorButton::changed, this, [em](const glm::vec4& c) { em(QStringLiteral("color2"), tr("Colour"), [c](Emitter& m) { m.color2 = c; }); });
-    connect(m_randomColor, &QCheckBox::toggled, this, [this, em](bool on) {
-        m_color2->setEnabled(on);
-        em(QStringLiteral("rcolor"), tr("Random colour"), [on](Emitter& m) {
-            if (!on) m.color2 = m.color;
-            else if (m.color2 == m.color) m.color2 = glm::vec4(1.0f);
+    connect(m_pColor2, &ColorButton::f_Changed, this, [l_fnEm](const glm::vec4& l_v4C) { l_fnEm(QStringLiteral("color2"), tr("Colour"), [l_v4C](Emitter& l_oM) { l_oM.m_v4Color2 = l_v4C; }); });
+    connect(m_pRandomColor, &QCheckBox::toggled, this, [this, l_fnEm](bool l_bOn) {
+        m_pColor2->setEnabled(l_bOn);
+        l_fnEm(QStringLiteral("rcolor"), tr("Random colour"), [l_bOn](Emitter& l_oM) {
+            if (!l_bOn) l_oM.m_v4Color2 = l_oM.m_v4Color;
+            else if (l_oM.m_v4Color2 == l_oM.m_v4Color) l_oM.m_v4Color2 = glm::vec4(1.0f);
         });
     });
-    auto commitSprite = [this, em] {
-        const QString s = m_sprite->currentText().trimmed();
-        if (m_doc->emitter() && qs(m_doc->emitter()->sprite) == s) return;
-        em(QStringLiteral("sprite"), tr("Sprite"), [s](Emitter& m) { m.sprite = s.toStdString(); });
+    auto l_fnCommitSprite = [this, l_fnEm] {
+        const QString l_oS = m_pSprite->currentText().trimmed();
+        if (m_pDoc->f_Emitter() && f_Qs(m_pDoc->f_Emitter()->m_strSprite) == l_oS) return;
+        l_fnEm(QStringLiteral("sprite"), tr("Sprite"), [l_oS](Emitter& l_oM) { l_oM.m_strSprite = l_oS.toStdString(); });
     };
-    connect(m_sprite, &QComboBox::activated, this, commitSprite);
-    connect(m_sprite->lineEdit(), &QLineEdit::editingFinished, this, commitSprite);
+    connect(m_pSprite, &QComboBox::activated, this, l_fnCommitSprite);
+    connect(m_pSprite->lineEdit(), &QLineEdit::editingFinished, this, l_fnCommitSprite);
 
     // ---- Over life
-    section(ev, tr("Over life"), &f);
-    m_colorCurve = new GradientEdit;
-    m_sizeCurve = new CurveEdit;
-    m_speedCurve = new CurveEdit;
-    m_spinCurve = new CurveEdit;
-    f->addRow(tr("Colour"), m_colorCurve);
-    f->addRow(tr("Size ×"), m_sizeCurve);
-    f->addRow(tr("Speed ×"), m_speedCurve);
-    f->addRow(tr("Spin ×"), m_spinCurve);
-    connect(m_colorCurve, &GradientEdit::changed, this, [this](const toms::fx::Curve<glm::vec4>& c) {
-        if (!m_updating) m_doc->editEmitter(tr("Colour over life"), [c](Emitter& m) { m.colorOverLife = c; },
-                                            QStringLiteral("ccurve%1").arg(m_colorCurve->gesture()));
+    f_Section(l_pEv, tr("Over life"), &l_pF);
+    m_pColorCurve = new GradientEdit;
+    m_pSizeCurve = new CurveEdit;
+    m_pSpeedCurve = new CurveEdit;
+    m_pSpinCurve = new CurveEdit;
+    l_pF->addRow(tr("Colour"), m_pColorCurve);
+    l_pF->addRow(tr("Size ×"), m_pSizeCurve);
+    l_pF->addRow(tr("Speed ×"), m_pSpeedCurve);
+    l_pF->addRow(tr("Spin ×"), m_pSpinCurve);
+    connect(m_pColorCurve, &GradientEdit::f_Changed, this, [this](const toms::fx::Curve<glm::vec4>& l_oC) {
+        if (!m_bUpdating) m_pDoc->f_EditEmitter(tr("Colour over life"), [l_oC](Emitter& l_oM) { l_oM.m_oColorOverLife = l_oC; },
+                                            QStringLiteral("ccurve%1").arg(m_pColorCurve->f_Gesture()));
     });
-    auto curve = [&](CurveEdit* w, const char* key, const QString& text, std::function<void(Emitter&, const toms::fx::Curve<float>&)> set) {
-        connect(w, &CurveEdit::changed, this, [this, w, key, text, set](const toms::fx::Curve<float>& c) {
-            if (!m_updating) m_doc->editEmitter(text, [set, c](Emitter& m) { set(m, c); }, QStringLiteral("%1%2").arg(QLatin1String(key)).arg(w->gesture()));
+    auto l_fnCurve = [&](CurveEdit* l_pW, const char* l_pszKey, const QString& l_oText, std::function<void(Emitter&, const toms::fx::Curve<float>&)> l_fnSet) {
+        connect(l_pW, &CurveEdit::f_Changed, this, [this, l_pW, l_pszKey, l_oText, l_fnSet](const toms::fx::Curve<float>& l_oC) {
+            if (!m_bUpdating) m_pDoc->f_EditEmitter(l_oText, [l_fnSet, l_oC](Emitter& l_oM) { l_fnSet(l_oM, l_oC); }, QStringLiteral("%1%2").arg(QLatin1String(l_pszKey)).arg(l_pW->f_Gesture()));
         });
     };
-    curve(m_sizeCurve, "zcurve", tr("Size over life"), [](Emitter& m, const toms::fx::Curve<float>& c) { m.sizeOverLife = c; });
-    curve(m_speedCurve, "vcurve", tr("Speed over life"), [](Emitter& m, const toms::fx::Curve<float>& c) { m.speedOverLife = c; });
-    curve(m_spinCurve, "scurve", tr("Spin over life"), [](Emitter& m, const toms::fx::Curve<float>& c) { m.spinOverLife = c; });
+    l_fnCurve(m_pSizeCurve, "zcurve", tr("Size over life"), [](Emitter& l_oM, const toms::fx::Curve<float>& l_oC) { l_oM.m_oSizeOverLife = l_oC; });
+    l_fnCurve(m_pSpeedCurve, "vcurve", tr("Speed over life"), [](Emitter& l_oM, const toms::fx::Curve<float>& l_oC) { l_oM.m_oSpeedOverLife = l_oC; });
+    l_fnCurve(m_pSpinCurve, "scurve", tr("Spin over life"), [](Emitter& l_oM, const toms::fx::Curve<float>& l_oC) { l_oM.m_oSpinOverLife = l_oC; });
 
     // ---- Forces
-    section(ev, tr("Forces"), &f);
-    m_gravity = new Vec2Edit(-100000, 100000, 1);
-    m_gravity->setToolTip(tr("px/s²; y down: [0, 300] falls, [0, -30] rises"));
-    m_drag = dspin(0, 100, 2, 0.1, tr(" /s"));
-    m_drag->setToolTip(tr("Slows particles down: velocity × e^(-drag·t)"));
-    m_radial = new RangeEdit(-100000, 100000, 1, 5, tr(" px/s²"));
-    m_radial->setToolTip(tr("Away from the emitter (negative: towards it)"));
-    m_tangential = new RangeEdit(-100000, 100000, 1, 5, tr(" px/s²"));
-    m_tangential->setToolTip(tr("Around the emitter, clockwise (negative: anticlockwise): orbits, swirls"));
-    f->addRow(tr("Gravity"), m_gravity);
-    f->addRow(tr("Drag"), m_drag);
-    f->addRow(tr("Radial"), m_radial);
-    f->addRow(tr("Tangential"), m_tangential);
-    connect(m_gravity, &Vec2Edit::changed, this, [em](const glm::vec2& g) { em(QStringLiteral("gravity"), tr("Gravity"), [g](Emitter& m) { m.gravity = g; }); });
-    connect(m_drag, &QDoubleSpinBox::valueChanged, this, [em](double x) { em(QStringLiteral("drag"), tr("Drag"), [x](Emitter& m) { m.drag = float(x); }); });
-    range(m_radial, "radial", tr("Radial"), [](Emitter& m, const Range& r) { m.radial = r; });
-    range(m_tangential, "tangential", tr("Tangential"), [](Emitter& m, const Range& r) { m.tangential = r; });
+    f_Section(l_pEv, tr("Forces"), &l_pF);
+    m_pGravity = new Vec2Edit(-100000, 100000, 1);
+    m_pGravity->setToolTip(tr("px/s²; y down: [0, 300] falls, [0, -30] rises"));
+    m_pDrag = f_Dspin(0, 100, 2, 0.1, tr(" /s"));
+    m_pDrag->setToolTip(tr("Slows particles down: velocity × e^(-drag·t)"));
+    m_pRadial = new RangeEdit(-100000, 100000, 1, 5, tr(" px/s²"));
+    m_pRadial->setToolTip(tr("Away from the emitter (negative: towards it)"));
+    m_pTangential = new RangeEdit(-100000, 100000, 1, 5, tr(" px/s²"));
+    m_pTangential->setToolTip(tr("Around the emitter, clockwise (negative: anticlockwise): orbits, swirls"));
+    l_pF->addRow(tr("Gravity"), m_pGravity);
+    l_pF->addRow(tr("Drag"), m_pDrag);
+    l_pF->addRow(tr("Radial"), m_pRadial);
+    l_pF->addRow(tr("Tangential"), m_pTangential);
+    connect(m_pGravity, &Vec2Edit::f_Changed, this, [l_fnEm](const glm::vec2& l_v2G) { l_fnEm(QStringLiteral("gravity"), tr("Gravity"), [l_v2G](Emitter& l_oM) { l_oM.m_v2Gravity = l_v2G; }); });
+    connect(m_pDrag, &QDoubleSpinBox::valueChanged, this, [l_fnEm](double l_dX) { l_fnEm(QStringLiteral("drag"), tr("Drag"), [l_dX](Emitter& l_oM) { l_oM.m_fDrag = float(l_dX); }); });
+    l_fnRange(m_pRadial, "radial", tr("Radial"), [](Emitter& l_oM, const Range& l_oR) { l_oM.m_oRadial = l_oR; });
+    l_fnRange(m_pTangential, "tangential", tr("Tangential"), [](Emitter& l_oM, const Range& l_oR) { l_oM.m_oTangential = l_oR; });
 
     // ---- Flipbook
-    section(ev, tr("Flipbook"), &f);
-    m_frames = new QListWidget;
-    m_frames->setDragDropMode(QAbstractItemView::InternalMove);
-    m_frames->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    m_frames->setMaximumHeight(110);
-    m_frames->setToolTip(tr("Drop sprites here (several at once: in their order); drag to reorder; Delete removes. "
+    f_Section(l_pEv, tr("Flipbook"), &l_pF);
+    m_pFrames = new QListWidget;
+    m_pFrames->setDragDropMode(QAbstractItemView::InternalMove);
+    m_pFrames->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    m_pFrames->setMaximumHeight(110);
+    m_pFrames->setToolTip(tr("Drop sprites here (several at once: in their order); drag to reorder; Delete removes. "
                             "Frames replace the Sprite."));
-    new FramesFilter(m_frames, [this] { QMetaObject::invokeMethod(this, &InspectorDock::commitFrames, Qt::QueuedConnection); });
-    connect(m_frames->model(), &QAbstractItemModel::rowsMoved, this, [this] {
-        if (!m_updating) QMetaObject::invokeMethod(this, &InspectorDock::commitFrames, Qt::QueuedConnection);
+    new FramesFilter(m_pFrames, [this] { QMetaObject::invokeMethod(this, &InspectorDock::f_CommitFrames, Qt::QueuedConnection); });
+    connect(m_pFrames->model(), &QAbstractItemModel::rowsMoved, this, [this] {
+        if (!m_bUpdating) QMetaObject::invokeMethod(this, &InspectorDock::f_CommitFrames, Qt::QueuedConnection);
     });
-    m_frameMode = new QComboBox;
-    m_frameMode->addItems({tr("over the life (all frames once)"), tr("loop at fps")});
-    m_fps = dspin(0.1, 240, 1, 1, tr(" fps"));
-    m_randomFrame = new QCheckBox(tr("each particle starts on a random frame"));
-    f->addRow(tr("Frames"), m_frames);
-    f->addRow(tr("Mode"), m_frameMode);
-    f->addRow(tr("Speed"), m_fps);
-    f->addRow(tr("Start"), m_randomFrame);
-    connect(m_frameMode, &QComboBox::currentIndexChanged, this, [this, em](int i) {
-        m_fps->setEnabled(i == 1);
-        em(QStringLiteral("fmode"), tr("Flipbook mode"), [i](Emitter& m) { m.framesByFps = i == 1; });
+    m_pFrameMode = new QComboBox;
+    m_pFrameMode->addItems({tr("over the life (all frames once)"), tr("loop at fps")});
+    m_pFps = f_Dspin(0.1, 240, 1, 1, tr(" fps"));
+    m_pRandomFrame = new QCheckBox(tr("each particle starts on a random frame"));
+    l_pF->addRow(tr("Frames"), m_pFrames);
+    l_pF->addRow(tr("Mode"), m_pFrameMode);
+    l_pF->addRow(tr("Speed"), m_pFps);
+    l_pF->addRow(tr("Start"), m_pRandomFrame);
+    connect(m_pFrameMode, &QComboBox::currentIndexChanged, this, [this, l_fnEm](int l_iI) {
+        m_pFps->setEnabled(l_iI == 1);
+        l_fnEm(QStringLiteral("fmode"), tr("Flipbook mode"), [l_iI](Emitter& l_oM) { l_oM.m_bFramesByFps = l_iI == 1; });
     });
-    connect(m_fps, &QDoubleSpinBox::valueChanged, this, [em](double x) { em(QStringLiteral("fps"), tr("Flipbook fps"), [x](Emitter& m) { m.fps = float(x); }); });
-    connect(m_randomFrame, &QCheckBox::toggled, this, [em](bool on) { em(QStringLiteral("frand"), tr("Random frame"), [on](Emitter& m) { m.randomFrame = on; }); });
+    connect(m_pFps, &QDoubleSpinBox::valueChanged, this, [l_fnEm](double l_dX) { l_fnEm(QStringLiteral("fps"), tr("Flipbook fps"), [l_dX](Emitter& l_oM) { l_oM.m_fFps = float(l_dX); }); });
+    connect(m_pRandomFrame, &QCheckBox::toggled, this, [l_fnEm](bool l_bOn) { l_fnEm(QStringLiteral("frand"), tr("Random frame"), [l_bOn](Emitter& l_oM) { l_oM.m_bRandomFrame = l_bOn; }); });
 
     // ---- Render
-    section(ev, tr("Render"), &f);
-    m_blend = new QComboBox;
-    m_blend->addItems({QStringLiteral("normal"), QStringLiteral("add"), QStringLiteral("multiply"), QStringLiteral("screen"), tr("custom…")});
-    m_blend->setToolTip(tr("normal: paints over · add: adds light (fire, sparks, magic) · multiply: darkens (shadows) · "
+    f_Section(l_pEv, tr("Render"), &l_pF);
+    m_pBlend = new QComboBox;
+    m_pBlend->addItems({QStringLiteral("normal"), QStringLiteral("add"), QStringLiteral("multiply"), QStringLiteral("screen"), tr("custom…")});
+    m_pBlend->setToolTip(tr("normal: paints over · add: adds light (fire, sparks, magic) · multiply: darkens (shadows) · "
                            "screen: soft light. multiply / screen / custom draw as normal in the game until phase 2b."));
-    m_src = new QComboBox;
-    m_dst = new QComboBox;
-    for (int i = 0; i < Blend::FactorCount; i++) {
-        m_src->addItem(QString::fromLatin1(Blend::factorName(Blend::Factor(i))));
-        m_dst->addItem(QString::fromLatin1(Blend::factorName(Blend::Factor(i))));
+    m_pSrc = new QComboBox;
+    m_pDst = new QComboBox;
+    for (int l_iI = 0; l_iI < Blend::FactorCount; l_iI++) {
+        m_pSrc->addItem(QString::fromLatin1(Blend::f_FactorName(Blend::Factor(l_iI))));
+        m_pDst->addItem(QString::fromLatin1(Blend::f_FactorName(Blend::Factor(l_iI))));
     }
-    auto* custom = new QWidget;
+    auto* l_pCustom = new QWidget;
     {
-        auto* h = new QHBoxLayout(custom);
-        h->setContentsMargins(0, 0, 0, 0);
-        h->addWidget(new QLabel(tr("src")));
-        h->addWidget(m_src, 1);
-        h->addWidget(new QLabel(tr("dst")));
-        h->addWidget(m_dst, 1);
+        auto* l_pH = new QHBoxLayout(l_pCustom);
+        l_pH->setContentsMargins(0, 0, 0, 0);
+        l_pH->addWidget(new QLabel(tr("src")));
+        l_pH->addWidget(m_pSrc, 1);
+        l_pH->addWidget(new QLabel(tr("dst")));
+        l_pH->addWidget(m_pDst, 1);
     }
-    m_order = new QSpinBox;
-    m_order->setRange(-1000, 1000);
-    m_order->setToolTip(tr("Among this effect's emitters: higher draws in front"));
-    m_align = new QCheckBox(tr("turn to the direction of motion"));
-    m_oldestOnTop = new QCheckBox(tr("older particles over newer ones"));
-    f->addRow(tr("Blend"), m_blend);
-    f->addRow(tr("Factors"), custom);
-    f->addRow(tr("Order"), m_order);
-    f->addRow(tr("Align"), m_align);
-    f->addRow(tr("Stacking"), m_oldestOnTop);
-    m_simulation = new QComboBox;
-    m_simulation->addItems({tr("auto: GPU above the game's particle threshold"), tr("CPU"), tr("GPU (when the device can)")});
-    m_simulation->setToolTip(tr("Where the game simulates this emitter.\n"
+    m_pOrder = new QSpinBox;
+    m_pOrder->setRange(-1000, 1000);
+    m_pOrder->setToolTip(tr("Among this effect's emitters: higher draws in front"));
+    m_pAlign = new QCheckBox(tr("turn to the direction of motion"));
+    m_pOldestOnTop = new QCheckBox(tr("older particles over newer ones"));
+    l_pF->addRow(tr("Blend"), m_pBlend);
+    l_pF->addRow(tr("Factors"), l_pCustom);
+    l_pF->addRow(tr("Order"), m_pOrder);
+    l_pF->addRow(tr("Align"), m_pAlign);
+    l_pF->addRow(tr("Stacking"), m_pOldestOnTop);
+    m_pSimulation = new QComboBox;
+    m_pSimulation->addItems({tr("auto: GPU above the game's particle threshold"), tr("CPU"), tr("GPU (when the device can)")});
+    m_pSimulation->setToolTip(tr("Where the game simulates this emitter.\n"
                                 "auto: on the GPU when Max particles is above the game setting particleGpuThreshold "
                                 "(desktop 5000, phones 3000).\n"
                                 "GPU: on the GPU whenever the device has compute shaders (not in the browser or on GLES phones: "
                                 "there it falls back to the CPU).\n"
                                 "CPU: always on the CPU.\n"
                                 "The editor's preview always simulates on the CPU; both give the same particles."));
-    f->addRow(tr("Simulation"), m_simulation);
-    connect(m_simulation, &QComboBox::currentIndexChanged, this, [em](int i) {
+    l_pF->addRow(tr("Simulation"), m_pSimulation);
+    connect(m_pSimulation, &QComboBox::currentIndexChanged, this, [l_fnEm](int l_iI) {
         using Sim = toms::fx::Emitter::Simulation;
-        const Sim s = i == 2 ? Sim::Gpu : i == 1 ? Sim::Cpu : Sim::Auto;
-        em(QStringLiteral("simulation"), tr("Simulation"), [s](Emitter& m) { m.simulation = s; });
+        const Sim l_eS = l_iI == 2 ? Sim::Gpu : l_iI == 1 ? Sim::Cpu : Sim::Auto;
+        l_fnEm(QStringLiteral("simulation"), tr("Simulation"), [l_eS](Emitter& l_oM) { l_oM.m_eSimulation = l_eS; });
     });
-    connect(m_blend, &QComboBox::activated, this, [this, em](int i) {
-        static const Blend presets[] = {Blend::normal(), Blend::add(), Blend::multiply(), Blend::screen()};
-        if (i < 4) em(QStringLiteral("blend"), tr("Blend"), [i](Emitter& m) { m.blend = presets[i]; });
-        refresh();   // shows / hides the factors
+    connect(m_pBlend, &QComboBox::activated, this, [this, l_fnEm](int l_iI) {
+        static const Blend l_arrPresets[] = {Blend::f_Normal(), Blend::f_Add(), Blend::f_Multiply(), Blend::f_Screen()};
+        if (l_iI < 4) l_fnEm(QStringLiteral("blend"), tr("Blend"), [l_iI](Emitter& l_oM) { l_oM.m_oBlend = l_arrPresets[l_iI]; });
+        f_Refresh();   // shows / hides the factors
     });
-    auto factor = [this, em](QComboBox* c, bool src) {
-        connect(c, &QComboBox::activated, this, [em, src](int i) {
-            em(QStringLiteral("factor"), tr("Blend factor"), [i, src](Emitter& m) { (src ? m.blend.src : m.blend.dst) = Blend::Factor(i); });
+    auto l_fnFactor = [this, l_fnEm](QComboBox* l_pC, bool l_bSrc) {
+        connect(l_pC, &QComboBox::activated, this, [l_fnEm, l_bSrc](int l_iI) {
+            l_fnEm(QStringLiteral("factor"), tr("Blend factor"), [l_iI, l_bSrc](Emitter& l_oM) { (l_bSrc ? l_oM.m_oBlend.m_eSrc : l_oM.m_oBlend.m_eDst) = Blend::Factor(l_iI); });
         });
     };
-    factor(m_src, true);
-    factor(m_dst, false);
-    connect(m_order, &QSpinBox::valueChanged, this, [em](int x) { em(QStringLiteral("order"), tr("Order"), [x](Emitter& m) { m.order = x; }); });
-    connect(m_align, &QCheckBox::toggled, this, [em](bool on) { em(QStringLiteral("align"), tr("Align to motion"), [on](Emitter& m) { m.alignToVelocity = on; }); });
-    connect(m_oldestOnTop, &QCheckBox::toggled, this, [em](bool on) { em(QStringLiteral("oldest"), tr("Stacking"), [on](Emitter& m) { m.oldestOnTop = on; }); });
+    l_fnFactor(m_pSrc, true);
+    l_fnFactor(m_pDst, false);
+    connect(m_pOrder, &QSpinBox::valueChanged, this, [l_fnEm](int l_iX) { l_fnEm(QStringLiteral("order"), tr("Order"), [l_iX](Emitter& l_oM) { l_oM.m_iOrder = l_iX; }); });
+    connect(m_pAlign, &QCheckBox::toggled, this, [l_fnEm](bool l_bOn) { l_fnEm(QStringLiteral("align"), tr("Align to motion"), [l_bOn](Emitter& l_oM) { l_oM.m_bAlignToVelocity = l_bOn; }); });
+    connect(m_pOldestOnTop, &QCheckBox::toggled, this, [l_fnEm](bool l_bOn) { l_fnEm(QStringLiteral("oldest"), tr("Stacking"), [l_bOn](Emitter& l_oM) { l_oM.m_bOldestOnTop = l_bOn; }); });
 
-    connect(doc, &ParticleDocument::fileChanged, this, &InspectorDock::refresh);
-    connect(doc, &ParticleDocument::selectionChanged, this, &InspectorDock::refresh);
-    connect(doc, &ParticleDocument::atlasChanged, this, &InspectorDock::refreshSprites);
-    refreshSprites();
-    refresh();
+    connect(l_pDoc, &ParticleDocument::f_FileChanged, this, &InspectorDock::f_Refresh);
+    connect(l_pDoc, &ParticleDocument::f_SelectionChanged, this, &InspectorDock::f_Refresh);
+    connect(l_pDoc, &ParticleDocument::f_AtlasChanged, this, &InspectorDock::f_RefreshSprites);
+    f_RefreshSprites();
+    f_Refresh();
 }
 
-void InspectorDock::refreshSprites()
+void InspectorDock::f_RefreshSprites()
 {
-    const QString cur = m_sprite->currentText();
-    const QSignalBlocker b(m_sprite);
-    m_sprite->clear();
-    for (const QString& r : m_doc->spriteRefs()) {
-        const QImage img = m_doc->spriteImage(r);
-        m_sprite->addItem(img.isNull() ? QIcon() : QIcon(QPixmap::fromImage(img.scaled(20, 20, Qt::KeepAspectRatio, Qt::SmoothTransformation))), r);
+    const QString l_oCur = m_pSprite->currentText();
+    const QSignalBlocker l_oB(m_pSprite);
+    m_pSprite->clear();
+    for (const QString& l_oR : m_pDoc->f_SpriteRefs()) {
+        const QImage l_oImg = m_pDoc->f_SpriteImage(l_oR);
+        m_pSprite->addItem(l_oImg.isNull() ? QIcon() : QIcon(QPixmap::fromImage(l_oImg.scaled(20, 20, Qt::KeepAspectRatio, Qt::SmoothTransformation))), l_oR);
     }
-    m_sprite->setEditText(cur);
+    m_pSprite->setEditText(l_oCur);
 }
 
-void InspectorDock::updateShapeRows()
+void InspectorDock::f_UpdateShapeRows()
 {
-    const int t = m_shapeType->currentIndex();
-    auto show = [this](QWidget* w, bool on) { m_shapeForm->setRowVisible(w, on); };
-    show(m_length, t == Shape::Line);
-    show(m_angle, t == Shape::Line);
-    show(m_width, t == Shape::Box);
-    show(m_height, t == Shape::Box);
-    show(m_radius, t == Shape::Circle || t == Shape::Ring);
-    show(m_thickness, t == Shape::Ring);
-    show(m_arcFrom, t == Shape::Circle || t == Shape::Ring);
-    show(m_arcTo, t == Shape::Circle || t == Shape::Ring);
-    show(m_edge, t == Shape::Box || t == Shape::Circle);
+    const int l_iT = m_pShapeType->currentIndex();
+    auto l_fnShow = [this](QWidget* l_pW, bool l_bOn) { m_pShapeForm->setRowVisible(l_pW, l_bOn); };
+    l_fnShow(m_pLength, l_iT == Shape::Line);
+    l_fnShow(m_pAngle, l_iT == Shape::Line);
+    l_fnShow(m_pWidth, l_iT == Shape::Box);
+    l_fnShow(m_pHeight, l_iT == Shape::Box);
+    l_fnShow(m_pRadius, l_iT == Shape::Circle || l_iT == Shape::Ring);
+    l_fnShow(m_pThickness, l_iT == Shape::Ring);
+    l_fnShow(m_pArcFrom, l_iT == Shape::Circle || l_iT == Shape::Ring);
+    l_fnShow(m_pArcTo, l_iT == Shape::Circle || l_iT == Shape::Ring);
+    l_fnShow(m_pEdge, l_iT == Shape::Box || l_iT == Shape::Circle);
 }
 
-void InspectorDock::refresh()
+void InspectorDock::f_Refresh()
 {
-    m_updating = true;
-    const Effect* e = m_doc->effect();
-    const Emitter* m = m_doc->emitter();
-    m_effectSection->setEnabled(e != nullptr);
-    m_emitterSections->setVisible(m != nullptr);
-    m_none->setVisible(m == nullptr);
-    setWindowTitle(m ? tr("Inspector: %1").arg(qs(m->name)) : e ? tr("Inspector: %1").arg(qs(e->name)) : tr("Inspector"));
-    if (e) {
-        if (!m_effectName->hasFocus()) m_effectName->setText(qs(e->name));
-        m_duration->setValue(e->duration);
-        m_loop->setChecked(e->loop);
-        m_loop->setEnabled(e->duration > 0);
-        m_prewarm->setValue(e->prewarm);
-        m_seed->setValue(int(e->seed));
+    m_bUpdating = true;
+    const Effect* l_pE = m_pDoc->f_Effect();
+    const Emitter* l_pM = m_pDoc->f_Emitter();
+    m_pEffectSection->setEnabled(l_pE != nullptr);
+    m_pEmitterSections->setVisible(l_pM != nullptr);
+    m_pNone->setVisible(l_pM == nullptr);
+    setWindowTitle(l_pM ? tr("Inspector: %1").arg(f_Qs(l_pM->m_strName)) : l_pE ? tr("Inspector: %1").arg(f_Qs(l_pE->m_strName)) : tr("Inspector"));
+    if (l_pE) {
+        if (!m_pEffectName->hasFocus()) m_pEffectName->setText(f_Qs(l_pE->m_strName));
+        m_pDuration->setValue(l_pE->m_fDuration);
+        m_pLoop->setChecked(l_pE->m_bLoop);
+        m_pLoop->setEnabled(l_pE->m_fDuration > 0);
+        m_pPrewarm->setValue(l_pE->m_fPrewarm);
+        m_pSeed->setValue(int(l_pE->m_uSeed));
     }
-    if (m) {
-        if (!m_emitterName->hasFocus()) m_emitterName->setText(qs(m->name));
-        m_offset->setValue(m->offset);
-        m_start->setValue(m->start);
-        m_stop->setValue(m->stop);
-        m_space->setCurrentIndex(m->localSpace ? 1 : 0);
-        m_max->setValue(m->maxParticles);
-        m_rate->setValue(m->rate);
-        m_bursts->setRowCount(int(m->bursts.size()));
-        for (int i = 0; i < int(m->bursts.size()); i++) {
-            const Burst& b = m->bursts[size_t(i)];
-            const double vals[] = {b.t, b.count.min, b.count.max, double(b.repeat), b.interval};
-            for (int c = 0; c < 5; c++) m_bursts->setItem(i, c, new QTableWidgetItem(QString::number(vals[c], 'g', 6)));
+    if (l_pM) {
+        if (!m_pEmitterName->hasFocus()) m_pEmitterName->setText(f_Qs(l_pM->m_strName));
+        m_pOffset->f_SetValue(l_pM->m_v2Offset);
+        m_pStart->setValue(l_pM->m_fStart);
+        m_pStop->setValue(l_pM->m_fStop);
+        m_pSpace->setCurrentIndex(l_pM->m_bLocalSpace ? 1 : 0);
+        m_pMax->setValue(l_pM->m_iMaxParticles);
+        m_pRate->setValue(l_pM->m_fRate);
+        m_pBursts->setRowCount(int(l_pM->m_vBursts.size()));
+        for (int l_iI = 0; l_iI < int(l_pM->m_vBursts.size()); l_iI++) {
+            const Burst& l_oB = l_pM->m_vBursts[size_t(l_iI)];
+            const double l_arrVals[] = {l_oB.m_fT, l_oB.m_oCount.m_fMin, l_oB.m_oCount.m_fMax, double(l_oB.m_iRepeat), l_oB.m_fInterval};
+            for (int l_iC = 0; l_iC < 5; l_iC++) m_pBursts->setItem(l_iI, l_iC, new QTableWidgetItem(QString::number(l_arrVals[l_iC], 'g', 6)));
         }
-        m_shapeType->setCurrentIndex(int(m->shape.type));
-        m_length->setValue(m->shape.length);
-        m_angle->setValue(m->shape.angle);
-        m_width->setValue(m->shape.width);
-        m_height->setValue(m->shape.height);
-        m_radius->setValue(m->shape.radius);
-        m_thickness->setValue(m->shape.thickness);
-        m_arcFrom->setValue(m->shape.arcFrom);
-        m_arcTo->setValue(m->shape.arcTo);
-        m_edge->setChecked(m->shape.edge);
-        m_outward->setChecked(m->shape.outward);
-        updateShapeRows();
-        m_life->setValue(m->life);
-        m_direction->setValue(m->direction);
-        m_direction->setEnabled(!m->shape.outward);
-        m_spread->setValue(m->spread);
-        m_speed->setValue(m->speed);
-        m_size->setValue(m->size);
-        m_rotation->setValue(m->rotation);
-        m_spin->setValue(m->spin);
-        m_color->setColor(m->color);
-        m_color2->setColor(m->color2);
-        m_randomColor->setChecked(m->color != m->color2);
-        m_color2->setEnabled(m->color != m->color2);
-        if (!m_sprite->lineEdit()->hasFocus()) m_sprite->setEditText(qs(m->sprite));
-        m_sprite->setEnabled(m->frames.empty());
-        m_colorCurve->setCurve(m->colorOverLife);
-        m_sizeCurve->setCurve(m->sizeOverLife);
-        m_speedCurve->setCurve(m->speedOverLife);
-        m_spinCurve->setCurve(m->spinOverLife);
-        m_gravity->setValue(m->gravity);
-        m_drag->setValue(m->drag);
-        m_radial->setValue(m->radial);
-        m_tangential->setValue(m->tangential);
-        m_frames->clear();
-        for (const std::string& fr : m->frames) m_frames->addItem(qs(fr));
-        m_frameMode->setCurrentIndex(m->framesByFps ? 1 : 0);
-        m_fps->setValue(m->fps);
-        m_fps->setEnabled(m->framesByFps);
-        m_randomFrame->setChecked(m->randomFrame);
-        const QString preset = qs(m->blend.presetName());
-        const bool customBlend = preset.isEmpty() || m_blend->currentIndex() == 4;
-        m_blend->setCurrentIndex(preset.isEmpty() ? 4 : (customBlend && m_blend->currentIndex() == 4 ? 4 : m_blend->findText(preset)));
-        m_src->setCurrentIndex(int(m->blend.src));
-        m_dst->setCurrentIndex(int(m->blend.dst));
-        for (QWidget* w : {static_cast<QWidget*>(m_src), static_cast<QWidget*>(m_dst)}) w->setEnabled(m_blend->currentIndex() == 4);
-        m_order->setValue(m->order);
-        m_align->setChecked(m->alignToVelocity);
-        m_oldestOnTop->setChecked(m->oldestOnTop);
-        m_simulation->setCurrentIndex(m->simulation == Emitter::Simulation::Gpu ? 2 : m->simulation == Emitter::Simulation::Cpu ? 1 : 0);
+        m_pShapeType->setCurrentIndex(int(l_pM->m_oShape.m_eType));
+        m_pLength->setValue(l_pM->m_oShape.m_fLength);
+        m_pAngle->setValue(l_pM->m_oShape.m_fAngle);
+        m_pWidth->setValue(l_pM->m_oShape.m_fWidth);
+        m_pHeight->setValue(l_pM->m_oShape.m_fHeight);
+        m_pRadius->setValue(l_pM->m_oShape.m_fRadius);
+        m_pThickness->setValue(l_pM->m_oShape.m_fThickness);
+        m_pArcFrom->setValue(l_pM->m_oShape.m_fArcFrom);
+        m_pArcTo->setValue(l_pM->m_oShape.m_fArcTo);
+        m_pEdge->setChecked(l_pM->m_oShape.m_bEdge);
+        m_pOutward->setChecked(l_pM->m_oShape.m_bOutward);
+        f_UpdateShapeRows();
+        m_pLife->f_SetValue(l_pM->m_oLife);
+        m_pDirection->setValue(l_pM->m_fDirection);
+        m_pDirection->setEnabled(!l_pM->m_oShape.m_bOutward);
+        m_pSpread->setValue(l_pM->m_fSpread);
+        m_pSpeed->f_SetValue(l_pM->m_oSpeed);
+        m_pSize->f_SetValue(l_pM->m_oSize);
+        m_pRotation->f_SetValue(l_pM->m_oRotation);
+        m_pSpin->f_SetValue(l_pM->m_oSpin);
+        m_pColor->f_SetColor(l_pM->m_v4Color);
+        m_pColor2->f_SetColor(l_pM->m_v4Color2);
+        m_pRandomColor->setChecked(l_pM->m_v4Color != l_pM->m_v4Color2);
+        m_pColor2->setEnabled(l_pM->m_v4Color != l_pM->m_v4Color2);
+        if (!m_pSprite->lineEdit()->hasFocus()) m_pSprite->setEditText(f_Qs(l_pM->m_strSprite));
+        m_pSprite->setEnabled(l_pM->m_vFrames.empty());
+        m_pColorCurve->f_SetCurve(l_pM->m_oColorOverLife);
+        m_pSizeCurve->f_SetCurve(l_pM->m_oSizeOverLife);
+        m_pSpeedCurve->f_SetCurve(l_pM->m_oSpeedOverLife);
+        m_pSpinCurve->f_SetCurve(l_pM->m_oSpinOverLife);
+        m_pGravity->f_SetValue(l_pM->m_v2Gravity);
+        m_pDrag->setValue(l_pM->m_fDrag);
+        m_pRadial->f_SetValue(l_pM->m_oRadial);
+        m_pTangential->f_SetValue(l_pM->m_oTangential);
+        m_pFrames->clear();
+        for (const std::string& l_strFr : l_pM->m_vFrames) m_pFrames->addItem(f_Qs(l_strFr));
+        m_pFrameMode->setCurrentIndex(l_pM->m_bFramesByFps ? 1 : 0);
+        m_pFps->setValue(l_pM->m_fFps);
+        m_pFps->setEnabled(l_pM->m_bFramesByFps);
+        m_pRandomFrame->setChecked(l_pM->m_bRandomFrame);
+        const QString l_oPreset = f_Qs(l_pM->m_oBlend.f_PresetName());
+        const bool l_bCustomBlend = l_oPreset.isEmpty() || m_pBlend->currentIndex() == 4;
+        m_pBlend->setCurrentIndex(l_oPreset.isEmpty() ? 4 : (l_bCustomBlend && m_pBlend->currentIndex() == 4 ? 4 : m_pBlend->findText(l_oPreset)));
+        m_pSrc->setCurrentIndex(int(l_pM->m_oBlend.m_eSrc));
+        m_pDst->setCurrentIndex(int(l_pM->m_oBlend.m_eDst));
+        for (QWidget* l_pW : {static_cast<QWidget*>(m_pSrc), static_cast<QWidget*>(m_pDst)}) l_pW->setEnabled(m_pBlend->currentIndex() == 4);
+        m_pOrder->setValue(l_pM->m_iOrder);
+        m_pAlign->setChecked(l_pM->m_bAlignToVelocity);
+        m_pOldestOnTop->setChecked(l_pM->m_bOldestOnTop);
+        m_pSimulation->setCurrentIndex(l_pM->m_eSimulation == Emitter::Simulation::Gpu ? 2 : l_pM->m_eSimulation == Emitter::Simulation::Cpu ? 1 : 0);
     }
-    m_updating = false;
+    m_bUpdating = false;
 }
 
-void InspectorDock::commitBursts()
+void InspectorDock::f_CommitBursts()
 {
-    std::vector<Burst> bursts;
-    for (int r = 0; r < m_bursts->rowCount(); r++) {
-        auto val = [&](int c, double def) {
-            const QTableWidgetItem* it = m_bursts->item(r, c);
-            bool ok = false;
-            const double v = it ? it->text().toDouble(&ok) : def;
-            return ok ? v : def;
+    std::vector<Burst> l_vBursts;
+    for (int l_iR = 0; l_iR < m_pBursts->rowCount(); l_iR++) {
+        auto l_fnVal = [&](int l_iC, double l_dDef) {
+            const QTableWidgetItem* l_pIt = m_pBursts->item(l_iR, l_iC);
+            bool l_bOk = false;
+            const double l_dV = l_pIt ? l_pIt->text().toDouble(&l_bOk) : l_dDef;
+            return l_bOk ? l_dV : l_dDef;
         };
-        Burst b;
-        b.t = float(std::max(0.0, val(0, 0)));
-        const float lo = float(std::max(0.0, val(1, 1))), hi = float(std::max(0.0, val(2, lo)));
-        b.count = Range(std::min(lo, hi), std::max(lo, hi));
-        b.repeat = int(val(3, 0));
-        b.interval = float(std::max(0.0, val(4, 0.5)));
-        bursts.push_back(b);
+        Burst l_oB;
+        l_oB.m_fT = float(std::max(0.0, l_fnVal(0, 0)));
+        const float l_fLo = float(std::max(0.0, l_fnVal(1, 1))), l_fHi = float(std::max(0.0, l_fnVal(2, l_fLo)));
+        l_oB.m_oCount = Range(std::min(l_fLo, l_fHi), std::max(l_fLo, l_fHi));
+        l_oB.m_iRepeat = int(l_fnVal(3, 0));
+        l_oB.m_fInterval = float(std::max(0.0, l_fnVal(4, 0.5)));
+        l_vBursts.push_back(l_oB);
     }
-    m_doc->editEmitter(tr("Bursts"), [&](Emitter& m) { m.bursts = bursts; }, mergeKey(QStringLiteral("bursts")));
+    m_pDoc->f_EditEmitter(tr("Bursts"), [&](Emitter& l_oM) { l_oM.m_vBursts = l_vBursts; }, f_MergeKey(QStringLiteral("bursts")));
 }
 
-void InspectorDock::commitFrames()
+void InspectorDock::f_CommitFrames()
 {
-    std::vector<std::string> frames;
-    for (int i = 0; i < m_frames->count(); i++) frames.push_back(m_frames->item(i)->text().toStdString());
-    m_doc->editEmitter(tr("Flipbook frames"), [&](Emitter& m) { m.frames = frames; });
+    std::vector<std::string> l_vFrames;
+    for (int l_iI = 0; l_iI < m_pFrames->count(); l_iI++) l_vFrames.push_back(m_pFrames->item(l_iI)->text().toStdString());
+    m_pDoc->f_EditEmitter(tr("Flipbook frames"), [&](Emitter& l_oM) { l_oM.m_vFrames = l_vFrames; });
 }

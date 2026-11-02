@@ -29,45 +29,45 @@ namespace toms::story {
 class StoryEffects {
 public:
     virtual ~StoryEffects() = default;
-    virtual bool addStat(const std::string& stat, int delta) = 0;
-    virtual bool setStat(const std::string& stat, int value) = 0;
-    virtual bool give(const std::string& itemId, int count) = 0;
-    virtual bool take(const std::string& itemId, int count) = 0;
-    virtual void setVar(const std::string& var, int value) = 0;
-    virtual void addVar(const std::string& var, int delta) = 0;
-    virtual void setFlag(const std::string& flag) = 0;
-    virtual void setStoryFlag(const std::string& flag) = 0;
-    virtual void addCounter(const std::string& counter, int delta) = 0;
-    virtual void fireEvent(const std::string& eventId) = 0;
-    virtual void message(const std::string& textKey) = 0;
+    virtual bool f_AddStat(const std::string& l_strStat, int l_iDelta) = 0;
+    virtual bool f_SetStat(const std::string& l_strStat, int l_iValue) = 0;
+    virtual bool f_Give(const std::string& l_strItemId, int l_iCount) = 0;
+    virtual bool f_Take(const std::string& l_strItemId, int l_iCount) = 0;
+    virtual void f_SetVar(const std::string& l_strVar, int l_iValue) = 0;
+    virtual void f_AddVar(const std::string& l_strVar, int l_iDelta) = 0;
+    virtual void f_SetFlag(const std::string& l_strFlag) = 0;
+    virtual void f_SetStoryFlag(const std::string& l_strFlag) = 0;
+    virtual void f_AddCounter(const std::string& l_strCounter, int l_iDelta) = 0;
+    virtual void f_FireEvent(const std::string& l_strEventId) = 0;
+    virtual void f_Message(const std::string& l_strTextKey) = 0;
     // Any other verb (the older dialogue verbs: startMission, makeChoice, enterBattle, ...). false = unknown.
-    virtual bool other(const nlohmann::json& /*action*/) { return false; }
+    virtual bool f_Other(const nlohmann::json& /*action*/) { return false; }
 };
 
 struct RunReport {
-    int ran = 0;                         // actions that did something
-    std::vector<std::string> problems;   // "addStat: unknown stat 'str'", one per failed action
+    int m_iRan = 0;                         // actions that did something
+    std::vector<std::string> m_vProblems;   // "addStat: unknown stat 'str'", one per failed action
 };
 
 // Runs `actions` in order: an array of actions, a single action object, or null (nothing).
-RunReport runActions(const nlohmann::json& actions, StoryEffects& fx);
+RunReport f_RunActions(const nlohmann::json& l_jActions, StoryEffects& l_oFx);
 
 // The names data may use, for checkActions. An empty set means "do not check that kind of name".
 struct Catalog {
-    std::set<std::string> stats, items, vars, flags, counters, events;
-    std::set<std::string> otherVerbs = {"startMission", "claimMission", "makeChoice", "enterBattle", "unlockSkill",
+    std::set<std::string> m_setStats, m_setItems, m_setVars, m_setFlags, m_setCounters, m_setEvents;
+    std::set<std::string> m_setOtherVerbs = {"startMission", "claimMission", "makeChoice", "enterBattle", "unlockSkill",
                                         "setSideStoryState"};
 };
 
 // Problems in `actions` (same shapes as runActions): unknown verbs, missing fields, names not in the catalogue,
 // a bool or number of the wrong kind. `where` prefixes every message (a file and a node, for example).
-std::vector<std::string> checkActions(const nlohmann::json& actions, const Catalog& cat, const std::string& where);
+std::vector<std::string> f_CheckActions(const nlohmann::json& l_jActions, const Catalog& l_oCat, const std::string& l_strWhere);
 
 // True when `actions` gives the player something that a repeated run would give again (addStat, setStat, give):
 // used to warn about rewards in chat lines and after-dialogues, which the player can repeat.
-bool grantsReward(const nlohmann::json& actions);
+bool f_GrantsReward(const nlohmann::json& l_jActions);
 
 // The player stats addStat / setStat understand, in the order the docs list them.
-const std::vector<std::string>& knownStats();
+const std::vector<std::string>& f_KnownStats();
 
 } // namespace toms::story

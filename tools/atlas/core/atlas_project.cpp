@@ -14,278 +14,278 @@ namespace atlas {
 
 // ---- paths -------------------------------------------------------------------------------------
 
-fs::path u8path(const std::string& utf8) { return fs::u8path(utf8); }
-std::string u8str(const fs::path& p) { return normalizePath(p.generic_u8string()); }
+fs::path f_U8path(const std::string& l_strUtf8) { return fs::u8path(l_strUtf8); }
+std::string f_U8str(const fs::path& l_oP) { return f_NormalizePath(l_oP.generic_u8string()); }
 
-std::string normalizePath(std::string p) {
-    for (char& c : p) if (c == '\\') c = '/';
-    return p;
+std::string f_NormalizePath(std::string l_strP) {
+    for (char& l_cC : l_strP) if (l_cC == '\\') l_cC = '/';
+    return l_strP;
 }
 
-static bool isAbsolute(const std::string& p) {
-    return (!p.empty() && p[0] == '/') || (p.size() > 1 && p[1] == ':');
+static bool f_IsAbsolute(const std::string& l_strP) {
+    return (!l_strP.empty() && l_strP[0] == '/') || (l_strP.size() > 1 && l_strP[1] == ':');
 }
 
-std::string joinPath(const std::string& a, const std::string& b) {
-    if (a.empty() || a == "." || isAbsolute(b)) return normalizePath(b);
-    if (b.empty() || b == ".") return normalizePath(a);
-    std::string r = normalizePath(a);
-    if (r.back() != '/') r += '/';
-    return r + normalizePath(b);
+std::string f_JoinPath(const std::string& l_strA, const std::string& l_strB) {
+    if (l_strA.empty() || l_strA == "." || f_IsAbsolute(l_strB)) return f_NormalizePath(l_strB);
+    if (l_strB.empty() || l_strB == ".") return f_NormalizePath(l_strA);
+    std::string l_strR = f_NormalizePath(l_strA);
+    if (l_strR.back() != '/') l_strR += '/';
+    return l_strR + f_NormalizePath(l_strB);
 }
 
-std::string parentDir(const std::string& p) {
-    const std::string n = normalizePath(p);
-    const size_t s = n.find_last_of('/');
-    if (s == std::string::npos) return ".";
-    if (s == 0) return "/";
-    return n.substr(0, s);
+std::string f_ParentDir(const std::string& l_strP) {
+    const std::string l_strN = f_NormalizePath(l_strP);
+    const size_t l_nS = l_strN.find_last_of('/');
+    if (l_nS == std::string::npos) return ".";
+    if (l_nS == 0) return "/";
+    return l_strN.substr(0, l_nS);
 }
 
-std::string fileName(const std::string& p) {
-    const std::string n = normalizePath(p);
-    const size_t s = n.find_last_of('/');
-    return s == std::string::npos ? n : n.substr(s + 1);
+std::string f_FileName(const std::string& l_strP) {
+    const std::string l_strN = f_NormalizePath(l_strP);
+    const size_t l_nS = l_strN.find_last_of('/');
+    return l_nS == std::string::npos ? l_strN : l_strN.substr(l_nS + 1);
 }
 
-std::string fileStem(const std::string& p) {
-    std::string f = fileName(p);
-    const size_t d = f.find_last_of('.');
-    return d == std::string::npos || d == 0 ? f : f.substr(0, d);
+std::string f_FileStem(const std::string& l_strP) {
+    std::string l_strF = f_FileName(l_strP);
+    const size_t l_nD = l_strF.find_last_of('.');
+    return l_nD == std::string::npos || l_nD == 0 ? l_strF : l_strF.substr(0, l_nD);
 }
 
-std::string Project::baseDir() const { return filePath.empty() ? "." : parentDir(filePath); }
+std::string Project::f_BaseDir() const { return m_strFilePath.empty() ? "." : f_ParentDir(m_strFilePath); }
 
-std::string Project::resolve(const std::string& rel) const {
-    if (rel.empty()) return rel;
-    return u8str(u8path(joinPath(baseDir(), rel)).lexically_normal());
+std::string Project::f_Resolve(const std::string& l_strRel) const {
+    if (l_strRel.empty()) return l_strRel;
+    return f_U8str(f_U8path(f_JoinPath(f_BaseDir(), l_strRel)).lexically_normal());
 }
 
-std::string Project::relativize(const std::string& path) const {
-    std::error_code ec;
-    const fs::path base = fs::absolute(u8path(baseDir()), ec).lexically_normal();
-    const fs::path abs = fs::absolute(u8path(path), ec).lexically_normal();
-    const fs::path rel = abs.lexically_relative(base);
-    if (rel.empty()) return normalizePath(path);
-    return u8str(rel);
+std::string Project::f_Relativize(const std::string& l_strPath) const {
+    std::error_code l_oEc;
+    const fs::path l_oBase = fs::absolute(f_U8path(f_BaseDir()), l_oEc).lexically_normal();
+    const fs::path l_oAbs = fs::absolute(f_U8path(l_strPath), l_oEc).lexically_normal();
+    const fs::path l_oRel = l_oAbs.lexically_relative(l_oBase);
+    if (l_oRel.empty()) return f_NormalizePath(l_strPath);
+    return f_U8str(l_oRel);
 }
 
-SpriteDef* Project::findSprite(const std::string& n) {
-    for (SpriteDef& s : sprites) if (s.name == n) return &s;
+SpriteDef* Project::f_FindSprite(const std::string& l_strN) {
+    for (SpriteDef& l_oS : m_vSprites) if (l_oS.m_strName == l_strN) return &l_oS;
     return nullptr;
 }
-const SpriteDef* Project::findSprite(const std::string& n) const {
-    for (const SpriteDef& s : sprites) if (s.name == n) return &s;
+const SpriteDef* Project::f_FindSprite(const std::string& l_strN) const {
+    for (const SpriteDef& l_oS : m_vSprites) if (l_oS.m_strName == l_strN) return &l_oS;
     return nullptr;
 }
-const Variant* Project::findVariant(const std::string& id) const {
-    for (const Variant& v : variants) if (v.id == id) return &v;
+const Variant* Project::f_FindVariant(const std::string& l_strId) const {
+    for (const Variant& l_oV : m_vVariants) if (l_oV.m_strId == l_strId) return &l_oV;
     return nullptr;
 }
 
 // ---- JSON --------------------------------------------------------------------------------------
 
-static void outputToJson(json& j, const Output& o) {
-    j["dir"] = o.dir;
-    if (!o.name.empty()) j["name"] = o.name;
-    j["formats"] = o.formats;
+static void f_OutputToJson(json& l_jJ, const Output& l_oO) {
+    l_jJ["dir"] = l_oO.m_strDir;
+    if (!l_oO.m_strName.empty()) l_jJ["name"] = l_oO.m_strName;
+    l_jJ["formats"] = l_oO.m_vFormats;
 }
 
-static void outputFromJson(const json& j, Output& o) {
-    if (!j.is_object()) return;
-    o.dir = j.value("dir", o.dir);
-    o.name = j.value("name", o.name);
-    if (j.contains("formats") && j["formats"].is_array()) o.formats = j["formats"].get<std::vector<std::string>>();
+static void f_OutputFromJson(const json& l_jJ, Output& l_oO) {
+    if (!l_jJ.is_object()) return;
+    l_oO.m_strDir = l_jJ.value("dir", l_oO.m_strDir);
+    l_oO.m_strName = l_jJ.value("name", l_oO.m_strName);
+    if (l_jJ.contains("formats") && l_jJ["formats"].is_array()) l_oO.m_vFormats = l_jJ["formats"].get<std::vector<std::string>>();
 }
 
-std::string projectToJson(const Project& p) {
-    const Settings& s = p.settings;
-    json j;
-    j["version"] = p.version;
-    j["name"] = p.name;
-    j["settings"] = {
-        {"maxWidth", s.maxWidth}, {"maxHeight", s.maxHeight}, {"minWidth", s.minWidth}, {"minHeight", s.minHeight},
-        {"powerOfTwo", s.powerOfTwo}, {"square", s.square}, {"fixedSize", s.fixedSize},
-        {"padding", s.padding}, {"border", s.border}, {"extrude", s.extrude},
-        {"trim", s.trim}, {"alphaThreshold", s.alphaThreshold}, {"dedupe", s.dedupe},
-        {"premultiplyAlpha", s.premultiplyAlpha}, {"filter", s.filter},
-        {"heuristic", heuristicName(s.heuristic)},
-        {"defaultPivot", {s.defaultPivot[0], s.defaultPivot[1]}}};
-    outputToJson(j["output"], p.output);
-    auto folders = [](const std::vector<SourceFolder>& v) {
-        json a = json::array();
-        for (const SourceFolder& f : v) a.push_back({{"path", f.path}, {"recursive", f.recursive}, {"prefix", f.prefix}});
-        return a;
+std::string f_ProjectToJson(const Project& l_oP) {
+    const Settings& l_oS = l_oP.m_oSettings;
+    json l_jJ;
+    l_jJ["version"] = l_oP.m_iVersion;
+    l_jJ["name"] = l_oP.m_strName;
+    l_jJ["settings"] = {
+        {"maxWidth", l_oS.m_iMaxWidth}, {"maxHeight", l_oS.m_iMaxHeight}, {"minWidth", l_oS.m_iMinWidth}, {"minHeight", l_oS.m_iMinHeight},
+        {"powerOfTwo", l_oS.m_bPowerOfTwo}, {"square", l_oS.m_bSquare}, {"fixedSize", l_oS.m_bFixedSize},
+        {"padding", l_oS.m_iPadding}, {"border", l_oS.m_iBorder}, {"extrude", l_oS.m_iExtrude},
+        {"trim", l_oS.m_bTrim}, {"alphaThreshold", l_oS.m_iAlphaThreshold}, {"dedupe", l_oS.m_bDedupe},
+        {"premultiplyAlpha", l_oS.m_bPremultiplyAlpha}, {"filter", l_oS.m_strFilter},
+        {"heuristic", f_HeuristicName(l_oS.m_eHeuristic)},
+        {"defaultPivot", {l_oS.m_arrDefaultPivot[0], l_oS.m_arrDefaultPivot[1]}}};
+    f_OutputToJson(l_jJ["output"], l_oP.m_oOutput);
+    auto l_fnFolders = [](const std::vector<SourceFolder>& l_vV) {
+        json l_jA = json::array();
+        for (const SourceFolder& l_oF : l_vV) l_jA.push_back({{"path", l_oF.m_strPath}, {"recursive", l_oF.m_bRecursive}, {"prefix", l_oF.m_strPrefix}});
+        return l_jA;
     };
-    if (p.embedded) {
-        j["embedded"] = true;
-        j["references"] = folders(p.references);
+    if (l_oP.m_bEmbedded) {
+        l_jJ["embedded"] = true;
+        l_jJ["references"] = l_fnFolders(l_oP.m_vReferences);
     }
-    if (!p.embedded || !p.sources.empty()) j["sources"] = folders(p.sources);
-    j["sprites"] = json::array();
-    for (const SpriteDef& d : p.sprites) {
-        json e;
-        e["name"] = d.name;
-        if (!d.file.empty()) e["file"] = d.file;
-        if (d.isChild()) {
-            e["parent"] = d.parent;
-            e["rect"] = {d.rect.x, d.rect.y, d.rect.w, d.rect.h};
-            if (d.bake) e["bake"] = true;
+    if (!l_oP.m_bEmbedded || !l_oP.m_vSources.empty()) l_jJ["sources"] = l_fnFolders(l_oP.m_vSources);
+    l_jJ["sprites"] = json::array();
+    for (const SpriteDef& l_oD : l_oP.m_vSprites) {
+        json l_jE;
+        l_jE["name"] = l_oD.m_strName;
+        if (!l_oD.m_strFile.empty()) l_jE["file"] = l_oD.m_strFile;
+        if (l_oD.f_IsChild()) {
+            l_jE["parent"] = l_oD.m_strParent;
+            l_jE["rect"] = {l_oD.m_oRect.m_iX, l_oD.m_oRect.m_iY, l_oD.m_oRect.m_iW, l_oD.m_oRect.m_iH};
+            if (l_oD.m_bBake) l_jE["bake"] = true;
         }
-        if (d.exclude) e["exclude"] = true;
-        if (d.hasPivot) e["pivot"] = {d.pivot[0], d.pivot[1]};
-        if (d.hasSplit) e["split"] = {d.split[0], d.split[1], d.split[2], d.split[3]};
-        if (d.trim >= 0) e["trim"] = d.trim == 1;
-        if (d.pinned) e["pin"] = {d.pinPage, d.pinX, d.pinY};
-        if (!d.tags.empty()) e["tags"] = d.tags;
-        j["sprites"].push_back(e);
+        if (l_oD.m_bExclude) l_jE["exclude"] = true;
+        if (l_oD.m_bHasPivot) l_jE["pivot"] = {l_oD.m_arrPivot[0], l_oD.m_arrPivot[1]};
+        if (l_oD.m_bHasSplit) l_jE["split"] = {l_oD.m_arrSplit[0], l_oD.m_arrSplit[1], l_oD.m_arrSplit[2], l_oD.m_arrSplit[3]};
+        if (l_oD.m_iTrim >= 0) l_jE["trim"] = l_oD.m_iTrim == 1;
+        if (l_oD.m_bPinned) l_jE["pin"] = {l_oD.m_iPinPage, l_oD.m_iPinX, l_oD.m_iPinY};
+        if (!l_oD.m_vTags.empty()) l_jE["tags"] = l_oD.m_vTags;
+        l_jJ["sprites"].push_back(l_jE);
     }
-    j["animations"] = json::array();
-    for (const Animation& a : p.animations) {
-        json frames = json::array();
-        for (const AnimFrame& f : a.frames) frames.push_back({{"sprite", f.sprite}, {"time", f.time}});
-        j["animations"].push_back({{"name", a.name}, {"loop", a.loop}, {"frames", frames}});
+    l_jJ["animations"] = json::array();
+    for (const Animation& l_oA : l_oP.m_vAnimations) {
+        json l_jFrames = json::array();
+        for (const AnimFrame& l_oF : l_oA.m_vFrames) l_jFrames.push_back({{"sprite", l_oF.m_strSprite}, {"time", l_oF.m_fTime}});
+        l_jJ["animations"].push_back({{"name", l_oA.m_strName}, {"loop", l_oA.m_bLoop}, {"frames", l_jFrames}});
     }
-    j["variants"] = json::array();
-    for (const Variant& v : p.variants) {
-        json e{{"id", v.id}};
-        if (!v.overrideDir.empty()) e["overrides"] = v.overrideDir;
-        if (!v.reference.empty()) e["reference"] = v.reference;
-        if (!v.images.empty()) {
-            json names = json::array();
-            for (const auto& kv : v.images) names.push_back(kv.first);
-            e["images"] = names;
+    l_jJ["variants"] = json::array();
+    for (const Variant& l_oV : l_oP.m_vVariants) {
+        json l_jE{{"id", l_oV.m_strId}};
+        if (!l_oV.m_strOverrideDir.empty()) l_jE["overrides"] = l_oV.m_strOverrideDir;
+        if (!l_oV.m_strReference.empty()) l_jE["reference"] = l_oV.m_strReference;
+        if (!l_oV.m_mapImages.empty()) {
+            json l_jNames = json::array();
+            for (const auto& l_pairKv : l_oV.m_mapImages) l_jNames.push_back(l_pairKv.first);
+            l_jE["images"] = l_jNames;
         }
-        outputToJson(e["output"], v.output);
-        j["variants"].push_back(e);
+        f_OutputToJson(l_jE["output"], l_oV.m_oOutput);
+        l_jJ["variants"].push_back(l_jE);
     }
-    return j.dump(2) + "\n";
+    return l_jJ.dump(2) + "\n";
 }
 
-template <class T> static void readArr(const json& j, const char* key, T* out, size_t n) {
-    if (!j.contains(key) || !j[key].is_array() || j[key].size() != n) return;
-    for (size_t i = 0; i < n; i++) out[i] = j[key][i].get<T>();
+template <class T> static void f_ReadArr(const json& l_jJ, const char* l_pszKey, T* l_pOut, size_t l_nN) {
+    if (!l_jJ.contains(l_pszKey) || !l_jJ[l_pszKey].is_array() || l_jJ[l_pszKey].size() != l_nN) return;
+    for (size_t l_nI = 0; l_nI < l_nN; l_nI++) l_pOut[l_nI] = l_jJ[l_pszKey][l_nI].get<T>();
 }
 
-bool projectFromJson(const std::string& text, Project& p, std::string* err) {
-    json j;
+bool f_ProjectFromJson(const std::string& l_strText, Project& l_oP, std::string* l_pErr) {
+    json l_jJ;
     try {
-        j = json::parse(text);
-    } catch (const std::exception& e) {
-        if (err) *err = std::string("invalid JSON: ") + e.what();
+        l_jJ = json::parse(l_strText);
+    } catch (const std::exception& l_oE) {
+        if (l_pErr) *l_pErr = std::string("invalid JSON: ") + l_oE.what();
         return false;
     }
-    if (!j.is_object()) { if (err) *err = "project root must be an object"; return false; }
+    if (!l_jJ.is_object()) { if (l_pErr) *l_pErr = "project root must be an object"; return false; }
     try {
-        p.version = j.value("version", 1);
-        p.name = j.value("name", p.name);
-        if (j.contains("settings")) {
-            const json& sj = j["settings"];
-            Settings& s = p.settings;
-            s.maxWidth = sj.value("maxWidth", s.maxWidth);
-            s.maxHeight = sj.value("maxHeight", s.maxHeight);
-            s.minWidth = sj.value("minWidth", s.minWidth);
-            s.minHeight = sj.value("minHeight", s.minHeight);
-            s.powerOfTwo = sj.value("powerOfTwo", s.powerOfTwo);
-            s.square = sj.value("square", s.square);
-            s.fixedSize = sj.value("fixedSize", s.fixedSize);
-            s.padding = sj.value("padding", s.padding);
-            s.border = sj.value("border", s.border);
-            s.extrude = sj.value("extrude", s.extrude);
-            s.trim = sj.value("trim", s.trim);
-            s.alphaThreshold = sj.value("alphaThreshold", s.alphaThreshold);
-            s.dedupe = sj.value("dedupe", s.dedupe);
-            s.premultiplyAlpha = sj.value("premultiplyAlpha", s.premultiplyAlpha);
-            s.filter = sj.value("filter", s.filter);
-            const std::string h = sj.value("heuristic", std::string("auto"));
-            if (!parseHeuristic(h, s.heuristic)) { if (err) *err = "unknown heuristic '" + h + "'"; return false; }
-            readArr(sj, "defaultPivot", s.defaultPivot, 2);
+        l_oP.m_iVersion = l_jJ.value("version", 1);
+        l_oP.m_strName = l_jJ.value("name", l_oP.m_strName);
+        if (l_jJ.contains("settings")) {
+            const json& l_jSj = l_jJ["settings"];
+            Settings& l_oS = l_oP.m_oSettings;
+            l_oS.m_iMaxWidth = l_jSj.value("maxWidth", l_oS.m_iMaxWidth);
+            l_oS.m_iMaxHeight = l_jSj.value("maxHeight", l_oS.m_iMaxHeight);
+            l_oS.m_iMinWidth = l_jSj.value("minWidth", l_oS.m_iMinWidth);
+            l_oS.m_iMinHeight = l_jSj.value("minHeight", l_oS.m_iMinHeight);
+            l_oS.m_bPowerOfTwo = l_jSj.value("powerOfTwo", l_oS.m_bPowerOfTwo);
+            l_oS.m_bSquare = l_jSj.value("square", l_oS.m_bSquare);
+            l_oS.m_bFixedSize = l_jSj.value("fixedSize", l_oS.m_bFixedSize);
+            l_oS.m_iPadding = l_jSj.value("padding", l_oS.m_iPadding);
+            l_oS.m_iBorder = l_jSj.value("border", l_oS.m_iBorder);
+            l_oS.m_iExtrude = l_jSj.value("extrude", l_oS.m_iExtrude);
+            l_oS.m_bTrim = l_jSj.value("trim", l_oS.m_bTrim);
+            l_oS.m_iAlphaThreshold = l_jSj.value("alphaThreshold", l_oS.m_iAlphaThreshold);
+            l_oS.m_bDedupe = l_jSj.value("dedupe", l_oS.m_bDedupe);
+            l_oS.m_bPremultiplyAlpha = l_jSj.value("premultiplyAlpha", l_oS.m_bPremultiplyAlpha);
+            l_oS.m_strFilter = l_jSj.value("filter", l_oS.m_strFilter);
+            const std::string l_strH = l_jSj.value("heuristic", std::string("auto"));
+            if (!f_ParseHeuristic(l_strH, l_oS.m_eHeuristic)) { if (l_pErr) *l_pErr = "unknown heuristic '" + l_strH + "'"; return false; }
+            f_ReadArr(l_jSj, "defaultPivot", l_oS.m_arrDefaultPivot, 2);
         }
-        if (j.contains("output")) outputFromJson(j["output"], p.output);
-        p.embedded = j.value("embedded", false);
-        auto folders = [](const json& a) {
-            std::vector<SourceFolder> v;
-            for (const json& f : a) {
-                SourceFolder sf;
-                sf.path = normalizePath(f.value("path", std::string()));
-                sf.recursive = f.value("recursive", true);
-                sf.prefix = f.value("prefix", std::string());
-                v.push_back(sf);
+        if (l_jJ.contains("output")) f_OutputFromJson(l_jJ["output"], l_oP.m_oOutput);
+        l_oP.m_bEmbedded = l_jJ.value("embedded", false);
+        auto l_fnFolders = [](const json& l_jA) {
+            std::vector<SourceFolder> l_vV;
+            for (const json& l_jF : l_jA) {
+                SourceFolder l_oSf;
+                l_oSf.m_strPath = f_NormalizePath(l_jF.value("path", std::string()));
+                l_oSf.m_bRecursive = l_jF.value("recursive", true);
+                l_oSf.m_strPrefix = l_jF.value("prefix", std::string());
+                l_vV.push_back(l_oSf);
             }
-            return v;
+            return l_vV;
         };
-        p.sources = folders(j.value("sources", json::array()));
-        p.references = folders(j.value("references", json::array()));
-        p.images.clear();
-        p.sprites.clear();
-        for (const json& e : j.value("sprites", json::array())) {
-            SpriteDef d;
-            d.name = e.value("name", std::string());
-            d.file = normalizePath(e.value("file", std::string()));
-            d.parent = e.value("parent", std::string());
-            if (e.contains("rect")) {
-                int r[4] = {0, 0, 0, 0};
-                readArr(e, "rect", r, 4);
-                d.rect = {r[0], r[1], r[2], r[3]};
+        l_oP.m_vSources = l_fnFolders(l_jJ.value("sources", json::array()));
+        l_oP.m_vReferences = l_fnFolders(l_jJ.value("references", json::array()));
+        l_oP.m_mapImages.clear();
+        l_oP.m_vSprites.clear();
+        for (const json& l_jE : l_jJ.value("sprites", json::array())) {
+            SpriteDef l_oD;
+            l_oD.m_strName = l_jE.value("name", std::string());
+            l_oD.m_strFile = f_NormalizePath(l_jE.value("file", std::string()));
+            l_oD.m_strParent = l_jE.value("parent", std::string());
+            if (l_jE.contains("rect")) {
+                int l_arrR[4] = {0, 0, 0, 0};
+                f_ReadArr(l_jE, "rect", l_arrR, 4);
+                l_oD.m_oRect = {l_arrR[0], l_arrR[1], l_arrR[2], l_arrR[3]};
             }
-            d.bake = e.value("bake", false);
-            d.exclude = e.value("exclude", false);
-            if (e.contains("pivot")) { d.hasPivot = true; readArr(e, "pivot", d.pivot, 2); }
-            if (e.contains("split")) { d.hasSplit = true; readArr(e, "split", d.split, 4); }
-            if (e.contains("trim")) d.trim = e["trim"].get<bool>() ? 1 : 0;
-            if (e.contains("pin")) {
-                int pin[3] = {0, 0, 0};
-                readArr(e, "pin", pin, 3);
-                d.pinned = true; d.pinPage = pin[0]; d.pinX = pin[1]; d.pinY = pin[2];
+            l_oD.m_bBake = l_jE.value("bake", false);
+            l_oD.m_bExclude = l_jE.value("exclude", false);
+            if (l_jE.contains("pivot")) { l_oD.m_bHasPivot = true; f_ReadArr(l_jE, "pivot", l_oD.m_arrPivot, 2); }
+            if (l_jE.contains("split")) { l_oD.m_bHasSplit = true; f_ReadArr(l_jE, "split", l_oD.m_arrSplit, 4); }
+            if (l_jE.contains("trim")) l_oD.m_iTrim = l_jE["trim"].get<bool>() ? 1 : 0;
+            if (l_jE.contains("pin")) {
+                int l_arrPin[3] = {0, 0, 0};
+                f_ReadArr(l_jE, "pin", l_arrPin, 3);
+                l_oD.m_bPinned = true; l_oD.m_iPinPage = l_arrPin[0]; l_oD.m_iPinX = l_arrPin[1]; l_oD.m_iPinY = l_arrPin[2];
             }
-            if (e.contains("tags")) d.tags = e["tags"].get<std::vector<std::string>>();
-            p.sprites.push_back(d);
+            if (l_jE.contains("tags")) l_oD.m_vTags = l_jE["tags"].get<std::vector<std::string>>();
+            l_oP.m_vSprites.push_back(l_oD);
         }
-        p.animations.clear();
-        for (const json& a : j.value("animations", json::array())) {
-            Animation an;
-            an.name = a.value("name", std::string());
-            an.loop = a.value("loop", true);
-            for (const json& f : a.value("frames", json::array()))
-                an.frames.push_back({f.value("sprite", std::string()), f.value("time", 0.1f)});
-            p.animations.push_back(an);
+        l_oP.m_vAnimations.clear();
+        for (const json& l_jA : l_jJ.value("animations", json::array())) {
+            Animation l_oAn;
+            l_oAn.m_strName = l_jA.value("name", std::string());
+            l_oAn.m_bLoop = l_jA.value("loop", true);
+            for (const json& l_jF : l_jA.value("frames", json::array()))
+                l_oAn.m_vFrames.push_back({l_jF.value("sprite", std::string()), l_jF.value("time", 0.1f)});
+            l_oP.m_vAnimations.push_back(l_oAn);
         }
-        p.variants.clear();
-        for (const json& v : j.value("variants", json::array())) {
-            Variant vr;
-            vr.id = v.value("id", std::string());
-            vr.overrideDir = normalizePath(v.value("overrides", std::string()));
-            vr.reference = normalizePath(v.value("reference", std::string()));
-            for (const json& n : v.value("images", json::array())) vr.images[n.get<std::string>()] = nullptr;
-            vr.output = p.output;
-            if (v.contains("output")) outputFromJson(v["output"], vr.output);
-            p.variants.push_back(vr);
+        l_oP.m_vVariants.clear();
+        for (const json& l_jV : l_jJ.value("variants", json::array())) {
+            Variant l_oVr;
+            l_oVr.m_strId = l_jV.value("id", std::string());
+            l_oVr.m_strOverrideDir = f_NormalizePath(l_jV.value("overrides", std::string()));
+            l_oVr.m_strReference = f_NormalizePath(l_jV.value("reference", std::string()));
+            for (const json& l_jN : l_jV.value("images", json::array())) l_oVr.m_mapImages[l_jN.get<std::string>()] = nullptr;
+            l_oVr.m_oOutput = l_oP.m_oOutput;
+            if (l_jV.contains("output")) f_OutputFromJson(l_jV["output"], l_oVr.m_oOutput);
+            l_oP.m_vVariants.push_back(l_oVr);
         }
-    } catch (const std::exception& e) {
-        if (err) *err = std::string("bad project field: ") + e.what();
+    } catch (const std::exception& l_oE) {
+        if (l_pErr) *l_pErr = std::string("bad project field: ") + l_oE.what();
         return false;
     }
     return true;
 }
 
-bool loadProject(const std::string& path, Project& out, std::string* err) {
-    std::ifstream f(u8path(path), std::ios::binary);
-    if (!f) { if (err) *err = "cannot open " + path; return false; }
-    std::stringstream ss;
-    ss << f.rdbuf();
-    Project p;
-    if (!projectFromJson(ss.str(), p, err)) { if (err) *err = path + ": " + *err; return false; }
-    p.filePath = normalizePath(path);
-    out = std::move(p);
+bool f_LoadProject(const std::string& l_strPath, Project& l_oOut, std::string* l_pErr) {
+    std::ifstream l_oF(f_U8path(l_strPath), std::ios::binary);
+    if (!l_oF) { if (l_pErr) *l_pErr = "cannot open " + l_strPath; return false; }
+    std::stringstream l_oSs;
+    l_oSs << l_oF.rdbuf();
+    Project l_oP;
+    if (!f_ProjectFromJson(l_oSs.str(), l_oP, l_pErr)) { if (l_pErr) *l_pErr = l_strPath + ": " + *l_pErr; return false; }
+    l_oP.m_strFilePath = f_NormalizePath(l_strPath);
+    l_oOut = std::move(l_oP);
     return true;
 }
 
-bool saveProject(const std::string& path, Project& p, std::string* err) {
-    std::ofstream f(u8path(path), std::ios::binary);
-    if (!f) { if (err) *err = "cannot write " + path; return false; }
-    f << projectToJson(p);
-    if (!f) { if (err) *err = "write failed: " + path; return false; }
-    p.filePath = normalizePath(path);
+bool f_SaveProject(const std::string& l_strPath, Project& l_oP, std::string* l_pErr) {
+    std::ofstream l_oF(f_U8path(l_strPath), std::ios::binary);
+    if (!l_oF) { if (l_pErr) *l_pErr = "cannot write " + l_strPath; return false; }
+    l_oF << f_ProjectToJson(l_oP);
+    if (!l_oF) { if (l_pErr) *l_pErr = "write failed: " + l_strPath; return false; }
+    l_oP.m_strFilePath = f_NormalizePath(l_strPath);
     return true;
 }
 

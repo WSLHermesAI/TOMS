@@ -14,9 +14,9 @@ class FxSpriteList : public QListWidget
     Q_OBJECT
 public:
     using QListWidget::QListWidget;
-    static constexpr int kRefRole = Qt::UserRole + 3;
+    static constexpr int m_iRefRole = Qt::UserRole + 3;
     QStringList mimeTypes() const override;
-    QMimeData* mimeData(const QList<QListWidgetItem*>& items) const override;
+    QMimeData* mimeData(const QList<QListWidgetItem*>& l_oItems) const override;
 };
 
 // The atlases' sprites with thumbnails, one tab per atlas (titled with its id), and a filter.
@@ -27,20 +27,20 @@ class FxSpritesDock : public QDockWidget
 {
     Q_OBJECT
 public:
-    explicit FxSpritesDock(ParticleDocument* doc, QWidget* parent = nullptr);
-    FxSpriteList* listFor(int atlas) const;
-    QTabWidget* tabs() const { return m_tabs; }
-    QStringList selectedRefs() const;   // of the current tab, in list order
+    explicit FxSpritesDock(ParticleDocument* l_pDoc, QWidget* l_pParent = nullptr);
+    FxSpriteList* f_ListFor(int l_iAtlas) const;
+    QTabWidget* f_Tabs() const { return m_pTabs; }
+    QStringList f_SelectedRefs() const;   // of the current tab, in list order
 
 signals:
-    void addAtlasRequested();
+    void f_AddAtlasRequested();
 
 private:
-    void rebuild();
-    void applyFilter();
+    void f_Rebuild();
+    void f_ApplyFilter();
 
-    ParticleDocument* m_doc;
-    QLineEdit* m_filter;
-    QTabWidget* m_tabs;
-    QVector<FxSpriteList*> m_lists;
+    ParticleDocument* m_pDoc;
+    QLineEdit* m_pFilter;
+    QTabWidget* m_pTabs;
+    QVector<FxSpriteList*> m_oLists;
 };

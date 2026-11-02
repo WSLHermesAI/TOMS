@@ -25,83 +25,83 @@ namespace stage {
 enum class Sev { Error, Warn, Info };
 
 struct Issue {
-    Sev sev = Sev::Warn;
-    std::string code;                  // "pNoStart", "sNeedKeys", ...: the HTML editor's I18N keys
-    std::vector<std::string> args;
-    std::vector<Cell> cells;
-    std::string fixList;               // pEvNotListed: the event id "Add to list" adds
-    std::string brush;                 // pEvUnplaced: the brush a click picks
+    Sev m_eSev = Sev::Warn;
+    std::string m_strCode;                  // "pNoStart", "sNeedKeys", ...: the HTML editor's I18N keys
+    std::vector<std::string> m_vArgs;
+    std::vector<Cell> m_vCells;
+    std::string m_strFixList;               // pEvNotListed: the event id "Add to list" adds
+    std::string m_strBrush;                 // pEvUnplaced: the brush a click picks
 };
 
-std::optional<Cell> startCell(const Project& p, const StageDoc& d);
+std::optional<Cell> f_StartCell(const Project& l_oP, const StageDoc& l_oD);
 // cells reachable from the start: walls block; doors, monsters and everything else can be passed in the end
 // (empty when there is no start)
-std::vector<char> reachableCells(const Project& p, const StageDoc& d);
-std::vector<Issue> problems(const Project& p, const StageDoc& d);
+std::vector<char> f_ReachableCells(const Project& l_oP, const StageDoc& l_oD);
+std::vector<Issue> f_Problems(const Project& l_oP, const StageDoc& l_oD);
 
 // ---- story: keys and doors, floor by floor ----
 enum KeyColor { Yellow, Blue, Red };
-extern const char* const kKeyColors[3];
+extern const char* const g_arrKeyColors[3];
 struct Keys {
-    int n[3] = {0, 0, 0};
-    int total() const { return n[0] + n[1] + n[2]; }
+    int m_arrN[3] = {0, 0, 0};
+    int f_Total() const { return m_arrN[0] + m_arrN[1] + m_arrN[2]; }
 };
 struct FloorFacts {
-    int W = 0, H = 0;
-    struct Door { int x, y, col; };
-    std::vector<Door> doors;
-    std::vector<int> keyAt;            // per cell: -1, or the key colour lying there
-    std::vector<int> ups;              // cells of 'U'
-    std::vector<int> doorIdx;          // per cell: -1, or the door's index
-    std::optional<Cell> start;
+    int m_iW = 0, m_iH = 0;
+    struct Door { int m_iX, m_iY, m_iCol; };
+    std::vector<Door> m_vDoors;
+    std::vector<int> m_vKeyAt;            // per cell: -1, or the key colour lying there
+    std::vector<int> m_vUps;              // cells of 'U'
+    std::vector<int> m_vDoorIdx;          // per cell: -1, or the door's index
+    std::optional<Cell> m_optStart;
 };
 struct FloodState {
-    uint32_t mask = 0;                 // the doors opened
-    std::vector<int> seenOrder;        // cells reached, in the order they were reached
-    std::vector<char> seen;
-    Keys found, opened, left;
-    std::vector<int> frontier;         // doors next to the reached cells, still closed
-    bool up = false;
-    int n = 0;                         // doors opened
+    uint32_t m_uMask = 0;                 // the doors opened
+    std::vector<int> m_vSeenOrder;        // cells reached, in the order they were reached
+    std::vector<char> m_vSeen;
+    Keys m_oFound, m_oOpened, m_oLeft;
+    std::vector<int> m_vFrontier;         // doors next to the reached cells, still closed
+    bool m_bUp = false;
+    int m_iN = 0;                         // doors opened
 };
 struct Explore {
-    FloorFacts F;
-    std::vector<FloodState> all;       // every reachable door set, in the order found
-    int route = -1, carry = -1, widest = -1;   // fewest doors up; most keys left up; most cells
-    std::vector<char> anySeen;
-    bool hasUp() const;
+    FloorFacts m_oF;
+    std::vector<FloodState> m_vAll;       // every reachable door set, in the order found
+    int m_iRoute = -1, m_iCarry = -1, m_iWidest = -1;   // fewest doors up; most keys left up; most cells
+    std::vector<char> m_vAnySeen;
+    bool f_HasUp() const;
 };
-Explore explore(const Project& p, const StageDoc& d, const Keys& keysIn);
+Explore f_Explore(const Project& l_oP, const StageDoc& l_oD, const Keys& l_oKeysIn);
 
 struct StoryRow {
-    std::string fid;
-    int idx = 0;
-    Keys keysIn;
-    Explore ex;
-    std::vector<Issue> issues;
-    bool top = false;                  // no stairs up and no connect.up
+    std::string m_strFid;
+    int m_iIdx = 0;
+    Keys m_oKeysIn;
+    Explore m_oEx;
+    std::vector<Issue> m_vIssues;
+    bool m_bTop = false;                  // no stairs up and no connect.up
 };
-std::vector<std::string> chainOrder(Project& p);
+std::vector<std::string> f_ChainOrder(Project& l_oP);
 // Cached until Project::storyVer changes.
-const std::vector<StoryRow>& storyCheck(Project& p);
+const std::vector<StoryRow>& f_StoryCheck(Project& l_oP);
 
-std::vector<Cell> safeCells(Project& p, const std::string& fid);
-bool isStepEvent(const Project& p, const std::string& id);
+std::vector<Cell> f_SafeCells(Project& l_oP, const std::string& l_strFid);
+bool f_IsStepEvent(const Project& l_oP, const std::string& l_strId);
 
 // Seeded random numbers as the HTML editor's (mulberry32 over an FNV-1a hash of the seed text).
-std::function<double()> mulberry(uint32_t seed);
-uint32_t hashStr(const std::string& s);
-std::optional<Cell> pickCell(const Project& p, const StageDoc& d, const std::vector<Cell>& cands, const std::function<double()>& rng);
+std::function<double()> f_Mulberry(uint32_t l_uSeed);
+uint32_t f_HashStr(const std::string& l_strS);
+std::optional<Cell> f_PickCell(const Project& l_oP, const StageDoc& l_oD, const std::vector<Cell>& l_vCands, const std::function<double()>& l_fnRng);
 
 struct AutoPlaceResult {
-    int placed = 0, floors = 0;
-    std::vector<Issue> skipped;        // apSkipNoCell (id, floor), apSkipUndef (n)
+    int m_iPlaced = 0, m_iFloors = 0;
+    std::vector<Issue> m_vSkipped;        // apSkipNoCell (id, floor), apSkipUndef (n)
 };
 // mode "missing": only listed events not placed yet; "all": every listed event moves to a new cell.
 // Each floor that changes gets one undo step (label from labelFor(n)).
-AutoPlaceResult autoPlace(Project& p, const std::vector<std::string>& fids, const std::string& mode, const std::string& seed,
-                          const std::function<std::string(int)>& labelFor);
+AutoPlaceResult f_AutoPlace(Project& l_oP, const std::vector<std::string>& l_vFids, const std::string& l_strMode, const std::string& l_strSeed,
+                          const std::function<std::string(int)>& l_fnLabelFor);
 
-std::string numText(const Json& v);   // a number as the HTML editor prints it (3, 2.5)
+std::string f_NumText(const Json& l_jV);   // a number as the HTML editor prints it (3, 2.5)
 
 }  // namespace stage

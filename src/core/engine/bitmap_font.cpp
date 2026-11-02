@@ -11,299 +11,299 @@ namespace {
 
 // key=value pairs of one line; a value may be quoted (letter=" ", file="a b.png").
 struct Fields {
-    std::string tag;
-    std::vector<std::pair<std::string, std::string>> kv;
+    std::string m_strTag;
+    std::vector<std::pair<std::string, std::string>> m_vKv;
 
-    const std::string* find(const char* key) const {
-        for (const auto& p : kv)
-            if (p.first == key) return &p.second;
+    const std::string* f_Find(const char* l_pszKey) const {
+        for (const auto& l_pairP : m_vKv)
+            if (l_pairP.first == l_pszKey) return &l_pairP.second;
         return nullptr;
     }
-    int num(const char* key, int def = 0) const {
-        const std::string* v = find(key);
-        return v ? std::atoi(v->c_str()) : def;
+    int f_Num(const char* l_pszKey, int l_iDef = 0) const {
+        const std::string* l_pV = f_Find(l_pszKey);
+        return l_pV ? std::atoi(l_pV->c_str()) : l_iDef;
     }
-    std::string str(const char* key) const {
-        const std::string* v = find(key);
-        return v ? *v : std::string();
+    std::string f_Str(const char* l_pszKey) const {
+        const std::string* l_pV = f_Find(l_pszKey);
+        return l_pV ? *l_pV : std::string();
     }
 };
 
-Fields splitLine(std::string_view line) {
-    Fields f;
-    size_t i = 0;
-    auto skipSpace = [&] { while (i < line.size() && (line[i] == ' ' || line[i] == '\t')) i++; };
-    skipSpace();
-    while (i < line.size() && line[i] != ' ' && line[i] != '\t') f.tag += line[i++];
+Fields f_SplitLine(std::string_view l_svLine) {
+    Fields l_oF;
+    size_t l_nI = 0;
+    auto l_fnSkipSpace = [&] { while (l_nI < l_svLine.size() && (l_svLine[l_nI] == ' ' || l_svLine[l_nI] == '\t')) l_nI++; };
+    l_fnSkipSpace();
+    while (l_nI < l_svLine.size() && l_svLine[l_nI] != ' ' && l_svLine[l_nI] != '\t') l_oF.m_strTag += l_svLine[l_nI++];
     for (;;) {
-        skipSpace();
-        if (i >= line.size()) break;
-        std::string key;
-        while (i < line.size() && line[i] != '=' && line[i] != ' ' && line[i] != '\t') key += line[i++];
-        std::string value;
-        if (i < line.size() && line[i] == '=') {
-            i++;
-            if (i < line.size() && line[i] == '"') {
-                const size_t end = line.find('"', i + 1);
-                const size_t stop = end == std::string_view::npos ? line.size() : end;
-                value = std::string(line.substr(i + 1, stop - i - 1));
-                i = stop == line.size() ? stop : stop + 1;
+        l_fnSkipSpace();
+        if (l_nI >= l_svLine.size()) break;
+        std::string l_strKey;
+        while (l_nI < l_svLine.size() && l_svLine[l_nI] != '=' && l_svLine[l_nI] != ' ' && l_svLine[l_nI] != '\t') l_strKey += l_svLine[l_nI++];
+        std::string l_strValue;
+        if (l_nI < l_svLine.size() && l_svLine[l_nI] == '=') {
+            l_nI++;
+            if (l_nI < l_svLine.size() && l_svLine[l_nI] == '"') {
+                const size_t l_nEnd = l_svLine.find('"', l_nI + 1);
+                const size_t l_nStop = l_nEnd == std::string_view::npos ? l_svLine.size() : l_nEnd;
+                l_strValue = std::string(l_svLine.substr(l_nI + 1, l_nStop - l_nI - 1));
+                l_nI = l_nStop == l_svLine.size() ? l_nStop : l_nStop + 1;
             } else {
-                while (i < line.size() && line[i] != ' ' && line[i] != '\t') value += line[i++];
+                while (l_nI < l_svLine.size() && l_svLine[l_nI] != ' ' && l_svLine[l_nI] != '\t') l_strValue += l_svLine[l_nI++];
             }
         }
-        if (!key.empty()) f.kv.emplace_back(std::move(key), std::move(value));
+        if (!l_strKey.empty()) l_oF.m_vKv.emplace_back(std::move(l_strKey), std::move(l_strValue));
     }
-    return f;
+    return l_oF;
 }
 
-uint32_t otherCase(uint32_t cp) {
-    if (cp >= 'a' && cp <= 'z') return cp - 32;
-    if (cp >= 'A' && cp <= 'Z') return cp + 32;
+uint32_t f_OtherCase(uint32_t l_uCp) {
+    if (l_uCp >= 'a' && l_uCp <= 'z') return l_uCp - 32;
+    if (l_uCp >= 'A' && l_uCp <= 'Z') return l_uCp + 32;
     return 0;
 }
 
-uint64_t kernKey(uint32_t a, uint32_t b) { return ((uint64_t)a << 32) | b; }
+uint64_t f_KernKey(uint32_t l_uA, uint32_t l_uB) { return ((uint64_t)l_uA << 32) | l_uB; }
 
 }  // namespace
 
-uint32_t utf8Next(std::string_view s, size_t& i) {
-    const unsigned char c = (unsigned char)s[i++];
-    if (c < 0x80) return c;
-    int extra = 0;
-    uint32_t cp = 0;
-    if ((c & 0xE0) == 0xC0) { extra = 1; cp = c & 0x1F; }
-    else if ((c & 0xF0) == 0xE0) { extra = 2; cp = c & 0x0F; }
-    else if ((c & 0xF8) == 0xF0) { extra = 3; cp = c & 0x07; }
+uint32_t f_Utf8Next(std::string_view l_svS, size_t& l_nI) {
+    const unsigned char l_u8C = (unsigned char)l_svS[l_nI++];
+    if (l_u8C < 0x80) return l_u8C;
+    int l_iExtra = 0;
+    uint32_t l_uCp = 0;
+    if ((l_u8C & 0xE0) == 0xC0) { l_iExtra = 1; l_uCp = l_u8C & 0x1F; }
+    else if ((l_u8C & 0xF0) == 0xE0) { l_iExtra = 2; l_uCp = l_u8C & 0x0F; }
+    else if ((l_u8C & 0xF8) == 0xF0) { l_iExtra = 3; l_uCp = l_u8C & 0x07; }
     else return 0xFFFD;
-    for (int k = 0; k < extra; k++) {
-        if (i >= s.size() || ((unsigned char)s[i] & 0xC0) != 0x80) return 0xFFFD;
-        cp = (cp << 6) | ((unsigned char)s[i++] & 0x3F);
+    for (int l_iK = 0; l_iK < l_iExtra; l_iK++) {
+        if (l_nI >= l_svS.size() || ((unsigned char)l_svS[l_nI] & 0xC0) != 0x80) return 0xFFFD;
+        l_uCp = (l_uCp << 6) | ((unsigned char)l_svS[l_nI++] & 0x3F);
     }
-    return cp;
+    return l_uCp;
 }
 
-bool BitmapFont::parse(std::string_view text, std::string* err) {
+bool BitmapFont::f_Parse(std::string_view l_svText, std::string* l_pErr) {
     *this = BitmapFont();
-    bool haveCommon = false;
-    size_t pos = 0;
-    while (pos < text.size()) {
-        size_t end = text.find('\n', pos);
-        if (end == std::string_view::npos) end = text.size();
-        std::string_view line = text.substr(pos, end - pos);
-        pos = end + 1;
-        if (!line.empty() && line.back() == '\r') line.remove_suffix(1);
-        const Fields f = splitLine(line);
-        if (f.tag == "info") {
-            face = f.str("face");
-            size = std::abs(f.num("size"));
-        } else if (f.tag == "common") {
-            haveCommon = true;
-            lineHeight = f.num("lineHeight");
-            base = f.num("base");
-            scaleW = f.num("scaleW");
-            scaleH = f.num("scaleH");
-        } else if (f.tag == "page") {
-            const int id = f.num("id");
-            if (id >= 0 && id < 256) {
-                if ((int)pages.size() <= id) pages.resize(id + 1);
-                pages[id] = f.str("file");
+    bool l_bHaveCommon = false;
+    size_t l_nPos = 0;
+    while (l_nPos < l_svText.size()) {
+        size_t l_nEnd = l_svText.find('\n', l_nPos);
+        if (l_nEnd == std::string_view::npos) l_nEnd = l_svText.size();
+        std::string_view l_svLine = l_svText.substr(l_nPos, l_nEnd - l_nPos);
+        l_nPos = l_nEnd + 1;
+        if (!l_svLine.empty() && l_svLine.back() == '\r') l_svLine.remove_suffix(1);
+        const Fields l_oF = f_SplitLine(l_svLine);
+        if (l_oF.m_strTag == "info") {
+            m_strFace = l_oF.f_Str("face");
+            m_iSize = std::abs(l_oF.f_Num("size"));
+        } else if (l_oF.m_strTag == "common") {
+            l_bHaveCommon = true;
+            m_iLineHeight = l_oF.f_Num("lineHeight");
+            m_iBase = l_oF.f_Num("base");
+            m_iScaleW = l_oF.f_Num("scaleW");
+            m_iScaleH = l_oF.f_Num("scaleH");
+        } else if (l_oF.m_strTag == "page") {
+            const int l_iId = l_oF.f_Num("id");
+            if (l_iId >= 0 && l_iId < 256) {
+                if ((int)m_vPages.size() <= l_iId) m_vPages.resize(l_iId + 1);
+                m_vPages[l_iId] = l_oF.f_Str("file");
             }
-        } else if (f.tag == "char") {
-            BitmapGlyph g;
-            g.id = (uint32_t)f.num("id");
-            g.x = f.num("x");
-            g.y = f.num("y");
-            g.w = f.num("width");
-            g.h = f.num("height");
-            g.xoffset = f.num("xoffset");
-            g.yoffset = f.num("yoffset");
-            g.xadvance = f.num("xadvance");
-            g.page = f.num("page");
-            auto it = index_.find(g.id);
-            if (it != index_.end()) glyphs[it->second] = g;   // a repeated id: the last one wins
-            else { index_[g.id] = glyphs.size(); glyphs.push_back(g); }
-        } else if (f.tag == "kerning") {
-            kern_[kernKey((uint32_t)f.num("first"), (uint32_t)f.num("second"))] = f.num("amount");
+        } else if (l_oF.m_strTag == "char") {
+            BitmapGlyph l_oG;
+            l_oG.m_uId = (uint32_t)l_oF.f_Num("id");
+            l_oG.m_iX = l_oF.f_Num("x");
+            l_oG.m_iY = l_oF.f_Num("y");
+            l_oG.m_iW = l_oF.f_Num("width");
+            l_oG.m_iH = l_oF.f_Num("height");
+            l_oG.m_iXoffset = l_oF.f_Num("xoffset");
+            l_oG.m_iYoffset = l_oF.f_Num("yoffset");
+            l_oG.m_iXadvance = l_oF.f_Num("xadvance");
+            l_oG.m_iPage = l_oF.f_Num("page");
+            auto l_itIt = m_mapIndex.find(l_oG.m_uId);
+            if (l_itIt != m_mapIndex.end()) m_vGlyphs[l_itIt->second] = l_oG;   // a repeated id: the last one wins
+            else { m_mapIndex[l_oG.m_uId] = m_vGlyphs.size(); m_vGlyphs.push_back(l_oG); }
+        } else if (l_oF.m_strTag == "kerning") {
+            m_mapKern[f_KernKey((uint32_t)l_oF.f_Num("first"), (uint32_t)l_oF.f_Num("second"))] = l_oF.f_Num("amount");
         }
     }
-    if (!haveCommon || glyphs.empty()) {
-        if (err) *err = !haveCommon ? "no 'common' line (not a text BMFont .fnt?)" : "no 'char' lines";
+    if (!l_bHaveCommon || m_vGlyphs.empty()) {
+        if (l_pErr) *l_pErr = !l_bHaveCommon ? "no 'common' line (not a text BMFont .fnt?)" : "no 'char' lines";
         return false;
     }
-    if (lineHeight <= 0)
-        for (const BitmapGlyph& g : glyphs) lineHeight = std::max(lineHeight, g.yoffset + g.h);
+    if (m_iLineHeight <= 0)
+        for (const BitmapGlyph& l_oG : m_vGlyphs) m_iLineHeight = std::max(m_iLineHeight, l_oG.m_iYoffset + l_oG.m_iH);
     return true;
 }
 
-const BitmapGlyph* BitmapFont::glyph(uint32_t cp) const {
-    auto it = index_.find(cp);
-    if (it == index_.end()) {
-        const uint32_t alt = otherCase(cp);
-        if (alt) it = index_.find(alt);
+const BitmapGlyph* BitmapFont::f_Glyph(uint32_t l_uCp) const {
+    auto l_itIt = m_mapIndex.find(l_uCp);
+    if (l_itIt == m_mapIndex.end()) {
+        const uint32_t l_uAlt = f_OtherCase(l_uCp);
+        if (l_uAlt) l_itIt = m_mapIndex.find(l_uAlt);
     }
-    return it == index_.end() ? nullptr : &glyphs[it->second];
+    return l_itIt == m_mapIndex.end() ? nullptr : &m_vGlyphs[l_itIt->second];
 }
 
-int BitmapFont::kerning(uint32_t first, uint32_t second) const {
-    if (kern_.empty()) return 0;
-    auto it = kern_.find(kernKey(first, second));
-    return it == kern_.end() ? 0 : it->second;
+int BitmapFont::f_Kerning(uint32_t l_uFirst, uint32_t l_uSecond) const {
+    if (m_mapKern.empty()) return 0;
+    auto l_itIt = m_mapKern.find(f_KernKey(l_uFirst, l_uSecond));
+    return l_itIt == m_mapKern.end() ? 0 : l_itIt->second;
 }
 
-std::vector<BitmapFont::Placed> BitmapFont::layout(std::string_view utf8, float x, float y, float scale,
-                                                   Align align, int* missing) const {
-    std::vector<Placed> out;
-    if (missing) *missing = 0;
-    size_t i = 0;
-    float lineY = y;
-    while (i <= utf8.size()) {
+std::vector<BitmapFont::Placed> BitmapFont::f_Layout(std::string_view l_svUtf8, float l_fX, float l_fY, float l_fScale,
+                                                   Align l_eAlign, int* l_pMissing) const {
+    std::vector<Placed> l_vOut;
+    if (l_pMissing) *l_pMissing = 0;
+    size_t l_nI = 0;
+    float l_fLineY = l_fY;
+    while (l_nI <= l_svUtf8.size()) {
         // one line: lay it out from 0, then shift it by the alignment
-        const size_t first = out.size();
-        float pen = 0;
-        uint32_t prev = 0;
-        while (i < utf8.size()) {
-            const uint32_t cp = utf8Next(utf8, i);
-            if (cp == '\n') break;
-            if (cp == '\r') continue;
-            const BitmapGlyph* g = glyph(cp);
-            if (!g) {
-                if (missing) ++*missing;
+        const size_t l_nFirst = l_vOut.size();
+        float l_fPen = 0;
+        uint32_t l_uPrev = 0;
+        while (l_nI < l_svUtf8.size()) {
+            const uint32_t l_uCp = f_Utf8Next(l_svUtf8, l_nI);
+            if (l_uCp == '\n') break;
+            if (l_uCp == '\r') continue;
+            const BitmapGlyph* l_pG = f_Glyph(l_uCp);
+            if (!l_pG) {
+                if (l_pMissing) ++*l_pMissing;
                 continue;
             }
-            if (prev) pen += kerning(prev, g->id) * scale;
-            if (g->w > 0 && g->h > 0)
-                out.push_back({g, pen + g->xoffset * scale, lineY + g->yoffset * scale, g->w * scale, g->h * scale});
-            pen += g->xadvance * scale;
-            prev = g->id;
+            if (l_uPrev) l_fPen += f_Kerning(l_uPrev, l_pG->m_uId) * l_fScale;
+            if (l_pG->m_iW > 0 && l_pG->m_iH > 0)
+                l_vOut.push_back({l_pG, l_fPen + l_pG->m_iXoffset * l_fScale, l_fLineY + l_pG->m_iYoffset * l_fScale, l_pG->m_iW * l_fScale, l_pG->m_iH * l_fScale});
+            l_fPen += l_pG->m_iXadvance * l_fScale;
+            l_uPrev = l_pG->m_uId;
         }
-        const float shift = align == Align::Left ? x : align == Align::Center ? x - pen * 0.5f : x - pen;
-        for (size_t k = first; k < out.size(); k++) out[k].x += shift;
-        lineY += lineHeight * scale;
-        if (i >= utf8.size()) break;
+        const float l_fShift = l_eAlign == Align::Left ? l_fX : l_eAlign == Align::Center ? l_fX - l_fPen * 0.5f : l_fX - l_fPen;
+        for (size_t l_nK = l_nFirst; l_nK < l_vOut.size(); l_nK++) l_vOut[l_nK].m_fX += l_fShift;
+        l_fLineY += m_iLineHeight * l_fScale;
+        if (l_nI >= l_svUtf8.size()) break;
     }
-    return out;
+    return l_vOut;
 }
 
-void BitmapFont::measure(std::string_view utf8, float scale, float& w, float& h) const {
-    w = 0;
-    int lines = 1;
-    float pen = 0;
-    uint32_t prev = 0;
-    size_t i = 0;
-    while (i < utf8.size()) {
-        const uint32_t cp = utf8Next(utf8, i);
-        if (cp == '\n') { w = std::max(w, pen); pen = 0; prev = 0; lines++; continue; }
-        const BitmapGlyph* g = glyph(cp);
-        if (!g) continue;
-        if (prev) pen += kerning(prev, g->id) * scale;
-        pen += g->xadvance * scale;
-        prev = g->id;
+void BitmapFont::f_Measure(std::string_view l_svUtf8, float l_fScale, float& l_fW, float& l_fH) const {
+    l_fW = 0;
+    int l_iLines = 1;
+    float l_fPen = 0;
+    uint32_t l_uPrev = 0;
+    size_t l_nI = 0;
+    while (l_nI < l_svUtf8.size()) {
+        const uint32_t l_uCp = f_Utf8Next(l_svUtf8, l_nI);
+        if (l_uCp == '\n') { l_fW = std::max(l_fW, l_fPen); l_fPen = 0; l_uPrev = 0; l_iLines++; continue; }
+        const BitmapGlyph* l_pG = f_Glyph(l_uCp);
+        if (!l_pG) continue;
+        if (l_uPrev) l_fPen += f_Kerning(l_uPrev, l_pG->m_uId) * l_fScale;
+        l_fPen += l_pG->m_iXadvance * l_fScale;
+        l_uPrev = l_pG->m_uId;
     }
-    w = std::max(w, pen);
-    h = (float)lines * lineHeight * scale;
+    l_fW = std::max(l_fW, l_fPen);
+    l_fH = (float)l_iLines * m_iLineHeight * l_fScale;
 }
 
-void BitmapFont::appendQuads(std::string_view utf8, float x, float y, float scale, Align align, const float tint[4],
-                             uint16_t texture, std::vector<Quad>& out, int* missing) const {
-    if (missing) *missing = 0;
-    if (scaleW <= 0 || scaleH <= 0) return;
-    for (const Placed& p : layout(utf8, x, y, scale, align, missing)) {
-        Quad q;
-        q.rect[0] = p.x; q.rect[1] = p.y; q.rect[2] = p.w; q.rect[3] = p.h;
-        q.uv[0] = (float)p.glyph->x / scaleW;
-        q.uv[1] = (float)p.glyph->y / scaleH;
-        q.uv[2] = (float)(p.glyph->x + p.glyph->w) / scaleW;
-        q.uv[3] = (float)(p.glyph->y + p.glyph->h) / scaleH;
-        for (int c = 0; c < 4; c++) q.tint[c] = tint[c];
-        q.texture = texture;
-        out.push_back(q);
+void BitmapFont::f_AppendQuads(std::string_view l_svUtf8, float l_fX, float l_fY, float l_fScale, Align l_eAlign, const float l_arrTint[4],
+                             uint16_t l_u16Texture, std::vector<Quad>& l_vOut, int* l_pMissing) const {
+    if (l_pMissing) *l_pMissing = 0;
+    if (m_iScaleW <= 0 || m_iScaleH <= 0) return;
+    for (const Placed& l_oP : f_Layout(l_svUtf8, l_fX, l_fY, l_fScale, l_eAlign, l_pMissing)) {
+        Quad l_oQ;
+        l_oQ.m_arrRect[0] = l_oP.m_fX; l_oQ.m_arrRect[1] = l_oP.m_fY; l_oQ.m_arrRect[2] = l_oP.m_fW; l_oQ.m_arrRect[3] = l_oP.m_fH;
+        l_oQ.m_arrUv[0] = (float)l_oP.m_pGlyph->m_iX / m_iScaleW;
+        l_oQ.m_arrUv[1] = (float)l_oP.m_pGlyph->m_iY / m_iScaleH;
+        l_oQ.m_arrUv[2] = (float)(l_oP.m_pGlyph->m_iX + l_oP.m_pGlyph->m_iW) / m_iScaleW;
+        l_oQ.m_arrUv[3] = (float)(l_oP.m_pGlyph->m_iY + l_oP.m_pGlyph->m_iH) / m_iScaleH;
+        for (int l_iC = 0; l_iC < 4; l_iC++) l_oQ.m_arrTint[l_iC] = l_arrTint[l_iC];
+        l_oQ.m_u16Texture = l_u16Texture;
+        l_vOut.push_back(l_oQ);
     }
 }
 
 // ---- FontText ----
 
-bool FontText::load(IRenderer& renderer, const std::string& fntPath, std::string* err) {
-    auto fail = [&](const std::string& why) {
-        if (err) *err = fntPath + ": " + why;
+bool FontText::f_Load(IRenderer& l_oRenderer, const std::string& l_strFntPath, std::string* l_pErr) {
+    auto l_fnFail = [&](const std::string& l_strWhy) {
+        if (l_pErr) *l_pErr = l_strFntPath + ": " + l_strWhy;
         return false;
     };
-    std::string text;
-    if (!toms::vfsReadAll(fntPath, text)) return fail("cannot read");
-    BitmapFont font;
-    std::string why;
-    if (!font.parse(text, &why)) return fail(why);
-    if (font.pages.empty() || font.pages[0].empty()) return fail("no page file");
-    const size_t slash = fntPath.find_last_of("/\\");
-    const std::string pagePath = (slash == std::string::npos ? std::string() : fntPath.substr(0, slash + 1)) + font.pages[0];
-    std::string png;
-    if (!toms::vfsReadAll(pagePath, png)) return fail("cannot read its page " + pagePath);
-    int w = 0, h = 0, ch = 0;
-    stbi_uc* px = stbi_load_from_memory((const stbi_uc*)png.data(), (int)png.size(), &w, &h, &ch, 4);
-    if (!px) return fail("cannot decode its page " + pagePath);
-    const uint16_t tex = renderer.loadTexture(std::vector<uint8_t>(px, px + (size_t)w * h * 4), (uint32_t)w, (uint32_t)h);
-    stbi_image_free(px);
-    if (font.scaleW <= 0 || font.scaleH <= 0) { font.scaleW = w; font.scaleH = h; }
-    font_ = std::move(font);
-    renderer_ = &renderer;
-    texture_ = tex;
-    dirty_ = true;
+    std::string l_strText;
+    if (!toms::f_VfsReadAll(l_strFntPath, l_strText)) return l_fnFail("cannot read");
+    BitmapFont l_oFont;
+    std::string l_strWhy;
+    if (!l_oFont.f_Parse(l_strText, &l_strWhy)) return l_fnFail(l_strWhy);
+    if (l_oFont.m_vPages.empty() || l_oFont.m_vPages[0].empty()) return l_fnFail("no page file");
+    const size_t l_nSlash = l_strFntPath.find_last_of("/\\");
+    const std::string l_strPagePath = (l_nSlash == std::string::npos ? std::string() : l_strFntPath.substr(0, l_nSlash + 1)) + l_oFont.m_vPages[0];
+    std::string l_strPng;
+    if (!toms::f_VfsReadAll(l_strPagePath, l_strPng)) return l_fnFail("cannot read its page " + l_strPagePath);
+    int l_iW = 0, l_iH = 0, l_iCh = 0;
+    stbi_uc* l_pPx = stbi_load_from_memory((const stbi_uc*)l_strPng.data(), (int)l_strPng.size(), &l_iW, &l_iH, &l_iCh, 4);
+    if (!l_pPx) return l_fnFail("cannot decode its page " + l_strPagePath);
+    const uint16_t l_u16Tex = l_oRenderer.f_LoadTexture(std::vector<uint8_t>(l_pPx, l_pPx + (size_t)l_iW * l_iH * 4), (uint32_t)l_iW, (uint32_t)l_iH);
+    stbi_image_free(l_pPx);
+    if (l_oFont.m_iScaleW <= 0 || l_oFont.m_iScaleH <= 0) { l_oFont.m_iScaleW = l_iW; l_oFont.m_iScaleH = l_iH; }
+    m_oFont = std::move(l_oFont);
+    m_pRenderer = &l_oRenderer;
+    m_u16Texture = l_u16Tex;
+    m_bDirty = true;
     return true;
 }
 
-void FontText::release() {
-    if (renderer_ && texture_ != kSpriteAtlasTexture) renderer_->releaseTexture(texture_);
-    renderer_ = nullptr;
-    texture_ = kSpriteAtlasTexture;
-    quads_.clear();
+void FontText::f_Release() {
+    if (m_pRenderer && m_u16Texture != g_u16SpriteAtlasTexture) m_pRenderer->f_ReleaseTexture(m_u16Texture);
+    m_pRenderer = nullptr;
+    m_u16Texture = g_u16SpriteAtlasTexture;
+    m_vQuads.clear();
 }
 
-void FontText::setText(std::string_view utf8) {
-    if (text_ == utf8) return;
-    text_.assign(utf8.data(), utf8.size());
-    dirty_ = true;
+void FontText::f_SetText(std::string_view l_svUtf8) {
+    if (m_strText == l_svUtf8) return;
+    m_strText.assign(l_svUtf8.data(), l_svUtf8.size());
+    m_bDirty = true;
 }
 
-void FontText::setPosition(float x, float y) {
-    if (x == x_ && y == y_) return;
-    x_ = x;
-    y_ = y;
-    dirty_ = true;
+void FontText::f_SetPosition(float l_fX, float l_fY) {
+    if (l_fX == m_fX && l_fY == m_fY) return;
+    m_fX = l_fX;
+    m_fY = l_fY;
+    m_bDirty = true;
 }
 
-void FontText::setAlign(BitmapFont::Align align) {
-    if (align == align_) return;
-    align_ = align;
-    dirty_ = true;
+void FontText::f_SetAlign(BitmapFont::Align l_eAlign) {
+    if (l_eAlign == m_eAlign) return;
+    m_eAlign = l_eAlign;
+    m_bDirty = true;
 }
 
-void FontText::setScale(float scale) {
-    if (scale == scale_) return;
-    scale_ = scale;
-    dirty_ = true;
+void FontText::f_SetScale(float l_fScale) {
+    if (l_fScale == m_fScale) return;
+    m_fScale = l_fScale;
+    m_bDirty = true;
 }
 
-void FontText::setColor(float r, float g, float b, float a) {
-    color_[0] = r; color_[1] = g; color_[2] = b; color_[3] = a;
-    dirty_ = true;
+void FontText::f_SetColor(float l_fR, float l_fG, float l_fB, float l_fA) {
+    m_arrColor[0] = l_fR; m_arrColor[1] = l_fG; m_arrColor[2] = l_fB; m_arrColor[3] = l_fA;
+    m_bDirty = true;
 }
 
-void FontText::setVisible(bool visible) { visible_ = visible; }
+void FontText::f_SetVisible(bool l_bVisible) { m_bVisible = l_bVisible; }
 
-void FontText::relayout() const {
-    if (!dirty_) return;
-    quads_.clear();
-    font_.appendQuads(text_, x_, y_, scale_, align_, color_, texture_, quads_, &missing_);
-    font_.measure(text_, scale_, w_, h_);
-    dirty_ = false;
+void FontText::f_Relayout() const {
+    if (!m_bDirty) return;
+    m_vQuads.clear();
+    m_oFont.f_AppendQuads(m_strText, m_fX, m_fY, m_fScale, m_eAlign, m_arrColor, m_u16Texture, m_vQuads, &m_iMissing);
+    m_oFont.f_Measure(m_strText, m_fScale, m_fW, m_fH);
+    m_bDirty = false;
 }
 
-void FontText::render() {
-    if (!renderer_ || !visible_ || text_.empty()) return;
-    relayout();
-    for (const Quad& q : quads_) renderer_->drawSprite(q);
+void FontText::f_Render() {
+    if (!m_pRenderer || !m_bVisible || m_strText.empty()) return;
+    f_Relayout();
+    for (const Quad& l_oQ : m_vQuads) m_pRenderer->f_DrawSprite(l_oQ);
 }
 
-float FontText::width() const { relayout(); return w_; }
-float FontText::height() const { relayout(); return h_; }
-int FontText::missingChars() const { relayout(); return missing_; }
+float FontText::f_Width() const { f_Relayout(); return m_fW; }
+float FontText::f_Height() const { f_Relayout(); return m_fH; }
+int FontText::f_MissingChars() const { f_Relayout(); return m_iMissing; }

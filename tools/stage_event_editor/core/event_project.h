@@ -18,135 +18,135 @@
 
 namespace stage {
 
-extern const char* const kLangs[6];   // zh_TW, en, zh_CN, ja, ko, es: the event text languages
+extern const char* const g_arrLangs[6];   // zh_TW, en, zh_CN, ja, ko, es: the event text languages
 
 // One problem of the validator (the HTML editor's RULES): where is a message code + arguments ("" code = args[0] as is)
 struct EvProblem {
-    std::string rule, id, act, to;
-    std::string whereCode;
-    std::vector<std::string> whereArgs;
+    std::string m_strRule, m_strId, m_strAct, m_strTo;
+    std::string m_strWhereCode;
+    std::vector<std::string> m_vWhereArgs;
 };
-const std::vector<std::pair<std::string, int>>& evRules();   // rule -> severity (0 error, 1 warn, 2 info), in display order
-int ruleSev(const std::string& rule);
+const std::vector<std::pair<std::string, int>>& f_EvRules();   // rule -> severity (0 error, 1 warn, 2 info), in display order
+int f_RuleSev(const std::string& l_strRule);
 
 // A condition row (condition.cpp leaf): subject "var:x" / "counter:x" / "flag:x" / "event:x" / "talks:npc" / "stat:s" /
 // "floor:F05" / "item:id" / "stage:id" / "choice:eventId", an operator, a value.
 struct CondRow {
-    std::string subj, op;
-    Json val;
+    std::string m_strSubj, m_strOp;
+    Json m_jVal;
 };
 struct CondRows {
-    std::string mode = "all";   // "all" | "any"
-    std::vector<Json> rows;     // leaves
-    bool raw = false;           // nested logic: shown as JSON
+    std::string m_strMode = "all";   // "all" | "any"
+    std::vector<Json> m_vRows;     // leaves
+    bool m_bRaw = false;           // nested logic: shown as JSON
 };
-CondRow leafToRow(const Json& leaf);
-Json rowToLeaf(const std::string& subj, const std::string& op, const Json& val);
-CondRows condToRows(const Json& c);
-Json rowsToCond(const std::string& mode, const std::vector<Json>& rows);
-std::vector<std::pair<std::string, std::string>> opsFor(const std::string& kind);   // (op, label key)
-Json makeAction(const std::string& type, const std::string& target, const Json& val);
-std::string actTarget(const Json& a);
-Json actValue(const Json& a);
-std::string leafRef(const Json& l);   // "var:x" ... or ""
-std::string actRef(const Json& a);
-bool nameOk(const std::string& s, bool file = false);
-bool idOk(const std::string& s);       // letters, digits, _ and - (NPC, dialogue and node ids)
+CondRow f_LeafToRow(const Json& l_jLeaf);
+Json f_RowToLeaf(const std::string& l_strSubj, const std::string& l_strOp, const Json& l_jVal);
+CondRows f_CondToRows(const Json& l_jC);
+Json f_RowsToCond(const std::string& l_strMode, const std::vector<Json>& l_vRows);
+std::vector<std::pair<std::string, std::string>> f_OpsFor(const std::string& l_strKind);   // (op, label key)
+Json f_MakeAction(const std::string& l_strType, const std::string& l_strTarget, const Json& l_jVal);
+std::string f_ActTarget(const Json& l_jA);
+Json f_ActValue(const Json& l_jA);
+std::string f_LeafRef(const Json& l_jL);   // "var:x" ... or ""
+std::string f_ActRef(const Json& l_jA);
+bool f_NameOk(const std::string& l_strS, bool l_bFile = false);
+bool f_IdOk(const std::string& l_strS);       // letters, digits, _ and - (NPC, dialogue and node ids)
 
 class EventProject {
 public:
-    std::string root;
-    Json S, base;                      // the working state and what is on disk
+    std::string m_strRoot;
+    Json m_jS, m_jBase;                      // the working state and what is on disk
     // read-only extras
-    std::map<std::string, std::vector<std::string>> npcPlaces;   // npc -> floors whose grid places it
-    std::vector<std::string> items, stats, sprites;
-    std::map<std::string, Json> origTexts;                       // (not used for saving: texts compare with base)
+    std::map<std::string, std::vector<std::string>> m_mapNpcPlaces;   // npc -> floors whose grid places it
+    std::vector<std::string> m_vItems, m_vStats, m_vSprites;
+    std::map<std::string, Json> m_mapOrigTexts;                       // (not used for saving: texts compare with base)
 
-    struct Step { Json s; std::string sel, label; };
-    std::vector<Step> undoStack;
-    std::string selected;              // an event id, a missing id or a floor id
+    struct Step { Json m_jS; std::string m_strSel, m_strLabel; };
+    std::vector<Step> m_vUndoStack;
+    std::string m_strSelected;              // an event id, a missing id or a floor id
 
-    bool load(const std::string& tomsRoot, std::string& err);
-    bool dirty() const { return S != base; }
+    bool f_Load(const std::string& l_strTomsRoot, std::string& l_strErr);
+    bool f_Dirty() const { return m_jS != m_jBase; }
 
     // edits: one undo step each
-    void edit(const std::string& label, const std::function<void()>& fn);
-    bool undo(std::string* label = nullptr);
+    void f_Edit(const std::string& l_strLabel, const std::function<void()>& l_fnFn);
+    bool f_Undo(std::string* l_pLabel = nullptr);
 
     // lookups
-    Json* ev(const std::string& id);
-    const Json* ev(const std::string& id) const { return const_cast<EventProject*>(this)->ev(id); }
-    Json* flo(const std::string& id);
-    const Json* flo(const std::string& id) const { return const_cast<EventProject*>(this)->flo(id); }
-    std::vector<const Json*> floorsOf(const std::string& evId) const;
-    bool isMissing(const std::string& id) const;
-    bool isNewEvent(const std::string& id) const;
-    bool isNewPool(const std::string& pool) const;
-    bool isNewFloor(const std::string& id) const;
-    std::set<std::string> reachable() const;
-    Json text(const std::string& key) const;   // {} when absent
-    bool isPlaceholder(const std::string& key) const;
-    Json reqJson(const Json& e) const;
-    bool hasLogic(const Json& e) const;
-    std::vector<std::string> pools() const;    // sorted
-    std::vector<std::string> kindsList() const;
-    std::string kindName(const std::string& k, const std::string& lang) const;
-    std::string kindColor(const std::string& k) const;
-    std::vector<std::string> dialogueList() const;
-    std::vector<Json> dialogueActs(const std::string& id) const;
-    std::vector<const Json*> changers(const std::string& ref) const;
-    std::vector<const Json*> readers(const std::string& ref) const;
-    std::vector<const Json*> readersOnly(const std::string& ref) const;
-    std::vector<const Json*> watchers(const std::string& ref) const;
-    std::vector<std::string> linkedValues(const std::string& ref) const;
-    bool refExists(const std::string& ref) const;
-    std::vector<std::string> valueRefs() const;   // var:x, counter:x, flag:x
-    Json* recOf(const std::string& ref);
-    std::vector<std::string> npcIds() const;
-    std::vector<Json*> topicsOf(const std::string& npc);
-    bool woken(const std::string& id) const;
-    std::string talkFloorOf(const Json& e, bool* conditional = nullptr) const;   // "" = every floor
-    void setEventReq(Json& e, const Json& c);
-    void setTalkFloor(Json& e, const std::string& floor);
-    std::string guessKind(const std::string& id) const;
-    std::vector<std::string> choiceIdsOf(const std::string& evId) const;
-    std::vector<EvProblem> problems() const;
+    Json* f_Ev(const std::string& l_strId);
+    const Json* f_Ev(const std::string& l_strId) const { return const_cast<EventProject*>(this)->f_Ev(l_strId); }
+    Json* f_Flo(const std::string& l_strId);
+    const Json* f_Flo(const std::string& l_strId) const { return const_cast<EventProject*>(this)->f_Flo(l_strId); }
+    std::vector<const Json*> f_FloorsOf(const std::string& l_strEvId) const;
+    bool f_IsMissing(const std::string& l_strId) const;
+    bool f_IsNewEvent(const std::string& l_strId) const;
+    bool f_IsNewPool(const std::string& l_strPool) const;
+    bool f_IsNewFloor(const std::string& l_strId) const;
+    std::set<std::string> f_Reachable() const;
+    Json f_Text(const std::string& l_strKey) const;   // {} when absent
+    bool f_IsPlaceholder(const std::string& l_strKey) const;
+    Json f_ReqJson(const Json& l_jE) const;
+    bool f_HasLogic(const Json& l_jE) const;
+    std::vector<std::string> f_Pools() const;    // sorted
+    std::vector<std::string> f_KindsList() const;
+    std::string f_KindName(const std::string& l_strK, const std::string& l_strLang) const;
+    std::string f_KindColor(const std::string& l_strK) const;
+    std::vector<std::string> f_DialogueList() const;
+    std::vector<Json> f_DialogueActs(const std::string& l_strId) const;
+    std::vector<const Json*> f_Changers(const std::string& l_strRef) const;
+    std::vector<const Json*> f_Readers(const std::string& l_strRef) const;
+    std::vector<const Json*> f_ReadersOnly(const std::string& l_strRef) const;
+    std::vector<const Json*> f_Watchers(const std::string& l_strRef) const;
+    std::vector<std::string> f_LinkedValues(const std::string& l_strRef) const;
+    bool f_RefExists(const std::string& l_strRef) const;
+    std::vector<std::string> f_ValueRefs() const;   // var:x, counter:x, flag:x
+    Json* f_RecOf(const std::string& l_strRef);
+    std::vector<std::string> f_NpcIds() const;
+    std::vector<Json*> f_TopicsOf(const std::string& l_strNpc);
+    bool f_Woken(const std::string& l_strId) const;
+    std::string f_TalkFloorOf(const Json& l_jE, bool* l_pConditional = nullptr) const;   // "" = every floor
+    void f_SetEventReq(Json& l_jE, const Json& l_jC);
+    void f_SetTalkFloor(Json& l_jE, const std::string& l_strFloor);
+    std::string f_GuessKind(const std::string& l_strId) const;
+    std::vector<std::string> f_ChoiceIdsOf(const std::string& l_strEvId) const;
+    std::vector<EvProblem> f_Problems() const;
 
     // event actions (call inside edit())
-    std::string newEventId();
-    Json blankEvent(const std::string& id, const std::string& pool) const;
-    void makeRecord(const std::string& id, const std::string& act);   // a missing id becomes an event
-    void renameEvent(Json& e, const std::string& nu);
-    std::string idError(const std::string& id, const Json* self) const;   // "" ok, "format", "dup:<pool>"
+    std::string f_NewEventId();
+    Json f_BlankEvent(const std::string& l_strId, const std::string& l_strPool) const;
+    void f_MakeRecord(const std::string& l_strId, const std::string& l_strAct);   // a missing id becomes an event
+    void f_RenameEvent(Json& l_jE, const std::string& l_strNu);
+    std::string f_IdError(const std::string& l_strId, const Json* l_pSelf) const;   // "" ok, "format", "dup:<pool>"
 
     // save
-    struct FileWrite { std::string path, before, text; bool existed = false; };
-    std::vector<FileWrite> liveWrites(const std::map<std::string, std::string>& comments) const;
+    struct FileWrite { std::string m_strPath, m_strBefore, m_strText; bool m_bExisted = false; };
+    std::vector<FileWrite> f_LiveWrites(const std::map<std::string, std::string>& l_mapComments) const;
     // backs up and writes; base = S. `written` gets the paths.
-    bool writeAll(const std::vector<FileWrite>& files, const std::string& stamp, std::string& err);
+    bool f_WriteAll(const std::vector<FileWrite>& l_vFiles, const std::string& l_strStamp, std::string& l_strErr);
 };
 
 // The talk preview (docs/gameplay/event_editor/08_NPC_DIALOGUE.md): the game's rules (talk_system.cpp, condition.cpp) on a
 // pretend run.
 struct TalkPreview {
-    std::string npc, stage;
-    std::set<std::string> finished, started, cleared;
-    std::map<std::string, double> vars, counters, stats;
-    std::map<std::string, int> counts;
-    struct TalkState { int index = 0, count = 0, last = -1; };
-    std::map<std::string, TalkState> talks;
-    struct MenuItem { std::string id; bool finished = false; };
-    struct Entry { int n = 0; std::string kind, dialogue, text; std::vector<MenuItem> menu; };   // kind: chat | topic | menu
-    std::vector<Entry> log;   // newest first
+    std::string m_strNpc, m_strStage;
+    std::set<std::string> m_setFinished, m_setStarted, m_setCleared;
+    std::map<std::string, double> m_mapVars, m_mapCounters, m_mapStats;
+    std::map<std::string, int> m_mapCounts;
+    struct TalkState { int m_iIndex = 0, m_iCount = 0, m_iLast = -1; };
+    std::map<std::string, TalkState> m_mapTalks;
+    struct MenuItem { std::string m_strId; bool m_bFinished = false; };
+    struct Entry { int m_iN = 0; std::string m_strKind, m_strDialogue, m_strText; std::vector<MenuItem> m_vMenu; };   // kind: chat | topic | menu
+    std::vector<Entry> m_vLog;   // newest first
 
-    void reset(EventProject& p, const std::string& npc);
-    bool eval(const Json& c) const;
-    std::vector<MenuItem> menu(EventProject& p, const std::string& npc);
-    int chat(const Json& npcFile);                 // nextChatLine: the line index, -1 = none
-    std::string firstText(const EventProject& p, const std::string& dlg, const std::string& lang, bool* missing = nullptr) const;
-    void talk(EventProject& p, const std::string& npc, const std::string& lang);
-    void finish(EventProject& p, const std::string& id);
-    void tick(EventProject& p, const std::string& id, bool on);   // a "finished events" box
+    void f_Reset(EventProject& l_oP, const std::string& l_strNpc);
+    bool f_Eval(const Json& l_jC) const;
+    std::vector<MenuItem> f_Menu(EventProject& l_oP, const std::string& l_strNpc);
+    int f_Chat(const Json& l_jNpcFile);                 // nextChatLine: the line index, -1 = none
+    std::string f_FirstText(const EventProject& l_oP, const std::string& l_strDlg, const std::string& l_strLang, bool* l_pMissing = nullptr) const;
+    void f_Talk(EventProject& l_oP, const std::string& l_strNpc, const std::string& l_strLang);
+    void f_Finish(EventProject& l_oP, const std::string& l_strId);
+    void f_Tick(EventProject& l_oP, const std::string& l_strId, bool l_bOn);   // a "finished events" box
 };
 
 }  // namespace stage

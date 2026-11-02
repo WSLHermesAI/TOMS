@@ -5,40 +5,40 @@
 
 namespace toms {
 
-int nextStanding(const std::vector<int>& hp, int from, int dir) {
-    const int n = (int)hp.size();
-    if (n == 0) return -1;
-    if (from < 0 || from >= n) from = 0;
-    if (dir == 0 && hp[(size_t)from] > 0) return from;
-    const int step = dir < 0 ? -1 : 1;
-    for (int k = 1; k <= n; k++) {
-        const int i = ((from + step * k) % n + n) % n;
-        if (hp[(size_t)i] > 0) return i;
+int f_NextStanding(const std::vector<int>& l_vHp, int l_iFrom, int l_iDir) {
+    const int l_iN = (int)l_vHp.size();
+    if (l_iN == 0) return -1;
+    if (l_iFrom < 0 || l_iFrom >= l_iN) l_iFrom = 0;
+    if (l_iDir == 0 && l_vHp[(size_t)l_iFrom] > 0) return l_iFrom;
+    const int l_iStep = l_iDir < 0 ? -1 : 1;
+    for (int l_iK = 1; l_iK <= l_iN; l_iK++) {
+        const int l_iI = ((l_iFrom + l_iStep * l_iK) % l_iN + l_iN) % l_iN;
+        if (l_vHp[(size_t)l_iI] > 0) return l_iI;
     }
     return -1;
 }
 
-bool allDown(const std::vector<int>& hp) {
-    for (int h : hp)
-        if (h > 0) return false;
+bool f_AllDown(const std::vector<int>& l_vHp) {
+    for (int l_iH : l_vHp)
+        if (l_iH > 0) return false;
     return true;
 }
 
-std::string battleEventLine(const BattleEvent& e, const std::vector<std::string>& foeIds) {
-    auto name = [&](int i) {
-        if (i < 0) return std::string("player");
-        return "foe " + std::to_string(i) + (i < (int)foeIds.size() ? " (" + foeIds[(size_t)i] + ")" : std::string());
+std::string f_BattleEventLine(const BattleEvent& l_oE, const std::vector<std::string>& l_vFoeIds) {
+    auto l_fnName = [&](int l_iI) {
+        if (l_iI < 0) return std::string("player");
+        return "foe " + std::to_string(l_iI) + (l_iI < (int)l_vFoeIds.size() ? " (" + l_vFoeIds[(size_t)l_iI] + ")" : std::string());
     };
-    char t[16];
-    std::snprintf(t, sizeof t, "%6.2f", e.ms / 1000.0);
-    std::string s = std::string(t) + "  " + name(e.who);
-    if (e.whom != e.who && (e.type == "hit" || e.type == "combo" || e.type == "super" || e.type == "target" ||
-                             e.type == "parry" || e.type == "guardBreak" || e.type == "spellBreak" || e.type == "summon"))
-        s += " -> " + name(e.whom);
-    s += ": " + e.type;
-    if (e.type == "hit" || e.type == "guard" || e.type == "combo" || e.type == "super") s += " " + std::to_string(e.value);
-    if (!e.note.empty()) s += " (" + e.note + ")";
-    return s;
+    char l_pszT[16];
+    std::snprintf(l_pszT, sizeof l_pszT, "%6.2f", l_oE.m_iMs / 1000.0);
+    std::string l_strS = std::string(l_pszT) + "  " + l_fnName(l_oE.m_iWho);
+    if (l_oE.m_iWhom != l_oE.m_iWho && (l_oE.m_strType == "hit" || l_oE.m_strType == "combo" || l_oE.m_strType == "super" || l_oE.m_strType == "target" ||
+                             l_oE.m_strType == "parry" || l_oE.m_strType == "guardBreak" || l_oE.m_strType == "spellBreak" || l_oE.m_strType == "summon"))
+        l_strS += " -> " + l_fnName(l_oE.m_iWhom);
+    l_strS += ": " + l_oE.m_strType;
+    if (l_oE.m_strType == "hit" || l_oE.m_strType == "guard" || l_oE.m_strType == "combo" || l_oE.m_strType == "super") l_strS += " " + std::to_string(l_oE.m_iValue);
+    if (!l_oE.m_strNote.empty()) l_strS += " (" + l_oE.m_strNote + ")";
+    return l_strS;
 }
 
 } // namespace toms

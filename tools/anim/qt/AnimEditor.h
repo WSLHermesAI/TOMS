@@ -31,110 +31,110 @@ class AnimEditor : public QObject
     Q_OBJECT
 
 public:
-    explicit AnimEditor(QMainWindow* host);
+    explicit AnimEditor(QMainWindow* l_pHost);
 
     // Puts the viewport, docks, menus and toolbars on the host.
-    void install();
+    void f_Install();
 
-    QString title() const;   // "name.anim[*] - Anim Editor" style, without the app name
-    QList<QMenu*> menus() const { return m_menus; }
-    QMenu* viewMenu() const { return m_viewMenu; }
-    QList<QDockWidget*> docks() const;
+    QString f_Title() const;   // "name.anim[*] - Anim Editor" style, without the app name
+    QList<QMenu*> f_Menus() const { return m_oMenus; }
+    QMenu* f_ViewMenu() const { return m_pViewMenu; }
+    QList<QDockWidget*> f_Docks() const;
 
-    AnimDocument* document() const { return m_doc; }
-    AnimViewport* viewport() const { return m_viewport; }
-    QAction* showSkinAction() const { return m_showSkinAct; }
+    AnimDocument* f_Document() const { return m_pDoc; }
+    AnimViewport* f_Viewport() const { return m_pViewport; }
+    QAction* f_ShowSkinAction() const { return m_pShowSkinAct; }
     // Edit > Cut / Copy / Paste / Paste as Sibling (nodes; the selftest).
-    QList<QAction*> nodeClipboardActions() const { return {m_cutAct, m_copyAct, m_pasteAct, m_pasteSiblingAct}; }
-    QAction* objectModeAction() const { return m_objectModeAct; }
-    QAction* boneModeAction() const { return m_boneModeAct; }
-    QAction* latticeModeAction() const { return m_latticeModeAct; }
-    QAction* weightModeAction() const { return m_weightModeAct; }
-    QAction* autoWeightsAction() const { return m_autoWeightsAct; }
-    QList<QAction*> tutorialActions() const { return {m_tutorialAct, m_tutorialStartAct, m_tutorialDoneAct}; }
+    QList<QAction*> f_NodeClipboardActions() const { return {m_pCutAct, m_pCopyAct, m_pPasteAct, m_pPasteSiblingAct}; }
+    QAction* f_ObjectModeAction() const { return m_pObjectModeAct; }
+    QAction* f_BoneModeAction() const { return m_pBoneModeAct; }
+    QAction* f_LatticeModeAction() const { return m_pLatticeModeAct; }
+    QAction* f_WeightModeAction() const { return m_pWeightModeAct; }
+    QAction* f_AutoWeightsAction() const { return m_pAutoWeightsAct; }
+    QList<QAction*> f_TutorialActions() const { return {m_pTutorialAct, m_pTutorialStartAct, m_pTutorialDoneAct}; }
     // A file of the TOMS repo the editor runs from (Build/<preset>/bin or Editor/bin, a few folders up), "" = not
     // found (this copy of the editor is outside the repo).
-    static QString repoFile(const QString& relative);
-    AnimNodesDock* nodesDock() const { return m_nodes; }
-    AnimSpritesDock* spritesDock() const { return m_sprites; }
-    AnimPropertiesDock* propertiesDock() const { return m_props; }
-    AnimKeyListDock* keyListDock() const { return m_keys; }
-    AnimEventsDock* eventsDock() const { return m_events; }
-    AnimProblemsDock* problemsDock() const { return m_problems; }
-    AnimTransport* transport() const { return m_transport; }
-    AnimClipsDock* clipsDock() const { return m_clips; }
+    static QString f_RepoFile(const QString& l_oRelative);
+    AnimNodesDock* f_NodesDock() const { return m_pNodes; }
+    AnimSpritesDock* f_SpritesDock() const { return m_pSprites; }
+    AnimPropertiesDock* f_PropertiesDock() const { return m_pProps; }
+    AnimKeyListDock* f_KeyListDock() const { return m_pKeys; }
+    AnimEventsDock* f_EventsDock() const { return m_pEvents; }
+    AnimProblemsDock* f_ProblemsDock() const { return m_pProblems; }
+    AnimTransport* f_Transport() const { return m_pTransport; }
+    AnimClipsDock* f_ClipsDock() const { return m_pClips; }
 
-    bool openFile(const QString& path, bool askForAtlas = true);
-    bool maybeSave();
+    bool f_OpenFile(const QString& l_oPath, bool l_bAskForAtlas = true);
+    bool f_MaybeSave();
     // Convert > MPDI Folder: the old engine's .mpdi (and their .pi) under a folder -> .anim (+ atlases).
-    void convertMpdiFolder();
-    bool save();
-    bool saveAs(const QString& startDir = QString());   // the dialog opens in startDir when given
-    bool saveTo(const QString& path);
+    void f_ConvertMpdiFolder();
+    bool f_Save();
+    bool f_SaveAs(const QString& l_oStartDir = QString());   // the dialog opens in startDir when given
+    bool f_SaveTo(const QString& l_oPath);
     // Adds an atlas (one undo step). An untitled file is saved first (Save As, starting in the
     // atlas's folder): atlas paths are stored relative to the .anim. False = not added.
-    bool addAtlasFile(const QString& path);
+    bool f_AddAtlasFile(const QString& l_oPath);
     // Sprites dropped on a time area: asks for the time gap (Yes / No), then one sprite key per
     // reference on the selected node at time, time + gap, ... (one undo step). False = nothing inserted.
-    bool insertSpriteKeys(const QStringList& refs, float time);
+    bool f_InsertSpriteKeys(const QStringList& l_oRefs, float l_fTime);
     // Key > Motion Recipe: picks a recipe for the selected node (anim_recipes.h), its start, period and strength.
-    void motionRecipeDialog();
+    void f_MotionRecipeDialog();
 
-    static QSettings settings();
-    void readSettings();
-    void writeSettings() const;
+    static QSettings f_Settings();
+    void f_ReadSettings();
+    void f_WriteSettings() const;
 
 signals:
-    void titleChanged();
+    void f_TitleChanged();
 
 private:
-    void createActions();
-    void createDocks();
-    void createMenus();
-    void createToolBars();
-    void addRecentFile(const QString& path);
-    void rebuildRecentMenu();
-    QString lastDir() const;
-    void onAddAtlas();
-    void addSpriteNode();
-    void moveSelected(int delta);
-    void updateActions();
+    void f_CreateActions();
+    void f_CreateDocks();
+    void f_CreateMenus();
+    void f_CreateToolBars();
+    void f_AddRecentFile(const QString& l_oPath);
+    void f_RebuildRecentMenu();
+    QString f_LastDir() const;
+    void f_OnAddAtlas();
+    void f_AddSpriteNode();
+    void f_MoveSelected(int l_iDelta);
+    void f_UpdateActions();
 
-    QMainWindow* m_host;
-    AnimDocument* m_doc;
-    AnimViewport* m_viewport;
-    AnimClipsDock* m_clips = nullptr;
-    QDockWidget* m_history = nullptr;
-    AutoBackup* m_backup = nullptr;
-    AnimNodesDock* m_nodes = nullptr;
-    AnimSpritesDock* m_sprites = nullptr;
-    AnimPropertiesDock* m_props = nullptr;
-    AnimKeyListDock* m_keys = nullptr;
-    AnimEventsDock* m_events = nullptr;
-    AnimProblemsDock* m_problems = nullptr;
-    QDockWidget* m_timeline = nullptr;
-    AnimTransport* m_transport = nullptr;
+    QMainWindow* m_pHost;
+    AnimDocument* m_pDoc;
+    AnimViewport* m_pViewport;
+    AnimClipsDock* m_pClips = nullptr;
+    QDockWidget* m_pHistory = nullptr;
+    AutoBackup* m_pBackup = nullptr;
+    AnimNodesDock* m_pNodes = nullptr;
+    AnimSpritesDock* m_pSprites = nullptr;
+    AnimPropertiesDock* m_pProps = nullptr;
+    AnimKeyListDock* m_pKeys = nullptr;
+    AnimEventsDock* m_pEvents = nullptr;
+    AnimProblemsDock* m_pProblems = nullptr;
+    QDockWidget* m_pTimeline = nullptr;
+    AnimTransport* m_pTransport = nullptr;
 
-    QList<QMenu*> m_menus;
-    QMenu* m_recentMenu = nullptr;
-    QMenu* m_viewMenu = nullptr;
-    QToolBar* m_mainBar = nullptr;
-    QAction *m_newAct, *m_openAct, *m_saveAct, *m_saveAsAct, *m_addAtlasAct, *m_reloadAtlasAct, *m_quitAct;
-    QAction *m_undoAct, *m_redoAct;
-    QAction* m_showSkinAct = nullptr;   // View > Show Skin (AnimViewport::setShowSkin)
-    QAction *m_objectModeAct = nullptr, *m_boneModeAct = nullptr, *m_latticeModeAct = nullptr;   // AnimViewport::EditMode
-    QAction* m_weightModeAct = nullptr;
+    QList<QMenu*> m_oMenus;
+    QMenu* m_pRecentMenu = nullptr;
+    QMenu* m_pViewMenu = nullptr;
+    QToolBar* m_pMainBar = nullptr;
+    QAction *m_pNewAct, *m_pOpenAct, *m_pSaveAct, *m_pSaveAsAct, *m_pAddAtlasAct, *m_pReloadAtlasAct, *m_pQuitAct;
+    QAction *m_pUndoAct, *m_pRedoAct;
+    QAction* m_pShowSkinAct = nullptr;   // View > Show Skin (AnimViewport::setShowSkin)
+    QAction *m_pObjectModeAct = nullptr, *m_pBoneModeAct = nullptr, *m_pLatticeModeAct = nullptr;   // AnimViewport::EditMode
+    QAction* m_pWeightModeAct = nullptr;
     // Weights mode: the brush ([ ] size; the tool bar's Brush / Strength), and back to automatic weights.
-    QAction *m_brushSmallerAct = nullptr, *m_brushLargerAct = nullptr, *m_autoWeightsAct = nullptr;
-    QList<QAction*> m_brushBarActions;   // the tool bar's brush controls: shown in Weights mode only
-    void resetWeights();
-    QAction *m_cutAct = nullptr, *m_copyAct = nullptr, *m_pasteAct = nullptr, *m_pasteSiblingAct = nullptr;   // nodes
-    void copyNode(bool cut);
-    void pasteNode(bool sibling);
-    QAction *m_addChildAct, *m_addSiblingAct, *m_addSpriteAct, *m_dupAct, *m_deleteAct, *m_renameAct, *m_upAct, *m_downAct;
-    QAction *m_moveAct, *m_rotateAct, *m_scaleAct, *m_autoKeyAct, *m_snapAct;
-    QAction *m_insertKeyAct, *m_qualifyAct, *m_fitAct, *m_zoomInAct, *m_zoomOutAct, *m_frameAct;
-    QAction *m_helpCliAct, *m_aboutAct;
+    QAction *m_pBrushSmallerAct = nullptr, *m_pBrushLargerAct = nullptr, *m_pAutoWeightsAct = nullptr;
+    QList<QAction*> m_oBrushBarActions;   // the tool bar's brush controls: shown in Weights mode only
+    void f_ResetWeights();
+    QAction *m_pCutAct = nullptr, *m_pCopyAct = nullptr, *m_pPasteAct = nullptr, *m_pPasteSiblingAct = nullptr;   // nodes
+    void f_CopyNode(bool l_bCut);
+    void f_PasteNode(bool l_bSibling);
+    QAction *m_pAddChildAct, *m_pAddSiblingAct, *m_pAddSpriteAct, *m_pDupAct, *m_pDeleteAct, *m_pRenameAct, *m_pUpAct, *m_pDownAct;
+    QAction *m_pMoveAct, *m_pRotateAct, *m_pScaleAct, *m_pAutoKeyAct, *m_pSnapAct;
+    QAction *m_pInsertKeyAct, *m_pQualifyAct, *m_pFitAct, *m_pZoomInAct, *m_pZoomOutAct, *m_pFrameAct;
+    QAction *m_pHelpCliAct, *m_pAboutAct;
     // Help > Skinning Tutorial (docs/engine/17_SKINNING_TUTORIAL.md) and its example files (docs/examples/tutorial/).
-    QAction *m_tutorialAct = nullptr, *m_tutorialStartAct = nullptr, *m_tutorialDoneAct = nullptr;
+    QAction *m_pTutorialAct = nullptr, *m_pTutorialStartAct = nullptr, *m_pTutorialDoneAct = nullptr;
 };

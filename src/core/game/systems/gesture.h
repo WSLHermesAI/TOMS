@@ -18,36 +18,36 @@ namespace toms {
 
 // The named shapes: "pentagram" (a star in one stroke), "triangle", "square", "circle" (8 points), "line" (left to
 // right). Unknown: empty. The corners are in [0, 1] x [0, 1], in drawing order.
-std::vector<glm::vec2> shapeCorners(const std::string& name);
-bool shapeClosed(const std::string& name);   // it ends where it began (its last corner is its first again)
+std::vector<glm::vec2> f_ShapeCorners(const std::string& l_strName);
+bool f_ShapeClosed(const std::string& l_strName);   // it ends where it began (its last corner is its first again)
 
 // The point a fraction `t` (0..1) along the shape's outline, the shape placed in a square of `size` centred at `centre`.
-glm::vec2 shapePoint(const std::string& name, glm::vec2 centre, float size, float t);
+glm::vec2 f_ShapePoint(const std::string& l_strName, glm::vec2 l_v2Centre, float l_fSize, float l_fT);
 
 // A shape on the screen, traced corner by corner.
 class ShapeTrace {
 public:
-    void start(const std::string& shape, glm::vec2 centre, float size, float cornerRadius);
+    void f_Start(const std::string& l_strShape, glm::vec2 l_v2Centre, float l_fSize, float l_fCornerRadius);
     // The pointer (0 down, 1 held, 2 up). Returns how many steps it made with this move (0 or more). The first corner
     // only starts the trace; each next corner reached in order is a step (a pentagram: 5 steps, back at its top).
-    int pointer(int phase, float x, float y);
-    int reached() const { return reached_; }                      // corners reached, the first one too
-    int steps() const { return std::max(0, reached_ - 1); }
-    int stepCount() const { return std::max(0, (int)pts_.size() - 1); }
-    bool done() const { return !pts_.empty() && reached_ >= (int)pts_.size(); }
-    const std::vector<glm::vec2>& points() const { return pts_; }   // on the screen
-    glm::vec2 last() const { return last_; }
-    bool drawing() const { return down_; }
+    int f_Pointer(int l_iPhase, float l_fX, float l_fY);
+    int f_Reached() const { return m_iReached; }                      // corners reached, the first one too
+    int f_Steps() const { return std::max(0, m_iReached - 1); }
+    int f_StepCount() const { return std::max(0, (int)m_vPts.size() - 1); }
+    bool f_Done() const { return !m_vPts.empty() && m_iReached >= (int)m_vPts.size(); }
+    const std::vector<glm::vec2>& f_Points() const { return m_vPts; }   // on the screen
+    glm::vec2 f_Last() const { return m_v2Last; }
+    bool f_Drawing() const { return m_bDown; }
 private:
-    std::vector<glm::vec2> pts_;
-    float radius_ = 40.0f;
-    int reached_ = 0;
-    bool down_ = false;
-    glm::vec2 last_{0.0f};
+    std::vector<glm::vec2> m_vPts;
+    float m_fRadius = 40.0f;
+    int m_iReached = 0;
+    bool m_bDown = false;
+    glm::vec2 m_v2Last{0.0f};
 };
 
 // A free stroke (the finger's points, in order) against a shape: true when, scaled to its own box, it passes near
 // each corner in order (a closed shape: from any corner, either way round). tolerance: as a share of the box.
-bool matchStroke(const std::vector<glm::vec2>& stroke, const std::string& shape, float tolerance = 0.2f);
+bool f_MatchStroke(const std::vector<glm::vec2>& l_vStroke, const std::string& l_strShape, float l_fTolerance = 0.2f);
 
 } // namespace toms

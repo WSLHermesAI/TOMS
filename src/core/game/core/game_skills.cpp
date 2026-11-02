@@ -13,410 +13,410 @@ using namespace toms::game_detail;
 
 // ---- each weapon's own play ----
 
-toms::PlayKind Game::battlePlayKind() const {
-    if (!playOverride_.empty() && playOverride_ != "weapon") return toms::playKindFromString(playOverride_);
-    return toms::playKindFromString(weaponPlayOf(weaponKey()).play);
+toms::PlayKind Game::f_BattlePlayKind() const {
+    if (!m_strPlayOverride.empty() && m_strPlayOverride != "weapon") return toms::f_PlayKindFromString(m_strPlayOverride);
+    return toms::f_PlayKindFromString(f_WeaponPlayOf(f_WeaponKey()).m_strPlay);
 }
 
-glm::vec4 Game::touchArea() const {
-    const glm::vec4 b = fighterBox(std::clamp(cs.target, 0, std::max(0, (int)cs.foes.size() - 1)));
+glm::vec4 Game::f_TouchArea() const {
+    const glm::vec4 l_v4B = f_FighterBox(std::clamp(m_oCs.m_iTarget, 0, std::max(0, (int)m_oCs.m_vFoes.size() - 1)));
     // the bow's targets on the monster; the circles from it down into the free space under the fighters; the
     // sword's prompts in that space (TouchPlay::promptAt), clear of the monster
-    glm::vec4 a = battlePlayKind() == toms::PlayKind::Bow && !cs.skill.on ? glm::vec4(b.x - 30.0f, b.y - 20.0f, b.z + 60.0f, b.w + 40.0f)
-                                                                            : glm::vec4(b.x - 120.0f, b.y - 10.0f, b.z + 240.0f, b.w + 210.0f);
+    glm::vec4 l_v4A = f_BattlePlayKind() == toms::PlayKind::Bow && !m_oCs.m_oSkill.m_bOn ? glm::vec4(l_v4B.x - 30.0f, l_v4B.y - 20.0f, l_v4B.z + 60.0f, l_v4B.w + 40.0f)
+                                                                            : glm::vec4(l_v4B.x - 120.0f, l_v4B.y - 10.0f, l_v4B.z + 240.0f, l_v4B.w + 210.0f);
     // On the screen, where a finger can reach it: a monster at the edge (the third of three) would push it past the
     // side; the bottom keeps clear of the GUARD / attack panels and the ultimate's row. Moved in, not shrunk, so the
     // circles keep their room.
-    const float w = ren ? (float)ren->width() : 1024.0f, h = ren ? (float)ren->height() : 768.0f;
-    const float margin = 12.0f, top = 60.0f, bottom = h - 290.0f;
-    a.z = std::min(a.z, w - 2.0f * margin);
-    a.w = std::min(a.w, std::max(40.0f, bottom - top));
-    a.x = std::clamp(a.x, margin, std::max(margin, w - margin - a.z));
-    a.y = std::clamp(a.y, top, std::max(top, bottom - a.w));
-    return a;
+    const float l_fW = m_pRen ? (float)m_pRen->f_Width() : 1024.0f, l_fH = m_pRen ? (float)m_pRen->f_Height() : 768.0f;
+    const float l_fMargin = 12.0f, l_fTop = 60.0f, l_fBottom = l_fH - 290.0f;
+    l_v4A.z = std::min(l_v4A.z, l_fW - 2.0f * l_fMargin);
+    l_v4A.w = std::min(l_v4A.w, std::max(40.0f, l_fBottom - l_fTop));
+    l_v4A.x = std::clamp(l_v4A.x, l_fMargin, std::max(l_fMargin, l_fW - l_fMargin - l_v4A.z));
+    l_v4A.y = std::clamp(l_v4A.y, l_fTop, std::max(l_fTop, l_fBottom - l_v4A.w));
+    return l_v4A;
 }
 
-toms::TouchPlaySettings Game::touchSettingsFor(toms::PlayKind kind) const {
-    toms::TouchPlaySettings s = touchSettings_;
-    if (kind == toms::PlayKind::Bow) {   // STR holds the pull longer, DEX keeps the aim still (16 §3.2)
-        s.bowHoldMs += std::max(0, attrValue("str")) * s.bowHoldPerStr;
-        s.bowShakePx /= 1.0f + (float)std::max(0, attrValue("dex")) * s.bowShakePerDex;
+toms::TouchPlaySettings Game::f_TouchSettingsFor(toms::PlayKind l_eKind) const {
+    toms::TouchPlaySettings l_oS = m_oTouchSettings;
+    if (l_eKind == toms::PlayKind::Bow) {   // STR holds the pull longer, DEX keeps the aim still (16 §3.2)
+        l_oS.m_iBowHoldMs += std::max(0, f_AttrValue("str")) * l_oS.m_iBowHoldPerStr;
+        l_oS.m_fBowShakePx /= 1.0f + (float)std::max(0, f_AttrValue("dex")) * l_oS.m_fBowShakePerDex;
     }
-    return s;
+    return l_oS;
 }
 
-void Game::armTouchPlay(bool ultimate, int points) {
-    const toms::PlayKind kind = battlePlayKind();
-    if (kind == toms::PlayKind::Bow && !ultimate) points = 1;   // a normal attack is one arrow (16 §3.2)
-    toms::TouchPlaySettings s = touchSettingsFor(kind);
-    if (kind == toms::PlayKind::Slice) {   // the level's shape prompts take the last places (16 §3.1)
-        const std::string key = weaponKey();
-        const std::vector<std::string> shapes = weaponPlayOf(key).shapeCuesAt(weaponLevel(key));
-        s.sliceCues.assign((size_t)points, "way");
-        for (size_t k = 0; k < shapes.size() && k < s.sliceCues.size(); k++) s.sliceCues[s.sliceCues.size() - shapes.size() + k] = shapes[k];
+void Game::f_ArmTouchPlay(bool l_bUltimate, int l_iPoints) {
+    const toms::PlayKind l_eKind = f_BattlePlayKind();
+    if (l_eKind == toms::PlayKind::Bow && !l_bUltimate) l_iPoints = 1;   // a normal attack is one arrow (16 §3.2)
+    toms::TouchPlaySettings l_oS = f_TouchSettingsFor(l_eKind);
+    if (l_eKind == toms::PlayKind::Slice) {   // the level's shape prompts take the last places (16 §3.1)
+        const std::string l_strKey = f_WeaponKey();
+        const std::vector<std::string> l_vShapes = f_WeaponPlayOf(l_strKey).f_ShapeCuesAt(f_WeaponLevel(l_strKey));
+        l_oS.m_vSliceCues.assign((size_t)l_iPoints, "way");
+        for (size_t l_nK = 0; l_nK < l_vShapes.size() && l_nK < l_oS.m_vSliceCues.size(); l_nK++) l_oS.m_vSliceCues[l_oS.m_vSliceCues.size() - l_vShapes.size() + l_nK] = l_vShapes[l_nK];
     }
-    touchArmedArea_ = touchArea();
-    cs.touch.start(kind, points, ultimate, touchArmedArea_, (uint32_t)playRng_(), s);   // new places and order each attack
-    cs.playDealt = 0;
-    cs.touchPaid = ultimate;   // the ultimate costs no stamina and runs at once with a full charge
-    cs.touchCharge = ultimate ? 1.0f : 0.0f;
-    if (!ultimate && cs.touch.started()) {   // the sword and the staff start by themselves: the attack starts now
-        cs.touchPaid = true;
-        cs.touchCharge = comboCharge();
-        if (cs.pace == toms::Pace::Stamina) cs.stamina = std::max(0.0f, cs.stamina - (float)paceSettings_.attackCost);
+    m_v4TouchArmedArea = f_TouchArea();
+    m_oCs.m_oTouch.f_Start(l_eKind, l_iPoints, l_bUltimate, m_v4TouchArmedArea, (uint32_t)m_oPlayRng(), l_oS);   // new places and order each attack
+    m_oCs.m_iPlayDealt = 0;
+    m_oCs.m_bTouchPaid = l_bUltimate;   // the ultimate costs no stamina and runs at once with a full charge
+    m_oCs.m_fTouchCharge = l_bUltimate ? 1.0f : 0.0f;
+    if (!l_bUltimate && m_oCs.m_oTouch.f_Started()) {   // the sword and the staff start by themselves: the attack starts now
+        m_oCs.m_bTouchPaid = true;
+        m_oCs.m_fTouchCharge = f_ComboCharge();
+        if (m_oCs.m_ePace == toms::Pace::Stamina) m_oCs.m_fStamina = std::max(0.0f, m_oCs.m_fStamina - (float)m_oPaceSettings.m_iAttackCost);
     }
-    touchHeld_ = false;
+    m_bTouchHeld = false;
 }
 
-void Game::battlePointer(int phase, float x, float y) {
-    if (!cs.active || cs.winPending || !cs.touch.running()) { touchHeld_ = false; return; }
-    if (cs.skill.on && cs.skill.phase != CombatState::SkillRun::Phase::Play) return;   // a move's show: watch it
-    if (phase == 0 && !cs.touch.started() && cs.pace == toms::Pace::Stamina && cs.stamina < (float)paceSettings_.attackCost) {
-        cs.log = locale_.tr("battle.no_stamina");   // the stamina pace: starting an attack costs it (13 §6.3)
-        audio.play("deny");
+void Game::f_BattlePointer(int l_iPhase, float l_fX, float l_fY) {
+    if (!m_oCs.m_bActive || m_oCs.m_bWinPending || !m_oCs.m_oTouch.f_Running()) { m_bTouchHeld = false; return; }
+    if (m_oCs.m_oSkill.m_bOn && m_oCs.m_oSkill.m_ePhase != CombatState::SkillRun::Phase::Play) return;   // a move's show: watch it
+    if (l_iPhase == 0 && !m_oCs.m_oTouch.f_Started() && m_oCs.m_ePace == toms::Pace::Stamina && m_oCs.m_fStamina < (float)m_oPaceSettings.m_iAttackCost) {
+        m_oCs.m_strLog = m_oLocale.f_Tr("battle.no_stamina");   // the stamina pace: starting an attack costs it (13 §6.3)
+        m_oAudio.f_Play("deny");
         return;
     }
-    if (phase == 0) touchHeld_ = true;
-    else if (!touchHeld_) return;   // a press that began on a button, or before the play
-    if (phase == 2) touchHeld_ = false;
-    const int index = cs.touch.index(), hits = cs.touch.result().hits;
-    const bool wasStarted = cs.touch.started();
-    cs.touch.pointer(phase, x, y);
-    if (cs.touch.started() && !wasStarted && !cs.touchPaid) {   // the bow's first pull: the attack starts (07 §4)
-        cs.touchPaid = true;
-        cs.touchCharge = comboCharge();
-        if (cs.pace == toms::Pace::Stamina) cs.stamina = std::max(0.0f, cs.stamina - (float)paceSettings_.attackCost);
+    if (l_iPhase == 0) m_bTouchHeld = true;
+    else if (!m_bTouchHeld) return;   // a press that began on a button, or before the play
+    if (l_iPhase == 2) m_bTouchHeld = false;
+    const int l_iIndex = m_oCs.m_oTouch.f_Index(), l_iHits = m_oCs.m_oTouch.f_Result().m_iHits;
+    const bool l_bWasStarted = m_oCs.m_oTouch.f_Started();
+    m_oCs.m_oTouch.f_Pointer(l_iPhase, l_fX, l_fY);
+    if (m_oCs.m_oTouch.f_Started() && !l_bWasStarted && !m_oCs.m_bTouchPaid) {   // the bow's first pull: the attack starts (07 §4)
+        m_oCs.m_bTouchPaid = true;
+        m_oCs.m_fTouchCharge = f_ComboCharge();
+        if (m_oCs.m_ePace == toms::Pace::Stamina) m_oCs.m_fStamina = std::max(0.0f, m_oCs.m_fStamina - (float)m_oPaceSettings.m_iAttackCost);
     }
-    touchPlayed(index, hits);
+    f_TouchPlayed(l_iIndex, l_iHits);
 }
 
-void Game::stepTouchPlay(int dtMs) {
-    const int index = cs.touch.index(), hits = cs.touch.result().hits;
-    cs.touch.update(dtMs);
-    touchPlayed(index, hits);
+void Game::f_StepTouchPlay(int l_iDtMs) {
+    const int l_iIndex = m_oCs.m_oTouch.f_Index(), l_iHits = m_oCs.m_oTouch.f_Result().m_iHits;
+    m_oCs.m_oTouch.f_Update(l_iDtMs);
+    f_TouchPlayed(l_iIndex, l_iHits);
 }
 
-void Game::touchPlayed(int indexBefore, int hitsBefore) {
-    const toms::PlayKind kind = cs.touch.kind();
-    const bool skillPlay = cs.skill.on && cs.skill.phase == CombatState::SkillRun::Phase::Play;
-    for (const toms::TouchPlay::Hit& h : cs.touch.takeHits()) {
-        if (skillPlay) {   // a move's step: its burst, "2/5", the next part of its name (the skill's "step" show)
-            if (!h.ok) { audio.play("deny"); continue; }
-            cs.skill.steps++;
-            for (const toms::ShowBeat& b : cs.skill.def->step) skillBeat(b, {h.x, h.y});
-            audio.play("confirm_click");
-        } else if (kind == toms::PlayKind::Slice || kind == toms::PlayKind::Circles) {
-            playHit(h);   // each cut, each spell hits at once (16 §3.1, §3.3)
+void Game::f_TouchPlayed(int l_iIndexBefore, int l_iHitsBefore) {
+    const toms::PlayKind l_eKind = m_oCs.m_oTouch.f_Kind();
+    const bool l_bSkillPlay = m_oCs.m_oSkill.m_bOn && m_oCs.m_oSkill.m_ePhase == CombatState::SkillRun::Phase::Play;
+    for (const toms::TouchPlay::Hit& l_oH : m_oCs.m_oTouch.f_TakeHits()) {
+        if (l_bSkillPlay) {   // a move's step: its burst, "2/5", the next part of its name (the skill's "step" show)
+            if (!l_oH.m_bOk) { m_oAudio.f_Play("deny"); continue; }
+            m_oCs.m_oSkill.m_iSteps++;
+            for (const toms::ShowBeat& l_oB : m_oCs.m_oSkill.m_pDef->m_vStep) f_SkillBeat(l_oB, {l_oH.m_fX, l_oH.m_fY});
+            m_oAudio.f_Play("confirm_click");
+        } else if (l_eKind == toms::PlayKind::Slice || l_eKind == toms::PlayKind::Circles) {
+            f_PlayHit(l_oH);   // each cut, each spell hits at once (16 §3.1, §3.3)
         }
     }
-    if (!skillPlay && kind != toms::PlayKind::Slice && kind != toms::PlayKind::Circles && cs.touch.index() > indexBefore)
-        audio.play(cs.touch.result().hits > hitsBefore ? "confirm_click" : "deny");
-    if (kind == toms::PlayKind::Bow && cs.touch.index() > indexBefore && !settings_.bowTutorialDone) {
-        settings_.bowTutorialDone = true;   // the first shot: the tutorial has done its job
-        toms::ensureSaveDir(toms::defaultSaveDir());
-        toms::saveGameSettings(toms::settingsPath(), settings_);
+    if (!l_bSkillPlay && l_eKind != toms::PlayKind::Slice && l_eKind != toms::PlayKind::Circles && m_oCs.m_oTouch.f_Index() > l_iIndexBefore)
+        m_oAudio.f_Play(m_oCs.m_oTouch.f_Result().m_iHits > l_iHitsBefore ? "confirm_click" : "deny");
+    if (l_eKind == toms::PlayKind::Bow && m_oCs.m_oTouch.f_Index() > l_iIndexBefore && !m_oSettings.m_bBowTutorialDone) {
+        m_oSettings.m_bBowTutorialDone = true;   // the first shot: the tutorial has done its job
+        toms::f_EnsureSaveDir(toms::f_DefaultSaveDir());
+        toms::f_SaveGameSettings(toms::f_SettingsPath(), m_oSettings);
     }
-    if (cs.skill.on) return;   // a move's play ends in updateSkill
-    if (!cs.touchPaid) return;
-    const bool targetFell = cs.target < (int)cs.foes.size() && cs.foes[(size_t)cs.target].down();
-    if (!cs.touch.done() && !targetFell) return;
-    cs.touchPaid = false;   // resolved once (the done play stays, its marks fading, until the next is armed)
-    cs.touch.stop();
-    toms::ComboResult r = cs.touch.result();
-    r.charge = kind == toms::PlayKind::Bow ? cs.touch.shotCharge() : cs.touchCharge;   // the bow: its pull's charge
-    resolveCombo(&r);
+    if (m_oCs.m_oSkill.m_bOn) return;   // a move's play ends in updateSkill
+    if (!m_oCs.m_bTouchPaid) return;
+    const bool l_bTargetFell = m_oCs.m_iTarget < (int)m_oCs.m_vFoes.size() && m_oCs.m_vFoes[(size_t)m_oCs.m_iTarget].f_Down();
+    if (!m_oCs.m_oTouch.f_Done() && !l_bTargetFell) return;
+    m_oCs.m_bTouchPaid = false;   // resolved once (the done play stays, its marks fading, until the next is armed)
+    m_oCs.m_oTouch.f_Stop();
+    toms::ComboResult l_oR = m_oCs.m_oTouch.f_Result();
+    l_oR.m_fCharge = l_eKind == toms::PlayKind::Bow ? m_oCs.m_oTouch.f_ShotCharge() : m_oCs.m_fTouchCharge;   // the bow: its pull's charge
+    f_ResolveCombo(&l_oR);
 }
 
-int Game::normalHitDamage(int foe) const {
-    const CombatState::Foe& f = cs.foes[(size_t)std::clamp(foe, 0, (int)cs.foes.size() - 1)];
-    const int baseHit = std::max(1, effectiveAtk() - (int)std::lround(f.enemy.def * f.defMul));
-    return toms::computeAttackDamage(baseHit, 100.0f, toms::effectiveMaxMult(equipped_, equipmentDefs_));
+int Game::f_NormalHitDamage(int l_iFoe) const {
+    const CombatState::Foe& l_oF = m_oCs.m_vFoes[(size_t)std::clamp(l_iFoe, 0, (int)m_oCs.m_vFoes.size() - 1)];
+    const int l_iBaseHit = std::max(1, f_EffectiveAtk() - (int)std::lround(l_oF.m_oEnemy.m_iDef * l_oF.m_fDefMul));
+    return toms::f_ComputeAttackDamage(l_iBaseHit, 100.0f, toms::f_EffectiveMaxMult(m_oEquipped, m_mapEquipmentDefs));
 }
 
-void Game::playHit(const toms::TouchPlay::Hit& h) {
-    if (!h.ok) { audio.play("deny"); return; }
-    const int t = cs.target;
-    if (t < 0 || t >= (int)cs.foes.size() || cs.foes[(size_t)t].down()) return;
+void Game::f_PlayHit(const toms::TouchPlay::Hit& l_oH) {
+    if (!l_oH.m_bOk) { m_oAudio.f_Play("deny"); return; }
+    const int l_iT = m_oCs.m_iTarget;
+    if (l_iT < 0 || l_iT >= (int)m_oCs.m_vFoes.size() || m_oCs.m_vFoes[(size_t)l_iT].f_Down()) return;
     // half a normal hit shared over the answers; the play's end deals the rest of the attack (resolveCombo)
-    const CombatState::Foe& f = cs.foes[(size_t)t];
-    int dmg = (int)std::lround((float)normalHitDamage(t) * 0.5f / (float)std::max(1, cs.touch.points()) *
-                               (h.perfect ? 1.3f : 1.0f) * f.staggerDamage);
-    dmg = std::max(1, dmg);
-    cs.playDealt += dmg;
-    battleEvent("hit", -1, t, dmg, "answer");
-    if (const toms::WeaponFx* fx = battleWeaponFx()) {
-        if (cs.touch.kind() == toms::PlayKind::Circles) playBattleFxAt(fx->release, h.x, h.y, true);   // the spell leaves the circle
-        playBattleFx(fx->hit, t);
+    const CombatState::Foe& l_oF = m_oCs.m_vFoes[(size_t)l_iT];
+    int l_iDmg = (int)std::lround((float)f_NormalHitDamage(l_iT) * 0.5f / (float)std::max(1, m_oCs.m_oTouch.f_Points()) *
+                               (l_oH.m_bPerfect ? 1.3f : 1.0f) * l_oF.m_fStaggerDamage);
+    l_iDmg = std::max(1, l_iDmg);
+    m_oCs.m_iPlayDealt += l_iDmg;
+    f_BattleEvent("hit", -1, l_iT, l_iDmg, "answer");
+    if (const toms::WeaponFx* l_pFx = f_BattleWeaponFx()) {
+        if (m_oCs.m_oTouch.f_Kind() == toms::PlayKind::Circles) f_PlayBattleFxAt(l_pFx->m_strRelease, l_oH.m_fX, l_oH.m_fY, true);   // the spell leaves the circle
+        f_PlayBattleFx(l_pFx->m_strHit, l_iT);
     }
-    audio.play("confirm_click");
-    feelMoment(h.perfect ? "great" : "hit");
-    popDamage(dmg, t, h.perfect ? "great" : "hit");
-    damageFoe(t, dmg);
+    m_oAudio.f_Play("confirm_click");
+    f_FeelMoment(l_oH.m_bPerfect ? "great" : "hit");
+    f_PopDamage(l_iDmg, l_iT, l_oH.m_bPerfect ? "great" : "hit");
+    f_DamageFoe(l_iT, l_iDmg);
 }
 
-void Game::stopOwnAttack() {
-    if (!attackRunning()) return;
-    cs.combo = toms::ComboPlay{};
-    cs.touch.stop();
-    cs.touchPaid = false;
-    cs.playDealt = 0;
-    cs.chargeMs = 0;
-    if (cs.pace == toms::Pace::Cooldown) { cs.atkBar.cooling = true; cs.atkBar.cooldownMs = barCooldownMs(); }
-    battleEvent("interrupt", -1, -1, 0, "guard");
+void Game::f_StopOwnAttack() {
+    if (!f_AttackRunning()) return;
+    m_oCs.m_oCombo = toms::ComboPlay{};
+    m_oCs.m_oTouch.f_Stop();
+    m_oCs.m_bTouchPaid = false;
+    m_oCs.m_iPlayDealt = 0;
+    m_oCs.m_iChargeMs = 0;
+    if (m_oCs.m_ePace == toms::Pace::Cooldown) { m_oCs.m_oAtkBar.m_bCooling = true; m_oCs.m_oAtkBar.m_iCooldownMs = f_BarCooldownMs(); }
+    f_BattleEvent("interrupt", -1, -1, 0, "guard");
 }
 
 // ---- the monsters' rhythm and the "!" (16 §4) ----
 
-int Game::moveWarnMs(const toms::MoveDef& m) const { return m.warnMs >= 0 ? m.warnMs : guard_.warnMs; }
+int Game::f_MoveWarnMs(const toms::MoveDef& l_oM) const { return l_oM.m_iWarnMs >= 0 ? l_oM.m_iWarnMs : m_oGuard.m_iWarnMs; }
 
-bool Game::foeWarning(int foe) const {
-    if (foe < 0 || foe >= (int)cs.foes.size()) return false;
-    const CombatState::Foe& f = cs.foes[(size_t)foe];
-    if (!cs.active || f.down() || f.staggerMs > 0) return false;
-    const toms::MoveDef& m = moves_.get(f.move);
-    if (m.kind == toms::MoveKind::Guard) return false;
-    const int warn = moveWarnMs(m);
-    if (f.volleyHit > 0) return f.volleyMs <= warn;
-    return f.moveMs - f.clockMs <= warn;
+bool Game::f_FoeWarning(int l_iFoe) const {
+    if (l_iFoe < 0 || l_iFoe >= (int)m_oCs.m_vFoes.size()) return false;
+    const CombatState::Foe& l_oF = m_oCs.m_vFoes[(size_t)l_iFoe];
+    if (!m_oCs.m_bActive || l_oF.f_Down() || l_oF.m_iStaggerMs > 0) return false;
+    const toms::MoveDef& l_oM = m_oMoves.f_Get(l_oF.m_strMove);
+    if (l_oM.m_eKind == toms::MoveKind::Guard) return false;
+    const int l_iWarn = f_MoveWarnMs(l_oM);
+    if (l_oF.m_iVolleyHit > 0) return l_oF.m_iVolleyMs <= l_iWarn;
+    return l_oF.m_iMoveMs - l_oF.m_iClockMs <= l_iWarn;
 }
 
 // ---- skills (16 §6; special_moves.json) ----
 
-glm::vec2 Game::skillCentre() const {
-    const glm::vec4 p = playerBox_, f = fighterBox(std::clamp(cs.target, 0, std::max(0, (int)cs.foes.size() - 1)));
-    return {(p.x + p.z * 0.5f + f.x + f.z * 0.5f) * 0.5f, std::max(p.y + p.w, f.y + f.w) - 10.0f};
+glm::vec2 Game::f_SkillCentre() const {
+    const glm::vec4 l_v4P = m_v4PlayerBox, l_v4F = f_FighterBox(std::clamp(m_oCs.m_iTarget, 0, std::max(0, (int)m_oCs.m_vFoes.size() - 1)));
+    return {(l_v4P.x + l_v4P.z * 0.5f + l_v4F.x + l_v4F.z * 0.5f) * 0.5f, std::max(l_v4P.y + l_v4P.w, l_v4F.y + l_v4F.w) - 10.0f};
 }
 
-std::string Game::skillName() const {
-    if (!cs.skill.def) return std::string();
-    const std::string& k = cs.skill.def->name;
-    return locale_.has(k) ? locale_.tr(k) : k;
+std::string Game::f_SkillName() const {
+    if (!m_oCs.m_oSkill.m_pDef) return std::string();
+    const std::string& l_strK = m_oCs.m_oSkill.m_pDef->m_strName;
+    return m_oLocale.f_Has(l_strK) ? m_oLocale.f_Tr(l_strK) : l_strK;
 }
 
-void Game::startSkill(const toms::SpecialMove& def, int owner) {
-    stopOwnAttack();
-    cs.skill = CombatState::SkillRun{};
-    cs.skill.on = true;
-    cs.skill.def = &def;
-    cs.skill.owner = owner;
-    battleEvent("skill", owner, cs.target, 0, def.id);
-    for (const toms::ShowBeat* b : toms::beatsDue(def.demo, -1, 0)) skillBeat(*b, skillCentre());
+void Game::f_StartSkill(const toms::SpecialMove& l_oDef, int l_iOwner) {
+    f_StopOwnAttack();
+    m_oCs.m_oSkill = CombatState::SkillRun{};
+    m_oCs.m_oSkill.m_bOn = true;
+    m_oCs.m_oSkill.m_pDef = &l_oDef;
+    m_oCs.m_oSkill.m_iOwner = l_iOwner;
+    f_BattleEvent("skill", l_iOwner, m_oCs.m_iTarget, 0, l_oDef.m_strId);
+    for (const toms::ShowBeat* l_pB : toms::f_BeatsDue(l_oDef.m_vDemo, -1, 0)) f_SkillBeat(*l_pB, f_SkillCentre());
 }
 
-void Game::skillBeat(const toms::ShowBeat& b, glm::vec2 at) {
+void Game::f_SkillBeat(const toms::ShowBeat& l_oB, glm::vec2 l_v2At) {
     using P = CombatState::SkillRun::Phase;
-    const toms::SpecialMove& d = *cs.skill.def;
-    const int t = cs.skill.owner >= 0 ? cs.skill.owner : cs.target;
-    if (b.what == "pathFx") {   // particles along the shape in its drawing order, a bigger burst at each corner
-        const std::string shape = b.shape.empty() ? d.play.shape : b.shape;
-        const glm::vec2 c = skillCentre();
-        const int n = std::max(8, b.ms / 60);
-        for (int k = 0; k < n; k++) {
-            const float f = (float)k / (float)(n - 1);
-            const glm::vec2 p = toms::shapePoint(shape, c, d.play.size, f);
-            playBattleFxAt(b.fx, p.x, p.y, true, (int)std::lround(f * (float)b.ms));
+    const toms::SpecialMove& l_oD = *m_oCs.m_oSkill.m_pDef;
+    const int l_iT = m_oCs.m_oSkill.m_iOwner >= 0 ? m_oCs.m_oSkill.m_iOwner : m_oCs.m_iTarget;
+    if (l_oB.m_strWhat == "pathFx") {   // particles along the shape in its drawing order, a bigger burst at each corner
+        const std::string l_strShape = l_oB.m_strShape.empty() ? l_oD.m_oPlay.m_strShape : l_oB.m_strShape;
+        const glm::vec2 l_v2C = f_SkillCentre();
+        const int l_iN = std::max(8, l_oB.m_iMs / 60);
+        for (int l_iK = 0; l_iK < l_iN; l_iK++) {
+            const float l_fF = (float)l_iK / (float)(l_iN - 1);
+            const glm::vec2 l_v2P = toms::f_ShapePoint(l_strShape, l_v2C, l_oD.m_oPlay.m_fSize, l_fF);
+            f_PlayBattleFxAt(l_oB.m_strFx, l_v2P.x, l_v2P.y, true, (int)std::lround(l_fF * (float)l_oB.m_iMs));
         }
-        const std::vector<glm::vec2> corners = toms::shapeCorners(shape);
-        float total = 0.0f, done = 0.0f;
-        for (size_t k = 1; k < corners.size(); k++) total += glm::length(corners[k] - corners[k - 1]);
-        for (size_t k = 1; k < corners.size() && total > 0.0f; k++) {
-            done += glm::length(corners[k] - corners[k - 1]);
-            const glm::vec2 p = c + (corners[k] - glm::vec2(0.5f)) * d.play.size;
-            playBattleFxAt(b.corner, p.x, p.y, true, (int)std::lround(done / total * (float)b.ms));
+        const std::vector<glm::vec2> l_vCorners = toms::f_ShapeCorners(l_strShape);
+        float l_fTotal = 0.0f, l_fDone = 0.0f;
+        for (size_t l_nK = 1; l_nK < l_vCorners.size(); l_nK++) l_fTotal += glm::length(l_vCorners[l_nK] - l_vCorners[l_nK - 1]);
+        for (size_t l_nK = 1; l_nK < l_vCorners.size() && l_fTotal > 0.0f; l_nK++) {
+            l_fDone += glm::length(l_vCorners[l_nK] - l_vCorners[l_nK - 1]);
+            const glm::vec2 l_v2P = l_v2C + (l_vCorners[l_nK] - glm::vec2(0.5f)) * l_oD.m_oPlay.m_fSize;
+            f_PlayBattleFxAt(l_oB.m_strCorner, l_v2P.x, l_v2P.y, true, (int)std::lround(l_fDone / l_fTotal * (float)l_oB.m_iMs));
         }
-    } else if (b.what == "fx") {
-        if (b.on == "player") playBattleFx(b.fx, -1);
-        else if (b.on == "monster") playBattleFx(b.fx, t);
-        else playBattleFxAt(b.fx, at.x, at.y, true);
-    } else if (b.what == "dim") {
-        cs.dimMs = settings_.reduceEffects ? 0 : std::max(700, b.ms > 0 ? b.ms : 60000);   // until the move ends (endSkill)
-    } else if (b.what == "banner") {
-        showBanner(locale_.has(b.text) ? locale_.tr(b.text) : b.text, cs.skill.owner >= 0 ? "line" : "ultimate", b.ms > 0 ? b.ms : 1500);
-    } else if (b.what == "name") {
-        showBanner(skillName(), "ultimate", b.ms > 0 ? b.ms : 1400);
-    } else if (b.what == "namePart") {
-        showBanner(toms::namePart(skillName(), cs.skill.steps, d.play.points), "ultimate", b.ms > 0 ? b.ms : 900);
-    } else if (b.what == "count") {
-        popWord(std::to_string(cs.skill.steps) + "/" + std::to_string(d.play.points), -1, "chain");
-    } else if (b.what == "camera") {
-        cs.camZoom = settings_.reduceEffects ? 1.0f + (b.zoom - 1.0f) * 0.4f : b.zoom;
-        cs.camMs = cs.camMsMax = std::max(300, b.ms);
-        cs.camOn = b.on == "monster" ? t : -1;
-    } else if (b.what == "clip") {
-        if (battleRigReady() && cs.skill.owner < 0) {
-            const bool has = playerView_ && !b.clip.empty() && playerView_->f_Has(b.clip);
-            setBattleRigState("attack", true, has ? b.clip : std::string());
+    } else if (l_oB.m_strWhat == "fx") {
+        if (l_oB.m_strOn == "player") f_PlayBattleFx(l_oB.m_strFx, -1);
+        else if (l_oB.m_strOn == "monster") f_PlayBattleFx(l_oB.m_strFx, l_iT);
+        else f_PlayBattleFxAt(l_oB.m_strFx, l_v2At.x, l_v2At.y, true);
+    } else if (l_oB.m_strWhat == "dim") {
+        m_oCs.m_iDimMs = m_oSettings.m_bReduceEffects ? 0 : std::max(700, l_oB.m_iMs > 0 ? l_oB.m_iMs : 60000);   // until the move ends (endSkill)
+    } else if (l_oB.m_strWhat == "banner") {
+        f_ShowBanner(m_oLocale.f_Has(l_oB.m_strText) ? m_oLocale.f_Tr(l_oB.m_strText) : l_oB.m_strText, m_oCs.m_oSkill.m_iOwner >= 0 ? "line" : "ultimate", l_oB.m_iMs > 0 ? l_oB.m_iMs : 1500);
+    } else if (l_oB.m_strWhat == "name") {
+        f_ShowBanner(f_SkillName(), "ultimate", l_oB.m_iMs > 0 ? l_oB.m_iMs : 1400);
+    } else if (l_oB.m_strWhat == "namePart") {
+        f_ShowBanner(toms::f_NamePart(f_SkillName(), m_oCs.m_oSkill.m_iSteps, l_oD.m_oPlay.m_iPoints), "ultimate", l_oB.m_iMs > 0 ? l_oB.m_iMs : 900);
+    } else if (l_oB.m_strWhat == "count") {
+        f_PopWord(std::to_string(m_oCs.m_oSkill.m_iSteps) + "/" + std::to_string(l_oD.m_oPlay.m_iPoints), -1, "chain");
+    } else if (l_oB.m_strWhat == "camera") {
+        m_oCs.m_fCamZoom = m_oSettings.m_bReduceEffects ? 1.0f + (l_oB.m_fZoom - 1.0f) * 0.4f : l_oB.m_fZoom;
+        m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = std::max(300, l_oB.m_iMs);
+        m_oCs.m_iCamOn = l_oB.m_strOn == "monster" ? l_iT : -1;
+    } else if (l_oB.m_strWhat == "clip") {
+        if (f_BattleRigReady() && m_oCs.m_oSkill.m_iOwner < 0) {
+            const bool l_bHas = m_upPlayerView && !l_oB.m_strClip.empty() && m_upPlayerView->f_Has(l_oB.m_strClip);
+            f_SetBattleRigState("attack", true, l_bHas ? l_oB.m_strClip : std::string());
         }
-    } else if (b.what == "hits") {   // the finish's hits share the move's damage (set when the finish began)
-        if (cs.skill.phase == P::Finish && cs.skill.owner < 0 && cs.skill.hitDmg > 0) {
-            const int count = std::max(1, b.count);
-            cs.skill.hitDmg = std::max(1, cs.skill.hitDmg / count);
-            cs.skill.hitsLeft = count;
-            cs.skill.hitGapMs = std::max(30, b.gapMs);
-            cs.skill.hitMs = 0;
+    } else if (l_oB.m_strWhat == "hits") {   // the finish's hits share the move's damage (set when the finish began)
+        if (m_oCs.m_oSkill.m_ePhase == P::Finish && m_oCs.m_oSkill.m_iOwner < 0 && m_oCs.m_oSkill.m_iHitDmg > 0) {
+            const int l_iCount = std::max(1, l_oB.m_iCount);
+            m_oCs.m_oSkill.m_iHitDmg = std::max(1, m_oCs.m_oSkill.m_iHitDmg / l_iCount);
+            m_oCs.m_oSkill.m_iHitsLeft = l_iCount;
+            m_oCs.m_oSkill.m_iHitGapMs = std::max(30, l_oB.m_iGapMs);
+            m_oCs.m_oSkill.m_iHitMs = 0;
         }
-    } else if (b.what == "shake") {
-        if (!settings_.reduceEffects) {
-            cs.shakePx = b.value > 0.0f ? b.value : 8.0f;
-            cs.shakeMs = cs.shakeMsMax = b.ms > 0 ? b.ms : 300;
+    } else if (l_oB.m_strWhat == "shake") {
+        if (!m_oSettings.m_bReduceEffects) {
+            m_oCs.m_fShakePx = l_oB.m_fValue > 0.0f ? l_oB.m_fValue : 8.0f;
+            m_oCs.m_iShakeMs = m_oCs.m_iShakeMsMax = l_oB.m_iMs > 0 ? l_oB.m_iMs : 300;
         }
-    } else if (b.what == "sound") {
-        audio.play(b.fx);
+    } else if (l_oB.m_strWhat == "sound") {
+        m_oAudio.f_Play(l_oB.m_strFx);
     }
 }
 
-void Game::updateSkill(int dtMs) {
+void Game::f_UpdateSkill(int l_iDtMs) {
     using P = CombatState::SkillRun::Phase;
-    CombatState::SkillRun& s = cs.skill;
-    const toms::SpecialMove& d = *s.def;
-    const int before = s.phaseMs;
-    s.phaseMs += dtMs;
-    if (s.phase == P::Demo) {
-        for (const toms::ShowBeat* b : toms::beatsDue(d.demo, before, s.phaseMs)) skillBeat(*b, skillCentre());
-        if (s.phaseMs < toms::showLength(d.demo)) return;
+    CombatState::SkillRun& l_oS = m_oCs.m_oSkill;
+    const toms::SpecialMove& l_oD = *l_oS.m_pDef;
+    const int l_iBefore = l_oS.m_iPhaseMs;
+    l_oS.m_iPhaseMs += l_iDtMs;
+    if (l_oS.m_ePhase == P::Demo) {
+        for (const toms::ShowBeat* l_pB : toms::f_BeatsDue(l_oD.m_vDemo, l_iBefore, l_oS.m_iPhaseMs)) f_SkillBeat(*l_pB, f_SkillCentre());
+        if (l_oS.m_iPhaseMs < toms::f_ShowLength(l_oD.m_vDemo)) return;
         // the play (16 §6.1 step 4): the move's own kind and numbers
-        const toms::PlayKind kind = toms::playKindFromString(d.play.kind);
-        toms::TouchPlaySettings ts = touchSettingsFor(kind);
-        ts.shape = d.play.shape;
-        ts.shapeSize = d.play.size;
-        ts.shapeCornerRadius = d.play.cornerRadius;
-        ts.shapeTimeMs = ts.mashTimeMs = d.play.timeMs;
-        ts.sliceCues = d.play.cues;
-        const glm::vec2 c = skillCentre();
-        const glm::vec4 area = kind == toms::PlayKind::Shape ? glm::vec4(c.x - 100.0f, c.y - 100.0f, 200.0f, 200.0f) : touchArea();
-        cs.touch.start(kind, d.play.points, true, area, (uint32_t)playRng_(), ts);
-        touchHeld_ = false;
-        s.phase = P::Play;
-        s.phaseMs = 0;
+        const toms::PlayKind l_eKind = toms::f_PlayKindFromString(l_oD.m_oPlay.m_strKind);
+        toms::TouchPlaySettings l_oTs = f_TouchSettingsFor(l_eKind);
+        l_oTs.m_strShape = l_oD.m_oPlay.m_strShape;
+        l_oTs.m_fShapeSize = l_oD.m_oPlay.m_fSize;
+        l_oTs.m_fShapeCornerRadius = l_oD.m_oPlay.m_fCornerRadius;
+        l_oTs.m_iShapeTimeMs = l_oTs.m_iMashTimeMs = l_oD.m_oPlay.m_iTimeMs;
+        l_oTs.m_vSliceCues = l_oD.m_oPlay.m_vCues;
+        const glm::vec2 l_v2C = f_SkillCentre();
+        const glm::vec4 l_v4Area = l_eKind == toms::PlayKind::Shape ? glm::vec4(l_v2C.x - 100.0f, l_v2C.y - 100.0f, 200.0f, 200.0f) : f_TouchArea();
+        m_oCs.m_oTouch.f_Start(l_eKind, l_oD.m_oPlay.m_iPoints, true, l_v4Area, (uint32_t)m_oPlayRng(), l_oTs);
+        m_bTouchHeld = false;
+        l_oS.m_ePhase = P::Play;
+        l_oS.m_iPhaseMs = 0;
         return;
     }
-    if (s.phase == P::Play) {
-        stepTouchPlay(dtMs);
-        if (cs.touch.running()) return;
+    if (l_oS.m_ePhase == P::Play) {
+        f_StepTouchPlay(l_iDtMs);
+        if (m_oCs.m_oTouch.f_Running()) return;
         // the play is over: what was done counts (Q45: a share of the hits and the damage)
-        s.share = (float)cs.touch.result().hits / (float)std::max(1, cs.touch.points());
-        s.phase = P::Finish;
-        s.phaseMs = 0;
-        cs.dimMs = 0;
-        if (s.owner < 0) {
-            const int t = cs.target;
-            const float stagger = t < (int)cs.foes.size() ? cs.foes[(size_t)t].staggerDamage : 1.0f;
-            s.hitDmg = (int)std::lround((float)normalHitDamage(t) * d.damage * s.share * stagger);
-            if (s.share <= 0.0f) popWord(locale_.tr("battle.move.default.miss"), -1, "move-miss");
+        l_oS.m_fShare = (float)m_oCs.m_oTouch.f_Result().m_iHits / (float)std::max(1, m_oCs.m_oTouch.f_Points());
+        l_oS.m_ePhase = P::Finish;
+        l_oS.m_iPhaseMs = 0;
+        m_oCs.m_iDimMs = 0;
+        if (l_oS.m_iOwner < 0) {
+            const int l_iT = m_oCs.m_iTarget;
+            const float l_fStagger = l_iT < (int)m_oCs.m_vFoes.size() ? m_oCs.m_vFoes[(size_t)l_iT].m_fStaggerDamage : 1.0f;
+            l_oS.m_iHitDmg = (int)std::lround((float)f_NormalHitDamage(l_iT) * l_oD.m_fDamage * l_oS.m_fShare * l_fStagger);
+            if (l_oS.m_fShare <= 0.0f) f_PopWord(m_oLocale.f_Tr("battle.move.default.miss"), -1, "move-miss");
         }
-        for (const toms::ShowBeat* b : toms::beatsDue(d.finish, -1, 0)) skillBeat(*b, skillCentre());
+        for (const toms::ShowBeat* l_pB : toms::f_BeatsDue(l_oD.m_vFinish, -1, 0)) f_SkillBeat(*l_pB, f_SkillCentre());
         return;
     }
-    for (const toms::ShowBeat* b : toms::beatsDue(d.finish, before, s.phaseMs)) skillBeat(*b, skillCentre());
-    if (s.hitsLeft > 0) {
-        s.hitMs -= dtMs;
-        while (s.hitMs <= 0 && s.hitsLeft > 0 && cs.skill.on) {
-            s.hitsLeft--;
-            s.hitMs += s.hitGapMs;
-            const int t = cs.target;
-            if (t < 0 || t >= (int)cs.foes.size() || cs.foes[(size_t)t].down()) { s.hitsLeft = 0; break; }
-            battleEvent("hit", -1, t, s.hitDmg, "skill");
-            popDamage(s.hitDmg, t, "perfect");
-            feelMoment("hit");
-            if (const toms::WeaponFx* fx = battleWeaponFx(true)) playBattleFx(fx->hit, t);
-            damageFoe(t, s.hitDmg);
-            if (cs.foes[(size_t)t].down()) {   // it fell: the rest of the show is cut short
-                const int dmg = s.hitDmg;
-                endSkill();   // (resets cs.skill, so s with it)
-                afterPlayerHit(std::string(), trParam(locale_.tr("battle.crit_win"), "dmg", std::to_string(dmg)));
+    for (const toms::ShowBeat* l_pB : toms::f_BeatsDue(l_oD.m_vFinish, l_iBefore, l_oS.m_iPhaseMs)) f_SkillBeat(*l_pB, f_SkillCentre());
+    if (l_oS.m_iHitsLeft > 0) {
+        l_oS.m_iHitMs -= l_iDtMs;
+        while (l_oS.m_iHitMs <= 0 && l_oS.m_iHitsLeft > 0 && m_oCs.m_oSkill.m_bOn) {
+            l_oS.m_iHitsLeft--;
+            l_oS.m_iHitMs += l_oS.m_iHitGapMs;
+            const int l_iT = m_oCs.m_iTarget;
+            if (l_iT < 0 || l_iT >= (int)m_oCs.m_vFoes.size() || m_oCs.m_vFoes[(size_t)l_iT].f_Down()) { l_oS.m_iHitsLeft = 0; break; }
+            f_BattleEvent("hit", -1, l_iT, l_oS.m_iHitDmg, "skill");
+            f_PopDamage(l_oS.m_iHitDmg, l_iT, "perfect");
+            f_FeelMoment("hit");
+            if (const toms::WeaponFx* l_pFx = f_BattleWeaponFx(true)) f_PlayBattleFx(l_pFx->m_strHit, l_iT);
+            f_DamageFoe(l_iT, l_oS.m_iHitDmg);
+            if (m_oCs.m_vFoes[(size_t)l_iT].f_Down()) {   // it fell: the rest of the show is cut short
+                const int l_iDmg = l_oS.m_iHitDmg;
+                f_EndSkill();   // (resets cs.skill, so s with it)
+                f_AfterPlayerHit(std::string(), f_TrParam(m_oLocale.f_Tr("battle.crit_win"), "dmg", std::to_string(l_iDmg)));
                 return;
             }
         }
     }
-    if (cs.skill.on && s.phaseMs >= toms::showLength(d.finish) && s.hitsLeft <= 0) endSkill();
+    if (m_oCs.m_oSkill.m_bOn && l_oS.m_iPhaseMs >= toms::f_ShowLength(l_oD.m_vFinish) && l_oS.m_iHitsLeft <= 0) f_EndSkill();
 }
 
-void Game::endSkill() {
-    const CombatState::SkillRun s = cs.skill;
-    cs.skill = CombatState::SkillRun{};
-    cs.dimMs = 0;
-    cs.touch.stop();
-    cs.touchPaid = false;
-    if (!s.def) return;
-    if (s.owner < 0) {   // the player's move: counted like an attack (the grade, the chain), then the cooldown
-        cs.ultimate = false;
-        cs.attacksDone++;
-        if (s.share >= 1.0f) { cs.perfects++; cs.chain = std::min(feel_.chainMax, cs.chain + 1); }
-        else if (s.share <= 0.0f) cs.chain = 0;
-        cs.bestChain = std::max(cs.bestChain, cs.chain);
-        const int t = cs.target;
-        if (cs.active && t < (int)cs.foes.size() && !cs.foes[(size_t)t].down() && cs.foes[(size_t)t].staggerMs <= 0)
-            if (toms::addBreak(cs.foes[(size_t)t].breakGauge, (float)s.steps, foeBreakPoints(t)))
-                stunFoe(t, breakSettings_.brokenMs, breakSettings_.brokenDamage, true);
-        if (cs.active && cs.pace == toms::Pace::Cooldown) { cs.atkBar.cooling = true; cs.atkBar.cooldownMs = barCooldownMs(); }
+void Game::f_EndSkill() {
+    const CombatState::SkillRun l_oS = m_oCs.m_oSkill;
+    m_oCs.m_oSkill = CombatState::SkillRun{};
+    m_oCs.m_iDimMs = 0;
+    m_oCs.m_oTouch.f_Stop();
+    m_oCs.m_bTouchPaid = false;
+    if (!l_oS.m_pDef) return;
+    if (l_oS.m_iOwner < 0) {   // the player's move: counted like an attack (the grade, the chain), then the cooldown
+        m_oCs.m_bUltimate = false;
+        m_oCs.m_iAttacksDone++;
+        if (l_oS.m_fShare >= 1.0f) { m_oCs.m_iPerfects++; m_oCs.m_iChain = std::min(m_oFeel.m_iChainMax, m_oCs.m_iChain + 1); }
+        else if (l_oS.m_fShare <= 0.0f) m_oCs.m_iChain = 0;
+        m_oCs.m_iBestChain = std::max(m_oCs.m_iBestChain, m_oCs.m_iChain);
+        const int l_iT = m_oCs.m_iTarget;
+        if (m_oCs.m_bActive && l_iT < (int)m_oCs.m_vFoes.size() && !m_oCs.m_vFoes[(size_t)l_iT].f_Down() && m_oCs.m_vFoes[(size_t)l_iT].m_iStaggerMs <= 0)
+            if (toms::f_AddBreak(m_oCs.m_vFoes[(size_t)l_iT].m_fBreakGauge, (float)l_oS.m_iSteps, f_FoeBreakPoints(l_iT)))
+                f_StunFoe(l_iT, m_oBreakSettings.m_iBrokenMs, m_oBreakSettings.m_fBrokenDamage, true);
+        if (m_oCs.m_bActive && m_oCs.m_ePace == toms::Pace::Cooldown) { m_oCs.m_oAtkBar.m_bCooling = true; m_oCs.m_oAtkBar.m_iCooldownMs = f_BarCooldownMs(); }
         return;
     }
     // a monster's special guard play: its waiting hit lands now, less by the share done (16 §4.3)
-    if (s.owner < (int)cs.foes.size() && cs.active) {
-        cs.foes[(size_t)s.owner].guardShare = s.share;
-        resolveEnemyClockFire(s.owner);
+    if (l_oS.m_iOwner < (int)m_oCs.m_vFoes.size() && m_oCs.m_bActive) {
+        m_oCs.m_vFoes[(size_t)l_oS.m_iOwner].m_fGuardShare = l_oS.m_fShare;
+        f_ResolveEnemyClockFire(l_oS.m_iOwner);
     }
 }
 
 // ---- the training ground (16 §5) ----
 
 namespace {
-std::string todayString() {
-    const std::time_t now = std::time(nullptr);
-    std::tm tm{};
+std::string f_TodayString() {
+    const std::time_t l_i64Now = std::time(nullptr);
+    std::tm l_oTm{};
 #ifdef _WIN32
-    localtime_s(&tm, &now);
+    localtime_s(&l_oTm, &l_i64Now);
 #else
     localtime_r(&now, &tm);
 #endif
-    char b[16];
-    std::strftime(b, sizeof b, "%Y-%m-%d", &tm);
-    return b;
+    char l_pszB[16];
+    std::strftime(l_pszB, sizeof l_pszB, "%Y-%m-%d", &l_oTm);
+    return l_pszB;
 }
 }  // namespace
 
-int Game::trainingRunsLeft() const {
-    const nlohmann::json tr = battleJson_.value("training", nlohmann::json::object());
-    const int perDay = std::max(0, tr.value("runsPerDay", 3));
-    const int used = meta_.trainDay == todayString() ? meta_.trainRuns : 0;
-    return std::max(0, perDay - used);
+int Game::f_TrainingRunsLeft() const {
+    const nlohmann::json l_jTr = m_jBattleJson.value("training", nlohmann::json::object());
+    const int l_iPerDay = std::max(0, l_jTr.value("runsPerDay", 3));
+    const int l_iUsed = m_oMeta.m_strTrainDay == f_TodayString() ? m_oMeta.m_iTrainRuns : 0;
+    return std::max(0, l_iPerDay - l_iUsed);
 }
 
-bool Game::startTraining(const std::string& monster) {
-    const nlohmann::json tr = battleJson_.value("training", nlohmann::json::object());
-    const int cost = std::max(0, tr.value("cards", 1));
-    auto it = meta_.cards.find(monster);
-    EnemyInst probe;
-    if (it == meta_.cards.end() || it->second.copies < cost || trainingRunsLeft() <= 0 ||
-        !enemyFromData(monster, nlohmann::json::object(), probe)) {
-        audio.play("deny");
+bool Game::f_StartTraining(const std::string& l_strMonster) {
+    const nlohmann::json l_jTr = m_jBattleJson.value("training", nlohmann::json::object());
+    const int l_iCost = std::max(0, l_jTr.value("cards", 1));
+    auto l_itIt = m_oMeta.m_mapCards.find(l_strMonster);
+    EnemyInst l_oProbe;
+    if (l_itIt == m_oMeta.m_mapCards.end() || l_itIt->second.m_iCopies < l_iCost || f_TrainingRunsLeft() <= 0 ||
+        !f_EnemyFromData(l_strMonster, nlohmann::json::object(), l_oProbe)) {
+        m_oAudio.f_Play("deny");
         return false;
     }
-    it->second.copies -= cost;   // the run spends the card (the owner's rule; Q44)
-    const std::string today = todayString();
-    if (meta_.trainDay != today) { meta_.trainDay = today; meta_.trainRuns = 0; }
-    meta_.trainRuns++;
-    markProgressDirty();
-    if (inGameMenuOpen_) closePlayerMenu();
-    const int hp = pl.hp;
-    arena_ = Arena{};
-    arena_.on = true;
-    arena_.training = true;
-    arena_.enemies = {monster};
-    arena_.overrides = nlohmann::json::object();   // (the monster as it is; a null here would throw in enemyFromData)
-    arena_.fightsMax = std::max(1, tr.value("fights", 3));
-    arena_.hpBefore = hp;
-    arenaNextFight();
-    cs.log = trParam(trParam(locale_.tr("training.start"), "name", probe.name), "n", std::to_string(arena_.fightsMax));
+    l_itIt->second.m_iCopies -= l_iCost;   // the run spends the card (the owner's rule; Q44)
+    const std::string l_strToday = f_TodayString();
+    if (m_oMeta.m_strTrainDay != l_strToday) { m_oMeta.m_strTrainDay = l_strToday; m_oMeta.m_iTrainRuns = 0; }
+    m_oMeta.m_iTrainRuns++;
+    f_MarkProgressDirty();
+    if (m_bInGameMenuOpen) f_ClosePlayerMenu();
+    const int l_iHp = m_oPl.m_iHp;
+    m_oArena = Arena{};
+    m_oArena.m_bOn = true;
+    m_oArena.m_bTraining = true;
+    m_oArena.m_vEnemies = {l_strMonster};
+    m_oArena.m_jOverrides = nlohmann::json::object();   // (the monster as it is; a null here would throw in enemyFromData)
+    m_oArena.m_iFightsMax = std::max(1, l_jTr.value("fights", 3));
+    m_oArena.m_iHpBefore = l_iHp;
+    f_ArenaNextFight();
+    m_oCs.m_strLog = f_TrParam(f_TrParam(m_oLocale.f_Tr("training.start"), "name", l_oProbe.m_strName), "n", std::to_string(m_oArena.m_iFightsMax));
     return true;
 }
 
-void Game::endTraining() {
-    const Arena a = arena_;
-    arena_ = Arena{};
-    cs = CombatState{};
-    pl.hp = a.hpBefore;
-    showNotice(trParam(trParam(trParam(locale_.tr("training.done"), "w", std::to_string(a.wins)), "exp", std::to_string(a.expGained)),
-                       "uses", std::to_string(a.usesGained)));
-    markProgressDirty();
+void Game::f_EndTraining() {
+    const Arena l_oA = m_oArena;
+    m_oArena = Arena{};
+    m_oCs = CombatState{};
+    m_oPl.m_iHp = l_oA.m_iHpBefore;
+    f_ShowNotice(f_TrParam(f_TrParam(f_TrParam(m_oLocale.f_Tr("training.done"), "w", std::to_string(l_oA.m_iWins)), "exp", std::to_string(l_oA.m_iExpGained)),
+                       "uses", std::to_string(l_oA.m_iUsesGained)));
+    f_MarkProgressDirty();
 }

@@ -39,510 +39,510 @@ namespace fs = std::filesystem;
 
 namespace {
 
-val bytesToJs(const uint8_t* data, size_t size) {
+val f_BytesToJs(const uint8_t* l_pData, size_t l_nSize) {
     // A copy: the view into the wasm heap dies when memory grows.
-    return val(emscripten::typed_memory_view(size, data)).call<val>("slice");
+    return val(emscripten::typed_memory_view(l_nSize, l_pData)).call<val>("slice");
 }
 
-json rectJson(const IRect& r) { return json::array({r.x, r.y, r.w, r.h}); }
+json f_RectJson(const IRect& l_oR) { return json::array({l_oR.m_iX, l_oR.m_iY, l_oR.m_iW, l_oR.m_iH}); }
 
-const char* levelName(Diagnostic::Level l) {
-    return l == Diagnostic::Error ? "error" : l == Diagnostic::Warning ? "warning" : "info";
+const char* f_LevelName(Diagnostic::Level l_eL) {
+    return l_eL == Diagnostic::Error ? "error" : l_eL == Diagnostic::Warning ? "warning" : "info";
 }
 
-json diagJson(const std::vector<Diagnostic>& ds) {
-    json a = json::array();
-    for (const Diagnostic& d : ds) a.push_back({{"level", levelName(d.level)}, {"sprite", d.sprite}, {"message", d.message}});
-    return a;
+json f_DiagJson(const std::vector<Diagnostic>& l_vDs) {
+    json l_jA = json::array();
+    for (const Diagnostic& l_oD : l_vDs) l_jA.push_back({{"level", f_LevelName(l_oD.m_eLevel)}, {"sprite", l_oD.m_strSprite}, {"message", l_oD.m_strMessage}});
+    return l_jA;
 }
 
-json regionJson(const Region& r) {
-    json j{{"name", r.name}, {"page", r.page}, {"frame", rectJson(r.frame)},
-           {"offsetX", r.offsetX}, {"offsetY", r.offsetY}, {"origW", r.origW}, {"origH", r.origH},
-           {"pivot", {r.pivot[0], r.pivot[1]}}, {"hasSplit", r.hasSplit},
-           {"split", {r.split[0], r.split[1], r.split[2], r.split[3]}}, {"tags", r.tags},
-           {"child", r.child}, {"parent", r.parent}, {"local", rectJson(r.local)}, {"baked", r.baked},
-           {"aliasOf", r.aliasOf}, {"sourceFile", r.sourceFile}, {"trimmed", r.trimmed()}};
-    return j;
+json f_RegionJson(const Region& l_oR) {
+    json l_jJ{{"name", l_oR.m_strName}, {"page", l_oR.m_iPage}, {"frame", f_RectJson(l_oR.m_oFrame)},
+           {"offsetX", l_oR.m_iOffsetX}, {"offsetY", l_oR.m_iOffsetY}, {"origW", l_oR.m_iOrigW}, {"origH", l_oR.m_iOrigH},
+           {"pivot", {l_oR.m_arrPivot[0], l_oR.m_arrPivot[1]}}, {"hasSplit", l_oR.m_bHasSplit},
+           {"split", {l_oR.m_arrSplit[0], l_oR.m_arrSplit[1], l_oR.m_arrSplit[2], l_oR.m_arrSplit[3]}}, {"tags", l_oR.m_vTags},
+           {"child", l_oR.m_bChild}, {"parent", l_oR.m_strParent}, {"local", f_RectJson(l_oR.m_oLocal)}, {"baked", l_oR.m_bBaked},
+           {"aliasOf", l_oR.m_strAliasOf}, {"sourceFile", l_oR.m_strSourceFile}, {"trimmed", l_oR.f_Trimmed()}};
+    return l_jJ;
 }
 
-std::string errJson(const std::string& e) { return json{{"error", e}}.dump(); }
+std::string f_ErrJson(const std::string& l_strE) { return json{{"error", l_strE}}.dump(); }
 
-int countPngs(const ImageSource& src, const std::string& dir, bool recursive) {
-    return (int)src.listPngs(dir, recursive).size();
+int f_CountPngs(const ImageSource& l_oSrc, const std::string& l_strDir, bool l_bRecursive) {
+    return (int)l_oSrc.m_fnListPngs(l_strDir, l_bRecursive).size();
 }
 
 class AtlasWeb {
 public:
     AtlasWeb() {
-        src_ = cachedImageSource(cache_);
-        newProject("atlas", "/work/atlas.atlasproj");
+        m_oSrc = f_CachedImageSource(m_spCache);
+        f_NewProject("atlas", "/work/atlas.atlasproj");
     }
 
     // ---- files (MEMFS, or NODEFS under node) ----
-    bool writeFile(const std::string& path, const val& bytes) {
-        const std::vector<uint8_t> data = emscripten::convertJSArrayToNumberVector<uint8_t>(bytes);
-        std::error_code ec;
-        fs::create_directories(u8path(path).parent_path(), ec);
-        std::ofstream f(u8path(path), std::ios::binary | std::ios::trunc);
-        if (!f) return false;
-        f.write((const char*)data.data(), (std::streamsize)data.size());
-        invalidateImages();
-        return (bool)f;
+    bool f_WriteFile(const std::string& l_strPath, const val& l_oBytes) {
+        const std::vector<uint8_t> l_vData = emscripten::convertJSArrayToNumberVector<uint8_t>(l_oBytes);
+        std::error_code l_oEc;
+        fs::create_directories(f_U8path(l_strPath).parent_path(), l_oEc);
+        std::ofstream l_oF(f_U8path(l_strPath), std::ios::binary | std::ios::trunc);
+        if (!l_oF) return false;
+        l_oF.write((const char*)l_vData.data(), (std::streamsize)l_vData.size());
+        f_InvalidateImages();
+        return (bool)l_oF;
     }
-    val readFile(const std::string& path) const {
-        std::ifstream f(u8path(path), std::ios::binary);
-        if (!f) return val::null();
-        std::vector<uint8_t> data((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
-        return bytesToJs(data.data(), data.size());
+    val f_ReadFile(const std::string& l_strPath) const {
+        std::ifstream l_oF(f_U8path(l_strPath), std::ios::binary);
+        if (!l_oF) return val::null();
+        std::vector<uint8_t> l_vData((std::istreambuf_iterator<char>(l_oF)), std::istreambuf_iterator<char>());
+        return f_BytesToJs(l_vData.data(), l_vData.size());
     }
-    bool removeFile(const std::string& path) {
-        std::error_code ec;
-        const auto n = fs::remove_all(u8path(path), ec);
-        invalidateImages();
-        return !ec && n > 0;
+    bool f_RemoveFile(const std::string& l_strPath) {
+        std::error_code l_oEc;
+        const auto l_u64N = fs::remove_all(f_U8path(l_strPath), l_oEc);
+        f_InvalidateImages();
+        return !l_oEc && l_u64N > 0;
     }
-    bool exists(const std::string& path) const {
-        std::error_code ec;
-        return fs::exists(u8path(path), ec);
+    bool f_Exists(const std::string& l_strPath) const {
+        std::error_code l_oEc;
+        return fs::exists(f_U8path(l_strPath), l_oEc);
     }
     // Every regular file below dir (recursive), '/' paths, sorted. JSON array.
-    std::string listFiles(const std::string& dir) const {
-        std::vector<std::string> out;
-        std::error_code ec;
-        if (fs::is_directory(u8path(dir), ec))
-            for (fs::recursive_directory_iterator it(u8path(dir), ec), end; !ec && it != end; it.increment(ec))
-                if (it->is_regular_file(ec)) out.push_back(u8str(it->path()));
-        std::sort(out.begin(), out.end());
-        return json(out).dump();
+    std::string f_ListFiles(const std::string& l_strDir) const {
+        std::vector<std::string> l_vOut;
+        std::error_code l_oEc;
+        if (fs::is_directory(f_U8path(l_strDir), l_oEc))
+            for (fs::recursive_directory_iterator l_oIt(f_U8path(l_strDir), l_oEc), l_oEnd; !l_oEc && l_oIt != l_oEnd; l_oIt.increment(l_oEc))
+                if (l_oIt->is_regular_file(l_oEc)) l_vOut.push_back(f_U8str(l_oIt->path()));
+        std::sort(l_vOut.begin(), l_vOut.end());
+        return json(l_vOut).dump();
     }
 
     // ---- project ----
     // A new, empty embedded project (its packed atlas goes next to the project file).
-    void newProject(const std::string& name, const std::string& path) {
-        Project p;
-        p.name = name.empty() ? "atlas" : name;
-        p.embedded = true;
-        p.output.dir = ".";
-        p.filePath = normalizePath(path);
-        project_ = std::move(p);
+    void f_NewProject(const std::string& l_strName, const std::string& l_strPath) {
+        Project l_oP;
+        l_oP.m_strName = l_strName.empty() ? "atlas" : l_strName;
+        l_oP.m_bEmbedded = true;
+        l_oP.m_oOutput.m_strDir = ".";
+        l_oP.m_strFilePath = f_NormalizePath(l_strPath);
+        m_oProject = std::move(l_oP);
     }
 
     // The project's JSON as edited by the page. The images stay what they are here (the JSON does
     // not hold them): base images are kept, a variant keeps its art by id (or by position when the
     // id was just renamed). Returns "" or the error. path: where the project "lives".
-    std::string setProject(const std::string& text, const std::string& path) {
-        Project p;
-        std::string err;
-        if (!projectFromJson(text, p, &err)) return err.empty() ? "invalid project" : err;
-        p.filePath = normalizePath(path);
-        p.embedded = true;   // the web editor works on embedded projects only
-        p.images = project_.images;
-        for (size_t i = 0; i < p.variants.size(); i++) {
-            Variant& v = p.variants[i];
-            const Variant* old = project_.findVariant(v.id);
-            if (!old && i < project_.variants.size() && !p.findVariant(project_.variants[i].id)) old = &project_.variants[i];
-            v.images = old ? old->images : std::map<std::string, ImagePtr>();
+    std::string f_SetProject(const std::string& l_strText, const std::string& l_strPath) {
+        Project l_oP;
+        std::string l_strErr;
+        if (!f_ProjectFromJson(l_strText, l_oP, &l_strErr)) return l_strErr.empty() ? "invalid project" : l_strErr;
+        l_oP.m_strFilePath = f_NormalizePath(l_strPath);
+        l_oP.m_bEmbedded = true;   // the web editor works on embedded projects only
+        l_oP.m_mapImages = m_oProject.m_mapImages;
+        for (size_t l_nI = 0; l_nI < l_oP.m_vVariants.size(); l_nI++) {
+            Variant& l_oV = l_oP.m_vVariants[l_nI];
+            const Variant* l_pOld = m_oProject.f_FindVariant(l_oV.m_strId);
+            if (!l_pOld && l_nI < m_oProject.m_vVariants.size() && !l_oP.f_FindVariant(m_oProject.m_vVariants[l_nI].m_strId)) l_pOld = &m_oProject.m_vVariants[l_nI];
+            l_oV.m_mapImages = l_pOld ? l_pOld->m_mapImages : std::map<std::string, ImagePtr>();
         }
-        project_ = std::move(p);
+        m_oProject = std::move(l_oP);
         return std::string();
     }
-    std::string getProject() const { return projectToJson(project_); }
-    std::string projectPath() const { return project_.filePath; }
-    std::string resolvePath(const std::string& rel) const { return project_.resolve(rel); }
-    std::string relativize(const std::string& path) const { return project_.relativize(path); }
+    std::string f_GetProject() const { return f_ProjectToJson(m_oProject); }
+    std::string f_ProjectPath() const { return m_oProject.m_strFilePath; }
+    std::string f_ResolvePath(const std::string& l_strRel) const { return m_oProject.f_Resolve(l_strRel); }
+    std::string f_Relativize(const std::string& l_strPath) const { return m_oProject.f_Relativize(l_strPath); }
 
     // What opening `path` needs, before opening it: JSON {error} or {embedded, name, store,
     // storeExists, variants:[{id, store, dir, needed, exists}], sources:[{path, dir, pngs}],
     // overrides:[{id, path, dir, pngs}]}.
-    std::string inspect(const std::string& path) {
-        Project p;
-        std::string err;
-        if (!loadProject(path, p, &err)) return errJson(err.empty() ? "cannot read " + path : err);
-        std::error_code ec;
-        json r{{"embedded", p.embedded}, {"name", p.name}};
-        json vars = json::array(), sources = json::array(), overrides = json::array();
-        if (p.embedded) {
-            r["store"] = storePath(p);
-            r["storeExists"] = fs::is_regular_file(u8path(storePath(p)), ec);
-            for (const Variant& v : p.variants) {
-                const std::string s = storePath(p, &v);
-                vars.push_back({{"id", v.id}, {"store", s}, {"dir", parentDir(s)}, {"needed", !v.images.empty()},
-                                {"exists", fs::is_regular_file(u8path(s), ec)}});
+    std::string f_Inspect(const std::string& l_strPath) {
+        Project l_oP;
+        std::string l_strErr;
+        if (!f_LoadProject(l_strPath, l_oP, &l_strErr)) return f_ErrJson(l_strErr.empty() ? "cannot read " + l_strPath : l_strErr);
+        std::error_code l_oEc;
+        json l_jR{{"embedded", l_oP.m_bEmbedded}, {"name", l_oP.m_strName}};
+        json l_jVars = json::array(), l_jSources = json::array(), l_jOverrides = json::array();
+        if (l_oP.m_bEmbedded) {
+            l_jR["store"] = f_StorePath(l_oP);
+            l_jR["storeExists"] = fs::is_regular_file(f_U8path(f_StorePath(l_oP)), l_oEc);
+            for (const Variant& l_oV : l_oP.m_vVariants) {
+                const std::string l_strS = f_StorePath(l_oP, &l_oV);
+                l_jVars.push_back({{"id", l_oV.m_strId}, {"store", l_strS}, {"dir", f_ParentDir(l_strS)}, {"needed", !l_oV.m_mapImages.empty()},
+                                {"exists", fs::is_regular_file(f_U8path(l_strS), l_oEc)}});
             }
         } else {
-            for (const SourceFolder& f : p.sources)
-                sources.push_back({{"path", f.path}, {"dir", p.resolve(f.path)}, {"pngs", countPngs(src_, p.resolve(f.path), f.recursive)}});
-            for (const Variant& v : p.variants)
-                if (!v.overrideDir.empty())
-                    overrides.push_back({{"id", v.id}, {"path", v.overrideDir}, {"dir", p.resolve(v.overrideDir)},
-                                         {"pngs", countPngs(src_, p.resolve(v.overrideDir), true)}});
+            for (const SourceFolder& l_oF : l_oP.m_vSources)
+                l_jSources.push_back({{"path", l_oF.m_strPath}, {"dir", l_oP.f_Resolve(l_oF.m_strPath)}, {"pngs", f_CountPngs(m_oSrc, l_oP.f_Resolve(l_oF.m_strPath), l_oF.m_bRecursive)}});
+            for (const Variant& l_oV : l_oP.m_vVariants)
+                if (!l_oV.m_strOverrideDir.empty())
+                    l_jOverrides.push_back({{"id", l_oV.m_strId}, {"path", l_oV.m_strOverrideDir}, {"dir", l_oP.f_Resolve(l_oV.m_strOverrideDir)},
+                                         {"pngs", f_CountPngs(m_oSrc, l_oP.f_Resolve(l_oV.m_strOverrideDir), true)}});
         }
-        r["variants"] = vars;
-        r["sources"] = sources;
-        r["overrides"] = overrides;
-        return r.dump();
+        l_jR["variants"] = l_jVars;
+        l_jR["sources"] = l_jSources;
+        l_jR["overrides"] = l_jOverrides;
+        return l_jR.dump();
     }
 
     // Opens a project from MEMFS: an embedded one gets its images cut out of the packed atlas; a
     // folder project is converted (embedSources, its folders must be in MEMFS). dropMissingVariants:
     // a variant whose packed atlas is missing loses its art instead of failing the open.
     // JSON {error} or {project, converted, images, dropped:[ids], diagnostics}.
-    std::string openProject(const std::string& path, bool dropMissingVariants) {
-        Project p;
-        std::string err;
-        json dropped = json::array();
-        std::vector<Diagnostic> diags;
-        int converted = -1;
+    std::string f_OpenProject(const std::string& l_strPath, bool l_bDropMissingVariants) {
+        Project l_oP;
+        std::string l_strErr;
+        json l_jDropped = json::array();
+        std::vector<Diagnostic> l_vDiags;
+        int l_iConverted = -1;
         try {
-            if (!loadProject(path, p, &err)) return errJson(err.empty() ? "cannot read " + path : err);
-            if (p.embedded) {
-                std::error_code ec;
-                if (dropMissingVariants)
-                    for (Variant& v : p.variants)
-                        if (!v.images.empty() && !fs::is_regular_file(u8path(storePath(p, &v)), ec)) {
-                            v.images.clear();
-                            dropped.push_back(v.id);
+            if (!f_LoadProject(l_strPath, l_oP, &l_strErr)) return f_ErrJson(l_strErr.empty() ? "cannot read " + l_strPath : l_strErr);
+            if (l_oP.m_bEmbedded) {
+                std::error_code l_oEc;
+                if (l_bDropMissingVariants)
+                    for (Variant& l_oV : l_oP.m_vVariants)
+                        if (!l_oV.m_mapImages.empty() && !fs::is_regular_file(f_U8path(f_StorePath(l_oP, &l_oV)), l_oEc)) {
+                            l_oV.m_mapImages.clear();
+                            l_jDropped.push_back(l_oV.m_strId);
                         }
-                if (!loadEmbeddedImages(p, &err)) return errJson(path + ": " + err);
+                if (!f_LoadEmbeddedImages(l_oP, &l_strErr)) return f_ErrJson(l_strPath + ": " + l_strErr);
             } else {
-                converted = embedSources(p, src_, &diags);
+                l_iConverted = f_EmbedSources(l_oP, m_oSrc, &l_vDiags);
             }
-        } catch (const std::exception& e) {
-            return errJson(e.what());
+        } catch (const std::exception& l_oE) {
+            return f_ErrJson(l_oE.what());
         }
-        project_ = std::move(p);
-        return json{{"project", projectToJson(project_)}, {"converted", converted}, {"images", (int)project_.images.size()},
-                    {"dropped", dropped}, {"diagnostics", diagJson(diags)}}.dump();
+        m_oProject = std::move(l_oP);
+        return json{{"project", f_ProjectToJson(m_oProject)}, {"converted", l_iConverted}, {"images", (int)m_oProject.m_mapImages.size()},
+                    {"dropped", l_jDropped}, {"diagnostics", f_DiagJson(l_vDiags)}}.dump();
     }
 
     // ---- images ----
     // Adds or replaces an image from PNG bytes (variant: that variant's replacement art). "" or the error.
-    std::string setImageBytes(const std::string& name, const val& bytes, const std::string& variant) {
-        const std::vector<uint8_t> data = emscripten::convertJSArrayToNumberVector<uint8_t>(bytes);
-        Image img;
-        std::string err;
-        if (!loadImageFromMemory(data.data(), data.size(), img, &err)) return name + ": " + (err.empty() ? "not a PNG" : err);
-        if (!setImage(project_, name, img, variant, &err)) return err.empty() ? "cannot set " + name : err;
+    std::string f_SetImageBytes(const std::string& l_strName, const val& l_oBytes, const std::string& l_strVariant) {
+        const std::vector<uint8_t> l_vData = emscripten::convertJSArrayToNumberVector<uint8_t>(l_oBytes);
+        Image l_oImg;
+        std::string l_strErr;
+        if (!f_LoadImageFromMemory(l_vData.data(), l_vData.size(), l_oImg, &l_strErr)) return l_strName + ": " + (l_strErr.empty() ? "not a PNG" : l_strErr);
+        if (!f_SetImage(m_oProject, l_strName, l_oImg, l_strVariant, &l_strErr)) return l_strErr.empty() ? "cannot set " + l_strName : l_strErr;
         return std::string();
     }
-    std::string setImageFile(const std::string& name, const std::string& path, const std::string& variant) {
-        Image img;
-        std::string err;
-        if (!loadImage(path, img, &err)) return err.empty() ? "cannot read " + path : err;
-        if (!setImage(project_, name, img, variant, &err)) return err.empty() ? "cannot set " + name : err;
+    std::string f_SetImageFile(const std::string& l_strName, const std::string& l_strPath, const std::string& l_strVariant) {
+        Image l_oImg;
+        std::string l_strErr;
+        if (!f_LoadImage(l_strPath, l_oImg, &l_strErr)) return l_strErr.empty() ? "cannot read " + l_strPath : l_strErr;
+        if (!f_SetImage(m_oProject, l_strName, l_oImg, l_strVariant, &l_strErr)) return l_strErr.empty() ? "cannot set " + l_strName : l_strErr;
         return std::string();
     }
-    bool hasImage(const std::string& name, const std::string& variant) const {
-        if (variant.empty()) return project_.images.count(name) > 0;
-        const Variant* v = project_.findVariant(variant);
-        return v && v->images.count(name) > 0;
+    bool f_HasImage(const std::string& l_strName, const std::string& l_strVariant) const {
+        if (l_strVariant.empty()) return m_oProject.m_mapImages.count(l_strName) > 0;
+        const Variant* l_pV = m_oProject.f_FindVariant(l_strVariant);
+        return l_pV && l_pV->m_mapImages.count(l_strName) > 0;
     }
-    std::string imageNames(const std::string& variant) const {
-        std::vector<std::string> out;
-        const Variant* v = variant.empty() ? nullptr : project_.findVariant(variant);
-        for (const auto& kv : v ? v->images : project_.images) out.push_back(kv.first);
-        return json(out).dump();
+    std::string f_ImageNames(const std::string& l_strVariant) const {
+        std::vector<std::string> l_vOut;
+        const Variant* l_pV = l_strVariant.empty() ? nullptr : m_oProject.f_FindVariant(l_strVariant);
+        for (const auto& l_pairKv : l_pV ? l_pV->m_mapImages : m_oProject.m_mapImages) l_vOut.push_back(l_pairKv.first);
+        return json(l_vOut).dump();
     }
-    std::string imageNameFor(const std::string& file, const std::string& folder, const std::string& prefix) const {
-        return atlas::imageNameFor(file, folder, prefix);
+    std::string f_ImageNameFor(const std::string& l_strFile, const std::string& l_strFolder, const std::string& l_strPrefix) const {
+        return atlas::f_ImageNameFor(l_strFile, l_strFolder, l_strPrefix);
     }
 
     // Renames an image or child sprite everywhere: the images (base and every variant), its entry,
     // children's parents and animation frames. "" or the error.
-    std::string renameSprite(const std::string& from, const std::string& to) {
-        if (to.empty()) return "a sprite needs a name";
-        if (to == from) return std::string();
-        if (project_.images.count(to) || project_.findSprite(to)) return "'" + to + "' already exists";
-        bool found = false;
-        auto move = [&](std::map<std::string, ImagePtr>& m) {
-            auto it = m.find(from);
-            if (it == m.end()) return false;
-            ImagePtr img = it->second;
-            m.erase(it);
-            m[to] = img;
+    std::string f_RenameSprite(const std::string& l_strFrom, const std::string& l_strTo) {
+        if (l_strTo.empty()) return "a sprite needs a name";
+        if (l_strTo == l_strFrom) return std::string();
+        if (m_oProject.m_mapImages.count(l_strTo) || m_oProject.f_FindSprite(l_strTo)) return "'" + l_strTo + "' already exists";
+        bool l_bFound = false;
+        auto l_fnMove = [&](std::map<std::string, ImagePtr>& l_mapM) {
+            auto l_itIt = l_mapM.find(l_strFrom);
+            if (l_itIt == l_mapM.end()) return false;
+            ImagePtr l_spImg = l_itIt->second;
+            l_mapM.erase(l_itIt);
+            l_mapM[l_strTo] = l_spImg;
             return true;
         };
-        found |= move(project_.images);
-        for (Variant& v : project_.variants) move(v.images);
-        for (SpriteDef& d : project_.sprites) {
-            if (d.name == from) { d.name = to; found = true; }
-            if (d.parent == from) d.parent = to;
+        l_bFound |= l_fnMove(m_oProject.m_mapImages);
+        for (Variant& l_oV : m_oProject.m_vVariants) l_fnMove(l_oV.m_mapImages);
+        for (SpriteDef& l_oD : m_oProject.m_vSprites) {
+            if (l_oD.m_strName == l_strFrom) { l_oD.m_strName = l_strTo; l_bFound = true; }
+            if (l_oD.m_strParent == l_strFrom) l_oD.m_strParent = l_strTo;
         }
-        for (Animation& a : project_.animations)
-            for (AnimFrame& f : a.frames) if (f.sprite == from) f.sprite = to;
-        return found ? std::string() : "no sprite '" + from + "'";
+        for (Animation& l_oA : m_oProject.m_vAnimations)
+            for (AnimFrame& l_oF : l_oA.m_vFrames) if (l_oF.m_strSprite == l_strFrom) l_oF.m_strSprite = l_strTo;
+        return l_bFound ? std::string() : "no sprite '" + l_strFrom + "'";
     }
 
     // Deletes sprites (JSON array of names) with their children: images, variant art, entries,
     // animation frames. Returns how many sprites went.
-    int deleteSprites(const std::string& namesJson) {
-        std::set<std::string> victims;
-        for (const json& n : json::parse(namesJson, nullptr, false)) if (n.is_string()) victims.insert(n.get<std::string>());
-        for (bool more = true; more;) {   // children of children
-            more = false;
-            for (const SpriteDef& d : project_.sprites)
-                if (d.isChild() && victims.count(d.parent) && victims.insert(d.name).second) more = true;
+    int f_DeleteSprites(const std::string& l_strNamesJson) {
+        std::set<std::string> l_setVictims;
+        for (const json& l_jN : json::parse(l_strNamesJson, nullptr, false)) if (l_jN.is_string()) l_setVictims.insert(l_jN.get<std::string>());
+        for (bool l_bMore = true; l_bMore;) {   // children of children
+            l_bMore = false;
+            for (const SpriteDef& l_oD : m_oProject.m_vSprites)
+                if (l_oD.f_IsChild() && l_setVictims.count(l_oD.m_strParent) && l_setVictims.insert(l_oD.m_strName).second) l_bMore = true;
         }
-        int n = 0;
-        for (const std::string& s : victims) {
-            bool any = project_.images.erase(s) > 0;
-            for (Variant& v : project_.variants) v.images.erase(s);
-            any |= project_.findSprite(s) != nullptr;
-            n += any;
+        int l_iN = 0;
+        for (const std::string& l_strS : l_setVictims) {
+            bool l_bAny = m_oProject.m_mapImages.erase(l_strS) > 0;
+            for (Variant& l_oV : m_oProject.m_vVariants) l_oV.m_mapImages.erase(l_strS);
+            l_bAny |= m_oProject.f_FindSprite(l_strS) != nullptr;
+            l_iN += l_bAny;
         }
-        project_.sprites.erase(std::remove_if(project_.sprites.begin(), project_.sprites.end(),
-                                              [&](const SpriteDef& d) { return victims.count(d.name) > 0; }),
-                               project_.sprites.end());
-        for (Animation& a : project_.animations)
-            a.frames.erase(std::remove_if(a.frames.begin(), a.frames.end(), [&](const AnimFrame& f) { return victims.count(f.sprite) > 0; }),
-                           a.frames.end());
-        return n;
+        m_oProject.m_vSprites.erase(std::remove_if(m_oProject.m_vSprites.begin(), m_oProject.m_vSprites.end(),
+                                              [&](const SpriteDef& l_oD) { return l_setVictims.count(l_oD.m_strName) > 0; }),
+                               m_oProject.m_vSprites.end());
+        for (Animation& l_oA : m_oProject.m_vAnimations)
+            l_oA.m_vFrames.erase(std::remove_if(l_oA.m_vFrames.begin(), l_oA.m_vFrames.end(), [&](const AnimFrame& l_oF) { return l_setVictims.count(l_oF.m_strSprite) > 0; }),
+                           l_oA.m_vFrames.end());
+        return l_iN;
     }
 
     // Reference folders (project, or one variant's) compared with the images held: JSON
     // [{name, file, status: "new"|"changed"|"same"}].
-    std::string scanReferences(const std::string& variant) const {
-        json a = json::array();
-        static const char* st[] = {"new", "changed", "same"};
-        for (const ReferenceImage& r : atlas::scanReferences(project_, src_, variant))
-            a.push_back({{"name", r.name}, {"file", r.file}, {"status", st[r.status]}});
-        return a.dump();
+    std::string f_ScanReferences(const std::string& l_strVariant) const {
+        json l_jA = json::array();
+        static const char* l_arrSt[] = {"new", "changed", "same"};
+        for (const ReferenceImage& l_oR : atlas::f_ScanReferences(m_oProject, m_oSrc, l_strVariant))
+            l_jA.push_back({{"name", l_oR.m_strName}, {"file", l_oR.m_strFile}, {"status", l_arrSt[l_oR.m_eStatus]}});
+        return l_jA.dump();
     }
 
     // ---- undo snapshots ----
-    int snapshot() {
-        const int id = nextSnap_++;
-        snaps_[id] = project_;
-        return id;
+    int f_Snapshot() {
+        const int l_iId = m_iNextSnap++;
+        m_mapSnaps[l_iId] = m_oProject;
+        return l_iId;
     }
-    bool restore(int id) {
-        auto it = snaps_.find(id);
-        if (it == snaps_.end()) return false;
-        project_ = it->second;
+    bool f_Restore(int l_iId) {
+        auto l_itIt = m_mapSnaps.find(l_iId);
+        if (l_itIt == m_mapSnaps.end()) return false;
+        m_oProject = l_itIt->second;
         return true;
     }
     // Forgets every snapshot not in idsJson (the ids the page's undo/redo stacks still use).
-    int keepSnapshots(const std::string& idsJson) {
-        std::set<int> keep;
-        for (const json& n : json::parse(idsJson, nullptr, false)) if (n.is_number_integer()) keep.insert(n.get<int>());
-        for (auto it = snaps_.begin(); it != snaps_.end();) it = keep.count(it->first) ? std::next(it) : snaps_.erase(it);
-        return (int)snaps_.size();
+    int f_KeepSnapshots(const std::string& l_strIdsJson) {
+        std::set<int> l_setKeep;
+        for (const json& l_jN : json::parse(l_strIdsJson, nullptr, false)) if (l_jN.is_number_integer()) l_setKeep.insert(l_jN.get<int>());
+        for (auto l_itIt = m_mapSnaps.begin(); l_itIt != m_mapSnaps.end();) l_itIt = l_setKeep.count(l_itIt->first) ? std::next(l_itIt) : m_mapSnaps.erase(l_itIt);
+        return (int)m_mapSnaps.size();
     }
 
     // ---- save / extract ----
     // The folders a save at `path` writes the packed atlases to (base first, then each variant), JSON.
-    std::string outputDirs(const std::string& path) const {
-        Project q = project_;
-        q.filePath = normalizePath(path);
-        json a = json::array();
-        a.push_back(q.resolve(q.output.dir.empty() ? "." : q.output.dir));
-        for (const Variant& v : q.variants) a.push_back(q.resolve(v.output.dir.empty() ? "." : v.output.dir));
-        return a.dump();
+    std::string f_OutputDirs(const std::string& l_strPath) const {
+        Project l_oQ = m_oProject;
+        l_oQ.m_strFilePath = f_NormalizePath(l_strPath);
+        json l_jA = json::array();
+        l_jA.push_back(l_oQ.f_Resolve(l_oQ.m_oOutput.m_strDir.empty() ? "." : l_oQ.m_oOutput.m_strDir));
+        for (const Variant& l_oV : l_oQ.m_vVariants) l_jA.push_back(l_oQ.f_Resolve(l_oV.m_oOutput.m_strDir.empty() ? "." : l_oV.m_oOutput.m_strDir));
+        return l_jA.dump();
     }
     // saveProjectAll() of a copy placed at `path` (relative paths are kept as they are, so the
     // saved project matches the folder layout around it). JSON {error} or {written, diagnostics}.
-    std::string saveAll(const std::string& path, const std::string& alsoCsv) const {
-        Project q = project_;
-        q.filePath = normalizePath(path);
-        SaveResult res;
-        std::string err;
+    std::string f_SaveAll(const std::string& l_strPath, const std::string& l_strAlsoCsv) const {
+        Project l_oQ = m_oProject;
+        l_oQ.m_strFilePath = f_NormalizePath(l_strPath);
+        SaveResult l_oRes;
+        std::string l_strErr;
         try {
-            if (!saveProjectAll(path, q, splitCsv(alsoCsv), &res, &err)) return errJson(err.empty() ? "save failed" : err);
-        } catch (const std::exception& e) {
-            return errJson(e.what());
+            if (!f_SaveProjectAll(l_strPath, l_oQ, f_SplitCsv(l_strAlsoCsv), &l_oRes, &l_strErr)) return f_ErrJson(l_strErr.empty() ? "save failed" : l_strErr);
+        } catch (const std::exception& l_oE) {
+            return f_ErrJson(l_oE.what());
         }
-        return json{{"written", res.written}, {"diagnostics", diagJson(res.diagnostics)}}.dump();
+        return json{{"written", l_oRes.m_vWritten}, {"diagnostics", f_DiagJson(l_oRes.m_vDiagnostics)}}.dump();
     }
-    std::string extract(const std::string& dir, const std::string& variant, bool children) const {
-        std::vector<std::string> written;
-        std::string err;
+    std::string f_Extract(const std::string& l_strDir, const std::string& l_strVariant, bool l_bChildren) const {
+        std::vector<std::string> l_vWritten;
+        std::string l_strErr;
         try {
-            if (!extractImages(project_, dir, variant, children, &written, &err)) return errJson(err.empty() ? "extract failed" : err);
-        } catch (const std::exception& e) {
-            return errJson(e.what());
+            if (!f_ExtractImages(m_oProject, l_strDir, l_strVariant, l_bChildren, &l_vWritten, &l_strErr)) return f_ErrJson(l_strErr.empty() ? "extract failed" : l_strErr);
+        } catch (const std::exception& l_oE) {
+            return f_ErrJson(l_oE.what());
         }
-        return json{{"written", written}}.dump();
+        return json{{"written", l_vWritten}}.dump();
     }
 
     // The sprites as the build sees them, JSON.
-    std::string resolve() const {
-        std::vector<Diagnostic> diags;
-        const std::vector<ResolvedSprite> rs = resolveSprites(project_, src_, &diags);
-        json a = json::array();
-        for (const ResolvedSprite& r : rs)
-            a.push_back({{"name", r.def.name}, {"file", r.file}, {"scanned", r.scanned}, {"child", r.def.isChild()},
-                         {"parent", r.def.parent}, {"exclude", r.def.exclude}, {"pinned", r.def.pinned}});
-        return json{{"sprites", a}, {"diagnostics", diagJson(diags)}}.dump();
+    std::string f_Resolve() const {
+        std::vector<Diagnostic> l_vDiags;
+        const std::vector<ResolvedSprite> l_vRs = f_ResolveSprites(m_oProject, m_oSrc, &l_vDiags);
+        json l_jA = json::array();
+        for (const ResolvedSprite& l_oR : l_vRs)
+            l_jA.push_back({{"name", l_oR.m_oDef.m_strName}, {"file", l_oR.m_strFile}, {"scanned", l_oR.m_bScanned}, {"child", l_oR.m_oDef.f_IsChild()},
+                         {"parent", l_oR.m_oDef.m_strParent}, {"exclude", l_oR.m_oDef.m_bExclude}, {"pinned", l_oR.m_oDef.m_bPinned}});
+        return json{{"sprites", l_jA}, {"diagnostics", f_DiagJson(l_vDiags)}}.dump();
     }
 
     // ---- build ----
-    std::string build(const std::string& variant) {
-        BuildOptions o;
-        o.variant = variant;
-        o.composite = true;
+    std::string f_Build(const std::string& l_strVariant) {
+        BuildOptions l_oO;
+        l_oO.m_strVariant = l_strVariant;
+        l_oO.m_bComposite = true;
         try {
-            result_ = atlas::build(project_, src_, o);
-        } catch (const std::exception& e) {
-            result_ = BuildResult();
-            result_.diagnostics.push_back({Diagnostic::Error, "", std::string("build failed: ") + e.what()});
+            m_oResult = atlas::f_Build(m_oProject, m_oSrc, l_oO);
+        } catch (const std::exception& l_oE) {
+            m_oResult = BuildResult();
+            m_oResult.m_vDiagnostics.push_back({Diagnostic::Error, "", std::string("build failed: ") + l_oE.what()});
         }
-        return resultJson(result_);
+        return f_ResultJson(m_oResult);
     }
-    int pageCount() const { return (int)result_.pages.size(); }
-    val getPageRGBA(int i) const {
-        if (i < 0 || i >= (int)result_.pages.size()) return val::null();
-        const Image& img = result_.pages[i].image;
-        return bytesToJs(img.px.data(), img.px.size());
+    int f_PageCount() const { return (int)m_oResult.m_vPages.size(); }
+    val f_GetPageRGBA(int l_iI) const {
+        if (l_iI < 0 || l_iI >= (int)m_oResult.m_vPages.size()) return val::null();
+        const Image& l_oImg = m_oResult.m_vPages[l_iI].m_oImage;
+        return f_BytesToJs(l_oImg.m_vPx.data(), l_oImg.m_vPx.size());
     }
-    val getPagePng(int i) const {
-        if (i < 0 || i >= (int)result_.pages.size()) return val::null();
-        const std::vector<uint8_t> png = encodePng(result_.pages[i].image);
-        return bytesToJs(png.data(), png.size());
+    val f_GetPagePng(int l_iI) const {
+        if (l_iI < 0 || l_iI >= (int)m_oResult.m_vPages.size()) return val::null();
+        const std::vector<uint8_t> l_vPng = f_EncodePng(m_oResult.m_vPages[l_iI].m_oImage);
+        return f_BytesToJs(l_vPng.data(), l_vPng.size());
     }
     // One region at its original size, as a game draws it: {w, h, data(RGBA)} or null.
-    val getRegionRGBA(const std::string& name) const {
-        const Region* r = result_.find(name);
-        if (!r) return val::null();
-        const Image img = renderRegion(result_, *r);
-        val o = val::object();
-        o.set("w", img.w);
-        o.set("h", img.h);
-        o.set("data", bytesToJs(img.px.data(), img.px.size()));
-        return o;
+    val f_GetRegionRGBA(const std::string& l_strName) const {
+        const Region* l_pR = m_oResult.f_Find(l_strName);
+        if (!l_pR) return val::null();
+        const Image l_oImg = f_RenderRegion(m_oResult, *l_pR);
+        val l_oO = val::object();
+        l_oO.set("w", l_oImg.m_iW);
+        l_oO.set("h", l_oImg.m_iH);
+        l_oO.set("data", f_BytesToJs(l_oImg.m_vPx.data(), l_oImg.m_vPx.size()));
+        return l_oO;
     }
     // The same as a PNG file (Save image as), or null.
-    val getRegionPng(const std::string& name) const {
-        const Region* r = result_.find(name);
-        if (!r) return val::null();
-        const std::vector<uint8_t> png = encodePng(renderRegion(result_, *r));
-        return bytesToJs(png.data(), png.size());
+    val f_GetRegionPng(const std::string& l_strName) const {
+        const Region* l_pR = m_oResult.f_Find(l_strName);
+        if (!l_pR) return val::null();
+        const std::vector<uint8_t> l_vPng = f_EncodePng(f_RenderRegion(m_oResult, *l_pR));
+        return f_BytesToJs(l_vPng.data(), l_vPng.size());
     }
 
     // ---- export / import ----
     // formatsCsv: "atlas,tp-json"; empty = the project's (or variant's) formats.
     // Returns an array of {name, data:Uint8Array}; on error {error}.
-    val exportFiles(const std::string& formatsCsv) const {
-        std::vector<std::string> formats = splitCsv(formatsCsv);
-        if (formats.empty()) formats = project_.output.formats;
-        std::vector<ExportFile> files;
-        std::string err;
-        if (result_.pages.empty() && result_.regions.empty()) err = "nothing built";
-        else if (!result_.ok()) err = std::to_string(result_.errorCount()) + " error(s): fix the problems first";
-        else if (!atlas::exportFiles(result_, formats, files, &err) && err.empty()) err = "export failed";
-        if (!err.empty()) {
-            val o = val::object();
-            o.set("error", err);
-            return o;
+    val f_ExportFiles(const std::string& l_strFormatsCsv) const {
+        std::vector<std::string> l_vFormats = f_SplitCsv(l_strFormatsCsv);
+        if (l_vFormats.empty()) l_vFormats = m_oProject.m_oOutput.m_vFormats;
+        std::vector<ExportFile> l_vFiles;
+        std::string l_strErr;
+        if (m_oResult.m_vPages.empty() && m_oResult.m_vRegions.empty()) l_strErr = "nothing built";
+        else if (!m_oResult.f_Ok()) l_strErr = std::to_string(m_oResult.f_ErrorCount()) + " error(s): fix the problems first";
+        else if (!atlas::f_ExportFiles(m_oResult, l_vFormats, l_vFiles, &l_strErr) && l_strErr.empty()) l_strErr = "export failed";
+        if (!l_strErr.empty()) {
+            val l_oO = val::object();
+            l_oO.set("error", l_strErr);
+            return l_oO;
         }
-        val a = val::array();
-        for (const ExportFile& f : files) {
-            val o = val::object();
-            o.set("name", f.name);
-            o.set("data", bytesToJs(f.data.data(), f.data.size()));
-            a.call<void>("push", o);
+        val l_oA = val::array();
+        for (const ExportFile& l_oF : l_vFiles) {
+            val l_oO = val::object();
+            l_oO.set("name", l_oF.m_strName);
+            l_oO.set("data", f_BytesToJs(l_oF.m_vData.data(), l_oF.m_vData.size()));
+            l_oA.call<void>("push", l_oO);
         }
-        return a;
+        return l_oA;
     }
     // Reads an atlas (.pi/.atlas/.json; its page PNGs next to it), cuts the sprites out into memory
     // and makes that the current (embedded) project at projectPath. JSON {error} or
     // {project, diagnostics, sprites, children}.
-    std::string importAtlas(const std::string& path, const std::string& projectPath) {
-        BuildResult in;
-        std::string err;
-        json r;
+    std::string f_ImportAtlas(const std::string& l_strPath, const std::string& l_strProjectPath) {
+        BuildResult l_oIn;
+        std::string l_strErr;
+        json l_jR;
         try {
-            if (!importAtlasFile(path, in, &err)) return errJson(err.empty() ? "cannot read " + path : err);
-            Project p;
-            if (!importToProject(in, projectPath, "", p, &err)) return errJson(err.empty() ? "import failed" : err);
-            std::string ext = u8str(u8path(path).extension());
-            for (char& c : ext) c = (char)tolower((unsigned char)c);
-            p.output.formats = {ext == ".pi" ? "pi" : ext == ".json" ? "tp-json" : "atlas"};
-            p.output.dir = ".";
-            p.embedded = true;
-            project_ = p;
-            int children = 0;
-            for (const Region& rg : in.regions) children += rg.child;
-            r = {{"project", projectToJson(project_)}, {"diagnostics", diagJson(in.diagnostics)},
-                 {"sprites", (int)in.regions.size()}, {"children", children}};
-        } catch (const std::exception& e) {
-            return errJson(e.what());
+            if (!f_ImportAtlasFile(l_strPath, l_oIn, &l_strErr)) return f_ErrJson(l_strErr.empty() ? "cannot read " + l_strPath : l_strErr);
+            Project l_oP;
+            if (!f_ImportToProject(l_oIn, l_strProjectPath, "", l_oP, &l_strErr)) return f_ErrJson(l_strErr.empty() ? "import failed" : l_strErr);
+            std::string l_strExt = f_U8str(f_U8path(l_strPath).extension());
+            for (char& l_cC : l_strExt) l_cC = (char)tolower((unsigned char)l_cC);
+            l_oP.m_oOutput.m_vFormats = {l_strExt == ".pi" ? "pi" : l_strExt == ".json" ? "tp-json" : "atlas"};
+            l_oP.m_oOutput.m_strDir = ".";
+            l_oP.m_bEmbedded = true;
+            m_oProject = l_oP;
+            int l_iChildren = 0;
+            for (const Region& l_oRg : l_oIn.m_vRegions) l_iChildren += l_oRg.m_bChild;
+            l_jR = {{"project", f_ProjectToJson(m_oProject)}, {"diagnostics", f_DiagJson(l_oIn.m_vDiagnostics)},
+                 {"sprites", (int)l_oIn.m_vRegions.size()}, {"children", l_iChildren}};
+        } catch (const std::exception& l_oE) {
+            return f_ErrJson(l_oE.what());
         }
-        return r.dump();
+        return l_jR.dump();
     }
 
-    std::string formats() const { return json(exportFormats()).dump(); }
+    std::string f_Formats() const { return json(f_ExportFormats()).dump(); }
 
 private:
-    void invalidateImages() {
-        cache_.reset();
-        src_ = cachedImageSource(cache_);
+    void f_InvalidateImages() {
+        m_spCache.reset();
+        m_oSrc = f_CachedImageSource(m_spCache);
     }
 
-    static std::vector<std::string> splitCsv(const std::string& s) {
-        std::vector<std::string> v;
-        std::string cur;
-        for (char c : s + ",") {
-            if (c == ',') { if (!cur.empty()) v.push_back(cur); cur.clear(); }
-            else if (c != ' ') cur += c;
+    static std::vector<std::string> f_SplitCsv(const std::string& l_strS) {
+        std::vector<std::string> l_vV;
+        std::string l_strCur;
+        for (char l_cC : l_strS + ",") {
+            if (l_cC == ',') { if (!l_strCur.empty()) l_vV.push_back(l_strCur); l_strCur.clear(); }
+            else if (l_cC != ' ') l_strCur += l_cC;
         }
-        return v;
+        return l_vV;
     }
 
-    static std::string resultJson(const BuildResult& b) {
-        json pages = json::array();
-        long long pageArea = 0, used = 0;
-        for (const Page& p : b.pages) {
-            pages.push_back({{"file", p.file}, {"w", p.image.w}, {"h", p.image.h}});
-            pageArea += (long long)p.image.w * p.image.h;
+    static std::string f_ResultJson(const BuildResult& l_oB) {
+        json l_jPages = json::array();
+        long long l_i64PageArea = 0, l_i64Used = 0;
+        for (const Page& l_oP : l_oB.m_vPages) {
+            l_jPages.push_back({{"file", l_oP.m_strFile}, {"w", l_oP.m_oImage.m_iW}, {"h", l_oP.m_oImage.m_iH}});
+            l_i64PageArea += (long long)l_oP.m_oImage.m_iW * l_oP.m_oImage.m_iH;
         }
-        json regions = json::array();
-        std::set<std::tuple<int, int, int, int, int>> placed;   // dedupe/children share pixels
-        int images = 0, children = 0, aliases = 0;
-        for (const Region& r : b.regions) {
-            regions.push_back(regionJson(r));
-            if (r.child && !r.baked) children++;
-            else if (!r.aliasOf.empty()) aliases++;
-            else images++;
-            if ((!r.child || r.baked) && placed.insert({r.page, r.frame.x, r.frame.y, r.frame.w, r.frame.h}).second)
-                used += (long long)r.frame.w * r.frame.h;
+        json l_jRegions = json::array();
+        std::set<std::tuple<int, int, int, int, int>> l_setPlaced;   // dedupe/children share pixels
+        int l_iImages = 0, l_iChildren = 0, l_iAliases = 0;
+        for (const Region& l_oR : l_oB.m_vRegions) {
+            l_jRegions.push_back(f_RegionJson(l_oR));
+            if (l_oR.m_bChild && !l_oR.m_bBaked) l_iChildren++;
+            else if (!l_oR.m_strAliasOf.empty()) l_iAliases++;
+            else l_iImages++;
+            if ((!l_oR.m_bChild || l_oR.m_bBaked) && l_setPlaced.insert({l_oR.m_iPage, l_oR.m_oFrame.m_iX, l_oR.m_oFrame.m_iY, l_oR.m_oFrame.m_iW, l_oR.m_oFrame.m_iH}).second)
+                l_i64Used += (long long)l_oR.m_oFrame.m_iW * l_oR.m_oFrame.m_iH;
         }
-        json stats{{"pages", (int)b.pages.size()}, {"regions", (int)b.regions.size()}, {"images", images},
-                   {"children", children}, {"aliases", aliases}, {"errors", b.errorCount()},
-                   {"warnings", b.warningCount()}, {"pageArea", pageArea}, {"usedArea", used},
-                   {"occupancy", pageArea ? (double)used / (double)pageArea : 0.0}};
-        json anims = json::array();
-        for (const Animation& a : b.animations) {
-            json fr = json::array();
-            for (const AnimFrame& f : a.frames) fr.push_back({{"sprite", f.sprite}, {"time", f.time}});
-            anims.push_back({{"name", a.name}, {"loop", a.loop}, {"frames", fr}});
+        json l_jStats{{"pages", (int)l_oB.m_vPages.size()}, {"regions", (int)l_oB.m_vRegions.size()}, {"images", l_iImages},
+                   {"children", l_iChildren}, {"aliases", l_iAliases}, {"errors", l_oB.f_ErrorCount()},
+                   {"warnings", l_oB.f_WarningCount()}, {"pageArea", l_i64PageArea}, {"usedArea", l_i64Used},
+                   {"occupancy", l_i64PageArea ? (double)l_i64Used / (double)l_i64PageArea : 0.0}};
+        json l_jAnims = json::array();
+        for (const Animation& l_oA : l_oB.m_vAnimations) {
+            json l_jFr = json::array();
+            for (const AnimFrame& l_oF : l_oA.m_vFrames) l_jFr.push_back({{"sprite", l_oF.m_strSprite}, {"time", l_oF.m_fTime}});
+            l_jAnims.push_back({{"name", l_oA.m_strName}, {"loop", l_oA.m_bLoop}, {"frames", l_jFr}});
         }
-        return json{{"name", b.name}, {"ok", b.ok()}, {"pages", pages}, {"regions", regions},
-                    {"diagnostics", diagJson(b.diagnostics)}, {"animations", anims}, {"stats", stats}}.dump();
+        return json{{"name", l_oB.m_strName}, {"ok", l_oB.f_Ok()}, {"pages", l_jPages}, {"regions", l_jRegions},
+                    {"diagnostics", f_DiagJson(l_oB.m_vDiagnostics)}, {"animations", l_jAnims}, {"stats", l_jStats}}.dump();
     }
 
-    Project project_;
-    std::shared_ptr<void> cache_;
-    ImageSource src_;
-    BuildResult result_;
-    std::map<int, Project> snaps_;
-    int nextSnap_ = 1;
+    Project m_oProject;
+    std::shared_ptr<void> m_spCache;
+    ImageSource m_oSrc;
+    BuildResult m_oResult;
+    std::map<int, Project> m_mapSnaps;
+    int m_iNextSnap = 1;
 };
 
 // atlaspack's command line. args: a JS array of strings. Returns the exit code.
-int cliMain(const val& args) {
-    std::vector<std::string> v;
-    const int n = args["length"].as<int>();
-    for (int i = 0; i < n; i++) v.push_back(args[i].as<std::string>());
-    int code = 2;
+int f_CliMain(const val& l_oArgs) {
+    std::vector<std::string> l_vV;
+    const int l_iN = l_oArgs["length"].as<int>();
+    for (int l_iI = 0; l_iI < l_iN; l_iI++) l_vV.push_back(l_oArgs[l_iI].as<std::string>());
+    int l_iCode = 2;
     try {
-        code = atlasCliMain(v);
-    } catch (const std::exception& e) {
-        std::fprintf(stderr, "error: %s\n", e.what());
+        l_iCode = f_AtlasCliMain(l_vV);
+    } catch (const std::exception& l_oE) {
+        std::fprintf(stderr, "error: %s\n", l_oE.what());
     }
     std::fflush(stdout);
     std::fflush(stderr);
-    return code;
+    return l_iCode;
 }
 
 }  // namespace
@@ -550,42 +550,42 @@ int cliMain(const val& args) {
 EMSCRIPTEN_BINDINGS(atlas_web) {
     emscripten::class_<AtlasWeb>("AtlasWeb")
         .constructor<>()
-        .function("writeFile", &AtlasWeb::writeFile)
-        .function("readFile", &AtlasWeb::readFile)
-        .function("removeFile", &AtlasWeb::removeFile)
-        .function("exists", &AtlasWeb::exists)
-        .function("listFiles", &AtlasWeb::listFiles)
-        .function("newProject", &AtlasWeb::newProject)
-        .function("setProject", &AtlasWeb::setProject)
-        .function("getProject", &AtlasWeb::getProject)
-        .function("projectPath", &AtlasWeb::projectPath)
-        .function("resolvePath", &AtlasWeb::resolvePath)
-        .function("relativize", &AtlasWeb::relativize)
-        .function("inspect", &AtlasWeb::inspect)
-        .function("openProject", &AtlasWeb::openProject)
-        .function("setImageBytes", &AtlasWeb::setImageBytes)
-        .function("setImageFile", &AtlasWeb::setImageFile)
-        .function("hasImage", &AtlasWeb::hasImage)
-        .function("imageNames", &AtlasWeb::imageNames)
-        .function("imageNameFor", &AtlasWeb::imageNameFor)
-        .function("renameSprite", &AtlasWeb::renameSprite)
-        .function("deleteSprites", &AtlasWeb::deleteSprites)
-        .function("scanReferences", &AtlasWeb::scanReferences)
-        .function("snapshot", &AtlasWeb::snapshot)
-        .function("restore", &AtlasWeb::restore)
-        .function("keepSnapshots", &AtlasWeb::keepSnapshots)
-        .function("outputDirs", &AtlasWeb::outputDirs)
-        .function("saveAll", &AtlasWeb::saveAll)
-        .function("extract", &AtlasWeb::extract)
-        .function("resolve", &AtlasWeb::resolve)
-        .function("build", &AtlasWeb::build)
-        .function("pageCount", &AtlasWeb::pageCount)
-        .function("getPageRGBA", &AtlasWeb::getPageRGBA)
-        .function("getPagePng", &AtlasWeb::getPagePng)
-        .function("getRegionRGBA", &AtlasWeb::getRegionRGBA)
-        .function("getRegionPng", &AtlasWeb::getRegionPng)
-        .function("exportFiles", &AtlasWeb::exportFiles)
-        .function("importAtlas", &AtlasWeb::importAtlas)
-        .function("formats", &AtlasWeb::formats);
-    emscripten::function("cliMain", &cliMain);
+        .function("writeFile", &AtlasWeb::f_WriteFile)
+        .function("readFile", &AtlasWeb::f_ReadFile)
+        .function("removeFile", &AtlasWeb::f_RemoveFile)
+        .function("exists", &AtlasWeb::f_Exists)
+        .function("listFiles", &AtlasWeb::f_ListFiles)
+        .function("newProject", &AtlasWeb::f_NewProject)
+        .function("setProject", &AtlasWeb::f_SetProject)
+        .function("getProject", &AtlasWeb::f_GetProject)
+        .function("projectPath", &AtlasWeb::f_ProjectPath)
+        .function("resolvePath", &AtlasWeb::f_ResolvePath)
+        .function("relativize", &AtlasWeb::f_Relativize)
+        .function("inspect", &AtlasWeb::f_Inspect)
+        .function("openProject", &AtlasWeb::f_OpenProject)
+        .function("setImageBytes", &AtlasWeb::f_SetImageBytes)
+        .function("setImageFile", &AtlasWeb::f_SetImageFile)
+        .function("hasImage", &AtlasWeb::f_HasImage)
+        .function("imageNames", &AtlasWeb::f_ImageNames)
+        .function("imageNameFor", &AtlasWeb::f_ImageNameFor)
+        .function("renameSprite", &AtlasWeb::f_RenameSprite)
+        .function("deleteSprites", &AtlasWeb::f_DeleteSprites)
+        .function("scanReferences", &AtlasWeb::f_ScanReferences)
+        .function("snapshot", &AtlasWeb::f_Snapshot)
+        .function("restore", &AtlasWeb::f_Restore)
+        .function("keepSnapshots", &AtlasWeb::f_KeepSnapshots)
+        .function("outputDirs", &AtlasWeb::f_OutputDirs)
+        .function("saveAll", &AtlasWeb::f_SaveAll)
+        .function("extract", &AtlasWeb::f_Extract)
+        .function("resolve", &AtlasWeb::f_Resolve)
+        .function("build", &AtlasWeb::f_Build)
+        .function("pageCount", &AtlasWeb::f_PageCount)
+        .function("getPageRGBA", &AtlasWeb::f_GetPageRGBA)
+        .function("getPagePng", &AtlasWeb::f_GetPagePng)
+        .function("getRegionRGBA", &AtlasWeb::f_GetRegionRGBA)
+        .function("getRegionPng", &AtlasWeb::f_GetRegionPng)
+        .function("exportFiles", &AtlasWeb::f_ExportFiles)
+        .function("importAtlas", &AtlasWeb::f_ImportAtlas)
+        .function("formats", &AtlasWeb::f_Formats);
+    emscripten::function("cliMain", &f_CliMain);
 }

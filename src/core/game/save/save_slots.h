@@ -15,63 +15,63 @@
 namespace toms {
 
 // Directory save files live in for this platform. Never empty.
-const std::string& defaultSaveDir();
+const std::string& f_DefaultSaveDir();
 // The player's settings file (game_settings.h) in it: the one place its name is written.
-inline std::string settingsPath() { return defaultSaveDir() + "/settings.json"; }
+inline std::string f_SettingsPath() { return f_DefaultSaveDir() + "/settings.json"; }
 // Creates the save directory if needed. Returns false if it could not be created.
-bool ensureSaveDir(const std::string& saveDir);
+bool f_EnsureSaveDir(const std::string& l_strSaveDir);
 // Flushes pending writes to persistent storage. No-op on desktop; on the browser this kicks
 // off an async IDBFS sync (see jsSyncfs), so a page reload does not lose the save.
-void flushSaveDir();
+void f_FlushSaveDir();
 
 // "<saveDir>/slot<N>.json" — also accepts a full path (used by tests).
-std::string slotPath(const std::string& saveDir, int slot);
+std::string f_SlotPath(const std::string& l_strSaveDir, int l_iSlot);
 // Local timestamp, "YYYY-MM-DD HH:MM:SS" (used for the Continue row's "saved" column).
-std::string nowStamp();
+std::string f_NowStamp();
 
-bool slotExists(const std::string& saveDir, int slot);
-bool deleteSlot(const std::string& saveDir, int slot);
+bool f_SlotExists(const std::string& l_strSaveDir, int l_iSlot);
+bool f_DeleteSlot(const std::string& l_strSaveDir, int l_iSlot);
 
 // The slot file's own format version (its header: savedAt, playTimeSec, meta, run). Raised only when that header
 // changes; the meta / run parts carry their own schemaVersion.
-constexpr int kSlotSaveVersion = 1;
+constexpr int g_iSlotSaveVersion = 1;
 
 // What the Continue page shows for one slot.
 struct SlotSummary {
-    int slot = 0;
-    bool exists = false;       // loadable (from the file or, failing that, its backup)
-    bool damaged = false;      // a file is there but neither it nor its backup can be read: never offered as empty
-    bool fromBackup = false;   // the slot file was unreadable and the backup (the save before it) is shown instead
-    bool newer = false;        // written by a newer version of the game: loads, but is never overwritten
-    std::string stageId;
-    std::string stageName;     // from data/stages/<id>.json's "name", when readable
-    int lv = 1;
-    int hp = 0, maxhp = 0, atk = 0, def = 0, gold = 0;
-    std::string savedAt;
-    int playTimeSec = 0;
+    int m_iSlot = 0;
+    bool m_bExists = false;       // loadable (from the file or, failing that, its backup)
+    bool m_bDamaged = false;      // a file is there but neither it nor its backup can be read: never offered as empty
+    bool m_bFromBackup = false;   // the slot file was unreadable and the backup (the save before it) is shown instead
+    bool m_bNewer = false;        // written by a newer version of the game: loads, but is never overwritten
+    std::string m_strStageId;
+    std::string m_strStageName;     // from data/stages/<id>.json's "name", when readable
+    int m_iLv = 1;
+    int m_iHp = 0, m_iMaxhp = 0, m_iAtk = 0, m_iDef = 0, m_iGold = 0;
+    std::string m_strSavedAt;
+    int m_iPlayTimeSec = 0;
 };
 
-bool writeSlotSave(const std::string& saveDir, int slot,
-                   const MetaSaveData& meta, const RunSaveData& run,
-                   int playTimeSec, const std::string& savedAt, const std::string& stageName);
+bool f_WriteSlotSave(const std::string& l_strSaveDir, int l_iSlot,
+                   const MetaSaveData& l_oMeta, const RunSaveData& l_oRun,
+                   int l_iPlayTimeSec, const std::string& l_strSavedAt, const std::string& l_strStageName);
 // How a slot was read (readSlotSave's optional report).
 struct SlotLoadInfo {
-    bool fromBackup = false;   // the slot file was damaged; its backup was loaded
-    bool newer = false;        // the file comes from a newer version of the game (writeSlotSave will not replace it)
+    bool m_bFromBackup = false;   // the slot file was damaged; its backup was loaded
+    bool m_bNewer = false;        // the file comes from a newer version of the game (writeSlotSave will not replace it)
 };
-bool readSlotSave(const std::string& saveDir, int slot,
-                  MetaSaveData& metaOut, RunSaveData& runOut,
-                  int* playTimeSec = nullptr, std::string* savedAt = nullptr, SlotLoadInfo* info = nullptr);
+bool f_ReadSlotSave(const std::string& l_strSaveDir, int l_iSlot,
+                  MetaSaveData& l_oMetaOut, RunSaveData& l_oRunOut,
+                  int* l_pPlayTimeSec = nullptr, std::string* l_pSavedAt = nullptr, SlotLoadInfo* l_pInfo = nullptr);
 // A save in the slot format (what writeSlotSave writes) read from any file -- test scenarios start from one
 // (docs/gameplay/08_TEST_SCENARIOS.md). No backup fallback: a scenario's file is test data, not a player's save.
-bool readSaveFile(const std::string& path, MetaSaveData& metaOut, RunSaveData& runOut, int* playTimeSec = nullptr);
+bool f_ReadSaveFile(const std::string& l_strPath, MetaSaveData& l_oMetaOut, RunSaveData& l_oRunOut, int* l_pPlayTimeSec = nullptr);
 // True when the slot holds a save from a newer version of the game (its file or, if that is damaged, its backup).
-bool slotIsNewer(const std::string& saveDir, int slot);
+bool f_SlotIsNewer(const std::string& l_strSaveDir, int l_iSlot);
 // Reads just the header/player fields the Continue list needs (no full parse of entityStatus).
-SlotSummary summarizeSlot(const std::string& saveDir, int slot, int maxSlot = 0);
+SlotSummary f_SummarizeSlot(const std::string& l_strSaveDir, int l_iSlot, int l_iMaxSlot = 0);
 // Lowest unused slot in [1..slotCount], or -1 when every slot is taken.
-int firstEmptySlot(const std::string& saveDir, int slotCount);
+int f_FirstEmptySlot(const std::string& l_strSaveDir, int l_iSlotCount);
 // Slot with the newest savedAt stamp, or -1 when there are none.
-int newestSlot(const std::string& saveDir, int slotCount);
+int f_NewestSlot(const std::string& l_strSaveDir, int l_iSlotCount);
 
 } // namespace toms

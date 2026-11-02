@@ -32,8 +32,8 @@ namespace toms {
 
 enum class LogLevel : int { Trace = 0, Debug = 1, Info = 2, Warn = 3, Error = 4, Fatal = 5 };
 
-constexpr const char* logLevelName(LogLevel l) {
-    switch (l) {
+constexpr const char* f_LogLevelName(LogLevel l_eL) {
+    switch (l_eL) {
         case LogLevel::Trace: return "TRACE";
         case LogLevel::Debug: return "DEBUG";
         case LogLevel::Info:  return "INFO";
@@ -46,120 +46,120 @@ constexpr const char* logLevelName(LogLevel l) {
 
 class Logger {
 public:
-    static Logger& instance() { static Logger l; return l; }
+    static Logger& f_Instance() { static Logger l_oL; return l_oL; }
 
-    void setLevel(LogLevel l) { minLevel_ = l; }
-    LogLevel level() const { return minLevel_; }
+    void f_SetLevel(LogLevel l_eL) { m_eMinLevel = l_eL; }
+    LogLevel f_Level() const { return m_eMinLevel; }
 
     // empty path disables the file sink
-    void setFile(const std::string& path) {
-        std::lock_guard<std::mutex> lk(mutex_);
-        file_.close();
-        if (!path.empty()) {
-            file_.open(path, std::ios::out | std::ios::app);
+    void f_SetFile(const std::string& l_strPath) {
+        std::lock_guard<std::mutex> l_oLk(m_oMutex);
+        m_oFile.close();
+        if (!l_strPath.empty()) {
+            m_oFile.open(l_strPath, std::ios::out | std::ios::app);
         }
     }
 
     // ---- "{}" format API ----
     template <class... Args>
-    void log(LogLevel lvl, const char* file, int line, std::string_view fmt, Args&&... args) {
-        if (lvl < minLevel_) return;
-        std::string msg = formatImpl(fmt, std::forward<Args>(args)...);
-        emit(lvl, file, line, msg);
+    void f_Log(LogLevel l_eLvl, const char* l_pszFile, int l_iLine, std::string_view l_svFmt, Args&&... l_oArgs) {
+        if (l_eLvl < m_eMinLevel) return;
+        std::string l_strMsg = f_FormatImpl(l_svFmt, std::forward<Args>(l_oArgs)...);
+        f_Emit(l_eLvl, l_pszFile, l_iLine, l_strMsg);
     }
 
     // ---- streaming API:  TOMS_LOG(LogLevel::Warn) << "hp=" << hp; ----
     struct Stream {
-        LogLevel lvl; const char* file; int line; bool enabled; std::ostringstream oss;
-        ~Stream() { if (enabled) Logger::instance().emit(lvl, file, line, oss.str()); }
-        template <class T> Stream& operator<<(T&& v) { oss << std::forward<T>(v); return *this; }
+        LogLevel m_eLvl; const char* m_pszFile; int m_iLine; bool m_bEnabled; std::ostringstream m_oOss;
+        ~Stream() { if (m_bEnabled) Logger::f_Instance().f_Emit(m_eLvl, m_pszFile, m_iLine, m_oOss.str()); }
+        template <class T> Stream& operator<<(T&& l_oV) { m_oOss << std::forward<T>(l_oV); return *this; }
     };
 
 private:
     Logger() = default;
-    ~Logger() { if (file_.is_open()) file_.close(); }
+    ~Logger() { if (m_oFile.is_open()) m_oFile.close(); }
 
     // stringify one argument (numbers / strings / string_view / const char*)
     template <class T>
-    static std::string toStr(T&& v) {
+    static std::string f_ToStr(T&& l_oV) {
         using U = std::decay_t<T>;
         if constexpr (std::is_same_v<U, std::string>)
-            return std::forward<T>(v);
+            return std::forward<T>(l_oV);
         else if constexpr (std::is_convertible_v<U, std::string_view>)
-            return std::string(std::forward<T>(v));
+            return std::string(std::forward<T>(l_oV));
         else {
-            std::ostringstream os;
-            os << std::forward<T>(v);
-            return os.str();
+            std::ostringstream l_oOs;
+            l_oOs << std::forward<T>(l_oV);
+            return l_oOs.str();
         }
     }
 
     // build the message: replace "{}" with args (supports "{{" / "}}" escapes)
     template <class... Args>
-    static std::string formatImpl(std::string_view fmt, Args&&... args) {
-        std::vector<std::string> strs{ toStr(std::forward<Args>(args))... };
-        std::string out; out.reserve(fmt.size() + 16);
-        size_t argN = 0;
-        for (size_t i = 0; i < fmt.size(); ) {
-            if (i + 1 < fmt.size() && fmt[i] == '{' && fmt[i + 1] == '}') {
-                if (argN < strs.size()) { out += strs[argN++]; i += 2; }
-                else { out += "{}"; i += 2; }
-            } else if (i + 1 < fmt.size() && fmt[i] == '{' && fmt[i + 1] == '{') {
-                out += '{'; i += 2;
-            } else if (i + 1 < fmt.size() && fmt[i] == '}' && fmt[i + 1] == '}') {
-                out += '}'; i += 2;
-            } else { out += fmt[i]; ++i; }
+    static std::string f_FormatImpl(std::string_view l_svFmt, Args&&... l_oArgs) {
+        std::vector<std::string> l_vStrs{ f_ToStr(std::forward<Args>(l_oArgs))... };
+        std::string l_strOut; l_strOut.reserve(l_svFmt.size() + 16);
+        size_t l_nArgN = 0;
+        for (size_t l_nI = 0; l_nI < l_svFmt.size(); ) {
+            if (l_nI + 1 < l_svFmt.size() && l_svFmt[l_nI] == '{' && l_svFmt[l_nI + 1] == '}') {
+                if (l_nArgN < l_vStrs.size()) { l_strOut += l_vStrs[l_nArgN++]; l_nI += 2; }
+                else { l_strOut += "{}"; l_nI += 2; }
+            } else if (l_nI + 1 < l_svFmt.size() && l_svFmt[l_nI] == '{' && l_svFmt[l_nI + 1] == '{') {
+                l_strOut += '{'; l_nI += 2;
+            } else if (l_nI + 1 < l_svFmt.size() && l_svFmt[l_nI] == '}' && l_svFmt[l_nI + 1] == '}') {
+                l_strOut += '}'; l_nI += 2;
+            } else { l_strOut += l_svFmt[l_nI]; ++l_nI; }
         }
-        return out;
+        return l_strOut;
     }
 
-    void emit(LogLevel lvl, const char* file, int line, const std::string& msg) {
-        std::lock_guard<std::mutex> lk(mutex_);
+    void f_Emit(LogLevel l_eLvl, const char* l_pszFile, int l_iLine, const std::string& l_strMsg) {
+        std::lock_guard<std::mutex> l_oLk(m_oMutex);
         // timestamp
-        auto now = std::chrono::system_clock::now();
-        auto t = std::chrono::system_clock::to_time_t(now);
-        std::tm tm{};
+        auto l_oNow = std::chrono::system_clock::now();
+        auto l_i64T = std::chrono::system_clock::to_time_t(l_oNow);
+        std::tm l_oTm{};
 #if defined(_WIN32)
-        localtime_s(&tm, &t);
+        localtime_s(&l_oTm, &l_i64T);
 #else
-        localtime_r(&t, &tm);
+        localtime_r(&l_i64T, &l_oTm);
 #endif
-        char ts[16];
-        std::strftime(ts, sizeof(ts), "%H:%M:%S", &tm);
+        char l_pszTs[16];
+        std::strftime(l_pszTs, sizeof(l_pszTs), "%H:%M:%S", &l_oTm);
         // strip path to basename
-        std::string floc = file ? file : "";
-        size_t slash = floc.find_last_of("/\\");
-        if (slash != std::string::npos) floc = floc.substr(slash + 1);
-        std::string lineStr =
-            std::string("[") + ts + "] " + logLevelName(lvl) + " " +
-            floc + ":" + std::to_string(line) + "  " + msg + "\n";
-        std::cout << lineStr;
+        std::string l_strFloc = l_pszFile ? l_pszFile : "";
+        size_t l_nSlash = l_strFloc.find_last_of("/\\");
+        if (l_nSlash != std::string::npos) l_strFloc = l_strFloc.substr(l_nSlash + 1);
+        std::string l_strLineStr =
+            std::string("[") + l_pszTs + "] " + f_LogLevelName(l_eLvl) + " " +
+            l_strFloc + ":" + std::to_string(l_iLine) + "  " + l_strMsg + "\n";
+        std::cout << l_strLineStr;
 #if defined(__ANDROID__)
         {   // On a device stdout goes nowhere visible: Android's log is read with adb logcat. A copy
             // without the trailing newline, because logcat appends its own per entry -- lineStr itself
             // is left untouched so the stream and the file sink still see exactly the same text.
-            static const char* kTag = "toms";
-            const int prio = lvl == LogLevel::Fatal ? ANDROID_LOG_FATAL
-                           : lvl == LogLevel::Error ? ANDROID_LOG_ERROR
-                           : lvl == LogLevel::Warn  ? ANDROID_LOG_WARN
-                           : lvl == LogLevel::Info  ? ANDROID_LOG_INFO
+            static const char* l_pszTag = "toms";
+            const int l_iPrio = l_eLvl == LogLevel::Fatal ? ANDROID_LOG_FATAL
+                           : l_eLvl == LogLevel::Error ? ANDROID_LOG_ERROR
+                           : l_eLvl == LogLevel::Warn  ? ANDROID_LOG_WARN
+                           : l_eLvl == LogLevel::Info  ? ANDROID_LOG_INFO
                                                     : ANDROID_LOG_DEBUG;
-            if (!lineStr.empty() && lineStr.back() == '\n') __android_log_print(prio, kTag, "%s", lineStr.substr(0, lineStr.size() - 1).c_str());
-            else                                             __android_log_print(prio, kTag, "%s", lineStr.c_str());
+            if (!l_strLineStr.empty() && l_strLineStr.back() == '\n') __android_log_print(l_iPrio, l_pszTag, "%s", l_strLineStr.substr(0, l_strLineStr.size() - 1).c_str());
+            else                                             __android_log_print(l_iPrio, l_pszTag, "%s", l_strLineStr.c_str());
         }
 #endif
-        if (file_.is_open()) file_ << lineStr;
+        if (m_oFile.is_open()) m_oFile << l_strLineStr;
     }
 
-    LogLevel        minLevel_ = LogLevel::Info;
-    std::mutex      mutex_;
-    std::ofstream   file_;
+    LogLevel        m_eMinLevel = LogLevel::Info;
+    std::mutex      m_oMutex;
+    std::ofstream   m_oFile;
 
 public:
     // test helper: expose the "{}" formatter (used by log_test.cpp)
     template <class... Args>
-    std::string formatForTest(std::string_view fmt, Args&&... args) {
-        return formatImpl(fmt, std::forward<Args>(args)...);
+    std::string f_FormatForTest(std::string_view l_svFmt, Args&&... l_oArgs) {
+        return f_FormatImpl(l_svFmt, std::forward<Args>(l_oArgs)...);
     }
 };
 
@@ -168,10 +168,10 @@ public:
 // ---- convenience macros (FTM: file/line injected automatically) ----
 #define TOMS_LOG(lvl) \
     toms::Logger::Stream{ (lvl), __FILE__, __LINE__, \
-        (toms::Logger::instance().level() <= (lvl)), std::ostringstream{} }
+        (toms::Logger::f_Instance().f_Level() <= (lvl)), std::ostringstream{} }
 #define TOMS_LOG_TRACE(...) toms::Logger::instance().log(toms::LogLevel::Trace, __FILE__, __LINE__, __VA_ARGS__)
 #define TOMS_LOG_DEBUG(...) toms::Logger::instance().log(toms::LogLevel::Debug, __FILE__, __LINE__, __VA_ARGS__)
-#define TOMS_LOG_INFO(...)  toms::Logger::instance().log(toms::LogLevel::Info,  __FILE__, __LINE__, __VA_ARGS__)
+#define TOMS_LOG_INFO(...)  toms::Logger::f_Instance().f_Log(toms::LogLevel::Info,  __FILE__, __LINE__, __VA_ARGS__)
 #define TOMS_LOG_WARN(...)  toms::Logger::instance().log(toms::LogLevel::Warn,  __FILE__, __LINE__, __VA_ARGS__)
-#define TOMS_LOG_ERROR(...) toms::Logger::instance().log(toms::LogLevel::Error, __FILE__, __LINE__, __VA_ARGS__)
+#define TOMS_LOG_ERROR(...) toms::Logger::f_Instance().f_Log(toms::LogLevel::Error, __FILE__, __LINE__, __VA_ARGS__)
 #define TOMS_LOG_FATAL(...) toms::Logger::instance().log(toms::LogLevel::Fatal, __FILE__, __LINE__, __VA_ARGS__)

@@ -16,24 +16,24 @@
 namespace toms {
 
 struct Canvas {
-    uint32_t w = 1024, h = 768;
-    bool portrait() const { return h > w; }
-    bool operator==(const Canvas& o) const { return w == o.w && h == o.h; }
-    bool operator!=(const Canvas& o) const { return !(*this == o); }
+    uint32_t m_uW = 1024, m_uH = 768;
+    bool f_Portrait() const { return m_uH > m_uW; }
+    bool operator==(const Canvas& l_oO) const { return m_uW == l_oO.m_uW && m_uH == l_oO.m_uH; }
+    bool operator!=(const Canvas& l_oO) const { return !(*this == l_oO); }
 };
 
-constexpr uint32_t kShortSide = 768, kMinLongSide = 1024, kMaxLongSide = 2048;
+constexpr uint32_t g_uShortSide = 768, g_uMinLongSide = 1024, g_uMaxLongSide = 2048;
 
-inline Canvas canvasFor(uint32_t deviceW, uint32_t deviceH) {
-    Canvas c;
-    if (deviceW == 0 || deviceH == 0) return c;   // no screen yet: the landscape default
-    const bool portrait = deviceH > deviceW;
-    const double ratio = portrait ? double(deviceH) / double(deviceW) : double(deviceW) / double(deviceH);
-    const uint32_t longSide =
-        (uint32_t)std::clamp<long>(std::lround(kShortSide * ratio), (long)kMinLongSide, (long)kMaxLongSide);
-    c.w = portrait ? kShortSide : longSide;
-    c.h = portrait ? longSide : kShortSide;
-    return c;
+inline Canvas f_CanvasFor(uint32_t l_uDeviceW, uint32_t l_uDeviceH) {
+    Canvas l_oC;
+    if (l_uDeviceW == 0 || l_uDeviceH == 0) return l_oC;   // no screen yet: the landscape default
+    const bool l_bPortrait = l_uDeviceH > l_uDeviceW;
+    const double l_dRatio = l_bPortrait ? double(l_uDeviceH) / double(l_uDeviceW) : double(l_uDeviceW) / double(l_uDeviceH);
+    const uint32_t l_uLongSide =
+        (uint32_t)std::clamp<long>(std::lround(g_uShortSide * l_dRatio), (long)g_uMinLongSide, (long)g_uMaxLongSide);
+    l_oC.m_uW = l_bPortrait ? g_uShortSide : l_uLongSide;
+    l_oC.m_uH = l_bPortrait ? l_uLongSide : g_uShortSide;
+    return l_oC;
 }
 
 }  // namespace toms

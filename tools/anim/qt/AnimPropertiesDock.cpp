@@ -26,465 +26,465 @@ using toms::anim::Node;
 
 namespace {
 
-QString qs(const std::string& s) { return QString::fromStdString(s); }
+QString f_Qs(const std::string& l_strS) { return QString::fromStdString(l_strS); }
 
-QDoubleSpinBox* dspin(double lo, double hi, int decimals, double step, QWidget* parent)
+QDoubleSpinBox* f_Dspin(double l_dLo, double l_dHi, int l_iDecimals, double l_dStep, QWidget* l_pParent)
 {
-    auto* s = new QDoubleSpinBox(parent);
-    s->setRange(lo, hi);
-    s->setDecimals(decimals);
-    s->setSingleStep(step);
-    s->setKeyboardTracking(false);
-    s->setMinimumWidth(52);
-    s->setAccelerated(true);
-    return s;
+    auto* l_pS = new QDoubleSpinBox(l_pParent);
+    l_pS->setRange(l_dLo, l_dHi);
+    l_pS->setDecimals(l_iDecimals);
+    l_pS->setSingleStep(l_dStep);
+    l_pS->setKeyboardTracking(false);
+    l_pS->setMinimumWidth(52);
+    l_pS->setAccelerated(true);
+    return l_pS;
 }
 
-QWidget* row(QWidget* parent, const QList<QPair<QString, QWidget*>>& fields, QWidget* trailing = nullptr)
+QWidget* f_Row(QWidget* l_pParent, const QList<QPair<QString, QWidget*>>& l_oFields, QWidget* l_pTrailing = nullptr)
 {
-    auto* w = new QWidget(parent);
-    auto* l = new QHBoxLayout(w);
-    l->setContentsMargins(0, 0, 0, 0);
-    l->setSpacing(3);
-    for (const auto& f : fields) {
-        if (!f.first.isEmpty()) {
-            auto* lab = new QLabel(f.first, w);
-            lab->setForegroundRole(QPalette::PlaceholderText);
-            l->addWidget(lab);
+    auto* l_pW = new QWidget(l_pParent);
+    auto* l_pL = new QHBoxLayout(l_pW);
+    l_pL->setContentsMargins(0, 0, 0, 0);
+    l_pL->setSpacing(3);
+    for (const auto& l_pairF : l_oFields) {
+        if (!l_pairF.first.isEmpty()) {
+            auto* l_pLab = new QLabel(l_pairF.first, l_pW);
+            l_pLab->setForegroundRole(QPalette::PlaceholderText);
+            l_pL->addWidget(l_pLab);
         }
-        l->addWidget(f.second, 1);
+        l_pL->addWidget(l_pairF.second, 1);
     }
-    if (trailing) l->addWidget(trailing);
-    return w;
+    if (l_pTrailing) l_pL->addWidget(l_pTrailing);
+    return l_pW;
 }
 
 }  // namespace
 
-AnimPropertiesDock::AnimPropertiesDock(AnimDocument* doc, QWidget* parent)
-    : QDockWidget(tr("Properties"), parent)
-    , m_doc(doc)
+AnimPropertiesDock::AnimPropertiesDock(AnimDocument* l_pDoc, QWidget* l_pParent)
+    : QDockWidget(tr("Properties"), l_pParent)
+    , m_pDoc(l_pDoc)
 {
     setObjectName(QStringLiteral("AnimPropertiesDock"));
-    auto* scroll = new QScrollArea(this);
-    scroll->setWidgetResizable(true);
-    scroll->setFrameShape(QFrame::NoFrame);
-    auto* body = new QWidget(scroll);
-    auto* layout = new QVBoxLayout(body);
-    layout->setContentsMargins(6, 6, 6, 6);
-    layout->setSpacing(8);
+    auto* l_pScroll = new QScrollArea(this);
+    l_pScroll->setWidgetResizable(true);
+    l_pScroll->setFrameShape(QFrame::NoFrame);
+    auto* l_pBody = new QWidget(l_pScroll);
+    auto* l_pLayout = new QVBoxLayout(l_pBody);
+    l_pLayout->setContentsMargins(6, 6, 6, 6);
+    l_pLayout->setSpacing(8);
 
     // ---- clip ----
-    auto* clipBox = new QGroupBox(tr("Clip"), body);
-    m_clip = ClipFields::create(doc, clipBox, &m_updating);
-    auto* cf = new QFormLayout(clipBox);
-    cf->addRow(tr("Length"), m_clip.length);
-    cf->addRow(tr("Plays"), m_clip.playCount);
-    cf->addRow(QString(), m_clip.stay);
-    layout->addWidget(clipBox);
+    auto* l_pClipBox = new QGroupBox(tr("Clip"), l_pBody);
+    m_oClip = ClipFields::f_Create(l_pDoc, l_pClipBox, &m_bUpdating);
+    auto* l_pCf = new QFormLayout(l_pClipBox);
+    l_pCf->addRow(tr("Length"), m_oClip.m_pLength);
+    l_pCf->addRow(tr("Plays"), m_oClip.m_pPlayCount);
+    l_pCf->addRow(QString(), m_oClip.m_pStay);
+    l_pLayout->addWidget(l_pClipBox);
 
     // ---- atlases (the file's, in lookup order) ----
-    auto* atlasBox = new QGroupBox(tr("Atlases"), body);
-    m_atlases = new AnimAtlasesPanel(doc, atlasBox);
-    auto* al = new QVBoxLayout(atlasBox);
-    al->addWidget(m_atlases);
-    layout->addWidget(atlasBox);
+    auto* l_pAtlasBox = new QGroupBox(tr("Atlases"), l_pBody);
+    m_pAtlases = new AnimAtlasesPanel(l_pDoc, l_pAtlasBox);
+    auto* l_pAl = new QVBoxLayout(l_pAtlasBox);
+    l_pAl->addWidget(m_pAtlases);
+    l_pLayout->addWidget(l_pAtlasBox);
 
     // ---- node (rest) ----
-    m_nodeBox = new QGroupBox(tr("Node"), body);
-    auto* nf = new QFormLayout(m_nodeBox);
-    m_name = new QLineEdit(m_nodeBox);
-    m_sprite = new QComboBox(m_nodeBox);
-    m_sprite->setEditable(true);
-    m_sprite->setInsertPolicy(QComboBox::NoInsert);
-    m_sprite->setMaxVisibleItems(24);
-    m_sprite->setToolTip(tr("The rest sprite, as name (atlas id): picking one stores its atlas (\"id:name\"). "
+    m_pNodeBox = new QGroupBox(tr("Node"), l_pBody);
+    auto* l_pNf = new QFormLayout(m_pNodeBox);
+    m_pName = new QLineEdit(m_pNodeBox);
+    m_pSprite = new QComboBox(m_pNodeBox);
+    m_pSprite->setEditable(true);
+    m_pSprite->setInsertPolicy(QComboBox::NoInsert);
+    m_pSprite->setMaxVisibleItems(24);
+    m_pSprite->setToolTip(tr("The rest sprite, as name (atlas id): picking one stores its atlas (\"id:name\"). "
                             "(none) = a group that only moves its children. Type to filter."));
-    m_atlasPivot = new QCheckBox(tr("Atlas pivot"), m_nodeBox);
-    m_atlasPivot->setToolTip(tr("Use the sprite's pivot from the atlas (x_pivot, else the centre)"));
-    m_pivotX = dspin(-4, 5, 3, 0.05, m_nodeBox);
-    m_pivotY = dspin(-4, 5, 3, 0.05, m_nodeBox);
-    m_order = new QSpinBox(m_nodeBox);
-    m_order->setRange(-999, 999);
-    m_order->setKeyboardTracking(false);
-    m_order->setToolTip(tr("Among siblings; < 0 draws before (under) the parent's own sprite"));
-    m_blend = new QComboBox(m_nodeBox);
-    m_blend->addItems({tr("normal"), tr("add")});
-    m_inheritColor = new QCheckBox(tr("Inherit colour"), m_nodeBox);
-    m_restVisible = new QCheckBox(tr("Visible (rest)"), m_nodeBox);
-    m_playback = new QComboBox(m_nodeBox);
-    m_playback->addItems({tr("Once, stay at the last key"), tr("Once, then hide"), tr("Loop")});
-    m_playback->setToolTip(tr("How this node plays its keys (with its children's: first..last key of the subtree).\n"
+    m_pAtlasPivot = new QCheckBox(tr("Atlas pivot"), m_pNodeBox);
+    m_pAtlasPivot->setToolTip(tr("Use the sprite's pivot from the atlas (x_pivot, else the centre)"));
+    m_pPivotX = f_Dspin(-4, 5, 3, 0.05, m_pNodeBox);
+    m_pPivotY = f_Dspin(-4, 5, 3, 0.05, m_pNodeBox);
+    m_pOrder = new QSpinBox(m_pNodeBox);
+    m_pOrder->setRange(-999, 999);
+    m_pOrder->setKeyboardTracking(false);
+    m_pOrder->setToolTip(tr("Among siblings; < 0 draws before (under) the parent's own sprite"));
+    m_pBlend = new QComboBox(m_pNodeBox);
+    m_pBlend->addItems({tr("normal"), tr("add")});
+    m_pInheritColor = new QCheckBox(tr("Inherit colour"), m_pNodeBox);
+    m_pRestVisible = new QCheckBox(tr("Visible (rest)"), m_pNodeBox);
+    m_pPlayback = new QComboBox(m_pNodeBox);
+    m_pPlayback->addItems({tr("Once, stay at the last key"), tr("Once, then hide"), tr("Loop")});
+    m_pPlayback->setToolTip(tr("How this node plays its keys (with its children's: first..last key of the subtree).\n"
                               "Once, stay: holds its last pose (drawn, nothing updates).\n"
                               "Once, then hide: hidden with its children after its last key.\n"
                               "Loop: plays first..last key again, forever, also after the clip has ended."));
-    m_skin = new QLineEdit(m_nodeBox);
-    m_skin->setPlaceholderText(tr("(not skinned)"));
-    m_skin->setToolTip(tr("Bones that bend this sprite's mesh: node names of this clip, comma separated. Empty = not skinned (drawn as a quad). The weights are made from the rest pose; its mesh is cut from the sprite and saved with the .anim (<name>.mesh.json). docs/engine/16_MESH_ANIMATION.md"));
-    nf->addRow(tr("Name"), m_name);
-    nf->addRow(tr("Sprite"), m_sprite);
-    nf->addRow(tr("Playback"), m_playback);
-    nf->addRow(tr("Pivot"), m_atlasPivot);
-    nf->addRow(QString(), row(m_nodeBox, {{QStringLiteral("x"), m_pivotX}, {QStringLiteral("y"), m_pivotY}}));
-    nf->addRow(tr("Order"), m_order);
-    nf->addRow(tr("Blend"), m_blend);
-    nf->addRow(QString(), m_inheritColor);
-    nf->addRow(QString(), m_restVisible);
-    nf->addRow(tr("Skin"), m_skin);
-    m_skinInfo = new QLabel(m_nodeBox);
-    m_skinInfo->setWordWrap(true);
-    m_skinInfo->setForegroundRole(QPalette::PlaceholderText);
-    nf->addRow(QString(), m_skinInfo);
+    m_pSkin = new QLineEdit(m_pNodeBox);
+    m_pSkin->setPlaceholderText(tr("(not skinned)"));
+    m_pSkin->setToolTip(tr("Bones that bend this sprite's mesh: node names of this clip, comma separated. Empty = not skinned (drawn as a quad). The weights are made from the rest pose; its mesh is cut from the sprite and saved with the .anim (<name>.mesh.json). docs/engine/16_MESH_ANIMATION.md"));
+    l_pNf->addRow(tr("Name"), m_pName);
+    l_pNf->addRow(tr("Sprite"), m_pSprite);
+    l_pNf->addRow(tr("Playback"), m_pPlayback);
+    l_pNf->addRow(tr("Pivot"), m_pAtlasPivot);
+    l_pNf->addRow(QString(), f_Row(m_pNodeBox, {{QStringLiteral("x"), m_pPivotX}, {QStringLiteral("y"), m_pPivotY}}));
+    l_pNf->addRow(tr("Order"), m_pOrder);
+    l_pNf->addRow(tr("Blend"), m_pBlend);
+    l_pNf->addRow(QString(), m_pInheritColor);
+    l_pNf->addRow(QString(), m_pRestVisible);
+    l_pNf->addRow(tr("Skin"), m_pSkin);
+    m_pSkinInfo = new QLabel(m_pNodeBox);
+    m_pSkinInfo->setWordWrap(true);
+    m_pSkinInfo->setForegroundRole(QPalette::PlaceholderText);
+    l_pNf->addRow(QString(), m_pSkinInfo);
     {   // Bones the node does not carry: moving it slides the mesh off them. One click puts them under it.
-        m_bonesOutside = new QWidget(m_nodeBox);
-        auto* v = new QVBoxLayout(m_bonesOutside);
-        v->setContentsMargins(0, 0, 0, 0);
-        m_bonesOutsideText = new QLabel(m_bonesOutside);
-        m_bonesOutsideText->setWordWrap(true);
-        QPalette warn = m_bonesOutsideText->palette();
-        warn.setColor(QPalette::WindowText, QColor(0xe0, 0xa0, 0x30));
-        m_bonesOutsideText->setPalette(warn);
-        auto* fix = new QPushButton(tr("Move Bones Under This Sprite"), m_bonesOutside);
-        fix->setToolTip(tr("The bones become children of this node, nothing moving on screen: then moving the sprite "
+        m_pBonesOutside = new QWidget(m_pNodeBox);
+        auto* l_pV = new QVBoxLayout(m_pBonesOutside);
+        l_pV->setContentsMargins(0, 0, 0, 0);
+        m_pBonesOutsideText = new QLabel(m_pBonesOutside);
+        m_pBonesOutsideText->setWordWrap(true);
+        QPalette l_oWarn = m_pBonesOutsideText->palette();
+        l_oWarn.setColor(QPalette::WindowText, QColor(0xe0, 0xa0, 0x30));
+        m_pBonesOutsideText->setPalette(l_oWarn);
+        auto* l_pFix = new QPushButton(tr("Move Bones Under This Sprite"), m_pBonesOutside);
+        l_pFix->setToolTip(tr("The bones become children of this node, nothing moving on screen: then moving the sprite "
                            "(Object mode) moves its mesh and bones together. One undo step"));
-        v->addWidget(m_bonesOutsideText);
-        v->addWidget(fix);
-        connect(fix, &QPushButton::clicked, this, [this] { m_doc->parentBonesUnder(m_doc->selectedPath()); });
-        nf->addRow(QString(), m_bonesOutside);
+        l_pV->addWidget(m_pBonesOutsideText);
+        l_pV->addWidget(l_pFix);
+        connect(l_pFix, &QPushButton::clicked, this, [this] { m_pDoc->f_ParentBonesUnder(m_pDoc->f_SelectedPath()); });
+        l_pNf->addRow(QString(), m_pBonesOutside);
     }
-    m_meshCols = new QSpinBox(m_nodeBox);
-    m_meshRows = new QSpinBox(m_nodeBox);
-    for (QSpinBox* b : {m_meshCols, m_meshRows}) {
-        b->setRange(1, toms::anim::kMaxMeshGrid);
-        b->setKeyboardTracking(false);
-        b->setToolTip(tr("This node's mesh: its sprite cut from its alpha on cells across x down (more cells bend more "
+    m_pMeshCols = new QSpinBox(m_pNodeBox);
+    m_pMeshRows = new QSpinBox(m_pNodeBox);
+    for (QSpinBox* l_pB : {m_pMeshCols, m_pMeshRows}) {
+        l_pB->setRange(1, toms::anim::g_iMaxMeshGrid);
+        l_pB->setKeyboardTracking(false);
+        l_pB->setToolTip(tr("This node's mesh: its sprite cut from its alpha on cells across x down (more cells bend more "
                          "smoothly). Kept in the node; the mesh is saved with the .anim (<name>.mesh.json)"));
-        connect(b, &QSpinBox::valueChanged, this, [this] {
-            if (!m_updating) m_doc->setMeshGrid(m_meshCols->value(), m_meshRows->value());
+        connect(l_pB, &QSpinBox::valueChanged, this, [this] {
+            if (!m_bUpdating) m_pDoc->f_SetMeshGrid(m_pMeshCols->value(), m_pMeshRows->value());
         });
     }
-    m_meshGridRow = row(m_nodeBox, {{QStringLiteral("x"), m_meshCols}, {QStringLiteral("y"), m_meshRows}});
-    nf->addRow(tr("Mesh grid"), m_meshGridRow);
-    m_latticeCols = new QSpinBox(m_nodeBox);
-    m_latticeRows = new QSpinBox(m_nodeBox);
-    for (QSpinBox* b : {m_latticeCols, m_latticeRows}) {
-        b->setRange(2, toms::anim::kMaxLattice);
-        b->setKeyboardTracking(false);
-        b->setToolTip(tr("The deform lattice: points across and down over the sprite (default 4 x 4). View > Lattice Mode "
+    m_pMeshGridRow = f_Row(m_pNodeBox, {{QStringLiteral("x"), m_pMeshCols}, {QStringLiteral("y"), m_pMeshRows}});
+    l_pNf->addRow(tr("Mesh grid"), m_pMeshGridRow);
+    m_pLatticeCols = new QSpinBox(m_pNodeBox);
+    m_pLatticeRows = new QSpinBox(m_pNodeBox);
+    for (QSpinBox* l_pB : {m_pLatticeCols, m_pLatticeRows}) {
+        l_pB->setRange(2, toms::anim::g_iMaxLattice);
+        l_pB->setKeyboardTracking(false);
+        l_pB->setToolTip(tr("The deform lattice: points across and down over the sprite (default 4 x 4). View > Lattice Mode "
                          "(L) shows it; drag a point to key the deform at the playhead"));
-        connect(b, &QSpinBox::valueChanged, this, [this] {
-            if (!m_updating) m_doc->setLatticeSize(m_latticeCols->value(), m_latticeRows->value());
+        connect(l_pB, &QSpinBox::valueChanged, this, [this] {
+            if (!m_bUpdating) m_pDoc->f_SetLatticeSize(m_pLatticeCols->value(), m_pLatticeRows->value());
         });
     }
-    nf->addRow(tr("Lattice"), row(m_nodeBox, {{QStringLiteral("x"), m_latticeCols}, {QStringLiteral("y"), m_latticeRows}}));
-    layout->addWidget(m_nodeBox);
+    l_pNf->addRow(tr("Lattice"), f_Row(m_pNodeBox, {{QStringLiteral("x"), m_pLatticeCols}, {QStringLiteral("y"), m_pLatticeRows}}));
+    l_pLayout->addWidget(m_pNodeBox);
 
     // ---- effect and trail (docs/engine/18_NODE_EFFECTS.md) ----
-    m_fxBox = new QGroupBox(tr("Effect"), body);
-    auto* ff = new QFormLayout(m_fxBox);
-    m_fxShader = new QComboBox(m_fxBox);
-    m_fxShader->addItems({tr("(none)"), tr("Group"), tr("Motion blur"), tr("Glow (HDR)"), tr("Flash"), tr("Outline")});
-    m_fxShader->setToolTip(tr("This node and its whole subtree are drawn into a picture of their own, then drawn through "
+    m_pFxBox = new QGroupBox(tr("Effect"), l_pBody);
+    auto* l_pFf = new QFormLayout(m_pFxBox);
+    m_pFxShader = new QComboBox(m_pFxBox);
+    m_pFxShader->addItems({tr("(none)"), tr("Group"), tr("Motion blur"), tr("Glow (HDR)"), tr("Flash"), tr("Outline")});
+    m_pFxShader->setToolTip(tr("This node and its whole subtree are drawn into a picture of their own, then drawn through "
                               "this shader. Nodes outside the subtree are not touched; effects nest. "
                               "docs/engine/18_NODE_EFFECTS.md"));
-    connect(m_fxShader, &QComboBox::currentIndexChanged, this, [this](int i) {
-        if (!m_updating) m_doc->editSelected(tr("Effect"), [i](Node& n) { n.fx.shader = toms::anim::FxShader(i); });
+    connect(m_pFxShader, &QComboBox::currentIndexChanged, this, [this](int l_iI) {
+        if (!m_bUpdating) m_pDoc->f_EditSelected(tr("Effect"), [l_iI](Node& l_oN) { l_oN.m_oFx.m_eShader = toms::anim::FxShader(l_iI); });
     });
-    ff->addRow(tr("Shader"), m_fxShader);
-    QWidget* params = new QWidget(m_fxBox);
-    auto* pg = new QGridLayout(params);
-    pg->setContentsMargins(0, 0, 0, 0);
-    for (int i = 0; i < 4; i++) {
-        m_fxParamNames[i] = new QLabel(params);
-        m_fxParam[i] = dspin(-9999, 9999, 3, 0.1, params);
-        pg->addWidget(m_fxParamNames[i], i / 2, (i % 2) * 2);
-        pg->addWidget(m_fxParam[i], i / 2, (i % 2) * 2 + 1);
-        connect(m_fxParam[i], &QDoubleSpinBox::valueChanged, this, [this] {
-            if (m_updating || !m_doc->selectedNode()) return;
-            Value v;
-            v.v = {float(m_fxParam[0]->value()), float(m_fxParam[1]->value()), float(m_fxParam[2]->value()), float(m_fxParam[3]->value())};
-            m_doc->setChannel(Channel::Fx, v, QStringLiteral("prop.fx.") + pathToString(m_doc->selectedPath()));
+    l_pFf->addRow(tr("Shader"), m_pFxShader);
+    QWidget* l_pParams = new QWidget(m_pFxBox);
+    auto* l_pPg = new QGridLayout(l_pParams);
+    l_pPg->setContentsMargins(0, 0, 0, 0);
+    for (int l_iI = 0; l_iI < 4; l_iI++) {
+        m_arrFxParamNames[l_iI] = new QLabel(l_pParams);
+        m_arrFxParam[l_iI] = f_Dspin(-9999, 9999, 3, 0.1, l_pParams);
+        l_pPg->addWidget(m_arrFxParamNames[l_iI], l_iI / 2, (l_iI % 2) * 2);
+        l_pPg->addWidget(m_arrFxParam[l_iI], l_iI / 2, (l_iI % 2) * 2 + 1);
+        connect(m_arrFxParam[l_iI], &QDoubleSpinBox::valueChanged, this, [this] {
+            if (m_bUpdating || !m_pDoc->f_SelectedNode()) return;
+            Value l_oV;
+            l_oV.m_v4V = {float(m_arrFxParam[0]->value()), float(m_arrFxParam[1]->value()), float(m_arrFxParam[2]->value()), float(m_arrFxParam[3]->value())};
+            m_pDoc->f_SetChannel(Channel::Fx, l_oV, QStringLiteral("prop.fx.") + f_PathToString(m_pDoc->f_SelectedPath()));
         });
     }
-    ff->addRow(tr("Params"), row(m_fxBox, {{QString(), params}}, makeKeyButton(Channel::Fx, m_fxBox)));
-    for (int i = 0; i < 4; i++) {
-        m_fxColor[i] = dspin(0, 8, 3, 0.05, m_fxBox);
-        connect(m_fxColor[i], &QDoubleSpinBox::valueChanged, this, [this] {
-            if (m_updating) return;
-            const glm::vec4 c(float(m_fxColor[0]->value()), float(m_fxColor[1]->value()), float(m_fxColor[2]->value()), float(m_fxColor[3]->value()));
-            m_doc->editSelected(tr("Effect colour"), [c](Node& n) { n.fx.color = c; },
-                                QStringLiteral("prop.fxcolor") + pathToString(m_doc->selectedPath()));
+    l_pFf->addRow(tr("Params"), f_Row(m_pFxBox, {{QString(), l_pParams}}, f_MakeKeyButton(Channel::Fx, m_pFxBox)));
+    for (int l_iI = 0; l_iI < 4; l_iI++) {
+        m_arrFxColor[l_iI] = f_Dspin(0, 8, 3, 0.05, m_pFxBox);
+        connect(m_arrFxColor[l_iI], &QDoubleSpinBox::valueChanged, this, [this] {
+            if (m_bUpdating) return;
+            const glm::vec4 l_v4C(float(m_arrFxColor[0]->value()), float(m_arrFxColor[1]->value()), float(m_arrFxColor[2]->value()), float(m_arrFxColor[3]->value()));
+            m_pDoc->f_EditSelected(tr("Effect colour"), [l_v4C](Node& l_oN) { l_oN.m_oFx.m_v4Color = l_v4C; },
+                                QStringLiteral("prop.fxcolor") + f_PathToString(m_pDoc->f_SelectedPath()));
         });
     }
-    ff->addRow(tr("Colour"), row(m_fxBox, {{QStringLiteral("r"), m_fxColor[0]}, {QStringLiteral("g"), m_fxColor[1]},
-                                           {QStringLiteral("b"), m_fxColor[2]}, {QStringLiteral("a"), m_fxColor[3]}}));
-    m_trailCount = new QSpinBox(m_fxBox);
-    m_trailCount->setRange(0, toms::anim::kMaxTrail);
-    m_trailCount->setKeyboardTracking(false);
-    m_trailCount->setToolTip(tr("Afterimages: copies of this subtree as it was a little earlier, fading, drawn behind it. 0 = none"));
-    m_trailGap = dspin(0.005, 1, 3, 0.005, m_fxBox);
-    m_trailGap->setToolTip(tr("Seconds between two afterimages"));
-    m_trailAdd = new QCheckBox(tr("Add"), m_fxBox);
-    m_trailAdd->setToolTip(tr("Additive afterimages (light) instead of normal blending"));
-    auto trailEdit = [this] {
-        if (m_updating) return;
-        toms::anim::NodeTrail t;
-        t.count = m_trailCount->value();
-        t.gap = float(m_trailGap->value());
-        t.color = {float(m_trailColor[0]->value()), float(m_trailColor[1]->value()), float(m_trailColor[2]->value()), float(m_trailColor[3]->value())};
-        t.additive = m_trailAdd->isChecked();
-        m_doc->editSelected(tr("Trail"), [t](Node& n) { n.trail = t; }, QStringLiteral("prop.trail") + pathToString(m_doc->selectedPath()));
+    l_pFf->addRow(tr("Colour"), f_Row(m_pFxBox, {{QStringLiteral("r"), m_arrFxColor[0]}, {QStringLiteral("g"), m_arrFxColor[1]},
+                                           {QStringLiteral("b"), m_arrFxColor[2]}, {QStringLiteral("a"), m_arrFxColor[3]}}));
+    m_pTrailCount = new QSpinBox(m_pFxBox);
+    m_pTrailCount->setRange(0, toms::anim::g_iMaxTrail);
+    m_pTrailCount->setKeyboardTracking(false);
+    m_pTrailCount->setToolTip(tr("Afterimages: copies of this subtree as it was a little earlier, fading, drawn behind it. 0 = none"));
+    m_pTrailGap = f_Dspin(0.005, 1, 3, 0.005, m_pFxBox);
+    m_pTrailGap->setToolTip(tr("Seconds between two afterimages"));
+    m_pTrailAdd = new QCheckBox(tr("Add"), m_pFxBox);
+    m_pTrailAdd->setToolTip(tr("Additive afterimages (light) instead of normal blending"));
+    auto l_fnTrailEdit = [this] {
+        if (m_bUpdating) return;
+        toms::anim::NodeTrail l_oT;
+        l_oT.m_iCount = m_pTrailCount->value();
+        l_oT.m_fGap = float(m_pTrailGap->value());
+        l_oT.m_v4Color = {float(m_arrTrailColor[0]->value()), float(m_arrTrailColor[1]->value()), float(m_arrTrailColor[2]->value()), float(m_arrTrailColor[3]->value())};
+        l_oT.m_bAdditive = m_pTrailAdd->isChecked();
+        m_pDoc->f_EditSelected(tr("Trail"), [l_oT](Node& l_oN) { l_oN.m_oTrail = l_oT; }, QStringLiteral("prop.trail") + f_PathToString(m_pDoc->f_SelectedPath()));
     };
-    for (int i = 0; i < 4; i++) {
-        m_trailColor[i] = dspin(0, 1, 3, 0.05, m_fxBox);
-        connect(m_trailColor[i], &QDoubleSpinBox::valueChanged, this, trailEdit);
+    for (int l_iI = 0; l_iI < 4; l_iI++) {
+        m_arrTrailColor[l_iI] = f_Dspin(0, 1, 3, 0.05, m_pFxBox);
+        connect(m_arrTrailColor[l_iI], &QDoubleSpinBox::valueChanged, this, l_fnTrailEdit);
     }
-    connect(m_trailCount, &QSpinBox::valueChanged, this, trailEdit);
-    connect(m_trailGap, &QDoubleSpinBox::valueChanged, this, trailEdit);
-    connect(m_trailAdd, &QCheckBox::toggled, this, trailEdit);
-    ff->addRow(tr("Trail"), row(m_fxBox, {{tr("count"), m_trailCount}, {tr("gap"), m_trailGap}}, m_trailAdd));
-    ff->addRow(QString(), row(m_fxBox, {{QStringLiteral("r"), m_trailColor[0]}, {QStringLiteral("g"), m_trailColor[1]},
-                                         {QStringLiteral("b"), m_trailColor[2]}, {QStringLiteral("a"), m_trailColor[3]}}));
-    m_trailStrength = dspin(0, 1, 3, 0.05, m_fxBox);
-    m_trailStrength->setToolTip(tr("The afterimages' strength at the playhead (0..1; keyed like the other channels)"));
-    connect(m_trailStrength, &QDoubleSpinBox::valueChanged, this, [this] {
-        if (m_updating || !m_doc->selectedNode()) return;
-        Value v;
-        v.v = {float(m_trailStrength->value()), 0, 0, 0};
-        m_doc->setChannel(Channel::Trail, v, QStringLiteral("prop.trailkey.") + pathToString(m_doc->selectedPath()));
+    connect(m_pTrailCount, &QSpinBox::valueChanged, this, l_fnTrailEdit);
+    connect(m_pTrailGap, &QDoubleSpinBox::valueChanged, this, l_fnTrailEdit);
+    connect(m_pTrailAdd, &QCheckBox::toggled, this, l_fnTrailEdit);
+    l_pFf->addRow(tr("Trail"), f_Row(m_pFxBox, {{tr("count"), m_pTrailCount}, {tr("gap"), m_pTrailGap}}, m_pTrailAdd));
+    l_pFf->addRow(QString(), f_Row(m_pFxBox, {{QStringLiteral("r"), m_arrTrailColor[0]}, {QStringLiteral("g"), m_arrTrailColor[1]},
+                                         {QStringLiteral("b"), m_arrTrailColor[2]}, {QStringLiteral("a"), m_arrTrailColor[3]}}));
+    m_pTrailStrength = f_Dspin(0, 1, 3, 0.05, m_pFxBox);
+    m_pTrailStrength->setToolTip(tr("The afterimages' strength at the playhead (0..1; keyed like the other channels)"));
+    connect(m_pTrailStrength, &QDoubleSpinBox::valueChanged, this, [this] {
+        if (m_bUpdating || !m_pDoc->f_SelectedNode()) return;
+        Value l_oV;
+        l_oV.m_v4V = {float(m_pTrailStrength->value()), 0, 0, 0};
+        m_pDoc->f_SetChannel(Channel::Trail, l_oV, QStringLiteral("prop.trailkey.") + f_PathToString(m_pDoc->f_SelectedPath()));
     });
-    ff->addRow(tr("Strength"), row(m_fxBox, {{QString(), m_trailStrength}}, makeKeyButton(Channel::Trail, m_fxBox)));
-    layout->addWidget(m_fxBox);
+    l_pFf->addRow(tr("Strength"), f_Row(m_pFxBox, {{QString(), m_pTrailStrength}}, f_MakeKeyButton(Channel::Trail, m_pFxBox)));
+    l_pLayout->addWidget(m_pFxBox);
 
     // ---- at the playhead ----
-    m_playBox = new QGroupBox(tr("At playhead"), body);
-    auto* pf = new QFormLayout(m_playBox);
-    m_playLabel = new QLabel(m_playBox);
-    m_playLabel->setForegroundRole(QPalette::PlaceholderText);
-    for (int i = 0; i < 3; i++) {
-        m_pos[i] = dspin(-99999, 99999, 2, 1, m_playBox);
-        m_rot[i] = dspin(-99999, 99999, 2, 5, m_playBox);
-        m_scale[i] = dspin(-999, 999, 3, 0.05, m_playBox);
+    m_pPlayBox = new QGroupBox(tr("At playhead"), l_pBody);
+    auto* l_pPf = new QFormLayout(m_pPlayBox);
+    m_pPlayLabel = new QLabel(m_pPlayBox);
+    m_pPlayLabel->setForegroundRole(QPalette::PlaceholderText);
+    for (int l_iI = 0; l_iI < 3; l_iI++) {
+        m_arrPos[l_iI] = f_Dspin(-99999, 99999, 2, 1, m_pPlayBox);
+        m_arrRot[l_iI] = f_Dspin(-99999, 99999, 2, 5, m_pPlayBox);
+        m_arrScale[l_iI] = f_Dspin(-999, 999, 3, 0.05, m_pPlayBox);
     }
-    m_pos[2]->setToolTip(tr("z: depth (into the screen). The 2D view does not move with it; a 3D camera would"));
-    m_rot[0]->setToolTip(tr("x: tilt about the horizontal axis (the 2D view foreshortens the sprite)"));
-    m_rot[1]->setToolTip(tr("y: tilt about the vertical axis (the 2D view foreshortens the sprite)"));
-    m_rot[2]->setToolTip(tr("z: turn in the screen plane, clockwise (the viewport's rotate handle)"));
-    m_scale[2]->setToolTip(tr("z: depth scale (shows with x / y tilts and a 3D camera)"));
-    for (int i = 0; i < 4; i++) m_color[i] = dspin(0, 1, 3, 0.05, m_playBox);
-    m_spriteHere = new QLabel(m_playBox);
-    m_spriteHere->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
-    m_visibleHere = new QCheckBox(m_playBox);
-    pf->addRow(m_playLabel);
-    auto xyz = [](QDoubleSpinBox* const s[3]) -> QList<QPair<QString, QWidget*>> {
-        return {{QStringLiteral("x"), s[0]}, {QStringLiteral("y"), s[1]}, {QStringLiteral("z"), s[2]}};
+    m_arrPos[2]->setToolTip(tr("z: depth (into the screen). The 2D view does not move with it; a 3D camera would"));
+    m_arrRot[0]->setToolTip(tr("x: tilt about the horizontal axis (the 2D view foreshortens the sprite)"));
+    m_arrRot[1]->setToolTip(tr("y: tilt about the vertical axis (the 2D view foreshortens the sprite)"));
+    m_arrRot[2]->setToolTip(tr("z: turn in the screen plane, clockwise (the viewport's rotate handle)"));
+    m_arrScale[2]->setToolTip(tr("z: depth scale (shows with x / y tilts and a 3D camera)"));
+    for (int l_iI = 0; l_iI < 4; l_iI++) m_arrColor[l_iI] = f_Dspin(0, 1, 3, 0.05, m_pPlayBox);
+    m_pSpriteHere = new QLabel(m_pPlayBox);
+    m_pSpriteHere->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+    m_pVisibleHere = new QCheckBox(m_pPlayBox);
+    l_pPf->addRow(m_pPlayLabel);
+    auto l_fnXyz = [](QDoubleSpinBox* const l_arrS[3]) -> QList<QPair<QString, QWidget*>> {
+        return {{QStringLiteral("x"), l_arrS[0]}, {QStringLiteral("y"), l_arrS[1]}, {QStringLiteral("z"), l_arrS[2]}};
     };
-    pf->addRow(tr("Pos"), row(m_playBox, xyz(m_pos), makeKeyButton(Channel::Pos, m_playBox)));
-    pf->addRow(tr("Rot"), row(m_playBox, xyz(m_rot), makeKeyButton(Channel::Rot, m_playBox)));
-    pf->addRow(tr("Scale"), row(m_playBox, xyz(m_scale), makeKeyButton(Channel::Scale, m_playBox)));
-    pf->addRow(tr("Colour"), row(m_playBox, {{QString(), m_color[0]}, {QString(), m_color[1]}, {QString(), m_color[2]}},
-                                 makeKeyButton(Channel::Color, m_playBox)));
-    pf->addRow(tr("Alpha"), row(m_playBox, {{QString(), m_color[3]}}));
-    pf->addRow(tr("Sprite"), row(m_playBox, {{QString(), m_spriteHere}}, makeKeyButton(Channel::Sprite, m_playBox)));
-    pf->addRow(tr("Visible"), row(m_playBox, {{QString(), m_visibleHere}}, makeKeyButton(Channel::Visible, m_playBox)));
-    m_color[0]->setToolTip(tr("red"));
-    m_color[1]->setToolTip(tr("green"));
-    m_color[2]->setToolTip(tr("blue"));
-    layout->addWidget(m_playBox);
+    l_pPf->addRow(tr("Pos"), f_Row(m_pPlayBox, l_fnXyz(m_arrPos), f_MakeKeyButton(Channel::Pos, m_pPlayBox)));
+    l_pPf->addRow(tr("Rot"), f_Row(m_pPlayBox, l_fnXyz(m_arrRot), f_MakeKeyButton(Channel::Rot, m_pPlayBox)));
+    l_pPf->addRow(tr("Scale"), f_Row(m_pPlayBox, l_fnXyz(m_arrScale), f_MakeKeyButton(Channel::Scale, m_pPlayBox)));
+    l_pPf->addRow(tr("Colour"), f_Row(m_pPlayBox, {{QString(), m_arrColor[0]}, {QString(), m_arrColor[1]}, {QString(), m_arrColor[2]}},
+                                 f_MakeKeyButton(Channel::Color, m_pPlayBox)));
+    l_pPf->addRow(tr("Alpha"), f_Row(m_pPlayBox, {{QString(), m_arrColor[3]}}));
+    l_pPf->addRow(tr("Sprite"), f_Row(m_pPlayBox, {{QString(), m_pSpriteHere}}, f_MakeKeyButton(Channel::Sprite, m_pPlayBox)));
+    l_pPf->addRow(tr("Visible"), f_Row(m_pPlayBox, {{QString(), m_pVisibleHere}}, f_MakeKeyButton(Channel::Visible, m_pPlayBox)));
+    m_arrColor[0]->setToolTip(tr("red"));
+    m_arrColor[1]->setToolTip(tr("green"));
+    m_arrColor[2]->setToolTip(tr("blue"));
+    l_pLayout->addWidget(m_pPlayBox);
 
     // ---- ease of the key at / before the playhead ----
-    m_easeBox = new QGroupBox(tr("Ease (key at / before the playhead)"), body);
-    auto* eg = new QGridLayout(m_easeBox);
-    eg->setColumnStretch(1, 1);
-    for (int i = 0; i < 4; i++) {
-        const Channel c = kInterpolated[i];
-        auto* lab = new QLabel(QLatin1String(channelName(c)), m_easeBox);
-        m_ease[i] = new QComboBox(m_easeBox);
-        EaseUi::fill(m_ease[i]);
-        m_easeAt[i] = new QLabel(m_easeBox);
-        m_easeAt[i]->setForegroundRole(QPalette::PlaceholderText);
-        m_easeAt[i]->setMinimumWidth(52);
-        eg->addWidget(lab, i, 0);
-        eg->addWidget(m_ease[i], i, 1);
-        eg->addWidget(m_easeAt[i], i, 2);
-        connect(m_ease[i], &QComboBox::activated, this, [this, i, c](int index) {
-            const Node* n = m_doc->selectedNode();
-            if (!n) return;
-            toms::anim::Ease cur, chosen;
-            if (!easeAtOrBefore(*n, c, m_doc->time(), cur) && keyCount(*n, c) > 0) easeAt(*n, c, keyTimes(*n, c).front(), cur);
-            if (EaseUi::picked(m_ease[i], index, cur, this, chosen)) m_doc->setEaseHere(c, chosen);
-            refreshPlayhead();
+    m_pEaseBox = new QGroupBox(tr("Ease (key at / before the playhead)"), l_pBody);
+    auto* l_pEg = new QGridLayout(m_pEaseBox);
+    l_pEg->setColumnStretch(1, 1);
+    for (int l_iI = 0; l_iI < 4; l_iI++) {
+        const Channel l_eC = g_arrInterpolated[l_iI];
+        auto* l_pLab = new QLabel(QLatin1String(f_ChannelName(l_eC)), m_pEaseBox);
+        m_arrEase[l_iI] = new QComboBox(m_pEaseBox);
+        EaseUi::f_Fill(m_arrEase[l_iI]);
+        m_arrEaseAt[l_iI] = new QLabel(m_pEaseBox);
+        m_arrEaseAt[l_iI]->setForegroundRole(QPalette::PlaceholderText);
+        m_arrEaseAt[l_iI]->setMinimumWidth(52);
+        l_pEg->addWidget(l_pLab, l_iI, 0);
+        l_pEg->addWidget(m_arrEase[l_iI], l_iI, 1);
+        l_pEg->addWidget(m_arrEaseAt[l_iI], l_iI, 2);
+        connect(m_arrEase[l_iI], &QComboBox::activated, this, [this, l_iI, l_eC](int l_iIndex) {
+            const Node* l_pN = m_pDoc->f_SelectedNode();
+            if (!l_pN) return;
+            toms::anim::Ease l_oCur, l_oChosen;
+            if (!f_EaseAtOrBefore(*l_pN, l_eC, m_pDoc->f_Time(), l_oCur) && f_KeyCount(*l_pN, l_eC) > 0) f_EaseAt(*l_pN, l_eC, f_KeyTimes(*l_pN, l_eC).front(), l_oCur);
+            if (EaseUi::f_Picked(m_arrEase[l_iI], l_iIndex, l_oCur, this, l_oChosen)) m_pDoc->f_SetEaseHere(l_eC, l_oChosen);
+            f_RefreshPlayhead();
         });
     }
-    layout->addWidget(m_easeBox);
-    layout->addStretch(1);
-    scroll->setWidget(body);
-    setWidget(scroll);
+    l_pLayout->addWidget(m_pEaseBox);
+    l_pLayout->addStretch(1);
+    l_pScroll->setWidget(l_pBody);
+    setWidget(l_pScroll);
 
     // ---- wiring ----
-    connect(m_name, &QLineEdit::editingFinished, this, [this] {
-        if (!m_updating && m_doc->selectedNode() && m_name->text() != qs(m_doc->selectedNode()->name))
-            m_doc->renameNode(m_doc->selectedPath(), m_name->text());
+    connect(m_pName, &QLineEdit::editingFinished, this, [this] {
+        if (!m_bUpdating && m_pDoc->f_SelectedNode() && m_pName->text() != f_Qs(m_pDoc->f_SelectedNode()->m_strName))
+            m_pDoc->f_RenameNode(m_pDoc->f_SelectedPath(), m_pName->text());
     });
-    auto commitSprite = [this] {
-        if (m_updating || !m_doc->selectedNode()) return;
-        const QString text = m_sprite->currentText().trimmed();
-        if (text == m_spriteShown) return;   // untouched (a bare legacy name stays as it is)
-        const std::string s = m_doc->spriteFromText(text);
-        if (s == m_doc->selectedNode()->sprite) return;
-        m_doc->editSelected(tr("Set sprite"), [s](Node& n) { n.sprite = s; });
+    auto l_fnCommitSprite = [this] {
+        if (m_bUpdating || !m_pDoc->f_SelectedNode()) return;
+        const QString l_oText = m_pSprite->currentText().trimmed();
+        if (l_oText == m_oSpriteShown) return;   // untouched (a bare legacy name stays as it is)
+        const std::string l_strS = m_pDoc->f_SpriteFromText(l_oText);
+        if (l_strS == m_pDoc->f_SelectedNode()->m_strSprite) return;
+        m_pDoc->f_EditSelected(tr("Set sprite"), [l_strS](Node& l_oN) { l_oN.m_strSprite = l_strS; });
     };
-    connect(m_sprite, &QComboBox::activated, this, commitSprite);
-    connect(m_sprite->lineEdit(), &QLineEdit::editingFinished, this, commitSprite);
-    connect(m_atlasPivot, &QCheckBox::toggled, this, [this](bool atlas) {
-        if (m_updating) return;
-        glm::vec2 start(0.5f, 0.5f);
-        if (const Node* n = m_doc->selectedNode())
-            if (const toms::AtlasRegion* r = m_doc->findSprite(spriteAt(*n, m_doc->time()))) start = {r->pivot[0], r->pivot[1]};
-        m_doc->editSelected(tr("Pivot"), [atlas, start](Node& n) {
-            n.hasPivot = !atlas;
-            if (!atlas) n.pivot = start;
+    connect(m_pSprite, &QComboBox::activated, this, l_fnCommitSprite);
+    connect(m_pSprite->lineEdit(), &QLineEdit::editingFinished, this, l_fnCommitSprite);
+    connect(m_pAtlasPivot, &QCheckBox::toggled, this, [this](bool l_bAtlas) {
+        if (m_bUpdating) return;
+        glm::vec2 l_v2Start(0.5f, 0.5f);
+        if (const Node* l_pN = m_pDoc->f_SelectedNode())
+            if (const toms::AtlasRegion* l_pR = m_pDoc->f_FindSprite(f_SpriteAt(*l_pN, m_pDoc->f_Time()))) l_v2Start = {l_pR->m_arrPivot[0], l_pR->m_arrPivot[1]};
+        m_pDoc->f_EditSelected(tr("Pivot"), [l_bAtlas, l_v2Start](Node& l_oN) {
+            l_oN.m_bHasPivot = !l_bAtlas;
+            if (!l_bAtlas) l_oN.m_v2Pivot = l_v2Start;
         });
     });
-    auto commitPivot = [this] {
-        if (m_updating) return;
-        const glm::vec2 p(float(m_pivotX->value()), float(m_pivotY->value()));
-        m_doc->editSelected(tr("Pivot"), [p](Node& n) {
-            n.hasPivot = true;
-            n.pivot = p;
-        }, QStringLiteral("prop.pivot") + pathToString(m_doc->selectedPath()));
+    auto l_fnCommitPivot = [this] {
+        if (m_bUpdating) return;
+        const glm::vec2 l_v2P(float(m_pPivotX->value()), float(m_pPivotY->value()));
+        m_pDoc->f_EditSelected(tr("Pivot"), [l_v2P](Node& l_oN) {
+            l_oN.m_bHasPivot = true;
+            l_oN.m_v2Pivot = l_v2P;
+        }, QStringLiteral("prop.pivot") + f_PathToString(m_pDoc->f_SelectedPath()));
     };
-    connect(m_pivotX, &QDoubleSpinBox::valueChanged, this, commitPivot);
-    connect(m_pivotY, &QDoubleSpinBox::valueChanged, this, commitPivot);
-    connect(m_order, &QSpinBox::valueChanged, this, [this](int v) {
-        if (!m_updating) m_doc->editSelected(tr("Order"), [v](Node& n) { n.order = v; }, QStringLiteral("prop.order") + pathToString(m_doc->selectedPath()));
+    connect(m_pPivotX, &QDoubleSpinBox::valueChanged, this, l_fnCommitPivot);
+    connect(m_pPivotY, &QDoubleSpinBox::valueChanged, this, l_fnCommitPivot);
+    connect(m_pOrder, &QSpinBox::valueChanged, this, [this](int l_iV) {
+        if (!m_bUpdating) m_pDoc->f_EditSelected(tr("Order"), [l_iV](Node& l_oN) { l_oN.m_iOrder = l_iV; }, QStringLiteral("prop.order") + f_PathToString(m_pDoc->f_SelectedPath()));
     });
-    connect(m_blend, &QComboBox::activated, this, [this](int i) {
-        if (!m_updating) m_doc->editSelected(tr("Blend"), [i](Node& n) { n.blend = i == 1 ? toms::anim::Blend::Add : toms::anim::Blend::Normal; });
+    connect(m_pBlend, &QComboBox::activated, this, [this](int l_iI) {
+        if (!m_bUpdating) m_pDoc->f_EditSelected(tr("Blend"), [l_iI](Node& l_oN) { l_oN.m_eBlend = l_iI == 1 ? toms::anim::Blend::Add : toms::anim::Blend::Normal; });
     });
-    connect(m_skin, &QLineEdit::editingFinished, this, [this] {
-        if (m_updating) return;
-        std::vector<std::string> bones;
-        for (const QString& b : m_skin->text().split(QLatin1Char(','), Qt::SkipEmptyParts))
-            if (!b.trimmed().isEmpty()) bones.push_back(b.trimmed().toStdString());
-        m_doc->editSelected(tr("Skin"), [bones](Node& n) {
-            if (n.skinBones != bones) n.skinWeights.clear();   // other bones: the weights are made again
-            n.skinBones = bones;
+    connect(m_pSkin, &QLineEdit::editingFinished, this, [this] {
+        if (m_bUpdating) return;
+        std::vector<std::string> l_vBones;
+        for (const QString& l_oB : m_pSkin->text().split(QLatin1Char(','), Qt::SkipEmptyParts))
+            if (!l_oB.trimmed().isEmpty()) l_vBones.push_back(l_oB.trimmed().toStdString());
+        m_pDoc->f_EditSelected(tr("Skin"), [l_vBones](Node& l_oN) {
+            if (l_oN.m_vSkinBones != l_vBones) l_oN.m_vSkinWeights.clear();   // other bones: the weights are made again
+            l_oN.m_vSkinBones = l_vBones;
         });
     });
-    connect(m_inheritColor, &QCheckBox::toggled, this, [this](bool on) {
-        if (!m_updating) m_doc->editSelected(tr("Inherit colour"), [on](Node& n) { n.inheritColor = on; });
+    connect(m_pInheritColor, &QCheckBox::toggled, this, [this](bool l_bOn) {
+        if (!m_bUpdating) m_pDoc->f_EditSelected(tr("Inherit colour"), [l_bOn](Node& l_oN) { l_oN.m_bInheritColor = l_bOn; });
     });
-    connect(m_restVisible, &QCheckBox::toggled, this, [this](bool on) {
-        if (!m_updating) m_doc->editSelected(tr("Visible"), [on](Node& n) { n.visible = on; });
+    connect(m_pRestVisible, &QCheckBox::toggled, this, [this](bool l_bOn) {
+        if (!m_bUpdating) m_pDoc->f_EditSelected(tr("Visible"), [l_bOn](Node& l_oN) { l_oN.m_bVisible = l_bOn; });
     });
-    connect(m_playback, &QComboBox::activated, this, [this](int i) {
-        if (!m_updating) m_doc->editSelected(tr("Playback"), [i](Node& n) {
-            n.loop = i == 2;
-            n.stayAtLastFrame = i != 1;
+    connect(m_pPlayback, &QComboBox::activated, this, [this](int l_iI) {
+        if (!m_bUpdating) m_pDoc->f_EditSelected(tr("Playback"), [l_iI](Node& l_oN) {
+            l_oN.m_bLoop = l_iI == 2;
+            l_oN.m_bStayAtLastFrame = l_iI != 1;
         });
     });
-    for (int i = 0; i < 3; i++) {
-        connect(m_pos[i], &QDoubleSpinBox::valueChanged, this, [this] { commitChannel(Channel::Pos); });
-        connect(m_rot[i], &QDoubleSpinBox::valueChanged, this, [this] { commitChannel(Channel::Rot); });
-        connect(m_scale[i], &QDoubleSpinBox::valueChanged, this, [this] { commitChannel(Channel::Scale); });
+    for (int l_iI = 0; l_iI < 3; l_iI++) {
+        connect(m_arrPos[l_iI], &QDoubleSpinBox::valueChanged, this, [this] { f_CommitChannel(Channel::Pos); });
+        connect(m_arrRot[l_iI], &QDoubleSpinBox::valueChanged, this, [this] { f_CommitChannel(Channel::Rot); });
+        connect(m_arrScale[l_iI], &QDoubleSpinBox::valueChanged, this, [this] { f_CommitChannel(Channel::Scale); });
     }
-    for (QDoubleSpinBox* s : m_color) connect(s, &QDoubleSpinBox::valueChanged, this, [this] { commitChannel(Channel::Color); });
-    connect(m_visibleHere, &QCheckBox::toggled, this, [this] { commitChannel(Channel::Visible); });
+    for (QDoubleSpinBox* l_pS : m_arrColor) connect(l_pS, &QDoubleSpinBox::valueChanged, this, [this] { f_CommitChannel(Channel::Color); });
+    connect(m_pVisibleHere, &QCheckBox::toggled, this, [this] { f_CommitChannel(Channel::Visible); });
 
-    connect(doc, &AnimDocument::fileChanged, this, &AnimPropertiesDock::refresh);
-    connect(doc, &AnimDocument::selectionChanged, this, &AnimPropertiesDock::refresh);
-    connect(doc, &AnimDocument::clipChanged, this, &AnimPropertiesDock::refresh);
-    connect(doc, &AnimDocument::timeChanged, this, &AnimPropertiesDock::refreshPlayhead);
-    connect(doc, &AnimDocument::autoKeyChanged, this, &AnimPropertiesDock::refreshPlayhead);
-    connect(doc, &AnimDocument::atlasChanged, this, [this] {
-        const QSignalBlocker b(m_sprite);
-        m_sprite->clear();
-        m_sprite->addItem(tr("(none)"));
-        m_sprite->addItems(m_doc->spriteChoices());
-        auto* c = new QCompleter(m_doc->spriteChoices(), m_sprite);
-        c->setFilterMode(Qt::MatchContains);
-        c->setCaseSensitivity(Qt::CaseInsensitive);
-        m_sprite->setCompleter(c);
-        refresh();
+    connect(l_pDoc, &AnimDocument::f_FileChanged, this, &AnimPropertiesDock::f_Refresh);
+    connect(l_pDoc, &AnimDocument::f_SelectionChanged, this, &AnimPropertiesDock::f_Refresh);
+    connect(l_pDoc, &AnimDocument::f_ClipChanged, this, &AnimPropertiesDock::f_Refresh);
+    connect(l_pDoc, &AnimDocument::f_TimeChanged, this, &AnimPropertiesDock::f_RefreshPlayhead);
+    connect(l_pDoc, &AnimDocument::f_AutoKeyChanged, this, &AnimPropertiesDock::f_RefreshPlayhead);
+    connect(l_pDoc, &AnimDocument::f_AtlasChanged, this, [this] {
+        const QSignalBlocker l_oB(m_pSprite);
+        m_pSprite->clear();
+        m_pSprite->addItem(tr("(none)"));
+        m_pSprite->addItems(m_pDoc->f_SpriteChoices());
+        auto* l_pC = new QCompleter(m_pDoc->f_SpriteChoices(), m_pSprite);
+        l_pC->setFilterMode(Qt::MatchContains);
+        l_pC->setCaseSensitivity(Qt::CaseInsensitive);
+        m_pSprite->setCompleter(l_pC);
+        f_Refresh();
     });
-    refresh();
+    f_Refresh();
 }
 
-QToolButton* AnimPropertiesDock::makeKeyButton(Channel c, QWidget* parent)
+QToolButton* AnimPropertiesDock::f_MakeKeyButton(Channel l_eC, QWidget* l_pParent)
 {
-    auto* b = new QToolButton(parent);
-    b->setAutoRaise(true);
-    b->setIconSize(QSize(16, 16));
-    m_key[int(c)] = b;
-    connect(b, &QToolButton::clicked, this, [this, c] {
-        const Node* n = m_doc->selectedNode();
-        if (!n) return;
-        if (hasKeyAt(*n, c, m_doc->time())) m_doc->removeKeyHere(c);
-        else m_doc->addKeyHere(c);
+    auto* l_pB = new QToolButton(l_pParent);
+    l_pB->setAutoRaise(true);
+    l_pB->setIconSize(QSize(16, 16));
+    m_arrKey[int(l_eC)] = l_pB;
+    connect(l_pB, &QToolButton::clicked, this, [this, l_eC] {
+        const Node* l_pN = m_pDoc->f_SelectedNode();
+        if (!l_pN) return;
+        if (f_HasKeyAt(*l_pN, l_eC, m_pDoc->f_Time())) m_pDoc->f_RemoveKeyHere(l_eC);
+        else m_pDoc->f_AddKeyHere(l_eC);
     });
-    return b;
+    return l_pB;
 }
 
-void AnimPropertiesDock::commitChannel(Channel c)
+void AnimPropertiesDock::f_CommitChannel(Channel l_eC)
 {
-    if (m_updating || !m_doc->selectedNode()) return;
-    Value v;
-    switch (c) {
-    case Channel::Pos: v.v = {float(m_pos[0]->value()), float(m_pos[1]->value()), float(m_pos[2]->value()), 0}; break;
-    case Channel::Rot: v.v = {float(m_rot[0]->value()), float(m_rot[1]->value()), float(m_rot[2]->value()), 0}; break;
-    case Channel::Scale: v.v = {float(m_scale[0]->value()), float(m_scale[1]->value()), float(m_scale[2]->value()), 0}; break;
+    if (m_bUpdating || !m_pDoc->f_SelectedNode()) return;
+    Value l_oV;
+    switch (l_eC) {
+    case Channel::Pos: l_oV.m_v4V = {float(m_arrPos[0]->value()), float(m_arrPos[1]->value()), float(m_arrPos[2]->value()), 0}; break;
+    case Channel::Rot: l_oV.m_v4V = {float(m_arrRot[0]->value()), float(m_arrRot[1]->value()), float(m_arrRot[2]->value()), 0}; break;
+    case Channel::Scale: l_oV.m_v4V = {float(m_arrScale[0]->value()), float(m_arrScale[1]->value()), float(m_arrScale[2]->value()), 0}; break;
     case Channel::Color:
-        v.v = {float(m_color[0]->value()), float(m_color[1]->value()), float(m_color[2]->value()), float(m_color[3]->value())};
+        l_oV.m_v4V = {float(m_arrColor[0]->value()), float(m_arrColor[1]->value()), float(m_arrColor[2]->value()), float(m_arrColor[3]->value())};
         break;
-    case Channel::Visible: v.b = m_visibleHere->isChecked(); break;
+    case Channel::Visible: l_oV.m_bB = m_pVisibleHere->isChecked(); break;
     default: return;
     }
-    m_doc->setChannel(c, v, QStringLiteral("prop.%1.%2").arg(QLatin1String(channelName(c)), pathToString(m_doc->selectedPath())));
+    m_pDoc->f_SetChannel(l_eC, l_oV, QStringLiteral("prop.%1.%2").arg(QLatin1String(f_ChannelName(l_eC)), f_PathToString(m_pDoc->f_SelectedPath())));
 }
 
 // The effect's params and the trail's strength at the playhead; the params' names follow the shader.
-void AnimPropertiesDock::refreshEffect(const Node* n)
+void AnimPropertiesDock::f_RefreshEffect(const Node* l_pN)
 {
-    m_fxBox->setEnabled(n != nullptr);
-    const int shader = n ? int(n->fx.shader) : 0;
-    static const char* kNames[6][4] = {{"", "", "", ""},
+    m_pFxBox->setEnabled(l_pN != nullptr);
+    const int l_iShader = l_pN ? int(l_pN->m_oFx.m_eShader) : 0;
+    static const char* l_arrNames[6][4] = {{"", "", "", ""},
                                        {"", "", "", ""},
                                        {QT_TR_NOOP("dx"), QT_TR_NOOP("dy"), QT_TR_NOOP("auto"), ""},
                                        {QT_TR_NOOP("intensity"), QT_TR_NOOP("radius"), QT_TR_NOOP("threshold"), QT_TR_NOOP("bloom")},
                                        {QT_TR_NOOP("amount"), "", "", ""},
                                        {QT_TR_NOOP("width"), QT_TR_NOOP("intensity"), "", ""}};
-    for (int i = 0; i < 4; i++) {
-        const bool used = kNames[shader][i][0] != 0;
-        m_fxParamNames[i]->setText(used ? tr(kNames[shader][i]) : QString());
-        m_fxParamNames[i]->setVisible(used);
-        m_fxParam[i]->setVisible(used);
+    for (int l_iI = 0; l_iI < 4; l_iI++) {
+        const bool l_bUsed = l_arrNames[l_iShader][l_iI][0] != 0;
+        m_arrFxParamNames[l_iI]->setText(l_bUsed ? tr(l_arrNames[l_iShader][l_iI]) : QString());
+        m_arrFxParamNames[l_iI]->setVisible(l_bUsed);
+        m_arrFxParam[l_iI]->setVisible(l_bUsed);
     }
-    if (!n) return;
-    const glm::vec4 p = toms::anim::fxParamsAt(*n, m_doc->time());
-    for (int i = 0; i < 4; i++) {
-        const QSignalBlocker b(m_fxParam[i]);
-        m_fxParam[i]->setValue(p[i]);
+    if (!l_pN) return;
+    const glm::vec4 l_v4P = toms::anim::f_FxParamsAt(*l_pN, m_pDoc->f_Time());
+    for (int l_iI = 0; l_iI < 4; l_iI++) {
+        const QSignalBlocker l_oB(m_arrFxParam[l_iI]);
+        m_arrFxParam[l_iI]->setValue(l_v4P[l_iI]);
     }
-    const QSignalBlocker b(m_trailStrength);
-    m_trailStrength->setValue(toms::anim::trailAt(*n, m_doc->time()));
+    const QSignalBlocker l_oB(m_pTrailStrength);
+    m_pTrailStrength->setValue(toms::anim::f_TrailAt(*l_pN, m_pDoc->f_Time()));
 }
 
-bool AnimPropertiesDock::bonesOutsideShown() const { return m_bonesOutside->isVisibleTo(m_nodeBox); }
+bool AnimPropertiesDock::f_BonesOutsideShown() const { return m_pBonesOutside->isVisibleTo(m_pNodeBox); }
 
-QString AnimPropertiesDock::skinInfoText() const { return m_skinInfo->isVisibleTo(m_nodeBox) ? m_skinInfo->text() : QString(); }
+QString AnimPropertiesDock::f_SkinInfoText() const { return m_pSkinInfo->isVisibleTo(m_pNodeBox) ? m_pSkinInfo->text() : QString(); }
 
 // What the selected node's skin is: its mesh, bones and weights (as the game bends it at the playhead), or why it
 // draws as a plain quad.
-QString AnimPropertiesDock::skinInfo(const Node& n) const
+QString AnimPropertiesDock::f_SkinInfo(const Node& l_oN) const
 {
-    const toms::anim::Clip* clip = m_doc->clip();
-    if (!clip) return QString();
-    std::vector<toms::anim::NodePose> poses;
-    toms::anim::evaluate(*clip, m_doc->time(), poses);
-    size_t i = 0;
-    while (i < poses.size() && poses[i].node != &n) i++;
-    toms::anim::SkinView sv;
-    switch (toms::anim::skinView(*clip, poses, i, m_doc->atlasSet(), toms::anim::placement(0, 0), &sv)) {
+    const toms::anim::Clip* l_pClip = m_pDoc->f_Clip();
+    if (!l_pClip) return QString();
+    std::vector<toms::anim::NodePose> l_vPoses;
+    toms::anim::f_Evaluate(*l_pClip, m_pDoc->f_Time(), l_vPoses);
+    size_t l_nI = 0;
+    while (l_nI < l_vPoses.size() && l_vPoses[l_nI].m_pNode != &l_oN) l_nI++;
+    toms::anim::SkinView l_oSv;
+    switch (toms::anim::f_SkinView(*l_pClip, l_vPoses, l_nI, m_pDoc->f_AtlasSet(), toms::anim::f_Placement(0, 0), &l_oSv)) {
     case toms::anim::SkinState::NotSkinned: return QString();
     case toms::anim::SkinState::NoSprite: return tr("No sprite to bend.");
     case toms::anim::SkinState::Rotated: return tr("The sprite is rotated in its atlas: it has no mesh and draws as a quad.");
@@ -492,128 +492,128 @@ QString AnimPropertiesDock::skinInfo(const Node& n) const
         return tr("No mesh for this sprite (a child sprite, or no visible pixels): it draws as a quad.");
     case toms::anim::SkinState::Ok: break;
     }
-    QString text = tr("Mesh: %1 points, %2 triangles. %3 bone(s), weights %4. View > Show Skin shows them.")
-                       .arg(sv.vertices.size()).arg(sv.triangles.size() / 3).arg(sv.bones.size())
-                       .arg(sv.autoWeights ? tr("automatic") : tr("painted"));
-    QStringList missing;
-    for (size_t b = 0; b < sv.bones.size(); b++)
-        if (!sv.boneFound[b]) missing << QString::fromStdString(sv.bones[b]);
-    if (!missing.isEmpty()) text += QLatin1Char(' ') + tr("Not a node of this clip: %1.").arg(missing.join(QStringLiteral(", ")));
-    return text;
+    QString l_oText = tr("Mesh: %1 points, %2 triangles. %3 bone(s), weights %4. View > Show Skin shows them.")
+                       .arg(l_oSv.m_vVertices.size()).arg(l_oSv.m_vTriangles.size() / 3).arg(l_oSv.m_vBones.size())
+                       .arg(l_oSv.m_bAutoWeights ? tr("automatic") : tr("painted"));
+    QStringList l_oMissing;
+    for (size_t l_nB = 0; l_nB < l_oSv.m_vBones.size(); l_nB++)
+        if (!l_oSv.m_vBoneFound[l_nB]) l_oMissing << QString::fromStdString(l_oSv.m_vBones[l_nB]);
+    if (!l_oMissing.isEmpty()) l_oText += QLatin1Char(' ') + tr("Not a node of this clip: %1.").arg(l_oMissing.join(QStringLiteral(", ")));
+    return l_oText;
 }
 
-void AnimPropertiesDock::refresh()
+void AnimPropertiesDock::f_Refresh()
 {
-    m_updating = true;
-    m_clip.refresh(m_doc);
-    const Node* n = m_doc->selectedNode();
-    m_nodeBox->setEnabled(n != nullptr);
-    if (n) {
-        m_nodeBox->setTitle(tr("Node: %1").arg(qs(n->name)));
-        m_name->setText(qs(n->name));
-        const QSignalBlocker b(m_sprite);
-        m_spriteShown = m_doc->spriteDisplay(n->sprite);
-        const int idx = m_sprite->findText(m_spriteShown);
-        if (idx >= 0) m_sprite->setCurrentIndex(idx);
-        m_sprite->setEditText(m_spriteShown);
-        m_atlasPivot->setChecked(!n->hasPivot);
-        glm::vec2 pv = n->pivot;
-        if (!n->hasPivot)
-            if (const toms::AtlasRegion* r = m_doc->findSprite(spriteAt(*n, m_doc->time()))) pv = {r->pivot[0], r->pivot[1]};
-        m_pivotX->setValue(pv.x);
-        m_pivotY->setValue(pv.y);
-        m_pivotX->setEnabled(n->hasPivot);
-        m_pivotY->setEnabled(n->hasPivot);
-        m_order->setValue(n->order);
-        m_blend->setCurrentIndex(n->blend == toms::anim::Blend::Add ? 1 : 0);
-        m_inheritColor->setChecked(n->inheritColor);
-        m_restVisible->setChecked(n->visible);
-        m_playback->setCurrentIndex(n->loop ? 2 : n->stayAtLastFrame ? 0 : 1);
-        QStringList bones;
-        for (const std::string& b : n->skinBones) bones << qs(b);
-        m_skin->setText(bones.join(QStringLiteral(", ")));
-        m_skinInfo->setVisible(n->skinned());
-        if (n->skinned()) m_skinInfo->setText(skinInfo(*n));
-        QStringList outside;
-        if (n->skinned() && m_doc->clip())
-            for (const std::string& b : animed::bonesOutside(m_doc->clip()->root, *n)) outside << qs(b);
-        m_bonesOutside->setVisible(!outside.isEmpty());
-        m_bonesOutsideText->setText(tr("Bones outside this sprite: %1. Moving the sprite in Object mode slides its mesh off "
-                                       "them; to move the whole object, put them under it.").arg(outside.join(QStringLiteral(", "))));
-        int cols = 0, rows = 0;
-        const bool grid = n->usesMesh() && m_doc->meshGridOf(*n, cols, rows);
-        m_meshGridRow->setVisible(grid);
-        if (auto* form = qobject_cast<QFormLayout*>(m_nodeBox->layout()))
-            if (QWidget* label = form->labelForField(m_meshGridRow)) label->setVisible(grid);
-        if (grid) {
-            m_meshCols->setValue(cols);
-            m_meshRows->setValue(rows);
+    m_bUpdating = true;
+    m_oClip.f_Refresh(m_pDoc);
+    const Node* l_pN = m_pDoc->f_SelectedNode();
+    m_pNodeBox->setEnabled(l_pN != nullptr);
+    if (l_pN) {
+        m_pNodeBox->setTitle(tr("Node: %1").arg(f_Qs(l_pN->m_strName)));
+        m_pName->setText(f_Qs(l_pN->m_strName));
+        const QSignalBlocker l_oB(m_pSprite);
+        m_oSpriteShown = m_pDoc->f_SpriteDisplay(l_pN->m_strSprite);
+        const int l_iIdx = m_pSprite->findText(m_oSpriteShown);
+        if (l_iIdx >= 0) m_pSprite->setCurrentIndex(l_iIdx);
+        m_pSprite->setEditText(m_oSpriteShown);
+        m_pAtlasPivot->setChecked(!l_pN->m_bHasPivot);
+        glm::vec2 l_v2Pv = l_pN->m_v2Pivot;
+        if (!l_pN->m_bHasPivot)
+            if (const toms::AtlasRegion* l_pR = m_pDoc->f_FindSprite(f_SpriteAt(*l_pN, m_pDoc->f_Time()))) l_v2Pv = {l_pR->m_arrPivot[0], l_pR->m_arrPivot[1]};
+        m_pPivotX->setValue(l_v2Pv.x);
+        m_pPivotY->setValue(l_v2Pv.y);
+        m_pPivotX->setEnabled(l_pN->m_bHasPivot);
+        m_pPivotY->setEnabled(l_pN->m_bHasPivot);
+        m_pOrder->setValue(l_pN->m_iOrder);
+        m_pBlend->setCurrentIndex(l_pN->m_eBlend == toms::anim::Blend::Add ? 1 : 0);
+        m_pInheritColor->setChecked(l_pN->m_bInheritColor);
+        m_pRestVisible->setChecked(l_pN->m_bVisible);
+        m_pPlayback->setCurrentIndex(l_pN->m_bLoop ? 2 : l_pN->m_bStayAtLastFrame ? 0 : 1);
+        QStringList l_oBones;
+        for (const std::string& l_strB : l_pN->m_vSkinBones) l_oBones << f_Qs(l_strB);
+        m_pSkin->setText(l_oBones.join(QStringLiteral(", ")));
+        m_pSkinInfo->setVisible(l_pN->f_Skinned());
+        if (l_pN->f_Skinned()) m_pSkinInfo->setText(f_SkinInfo(*l_pN));
+        QStringList l_oOutside;
+        if (l_pN->f_Skinned() && m_pDoc->f_Clip())
+            for (const std::string& l_strB : animed::f_BonesOutside(m_pDoc->f_Clip()->m_oRoot, *l_pN)) l_oOutside << f_Qs(l_strB);
+        m_pBonesOutside->setVisible(!l_oOutside.isEmpty());
+        m_pBonesOutsideText->setText(tr("Bones outside this sprite: %1. Moving the sprite in Object mode slides its mesh off "
+                                       "them; to move the whole object, put them under it.").arg(l_oOutside.join(QStringLiteral(", "))));
+        int l_iCols = 0, l_iRows = 0;
+        const bool l_bGrid = l_pN->f_UsesMesh() && m_pDoc->f_MeshGridOf(*l_pN, l_iCols, l_iRows);
+        m_pMeshGridRow->setVisible(l_bGrid);
+        if (auto* l_pForm = qobject_cast<QFormLayout*>(m_pNodeBox->layout()))
+            if (QWidget* l_pLabel = l_pForm->labelForField(m_pMeshGridRow)) l_pLabel->setVisible(l_bGrid);
+        if (l_bGrid) {
+            m_pMeshCols->setValue(l_iCols);
+            m_pMeshRows->setValue(l_iRows);
         }
-        m_latticeCols->setValue(n->latticeCols());
-        m_latticeRows->setValue(n->latticeRows());
-        m_fxShader->setCurrentIndex(int(n->fx.shader));
-        for (int i = 0; i < 4; i++) m_fxColor[i]->setValue(n->fx.color[i]);
-        m_trailCount->setValue(n->trail.count);
-        m_trailGap->setValue(n->trail.gap);
-        for (int i = 0; i < 4; i++) m_trailColor[i]->setValue(n->trail.color[i]);
-        m_trailAdd->setChecked(n->trail.additive);
+        m_pLatticeCols->setValue(l_pN->f_LatticeCols());
+        m_pLatticeRows->setValue(l_pN->f_LatticeRows());
+        m_pFxShader->setCurrentIndex(int(l_pN->m_oFx.m_eShader));
+        for (int l_iI = 0; l_iI < 4; l_iI++) m_arrFxColor[l_iI]->setValue(l_pN->m_oFx.m_v4Color[l_iI]);
+        m_pTrailCount->setValue(l_pN->m_oTrail.m_iCount);
+        m_pTrailGap->setValue(l_pN->m_oTrail.m_fGap);
+        for (int l_iI = 0; l_iI < 4; l_iI++) m_arrTrailColor[l_iI]->setValue(l_pN->m_oTrail.m_v4Color[l_iI]);
+        m_pTrailAdd->setChecked(l_pN->m_oTrail.m_bAdditive);
     } else {
-        m_nodeBox->setTitle(tr("Node"));
+        m_pNodeBox->setTitle(tr("Node"));
     }
-    m_updating = false;
-    refreshPlayhead();
+    m_bUpdating = false;
+    f_RefreshPlayhead();
 }
 
-void AnimPropertiesDock::refreshPlayhead()
+void AnimPropertiesDock::f_RefreshPlayhead()
 {
-    m_updating = true;
-    const Node* n = m_doc->selectedNode();
-    const float t = m_doc->time();
-    m_playBox->setEnabled(n != nullptr);
-    m_easeBox->setEnabled(n != nullptr);
-    m_playLabel->setText(tr("t = %1 s   auto-key %2").arg(t, 0, 'f', 3).arg(m_doc->autoKey() ? tr("ON (edits write keys)") : tr("off (edits change rest values)")));
-    refreshEffect(n);
-    if (n) {
-        const glm::vec3 p = toms::anim::positionAt(*n, t), r = toms::anim::rotationAt(*n, t), s = toms::anim::scaleAt(*n, t);
-        const glm::vec4 c = toms::anim::colorAt(*n, t);
-        for (int i = 0; i < 3; i++) {
-            const QSignalBlocker bp(m_pos[i]), br(m_rot[i]), bs(m_scale[i]);
-            m_pos[i]->setValue(p[i]);
-            m_rot[i]->setValue(r[i]);
-            m_scale[i]->setValue(s[i]);
+    m_bUpdating = true;
+    const Node* l_pN = m_pDoc->f_SelectedNode();
+    const float l_fT = m_pDoc->f_Time();
+    m_pPlayBox->setEnabled(l_pN != nullptr);
+    m_pEaseBox->setEnabled(l_pN != nullptr);
+    m_pPlayLabel->setText(tr("t = %1 s   auto-key %2").arg(l_fT, 0, 'f', 3).arg(m_pDoc->f_AutoKey() ? tr("ON (edits write keys)") : tr("off (edits change rest values)")));
+    f_RefreshEffect(l_pN);
+    if (l_pN) {
+        const glm::vec3 l_v3P = toms::anim::f_PositionAt(*l_pN, l_fT), l_v3R = toms::anim::f_RotationAt(*l_pN, l_fT), l_v3S = toms::anim::f_ScaleAt(*l_pN, l_fT);
+        const glm::vec4 l_v4C = toms::anim::f_ColorAt(*l_pN, l_fT);
+        for (int l_iI = 0; l_iI < 3; l_iI++) {
+            const QSignalBlocker l_oBp(m_arrPos[l_iI]), l_oBr(m_arrRot[l_iI]), l_oBs(m_arrScale[l_iI]);
+            m_arrPos[l_iI]->setValue(l_v3P[l_iI]);
+            m_arrRot[l_iI]->setValue(l_v3R[l_iI]);
+            m_arrScale[l_iI]->setValue(l_v3S[l_iI]);
         }
-        for (int i = 0; i < 4; i++) {
-            const QSignalBlocker b(m_color[i]);
-            m_color[i]->setValue(c[i]);
+        for (int l_iI = 0; l_iI < 4; l_iI++) {
+            const QSignalBlocker l_oB(m_arrColor[l_iI]);
+            m_arrColor[l_iI]->setValue(l_v4C[l_iI]);
         }
-        const std::string sp = toms::anim::spriteAt(*n, t);
-        m_spriteHere->setText(m_doc->spriteDisplay(sp));
-        m_spriteHere->setToolTip(sp.empty() ? QString() : tr("Stored as \"%1\"").arg(qs(sp)));
+        const std::string l_strSp = toms::anim::f_SpriteAt(*l_pN, l_fT);
+        m_pSpriteHere->setText(m_pDoc->f_SpriteDisplay(l_strSp));
+        m_pSpriteHere->setToolTip(l_strSp.empty() ? QString() : tr("Stored as \"%1\"").arg(f_Qs(l_strSp)));
         {
-            const QSignalBlocker b(m_visibleHere);
-            m_visibleHere->setChecked(toms::anim::visibleAt(*n, t));
+            const QSignalBlocker l_oB(m_pVisibleHere);
+            m_pVisibleHere->setChecked(toms::anim::f_VisibleAt(*l_pN, l_fT));
         }
-        for (Channel ch : kAllChannels) {
-            QToolButton* b = m_key[int(ch)];
-            if (!b) continue;
-            const bool here = hasKeyAt(*n, ch, t), track = keyCount(*n, ch) > 0;
-            b->setIcon(Icons::icon(here ? Icons::Id::KeyOn : track ? Icons::Id::KeyOff : Icons::Id::KeyNone));
-            b->setToolTip(here ? tr("Key at the playhead: click to remove it")
-                               : track ? tr("Animated, no key here: click to key the current value")
+        for (Channel l_eCh : g_arrAllChannels) {
+            QToolButton* l_pB = m_arrKey[int(l_eCh)];
+            if (!l_pB) continue;
+            const bool l_bHere = f_HasKeyAt(*l_pN, l_eCh, l_fT), l_bTrack = f_KeyCount(*l_pN, l_eCh) > 0;
+            l_pB->setIcon(Icons::f_Icon(l_bHere ? Icons::Id::KeyOn : l_bTrack ? Icons::Id::KeyOff : Icons::Id::KeyNone));
+            l_pB->setToolTip(l_bHere ? tr("Key at the playhead: click to remove it")
+                               : l_bTrack ? tr("Animated, no key here: click to key the current value")
                                        : tr("No keys: click to start a track with the current value"));
         }
-        for (int i = 0; i < 4; i++) {
-            const Channel ch = kInterpolated[i];
-            toms::anim::Ease e;
-            float kt = 0;
-            bool have = easeAtOrBefore(*n, ch, t, e, &kt);
-            if (!have && keyCount(*n, ch) > 0) {
-                kt = keyTimes(*n, ch).front();
-                have = easeAt(*n, ch, kt, e);
+        for (int l_iI = 0; l_iI < 4; l_iI++) {
+            const Channel l_eCh = g_arrInterpolated[l_iI];
+            toms::anim::Ease l_oE;
+            float l_fKt = 0;
+            bool l_bHave = f_EaseAtOrBefore(*l_pN, l_eCh, l_fT, l_oE, &l_fKt);
+            if (!l_bHave && f_KeyCount(*l_pN, l_eCh) > 0) {
+                l_fKt = f_KeyTimes(*l_pN, l_eCh).front();
+                l_bHave = f_EaseAt(*l_pN, l_eCh, l_fKt, l_oE);
             }
-            EaseUi::show(m_ease[i], have ? &e : nullptr);
-            m_easeAt[i]->setText(have ? tr("@ %1").arg(kt, 0, 'f', 3) : tr("no keys"));
+            EaseUi::f_Show(m_arrEase[l_iI], l_bHave ? &l_oE : nullptr);
+            m_arrEaseAt[l_iI]->setText(l_bHave ? tr("@ %1").arg(l_fKt, 0, 'f', 3) : tr("no keys"));
         }
     }
-    m_updating = false;
+    m_bUpdating = false;
 }

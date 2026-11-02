@@ -30,176 +30,176 @@
 namespace toms::next {
 namespace {
 
-bgfx::VertexLayout& rmlLayout() {
+bgfx::VertexLayout& f_RmlLayout() {
     // Must match Rml::Vertex: Vector2f position, ColourbPremultiplied colour, Vector2f tex_coord.
-    static bgfx::VertexLayout layout;
-    static bool ready = false;
-    if (!ready) {
-        layout.begin()
+    static bgfx::VertexLayout l_oLayout;
+    static bool l_bReady = false;
+    if (!l_bReady) {
+        l_oLayout.begin()
             .add(bgfx::Attrib::Position,  2, bgfx::AttribType::Float)
             .add(bgfx::Attrib::Color0,    4, bgfx::AttribType::Uint8, true)
             .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
             .end();
-        ready = true;
+        l_bReady = true;
     }
-    return layout;
+    return l_oLayout;
 }
 
 struct Geometry {
-    bgfx::VertexBufferHandle vbh = BGFX_INVALID_HANDLE;
-    bgfx::IndexBufferHandle  ibh = BGFX_INVALID_HANDLE;
+    bgfx::VertexBufferHandle m_oVbh = BGFX_INVALID_HANDLE;
+    bgfx::IndexBufferHandle  m_oIbh = BGFX_INVALID_HANDLE;
 };
 
 class BgfxRenderInterface final : public Rml::RenderInterface {
 public:
-    float designW = 1024, designH = 768;
-    float vpX = 0, vpY = 0, vpW = 1024, vpH = 768;   // letterbox rect in device pixels
-    uint16_t view = 2;
-    bgfx::ProgramHandle program = BGFX_INVALID_HANDLE;
-    bgfx::UniformHandle sampler = BGFX_INVALID_HANDLE;
-    bgfx::UniformHandle params = BGFX_INVALID_HANDLE;   // u_rmlParams, see vs_rml.sc
-    bgfx::TextureHandle white = BGFX_INVALID_HANDLE;
+    float m_fDesignW = 1024, m_fDesignH = 768;
+    float m_fVpX = 0, m_fVpY = 0, m_fVpW = 1024, m_fVpH = 768;   // letterbox rect in device pixels
+    uint16_t m_u16View = 2;
+    bgfx::ProgramHandle m_oProgram = BGFX_INVALID_HANDLE;
+    bgfx::UniformHandle m_oSampler = BGFX_INVALID_HANDLE;
+    bgfx::UniformHandle m_oParams = BGFX_INVALID_HANDLE;   // u_rmlParams, see vs_rml.sc
+    bgfx::TextureHandle m_oWhite = BGFX_INVALID_HANDLE;
 
-    bool create() {
+    bool f_Create() {
         static_assert(sizeof(Rml::Vertex) == 20, "Rml::Vertex layout changed; update rmlLayout()");
-        program = createEmbeddedProgram(ShaderProgram::RmlUi);
-        sampler = bgfx::createUniform("s_tex", bgfx::UniformType::Sampler);
-        params = bgfx::createUniform("u_rmlParams", bgfx::UniformType::Vec4);
-        const uint32_t px = 0xffffffff;
-        white = bgfx::createTexture2D(1, 1, false, 1, bgfx::TextureFormat::RGBA8, 0, bgfx::copy(&px, 4));
-        return bgfx::isValid(program);
+        m_oProgram = f_CreateEmbeddedProgram(ShaderProgram::RmlUi);
+        m_oSampler = bgfx::createUniform("s_tex", bgfx::UniformType::Sampler);
+        m_oParams = bgfx::createUniform("u_rmlParams", bgfx::UniformType::Vec4);
+        const uint32_t l_uPx = 0xffffffff;
+        m_oWhite = bgfx::createTexture2D(1, 1, false, 1, bgfx::TextureFormat::RGBA8, 0, bgfx::copy(&l_uPx, 4));
+        return bgfx::isValid(m_oProgram);
     }
-    void destroy() {
-        if (bgfx::isValid(program)) bgfx::destroy(program);
-        if (bgfx::isValid(sampler)) bgfx::destroy(sampler);
-        if (bgfx::isValid(params)) bgfx::destroy(params);
-        if (bgfx::isValid(white)) bgfx::destroy(white);
-        program = BGFX_INVALID_HANDLE; sampler = BGFX_INVALID_HANDLE; params = BGFX_INVALID_HANDLE;
-        white = BGFX_INVALID_HANDLE;
+    void f_Destroy() {
+        if (bgfx::isValid(m_oProgram)) bgfx::destroy(m_oProgram);
+        if (bgfx::isValid(m_oSampler)) bgfx::destroy(m_oSampler);
+        if (bgfx::isValid(m_oParams)) bgfx::destroy(m_oParams);
+        if (bgfx::isValid(m_oWhite)) bgfx::destroy(m_oWhite);
+        m_oProgram = BGFX_INVALID_HANDLE; m_oSampler = BGFX_INVALID_HANDLE; m_oParams = BGFX_INVALID_HANDLE;
+        m_oWhite = BGFX_INVALID_HANDLE;
     }
 
     // ---- geometry ----
-    Rml::CompiledGeometryHandle CompileGeometry(Rml::Span<const Rml::Vertex> vertices, Rml::Span<const int> indices) override {
-        auto* g = new Geometry();
-        g->vbh = bgfx::createVertexBuffer(bgfx::copy(vertices.data(), (uint32_t)(vertices.size() * sizeof(Rml::Vertex))), rmlLayout());
-        g->ibh = bgfx::createIndexBuffer(bgfx::copy(indices.data(), (uint32_t)(indices.size() * sizeof(int))), BGFX_BUFFER_INDEX32);
-        return reinterpret_cast<Rml::CompiledGeometryHandle>(g);
+    Rml::CompiledGeometryHandle CompileGeometry(Rml::Span<const Rml::Vertex> l_oVertices, Rml::Span<const int> l_oIndices) override {
+        auto* l_pG = new Geometry();
+        l_pG->m_oVbh = bgfx::createVertexBuffer(bgfx::copy(l_oVertices.data(), (uint32_t)(l_oVertices.size() * sizeof(Rml::Vertex))), f_RmlLayout());
+        l_pG->m_oIbh = bgfx::createIndexBuffer(bgfx::copy(l_oIndices.data(), (uint32_t)(l_oIndices.size() * sizeof(int))), BGFX_BUFFER_INDEX32);
+        return reinterpret_cast<Rml::CompiledGeometryHandle>(l_pG);
     }
-    void ReleaseGeometry(Rml::CompiledGeometryHandle handle) override {
-        auto* g = reinterpret_cast<Geometry*>(handle);
-        if (bgfx::isValid(g->vbh)) bgfx::destroy(g->vbh);
-        if (bgfx::isValid(g->ibh)) bgfx::destroy(g->ibh);
-        delete g;
+    void ReleaseGeometry(Rml::CompiledGeometryHandle l_u64Handle) override {
+        auto* l_pG = reinterpret_cast<Geometry*>(l_u64Handle);
+        if (bgfx::isValid(l_pG->m_oVbh)) bgfx::destroy(l_pG->m_oVbh);
+        if (bgfx::isValid(l_pG->m_oIbh)) bgfx::destroy(l_pG->m_oIbh);
+        delete l_pG;
     }
-    void RenderGeometry(Rml::CompiledGeometryHandle handle, Rml::Vector2f translation, Rml::TextureHandle texture) override {
-        auto* g = reinterpret_cast<Geometry*>(handle);
-        float model[16], move[16];
-        bx::mtxTranslate(move, translation.x, translation.y, 0.0f);
-        if (hasTransform) bx::mtxMul(model, move, transform);   // translate first, then the element transform
-        else std::copy(move, move + 16, model);
-        bgfx::setTransform(model);
-        bgfx::setVertexBuffer(0, g->vbh);
-        bgfx::setIndexBuffer(g->ibh);
-        bgfx::TextureHandle tex = texture ? bgfx::TextureHandle{(uint16_t)(texture - 1)} : white;
-        bgfx::setTexture(0, sampler, tex);
+    void RenderGeometry(Rml::CompiledGeometryHandle l_u64Handle, Rml::Vector2f l_oTranslation, Rml::TextureHandle l_u64Texture) override {
+        auto* l_pG = reinterpret_cast<Geometry*>(l_u64Handle);
+        float l_arrModel[16], l_arrMove[16];
+        bx::mtxTranslate(l_arrMove, l_oTranslation.x, l_oTranslation.y, 0.0f);
+        if (m_bHasTransform) bx::mtxMul(l_arrModel, l_arrMove, m_arrTransform);   // translate first, then the element transform
+        else std::copy(l_arrMove, l_arrMove + 16, l_arrModel);
+        bgfx::setTransform(l_arrModel);
+        bgfx::setVertexBuffer(0, l_pG->m_oVbh);
+        bgfx::setIndexBuffer(l_pG->m_oIbh);
+        bgfx::TextureHandle l_oTex = l_u64Texture ? bgfx::TextureHandle{(uint16_t)(l_u64Texture - 1)} : m_oWhite;
+        bgfx::setTexture(0, m_oSampler, l_oTex);
         // The desktop backbuffer is sRGB (bgfx_host.cpp) and RCSS colours are sRGB, so the shader
         // linearizes them; the web's and Android's are not (color_space.h), so they pass through.
 #if TOMS_GAMMA_SPACE
-        float p[4] = {0, 0, 0, 0};
+        float l_arrP[4] = {0, 0, 0, 0};
 #else
-        float p[4] = {1, 0, 0, 0};
+        float l_arrP[4] = {1, 0, 0, 0};
 #endif
-        p[1] = borrowed.count(texture) ? 1.0f : 0.0f;   // straight alpha: fs_rml premultiplies it
-        bgfx::setUniform(params, p);
-        if (scissorOn) {
+        l_arrP[1] = m_setBorrowed.count(l_u64Texture) ? 1.0f : 0.0f;   // straight alpha: fs_rml premultiplies it
+        bgfx::setUniform(m_oParams, l_arrP);
+        if (m_bScissorOn) {
             // RmlUi gives the region in UI pixels; bgfx wants backbuffer pixels.
-            const float sx = vpW / designW, sy = vpH / designH;
-            const float x0 = vpX + scissor.Left() * sx, y0 = vpY + scissor.Top() * sy;
-            const float w = scissor.Width() * sx, h = scissor.Height() * sy;
-            bgfx::setScissor((uint16_t)std::max(0.0f, std::floor(x0)), (uint16_t)std::max(0.0f, std::floor(y0)),
-                             (uint16_t)std::max(0.0f, std::ceil(w)), (uint16_t)std::max(0.0f, std::ceil(h)));
+            const float l_fSx = m_fVpW / m_fDesignW, l_fSy = m_fVpH / m_fDesignH;
+            const float l_fX0 = m_fVpX + m_oScissor.Left() * l_fSx, l_fY0 = m_fVpY + m_oScissor.Top() * l_fSy;
+            const float l_fW = m_oScissor.Width() * l_fSx, l_fH = m_oScissor.Height() * l_fSy;
+            bgfx::setScissor((uint16_t)std::max(0.0f, std::floor(l_fX0)), (uint16_t)std::max(0.0f, std::floor(l_fY0)),
+                             (uint16_t)std::max(0.0f, std::ceil(l_fW)), (uint16_t)std::max(0.0f, std::ceil(l_fH)));
         }
         // Premultiplied alpha (RmlUi's colours and generated textures are premultiplied).
         bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A |
                        BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_INV_SRC_ALPHA));
-        bgfx::submit(view, program);
+        bgfx::submit(m_u16View, m_oProgram);
     }
 
     // ---- textures ----
     // Textures borrowed from the map renderer (shared_textures.h): never destroyed here, and drawn
     // with u_rmlParams.y = 1 because their alpha is straight.
-    std::set<Rml::TextureHandle> borrowed;
-    int lentVersion = 0;   // lentTexturesVersion() when `borrowed` was last valid
+    std::set<Rml::TextureHandle> m_setBorrowed;
+    int m_iLentVersion = 0;   // lentTexturesVersion() when `borrowed` was last valid
 
-    Rml::TextureHandle LoadTexture(Rml::Vector2i& dimensions, const Rml::String& source) override {
-        if (const SharedTexture* s = findLentTexture(source)) {   // the sprite atlas: already on the GPU
-            dimensions = {s->w, s->h};
-            const Rml::TextureHandle t = (Rml::TextureHandle)s->handle + 1;
-            if (borrowed.insert(t).second)
-                Rml::Log::Message(Rml::Log::LT_INFO, "%s: the map's texture, shared (%dx%d)", source.c_str(), s->w, s->h);
-            return t;
+    Rml::TextureHandle LoadTexture(Rml::Vector2i& l_oDimensions, const Rml::String& l_strSource) override {
+        if (const SharedTexture* l_pS = f_FindLentTexture(l_strSource)) {   // the sprite atlas: already on the GPU
+            l_oDimensions = {l_pS->m_iW, l_pS->m_iH};
+            const Rml::TextureHandle l_u64T = (Rml::TextureHandle)l_pS->m_u16Handle + 1;
+            if (m_setBorrowed.insert(l_u64T).second)
+                Rml::Log::Message(Rml::Log::LT_INFO, "%s: the map's texture, shared (%dx%d)", l_strSource.c_str(), l_pS->m_iW, l_pS->m_iH);
+            return l_u64T;
         }
-        int w = 0, h = 0, n = 0;
-        std::string file;   // vfs: APK entries on Android
-        stbi_uc* px = toms::vfsReadAll(source, file)
-            ? stbi_load_from_memory((const stbi_uc*)file.data(), (int)file.size(), &w, &h, &n, 4) : nullptr;
-        if (!px) {
-            Rml::Log::Message(Rml::Log::LT_WARNING, "image not found: %s", source.c_str());
+        int l_iW = 0, l_iH = 0, l_iN = 0;
+        std::string l_strFile;   // vfs: APK entries on Android
+        stbi_uc* l_pPx = toms::f_VfsReadAll(l_strSource, l_strFile)
+            ? stbi_load_from_memory((const stbi_uc*)l_strFile.data(), (int)l_strFile.size(), &l_iW, &l_iH, &l_iN, 4) : nullptr;
+        if (!l_pPx) {
+            Rml::Log::Message(Rml::Log::LT_WARNING, "image not found: %s", l_strSource.c_str());
             return 0;
         }
-        for (int i = 0; i < w * h; ++i) {   // RmlUi expects premultiplied alpha
-            stbi_uc* p = px + i * 4;
-            p[0] = (stbi_uc)(p[0] * p[3] / 255); p[1] = (stbi_uc)(p[1] * p[3] / 255); p[2] = (stbi_uc)(p[2] * p[3] / 255);
+        for (int l_iI = 0; l_iI < l_iW * l_iH; ++l_iI) {   // RmlUi expects premultiplied alpha
+            stbi_uc* l_pP = l_pPx + l_iI * 4;
+            l_pP[0] = (stbi_uc)(l_pP[0] * l_pP[3] / 255); l_pP[1] = (stbi_uc)(l_pP[1] * l_pP[3] / 255); l_pP[2] = (stbi_uc)(l_pP[2] * l_pP[3] / 255);
         }
-        dimensions = {w, h};
+        l_oDimensions = {l_iW, l_iH};
         // Images are the game's pixel art: point sampling keeps them crisp when scaled up. sRGB like
         // the game's own atlases (bgfx_renderer.cpp), so icons look the same in both UIs.
-        uint64_t flags = BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP;
+        uint64_t l_u64Flags = BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP;
 #if !TOMS_GAMMA_SPACE
-        flags |= BGFX_TEXTURE_SRGB;
+        l_u64Flags |= BGFX_TEXTURE_SRGB;
 #endif
-        bgfx::TextureHandle t = bgfx::createTexture2D((uint16_t)w, (uint16_t)h, false, 1, bgfx::TextureFormat::RGBA8,
-                                                      flags,
-                                                      bgfx::copy(px, (uint32_t)(w * h * 4)));
-        stbi_image_free(px);
-        return bgfx::isValid(t) ? (Rml::TextureHandle)t.idx + 1 : 0;
+        bgfx::TextureHandle l_oT = bgfx::createTexture2D((uint16_t)l_iW, (uint16_t)l_iH, false, 1, bgfx::TextureFormat::RGBA8,
+                                                      l_u64Flags,
+                                                      bgfx::copy(l_pPx, (uint32_t)(l_iW * l_iH * 4)));
+        stbi_image_free(l_pPx);
+        return bgfx::isValid(l_oT) ? (Rml::TextureHandle)l_oT.idx + 1 : 0;
     }
-    Rml::TextureHandle GenerateTexture(Rml::Span<const Rml::byte> source, Rml::Vector2i dim) override {
+    Rml::TextureHandle GenerateTexture(Rml::Span<const Rml::byte> l_oSource, Rml::Vector2i l_oDim) override {
         // Font glyph atlases and other generated images: smooth sampling.
-        bgfx::TextureHandle t = bgfx::createTexture2D((uint16_t)dim.x, (uint16_t)dim.y, false, 1, bgfx::TextureFormat::RGBA8,
-                                                      BGFX_SAMPLER_UVW_CLAMP, bgfx::copy(source.data(), (uint32_t)source.size()));
-        return bgfx::isValid(t) ? (Rml::TextureHandle)t.idx + 1 : 0;
+        bgfx::TextureHandle l_oT = bgfx::createTexture2D((uint16_t)l_oDim.x, (uint16_t)l_oDim.y, false, 1, bgfx::TextureFormat::RGBA8,
+                                                      BGFX_SAMPLER_UVW_CLAMP, bgfx::copy(l_oSource.data(), (uint32_t)l_oSource.size()));
+        return bgfx::isValid(l_oT) ? (Rml::TextureHandle)l_oT.idx + 1 : 0;
     }
-    void ReleaseTexture(Rml::TextureHandle texture) override {
-        if (borrowed.erase(texture)) return;   // the map renderer owns it
-        if (texture) bgfx::destroy(bgfx::TextureHandle{(uint16_t)(texture - 1)});
+    void ReleaseTexture(Rml::TextureHandle l_u64Texture) override {
+        if (m_setBorrowed.erase(l_u64Texture)) return;   // the map renderer owns it
+        if (l_u64Texture) bgfx::destroy(bgfx::TextureHandle{(uint16_t)(l_u64Texture - 1)});
     }
 
     // ---- scissor / transform (clip masks, layers and filters are not implemented) ----
-    void EnableScissorRegion(bool enable) override { scissorOn = enable; }
-    void SetScissorRegion(Rml::Rectanglei region) override { scissor = region; }
-    void SetTransform(const Rml::Matrix4f* t) override {
-        hasTransform = t != nullptr;
-        if (t) std::copy(t->data(), t->data() + 16, transform);
+    void EnableScissorRegion(bool l_bEnable) override { m_bScissorOn = l_bEnable; }
+    void SetScissorRegion(Rml::Rectanglei l_oRegion) override { m_oScissor = l_oRegion; }
+    void SetTransform(const Rml::Matrix4f* l_pT) override {
+        m_bHasTransform = l_pT != nullptr;
+        if (l_pT) std::copy(l_pT->data(), l_pT->data() + 16, m_arrTransform);
     }
 
 private:
-    bool scissorOn = false;
-    Rml::Rectanglei scissor;
-    bool hasTransform = false;
-    float transform[16] = {};
+    bool m_bScissorOn = false;
+    Rml::Rectanglei m_oScissor;
+    bool m_bHasTransform = false;
+    float m_arrTransform[16] = {};
 };
 
 // RmlUi::setLogListener: the UI editor's Problems list.
-std::function<void(int, const std::string&)>& logListener() {
-    static std::function<void(int, const std::string&)> listener;
-    return listener;
+std::function<void(int, const std::string&)>& f_LogListener() {
+    static std::function<void(int, const std::string&)> l_fnListener;
+    return l_fnListener;
 }
 
 // Documents made in memory (RmlUi::setVirtualFile), by file name.
-std::map<std::string, std::string>& virtualFiles() {
-    static std::map<std::string, std::string> files;
-    return files;
+std::map<std::string, std::string>& f_VirtualFiles() {
+    static std::map<std::string, std::string> l_mapFiles;
+    return l_mapFiles;
 }
 
 // RmlUi reads its documents (.rml/.rcss) and its fonts through this interface, on every platform:
@@ -207,49 +207,49 @@ std::map<std::string, std::string>& virtualFiles() {
 // elsewhere, and the game's in-memory sprite sheet (virtualFiles) is served from here.
 class FileInterface final : public Rml::FileInterface {
 public:
-    Rml::FileHandle Open(const Rml::String& path) override {
-        std::string buf;
-        const size_t slash = path.find_last_of("/\\");
-        auto v = virtualFiles().find(slash == std::string::npos ? path : path.substr(slash + 1));
-        if (v != virtualFiles().end()) buf = v->second;
-        else if (!toms::vfsReadAll(path, buf)) return 0;   // 0 == failed open, RmlUi's contract
-        return (Rml::FileHandle) new Entry{std::move(buf), 0};
+    Rml::FileHandle Open(const Rml::String& l_strPath) override {
+        std::string l_strBuf;
+        const size_t l_nSlash = l_strPath.find_last_of("/\\");
+        auto l_itV = f_VirtualFiles().find(l_nSlash == std::string::npos ? l_strPath : l_strPath.substr(l_nSlash + 1));
+        if (l_itV != f_VirtualFiles().end()) l_strBuf = l_itV->second;
+        else if (!toms::f_VfsReadAll(l_strPath, l_strBuf)) return 0;   // 0 == failed open, RmlUi's contract
+        return (Rml::FileHandle) new Entry{std::move(l_strBuf), 0};
     }
-    void Close(Rml::FileHandle file) override { delete (Entry*)file; }
+    void Close(Rml::FileHandle l_u64File) override { delete (Entry*)l_u64File; }
 
-    size_t Read(void* buffer, size_t size, Rml::FileHandle file) override {
-        Entry* e = (Entry*)file;
-        if (!e || e->pos >= e->data.size()) return 0;
-        const size_t n = size < (e->data.size() - e->pos) ? size : (e->data.size() - e->pos);
-        std::memcpy(buffer, e->data.data() + e->pos, n);
-        e->pos += n;
-        return n;
+    size_t Read(void* l_pBuffer, size_t l_nSize, Rml::FileHandle l_u64File) override {
+        Entry* l_pE = (Entry*)l_u64File;
+        if (!l_pE || l_pE->m_nPos >= l_pE->m_strData.size()) return 0;
+        const size_t l_nN = l_nSize < (l_pE->m_strData.size() - l_pE->m_nPos) ? l_nSize : (l_pE->m_strData.size() - l_pE->m_nPos);
+        std::memcpy(l_pBuffer, l_pE->m_strData.data() + l_pE->m_nPos, l_nN);
+        l_pE->m_nPos += l_nN;
+        return l_nN;
     }
-    bool Seek(Rml::FileHandle file, long offset, int origin) override {
-        Entry* e = (Entry*)file;
-        if (!e) return false;
-        const long base = origin == SEEK_SET ? 0L : origin == SEEK_CUR ? (long)e->pos : (long)e->data.size();
-        const long target = base + offset;
-        if (target < 0 || (size_t)target > e->data.size()) return false;
-        e->pos = (size_t)target;
+    bool Seek(Rml::FileHandle l_u64File, long l_iOffset, int l_iOrigin) override {
+        Entry* l_pE = (Entry*)l_u64File;
+        if (!l_pE) return false;
+        const long l_iBase = l_iOrigin == SEEK_SET ? 0L : l_iOrigin == SEEK_CUR ? (long)l_pE->m_nPos : (long)l_pE->m_strData.size();
+        const long l_iTarget = l_iBase + l_iOffset;
+        if (l_iTarget < 0 || (size_t)l_iTarget > l_pE->m_strData.size()) return false;
+        l_pE->m_nPos = (size_t)l_iTarget;
         return true;
     }
-    size_t Tell(Rml::FileHandle file) override { Entry* e = (Entry*)file; return e ? e->pos : 0; }
+    size_t Tell(Rml::FileHandle l_u64File) override { Entry* l_pE = (Entry*)l_u64File; return l_pE ? l_pE->m_nPos : 0; }
 
 private:
-    struct Entry { std::string data; size_t pos = 0; };
+    struct Entry { std::string m_strData; size_t m_nPos = 0; };
 };
 
 class SystemInterface final : public Rml::SystemInterface {
 public:
-    double now = 0;
-    double GetElapsedTime() override { return now; }
-    bool LogMessage(Rml::Log::Type type, const Rml::String& message) override {
-        const char* tag = type == Rml::Log::LT_ERROR || type == Rml::Log::LT_ASSERT ? "error"
-                        : type == Rml::Log::LT_WARNING ? "warning" : "info";
-        std::fprintf(stderr, "[rmlui %s] %s\n", tag, message.c_str());
-        if (logListener())
-            logListener()(type == Rml::Log::LT_ERROR || type == Rml::Log::LT_ASSERT ? 2 : type == Rml::Log::LT_WARNING ? 1 : 0, message);
+    double m_dNow = 0;
+    double GetElapsedTime() override { return m_dNow; }
+    bool LogMessage(Rml::Log::Type l_eType, const Rml::String& l_strMessage) override {
+        const char* l_pszTag = l_eType == Rml::Log::LT_ERROR || l_eType == Rml::Log::LT_ASSERT ? "error"
+                        : l_eType == Rml::Log::LT_WARNING ? "warning" : "info";
+        std::fprintf(stderr, "[rmlui %s] %s\n", l_pszTag, l_strMessage.c_str());
+        if (f_LogListener())
+            f_LogListener()(l_eType == Rml::Log::LT_ERROR || l_eType == Rml::Log::LT_ASSERT ? 2 : l_eType == Rml::Log::LT_WARNING ? 1 : 0, l_strMessage);
         return true;
     }
 };
@@ -257,16 +257,16 @@ public:
 }  // namespace
 
 struct RmlUi::Impl {
-    BgfxRenderInterface render;
-    SystemInterface system;
-    FileInterface file;
-    Rml::Context* context = nullptr;
-    bool debugger = false;
+    BgfxRenderInterface m_oRender;
+    SystemInterface m_oSystem;
+    FileInterface m_oFile;
+    Rml::Context* m_pContext = nullptr;
+    bool m_bDebugger = false;
 #ifdef __EMSCRIPTEN__
-    CanvasFontEngine canvasFont;         // web: the browser draws the text (rml_canvas_font.h)
+    CanvasFontEngine m_oCanvasFont;         // web: the browser draws the text (rml_canvas_font.h)
 #else
-    std::set<std::string> loadedFamilies;   // desktop: language fonts already registered
-    std::vector<Rml::byte> systemFont;      // the system fallback font's bytes: RmlUi reads them until Rml::Shutdown
+    std::set<std::string> m_setLoadedFamilies;   // desktop: language fonts already registered
+    std::vector<Rml::byte> m_vSystemFont;      // the system fallback font's bytes: RmlUi reads them until Rml::Shutdown
 #endif
 };
 
@@ -277,59 +277,59 @@ namespace {
 // fallback faces in the order they were loaded, so the bundled font always wins and screenshots do not change.
 // Only one file is loaded (they are 10-25 MB, read into memory). TOMS_SYSTEM_FONT=<path>[#face] picks another file,
 // TOMS_SYSTEM_FONT=none turns it off. Never shipped: it is read from the player's own system.
-struct SystemFontFile { std::string path; int face; };
+struct SystemFontFile { std::string m_strPath; int m_iFace; };
 
-std::vector<SystemFontFile> systemFontCandidates() {
-    std::vector<SystemFontFile> out;
-    if (const char* env = std::getenv("TOMS_SYSTEM_FONT"); env && *env) {
-        std::string s = env;
-        if (s == "none") return out;
-        int face = 0;
-        if (const size_t hash = s.rfind('#'); hash != std::string::npos) { face = std::atoi(s.c_str() + hash + 1); s.resize(hash); }
-        out.push_back({s, face});
-        return out;
+std::vector<SystemFontFile> f_SystemFontCandidates() {
+    std::vector<SystemFontFile> l_vOut;
+    if (const char* l_pszEnv = std::getenv("TOMS_SYSTEM_FONT"); l_pszEnv && *l_pszEnv) {
+        std::string l_strS = l_pszEnv;
+        if (l_strS == "none") return l_vOut;
+        int l_iFace = 0;
+        if (const size_t l_nHash = l_strS.rfind('#'); l_nHash != std::string::npos) { l_iFace = std::atoi(l_strS.c_str() + l_nHash + 1); l_strS.resize(l_nHash); }
+        l_vOut.push_back({l_strS, l_iFace});
+        return l_vOut;
     }
 #if defined(_WIN32)
-    const char* win = std::getenv("WINDIR");
-    const std::string fonts = std::string(win && *win ? win : "C:\\Windows") + "\\Fonts\\";
+    const char* l_pszWin = std::getenv("WINDIR");
+    const std::string l_strFonts = std::string(l_pszWin && *l_pszWin ? l_pszWin : "C:\\Windows") + "\\Fonts\\";
     // Microsoft JhengHei (Traditional Chinese, Windows 7+), then YaHei (Simplified), MingLiU, SimSun
-    for (const char* f : {"msjh.ttc", "msyh.ttc", "mingliu.ttc", "simsun.ttc"}) out.push_back({fonts + f, 0});
+    for (const char* l_pszF : {"msjh.ttc", "msyh.ttc", "mingliu.ttc", "simsun.ttc"}) l_vOut.push_back({l_strFonts + l_pszF, 0});
 #elif defined(__ANDROID__)
     // Android 7+: Noto Sans CJK, one collection; face 3 is Traditional Chinese (0 JP, 1 KR, 2 SC, 3 TC, 4 HK).
-    out.push_back({"/system/fonts/NotoSansCJK-Regular.ttc", 3});
-    out.push_back({"/system/fonts/NotoSansCJKtc-Regular.otf", 0});
-    out.push_back({"/system/fonts/DroidSansFallbackFull.ttf", 0});   // older Android
-    out.push_back({"/system/fonts/DroidSansFallback.ttf", 0});
+    l_vOut.push_back({"/system/fonts/NotoSansCJK-Regular.ttc", 3});
+    l_vOut.push_back({"/system/fonts/NotoSansCJKtc-Regular.otf", 0});
+    l_vOut.push_back({"/system/fonts/DroidSansFallbackFull.ttf", 0});   // older Android
+    l_vOut.push_back({"/system/fonts/DroidSansFallback.ttf", 0});
 #else
     out.push_back({"/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc", 3});
     out.push_back({"/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc", 3});
 #endif
-    return out;
+    return l_vOut;
 }
 
 // Loads the first candidate that exists and that RmlUi accepts. Returns false (and keeps nothing) when none does.
-bool loadSystemFallbackFont(std::vector<Rml::byte>& keep) {
-    for (const SystemFontFile& f : systemFontCandidates()) {
-        std::FILE* fp = std::fopen(f.path.c_str(), "rb");   // an absolute system path: not through the APK file interface
-        if (!fp) continue;
-        std::vector<Rml::byte> bytes;
-        std::fseek(fp, 0, SEEK_END);
-        const long size = std::ftell(fp);
-        std::fseek(fp, 0, SEEK_SET);
-        if (size > 0) {
-            bytes.resize((size_t)size);
-            if (std::fread(bytes.data(), 1, bytes.size(), fp) != bytes.size()) bytes.clear();
+bool f_LoadSystemFallbackFont(std::vector<Rml::byte>& l_vKeep) {
+    for (const SystemFontFile& l_oF : f_SystemFontCandidates()) {
+        std::FILE* l_pFp = std::fopen(l_oF.m_strPath.c_str(), "rb");   // an absolute system path: not through the APK file interface
+        if (!l_pFp) continue;
+        std::vector<Rml::byte> l_vBytes;
+        std::fseek(l_pFp, 0, SEEK_END);
+        const long l_iSize = std::ftell(l_pFp);
+        std::fseek(l_pFp, 0, SEEK_SET);
+        if (l_iSize > 0) {
+            l_vBytes.resize((size_t)l_iSize);
+            if (std::fread(l_vBytes.data(), 1, l_vBytes.size(), l_pFp) != l_vBytes.size()) l_vBytes.clear();
         }
-        std::fclose(fp);
-        if (bytes.empty()) continue;
-        keep = std::move(bytes);
-        if (Rml::LoadFontFace(Rml::Span<const Rml::byte>(keep.data(), keep.size()), "toms-system", Rml::Style::FontStyle::Normal,
-                              Rml::Style::FontWeight::Auto, true, f.face)) {
-            std::fprintf(stderr, "[rmlui] system fallback font: %s (face %d, %.1f MB)\n", f.path.c_str(), f.face, keep.size() / 1048576.0);
+        std::fclose(l_pFp);
+        if (l_vBytes.empty()) continue;
+        l_vKeep = std::move(l_vBytes);
+        if (Rml::LoadFontFace(Rml::Span<const Rml::byte>(l_vKeep.data(), l_vKeep.size()), "toms-system", Rml::Style::FontStyle::Normal,
+                              Rml::Style::FontWeight::Auto, true, l_oF.m_iFace)) {
+            std::fprintf(stderr, "[rmlui] system fallback font: %s (face %d, %.1f MB)\n", l_oF.m_strPath.c_str(), l_oF.m_iFace, l_vKeep.size() / 1048576.0);
             return true;
         }
-        std::fprintf(stderr, "[rmlui] system font could not be loaded: %s\n", f.path.c_str());
-        keep.clear();
+        std::fprintf(stderr, "[rmlui] system font could not be loaded: %s\n", l_oF.m_strPath.c_str());
+        l_vKeep.clear();
     }
     std::fprintf(stderr, "[rmlui] no system fallback font (characters the bundled font lacks show as boxes)\n");
     return false;
@@ -338,135 +338,135 @@ bool loadSystemFallbackFont(std::vector<Rml::byte>& keep) {
 #endif
 
 RmlUi::RmlUi() = default;
-RmlUi::~RmlUi() { shutdown(); }
+RmlUi::~RmlUi() { f_Shutdown(); }
 
-bool RmlUi::init(int designW, int designH, const std::string& defaultFont, std::string& error) {
-    shutdown();
-    impl_ = std::make_unique<Impl>();
-    impl_->render.designW = (float)designW;
-    impl_->render.designH = (float)designH;
-    if (!impl_->render.create()) { error = "RmlUi: shader program missing for this renderer"; impl_.reset(); return false; }
-    Rml::SetRenderInterface(&impl_->render);
-    Rml::SetSystemInterface(&impl_->system);
-    Rml::SetFileInterface(&impl_->file);   // APK entries on Android, the in-memory sprite sheet everywhere
+bool RmlUi::f_Init(int l_iDesignW, int l_iDesignH, const std::string& l_strDefaultFont, std::string& l_strError) {
+    f_Shutdown();
+    m_upImpl = std::make_unique<Impl>();
+    m_upImpl->m_oRender.m_fDesignW = (float)l_iDesignW;
+    m_upImpl->m_oRender.m_fDesignH = (float)l_iDesignH;
+    if (!m_upImpl->m_oRender.f_Create()) { l_strError = "RmlUi: shader program missing for this renderer"; m_upImpl.reset(); return false; }
+    Rml::SetRenderInterface(&m_upImpl->m_oRender);
+    Rml::SetSystemInterface(&m_upImpl->m_oSystem);
+    Rml::SetFileInterface(&m_upImpl->m_oFile);   // APK entries on Android, the in-memory sprite sheet everywhere
 #ifdef __EMSCRIPTEN__
-    (void)defaultFont;                                  // no font files on the web
-    Rml::SetFontEngineInterface(&impl_->canvasFont);
+    (void)l_strDefaultFont;                                  // no font files on the web
+    Rml::SetFontEngineInterface(&m_upImpl->canvasFont);
 #endif
-    if (!Rml::Initialise()) { error = "RmlUi: Rml::Initialise failed"; impl_->render.destroy(); impl_.reset(); return false; }
+    if (!Rml::Initialise()) { l_strError = "RmlUi: Rml::Initialise failed"; m_upImpl->m_oRender.f_Destroy(); m_upImpl.reset(); return false; }
 #ifndef __EMSCRIPTEN__
     // The bundled font is family "toms" AND the fallback face: characters a language's own font
     // (languageFont) lacks are drawn from it.
-    if (!Rml::LoadFontFace(defaultFont, "toms", Rml::Style::FontStyle::Normal, Rml::Style::FontWeight::Auto, true, 0)) {
-        error = "RmlUi: the UI font could not be loaded: " + defaultFont;
-        Rml::Shutdown(); impl_->render.destroy(); impl_.reset();
+    if (!Rml::LoadFontFace(l_strDefaultFont, "toms", Rml::Style::FontStyle::Normal, Rml::Style::FontWeight::Auto, true, 0)) {
+        l_strError = "RmlUi: the UI font could not be loaded: " + l_strDefaultFont;
+        Rml::Shutdown(); m_upImpl->m_oRender.f_Destroy(); m_upImpl.reset();
         return false;
     }
-    std::fprintf(stderr, "[rmlui] font family 'toms' (and fallback): %s\n", defaultFont.c_str());
-    loadSystemFallbackFont(impl_->systemFont);   // after the bundled face: only for characters it lacks
+    std::fprintf(stderr, "[rmlui] font family 'toms' (and fallback): %s\n", l_strDefaultFont.c_str());
+    f_LoadSystemFallbackFont(m_upImpl->m_vSystemFont);   // after the bundled face: only for characters it lacks
 #endif
-    impl_->context = Rml::CreateContext("game", Rml::Vector2i(designW, designH));
-    if (!impl_->context) { error = "RmlUi: CreateContext failed"; shutdown(); return false; }
-    Rml::Debugger::Initialise(impl_->context);
-    impl_->render.lentVersion = lentTexturesVersion();
+    m_upImpl->m_pContext = Rml::CreateContext("game", Rml::Vector2i(l_iDesignW, l_iDesignH));
+    if (!m_upImpl->m_pContext) { l_strError = "RmlUi: CreateContext failed"; f_Shutdown(); return false; }
+    Rml::Debugger::Initialise(m_upImpl->m_pContext);
+    m_upImpl->m_oRender.m_iLentVersion = f_LentTexturesVersion();
     return true;
 }
 
-void RmlUi::shutdown() {
-    if (!impl_) return;
-    if (impl_->context) {
+void RmlUi::f_Shutdown() {
+    if (!m_upImpl) return;
+    if (m_upImpl->m_pContext) {
         Rml::Debugger::Shutdown();
-        Rml::RemoveContext(impl_->context->GetName());
-        impl_->context = nullptr;
+        Rml::RemoveContext(m_upImpl->m_pContext->GetName());
+        m_upImpl->m_pContext = nullptr;
     }
     Rml::Shutdown();            // releases RmlUi's textures and geometry through the render interface
-    impl_->render.destroy();
-    impl_.reset();
-    std::map<std::string, std::string>().swap(virtualFiles());   // the in-memory documents go with RmlUi
+    m_upImpl->m_oRender.f_Destroy();
+    m_upImpl.reset();
+    std::map<std::string, std::string>().swap(f_VirtualFiles());   // the in-memory documents go with RmlUi
 }
 
-bool RmlUi::ready() const { return impl_ && impl_->context; }
-Rml::Context* RmlUi::context() { return impl_ ? impl_->context : nullptr; }
+bool RmlUi::f_Ready() const { return m_upImpl && m_upImpl->m_pContext; }
+Rml::Context* RmlUi::f_Context() { return m_upImpl ? m_upImpl->m_pContext : nullptr; }
 
-std::string RmlUi::languageFont(const std::string& code, const std::string& fontFile, const std::string& webFonts) {
-    if (!impl_) return "toms";
+std::string RmlUi::f_LanguageFont(const std::string& l_strCode, const std::string& l_strFontFile, const std::string& l_strWebFonts) {
+    if (!m_upImpl) return "toms";
 #ifdef __EMSCRIPTEN__
-    (void)fontFile;
-    std::string tag = code;                                   // zh_TW -> zh-TW (BCP 47)
-    std::replace(tag.begin(), tag.end(), '_', '-');
-    impl_->canvasFont.setLanguage(tag, webFonts);
+    (void)l_strFontFile;
+    std::string l_strTag = l_strCode;                                   // zh_TW -> zh-TW (BCP 47)
+    std::replace(l_strTag.begin(), l_strTag.end(), '_', '-');
+    m_upImpl->canvasFont.f_SetLanguage(l_strTag, l_strWebFonts);
     return "toms";
 #else
-    (void)webFonts;
-    if (fontFile.empty()) return "toms";
-    const std::string family = "toms-" + code;
-    if (impl_->loadedFamilies.count(family)) return family;
-    if (!toms::vfsExists(fontFile)) {
-        std::fprintf(stderr, "[rmlui] font for '%s' not found, using the default: %s\n", code.c_str(), fontFile.c_str());
+    (void)l_strWebFonts;
+    if (l_strFontFile.empty()) return "toms";
+    const std::string l_strFamily = "toms-" + l_strCode;
+    if (m_upImpl->m_setLoadedFamilies.count(l_strFamily)) return l_strFamily;
+    if (!toms::f_VfsExists(l_strFontFile)) {
+        std::fprintf(stderr, "[rmlui] font for '%s' not found, using the default: %s\n", l_strCode.c_str(), l_strFontFile.c_str());
         return "toms";
     }
-    if (!Rml::LoadFontFace(fontFile, family, Rml::Style::FontStyle::Normal, Rml::Style::FontWeight::Auto, false, 0)) {
-        std::fprintf(stderr, "[rmlui] font for '%s' could not be loaded, using the default: %s\n", code.c_str(), fontFile.c_str());
+    if (!Rml::LoadFontFace(l_strFontFile, l_strFamily, Rml::Style::FontStyle::Normal, Rml::Style::FontWeight::Auto, false, 0)) {
+        std::fprintf(stderr, "[rmlui] font for '%s' could not be loaded, using the default: %s\n", l_strCode.c_str(), l_strFontFile.c_str());
         return "toms";
     }
-    std::fprintf(stderr, "[rmlui] font family '%s': %s\n", family.c_str(), fontFile.c_str());
-    impl_->loadedFamilies.insert(family);
-    return family;
+    std::fprintf(stderr, "[rmlui] font family '%s': %s\n", l_strFamily.c_str(), l_strFontFile.c_str());
+    m_upImpl->m_setLoadedFamilies.insert(l_strFamily);
+    return l_strFamily;
 #endif
 }
 
-void RmlUi::setViewport(float x, float y, float w, float h) {
-    if (!impl_) return;
-    impl_->render.vpX = x; impl_->render.vpY = y; impl_->render.vpW = w; impl_->render.vpH = h;
+void RmlUi::f_SetViewport(float l_fX, float l_fY, float l_fW, float l_fH) {
+    if (!m_upImpl) return;
+    m_upImpl->m_oRender.m_fVpX = l_fX; m_upImpl->m_oRender.m_fVpY = l_fY; m_upImpl->m_oRender.m_fVpW = l_fW; m_upImpl->m_oRender.m_fVpH = l_fH;
 #ifdef __EMSCRIPTEN__
-    if (impl_->render.designW > 0) impl_->canvasFont.setPixelScale(w / impl_->render.designW);
+    if (m_upImpl->render.designW > 0) m_upImpl->canvasFont.f_SetPixelScale(l_fW / m_upImpl->render.designW);
 #endif
 }
 
-void RmlUi::setDesignSize(int designW, int designH) {
-    if (!impl_ || designW <= 0 || designH <= 0) return;
-    if ((float)designW == impl_->render.designW && (float)designH == impl_->render.designH) return;
-    impl_->render.designW = (float)designW;
-    impl_->render.designH = (float)designH;
-    if (impl_->context) impl_->context->SetDimensions(Rml::Vector2i(designW, designH));
+void RmlUi::f_SetDesignSize(int l_iDesignW, int l_iDesignH) {
+    if (!m_upImpl || l_iDesignW <= 0 || l_iDesignH <= 0) return;
+    if ((float)l_iDesignW == m_upImpl->m_oRender.m_fDesignW && (float)l_iDesignH == m_upImpl->m_oRender.m_fDesignH) return;
+    m_upImpl->m_oRender.m_fDesignW = (float)l_iDesignW;
+    m_upImpl->m_oRender.m_fDesignH = (float)l_iDesignH;
+    if (m_upImpl->m_pContext) m_upImpl->m_pContext->SetDimensions(Rml::Vector2i(l_iDesignW, l_iDesignH));
 }
 
-void RmlUi::update(double timeSeconds) {
-    if (!ready()) return;
+void RmlUi::f_Update(double l_dTimeSeconds) {
+    if (!f_Ready()) return;
     // The map renderer lent another texture (art style switch): drop every texture RmlUi holds so
     // nothing draws with the old one; they reload, from the new loan, when next needed.
-    if (impl_->render.lentVersion != lentTexturesVersion()) {
+    if (m_upImpl->m_oRender.m_iLentVersion != f_LentTexturesVersion()) {
         Rml::ReleaseTextures();
-        impl_->render.borrowed.clear();
-        impl_->render.lentVersion = lentTexturesVersion();
+        m_upImpl->m_oRender.m_setBorrowed.clear();
+        m_upImpl->m_oRender.m_iLentVersion = f_LentTexturesVersion();
     }
-    impl_->system.now = timeSeconds;
-    impl_->context->Update();
+    m_upImpl->m_oSystem.m_dNow = l_dTimeSeconds;
+    m_upImpl->m_pContext->Update();
 }
 
-void RmlUi::render(uint16_t viewId) {
-    if (!ready()) return;
-    auto& r = impl_->render;
-    r.view = viewId;
-    bgfx::setViewRect(viewId, (uint16_t)std::lround(r.vpX), (uint16_t)std::lround(r.vpY),
-                      (uint16_t)std::lround(r.vpW), (uint16_t)std::lround(r.vpH));
-    bgfx::setViewMode(viewId, bgfx::ViewMode::Sequential);
-    float proj[16];
-    bx::mtxOrtho(proj, 0.0f, r.designW, r.designH, 0.0f, -1.0f, 1.0f, 0.0f, bgfx::getCaps()->homogeneousDepth);
-    bgfx::setViewTransform(viewId, nullptr, proj);
-    bgfx::touch(viewId);
-    impl_->context->Render();
+void RmlUi::f_Render(uint16_t l_u16ViewId) {
+    if (!f_Ready()) return;
+    auto& l_oR = m_upImpl->m_oRender;
+    l_oR.m_u16View = l_u16ViewId;
+    bgfx::setViewRect(l_u16ViewId, (uint16_t)std::lround(l_oR.m_fVpX), (uint16_t)std::lround(l_oR.m_fVpY),
+                      (uint16_t)std::lround(l_oR.m_fVpW), (uint16_t)std::lround(l_oR.m_fVpH));
+    bgfx::setViewMode(l_u16ViewId, bgfx::ViewMode::Sequential);
+    float l_arrProj[16];
+    bx::mtxOrtho(l_arrProj, 0.0f, l_oR.m_fDesignW, l_oR.m_fDesignH, 0.0f, -1.0f, 1.0f, 0.0f, bgfx::getCaps()->homogeneousDepth);
+    bgfx::setViewTransform(l_u16ViewId, nullptr, l_arrProj);
+    bgfx::touch(l_u16ViewId);
+    m_upImpl->m_pContext->Render();
 }
 
-void RmlUi::setVirtualFile(const std::string& fileName, const std::string& text) { virtualFiles()[fileName] = text; }
-void RmlUi::clearVirtualFile(const std::string& fileName) { virtualFiles().erase(fileName); }
-void RmlUi::setLogListener(std::function<void(int, const std::string&)> listener) { logListener() = std::move(listener); }
+void RmlUi::f_SetVirtualFile(const std::string& l_strFileName, const std::string& l_strText) { f_VirtualFiles()[l_strFileName] = l_strText; }
+void RmlUi::f_ClearVirtualFile(const std::string& l_strFileName) { f_VirtualFiles().erase(l_strFileName); }
+void RmlUi::f_SetLogListener(std::function<void(int, const std::string&)> l_fnListener) { f_LogListener() = std::move(l_fnListener); }
 
-void RmlUi::toggleDebugger() {
-    if (!ready()) return;
-    impl_->debugger = !impl_->debugger;
-    Rml::Debugger::SetVisible(impl_->debugger);
+void RmlUi::f_ToggleDebugger() {
+    if (!f_Ready()) return;
+    m_upImpl->m_bDebugger = !m_upImpl->m_bDebugger;
+    Rml::Debugger::SetVisible(m_upImpl->m_bDebugger);
 }
-bool RmlUi::debuggerVisible() const { return impl_ && impl_->debugger; }
+bool RmlUi::f_DebuggerVisible() const { return m_upImpl && m_upImpl->m_bDebugger; }
 
 }  // namespace toms::next

@@ -10,68 +10,68 @@
 
 using animed::Problem;
 
-AnimProblemsDock::AnimProblemsDock(AnimDocument* doc, QWidget* parent)
-    : QDockWidget(tr("Problems"), parent)
-    , m_doc(doc)
-    , m_tabs(new QTabWidget(this))
-    , m_table(new QTableWidget(0, 3, m_tabs))
-    , m_log(new QPlainTextEdit(m_tabs))
+AnimProblemsDock::AnimProblemsDock(AnimDocument* l_pDoc, QWidget* l_pParent)
+    : QDockWidget(tr("Problems"), l_pParent)
+    , m_pDoc(l_pDoc)
+    , m_pTabs(new QTabWidget(this))
+    , m_pTable(new QTableWidget(0, 3, m_pTabs))
+    , m_pLog(new QPlainTextEdit(m_pTabs))
 {
     setObjectName(QStringLiteral("AnimProblemsDock"));
-    m_table->setHorizontalHeaderLabels({tr("Level"), tr("Where"), tr("Message")});
-    m_table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
-    m_table->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Interactive);
-    m_table->horizontalHeader()->setStretchLastSection(true);
-    m_table->setColumnWidth(1, 220);
-    m_table->verticalHeader()->hide();
-    m_table->verticalHeader()->setDefaultSectionSize(22);
-    m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    m_table->setSelectionBehavior(QAbstractItemView::SelectRows);
-    m_table->setShowGrid(false);
-    m_table->setAlternatingRowColors(true);
-    m_log->setReadOnly(true);
-    m_log->setMaximumBlockCount(2000);
-    m_log->setLineWrapMode(QPlainTextEdit::NoWrap);
-    m_tabs->setDocumentMode(true);
-    m_tabs->addTab(m_table, tr("Problems"));
-    m_tabs->addTab(m_log, tr("Log"));
-    setWidget(m_tabs);
+    m_pTable->setHorizontalHeaderLabels({tr("Level"), tr("Where"), tr("Message")});
+    m_pTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    m_pTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Interactive);
+    m_pTable->horizontalHeader()->setStretchLastSection(true);
+    m_pTable->setColumnWidth(1, 220);
+    m_pTable->verticalHeader()->hide();
+    m_pTable->verticalHeader()->setDefaultSectionSize(22);
+    m_pTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_pTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_pTable->setShowGrid(false);
+    m_pTable->setAlternatingRowColors(true);
+    m_pLog->setReadOnly(true);
+    m_pLog->setMaximumBlockCount(2000);
+    m_pLog->setLineWrapMode(QPlainTextEdit::NoWrap);
+    m_pTabs->setDocumentMode(true);
+    m_pTabs->addTab(m_pTable, tr("Problems"));
+    m_pTabs->addTab(m_pLog, tr("Log"));
+    setWidget(m_pTabs);
 
-    connect(doc, &AnimDocument::fileChanged, this, &AnimProblemsDock::refresh);
-    connect(doc, &AnimDocument::atlasChanged, this, &AnimProblemsDock::refresh);
-    connect(doc, &AnimDocument::message, this, &AnimProblemsDock::appendLog);
-    connect(m_table, &QTableWidget::cellDoubleClicked, this, [this](int row) {
-        if (row < 0 || row >= int(m_problems.size())) return;
-        const Problem& p = m_problems[size_t(row)];
-        if (p.clip < 0) return;
-        m_doc->setClipIndex(p.clip);
-        m_doc->selectNode(p.path);
+    connect(l_pDoc, &AnimDocument::f_FileChanged, this, &AnimProblemsDock::f_Refresh);
+    connect(l_pDoc, &AnimDocument::f_AtlasChanged, this, &AnimProblemsDock::f_Refresh);
+    connect(l_pDoc, &AnimDocument::f_Message, this, &AnimProblemsDock::f_AppendLog);
+    connect(m_pTable, &QTableWidget::cellDoubleClicked, this, [this](int l_iRow) {
+        if (l_iRow < 0 || l_iRow >= int(m_vProblems.size())) return;
+        const Problem& l_oP = m_vProblems[size_t(l_iRow)];
+        if (l_oP.m_iClip < 0) return;
+        m_pDoc->f_SetClipIndex(l_oP.m_iClip);
+        m_pDoc->f_SelectNode(l_oP.m_vPath);
     });
-    refresh();
+    f_Refresh();
 }
 
-void AnimProblemsDock::appendLog(const QString& text)
+void AnimProblemsDock::f_AppendLog(const QString& l_oText)
 {
-    m_log->appendPlainText(QStringLiteral("[%1] %2").arg(QTime::currentTime().toString(QStringLiteral("HH:mm:ss")), text));
+    m_pLog->appendPlainText(QStringLiteral("[%1] %2").arg(QTime::currentTime().toString(QStringLiteral("HH:mm:ss")), l_oText));
 }
 
-QString AnimProblemsDock::logText() const { return m_log->toPlainText(); }
+QString AnimProblemsDock::f_LogText() const { return m_pLog->toPlainText(); }
 
-void AnimProblemsDock::refresh()
+void AnimProblemsDock::f_Refresh()
 {
-    m_problems = animed::checkAnim(m_doc->file(), m_doc->checkAtlases());
-    m_table->setRowCount(int(m_problems.size()));
-    for (size_t i = 0; i < m_problems.size(); i++) {
-        const Problem& p = m_problems[i];
-        const Icons::Id icon = p.level == Problem::Error ? Icons::Id::Error : p.level == Problem::Warning ? Icons::Id::Warning : Icons::Id::Info;
-        m_table->setItem(int(i), 0, new QTableWidgetItem(Icons::icon(icon), QString::fromLatin1(animed::levelName(p.level))));
-        m_table->setItem(int(i), 1, new QTableWidgetItem(QString::fromStdString(p.where)));
-        auto* msg = new QTableWidgetItem(QString::fromStdString(p.message));
-        msg->setToolTip(msg->text());
-        m_table->setItem(int(i), 2, msg);
+    m_vProblems = animed::f_CheckAnim(m_pDoc->f_File(), m_pDoc->f_CheckAtlases());
+    m_pTable->setRowCount(int(m_vProblems.size()));
+    for (size_t l_nI = 0; l_nI < m_vProblems.size(); l_nI++) {
+        const Problem& l_oP = m_vProblems[l_nI];
+        const Icons::Id l_eIcon = l_oP.m_eLevel == Problem::Error ? Icons::Id::Error : l_oP.m_eLevel == Problem::Warning ? Icons::Id::Warning : Icons::Id::Info;
+        m_pTable->setItem(int(l_nI), 0, new QTableWidgetItem(Icons::f_Icon(l_eIcon), QString::fromLatin1(animed::f_LevelName(l_oP.m_eLevel))));
+        m_pTable->setItem(int(l_nI), 1, new QTableWidgetItem(QString::fromStdString(l_oP.m_strWhere)));
+        auto* l_pMsg = new QTableWidgetItem(QString::fromStdString(l_oP.m_strMessage));
+        l_pMsg->setToolTip(l_pMsg->text());
+        m_pTable->setItem(int(l_nI), 2, l_pMsg);
     }
-    const int errors = animed::countLevel(m_problems, Problem::Error), warnings = animed::countLevel(m_problems, Problem::Warning);
-    setWindowTitle(errors + warnings ? tr("Problems (%1)").arg(errors + warnings) : tr("Problems"));
-    m_tabs->setTabText(0, m_problems.empty() ? tr("Problems") : tr("Problems (%1)").arg(m_problems.size()));
-    m_tabs->setTabIcon(0, errors ? Icons::icon(Icons::Id::Error) : warnings ? Icons::icon(Icons::Id::Warning) : QIcon());
+    const int l_iErrors = animed::f_CountLevel(m_vProblems, Problem::Error), l_iWarnings = animed::f_CountLevel(m_vProblems, Problem::Warning);
+    setWindowTitle(l_iErrors + l_iWarnings ? tr("Problems (%1)").arg(l_iErrors + l_iWarnings) : tr("Problems"));
+    m_pTabs->setTabText(0, m_vProblems.empty() ? tr("Problems") : tr("Problems (%1)").arg(m_vProblems.size()));
+    m_pTabs->setTabIcon(0, l_iErrors ? Icons::f_Icon(Icons::Id::Error) : l_iWarnings ? Icons::f_Icon(Icons::Id::Warning) : QIcon());
 }

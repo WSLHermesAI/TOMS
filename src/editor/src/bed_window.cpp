@@ -51,47 +51,47 @@ using bed::ojson;
 // fixed child (its native window never moves to another parent), only its size changes.
 class AspectBox : public QWidget {
 public:
-    explicit AspectBox(QWidget* parent = nullptr) : QWidget(parent) {}
-    void setChild(QWidget* w) { child_ = w; w->setParent(this); place(); }
-    void setAspect(double wOverH) { aspect_ = wOverH; place(); }
+    explicit AspectBox(QWidget* l_pParent = nullptr) : QWidget(l_pParent) {}
+    void f_SetChild(QWidget* l_pW) { m_pChild = l_pW; l_pW->setParent(this); f_Place(); }
+    void f_SetAspect(double l_dWOverH) { m_dAspect = l_dWOverH; f_Place(); }
 protected:
-    void resizeEvent(QResizeEvent*) override { place(); }
+    void resizeEvent(QResizeEvent*) override { f_Place(); }
 private:
-    void place() {
-        if (!child_) return;
-        if (aspect_ <= 0.0) { child_->setGeometry(rect()); return; }   // fill
-        int w = width(), h = (int)(w / aspect_);
-        if (h > height()) { h = height(); w = (int)(h * aspect_); }
-        child_->setGeometry((width() - w) / 2, (height() - h) / 2, w, h);
+    void f_Place() {
+        if (!m_pChild) return;
+        if (m_dAspect <= 0.0) { m_pChild->setGeometry(rect()); return; }   // fill
+        int l_iW = width(), l_iH = (int)(l_iW / m_dAspect);
+        if (l_iH > height()) { l_iH = height(); l_iW = (int)(l_iH * m_dAspect); }
+        m_pChild->setGeometry((width() - l_iW) / 2, (height() - l_iH) / 2, l_iW, l_iH);
     }
-    QWidget* child_ = nullptr;
-    double aspect_ = 0.0;
+    QWidget* m_pChild = nullptr;
+    double m_dAspect = 0.0;
 };
 
 namespace {
 
-QString readText(const QString& path) {
-    QFile f(path);
-    return f.open(QIODevice::ReadOnly) ? QString::fromUtf8(f.readAll()) : QString();
+QString f_ReadText(const QString& l_oPath) {
+    QFile l_oF(l_oPath);
+    return l_oF.open(QIODevice::ReadOnly) ? QString::fromUtf8(l_oF.readAll()) : QString();
 }
 
-bool writeText(const QString& path, const QString& text) {
-    QFile f(path);
-    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) return false;
-    const QByteArray b = text.toUtf8();
-    return f.write(b) == b.size();
+bool f_WriteText(const QString& l_oPath, const QString& l_oText) {
+    QFile l_oF(l_oPath);
+    if (!l_oF.open(QIODevice::WriteOnly | QIODevice::Truncate)) return false;
+    const QByteArray l_oB = l_oText.toUtf8();
+    return l_oF.write(l_oB) == l_oB.size();
 }
 
-bool parse(const QString& text, ojson& out) {
-    out = ojson::parse(text.toStdString(), nullptr, false);
-    return !out.is_discarded();
+bool f_Parse(const QString& l_oText, ojson& l_jOut) {
+    l_jOut = ojson::parse(l_oText.toStdString(), nullptr, false);
+    return !l_jOut.is_discarded();
 }
 
-QString qs(const std::string& s) { return QString::fromStdString(s); }
-std::string ss(const QString& s) { return s.toStdString(); }
+QString f_Qs(const std::string& l_strS) { return QString::fromStdString(l_strS); }
+std::string f_Ss(const QString& l_oS) { return l_oS.toStdString(); }
 
-QString nameOf(const ojson& m) {
-    if (m.contains("name") && m["name"].is_object()) return qs(m["name"].value("en", m["name"].value("zh_TW", std::string())));
+QString f_NameOf(const ojson& l_jM) {
+    if (l_jM.contains("name") && l_jM["name"].is_object()) return f_Qs(l_jM["name"].value("en", l_jM["name"].value("zh_TW", std::string())));
     return QString();
 }
 
@@ -100,1087 +100,1087 @@ QString nameOf(const ojson& m) {
 BattleEditorWindow::BattleEditorWindow() {
     setWindowTitle(tr("TOMS Battle Editor"));
     resize(1600, 940);
-    mNumbers_ = new QMap<QString, QSpinBox*>();
-    wNumbers_ = new QMap<QString, QSpinBox*>();
-    pAttrs_ = new QMap<QString, QSpinBox*>();
+    m_pMNumbers = new QMap<QString, QSpinBox*>();
+    m_pWNumbers = new QMap<QString, QSpinBox*>();
+    m_pPAttrs = new QMap<QString, QSpinBox*>();
 
-    view_ = new BgfxViewport();
-    dataDir_ = QDir::cleanPath(QDir(view_->assetDir()).filePath(QStringLiteral("../data")));
-    setupsDir_ = QDir::cleanPath(QDir(view_->assetDir()).filePath(QStringLiteral("../../tools/battle_editor/setups")));
-    fxFile_ = QDir(view_->assetDir()).filePath(QStringLiteral("fx/battle.particle"));
-    scratchDir_ = QDir(QStandardPaths::writableLocation(QStandardPaths::TempLocation)).filePath(QStringLiteral("toms_battle_editor"));
-    QDir().mkpath(QDir(scratchDir_).filePath(QStringLiteral("current")));
-    QDir().mkpath(setupsDir_);
-    loadData();
+    m_pView = new BgfxViewport();
+    m_oDataDir = QDir::cleanPath(QDir(m_pView->f_AssetDir()).filePath(QStringLiteral("../data")));
+    m_oSetupsDir = QDir::cleanPath(QDir(m_pView->f_AssetDir()).filePath(QStringLiteral("../../tools/battle_editor/setups")));
+    m_oFxFile = QDir(m_pView->f_AssetDir()).filePath(QStringLiteral("fx/battle.particle"));
+    m_oScratchDir = QDir(QStandardPaths::writableLocation(QStandardPaths::TempLocation)).filePath(QStringLiteral("toms_battle_editor"));
+    QDir().mkpath(QDir(m_oScratchDir).filePath(QStringLiteral("current")));
+    QDir().mkpath(m_oSetupsDir);
+    f_LoadData();
 
-    auto* split = new QSplitter(Qt::Horizontal);
-    split->addWidget(buildMonsterList());
-    split->addWidget(buildCentre());
-    tabs_ = new QTabWidget();
-    tabs_->addTab(buildMonsterTab(), tr("Monster"));
-    tabs_->addTab(buildWeaponTab(), tr("Weapon"));
-    tabs_->addTab(buildPlayerTab(), tr("Player"));
-    tabs_->addTab(buildEventsTab(), tr("Events"));
-    tabs_->addTab(buildLogTab(), tr("Log"));
-    tabs_->addTab(buildScenariosTab(), tr("Scenarios"));
-    split->addWidget(tabs_);
-    split->setStretchFactor(0, 0);
-    split->setStretchFactor(1, 1);
-    split->setStretchFactor(2, 0);
-    split->setSizes({240, 860, 480});
+    auto* l_pSplit = new QSplitter(Qt::Horizontal);
+    l_pSplit->addWidget(f_BuildMonsterList());
+    l_pSplit->addWidget(f_BuildCentre());
+    m_pTabs = new QTabWidget();
+    m_pTabs->addTab(f_BuildMonsterTab(), tr("Monster"));
+    m_pTabs->addTab(f_BuildWeaponTab(), tr("Weapon"));
+    m_pTabs->addTab(f_BuildPlayerTab(), tr("Player"));
+    m_pTabs->addTab(f_BuildEventsTab(), tr("Events"));
+    m_pTabs->addTab(f_BuildLogTab(), tr("Log"));
+    m_pTabs->addTab(f_BuildScenariosTab(), tr("Scenarios"));
+    l_pSplit->addWidget(m_pTabs);
+    l_pSplit->setStretchFactor(0, 0);
+    l_pSplit->setStretchFactor(1, 1);
+    l_pSplit->setStretchFactor(2, 0);
+    l_pSplit->setSizes({240, 860, 480});
 
-    auto* central = new QWidget();
-    auto* v = new QVBoxLayout(central);
-    v->setContentsMargins(4, 4, 4, 4);
-    v->addWidget(split, 1);
-    v->addWidget(buildSetupsBar());
-    setCentralWidget(central);
+    auto* l_pCentral = new QWidget();
+    auto* l_pV = new QVBoxLayout(l_pCentral);
+    l_pV->setContentsMargins(4, 4, 4, 4);
+    l_pV->addWidget(l_pSplit, 1);
+    l_pV->addWidget(f_BuildSetupsBar());
+    setCentralWidget(l_pCentral);
     statusBar()->showMessage(tr("Tick up to three monsters (+ Battle), then ▶ Battle."));
-    connect(view_, &BgfxViewport::statusMessage, this, [this](const QString& t) { statusBar()->showMessage(t, 4000); });
+    connect(m_pView, &BgfxViewport::f_StatusMessage, this, [this](const QString& l_oT) { statusBar()->showMessage(l_oT, 4000); });
 
-    fillMonsterList();
-    if (monsters_->count() > 0) {
-        monsters_->setCurrentRow(0);
-        setInBattle(monsters_->item(0)->data(Qt::UserRole).toString(), true);
+    f_FillMonsterList();
+    if (m_pMonsters->count() > 0) {
+        m_pMonsters->setCurrentRow(0);
+        f_SetInBattle(m_pMonsters->item(0)->data(Qt::UserRole).toString(), true);
     }
-    if (weapons_->count() > 0) weapons_->setCurrentRow(0);
-    fillSetups();
-    logTimer_.setInterval(250);
-    connect(&logTimer_, &QTimer::timeout, this, &BattleEditorWindow::refreshLog);
-    logTimer_.start();
+    if (m_pWeapons->count() > 0) m_pWeapons->setCurrentRow(0);
+    f_FillSetups();
+    m_oLogTimer.setInterval(250);
+    connect(&m_oLogTimer, &QTimer::timeout, this, &BattleEditorWindow::f_RefreshLog);
+    m_oLogTimer.start();
 }
 
 // ---------------------------------------------------------------- the data files
 
-bool BattleEditorWindow::loadData() {
-    bool ok = parse(readText(QDir(dataDir_).filePath(QStringLiteral("enemies.json"))), enemies_) && enemies_.is_object();
-    if (!ok) { enemies_ = ojson::object(); warn(tr("enemies.json"), tr("data/enemies.json could not be read.")); }
-    if (!parse(readText(QDir(dataDir_).filePath(QStringLiteral("weapon_play.json"))), weaponPlay_) || !weaponPlay_.is_object()) {
-        weaponPlay_ = ojson::object();
-        warn(tr("weapon_play.json"), tr("data/weapon_play.json could not be read."));
-        ok = false;
+bool BattleEditorWindow::f_LoadData() {
+    bool l_bOk = f_Parse(f_ReadText(QDir(m_oDataDir).filePath(QStringLiteral("enemies.json"))), m_jEnemies) && m_jEnemies.is_object();
+    if (!l_bOk) { m_jEnemies = ojson::object(); f_Warn(tr("enemies.json"), tr("data/enemies.json could not be read.")); }
+    if (!f_Parse(f_ReadText(QDir(m_oDataDir).filePath(QStringLiteral("weapon_play.json"))), m_jWeaponPlay) || !m_jWeaponPlay.is_object()) {
+        m_jWeaponPlay = ojson::object();
+        f_Warn(tr("weapon_play.json"), tr("data/weapon_play.json could not be read."));
+        l_bOk = false;
     }
-    ojson stats;
-    attrIds_.clear();
-    if (parse(readText(QDir(dataDir_).filePath(QStringLiteral("stats.json"))), stats) && stats.contains("attributes"))
-        for (const auto& a : stats["attributes"])
-            if (a.contains("id")) attrIds_ << qs(a["id"].get<std::string>());
-    ojson fx;
-    effects_.clear();
-    if (parse(readText(fxFile_), fx) && fx.contains("effects"))
-        for (const auto& e : fx["effects"])
-            if (e.contains("name")) effects_ << qs(e["name"].get<std::string>());
-    monstersDirty_ = weaponsDirty_ = false;
-    return ok;
+    ojson l_jStats;
+    m_oAttrIds.clear();
+    if (f_Parse(f_ReadText(QDir(m_oDataDir).filePath(QStringLiteral("stats.json"))), l_jStats) && l_jStats.contains("attributes"))
+        for (const auto& l_jA : l_jStats["attributes"])
+            if (l_jA.contains("id")) m_oAttrIds << f_Qs(l_jA["id"].get<std::string>());
+    ojson l_jFx;
+    m_oEffects.clear();
+    if (f_Parse(f_ReadText(m_oFxFile), l_jFx) && l_jFx.contains("effects"))
+        for (const auto& l_jE : l_jFx["effects"])
+            if (l_jE.contains("name")) m_oEffects << f_Qs(l_jE["name"].get<std::string>());
+    m_bMonstersDirty = m_bWeaponsDirty = false;
+    return l_bOk;
 }
 
-bool BattleEditorWindow::saveMonsters() {
-    const QString path = QDir(dataDir_).filePath(QStringLiteral("enemies.json"));
-    if (!writeText(path, qs(bed::dumpCompact(enemies_)))) { warn(tr("Save"), tr("Could not write %1").arg(path)); return false; }
-    monstersDirty_ = false;
-    say(tr("Saved data/enemies.json"));
+bool BattleEditorWindow::f_SaveMonsters() {
+    const QString l_oPath = QDir(m_oDataDir).filePath(QStringLiteral("enemies.json"));
+    if (!f_WriteText(l_oPath, f_Qs(bed::f_DumpCompact(m_jEnemies)))) { f_Warn(tr("Save"), tr("Could not write %1").arg(l_oPath)); return false; }
+    m_bMonstersDirty = false;
+    f_Say(tr("Saved data/enemies.json"));
     return true;
 }
 
-bool BattleEditorWindow::saveWeapons() {
-    const QString path = QDir(dataDir_).filePath(QStringLiteral("weapon_play.json"));
-    if (!writeText(path, qs(weaponPlay_.dump(2, ' ', false) + "\n"))) { warn(tr("Save"), tr("Could not write %1").arg(path)); return false; }
-    weaponsDirty_ = false;
-    say(tr("Saved data/weapon_play.json (the next battle uses it)"));
+bool BattleEditorWindow::f_SaveWeapons() {
+    const QString l_oPath = QDir(m_oDataDir).filePath(QStringLiteral("weapon_play.json"));
+    if (!f_WriteText(l_oPath, f_Qs(m_jWeaponPlay.dump(2, ' ', false) + "\n"))) { f_Warn(tr("Save"), tr("Could not write %1").arg(l_oPath)); return false; }
+    m_bWeaponsDirty = false;
+    f_Say(tr("Saved data/weapon_play.json (the next battle uses it)"));
     return true;
 }
 
-bool BattleEditorWindow::saveGrowthTable() {
-    const QString path = QDir(dataDir_).filePath(QStringLiteral("stats.json"));
-    const QString text = readText(path);
-    ojson stats;
-    if (!parse(text, stats)) { warn(tr("Save"), tr("data/stats.json could not be read.")); return false; }
-    const ojson old = stats.contains("levelUp") ? stats["levelUp"].value("points", ojson::array()) : ojson::array();
-    const std::vector<int> per = calculate(cTotal_->value(), cLevel_->value(), cShape_->value());
-    const ojson rows = bed::pointsRows(per, cLevel_->value(), old);
-    std::string t = ss(text);
-    if (!bed::replaceLevelPoints(t, rows)) { warn(tr("Save"), tr("data/stats.json has no levelUp \"points\" table.")); return false; }
-    if (!ask(tr("Save the growth table"), tr("Replace data/stats.json's levelUp points with these %1 rows?\n\n%2")
-                                                .arg(rows.size()).arg(qs(rows.dump()))))
+bool BattleEditorWindow::f_SaveGrowthTable() {
+    const QString l_oPath = QDir(m_oDataDir).filePath(QStringLiteral("stats.json"));
+    const QString l_oText = f_ReadText(l_oPath);
+    ojson l_jStats;
+    if (!f_Parse(l_oText, l_jStats)) { f_Warn(tr("Save"), tr("data/stats.json could not be read.")); return false; }
+    const ojson l_jOld = l_jStats.contains("levelUp") ? l_jStats["levelUp"].value("points", ojson::array()) : ojson::array();
+    const std::vector<int> l_vPer = f_Calculate(m_pCTotal->value(), m_pCLevel->value(), m_pCShape->value());
+    const ojson l_jRows = bed::f_PointsRows(l_vPer, m_pCLevel->value(), l_jOld);
+    std::string l_strT = f_Ss(l_oText);
+    if (!bed::f_ReplaceLevelPoints(l_strT, l_jRows)) { f_Warn(tr("Save"), tr("data/stats.json has no levelUp \"points\" table.")); return false; }
+    if (!f_Ask(tr("Save the growth table"), tr("Replace data/stats.json's levelUp points with these %1 rows?\n\n%2")
+                                                .arg(l_jRows.size()).arg(f_Qs(l_jRows.dump()))))
         return false;
-    if (!writeText(path, qs(t))) { warn(tr("Save"), tr("Could not write %1").arg(path)); return false; }
-    say(tr("Saved data/stats.json levelUp points (%1 rows)").arg(rows.size()));
+    if (!f_WriteText(l_oPath, f_Qs(l_strT))) { f_Warn(tr("Save"), tr("Could not write %1").arg(l_oPath)); return false; }
+    f_Say(tr("Saved data/stats.json levelUp points (%1 rows)").arg(l_jRows.size()));
     return true;
 }
 
 // ---------------------------------------------------------------- the monster list
 
-QWidget* BattleEditorWindow::buildMonsterList() {
-    auto* w = new QWidget();
-    auto* v = new QVBoxLayout(w);
-    v->setContentsMargins(0, 0, 0, 0);
-    auto* title = new QLabel(tr("<b>MONSTERS</b>"));
-    inBattleLabel_ = new QLabel();
-    search_ = new QLineEdit();
-    search_->setPlaceholderText(tr("search…"));
-    monsters_ = new QListWidget();
-    monsters_->setToolTip(tr("Tick + Battle for the monsters in the test battle (up to three, in the order ticked)."));
-    v->addWidget(title);
-    v->addWidget(inBattleLabel_);
-    v->addWidget(search_);
-    v->addWidget(monsters_, 1);
-    auto* row = new QHBoxLayout();
-    auto* add = new QPushButton(tr("New"));
-    auto* dup = new QPushButton(tr("Duplicate"));
-    auto* del = new QPushButton(tr("Delete"));
-    row->addWidget(add);
-    row->addWidget(dup);
-    row->addWidget(del);
-    v->addLayout(row);
-    auto* again = new QPushButton(tr("+ Again"));
-    again->setToolTip(tr("The selected monster once more in the battle (e.g. three bats)."));
-    v->addWidget(again);
-    connect(again, &QPushButton::clicked, this, [this] { if (!current_.isEmpty()) addToBattle(current_); });
-    auto* row2 = new QHBoxLayout();
-    auto* save = new QPushButton(tr("Save monsters"));
-    auto* revert = new QPushButton(tr("Revert"));
-    row2->addWidget(save);
-    row2->addWidget(revert);
-    v->addLayout(row2);
+QWidget* BattleEditorWindow::f_BuildMonsterList() {
+    auto* l_pW = new QWidget();
+    auto* l_pV = new QVBoxLayout(l_pW);
+    l_pV->setContentsMargins(0, 0, 0, 0);
+    auto* l_pTitle = new QLabel(tr("<b>MONSTERS</b>"));
+    m_pInBattleLabel = new QLabel();
+    m_pSearch = new QLineEdit();
+    m_pSearch->setPlaceholderText(tr("search…"));
+    m_pMonsters = new QListWidget();
+    m_pMonsters->setToolTip(tr("Tick + Battle for the monsters in the test battle (up to three, in the order ticked)."));
+    l_pV->addWidget(l_pTitle);
+    l_pV->addWidget(m_pInBattleLabel);
+    l_pV->addWidget(m_pSearch);
+    l_pV->addWidget(m_pMonsters, 1);
+    auto* l_pRow = new QHBoxLayout();
+    auto* l_pAdd = new QPushButton(tr("New"));
+    auto* l_pDup = new QPushButton(tr("Duplicate"));
+    auto* l_pDel = new QPushButton(tr("Delete"));
+    l_pRow->addWidget(l_pAdd);
+    l_pRow->addWidget(l_pDup);
+    l_pRow->addWidget(l_pDel);
+    l_pV->addLayout(l_pRow);
+    auto* l_pAgain = new QPushButton(tr("+ Again"));
+    l_pAgain->setToolTip(tr("The selected monster once more in the battle (e.g. three bats)."));
+    l_pV->addWidget(l_pAgain);
+    connect(l_pAgain, &QPushButton::clicked, this, [this] { if (!m_oCurrent.isEmpty()) f_AddToBattle(m_oCurrent); });
+    auto* l_pRow2 = new QHBoxLayout();
+    auto* l_pSave = new QPushButton(tr("Save monsters"));
+    auto* l_pRevert = new QPushButton(tr("Revert"));
+    l_pRow2->addWidget(l_pSave);
+    l_pRow2->addWidget(l_pRevert);
+    l_pV->addLayout(l_pRow2);
 
-    connect(search_, &QLineEdit::textChanged, this, [this](const QString& t) {
-        for (int i = 0; i < monsters_->count(); i++) {
-            QListWidgetItem* it = monsters_->item(i);
-            it->setHidden(!t.isEmpty() && !it->text().contains(t, Qt::CaseInsensitive));
+    connect(m_pSearch, &QLineEdit::textChanged, this, [this](const QString& l_oT) {
+        for (int l_iI = 0; l_iI < m_pMonsters->count(); l_iI++) {
+            QListWidgetItem* l_pIt = m_pMonsters->item(l_iI);
+            l_pIt->setHidden(!l_oT.isEmpty() && !l_pIt->text().contains(l_oT, Qt::CaseInsensitive));
         }
     });
-    connect(monsters_, &QListWidget::currentItemChanged, this, [this](QListWidgetItem* it) {
-        if (it) showMonster(it->data(Qt::UserRole).toString());
+    connect(m_pMonsters, &QListWidget::currentItemChanged, this, [this](QListWidgetItem* l_pIt) {
+        if (l_pIt) f_ShowMonster(l_pIt->data(Qt::UserRole).toString());
     });
-    connect(monsters_, &QListWidget::itemChanged, this, [this](QListWidgetItem* it) {
-        if (filling_) return;
-        const QString id = it->data(Qt::UserRole).toString();
-        const bool on = it->checkState() == Qt::Checked;
-        if (on != inBattle_.contains(id) && !setInBattle(id, on)) {
-            filling_ = true;
-            it->setCheckState(Qt::Unchecked);
-            filling_ = false;
+    connect(m_pMonsters, &QListWidget::itemChanged, this, [this](QListWidgetItem* l_pIt) {
+        if (m_bFilling) return;
+        const QString l_oId = l_pIt->data(Qt::UserRole).toString();
+        const bool l_bOn = l_pIt->checkState() == Qt::Checked;
+        if (l_bOn != m_oInBattle.contains(l_oId) && !f_SetInBattle(l_oId, l_bOn)) {
+            m_bFilling = true;
+            l_pIt->setCheckState(Qt::Unchecked);
+            m_bFilling = false;
         }
     });
-    connect(add, &QPushButton::clicked, this, [this] {
-        const QString id = QInputDialog::getText(this, tr("New monster"), tr("Its id (enemies.json key, e.g. slime_red):")).trimmed();
-        if (id.isEmpty()) return;
-        if (enemies_.contains(ss(id))) { warn(tr("New monster"), tr("\"%1\" is already there.").arg(id)); return; }
-        ojson m = ojson::object();
-        ojson name = ojson::object();
-        name["en"] = ss(id);
-        m["name"] = name;
-        m["sprite"] = ss(id) + ".png";
-        m["hp"] = 20; m["atk"] = 8; m["def"] = 2; m["exp"] = 5; m["gold"] = 3;
-        enemies_[ss(id)] = m;
-        monstersDirty_ = true;
-        fillMonsterList();
-        selectMonster(id);
+    connect(l_pAdd, &QPushButton::clicked, this, [this] {
+        const QString l_oId = QInputDialog::getText(this, tr("New monster"), tr("Its id (enemies.json key, e.g. slime_red):")).trimmed();
+        if (l_oId.isEmpty()) return;
+        if (m_jEnemies.contains(f_Ss(l_oId))) { f_Warn(tr("New monster"), tr("\"%1\" is already there.").arg(l_oId)); return; }
+        ojson l_jM = ojson::object();
+        ojson l_jName = ojson::object();
+        l_jName["en"] = f_Ss(l_oId);
+        l_jM["name"] = l_jName;
+        l_jM["sprite"] = f_Ss(l_oId) + ".png";
+        l_jM["hp"] = 20; l_jM["atk"] = 8; l_jM["def"] = 2; l_jM["exp"] = 5; l_jM["gold"] = 3;
+        m_jEnemies[f_Ss(l_oId)] = l_jM;
+        m_bMonstersDirty = true;
+        f_FillMonsterList();
+        f_SelectMonster(l_oId);
     });
-    connect(dup, &QPushButton::clicked, this, [this] {
-        if (current_.isEmpty()) return;
-        const QString id = QInputDialog::getText(this, tr("Duplicate"), tr("The copy's id:"), QLineEdit::Normal,
-                                                 current_ + QStringLiteral("_2")).trimmed();
-        if (id.isEmpty() || enemies_.contains(ss(id))) return;
-        enemies_[ss(id)] = enemies_[ss(current_)];
-        monstersDirty_ = true;
-        fillMonsterList();
-        selectMonster(id);
+    connect(l_pDup, &QPushButton::clicked, this, [this] {
+        if (m_oCurrent.isEmpty()) return;
+        const QString l_oId = QInputDialog::getText(this, tr("Duplicate"), tr("The copy's id:"), QLineEdit::Normal,
+                                                 m_oCurrent + QStringLiteral("_2")).trimmed();
+        if (l_oId.isEmpty() || m_jEnemies.contains(f_Ss(l_oId))) return;
+        m_jEnemies[f_Ss(l_oId)] = m_jEnemies[f_Ss(m_oCurrent)];
+        m_bMonstersDirty = true;
+        f_FillMonsterList();
+        f_SelectMonster(l_oId);
     });
-    connect(del, &QPushButton::clicked, this, [this] {
-        if (current_.isEmpty()) return;
+    connect(l_pDel, &QPushButton::clicked, this, [this] {
+        if (m_oCurrent.isEmpty()) return;
         // which floors place it (data/stages/*.json name "monster:<id>")
-        QStringList floors;
-        QDirIterator it(QDir(dataDir_).filePath(QStringLiteral("stages")), {QStringLiteral("*.json")}, QDir::Files);
-        while (it.hasNext()) {
-            const QString f = it.next();
-            if (readText(f).contains(QStringLiteral("\"monster:%1\"").arg(current_))) floors << QFileInfo(f).baseName();
+        QStringList l_oFloors;
+        QDirIterator l_oIt(QDir(m_oDataDir).filePath(QStringLiteral("stages")), {QStringLiteral("*.json")}, QDir::Files);
+        while (l_oIt.hasNext()) {
+            const QString l_oF = l_oIt.next();
+            if (f_ReadText(l_oF).contains(QStringLiteral("\"monster:%1\"").arg(m_oCurrent))) l_oFloors << QFileInfo(l_oF).baseName();
         }
-        QString text = tr("Delete \"%1\" from enemies.json (when saved)?").arg(current_);
-        if (!floors.isEmpty()) text += tr("\n\nThese floors place it: %1").arg(floors.join(QStringLiteral(", ")));
-        if (!ask(tr("Delete"), text)) return;
-        setInBattle(current_, false);
-        enemies_.erase(ss(current_));
-        monstersDirty_ = true;
-        current_.clear();
-        fillMonsterList();
+        QString l_oText = tr("Delete \"%1\" from enemies.json (when saved)?").arg(m_oCurrent);
+        if (!l_oFloors.isEmpty()) l_oText += tr("\n\nThese floors place it: %1").arg(l_oFloors.join(QStringLiteral(", ")));
+        if (!f_Ask(tr("Delete"), l_oText)) return;
+        f_SetInBattle(m_oCurrent, false);
+        m_jEnemies.erase(f_Ss(m_oCurrent));
+        m_bMonstersDirty = true;
+        m_oCurrent.clear();
+        f_FillMonsterList();
     });
-    connect(save, &QPushButton::clicked, this, [this] { saveMonsters(); });
-    connect(revert, &QPushButton::clicked, this, [this] {
-        if (monstersDirty_ && !ask(tr("Revert"), tr("Drop the monster changes not saved?"))) return;
-        loadData();
-        fillMonsterList();
-        showMonster(current_);
+    connect(l_pSave, &QPushButton::clicked, this, [this] { f_SaveMonsters(); });
+    connect(l_pRevert, &QPushButton::clicked, this, [this] {
+        if (m_bMonstersDirty && !f_Ask(tr("Revert"), tr("Drop the monster changes not saved?"))) return;
+        f_LoadData();
+        f_FillMonsterList();
+        f_ShowMonster(m_oCurrent);
     });
-    return w;
+    return l_pW;
 }
 
-void BattleEditorWindow::fillMonsterList() {
-    filling_ = true;
-    monsters_->clear();
-    for (auto it = enemies_.begin(); it != enemies_.end(); ++it) {
-        if (it.key().empty() || it.key()[0] == '_' || !it.value().is_object()) continue;
-        const QString id = qs(it.key());
-        QString label = id;
-        const QString name = nameOf(it.value());
-        if (!name.isEmpty() && name != id) label += QStringLiteral("  ·  ") + name;
-        if (it.value().value("boss", false)) label = QStringLiteral("★ ") + label;
-        if (it.value().value("draft", false)) label += tr("  (draft)");
-        auto* item = new QListWidgetItem(label, monsters_);
-        item->setData(Qt::UserRole, id);
-        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-        item->setCheckState(inBattle_.contains(id) ? Qt::Checked : Qt::Unchecked);
+void BattleEditorWindow::f_FillMonsterList() {
+    m_bFilling = true;
+    m_pMonsters->clear();
+    for (auto l_oIt = m_jEnemies.begin(); l_oIt != m_jEnemies.end(); ++l_oIt) {
+        if (l_oIt.key().empty() || l_oIt.key()[0] == '_' || !l_oIt.value().is_object()) continue;
+        const QString l_oId = f_Qs(l_oIt.key());
+        QString l_oLabel = l_oId;
+        const QString l_oName = f_NameOf(l_oIt.value());
+        if (!l_oName.isEmpty() && l_oName != l_oId) l_oLabel += QStringLiteral("  ·  ") + l_oName;
+        if (l_oIt.value().value("boss", false)) l_oLabel = QStringLiteral("★ ") + l_oLabel;
+        if (l_oIt.value().value("draft", false)) l_oLabel += tr("  (draft)");
+        auto* l_pItem = new QListWidgetItem(l_oLabel, m_pMonsters);
+        l_pItem->setData(Qt::UserRole, l_oId);
+        l_pItem->setFlags(l_pItem->flags() | Qt::ItemIsUserCheckable);
+        l_pItem->setCheckState(m_oInBattle.contains(l_oId) ? Qt::Checked : Qt::Unchecked);
     }
-    filling_ = false;
-    for (int i = 0; i < monsters_->count(); i++)
-        if (monsters_->item(i)->data(Qt::UserRole).toString() == current_) monsters_->setCurrentRow(i);
-    updateInBattleLabel();
+    m_bFilling = false;
+    for (int l_iI = 0; l_iI < m_pMonsters->count(); l_iI++)
+        if (m_pMonsters->item(l_iI)->data(Qt::UserRole).toString() == m_oCurrent) m_pMonsters->setCurrentRow(l_iI);
+    f_UpdateInBattleLabel();
 }
 
-int BattleEditorWindow::monsterCount() const { return monsters_->count(); }
+int BattleEditorWindow::f_MonsterCount() const { return m_pMonsters->count(); }
 
-bool BattleEditorWindow::setInBattle(const QString& id, bool on) {
-    if (on) {
-        if (inBattle_.contains(id)) return true;
-        return addToBattle(id);
+bool BattleEditorWindow::f_SetInBattle(const QString& l_oId, bool l_bOn) {
+    if (l_bOn) {
+        if (m_oInBattle.contains(l_oId)) return true;
+        return f_AddToBattle(l_oId);
     }
-    inBattle_.removeAll(id);
-    filling_ = true;
-    for (int i = 0; i < monsters_->count(); i++) {
-        QListWidgetItem* it = monsters_->item(i);
-        if (it->data(Qt::UserRole).toString() == id) it->setCheckState(Qt::Unchecked);
+    m_oInBattle.removeAll(l_oId);
+    m_bFilling = true;
+    for (int l_iI = 0; l_iI < m_pMonsters->count(); l_iI++) {
+        QListWidgetItem* l_pIt = m_pMonsters->item(l_iI);
+        if (l_pIt->data(Qt::UserRole).toString() == l_oId) l_pIt->setCheckState(Qt::Unchecked);
     }
-    filling_ = false;
-    updateInBattleLabel();
+    m_bFilling = false;
+    f_UpdateInBattleLabel();
     return true;
 }
 
-bool BattleEditorWindow::addToBattle(const QString& id) {
-    if (inBattle_.size() >= toms::kMaxFoes) { say(tr("A battle has up to three monsters.")); return false; }
-    if (!enemies_.contains(ss(id))) return false;
-    inBattle_ << id;
-    filling_ = true;
-    for (int i = 0; i < monsters_->count(); i++) {
-        QListWidgetItem* it = monsters_->item(i);
-        if (it->data(Qt::UserRole).toString() == id) it->setCheckState(Qt::Checked);
+bool BattleEditorWindow::f_AddToBattle(const QString& l_oId) {
+    if (m_oInBattle.size() >= toms::g_iMaxFoes) { f_Say(tr("A battle has up to three monsters.")); return false; }
+    if (!m_jEnemies.contains(f_Ss(l_oId))) return false;
+    m_oInBattle << l_oId;
+    m_bFilling = true;
+    for (int l_iI = 0; l_iI < m_pMonsters->count(); l_iI++) {
+        QListWidgetItem* l_pIt = m_pMonsters->item(l_iI);
+        if (l_pIt->data(Qt::UserRole).toString() == l_oId) l_pIt->setCheckState(Qt::Checked);
     }
-    filling_ = false;
-    updateInBattleLabel();
+    m_bFilling = false;
+    f_UpdateInBattleLabel();
     return true;
 }
 
-void BattleEditorWindow::updateInBattleLabel() {
-    inBattleLabel_->setText(tr("IN BATTLE: %1  %2").arg(inBattle_.size()).arg(inBattle_.join(QStringLiteral(" + "))));
+void BattleEditorWindow::f_UpdateInBattleLabel() {
+    m_pInBattleLabel->setText(tr("IN BATTLE: %1  %2").arg(m_oInBattle.size()).arg(m_oInBattle.join(QStringLiteral(" + "))));
 }
 
-bool BattleEditorWindow::selectMonster(const QString& id) {
-    for (int i = 0; i < monsters_->count(); i++)
-        if (monsters_->item(i)->data(Qt::UserRole).toString() == id) { monsters_->setCurrentRow(i); return true; }
+bool BattleEditorWindow::f_SelectMonster(const QString& l_oId) {
+    for (int l_iI = 0; l_iI < m_pMonsters->count(); l_iI++)
+        if (m_pMonsters->item(l_iI)->data(Qt::UserRole).toString() == l_oId) { m_pMonsters->setCurrentRow(l_iI); return true; }
     return false;
 }
 
 // ---------------------------------------------------------------- the centre: battle bar + game
 
-QWidget* BattleEditorWindow::buildCentre() {
-    auto* w = new QWidget();
-    auto* v = new QVBoxLayout(w);
-    v->setContentsMargins(0, 0, 0, 0);
-    auto* bar = new QHBoxLayout();
-    auto* battle = new QPushButton(tr("▶ Battle"));
-    battle->setToolTip(tr("Start the test battle with the ticked monsters and the test player (again: restart it)."));
-    battle->setStyleSheet(QStringLiteral("font-weight: bold;"));
-    pause_ = new QPushButton(tr("⏸ Pause"));
-    pause_->setCheckable(true);
-    speed_ = new QComboBox();
-    speed_->addItem(QStringLiteral("×0.5"), 0.5);
-    speed_->addItem(QStringLiteral("×1"), 1.0);
-    speed_->addItem(QStringLiteral("×2"), 2.0);
-    speed_->setCurrentIndex(1);
-    pace_ = new QComboBox();
-    pace_->addItem(tr("pace: from the data"), QString());
-    pace_->addItem(tr("pace: cooldown"), QStringLiteral("cooldown"));
-    pace_->addItem(tr("pace: stamina"), QStringLiteral("stamina"));
-    pace_->setToolTip(tr("Cooldown: each bar waits after a tap. Stamina: no waits, attacks and guards cost stamina. "
+QWidget* BattleEditorWindow::f_BuildCentre() {
+    auto* l_pW = new QWidget();
+    auto* l_pV = new QVBoxLayout(l_pW);
+    l_pV->setContentsMargins(0, 0, 0, 0);
+    auto* l_pBar = new QHBoxLayout();
+    auto* l_pBattle = new QPushButton(tr("▶ Battle"));
+    l_pBattle->setToolTip(tr("Start the test battle with the ticked monsters and the test player (again: restart it)."));
+    l_pBattle->setStyleSheet(QStringLiteral("font-weight: bold;"));
+    m_pPause = new QPushButton(tr("⏸ Pause"));
+    m_pPause->setCheckable(true);
+    m_pSpeed = new QComboBox();
+    m_pSpeed->addItem(QStringLiteral("×0.5"), 0.5);
+    m_pSpeed->addItem(QStringLiteral("×1"), 1.0);
+    m_pSpeed->addItem(QStringLiteral("×2"), 2.0);
+    m_pSpeed->setCurrentIndex(1);
+    m_pPace = new QComboBox();
+    m_pPace->addItem(tr("pace: from the data"), QString());
+    m_pPace->addItem(tr("pace: cooldown"), QStringLiteral("cooldown"));
+    m_pPace->addItem(tr("pace: stamina"), QStringLiteral("stamina"));
+    m_pPace->setToolTip(tr("Cooldown: each bar waits after a tap. Stamina: no waits, attacks and guards cost stamina. "
                          "Switches the running battle too (docs/gameplay/13 §6.3)."));
-    auto* win = new QPushButton(tr("Win now"));
-    auto* lose = new QPushButton(tr("Lose now"));
-    autoRestart_ = new QCheckBox(tr("auto restart"));
-    autoRestart_->setChecked(true);
-    autoRestart_->setToolTip(tr("When the battle ends (every monster down, Win now, or a loss), the same setup starts "
-                                "again after %1 s.").arg(kAutoRestartMs / 1000.0));
-    shape_ = new QComboBox();
-    shape_->addItem(tr("fill"), 0.0);
-    shape_->addItem(tr("4:3 landscape"), 4.0 / 3.0);
-    shape_->addItem(tr("16:9 landscape"), 16.0 / 9.0);
-    shape_->addItem(tr("3:4 portrait"), 3.0 / 4.0);
-    shape_->addItem(tr("phone portrait"), 9.0 / 19.5);
-    shape_->setToolTip(tr("The game view's shape: the battle screen's landscape and portrait layouts (docs/gameplay/12)."));
-    bar->addWidget(battle);
-    bar->addWidget(pause_);
-    bar->addWidget(speed_);
-    bar->addWidget(pace_);
-    bar->addWidget(win);
-    bar->addWidget(lose);
-    bar->addWidget(autoRestart_);
-    bar->addStretch(1);
-    bar->addWidget(shape_);
-    v->addLayout(bar);
-    viewBox_ = new AspectBox();
-    viewBox_->setChild(view_);
-    v->addWidget(viewBox_, 1);
+    auto* l_pWin = new QPushButton(tr("Win now"));
+    auto* l_pLose = new QPushButton(tr("Lose now"));
+    m_pAutoRestart = new QCheckBox(tr("auto restart"));
+    m_pAutoRestart->setChecked(true);
+    m_pAutoRestart->setToolTip(tr("When the battle ends (every monster down, Win now, or a loss), the same setup starts "
+                                "again after %1 s.").arg(m_iAutoRestartMs / 1000.0));
+    m_pShape = new QComboBox();
+    m_pShape->addItem(tr("fill"), 0.0);
+    m_pShape->addItem(tr("4:3 landscape"), 4.0 / 3.0);
+    m_pShape->addItem(tr("16:9 landscape"), 16.0 / 9.0);
+    m_pShape->addItem(tr("3:4 portrait"), 3.0 / 4.0);
+    m_pShape->addItem(tr("phone portrait"), 9.0 / 19.5);
+    m_pShape->setToolTip(tr("The game view's shape: the battle screen's landscape and portrait layouts (docs/gameplay/12)."));
+    l_pBar->addWidget(l_pBattle);
+    l_pBar->addWidget(m_pPause);
+    l_pBar->addWidget(m_pSpeed);
+    l_pBar->addWidget(m_pPace);
+    l_pBar->addWidget(l_pWin);
+    l_pBar->addWidget(l_pLose);
+    l_pBar->addWidget(m_pAutoRestart);
+    l_pBar->addStretch(1);
+    l_pBar->addWidget(m_pShape);
+    l_pV->addLayout(l_pBar);
+    m_pViewBox = new AspectBox();
+    m_pViewBox->f_SetChild(m_pView);
+    l_pV->addWidget(m_pViewBox, 1);
 
-    connect(battle, &QPushButton::clicked, this, [this] { startBattle(); });
-    connect(pause_, &QPushButton::toggled, this, [this](bool on) {
-        view_->setTimeScale(on ? 0.0 : speed_->currentData().toDouble());
+    connect(l_pBattle, &QPushButton::clicked, this, [this] { f_StartBattle(); });
+    connect(m_pPause, &QPushButton::toggled, this, [this](bool l_bOn) {
+        m_pView->f_SetTimeScale(l_bOn ? 0.0 : m_pSpeed->currentData().toDouble());
     });
-    connect(speed_, qOverload<int>(&QComboBox::currentIndexChanged), this, [this] {
-        if (!pause_->isChecked()) view_->setTimeScale(speed_->currentData().toDouble());
+    connect(m_pSpeed, qOverload<int>(&QComboBox::currentIndexChanged), this, [this] {
+        if (!m_pPause->isChecked()) m_pView->f_SetTimeScale(m_pSpeed->currentData().toDouble());
     });
-    connect(pace_, qOverload<int>(&QComboBox::currentIndexChanged), this, [this] {
-        if (Game* g = view_->session().game()) g->setBattlePace(ss(pace_->currentData().toString()));
+    connect(m_pPace, qOverload<int>(&QComboBox::currentIndexChanged), this, [this] {
+        if (Game* l_pG = m_pView->f_Session().f_Game()) l_pG->f_SetBattlePace(f_Ss(m_pPace->currentData().toString()));
     });
-    connect(win, &QPushButton::clicked, this, [this] { if (Game* g = view_->session().game()) g->debugForceWin(); });
-    connect(lose, &QPushButton::clicked, this, [this] { if (Game* g = view_->session().game()) g->debugForceLose(); });
-    connect(shape_, qOverload<int>(&QComboBox::currentIndexChanged), this, [this] {
-        viewBox_->setAspect(shape_->currentData().toDouble());
+    connect(l_pWin, &QPushButton::clicked, this, [this] { if (Game* l_pG = m_pView->f_Session().f_Game()) l_pG->f_DebugForceWin(); });
+    connect(l_pLose, &QPushButton::clicked, this, [this] { if (Game* l_pG = m_pView->f_Session().f_Game()) l_pG->f_DebugForceLose(); });
+    connect(m_pShape, qOverload<int>(&QComboBox::currentIndexChanged), this, [this] {
+        m_pViewBox->f_SetAspect(m_pShape->currentData().toDouble());
     });
-    return w;
+    return l_pW;
 }
 
-void BattleEditorWindow::setPace(const QString& pace) {
-    const int i = pace_->findData(pace);
-    if (i >= 0) pace_->setCurrentIndex(i);
+void BattleEditorWindow::f_SetPace(const QString& l_oPace) {
+    const int l_iI = m_pPace->findData(l_oPace);
+    if (l_iI >= 0) m_pPace->setCurrentIndex(l_iI);
 }
 
-bed::Setup BattleEditorWindow::currentSetup() const {
-    bed::Setup s;
-    s.name = setups_ ? ss(setups_->currentText()) : std::string();
-    s.pace = ss(pace_->currentData().toString());
-    for (const QString& id : inBattle_) {
-        bed::SetupFoe f;
-        f.id = ss(id);
+bed::Setup BattleEditorWindow::f_CurrentSetup() const {
+    bed::Setup l_oS;
+    l_oS.m_strName = m_pSetups ? f_Ss(m_pSetups->currentText()) : std::string();
+    l_oS.m_strPace = f_Ss(m_pPace->currentData().toString());
+    for (const QString& l_oId : m_oInBattle) {
+        bed::SetupFoe l_oF;
+        l_oF.m_strId = f_Ss(l_oId);
         // the monster as edited here, saved or not: the scenario's overrides (enemyFromData reads them)
-        const ojson& m = enemies_[ss(id)];
-        for (const char* k : {"hp", "atk", "def", "atk_interval_ms", "moves", "look", "break", "events"})
-            if (m.contains(k)) f.overrides[k] = m[k];
-        s.foes.push_back(f);
+        const ojson& l_jM = m_jEnemies[f_Ss(l_oId)];
+        for (const char* l_pszK : {"hp", "atk", "def", "atk_interval_ms", "moves", "look", "break", "events"})
+            if (l_jM.contains(l_pszK)) l_oF.m_jOverrides[l_pszK] = l_jM[l_pszK];
+        l_oS.m_vFoes.push_back(l_oF);
     }
-    s.player.lv = pLv_->value();
-    s.player.hp = pHp_->value();
-    s.player.maxhp = pMaxHp_->value();
-    s.player.weapon = ss(pWeapon_->currentData().toString());
-    s.player.weaponWins = pWins_->value();
-    s.player.attrPoints = pPoints_->value();
-    for (auto it = pAttrs_->begin(); it != pAttrs_->end(); ++it)
-        if (it.value()->value() > 0) s.player.attrs[ss(it.key())] = it.value()->value();
-    return s;
+    l_oS.m_oPlayer.m_iLv = m_pPLv->value();
+    l_oS.m_oPlayer.m_iHp = m_pPHp->value();
+    l_oS.m_oPlayer.m_iMaxhp = m_pPMaxHp->value();
+    l_oS.m_oPlayer.m_strWeapon = f_Ss(m_pPWeapon->currentData().toString());
+    l_oS.m_oPlayer.m_iWeaponWins = m_pPWins->value();
+    l_oS.m_oPlayer.m_iAttrPoints = m_pPPoints->value();
+    for (auto l_oIt = m_pPAttrs->begin(); l_oIt != m_pPAttrs->end(); ++l_oIt)
+        if (l_oIt.value()->value() > 0) l_oS.m_oPlayer.m_jAttrs[f_Ss(l_oIt.key())] = l_oIt.value()->value();
+    return l_oS;
 }
 
-bool BattleEditorWindow::startBattle() {
-    if (inBattle_.isEmpty()) { warn(tr("Battle"), tr("Tick a monster (+ Battle) first.")); return false; }
-    const QString dir = QDir(scratchDir_).filePath(QStringLiteral("current"));
-    const QString file = QDir(dir).filePath(QStringLiteral("scenario.json"));
-    if (!writeText(file, qs(bed::setupToScenario(currentSetup()).dump(2) + "\n"))) {
-        warn(tr("Battle"), tr("Could not write %1").arg(file));
+bool BattleEditorWindow::f_StartBattle() {
+    if (m_oInBattle.isEmpty()) { f_Warn(tr("Battle"), tr("Tick a monster (+ Battle) first.")); return false; }
+    const QString l_oDir = QDir(m_oScratchDir).filePath(QStringLiteral("current"));
+    const QString l_oFile = QDir(l_oDir).filePath(QStringLiteral("scenario.json"));
+    if (!f_WriteText(l_oFile, f_Qs(bed::f_SetupToScenario(f_CurrentSetup()).dump(2) + "\n"))) {
+        f_Warn(tr("Battle"), tr("Could not write %1").arg(l_oFile));
         return false;
     }
-    QString err;
-    if (!view_->startScenario(dir, err)) {
-        warn(tr("Battle"), tr("The battle could not start:\n%1").arg(err));
+    QString l_oErr;
+    if (!m_pView->f_StartScenario(l_oDir, l_oErr)) {
+        f_Warn(tr("Battle"), tr("The battle could not start:\n%1").arg(l_oErr));
         return false;
     }
-    logShown_ = -1;
-    if (weaponsDirty_) say(tr("Battle started -- the weapon changes are used once saved"));
-    else say(tr("Battle: %1").arg(inBattle_.join(QStringLiteral(" + "))));
-    view_->setFocus();
+    m_iLogShown = -1;
+    if (m_bWeaponsDirty) f_Say(tr("Battle started -- the weapon changes are used once saved"));
+    else f_Say(tr("Battle: %1").arg(m_oInBattle.join(QStringLiteral(" + "))));
+    m_pView->setFocus();
     return true;
 }
 
 // ---------------------------------------------------------------- Monster
 
-QWidget* BattleEditorWindow::buildMonsterTab() {
-    auto* w = new QWidget();
-    auto* f = new QFormLayout(w);
-    mId_ = new QLabel();
-    mNameEn_ = new QLineEdit();
-    mNameZh_ = new QLineEdit();
-    mSprite_ = new QLineEdit();
-    mLook_ = new QLineEdit();
-    mLook_->setToolTip(tr("Its status map in data/looks.json (empty: \"monster\")."));
-    mMoves_ = new QLineEdit();
-    mMoves_->setToolTip(tr("What it may do next (data/moves.json), e.g. \"strike, heavy:2, guard\" (id:weight). "
+QWidget* BattleEditorWindow::f_BuildMonsterTab() {
+    auto* l_pW = new QWidget();
+    auto* l_pF = new QFormLayout(l_pW);
+    m_pMId = new QLabel();
+    m_pMNameEn = new QLineEdit();
+    m_pMNameZh = new QLineEdit();
+    m_pMSprite = new QLineEdit();
+    m_pMLook = new QLineEdit();
+    m_pMLook->setToolTip(tr("Its status map in data/looks.json (empty: \"monster\")."));
+    m_pMMoves = new QLineEdit();
+    m_pMMoves->setToolTip(tr("What it may do next (data/moves.json), e.g. \"strike, heavy:2, guard\" (id:weight). "
                            "Empty: a plain strike."));
-    mParty_ = new QLineEdit();
-    mParty_->setToolTip(tr("Monsters that fight beside it when met on a floor, e.g. \"bat, bat\" (up to two)."));
-    mBoss_ = new QCheckBox(tr("boss"));
-    f->addRow(tr("id"), mId_);
-    f->addRow(tr("name (en)"), mNameEn_);
-    f->addRow(tr("name (zh_TW)"), mNameZh_);
-    f->addRow(tr("sprite"), mSprite_);
-    struct N { const char* key; const char* label; int max; };
-    for (const N& n : {N{"hp", "HP", 99999}, N{"atk", "ATK", 9999}, N{"def", "DEF", 9999},
+    m_pMParty = new QLineEdit();
+    m_pMParty->setToolTip(tr("Monsters that fight beside it when met on a floor, e.g. \"bat, bat\" (up to two)."));
+    m_pMBoss = new QCheckBox(tr("boss"));
+    l_pF->addRow(tr("id"), m_pMId);
+    l_pF->addRow(tr("name (en)"), m_pMNameEn);
+    l_pF->addRow(tr("name (zh_TW)"), m_pMNameZh);
+    l_pF->addRow(tr("sprite"), m_pMSprite);
+    struct N { const char* m_pszKey; const char* m_pszLabel; int m_iMax; };
+    for (const N& l_oN : {N{"hp", "HP", 99999}, N{"atk", "ATK", 9999}, N{"def", "DEF", 9999},
                        N{"atk_interval_ms", "attack interval (ms)", 60000}, N{"break", "break points (0: battle.json)", 999},
                        N{"exp", "EXP", 99999}, N{"gold", "gold", 99999}}) {
-        auto* sb = new QSpinBox();
-        sb->setRange(0, n.max);
-        (*mNumbers_)[QString::fromLatin1(n.key)] = sb;
-        f->addRow(tr(n.label), sb);
-        connect(sb, qOverload<int>(&QSpinBox::valueChanged), this, [this] { monsterEdited(); });
+        auto* l_pSb = new QSpinBox();
+        l_pSb->setRange(0, l_oN.m_iMax);
+        (*m_pMNumbers)[QString::fromLatin1(l_oN.m_pszKey)] = l_pSb;
+        l_pF->addRow(tr(l_oN.m_pszLabel), l_pSb);
+        connect(l_pSb, qOverload<int>(&QSpinBox::valueChanged), this, [this] { f_MonsterEdited(); });
     }
-    f->addRow(tr("moves"), mMoves_);
-    f->addRow(tr("look"), mLook_);
-    f->addRow(tr("party"), mParty_);
-    f->addRow(QString(), mBoss_);
-    readout_ = new QLabel();
-    readout_->setWordWrap(true);
-    readout_->setStyleSheet(QStringLiteral("color: #555;"));
-    f->addRow(tr("last battle"), readout_);
-    for (QLineEdit* e : {mNameEn_, mNameZh_, mSprite_, mLook_, mMoves_, mParty_})
-        connect(e, &QLineEdit::textEdited, this, [this] { monsterEdited(); });
-    connect(mBoss_, &QCheckBox::toggled, this, [this] { monsterEdited(); });
-    return w;
+    l_pF->addRow(tr("moves"), m_pMMoves);
+    l_pF->addRow(tr("look"), m_pMLook);
+    l_pF->addRow(tr("party"), m_pMParty);
+    l_pF->addRow(QString(), m_pMBoss);
+    m_pReadout = new QLabel();
+    m_pReadout->setWordWrap(true);
+    m_pReadout->setStyleSheet(QStringLiteral("color: #555;"));
+    l_pF->addRow(tr("last battle"), m_pReadout);
+    for (QLineEdit* l_pE : {m_pMNameEn, m_pMNameZh, m_pMSprite, m_pMLook, m_pMMoves, m_pMParty})
+        connect(l_pE, &QLineEdit::textEdited, this, [this] { f_MonsterEdited(); });
+    connect(m_pMBoss, &QCheckBox::toggled, this, [this] { f_MonsterEdited(); });
+    return l_pW;
 }
 
-void BattleEditorWindow::showMonster(const QString& id) {
-    current_ = id;
-    filling_ = true;
-    const bool has = !id.isEmpty() && enemies_.contains(ss(id));
-    const ojson m = has ? enemies_[ss(id)] : ojson::object();
-    mId_->setText(id);
-    mNameEn_->setText(has && m.contains("name") ? qs(m["name"].value("en", std::string())) : QString());
-    mNameZh_->setText(has && m.contains("name") ? qs(m["name"].value("zh_TW", std::string())) : QString());
-    mSprite_->setText(qs(m.value("sprite", std::string())));
-    for (auto it = mNumbers_->begin(); it != mNumbers_->end(); ++it)
-        it.value()->setValue(m.value(ss(it.key()), it.key() == QStringLiteral("atk_interval_ms") ? 4000 : 0));
-    mMoves_->setText(qs(bed::movesToText(m.value("moves", ojson::array()))));
-    mLook_->setText(qs(m.value("look", std::string())));
-    mParty_->setText(qs(bed::idsToText(m.value("party", ojson::array()))));
-    mBoss_->setChecked(m.value("boss", false));
-    filling_ = false;
-    showEvents();
+void BattleEditorWindow::f_ShowMonster(const QString& l_oId) {
+    m_oCurrent = l_oId;
+    m_bFilling = true;
+    const bool l_bHas = !l_oId.isEmpty() && m_jEnemies.contains(f_Ss(l_oId));
+    const ojson l_jM = l_bHas ? m_jEnemies[f_Ss(l_oId)] : ojson::object();
+    m_pMId->setText(l_oId);
+    m_pMNameEn->setText(l_bHas && l_jM.contains("name") ? f_Qs(l_jM["name"].value("en", std::string())) : QString());
+    m_pMNameZh->setText(l_bHas && l_jM.contains("name") ? f_Qs(l_jM["name"].value("zh_TW", std::string())) : QString());
+    m_pMSprite->setText(f_Qs(l_jM.value("sprite", std::string())));
+    for (auto l_oIt = m_pMNumbers->begin(); l_oIt != m_pMNumbers->end(); ++l_oIt)
+        l_oIt.value()->setValue(l_jM.value(f_Ss(l_oIt.key()), l_oIt.key() == QStringLiteral("atk_interval_ms") ? 4000 : 0));
+    m_pMMoves->setText(f_Qs(bed::f_MovesToText(l_jM.value("moves", ojson::array()))));
+    m_pMLook->setText(f_Qs(l_jM.value("look", std::string())));
+    m_pMParty->setText(f_Qs(bed::f_IdsToText(l_jM.value("party", ojson::array()))));
+    m_pMBoss->setChecked(l_jM.value("boss", false));
+    m_bFilling = false;
+    f_ShowEvents();
 }
 
-void BattleEditorWindow::setMonsterNumber(const QString& key, int value) {
-    if (QSpinBox* sb = mNumbers_->value(key)) sb->setValue(value);
+void BattleEditorWindow::f_SetMonsterNumber(const QString& l_oKey, int l_iValue) {
+    if (QSpinBox* l_pSb = m_pMNumbers->value(l_oKey)) l_pSb->setValue(l_iValue);
 }
 
-void BattleEditorWindow::monsterEdited() {
-    if (filling_ || current_.isEmpty() || !enemies_.contains(ss(current_))) return;
-    ojson& m = enemies_[ss(current_)];
-    if (!m.contains("name") || !m["name"].is_object()) m["name"] = ojson::object();
-    m["name"]["en"] = ss(mNameEn_->text());
-    if (!mNameZh_->text().isEmpty()) m["name"]["zh_TW"] = ss(mNameZh_->text());
-    m["sprite"] = ss(mSprite_->text());
-    for (auto it = mNumbers_->begin(); it != mNumbers_->end(); ++it) {
-        const std::string k = ss(it.key());
-        const int v = it.value()->value();
-        const bool optional = k == "atk_interval_ms" || k == "break";   // left out when it is the default
-        if (optional && (v == 0 || (k == "atk_interval_ms" && v == 4000) )) m.erase(k);
-        else m[k] = v;
+void BattleEditorWindow::f_MonsterEdited() {
+    if (m_bFilling || m_oCurrent.isEmpty() || !m_jEnemies.contains(f_Ss(m_oCurrent))) return;
+    ojson& l_jM = m_jEnemies[f_Ss(m_oCurrent)];
+    if (!l_jM.contains("name") || !l_jM["name"].is_object()) l_jM["name"] = ojson::object();
+    l_jM["name"]["en"] = f_Ss(m_pMNameEn->text());
+    if (!m_pMNameZh->text().isEmpty()) l_jM["name"]["zh_TW"] = f_Ss(m_pMNameZh->text());
+    l_jM["sprite"] = f_Ss(m_pMSprite->text());
+    for (auto l_oIt = m_pMNumbers->begin(); l_oIt != m_pMNumbers->end(); ++l_oIt) {
+        const std::string l_strK = f_Ss(l_oIt.key());
+        const int l_iV = l_oIt.value()->value();
+        const bool l_bOptional = l_strK == "atk_interval_ms" || l_strK == "break";   // left out when it is the default
+        if (l_bOptional && (l_iV == 0 || (l_strK == "atk_interval_ms" && l_iV == 4000) )) l_jM.erase(l_strK);
+        else l_jM[l_strK] = l_iV;
     }
-    auto setOrErase = [&m](const char* k, const ojson& v) { if (v.empty()) m.erase(k); else m[k] = v; };
-    setOrErase("moves", bed::movesFromText(ss(mMoves_->text())));
-    setOrErase("party", bed::idsFromText(ss(mParty_->text())));
-    if (mLook_->text().trimmed().isEmpty()) m.erase("look"); else m["look"] = ss(mLook_->text().trimmed());
-    if (mBoss_->isChecked()) m["boss"] = true; else m.erase("boss");
-    monstersDirty_ = true;
+    auto l_fnSetOrErase = [&l_jM](const char* l_pszK, const ojson& l_jV) { if (l_jV.empty()) l_jM.erase(l_pszK); else l_jM[l_pszK] = l_jV; };
+    l_fnSetOrErase("moves", bed::f_MovesFromText(f_Ss(m_pMMoves->text())));
+    l_fnSetOrErase("party", bed::f_IdsFromText(f_Ss(m_pMParty->text())));
+    if (m_pMLook->text().trimmed().isEmpty()) l_jM.erase("look"); else l_jM["look"] = f_Ss(m_pMLook->text().trimmed());
+    if (m_pMBoss->isChecked()) l_jM["boss"] = true; else l_jM.erase("boss");
+    m_bMonstersDirty = true;
     setWindowTitle(tr("TOMS Battle Editor *"));
-    applyToRunningBattle(current_);
+    f_ApplyToRunningBattle(m_oCurrent);
 }
 
 // An edit reaches the battle that is running at once (every monster of that kind in it), not only the next ▶ Battle.
-void BattleEditorWindow::applyToRunningBattle(const QString& id) {
-    Game* g = view_->session().game();
-    if (!g || g->battleFoeCount() == 0 || !enemies_.contains(ss(id))) return;
-    g->debugUpdateMonster(ss(id), nlohmann::json::parse(enemies_[ss(id)].dump()));
+void BattleEditorWindow::f_ApplyToRunningBattle(const QString& l_oId) {
+    Game* l_pG = m_pView->f_Session().f_Game();
+    if (!l_pG || l_pG->f_BattleFoeCount() == 0 || !m_jEnemies.contains(f_Ss(l_oId))) return;
+    l_pG->f_DebugUpdateMonster(f_Ss(l_oId), nlohmann::json::parse(m_jEnemies[f_Ss(l_oId)].dump()));
 }
 
 // The last battle's numbers from its log: how hard the monsters are for this player (13 §4.1's readout).
-void BattleEditorWindow::updateReadout() {
-    Game* g = view_->session().game();
-    if (!g || !readout_) return;
-    const std::vector<toms::BattleEvent>& ev = g->battleEvents();
-    int dealt = 0, dealtN = 0, taken = 0, takenN = 0, endMs = 0;
-    for (const toms::BattleEvent& e : ev) {
-        if (e.type == "hit" && e.who < 0) { dealt += e.value; dealtN++; }
-        if (e.type == "hit" && e.who >= 0) { taken += e.value; takenN++; }
-        endMs = std::max(endMs, e.ms);
+void BattleEditorWindow::f_UpdateReadout() {
+    Game* l_pG = m_pView->f_Session().f_Game();
+    if (!l_pG || !m_pReadout) return;
+    const std::vector<toms::BattleEvent>& l_vEv = l_pG->f_BattleEvents();
+    int l_iDealt = 0, l_iDealtN = 0, l_iTaken = 0, l_iTakenN = 0, l_iEndMs = 0;
+    for (const toms::BattleEvent& l_oE : l_vEv) {
+        if (l_oE.m_strType == "hit" && l_oE.m_iWho < 0) { l_iDealt += l_oE.m_iValue; l_iDealtN++; }
+        if (l_oE.m_strType == "hit" && l_oE.m_iWho >= 0) { l_iTaken += l_oE.m_iValue; l_iTakenN++; }
+        l_iEndMs = std::max(l_iEndMs, l_oE.m_iMs);
     }
-    if (ev.empty()) { readout_->setText(tr("(no battle yet)")); return; }
-    readout_->setText(tr("you hit %1 times, %2 on average; the monsters hit %3 times, %4 on average; %5 s")
-                          .arg(dealtN).arg(dealtN ? dealt / dealtN : 0).arg(takenN).arg(takenN ? taken / takenN : 0)
-                          .arg(endMs / 1000.0, 0, 'f', 1));
+    if (l_vEv.empty()) { m_pReadout->setText(tr("(no battle yet)")); return; }
+    m_pReadout->setText(tr("you hit %1 times, %2 on average; the monsters hit %3 times, %4 on average; %5 s")
+                          .arg(l_iDealtN).arg(l_iDealtN ? l_iDealt / l_iDealtN : 0).arg(l_iTakenN).arg(l_iTakenN ? l_iTaken / l_iTakenN : 0)
+                          .arg(l_iEndMs / 1000.0, 0, 'f', 1));
 }
 
 // ---------------------------------------------------------------- Weapon
 
-QWidget* BattleEditorWindow::buildWeaponTab() {
-    auto* w = new QWidget();
-    auto* v = new QVBoxLayout(w);
-    weapons_ = new QListWidget();
-    weapons_->setMaximumHeight(130);
-    for (auto it = weaponPlay_.begin(); it != weaponPlay_.end(); ++it)
-        if (!it.key().empty() && it.key()[0] != '_') weapons_->addItem(qs(it.key()));
-    v->addWidget(new QLabel(tr("<b>weapon_play.json</b>")));
-    v->addWidget(weapons_);
-    auto* use = new QPushButton(tr("Use this weapon in the battle"));
-    v->addWidget(use);
-    wLabel_ = new QLabel();
-    v->addWidget(wLabel_);
-    auto* form = new QFormLayout();
-    for (const char* k : {"sweepMs", "chargeMs", "hitWindowMs", "lateMs"}) {
-        auto* sb = new QSpinBox();
-        sb->setRange(0, 10000);
-        (*wNumbers_)[QString::fromLatin1(k)] = sb;
-        form->addRow(QString::fromLatin1(k), sb);
-        connect(sb, qOverload<int>(&QSpinBox::valueChanged), this, [this] { weaponEdited(); });
+QWidget* BattleEditorWindow::f_BuildWeaponTab() {
+    auto* l_pW = new QWidget();
+    auto* l_pV = new QVBoxLayout(l_pW);
+    m_pWeapons = new QListWidget();
+    m_pWeapons->setMaximumHeight(130);
+    for (auto l_oIt = m_jWeaponPlay.begin(); l_oIt != m_jWeaponPlay.end(); ++l_oIt)
+        if (!l_oIt.key().empty() && l_oIt.key()[0] != '_') m_pWeapons->addItem(f_Qs(l_oIt.key()));
+    l_pV->addWidget(new QLabel(tr("<b>weapon_play.json</b>")));
+    l_pV->addWidget(m_pWeapons);
+    auto* l_pUse = new QPushButton(tr("Use this weapon in the battle"));
+    l_pV->addWidget(l_pUse);
+    m_pWLabel = new QLabel();
+    l_pV->addWidget(m_pWLabel);
+    auto* l_pForm = new QFormLayout();
+    for (const char* l_pszK : {"sweepMs", "chargeMs", "hitWindowMs", "lateMs"}) {
+        auto* l_pSb = new QSpinBox();
+        l_pSb->setRange(0, 10000);
+        (*m_pWNumbers)[QString::fromLatin1(l_pszK)] = l_pSb;
+        l_pForm->addRow(QString::fromLatin1(l_pszK), l_pSb);
+        connect(l_pSb, qOverload<int>(&QSpinBox::valueChanged), this, [this] { f_WeaponEdited(); });
     }
-    wPace_ = new QComboBox();
-    wPace_->addItem(tr("(the battle's)"), QString());
-    wPace_->addItem(QStringLiteral("cooldown"), QStringLiteral("cooldown"));
-    wPace_->addItem(QStringLiteral("stamina"), QStringLiteral("stamina"));
-    form->addRow(tr("pace"), wPace_);
-    connect(wPace_, qOverload<int>(&QComboBox::currentIndexChanged), this, [this] { weaponEdited(); });
-    v->addLayout(form);
-    v->addWidget(new QLabel(tr("<b>Results</b> by points matched (13 §4.2): the highest row reached applies; hits \"all\" = every point. "
+    m_pWPace = new QComboBox();
+    m_pWPace->addItem(tr("(the battle's)"), QString());
+    m_pWPace->addItem(QStringLiteral("cooldown"), QStringLiteral("cooldown"));
+    m_pWPace->addItem(QStringLiteral("stamina"), QStringLiteral("stamina"));
+    l_pForm->addRow(tr("pace"), m_pWPace);
+    connect(m_pWPace, qOverload<int>(&QComboBox::currentIndexChanged), this, [this] { f_WeaponEdited(); });
+    l_pV->addLayout(l_pForm);
+    l_pV->addWidget(new QLabel(tr("<b>Results</b> by points matched (13 §4.2): the highest row reached applies; hits \"all\" = every point. "
                                "A particle not in battle.particle is red.")));
-    results_ = new QTableWidget(0, 8);
-    results_->setHorizontalHeaderLabels({tr("hits"), tr("name"), tr("damage"), tr("fx"), tr("sound"), tr("stunMs"),
+    m_pResults = new QTableWidget(0, 8);
+    m_pResults->setHorizontalHeaderLabels({tr("hits"), tr("name"), tr("damage"), tr("fx"), tr("sound"), tr("stunMs"),
                                          tr("pushMs"), tr("breakAdd")});
-    results_->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    v->addWidget(results_, 1);
-    auto* row = new QHBoxLayout();
-    auto* addRow = new QPushButton(tr("+ Row"));
-    auto* delRow = new QPushButton(tr("− Row"));
-    auto* save = new QPushButton(tr("Save weapons"));
-    row->addWidget(addRow);
-    row->addWidget(delRow);
-    row->addStretch(1);
-    row->addWidget(save);
-    v->addLayout(row);
+    m_pResults->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    l_pV->addWidget(m_pResults, 1);
+    auto* l_pRow = new QHBoxLayout();
+    auto* l_pAddRow = new QPushButton(tr("+ Row"));
+    auto* l_pDelRow = new QPushButton(tr("− Row"));
+    auto* l_pSave = new QPushButton(tr("Save weapons"));
+    l_pRow->addWidget(l_pAddRow);
+    l_pRow->addWidget(l_pDelRow);
+    l_pRow->addStretch(1);
+    l_pRow->addWidget(l_pSave);
+    l_pV->addLayout(l_pRow);
 
-    connect(weapons_, &QListWidget::currentTextChanged, this, [this](const QString& k) { showWeapon(k); });
-    connect(use, &QPushButton::clicked, this, [this] {
-        const QString k = currentWeapon_;
-        if (k == QStringLiteral("default")) { say(tr("\"default\" is the settings of weapons without their own.")); return; }
-        const int i = pWeapon_->findData(k == QStringLiteral("unarmed") ? QString() : k);
-        if (i >= 0) pWeapon_->setCurrentIndex(i);
-        else { pWeapon_->addItem(k, k); pWeapon_->setCurrentIndex(pWeapon_->count() - 1); }
-        say(tr("The test player uses %1 (▶ Battle to try it)").arg(k));
+    connect(m_pWeapons, &QListWidget::currentTextChanged, this, [this](const QString& l_oK) { f_ShowWeapon(l_oK); });
+    connect(l_pUse, &QPushButton::clicked, this, [this] {
+        const QString l_oK = m_oCurrentWeapon;
+        if (l_oK == QStringLiteral("default")) { f_Say(tr("\"default\" is the settings of weapons without their own.")); return; }
+        const int l_iI = m_pPWeapon->findData(l_oK == QStringLiteral("unarmed") ? QString() : l_oK);
+        if (l_iI >= 0) m_pPWeapon->setCurrentIndex(l_iI);
+        else { m_pPWeapon->addItem(l_oK, l_oK); m_pPWeapon->setCurrentIndex(m_pPWeapon->count() - 1); }
+        f_Say(tr("The test player uses %1 (▶ Battle to try it)").arg(l_oK));
     });
-    connect(results_, &QTableWidget::cellChanged, this, [this] { weaponEdited(); });
-    connect(addRow, &QPushButton::clicked, this, [this] {
-        filling_ = true;
-        const int r = results_->rowCount();
-        results_->insertRow(r);
-        for (int c = 0; c < results_->columnCount(); c++) results_->setItem(r, c, new QTableWidgetItem());
-        results_->item(r, 0)->setText(QStringLiteral("all"));
-        results_->item(r, 2)->setText(QStringLiteral("1"));
-        filling_ = false;
-        weaponEdited();
+    connect(m_pResults, &QTableWidget::cellChanged, this, [this] { f_WeaponEdited(); });
+    connect(l_pAddRow, &QPushButton::clicked, this, [this] {
+        m_bFilling = true;
+        const int l_iR = m_pResults->rowCount();
+        m_pResults->insertRow(l_iR);
+        for (int l_iC = 0; l_iC < m_pResults->columnCount(); l_iC++) m_pResults->setItem(l_iR, l_iC, new QTableWidgetItem());
+        m_pResults->item(l_iR, 0)->setText(QStringLiteral("all"));
+        m_pResults->item(l_iR, 2)->setText(QStringLiteral("1"));
+        m_bFilling = false;
+        f_WeaponEdited();
     });
-    connect(delRow, &QPushButton::clicked, this, [this] {
-        if (results_->currentRow() >= 0) { results_->removeRow(results_->currentRow()); weaponEdited(); }
+    connect(l_pDelRow, &QPushButton::clicked, this, [this] {
+        if (m_pResults->currentRow() >= 0) { m_pResults->removeRow(m_pResults->currentRow()); f_WeaponEdited(); }
     });
-    connect(save, &QPushButton::clicked, this, [this] { saveWeapons(); });
-    return w;
+    connect(l_pSave, &QPushButton::clicked, this, [this] { f_SaveWeapons(); });
+    return l_pW;
 }
 
-void BattleEditorWindow::showWeapon(const QString& key) {
-    currentWeapon_ = key;
-    filling_ = true;
-    const ojson w = weaponPlay_.value(ss(key), ojson::object());
-    const ojson def = weaponPlay_.value("default", ojson::object());
-    for (auto it = wNumbers_->begin(); it != wNumbers_->end(); ++it)
-        it.value()->setValue(w.value(ss(it.key()), def.value(ss(it.key()), 0)));
-    wPace_->setCurrentIndex(std::max(0, wPace_->findData(qs(w.value("pace", std::string())))));
-    const bool own = w.contains("results");
-    wLabel_->setText(own ? tr("Its own results:") : tr("No results of its own: the default's apply (adding a row gives it its own)."));
-    results_->setRowCount(0);
-    const ojson rows = own ? w["results"] : ojson::array();
-    for (const auto& r : rows) {
-        const int i = results_->rowCount();
-        results_->insertRow(i);
-        auto cell = [&](int c, const QString& t) { results_->setItem(i, c, new QTableWidgetItem(t)); };
-        cell(0, r.contains("hits") ? (r["hits"].is_string() ? qs(r["hits"].get<std::string>()) : QString::number(r["hits"].get<int>())) : QString());
-        cell(1, qs(r.value("name", std::string())));
-        cell(2, QString::number(r.value("damage", 1.0)));
-        cell(3, qs(r.value("fx", std::string())));
-        cell(4, qs(r.value("sound", std::string())));
-        cell(5, QString::number(r.value("stunMs", 0)));
-        cell(6, QString::number(r.value("pushMs", 0)));
-        cell(7, QString::number(r.value("breakAdd", 0.0)));
-        const QString fx = qs(r.value("fx", std::string()));
-        if (!fx.isEmpty() && !effects_.contains(fx)) results_->item(i, 3)->setBackground(QColor(255, 200, 200));
+void BattleEditorWindow::f_ShowWeapon(const QString& l_oKey) {
+    m_oCurrentWeapon = l_oKey;
+    m_bFilling = true;
+    const ojson l_jW = m_jWeaponPlay.value(f_Ss(l_oKey), ojson::object());
+    const ojson l_jDef = m_jWeaponPlay.value("default", ojson::object());
+    for (auto l_oIt = m_pWNumbers->begin(); l_oIt != m_pWNumbers->end(); ++l_oIt)
+        l_oIt.value()->setValue(l_jW.value(f_Ss(l_oIt.key()), l_jDef.value(f_Ss(l_oIt.key()), 0)));
+    m_pWPace->setCurrentIndex(std::max(0, m_pWPace->findData(f_Qs(l_jW.value("pace", std::string())))));
+    const bool l_bOwn = l_jW.contains("results");
+    m_pWLabel->setText(l_bOwn ? tr("Its own results:") : tr("No results of its own: the default's apply (adding a row gives it its own)."));
+    m_pResults->setRowCount(0);
+    const ojson l_jRows = l_bOwn ? l_jW["results"] : ojson::array();
+    for (const auto& l_jR : l_jRows) {
+        const int l_iI = m_pResults->rowCount();
+        m_pResults->insertRow(l_iI);
+        auto l_fnCell = [&](int l_iC, const QString& l_oT) { m_pResults->setItem(l_iI, l_iC, new QTableWidgetItem(l_oT)); };
+        l_fnCell(0, l_jR.contains("hits") ? (l_jR["hits"].is_string() ? f_Qs(l_jR["hits"].get<std::string>()) : QString::number(l_jR["hits"].get<int>())) : QString());
+        l_fnCell(1, f_Qs(l_jR.value("name", std::string())));
+        l_fnCell(2, QString::number(l_jR.value("damage", 1.0)));
+        l_fnCell(3, f_Qs(l_jR.value("fx", std::string())));
+        l_fnCell(4, f_Qs(l_jR.value("sound", std::string())));
+        l_fnCell(5, QString::number(l_jR.value("stunMs", 0)));
+        l_fnCell(6, QString::number(l_jR.value("pushMs", 0)));
+        l_fnCell(7, QString::number(l_jR.value("breakAdd", 0.0)));
+        const QString l_oFx = f_Qs(l_jR.value("fx", std::string()));
+        if (!l_oFx.isEmpty() && !m_oEffects.contains(l_oFx)) m_pResults->item(l_iI, 3)->setBackground(QColor(255, 200, 200));
     }
-    filling_ = false;
+    m_bFilling = false;
 }
 
-void BattleEditorWindow::weaponEdited() {
-    if (filling_ || currentWeapon_.isEmpty()) return;
-    ojson& w = weaponPlay_[ss(currentWeapon_)];
-    if (!w.is_object()) w = ojson::object();
-    for (auto it = wNumbers_->begin(); it != wNumbers_->end(); ++it) w[ss(it.key())] = it.value()->value();
-    if (wPace_->currentData().toString().isEmpty()) w.erase("pace"); else w["pace"] = ss(wPace_->currentData().toString());
-    ojson rows = ojson::array();
-    for (int r = 0; r < results_->rowCount(); r++) {
-        auto text = [&](int c) { QTableWidgetItem* it = results_->item(r, c); return it ? it->text().trimmed() : QString(); };
-        ojson row = ojson::object();
-        bool num = false;
-        const int hits = text(0).toInt(&num);
-        row["hits"] = num ? ojson(hits) : ojson("all");
-        if (!text(1).isEmpty()) row["name"] = ss(text(1));
-        row["damage"] = text(2).isEmpty() ? 1.0 : text(2).toDouble();
-        if (!text(3).isEmpty()) row["fx"] = ss(text(3));
-        if (!text(4).isEmpty()) row["sound"] = ss(text(4));
-        if (text(5).toInt() > 0) row["stunMs"] = text(5).toInt();
-        if (text(6).toInt() > 0) row["pushMs"] = text(6).toInt();
-        if (text(7).toDouble() > 0) row["breakAdd"] = text(7).toDouble();
-        rows.push_back(row);
-        if (QTableWidgetItem* fx = results_->item(r, 3)) {
-            filling_ = true;
-            fx->setBackground(!text(3).isEmpty() && !effects_.contains(text(3)) ? QColor(255, 200, 200) : QColor(Qt::white));
-            filling_ = false;
+void BattleEditorWindow::f_WeaponEdited() {
+    if (m_bFilling || m_oCurrentWeapon.isEmpty()) return;
+    ojson& l_jW = m_jWeaponPlay[f_Ss(m_oCurrentWeapon)];
+    if (!l_jW.is_object()) l_jW = ojson::object();
+    for (auto l_oIt = m_pWNumbers->begin(); l_oIt != m_pWNumbers->end(); ++l_oIt) l_jW[f_Ss(l_oIt.key())] = l_oIt.value()->value();
+    if (m_pWPace->currentData().toString().isEmpty()) l_jW.erase("pace"); else l_jW["pace"] = f_Ss(m_pWPace->currentData().toString());
+    ojson l_jRows = ojson::array();
+    for (int l_iR = 0; l_iR < m_pResults->rowCount(); l_iR++) {
+        auto l_fnText = [&](int l_iC) { QTableWidgetItem* l_pIt = m_pResults->item(l_iR, l_iC); return l_pIt ? l_pIt->text().trimmed() : QString(); };
+        ojson l_jRow = ojson::object();
+        bool l_bNum = false;
+        const int l_iHits = l_fnText(0).toInt(&l_bNum);
+        l_jRow["hits"] = l_bNum ? ojson(l_iHits) : ojson("all");
+        if (!l_fnText(1).isEmpty()) l_jRow["name"] = f_Ss(l_fnText(1));
+        l_jRow["damage"] = l_fnText(2).isEmpty() ? 1.0 : l_fnText(2).toDouble();
+        if (!l_fnText(3).isEmpty()) l_jRow["fx"] = f_Ss(l_fnText(3));
+        if (!l_fnText(4).isEmpty()) l_jRow["sound"] = f_Ss(l_fnText(4));
+        if (l_fnText(5).toInt() > 0) l_jRow["stunMs"] = l_fnText(5).toInt();
+        if (l_fnText(6).toInt() > 0) l_jRow["pushMs"] = l_fnText(6).toInt();
+        if (l_fnText(7).toDouble() > 0) l_jRow["breakAdd"] = l_fnText(7).toDouble();
+        l_jRows.push_back(l_jRow);
+        if (QTableWidgetItem* l_pFx = m_pResults->item(l_iR, 3)) {
+            m_bFilling = true;
+            l_pFx->setBackground(!l_fnText(3).isEmpty() && !m_oEffects.contains(l_fnText(3)) ? QColor(255, 200, 200) : QColor(Qt::white));
+            m_bFilling = false;
         }
     }
-    if (rows.empty()) w.erase("results"); else w["results"] = rows;
-    weaponsDirty_ = true;
+    if (l_jRows.empty()) l_jW.erase("results"); else l_jW["results"] = l_jRows;
+    m_bWeaponsDirty = true;
     setWindowTitle(tr("TOMS Battle Editor *"));
 }
 
 // ---------------------------------------------------------------- Player (and the growth calculator)
 
-QWidget* BattleEditorWindow::buildPlayerTab() {
-    auto* w = new QWidget();
-    auto* v = new QVBoxLayout(w);
-    auto* box = new QGroupBox(tr("The test player"));
-    auto* f = new QFormLayout(box);
-    auto spin = [](int lo, int hi, int val) { auto* s = new QSpinBox(); s->setRange(lo, hi); s->setValue(val); return s; };
-    pLv_ = spin(1, 99, 1);
-    pHp_ = spin(1, 99999, 120);
-    pMaxHp_ = spin(1, 99999, 120);
-    pWeapon_ = new QComboBox();
-    pWeapon_->addItem(tr("(unarmed)"), QString());
-    for (auto it = weaponPlay_.begin(); it != weaponPlay_.end(); ++it)
-        if (!it.key().empty() && it.key()[0] != '_' && it.key() != "default" && it.key() != "unarmed")
-            pWeapon_->addItem(qs(it.key()), qs(it.key()));
-    pWeapon_->setCurrentIndex(std::max(0, pWeapon_->findData(QStringLiteral("bow"))));
-    pWins_ = spin(0, 9999, 0);
-    pWins_->setToolTip(tr("Wins with the weapon: its level (weapon_play.json usesToLevel)."));
-    pPoints_ = spin(0, 9999, 0);
-    f->addRow(tr("level"), pLv_);
-    f->addRow(tr("HP"), pHp_);
-    f->addRow(tr("max HP"), pMaxHp_);
-    f->addRow(tr("weapon"), pWeapon_);
-    f->addRow(tr("weapon wins"), pWins_);
-    for (const QString& id : attrIds_) {
-        auto* s = spin(0, 999, 0);
-        (*pAttrs_)[id] = s;
-        f->addRow(id.toUpper() + tr(" (placed)"), s);
+QWidget* BattleEditorWindow::f_BuildPlayerTab() {
+    auto* l_pW = new QWidget();
+    auto* l_pV = new QVBoxLayout(l_pW);
+    auto* l_pBox = new QGroupBox(tr("The test player"));
+    auto* l_pF = new QFormLayout(l_pBox);
+    auto l_fnSpin = [](int l_iLo, int l_iHi, int l_iVal) { auto* l_pS = new QSpinBox(); l_pS->setRange(l_iLo, l_iHi); l_pS->setValue(l_iVal); return l_pS; };
+    m_pPLv = l_fnSpin(1, 99, 1);
+    m_pPHp = l_fnSpin(1, 99999, 120);
+    m_pPMaxHp = l_fnSpin(1, 99999, 120);
+    m_pPWeapon = new QComboBox();
+    m_pPWeapon->addItem(tr("(unarmed)"), QString());
+    for (auto l_oIt = m_jWeaponPlay.begin(); l_oIt != m_jWeaponPlay.end(); ++l_oIt)
+        if (!l_oIt.key().empty() && l_oIt.key()[0] != '_' && l_oIt.key() != "default" && l_oIt.key() != "unarmed")
+            m_pPWeapon->addItem(f_Qs(l_oIt.key()), f_Qs(l_oIt.key()));
+    m_pPWeapon->setCurrentIndex(std::max(0, m_pPWeapon->findData(QStringLiteral("bow"))));
+    m_pPWins = l_fnSpin(0, 9999, 0);
+    m_pPWins->setToolTip(tr("Wins with the weapon: its level (weapon_play.json usesToLevel)."));
+    m_pPPoints = l_fnSpin(0, 9999, 0);
+    l_pF->addRow(tr("level"), m_pPLv);
+    l_pF->addRow(tr("HP"), m_pPHp);
+    l_pF->addRow(tr("max HP"), m_pPMaxHp);
+    l_pF->addRow(tr("weapon"), m_pPWeapon);
+    l_pF->addRow(tr("weapon wins"), m_pPWins);
+    for (const QString& l_oId : m_oAttrIds) {
+        auto* l_pS = l_fnSpin(0, 999, 0);
+        (*m_pPAttrs)[l_oId] = l_pS;
+        l_pF->addRow(l_oId.toUpper() + tr(" (placed)"), l_pS);
     }
-    f->addRow(tr("points to place"), pPoints_);
-    v->addWidget(box);
+    l_pF->addRow(tr("points to place"), m_pPPoints);
+    l_pV->addWidget(l_pBox);
 
-    auto* calc = new QGroupBox(tr("Growth calculator (13 §4.3): T points by level L, on a curve"));
-    auto* cv = new QVBoxLayout(calc);
-    auto* row = new QHBoxLayout();
-    cTotal_ = spin(0, 9999, 100);
-    cLevel_ = spin(2, 99, 20);
-    cShape_ = new QDoubleSpinBox();
-    cShape_->setRange(0.2, 4.0);
-    cShape_->setSingleStep(0.1);
-    cShape_->setValue(1.3);
-    cShape_->setToolTip(tr("k: 1 = the same each level, above 1 = more later, below 1 = more early."));
-    row->addWidget(new QLabel(tr("T")));
-    row->addWidget(cTotal_);
-    row->addWidget(new QLabel(tr("by level L")));
-    row->addWidget(cLevel_);
-    row->addWidget(new QLabel(tr("k")));
-    row->addWidget(cShape_);
-    cv->addLayout(row);
-    cTable_ = new QTableWidget(0, 3);
-    cTable_->setHorizontalHeaderLabels({tr("level"), tr("points"), tr("total")});
-    cTable_->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    cTable_->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    cv->addWidget(cTable_, 1);
-    cSum_ = new QLabel();
-    cv->addWidget(cSum_);
-    auto* row2 = new QHBoxLayout();
-    auto* apply = new QPushButton(tr("Apply to the test player"));
-    apply->setToolTip(tr("The test player at level L with T points to place."));
-    auto* saveT = new QPushButton(tr("Save as the game's table"));
-    saveT->setToolTip(tr("data/stats.json levelUp \"points\": neighbouring levels with the same points merged."));
-    row2->addWidget(apply);
-    row2->addWidget(saveT);
-    cv->addLayout(row2);
-    v->addWidget(calc, 1);
+    auto* l_pCalc = new QGroupBox(tr("Growth calculator (13 §4.3): T points by level L, on a curve"));
+    auto* l_pCv = new QVBoxLayout(l_pCalc);
+    auto* l_pRow = new QHBoxLayout();
+    m_pCTotal = l_fnSpin(0, 9999, 100);
+    m_pCLevel = l_fnSpin(2, 99, 20);
+    m_pCShape = new QDoubleSpinBox();
+    m_pCShape->setRange(0.2, 4.0);
+    m_pCShape->setSingleStep(0.1);
+    m_pCShape->setValue(1.3);
+    m_pCShape->setToolTip(tr("k: 1 = the same each level, above 1 = more later, below 1 = more early."));
+    l_pRow->addWidget(new QLabel(tr("T")));
+    l_pRow->addWidget(m_pCTotal);
+    l_pRow->addWidget(new QLabel(tr("by level L")));
+    l_pRow->addWidget(m_pCLevel);
+    l_pRow->addWidget(new QLabel(tr("k")));
+    l_pRow->addWidget(m_pCShape);
+    l_pCv->addLayout(l_pRow);
+    m_pCTable = new QTableWidget(0, 3);
+    m_pCTable->setHorizontalHeaderLabels({tr("level"), tr("points"), tr("total")});
+    m_pCTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    m_pCTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    l_pCv->addWidget(m_pCTable, 1);
+    m_pCSum = new QLabel();
+    l_pCv->addWidget(m_pCSum);
+    auto* l_pRow2 = new QHBoxLayout();
+    auto* l_pApply = new QPushButton(tr("Apply to the test player"));
+    l_pApply->setToolTip(tr("The test player at level L with T points to place."));
+    auto* l_pSaveT = new QPushButton(tr("Save as the game's table"));
+    l_pSaveT->setToolTip(tr("data/stats.json levelUp \"points\": neighbouring levels with the same points merged."));
+    l_pRow2->addWidget(l_pApply);
+    l_pRow2->addWidget(l_pSaveT);
+    l_pCv->addLayout(l_pRow2);
+    l_pV->addWidget(l_pCalc, 1);
 
-    auto recalc = [this] { calculate(cTotal_->value(), cLevel_->value(), cShape_->value()); };
-    connect(cTotal_, qOverload<int>(&QSpinBox::valueChanged), this, recalc);
-    connect(cLevel_, qOverload<int>(&QSpinBox::valueChanged), this, recalc);
-    connect(cShape_, qOverload<double>(&QDoubleSpinBox::valueChanged), this, recalc);
-    connect(apply, &QPushButton::clicked, this, [this] {
-        pLv_->setValue(cLevel_->value());
-        pPoints_->setValue(cTotal_->value());
-        for (QSpinBox* s : *pAttrs_) s->setValue(0);
-        say(tr("The test player: level %1 with %2 points to place").arg(cLevel_->value()).arg(cTotal_->value()));
+    auto l_fnRecalc = [this] { f_Calculate(m_pCTotal->value(), m_pCLevel->value(), m_pCShape->value()); };
+    connect(m_pCTotal, qOverload<int>(&QSpinBox::valueChanged), this, l_fnRecalc);
+    connect(m_pCLevel, qOverload<int>(&QSpinBox::valueChanged), this, l_fnRecalc);
+    connect(m_pCShape, qOverload<double>(&QDoubleSpinBox::valueChanged), this, l_fnRecalc);
+    connect(l_pApply, &QPushButton::clicked, this, [this] {
+        m_pPLv->setValue(m_pCLevel->value());
+        m_pPPoints->setValue(m_pCTotal->value());
+        for (QSpinBox* l_pS : *m_pPAttrs) l_pS->setValue(0);
+        f_Say(tr("The test player: level %1 with %2 points to place").arg(m_pCLevel->value()).arg(m_pCTotal->value()));
     });
-    connect(saveT, &QPushButton::clicked, this, [this] { saveGrowthTable(); });
-    recalc();
-    return w;
+    connect(l_pSaveT, &QPushButton::clicked, this, [this] { f_SaveGrowthTable(); });
+    l_fnRecalc();
+    return l_pW;
 }
 
-std::vector<int> BattleEditorWindow::calculate(int total, int level, double k) {
-    const std::vector<int> per = bed::levelPoints(total, level, k);
-    if (cTable_) {
-        cTable_->setRowCount((int)per.size());
-        int run = 0;
-        for (size_t i = 0; i < per.size(); i++) {
-            run += per[i];
-            cTable_->setItem((int)i, 0, new QTableWidgetItem(QString::number(i + 2)));
-            auto* bar = new QTableWidgetItem(QString::number(per[i]) + QStringLiteral("  ") + QString(per[i], QChar(0x2588)));
-            cTable_->setItem((int)i, 1, bar);
-            cTable_->setItem((int)i, 2, new QTableWidgetItem(QString::number(run)));
+std::vector<int> BattleEditorWindow::f_Calculate(int l_iTotal, int l_iLevel, double l_dK) {
+    const std::vector<int> l_vPer = bed::f_LevelPoints(l_iTotal, l_iLevel, l_dK);
+    if (m_pCTable) {
+        m_pCTable->setRowCount((int)l_vPer.size());
+        int l_iRun = 0;
+        for (size_t l_nI = 0; l_nI < l_vPer.size(); l_nI++) {
+            l_iRun += l_vPer[l_nI];
+            m_pCTable->setItem((int)l_nI, 0, new QTableWidgetItem(QString::number(l_nI + 2)));
+            auto* l_pBar = new QTableWidgetItem(QString::number(l_vPer[l_nI]) + QStringLiteral("  ") + QString(l_vPer[l_nI], QChar(0x2588)));
+            m_pCTable->setItem((int)l_nI, 1, l_pBar);
+            m_pCTable->setItem((int)l_nI, 2, new QTableWidgetItem(QString::number(l_iRun)));
         }
-        cSum_->setText(tr("Lv 2–%1: %2 points in all").arg(level).arg(run));
+        m_pCSum->setText(tr("Lv 2–%1: %2 points in all").arg(l_iLevel).arg(l_iRun));
     }
-    return per;
+    return l_vPer;
 }
 
 // ---------------------------------------------------------------- Events
 
-QWidget* BattleEditorWindow::buildEventsTab() {
-    auto* w = new QWidget();
-    auto* v = new QVBoxLayout(w);
-    evMonster_ = new QLabel();
-    v->addWidget(evMonster_);
-    v->addWidget(new QLabel(tr("Triggers: beforeBattle, battleStart, hpBelow, playerHpBelow, attacks, everyMs, perfectHit, falls.\n"
+QWidget* BattleEditorWindow::f_BuildEventsTab() {
+    auto* l_pW = new QWidget();
+    auto* l_pV = new QVBoxLayout(l_pW);
+    m_pEvMonster = new QLabel();
+    l_pV->addWidget(m_pEvMonster);
+    l_pV->addWidget(new QLabel(tr("Triggers: beforeBattle, battleStart, hpBelow, playerHpBelow, attacks, everyMs, perfectHit, falls.\n"
                                "Actions: say, stat (atk / def / interval, mul / add), transformInto (hp keepShare / full), heal, "
                                "summon, flee, anim, fx, sound, flag (13 §4.4).")));
-    evText_ = new QPlainTextEdit();
-    evText_->setFont(QFont(QStringLiteral("Consolas"), 10));
-    v->addWidget(evText_, 2);
-    auto* row = new QHBoxLayout();
-    auto* apply = new QPushButton(tr("Apply"));
-    apply->setToolTip(tr("Check the text and keep it as the monster's events (Save monsters writes the file)."));
-    auto* example = new QPushButton(tr("Insert an example"));
-    row->addWidget(apply);
-    row->addWidget(example);
-    row->addStretch(1);
-    v->addLayout(row);
-    v->addWidget(new QLabel(tr("In the running battle:")));
-    evList_ = new QListWidget();
-    v->addWidget(evList_, 1);
-    auto* fire = new QPushButton(tr("Fire now"));
-    fire->setToolTip(tr("Run the selected event's actions now, in the running battle (the monster must be in it)."));
-    v->addWidget(fire);
-    connect(apply, &QPushButton::clicked, this, &BattleEditorWindow::applyEventsText);
-    connect(example, &QPushButton::clicked, this, [this] {
-        evText_->setPlainText(QStringLiteral(
+    m_pEvText = new QPlainTextEdit();
+    m_pEvText->setFont(QFont(QStringLiteral("Consolas"), 10));
+    l_pV->addWidget(m_pEvText, 2);
+    auto* l_pRow = new QHBoxLayout();
+    auto* l_pApply = new QPushButton(tr("Apply"));
+    l_pApply->setToolTip(tr("Check the text and keep it as the monster's events (Save monsters writes the file)."));
+    auto* l_pExample = new QPushButton(tr("Insert an example"));
+    l_pRow->addWidget(l_pApply);
+    l_pRow->addWidget(l_pExample);
+    l_pRow->addStretch(1);
+    l_pV->addLayout(l_pRow);
+    l_pV->addWidget(new QLabel(tr("In the running battle:")));
+    m_pEvList = new QListWidget();
+    l_pV->addWidget(m_pEvList, 1);
+    auto* l_pFire = new QPushButton(tr("Fire now"));
+    l_pFire->setToolTip(tr("Run the selected event's actions now, in the running battle (the monster must be in it)."));
+    l_pV->addWidget(l_pFire);
+    connect(l_pApply, &QPushButton::clicked, this, &BattleEditorWindow::f_ApplyEventsText);
+    connect(l_pExample, &QPushButton::clicked, this, [this] {
+        m_pEvText->setPlainText(QStringLiteral(
             "[\n  { \"on\": \"hpBelow\", \"value\": 50, \"do\": [ { \"say\": \"It grows angry!\" }, { \"stat\": \"atk\", \"mul\": 1.3 }, "
             "{ \"anim\": \"special\" } ] },\n  { \"on\": \"hpBelow\", \"value\": 20, \"do\": [ { \"transformInto\": \"slime\", \"hp\": \"keepShare\" } ] }\n]\n"));
     });
-    connect(fire, &QPushButton::clicked, this, [this] {
-        Game* g = view_->session().game();
-        const int foe = inBattle_.indexOf(current_);
-        if (!g || foe < 0 || g->battleFoeCount() == 0) { say(tr("Start a battle with this monster in it first.")); return; }
-        g->debugFireFoeEvent(foe, evList_->currentRow());
+    connect(l_pFire, &QPushButton::clicked, this, [this] {
+        Game* l_pG = m_pView->f_Session().f_Game();
+        const int l_iFoe = m_oInBattle.indexOf(m_oCurrent);
+        if (!l_pG || l_iFoe < 0 || l_pG->f_BattleFoeCount() == 0) { f_Say(tr("Start a battle with this monster in it first.")); return; }
+        l_pG->f_DebugFireFoeEvent(l_iFoe, m_pEvList->currentRow());
     });
-    return w;
+    return l_pW;
 }
 
-void BattleEditorWindow::showEvents() {
-    if (!evText_) return;
-    const ojson m = !current_.isEmpty() && enemies_.contains(ss(current_)) ? enemies_[ss(current_)] : ojson::object();
-    evMonster_->setText(tr("<b>%1</b>'s events (enemies.json \"events\")").arg(current_));
-    const ojson ev = m.value("events", ojson::array());
-    evText_->setPlainText(ev.empty() ? QStringLiteral("[]") : qs(ev.dump(2)));
-    evList_->clear();
-    for (const auto& e : ev) {
-        QString line = qs(e.value("on", std::string()));
-        if (e.contains("value")) line += QStringLiteral(" ") + qs(e["value"].dump());
-        line += QStringLiteral("  →  ") + qs(e.value("do", ojson::array()).dump());
-        evList_->addItem(line);
+void BattleEditorWindow::f_ShowEvents() {
+    if (!m_pEvText) return;
+    const ojson l_jM = !m_oCurrent.isEmpty() && m_jEnemies.contains(f_Ss(m_oCurrent)) ? m_jEnemies[f_Ss(m_oCurrent)] : ojson::object();
+    m_pEvMonster->setText(tr("<b>%1</b>'s events (enemies.json \"events\")").arg(m_oCurrent));
+    const ojson l_jEv = l_jM.value("events", ojson::array());
+    m_pEvText->setPlainText(l_jEv.empty() ? QStringLiteral("[]") : f_Qs(l_jEv.dump(2)));
+    m_pEvList->clear();
+    for (const auto& l_jE : l_jEv) {
+        QString l_oLine = f_Qs(l_jE.value("on", std::string()));
+        if (l_jE.contains("value")) l_oLine += QStringLiteral(" ") + f_Qs(l_jE["value"].dump());
+        l_oLine += QStringLiteral("  →  ") + f_Qs(l_jE.value("do", ojson::array()).dump());
+        m_pEvList->addItem(l_oLine);
     }
 }
 
-void BattleEditorWindow::applyEventsText() {
-    if (current_.isEmpty()) return;
-    ojson ev;
-    if (!parse(evText_->toPlainText(), ev) || !ev.is_array()) {
-        warn(tr("Events"), tr("The events are not a JSON list: [ { \"on\": ..., \"do\": [ ... ] }, ... ]"));
+void BattleEditorWindow::f_ApplyEventsText() {
+    if (m_oCurrent.isEmpty()) return;
+    ojson l_jEv;
+    if (!f_Parse(m_pEvText->toPlainText(), l_jEv) || !l_jEv.is_array()) {
+        f_Warn(tr("Events"), tr("The events are not a JSON list: [ { \"on\": ..., \"do\": [ ... ] }, ... ]"));
         return;
     }
-    for (const auto& e : ev)
-        if (!e.is_object() || !e.contains("on") || !e.contains("do")) {
-            warn(tr("Events"), tr("Each event needs \"on\" and \"do\": %1").arg(qs(e.dump())));
+    for (const auto& l_jE : l_jEv)
+        if (!l_jE.is_object() || !l_jE.contains("on") || !l_jE.contains("do")) {
+            f_Warn(tr("Events"), tr("Each event needs \"on\" and \"do\": %1").arg(f_Qs(l_jE.dump())));
             return;
         }
-    ojson& m = enemies_[ss(current_)];
-    if (ev.empty()) m.erase("events"); else m["events"] = ev;
-    monstersDirty_ = true;
+    ojson& l_jM = m_jEnemies[f_Ss(m_oCurrent)];
+    if (l_jEv.empty()) l_jM.erase("events"); else l_jM["events"] = l_jEv;
+    m_bMonstersDirty = true;
     setWindowTitle(tr("TOMS Battle Editor *"));
-    applyToRunningBattle(current_);
-    showEvents();
-    say(tr("Events kept for %1 (▶ Battle uses them; Save monsters writes them)").arg(current_));
+    f_ApplyToRunningBattle(m_oCurrent);
+    f_ShowEvents();
+    f_Say(tr("Events kept for %1 (▶ Battle uses them; Save monsters writes them)").arg(m_oCurrent));
 }
 
 // ---------------------------------------------------------------- Log
 
-QWidget* BattleEditorWindow::buildLogTab() {
-    auto* w = new QWidget();
-    auto* v = new QVBoxLayout(w);
-    log_ = new QPlainTextEdit();
-    log_->setReadOnly(true);
-    log_->setFont(QFont(QStringLiteral("Consolas"), 10));
-    v->addWidget(new QLabel(tr("Every event of the running battle, with its time (13 §4.5).")));
-    v->addWidget(log_, 1);
-    return w;
+QWidget* BattleEditorWindow::f_BuildLogTab() {
+    auto* l_pW = new QWidget();
+    auto* l_pV = new QVBoxLayout(l_pW);
+    m_pLog = new QPlainTextEdit();
+    m_pLog->setReadOnly(true);
+    m_pLog->setFont(QFont(QStringLiteral("Consolas"), 10));
+    l_pV->addWidget(new QLabel(tr("Every event of the running battle, with its time (13 §4.5).")));
+    l_pV->addWidget(m_pLog, 1);
+    return l_pW;
 }
 
 // ---- the Scenarios tab (it was toms_editor's Scenarios dock until 2026-10-31; docs/gameplay/08_TEST_SCENARIOS.md) ----
 
 // tests/scenarios/ of the repository: the assets folder is <repo>/assets/media.
-QString BattleEditorWindow::scenarioRoot() const {
-    return QDir::cleanPath(QDir(view_->assetDir()).filePath(QStringLiteral("../../tests/scenarios")));
+QString BattleEditorWindow::f_ScenarioRoot() const {
+    return QDir::cleanPath(QDir(m_pView->f_AssetDir()).filePath(QStringLiteral("../../tests/scenarios")));
 }
 
-int BattleEditorWindow::scenarioCount() const {
-    int n = 0;
-    for (int g = 0; scenarioList_ && g < scenarioList_->topLevelItemCount(); g++) n += scenarioList_->topLevelItem(g)->childCount();
-    return n;
+int BattleEditorWindow::f_ScenarioCount() const {
+    int l_iN = 0;
+    for (int l_iG = 0; m_pScenarioList && l_iG < m_pScenarioList->topLevelItemCount(); l_iG++) l_iN += m_pScenarioList->topLevelItem(l_iG)->childCount();
+    return l_iN;
 }
 
 // One row per scenario folder (a folder holding scenario.json): its name, its scene, and its _comment as the tooltip.
 // "_shared" and other folders starting with "_" hold shared files, not scenarios; "_cloud" (downloaded ones, docs/gameplay/09)
 // is listed as a group of its own when it is there.
-void BattleEditorWindow::fillScenarioList() {
-    scenarioList_->clear();
-    auto addRoot = [this](const QString& dir, const QString& title) {
-        const QDir root(dir);
-        if (!root.exists()) return;
-        auto* group = new QTreeWidgetItem(scenarioList_, {title});
-        group->setToolTip(0, QDir::toNativeSeparators(root.absolutePath()));
-        group->setFirstColumnSpanned(true);
-        for (const QFileInfo& f : root.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name)) {
-            const QString file = QDir(f.absoluteFilePath()).filePath(QStringLiteral("scenario.json"));
-            if (f.fileName().startsWith(QLatin1Char('_')) || !QFileInfo::exists(file)) continue;
-            QFile in(file);
-            QJsonObject j;
-            if (in.open(QIODevice::ReadOnly)) j = QJsonDocument::fromJson(in.readAll()).object();
-            auto* it = new QTreeWidgetItem(group, {f.fileName(), j.value(QStringLiteral("scene")).toString(QStringLiteral("stage"))});
-            it->setData(0, Qt::UserRole, f.absoluteFilePath());
-            QString tip = j.value(QStringLiteral("_comment")).toString();
-            if (j.isEmpty()) tip = tr("scenario.json cannot be read");
-            it->setToolTip(0, tip.isEmpty() ? QDir::toNativeSeparators(f.absoluteFilePath()) : tip);
-            it->setToolTip(1, it->toolTip(0));
+void BattleEditorWindow::f_FillScenarioList() {
+    m_pScenarioList->clear();
+    auto l_fnAddRoot = [this](const QString& l_oDir, const QString& l_oTitle) {
+        const QDir l_oRoot(l_oDir);
+        if (!l_oRoot.exists()) return;
+        auto* l_pGroup = new QTreeWidgetItem(m_pScenarioList, {l_oTitle});
+        l_pGroup->setToolTip(0, QDir::toNativeSeparators(l_oRoot.absolutePath()));
+        l_pGroup->setFirstColumnSpanned(true);
+        for (const QFileInfo& l_oF : l_oRoot.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name)) {
+            const QString l_oFile = QDir(l_oF.absoluteFilePath()).filePath(QStringLiteral("scenario.json"));
+            if (l_oF.fileName().startsWith(QLatin1Char('_')) || !QFileInfo::exists(l_oFile)) continue;
+            QFile l_oIn(l_oFile);
+            QJsonObject l_oJ;
+            if (l_oIn.open(QIODevice::ReadOnly)) l_oJ = QJsonDocument::fromJson(l_oIn.readAll()).object();
+            auto* l_pIt = new QTreeWidgetItem(l_pGroup, {l_oF.fileName(), l_oJ.value(QStringLiteral("scene")).toString(QStringLiteral("stage"))});
+            l_pIt->setData(0, Qt::UserRole, l_oF.absoluteFilePath());
+            QString l_oTip = l_oJ.value(QStringLiteral("_comment")).toString();
+            if (l_oJ.isEmpty()) l_oTip = tr("scenario.json cannot be read");
+            l_pIt->setToolTip(0, l_oTip.isEmpty() ? QDir::toNativeSeparators(l_oF.absoluteFilePath()) : l_oTip);
+            l_pIt->setToolTip(1, l_pIt->toolTip(0));
         }
-        group->setExpanded(true);
-        if (group->childCount() == 0) delete group;
+        l_pGroup->setExpanded(true);
+        if (l_pGroup->childCount() == 0) delete l_pGroup;
     };
-    addRoot(scenarioRoot(), tr("tests/scenarios"));
-    addRoot(QDir(scenarioRoot()).filePath(QStringLiteral("_cloud")), tr("downloaded (_cloud)"));
-    if (!extraScenarioDir_.isEmpty()) addRoot(extraScenarioDir_, QFileInfo(extraScenarioDir_).fileName());
-    if (scenarioList_->topLevelItemCount() == 0) {
-        auto* none = new QTreeWidgetItem(scenarioList_, {tr("No scenarios in %1").arg(QDir::toNativeSeparators(scenarioRoot()))});
-        none->setFirstColumnSpanned(true);
-        none->setFlags(Qt::NoItemFlags);
+    l_fnAddRoot(f_ScenarioRoot(), tr("tests/scenarios"));
+    l_fnAddRoot(QDir(f_ScenarioRoot()).filePath(QStringLiteral("_cloud")), tr("downloaded (_cloud)"));
+    if (!m_oExtraScenarioDir.isEmpty()) l_fnAddRoot(m_oExtraScenarioDir, QFileInfo(m_oExtraScenarioDir).fileName());
+    if (m_pScenarioList->topLevelItemCount() == 0) {
+        auto* l_pNone = new QTreeWidgetItem(m_pScenarioList, {tr("No scenarios in %1").arg(QDir::toNativeSeparators(f_ScenarioRoot()))});
+        l_pNone->setFirstColumnSpanned(true);
+        l_pNone->setFlags(Qt::NoItemFlags);
     }
 }
 
-bool BattleEditorWindow::playScenario(const QString& path) {
+bool BattleEditorWindow::f_PlayScenario(const QString& l_oPath) {
     // the test battle's auto restart would replace the scenario when its battle ends: off while a scenario plays
-    if (autoRestart_) autoRestart_->setChecked(false);
-    restartPending_ = false;
-    QString err;
-    if (!view_->startScenario(path, err)) {
-        warn(tr("The scenario could not start"), err + tr("\n\nSee docs/gameplay/08_TEST_SCENARIOS.md"));
+    if (m_pAutoRestart) m_pAutoRestart->setChecked(false);
+    m_bRestartPending = false;
+    QString l_oErr;
+    if (!m_pView->f_StartScenario(l_oPath, l_oErr)) {
+        f_Warn(tr("The scenario could not start"), l_oErr + tr("\n\nSee docs/gameplay/08_TEST_SCENARIOS.md"));
         return false;
     }
-    say(tr("Scenario %1: playing (auto restart off). ▶ Battle goes back to the test battle.").arg(QFileInfo(path).fileName()));
-    view_->setFocus();
+    f_Say(tr("Scenario %1: playing (auto restart off). ▶ Battle goes back to the test battle.").arg(QFileInfo(l_oPath).fileName()));
+    m_pView->setFocus();
     return true;
 }
 
-QWidget* BattleEditorWindow::buildScenariosTab() {
-    auto* w = new QWidget();
-    auto* v = new QVBoxLayout(w);
-    auto* note = new QLabel(tr("Every test scenario of tests/scenarios (docs/gameplay/08). Double-click one to play it in the "
+QWidget* BattleEditorWindow::f_BuildScenariosTab() {
+    auto* l_pW = new QWidget();
+    auto* l_pV = new QVBoxLayout(l_pW);
+    auto* l_pNote = new QLabel(tr("Every test scenario of tests/scenarios (docs/gameplay/08). Double-click one to play it in the "
                                "game view; ▶ Battle goes back to the test battle."));
-    note->setWordWrap(true);
-    v->addWidget(note);
-    scenarioList_ = new QTreeWidget();
-    scenarioList_->setColumnCount(2);
-    scenarioList_->setHeaderLabels({tr("Scenario (double-click to play)"), tr("Scene")});
-    scenarioList_->header()->setSectionResizeMode(0, QHeaderView::Stretch);
-    scenarioList_->header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
-    scenarioList_->header()->setStretchLastSection(false);
-    scenarioList_->setRootIsDecorated(true);
-    scenarioList_->setContextMenuPolicy(Qt::CustomContextMenu);
-    v->addWidget(scenarioList_, 1);
-    auto* row = new QHBoxLayout();
-    auto* play = new QPushButton(tr("Play"));
-    auto* reload = new QPushButton(tr("Reload the list"));
-    auto* open = new QPushButton(tr("Open scenario folder..."));
-    row->addWidget(play);
-    row->addWidget(reload);
-    row->addWidget(open);
-    row->addStretch(1);
-    v->addLayout(row);
-    fillScenarioList();
-    auto pathOf = [](QTreeWidgetItem* it) { return it ? it->data(0, Qt::UserRole).toString() : QString(); };
-    connect(scenarioList_, &QTreeWidget::itemDoubleClicked, this, [this, pathOf](QTreeWidgetItem* it, int) {
-        const QString path = pathOf(it);
-        if (!path.isEmpty()) playScenario(path);
+    l_pNote->setWordWrap(true);
+    l_pV->addWidget(l_pNote);
+    m_pScenarioList = new QTreeWidget();
+    m_pScenarioList->setColumnCount(2);
+    m_pScenarioList->setHeaderLabels({tr("Scenario (double-click to play)"), tr("Scene")});
+    m_pScenarioList->header()->setSectionResizeMode(0, QHeaderView::Stretch);
+    m_pScenarioList->header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+    m_pScenarioList->header()->setStretchLastSection(false);
+    m_pScenarioList->setRootIsDecorated(true);
+    m_pScenarioList->setContextMenuPolicy(Qt::CustomContextMenu);
+    l_pV->addWidget(m_pScenarioList, 1);
+    auto* l_pRow = new QHBoxLayout();
+    auto* l_pPlay = new QPushButton(tr("Play"));
+    auto* l_pReload = new QPushButton(tr("Reload the list"));
+    auto* l_pOpen = new QPushButton(tr("Open scenario folder..."));
+    l_pRow->addWidget(l_pPlay);
+    l_pRow->addWidget(l_pReload);
+    l_pRow->addWidget(l_pOpen);
+    l_pRow->addStretch(1);
+    l_pV->addLayout(l_pRow);
+    f_FillScenarioList();
+    auto l_fnPathOf = [](QTreeWidgetItem* l_pIt) { return l_pIt ? l_pIt->data(0, Qt::UserRole).toString() : QString(); };
+    connect(m_pScenarioList, &QTreeWidget::itemDoubleClicked, this, [this, l_fnPathOf](QTreeWidgetItem* l_pIt, int) {
+        const QString l_oPath = l_fnPathOf(l_pIt);
+        if (!l_oPath.isEmpty()) f_PlayScenario(l_oPath);
     });
-    connect(play, &QPushButton::clicked, this, [this, pathOf] {
-        const QString path = pathOf(scenarioList_->currentItem());
-        if (!path.isEmpty()) playScenario(path);
+    connect(l_pPlay, &QPushButton::clicked, this, [this, l_fnPathOf] {
+        const QString l_oPath = l_fnPathOf(m_pScenarioList->currentItem());
+        if (!l_oPath.isEmpty()) f_PlayScenario(l_oPath);
     });
-    connect(reload, &QPushButton::clicked, this, [this] { fillScenarioList(); });
-    connect(open, &QPushButton::clicked, this, [this] {
-        const QString dir = QFileDialog::getExistingDirectory(this, tr("A folder of scenario folders, or one scenario"), scenarioRoot());
-        if (dir.isEmpty()) return;
-        if (QFileInfo::exists(QDir(dir).filePath(QStringLiteral("scenario.json")))) { playScenario(dir); return; }   // one scenario
-        extraScenarioDir_ = dir;
-        fillScenarioList();
+    connect(l_pReload, &QPushButton::clicked, this, [this] { f_FillScenarioList(); });
+    connect(l_pOpen, &QPushButton::clicked, this, [this] {
+        const QString l_oDir = QFileDialog::getExistingDirectory(this, tr("A folder of scenario folders, or one scenario"), f_ScenarioRoot());
+        if (l_oDir.isEmpty()) return;
+        if (QFileInfo::exists(QDir(l_oDir).filePath(QStringLiteral("scenario.json")))) { f_PlayScenario(l_oDir); return; }   // one scenario
+        m_oExtraScenarioDir = l_oDir;
+        f_FillScenarioList();
     });
-    connect(scenarioList_, &QWidget::customContextMenuRequested, this, [this, pathOf](const QPoint& pos) {
-        const QString path = pathOf(scenarioList_->itemAt(pos));
-        QMenu m(this);
-        if (!path.isEmpty()) {
-            m.addAction(tr("Play"), this, [this, path] { playScenario(path); });
-            m.addAction(tr("Open its folder"), this, [path] { QDesktopServices::openUrl(QUrl::fromLocalFile(path)); });
-            m.addAction(tr("Edit scenario.json"), this, [path] {
-                QDesktopServices::openUrl(QUrl::fromLocalFile(QDir(path).filePath(QStringLiteral("scenario.json"))));
+    connect(m_pScenarioList, &QWidget::customContextMenuRequested, this, [this, l_fnPathOf](const QPoint& l_oPos) {
+        const QString l_oPath = l_fnPathOf(m_pScenarioList->itemAt(l_oPos));
+        QMenu l_oM(this);
+        if (!l_oPath.isEmpty()) {
+            l_oM.addAction(tr("Play"), this, [this, l_oPath] { f_PlayScenario(l_oPath); });
+            l_oM.addAction(tr("Open its folder"), this, [l_oPath] { QDesktopServices::openUrl(QUrl::fromLocalFile(l_oPath)); });
+            l_oM.addAction(tr("Edit scenario.json"), this, [l_oPath] {
+                QDesktopServices::openUrl(QUrl::fromLocalFile(QDir(l_oPath).filePath(QStringLiteral("scenario.json"))));
             });
-            m.addSeparator();
+            l_oM.addSeparator();
         }
-        m.addAction(tr("Reload the list"), this, [this] { fillScenarioList(); });
-        m.exec(scenarioList_->viewport()->mapToGlobal(pos));
+        l_oM.addAction(tr("Reload the list"), this, [this] { f_FillScenarioList(); });
+        l_oM.exec(m_pScenarioList->viewport()->mapToGlobal(l_oPos));
     });
-    return w;
+    return l_pW;
 }
 
-void BattleEditorWindow::refreshLog() {
-    Game* g = view_->session().game();
-    if (!g || !log_) return;
+void BattleEditorWindow::f_RefreshLog() {
+    Game* l_pG = m_pView->f_Session().f_Game();
+    if (!l_pG || !m_pLog) return;
     // the battle ended (won or lost): start it again, after a moment to see how it ended
-    const bool running = g->battleFoeCount() > 0;
-    if (battleRunning_ && !running && autoRestart_ && autoRestart_->isChecked() && !restartPending_) {
-        restartPending_ = true;
-        say(tr("The battle is over -- again in %1 s (auto restart)").arg(kAutoRestartMs / 1000.0));
-        QTimer::singleShot(kAutoRestartMs, this, [this] {
-            restartPending_ = false;
-            if (autoRestart_->isChecked() && !inBattle_.isEmpty()) startBattle();
+    const bool l_bRunning = l_pG->f_BattleFoeCount() > 0;
+    if (m_bBattleRunning && !l_bRunning && m_pAutoRestart && m_pAutoRestart->isChecked() && !m_bRestartPending) {
+        m_bRestartPending = true;
+        f_Say(tr("The battle is over -- again in %1 s (auto restart)").arg(m_iAutoRestartMs / 1000.0));
+        QTimer::singleShot(m_iAutoRestartMs, this, [this] {
+            m_bRestartPending = false;
+            if (m_pAutoRestart->isChecked() && !m_oInBattle.isEmpty()) f_StartBattle();
         });
     }
-    battleRunning_ = running;
-    const std::vector<toms::BattleEvent>& ev = g->battleEvents();
-    if ((int)ev.size() == logShown_) return;
-    logShown_ = (int)ev.size();
-    const std::vector<std::string> ids = g->battleFoeIds();
-    QString text;
-    for (const toms::BattleEvent& e : ev) text += qs(toms::battleEventLine(e, ids)) + QLatin1Char('\n');
-    log_->setPlainText(text);
-    log_->moveCursor(QTextCursor::End);
-    updateReadout();
+    m_bBattleRunning = l_bRunning;
+    const std::vector<toms::BattleEvent>& l_vEv = l_pG->f_BattleEvents();
+    if ((int)l_vEv.size() == m_iLogShown) return;
+    m_iLogShown = (int)l_vEv.size();
+    const std::vector<std::string> l_vIds = l_pG->f_BattleFoeIds();
+    QString l_oText;
+    for (const toms::BattleEvent& l_oE : l_vEv) l_oText += f_Qs(toms::f_BattleEventLine(l_oE, l_vIds)) + QLatin1Char('\n');
+    m_pLog->setPlainText(l_oText);
+    m_pLog->moveCursor(QTextCursor::End);
+    f_UpdateReadout();
 }
 
-QString BattleEditorWindow::logText() const { return log_ ? log_->toPlainText() : QString(); }
+QString BattleEditorWindow::f_LogText() const { return m_pLog ? m_pLog->toPlainText() : QString(); }
 
 // ---------------------------------------------------------------- test setups
 
-QWidget* BattleEditorWindow::buildSetupsBar() {
-    auto* w = new QWidget();
-    auto* h = new QHBoxLayout(w);
-    h->setContentsMargins(0, 0, 0, 0);
-    h->addWidget(new QLabel(tr("<b>TEST SETUPS</b> (tools/battle_editor/setups: editor files, not tests)")));
-    setups_ = new QComboBox();
-    setups_->setMinimumWidth(220);
-    auto* load = new QPushButton(tr("Load"));
-    auto* save = new QPushButton(tr("+ Save current as…"));
-    h->addWidget(setups_);
-    h->addWidget(load);
-    h->addWidget(save);
-    h->addStretch(1);
-    connect(load, &QPushButton::clicked, this, [this] { if (loadSetup(setups_->currentText())) startBattle(); });
-    connect(save, &QPushButton::clicked, this, [this] {
-        const QString name = QInputDialog::getText(this, tr("Save the setup"), tr("Its name (e.g. 3 bats Lv5 sword):"),
-                                                   QLineEdit::Normal, setups_->currentText()).trimmed();
-        if (!name.isEmpty()) saveSetupAs(name);
+QWidget* BattleEditorWindow::f_BuildSetupsBar() {
+    auto* l_pW = new QWidget();
+    auto* l_pH = new QHBoxLayout(l_pW);
+    l_pH->setContentsMargins(0, 0, 0, 0);
+    l_pH->addWidget(new QLabel(tr("<b>TEST SETUPS</b> (tools/battle_editor/setups: editor files, not tests)")));
+    m_pSetups = new QComboBox();
+    m_pSetups->setMinimumWidth(220);
+    auto* l_pLoad = new QPushButton(tr("Load"));
+    auto* l_pSave = new QPushButton(tr("+ Save current as…"));
+    l_pH->addWidget(m_pSetups);
+    l_pH->addWidget(l_pLoad);
+    l_pH->addWidget(l_pSave);
+    l_pH->addStretch(1);
+    connect(l_pLoad, &QPushButton::clicked, this, [this] { if (f_LoadSetup(m_pSetups->currentText())) f_StartBattle(); });
+    connect(l_pSave, &QPushButton::clicked, this, [this] {
+        const QString l_oName = QInputDialog::getText(this, tr("Save the setup"), tr("Its name (e.g. 3 bats Lv5 sword):"),
+                                                   QLineEdit::Normal, m_pSetups->currentText()).trimmed();
+        if (!l_oName.isEmpty()) f_SaveSetupAs(l_oName);
     });
-    return w;
+    return l_pW;
 }
 
-void BattleEditorWindow::fillSetups() {
-    const QString keep = setups_->currentText();
-    setups_->clear();
-    for (const QFileInfo& f : QDir(setupsDir_).entryInfoList({QStringLiteral("*.json")}, QDir::Files, QDir::Name))
-        setups_->addItem(f.completeBaseName());
-    const int i = setups_->findText(keep);
-    if (i >= 0) setups_->setCurrentIndex(i);
+void BattleEditorWindow::f_FillSetups() {
+    const QString l_oKeep = m_pSetups->currentText();
+    m_pSetups->clear();
+    for (const QFileInfo& l_oF : QDir(m_oSetupsDir).entryInfoList({QStringLiteral("*.json")}, QDir::Files, QDir::Name))
+        m_pSetups->addItem(l_oF.completeBaseName());
+    const int l_iI = m_pSetups->findText(l_oKeep);
+    if (l_iI >= 0) m_pSetups->setCurrentIndex(l_iI);
 }
 
-bool BattleEditorWindow::saveSetupAs(const QString& name) {
-    QString file = name;
-    file.replace(QRegularExpression(QStringLiteral("[\\\\/:*?\"<>|]")), QStringLiteral("_"));
-    bed::Setup s = currentSetup();
-    s.name = ss(name);
-    const QString path = QDir(setupsDir_).filePath(file + QStringLiteral(".json"));
-    if (!writeText(path, qs(bed::setupToScenario(s).dump(2) + "\n"))) { warn(tr("Setup"), tr("Could not write %1").arg(path)); return false; }
-    fillSetups();
-    setups_->setCurrentIndex(setups_->findText(file));
-    say(tr("Saved the setup %1").arg(path));
+bool BattleEditorWindow::f_SaveSetupAs(const QString& l_oName) {
+    QString l_oFile = l_oName;
+    l_oFile.replace(QRegularExpression(QStringLiteral("[\\\\/:*?\"<>|]")), QStringLiteral("_"));
+    bed::Setup l_oS = f_CurrentSetup();
+    l_oS.m_strName = f_Ss(l_oName);
+    const QString l_oPath = QDir(m_oSetupsDir).filePath(l_oFile + QStringLiteral(".json"));
+    if (!f_WriteText(l_oPath, f_Qs(bed::f_SetupToScenario(l_oS).dump(2) + "\n"))) { f_Warn(tr("Setup"), tr("Could not write %1").arg(l_oPath)); return false; }
+    f_FillSetups();
+    m_pSetups->setCurrentIndex(m_pSetups->findText(l_oFile));
+    f_Say(tr("Saved the setup %1").arg(l_oPath));
     return true;
 }
 
-bool BattleEditorWindow::loadSetup(const QString& name) {
-    ojson j;
-    bed::Setup s;
-    const QString path = QDir(setupsDir_).filePath(name + QStringLiteral(".json"));
-    if (!parse(readText(path), j) || !bed::setupFromScenario(j, s)) {
-        warn(tr("Setup"), tr("%1 is not a battle editor setup.").arg(path));
+bool BattleEditorWindow::f_LoadSetup(const QString& l_oName) {
+    ojson l_jJ;
+    bed::Setup l_oS;
+    const QString l_oPath = QDir(m_oSetupsDir).filePath(l_oName + QStringLiteral(".json"));
+    if (!f_Parse(f_ReadText(l_oPath), l_jJ) || !bed::f_SetupFromScenario(l_jJ, l_oS)) {
+        f_Warn(tr("Setup"), tr("%1 is not a battle editor setup.").arg(l_oPath));
         return false;
     }
-    for (const QString& id : QStringList(inBattle_)) setInBattle(id, false);
-    for (const bed::SetupFoe& f : s.foes) addToBattle(qs(f.id));
-    pLv_->setValue(s.player.lv);
-    pMaxHp_->setValue(s.player.maxhp);
-    pHp_->setValue(s.player.hp);
-    pWeapon_->setCurrentIndex(std::max(0, pWeapon_->findData(qs(s.player.weapon))));
-    pWins_->setValue(s.player.weaponWins);
-    pPoints_->setValue(s.player.attrPoints);
-    for (auto it = pAttrs_->begin(); it != pAttrs_->end(); ++it) it.value()->setValue(s.player.attrs.value(ss(it.key()), 0));
-    setPace(qs(s.pace));
-    say(tr("Loaded the setup %1").arg(name));
+    for (const QString& l_oId : QStringList(m_oInBattle)) f_SetInBattle(l_oId, false);
+    for (const bed::SetupFoe& l_oF : l_oS.m_vFoes) f_AddToBattle(f_Qs(l_oF.m_strId));
+    m_pPLv->setValue(l_oS.m_oPlayer.m_iLv);
+    m_pPMaxHp->setValue(l_oS.m_oPlayer.m_iMaxhp);
+    m_pPHp->setValue(l_oS.m_oPlayer.m_iHp);
+    m_pPWeapon->setCurrentIndex(std::max(0, m_pPWeapon->findData(f_Qs(l_oS.m_oPlayer.m_strWeapon))));
+    m_pPWins->setValue(l_oS.m_oPlayer.m_iWeaponWins);
+    m_pPPoints->setValue(l_oS.m_oPlayer.m_iAttrPoints);
+    for (auto l_oIt = m_pPAttrs->begin(); l_oIt != m_pPAttrs->end(); ++l_oIt) l_oIt.value()->setValue(l_oS.m_oPlayer.m_jAttrs.value(f_Ss(l_oIt.key()), 0));
+    f_SetPace(f_Qs(l_oS.m_strPace));
+    f_Say(tr("Loaded the setup %1").arg(l_oName));
     return true;
 }
 
 // ---------------------------------------------------------------- the rest
 
-void BattleEditorWindow::say(const QString& text) { statusBar()->showMessage(text, 6000); }
+void BattleEditorWindow::f_Say(const QString& l_oText) { statusBar()->showMessage(l_oText, 6000); }
 
-bool BattleEditorWindow::ask(const QString& title, const QString& text) {
-    if (quiet_) return true;
-    return QMessageBox::question(this, title, text) == QMessageBox::Yes;
+bool BattleEditorWindow::f_Ask(const QString& l_oTitle, const QString& l_oText) {
+    if (m_bQuiet) return true;
+    return QMessageBox::question(this, l_oTitle, l_oText) == QMessageBox::Yes;
 }
 
-void BattleEditorWindow::warn(const QString& title, const QString& text) {
-    if (quiet_) { std::fprintf(stderr, "[battle_editor] %s: %s\n", ss(title).c_str(), ss(text).c_str()); return; }
-    QMessageBox::warning(this, title, text);
+void BattleEditorWindow::f_Warn(const QString& l_oTitle, const QString& l_oText) {
+    if (m_bQuiet) { std::fprintf(stderr, "[battle_editor] %s: %s\n", f_Ss(l_oTitle).c_str(), f_Ss(l_oText).c_str()); return; }
+    QMessageBox::warning(this, l_oTitle, l_oText);
 }
 
-void BattleEditorWindow::closeEvent(QCloseEvent* e) {
-    if (isDirty() && !quiet_) {
-        const auto b = QMessageBox::question(this, tr("Unsaved changes"),
+void BattleEditorWindow::closeEvent(QCloseEvent* l_pE) {
+    if (f_IsDirty() && !m_bQuiet) {
+        const auto l_eB = QMessageBox::question(this, tr("Unsaved changes"),
                                              tr("Save the changed monsters and weapons before closing?"),
                                              QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
-        if (b == QMessageBox::Cancel) { e->ignore(); return; }
-        if (b == QMessageBox::Save) {
-            if (monstersDirty_ && !saveMonsters()) { e->ignore(); return; }
-            if (weaponsDirty_ && !saveWeapons()) { e->ignore(); return; }
+        if (l_eB == QMessageBox::Cancel) { l_pE->ignore(); return; }
+        if (l_eB == QMessageBox::Save) {
+            if (m_bMonstersDirty && !f_SaveMonsters()) { l_pE->ignore(); return; }
+            if (m_bWeaponsDirty && !f_SaveWeapons()) { l_pE->ignore(); return; }
         }
     }
-    e->accept();
+    l_pE->accept();
 }

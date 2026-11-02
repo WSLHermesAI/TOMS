@@ -16,17 +16,17 @@ class AnimNodeTree : public QTreeWidget
     Q_OBJECT
 
 public:
-    explicit AnimNodeTree(AnimDocument* doc, QWidget* parent = nullptr);
+    explicit AnimNodeTree(AnimDocument* l_pDoc, QWidget* l_pParent = nullptr);
 
 protected:
     QStringList mimeTypes() const override;
-    void dragEnterEvent(QDragEnterEvent* e) override;
-    void dragMoveEvent(QDragMoveEvent* e) override;
-    void dropEvent(QDropEvent* e) override;
-    bool edit(const QModelIndex& index, EditTrigger trigger, QEvent* event) override;   // the name only
+    void dragEnterEvent(QDragEnterEvent* l_pE) override;
+    void dragMoveEvent(QDragMoveEvent* l_pE) override;
+    void dropEvent(QDropEvent* l_pE) override;
+    bool edit(const QModelIndex& l_oIndex, EditTrigger l_eTrigger, QEvent* l_pEvent) override;   // the name only
 
 private:
-    AnimDocument* m_doc;
+    AnimDocument* m_pDoc;
 };
 
 class AnimNodesDock : public QDockWidget
@@ -34,26 +34,26 @@ class AnimNodesDock : public QDockWidget
     Q_OBJECT
 
 public:
-    explicit AnimNodesDock(AnimDocument* doc, QWidget* parent = nullptr);
+    explicit AnimNodesDock(AnimDocument* l_pDoc, QWidget* l_pParent = nullptr);
 
-    QToolBar* toolBar() const { return m_toolBar; }
-    void beginRename();
+    QToolBar* f_ToolBar() const { return m_pToolBar; }
+    void f_BeginRename();
     // The right-click menu on a node (it selects the node first): these actions, nullptr = a separator.
-    void setContextActions(const QList<QAction*>& actions) { m_contextActions = actions; }
+    void f_SetContextActions(const QList<QAction*>& l_oActions) { m_oContextActions = l_oActions; }
 
 signals:
-    void addSpriteNodeRequested();   // the editor knows which sprite is picked
+    void f_AddSpriteNodeRequested();   // the editor knows which sprite is picked
 
 private:
-    void rebuild();
-    void syncSelection();
-    void playbackMenu(const NodePath& path, const QPoint& globalPos);   // the Playback column's menu
-    QTreeWidgetItem* itemFor(const NodePath& path) const;
+    void f_Rebuild();
+    void f_SyncSelection();
+    void f_PlaybackMenu(const NodePath& l_vPath, const QPoint& l_oGlobalPos);   // the Playback column's menu
+    QTreeWidgetItem* f_ItemFor(const NodePath& l_vPath) const;
 
-    AnimDocument* m_doc;
-    AnimNodeTree* m_tree;
-    QToolBar* m_toolBar;
-    QSet<QString> m_collapsed;   // path strings
-    bool m_updating = false;
-    QList<QAction*> m_contextActions;
+    AnimDocument* m_pDoc;
+    AnimNodeTree* m_pTree;
+    QToolBar* m_pToolBar;
+    QSet<QString> m_oCollapsed;   // path strings
+    bool m_bUpdating = false;
+    QList<QAction*> m_oContextActions;
 };

@@ -57,7 +57,7 @@ public:
     bool f_Play(const std::string& l_strClip, bool l_bRestart) override;
     void f_Stop() override;
     const std::string& f_Clip() const override { return m_strClip; }
-    bool f_Finished() const override { return m_oRig.finished(); }
+    bool f_Finished() const override { return m_oRig.f_Finished(); }
     void f_Update(int l_iDtMs) override;
     void f_Draw(IRenderer* l_pRen, const glm::vec4& l_v4Box) const override;
 

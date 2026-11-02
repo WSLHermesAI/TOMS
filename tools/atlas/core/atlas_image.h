@@ -8,50 +8,50 @@
 namespace atlas {
 
 struct IRect {
-    int x = 0, y = 0, w = 0, h = 0;
-    int right() const { return x + w; }    // exclusive
-    int bottom() const { return y + h; }   // exclusive
-    bool empty() const { return w <= 0 || h <= 0; }
-    bool contains(const IRect& r) const {
-        return r.x >= x && r.y >= y && r.right() <= right() && r.bottom() <= bottom();
+    int m_iX = 0, m_iY = 0, m_iW = 0, m_iH = 0;
+    int f_Right() const { return m_iX + m_iW; }    // exclusive
+    int f_Bottom() const { return m_iY + m_iH; }   // exclusive
+    bool f_Empty() const { return m_iW <= 0 || m_iH <= 0; }
+    bool f_Contains(const IRect& l_oR) const {
+        return l_oR.m_iX >= m_iX && l_oR.m_iY >= m_iY && l_oR.f_Right() <= f_Right() && l_oR.f_Bottom() <= f_Bottom();
     }
-    bool intersects(const IRect& r) const {
-        return r.x < right() && x < r.right() && r.y < bottom() && y < r.bottom();
+    bool f_Intersects(const IRect& l_oR) const {
+        return l_oR.m_iX < f_Right() && m_iX < l_oR.f_Right() && l_oR.m_iY < f_Bottom() && m_iY < l_oR.f_Bottom();
     }
-    bool operator==(const IRect& o) const { return x == o.x && y == o.y && w == o.w && h == o.h; }
-    bool operator!=(const IRect& o) const { return !(*this == o); }
+    bool operator==(const IRect& l_oO) const { return m_iX == l_oO.m_iX && m_iY == l_oO.m_iY && m_iW == l_oO.m_iW && m_iH == l_oO.m_iH; }
+    bool operator!=(const IRect& l_oO) const { return !(*this == l_oO); }
 };
 
-IRect unite(const IRect& a, const IRect& b);   // bounding box; an empty side is ignored
+IRect f_Unite(const IRect& l_oA, const IRect& l_oB);   // bounding box; an empty side is ignored
 
 struct Image {
-    int w = 0, h = 0;
-    std::vector<uint8_t> px;   // w*h*4
+    int m_iW = 0, m_iH = 0;
+    std::vector<uint8_t> m_vPx;   // w*h*4
 
     Image() = default;
-    Image(int w_, int h_) : w(w_), h(h_), px((size_t)w_ * h_ * 4, 0) {}
-    bool valid() const { return w > 0 && h > 0 && px.size() == (size_t)w * h * 4; }
-    uint8_t* at(int x, int y) { return &px[((size_t)y * w + x) * 4]; }
-    const uint8_t* at(int x, int y) const { return &px[((size_t)y * w + x) * 4]; }
+    Image(int l_iW, int l_iH) : m_iW(l_iW), m_iH(l_iH), m_vPx((size_t)l_iW * l_iH * 4, 0) {}
+    bool f_Valid() const { return m_iW > 0 && m_iH > 0 && m_vPx.size() == (size_t)m_iW * m_iH * 4; }
+    uint8_t* f_At(int l_iX, int l_iY) { return &m_vPx[((size_t)l_iY * m_iW + l_iX) * 4]; }
+    const uint8_t* f_At(int l_iX, int l_iY) const { return &m_vPx[((size_t)l_iY * m_iW + l_iX) * 4]; }
 };
 
-bool loadImage(const std::string& path, Image& out, std::string* err = nullptr);
-bool loadImageFromMemory(const void* data, size_t size, Image& out, std::string* err = nullptr);
-bool savePng(const std::string& path, const Image& img, std::string* err = nullptr);
-std::vector<uint8_t> encodePng(const Image& img);
+bool f_LoadImage(const std::string& l_strPath, Image& l_oOut, std::string* l_pErr = nullptr);
+bool f_LoadImageFromMemory(const void* l_pData, size_t l_nSize, Image& l_oOut, std::string* l_pErr = nullptr);
+bool f_SavePng(const std::string& l_strPath, const Image& l_oImg, std::string* l_pErr = nullptr);
+std::vector<uint8_t> f_EncodePng(const Image& l_oImg);
 
 // Smallest rect holding every pixel with alpha > threshold. Empty rect for a fully transparent image.
-IRect opaqueBounds(const Image& img, int alphaThreshold = 0);
+IRect f_OpaqueBounds(const Image& l_oImg, int l_iAlphaThreshold = 0);
 
-Image crop(const Image& src, const IRect& r);                     // r may reach outside src (filled transparent)
-void blit(Image& dst, const Image& src, const IRect& srcRect, int dx, int dy);
+Image f_Crop(const Image& l_oSrc, const IRect& l_oR);                     // r may reach outside src (filled transparent)
+void f_Blit(Image& l_oDst, const Image& l_oSrc, const IRect& l_oSrcRect, int l_iDx, int l_iDy);
 // Repeats the edge pixels of `r` (already in dst) outward by n pixels on every side.
-void extrude(Image& dst, const IRect& r, int n);
-void premultiply(Image& img);
-void unpremultiply(Image& img);   // inverse of premultiply (lossy where alpha is small)
+void f_Extrude(Image& l_oDst, const IRect& l_oR, int l_iN);
+void f_Premultiply(Image& l_oImg);
+void f_Unpremultiply(Image& l_oImg);   // inverse of premultiply (lossy where alpha is small)
 // Nearest-neighbour scale, used for variants whose sprites differ in size.
-Image scaleNearest(const Image& src, int w, int h);
-uint64_t hashPixels(const Image& img, const IRect& r);           // FNV-1a over size + pixels
-bool samePixels(const Image& a, const IRect& ra, const Image& b, const IRect& rb);
+Image f_ScaleNearest(const Image& l_oSrc, int l_iW, int l_iH);
+uint64_t f_HashPixels(const Image& l_oImg, const IRect& l_oR);           // FNV-1a over size + pixels
+bool f_SamePixels(const Image& l_oA, const IRect& l_oRa, const Image& l_oB, const IRect& l_oRb);
 
 }  // namespace atlas

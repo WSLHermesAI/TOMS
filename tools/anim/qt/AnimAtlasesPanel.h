@@ -22,26 +22,26 @@ class AnimAtlasesPanel : public QWidget
 public:
     enum Column { ColId, ColPath, ColCount };
 
-    explicit AnimAtlasesPanel(AnimDocument* doc, QWidget* parent = nullptr);
+    explicit AnimAtlasesPanel(AnimDocument* l_pDoc, QWidget* l_pParent = nullptr);
 
-    QTreeWidget* list() const { return m_list; }
-    int currentIndex() const;
-    void setCurrentIndex(int index);
+    QTreeWidget* f_List() const { return m_pList; }
+    int f_CurrentIndex() const;
+    void f_SetCurrentIndex(int l_iIndex);
     // The Remove button: asks when sprite references still use the atlas. False = not removed.
-    bool removeAtlas(int index);
+    bool f_RemoveAtlas(int l_iIndex);
     // What editing an id cell commits (also the inline editor's path).
-    bool renameId(int index, const QString& id);
+    bool f_RenameId(int l_iIndex, const QString& l_oId);
 
 signals:
-    void addRequested();
+    void f_AddRequested();
 
 private:
-    void rebuild();
-    void updateButtons();
-    void warn(const QString& title, const QString& text);
+    void f_Rebuild();
+    void f_UpdateButtons();
+    void f_Warn(const QString& l_oTitle, const QString& l_oText);
 
-    AnimDocument* m_doc;
-    QTreeWidget* m_list;
-    QToolButton *m_add, *m_remove, *m_up, *m_down, *m_qualify, *m_reload;
-    bool m_updating = false;
+    AnimDocument* m_pDoc;
+    QTreeWidget* m_pList;
+    QToolButton *m_pAdd, *m_pRemove, *m_pUp, *m_pDown, *m_pQualify, *m_pReload;
+    bool m_bUpdating = false;
 };

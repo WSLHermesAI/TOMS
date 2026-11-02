@@ -24,8 +24,8 @@ namespace toms {
 
 enum class TitlePage { Menu, Continue, Settings };
 
-inline const char* toString(TitlePage p) {
-    switch (p) {
+inline const char* f_ToString(TitlePage l_eP) {
+    switch (l_eP) {
         case TitlePage::Menu:     return "Menu";
         case TitlePage::Continue: return "Continue";
         case TitlePage::Settings: return "Settings";
@@ -65,116 +65,116 @@ enum class TitleAction {
 
 class TitleScreen {
 public:
-    static constexpr int kMenuItemCount = 3;   // New Game / Continue / Settings
-    static constexpr int kMaxSlots = 8;        // save slots listed on the Continue page
-    static constexpr int kMaxLanguages = 16;
+    static constexpr int m_iMenuItemCount = 3;   // New Game / Continue / Settings
+    static constexpr int m_iMaxSlots = 8;        // save slots listed on the Continue page
+    static constexpr int m_iMaxLanguages = 16;
 
-    void open();                       // show the title, reset to the Menu page
-    void close() { open_ = false; closeConfirm(); closeLanguageConfirm(); closeStyleConfirm(); }
-    bool isOpen() const { return open_; }
+    void f_Open();                       // show the title, reset to the Menu page
+    void f_Close() { m_bOpen = false; f_CloseConfirm(); f_CloseLanguageConfirm(); f_CloseStyleConfirm(); }
+    bool f_IsOpen() const { return m_bOpen; }
 
-    TitlePage page() const { return page_; }
-    void setPage(TitlePage p);
-    int selection() const;
-    int menuSelection() const { return menuSel_; }
-    int slotSelection() const { return slotSel_; }
-    int settingsSelection() const { return setSel_; }
+    TitlePage f_Page() const { return m_ePage; }
+    void f_SetPage(TitlePage l_eP);
+    int f_Selection() const;
+    int f_MenuSelection() const { return m_iMenuSel; }
+    int f_SlotSelection() const { return m_iSlotSel; }
+    int f_SettingsSelection() const { return m_iSetSel; }
 
-    int slotCount() const { return slotCount_; }
-    void setSlotCount(int n);
-    int languageCount() const { return langCount_; }
-    void setLanguageCount(int n);
-    void setLanguageIndex(int i);
-    int languageIndex() const { return langIdx_; }
+    int f_SlotCount() const { return m_iSlotCount; }
+    void f_SetSlotCount(int l_iN);
+    int f_LanguageCount() const { return m_iLangCount; }
+    void f_SetLanguageCount(int l_iN);
+    void f_SetLanguageIndex(int l_iI);
+    int f_LanguageIndex() const { return m_iLangIdx; }
     // Art styles: rows after the languages on the Settings page. 0 = no style rows (only the
     // original art exists); otherwise the style count including the original.
-    int styleCount() const { return styleCount_; }
-    void setStyleCount(int n);
-    void setStyleIndex(int i);
-    int styleIndex() const { return styleIdx_; }        // the chosen style (persisted by Game)
-    int settingsRowCount() const { return langCount_ + styleCount_; }
+    int f_StyleCount() const { return m_iStyleCount; }
+    void f_SetStyleCount(int l_iN);
+    void f_SetStyleIndex(int l_iI);
+    int f_StyleIndex() const { return m_iStyleIdx; }        // the chosen style (persisted by Game)
+    int f_SettingsRowCount() const { return m_iLangCount + m_iStyleCount; }
 
-    void setSummaries(std::vector<SlotSummary> s) { slots_ = std::move(s); }
-    const std::vector<SlotSummary>& summaries() const { return slots_; }
+    void f_SetSummaries(std::vector<SlotSummary> l_vS) { m_vSlots = std::move(l_vS); }
+    const std::vector<SlotSummary>& f_Summaries() const { return m_vSlots; }
     // 1-based slot number of the highlighted Continue row (even when that slot is empty).
-    int selectedSlotNumber() const;
+    int f_SelectedSlotNumber() const;
     // First slot that actually has a save, or -1. Used to park the cursor on something playable.
-    int firstPlayableSlot() const;
-    bool selectedSlotExists() const;
+    int f_FirstPlayableSlot() const;
+    bool f_SelectedSlotExists() const;
 
-    bool runInProgress() const { return runInProgress_; }
-    void setRunInProgress(bool v);
+    bool f_RunInProgress() const { return m_bRunInProgress; }
+    void f_SetRunInProgress(bool l_bV);
 
     // Navigation, clamped per page. Return an action when the move itself was an action
     // (Settings' left/right changes the language), else None.
-    TitleAction moveVertical(int delta);
-    TitleAction moveHorizontal(int delta);
+    TitleAction f_MoveVertical(int l_iDelta);
+    TitleAction f_MoveHorizontal(int l_iDelta);
     // Enter/Space: performs the highlighted row. May change pages.
-    TitleAction activate();
+    TitleAction f_Activate();
     // Esc: Continue/Settings -> Menu; on Menu it is not handled here (caller decides: desktop
     // quits, the browser build ignores it).
-    TitleAction cancel();
+    TitleAction f_Cancel();
     // Mouse/touch, by row: the UI (assets/media/ui/title.rml) lists the current page's rows in
     // the same order as the keyboard cursor. clickRow(-1) = the Back button. hoverRow() only moves
     // the highlight. answerConfirm() answers whichever confirm dialog is open.
-    TitleAction clickRow(int row);
-    void hoverRow(int row);
-    TitleAction answerConfirm(bool yes);
+    TitleAction f_ClickRow(int l_iRow);
+    void f_HoverRow(int l_iRow);
+    TitleAction f_AnswerConfirm(bool l_bYes);
 
-    int pendingSlot() const { return pendingSlot_; }   // valid for LoadSlot / StartNewGameInSlot
+    int f_PendingSlot() const { return m_iPendingSlot; }   // valid for LoadSlot / StartNewGameInSlot
 
     // ---- "Start a new game in this slot?" confirm dialog ----
     // Shown when the player activates an EMPTY slot on the Continue page (the owner's ask:
     // picking an empty slot used to do nothing visible). Yes starts a fresh run in that slot
     // instead of silently doing nothing; No/Esc returns to the list.
-    bool newGameConfirmOpen() const { return confirmNewGame_; }
-    int newGameConfirmSlot() const { return confirmSlot_; }
-    bool newGameConfirmYesSelected() const { return confirmYes_; }
-    void setNewGameConfirmYesSelected(bool yes) { confirmYes_ = yes; }
+    bool f_NewGameConfirmOpen() const { return m_bConfirmNewGame; }
+    int f_NewGameConfirmSlot() const { return m_iConfirmSlot; }
+    bool f_NewGameConfirmYesSelected() const { return m_bConfirmYes; }
+    void f_SetNewGameConfirmYesSelected(bool l_bYes) { m_bConfirmYes = l_bYes; }
 
     // ---- "Switch to XXX language?" confirm dialog ----
     // Shown when the player activates/taps a language row on the Settings page, instead of
     // applying it instantly -- a single mis-tap on a touch device (no keyboard, no Esc) used to
     // have no way back. No/Esc leaves the active language untouched.
-    bool languageConfirmOpen() const { return confirmLanguage_; }
-    int languageConfirmIndex() const { return confirmLangIdx_; }
-    bool languageConfirmYesSelected() const { return confirmLangYes_; }
-    void setLanguageConfirmYesSelected(bool yes) { confirmLangYes_ = yes; }
+    bool f_LanguageConfirmOpen() const { return m_bConfirmLanguage; }
+    int f_LanguageConfirmIndex() const { return m_iConfirmLangIdx; }
+    bool f_LanguageConfirmYesSelected() const { return m_bConfirmLangYes; }
+    void f_SetLanguageConfirmYesSelected(bool l_bYes) { m_bConfirmLangYes = l_bYes; }
 
     // ---- "Switch the art style to XXX? It applies after a restart." confirm dialog ----
-    bool styleConfirmOpen() const { return confirmStyle_; }
-    int styleConfirmIndex() const { return confirmStyleIdx_; }
-    bool styleConfirmYesSelected() const { return confirmStyleYes_; }
-    bool anyConfirmOpen() const { return confirmNewGame_ || confirmLanguage_ || confirmStyle_; }
+    bool f_StyleConfirmOpen() const { return m_bConfirmStyle; }
+    int f_StyleConfirmIndex() const { return m_iConfirmStyleIdx; }
+    bool f_StyleConfirmYesSelected() const { return m_bConfirmStyleYes; }
+    bool f_AnyConfirmOpen() const { return m_bConfirmNewGame || m_bConfirmLanguage || m_bConfirmStyle; }
 
 private:
-    bool open_ = false;
-    TitlePage page_ = TitlePage::Menu;
-    int menuSel_ = 0;
-    int slotSel_ = 0;
-    int setSel_ = 0;
-    int slotCount_ = 3;
-    int langCount_ = 2;
-    int langIdx_ = 0;
-    int pendingSlot_ = 0;
-    bool runInProgress_ = false;
-    std::vector<SlotSummary> slots_;
-    bool confirmNewGame_ = false;   // dialog visible
-    int confirmSlot_ = 0;           // slot the dialog is about (1-based)
-    bool confirmYes_ = true;        // which answer is highlighted (Yes is the default)
-    void closeConfirm() { confirmNewGame_ = false; confirmSlot_ = 0; confirmYes_ = true; }
+    bool m_bOpen = false;
+    TitlePage m_ePage = TitlePage::Menu;
+    int m_iMenuSel = 0;
+    int m_iSlotSel = 0;
+    int m_iSetSel = 0;
+    int m_iSlotCount = 3;
+    int m_iLangCount = 2;
+    int m_iLangIdx = 0;
+    int m_iPendingSlot = 0;
+    bool m_bRunInProgress = false;
+    std::vector<SlotSummary> m_vSlots;
+    bool m_bConfirmNewGame = false;   // dialog visible
+    int m_iConfirmSlot = 0;           // slot the dialog is about (1-based)
+    bool m_bConfirmYes = true;        // which answer is highlighted (Yes is the default)
+    void f_CloseConfirm() { m_bConfirmNewGame = false; m_iConfirmSlot = 0; m_bConfirmYes = true; }
 
-    bool confirmLanguage_ = false;  // dialog visible
-    int confirmLangIdx_ = 0;        // language row the dialog is about
-    bool confirmLangYes_ = true;    // which answer is highlighted (Yes is the default)
-    void closeLanguageConfirm() { confirmLanguage_ = false; confirmLangIdx_ = 0; confirmLangYes_ = true; }
+    bool m_bConfirmLanguage = false;  // dialog visible
+    int m_iConfirmLangIdx = 0;        // language row the dialog is about
+    bool m_bConfirmLangYes = true;    // which answer is highlighted (Yes is the default)
+    void f_CloseLanguageConfirm() { m_bConfirmLanguage = false; m_iConfirmLangIdx = 0; m_bConfirmLangYes = true; }
 
-    int styleCount_ = 0;
-    int styleIdx_ = 0;
-    bool confirmStyle_ = false;     // dialog visible
-    int confirmStyleIdx_ = 0;       // style the dialog is about
-    bool confirmStyleYes_ = true;
-    void closeStyleConfirm() { confirmStyle_ = false; confirmStyleIdx_ = 0; confirmStyleYes_ = true; }
+    int m_iStyleCount = 0;
+    int m_iStyleIdx = 0;
+    bool m_bConfirmStyle = false;     // dialog visible
+    int m_iConfirmStyleIdx = 0;       // style the dialog is about
+    bool m_bConfirmStyleYes = true;
+    void f_CloseStyleConfirm() { m_bConfirmStyle = false; m_iConfirmStyleIdx = 0; m_bConfirmStyleYes = true; }
 };
 
 } // namespace toms

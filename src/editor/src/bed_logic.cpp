@@ -10,133 +10,133 @@ namespace bed {
 
 // ---- the growth calculator ----
 
-std::vector<int> levelPoints(int total, int maxLevel, double k) {
-    std::vector<int> out;
-    if (maxLevel < 2 || total < 0) return out;
-    k = std::max(0.05, k);
-    const double denom = std::pow((double)(maxLevel - 1), k);
-    std::vector<double> raw;
-    for (int n = 2; n <= maxLevel; n++)
-        raw.push_back(total * (std::pow((double)(n - 1), k) - std::pow((double)(n - 2), k)) / denom);
-    int sum = 0;
-    for (double r : raw) { out.push_back((int)std::floor(r)); sum += out.back(); }
-    std::vector<size_t> order(raw.size());
-    std::iota(order.begin(), order.end(), 0);
-    std::stable_sort(order.begin(), order.end(), [&](size_t a, size_t b) {
-        const double fa = raw[a] - std::floor(raw[a]), fb = raw[b] - std::floor(raw[b]);
-        if (std::fabs(fa - fb) > 1e-9) return fa > fb;
-        return a > b;   // a tie: the later level
+std::vector<int> f_LevelPoints(int l_iTotal, int l_iMaxLevel, double l_dK) {
+    std::vector<int> l_vOut;
+    if (l_iMaxLevel < 2 || l_iTotal < 0) return l_vOut;
+    l_dK = std::max(0.05, l_dK);
+    const double l_dDenom = std::pow((double)(l_iMaxLevel - 1), l_dK);
+    std::vector<double> l_vRaw;
+    for (int l_iN = 2; l_iN <= l_iMaxLevel; l_iN++)
+        l_vRaw.push_back(l_iTotal * (std::pow((double)(l_iN - 1), l_dK) - std::pow((double)(l_iN - 2), l_dK)) / l_dDenom);
+    int l_iSum = 0;
+    for (double l_dR : l_vRaw) { l_vOut.push_back((int)std::floor(l_dR)); l_iSum += l_vOut.back(); }
+    std::vector<size_t> l_vOrder(l_vRaw.size());
+    std::iota(l_vOrder.begin(), l_vOrder.end(), 0);
+    std::stable_sort(l_vOrder.begin(), l_vOrder.end(), [&](size_t l_nA, size_t l_nB) {
+        const double l_dFa = l_vRaw[l_nA] - std::floor(l_vRaw[l_nA]), l_dFb = l_vRaw[l_nB] - std::floor(l_vRaw[l_nB]);
+        if (std::fabs(l_dFa - l_dFb) > 1e-9) return l_dFa > l_dFb;
+        return l_nA > l_nB;   // a tie: the later level
     });
-    for (size_t i = 0; i < order.size() && sum < total; i++, sum++) out[order[i]]++;
-    return out;
+    for (size_t l_nI = 0; l_nI < l_vOrder.size() && l_iSum < l_iTotal; l_nI++, l_iSum++) l_vOut[l_vOrder[l_nI]]++;
+    return l_vOut;
 }
 
-int pointsAt(const ojson& rows, int level) {
-    int best = -1, pts = 0;
-    if (!rows.is_array()) return 0;
-    for (const auto& r : rows) {
-        const int from = r.value("from", 0);
-        if (from <= level && from > best) { best = from; pts = r.value("points", 0); }
+int f_PointsAt(const ojson& l_jRows, int l_iLevel) {
+    int l_iBest = -1, l_iPts = 0;
+    if (!l_jRows.is_array()) return 0;
+    for (const auto& l_jR : l_jRows) {
+        const int l_iFrom = l_jR.value("from", 0);
+        if (l_iFrom <= l_iLevel && l_iFrom > l_iBest) { l_iBest = l_iFrom; l_iPts = l_jR.value("points", 0); }
     }
-    return pts;
+    return l_iPts;
 }
 
-ojson pointsRows(const std::vector<int>& perLevel, int maxLevel, const ojson& oldRows) {
-    ojson rows = ojson::array();
-    for (size_t i = 0; i < perLevel.size(); i++) {
-        const int lv = (int)i + 2;
-        if (!rows.empty() && rows.back()["points"].get<int>() == perLevel[i]) continue;
-        ojson r = ojson::object();
-        r["from"] = lv;
-        r["points"] = perLevel[i];
-        rows.push_back(r);
+ojson f_PointsRows(const std::vector<int>& l_vPerLevel, int l_iMaxLevel, const ojson& l_jOldRows) {
+    ojson l_jRows = ojson::array();
+    for (size_t l_nI = 0; l_nI < l_vPerLevel.size(); l_nI++) {
+        const int l_iLv = (int)l_nI + 2;
+        if (!l_jRows.empty() && l_jRows.back()["points"].get<int>() == l_vPerLevel[l_nI]) continue;
+        ojson l_jR = ojson::object();
+        l_jR["from"] = l_iLv;
+        l_jR["points"] = l_vPerLevel[l_nI];
+        l_jRows.push_back(l_jR);
     }
     // past the calculator's levels the old table goes on
-    const int after = pointsAt(oldRows, maxLevel + 1);
-    if (rows.empty() || rows.back()["points"].get<int>() != after) {
-        ojson r = ojson::object();
-        r["from"] = maxLevel + 1;
-        r["points"] = after;
-        rows.push_back(r);
+    const int l_iAfter = f_PointsAt(l_jOldRows, l_iMaxLevel + 1);
+    if (l_jRows.empty() || l_jRows.back()["points"].get<int>() != l_iAfter) {
+        ojson l_jR = ojson::object();
+        l_jR["from"] = l_iMaxLevel + 1;
+        l_jR["points"] = l_iAfter;
+        l_jRows.push_back(l_jR);
     }
-    if (oldRows.is_array())
-        for (const auto& r : oldRows)
-            if (r.value("from", 0) > maxLevel + 1 && rows.back()["points"].get<int>() != r.value("points", 0)) rows.push_back(r);
-    return rows;
+    if (l_jOldRows.is_array())
+        for (const auto& l_jR : l_jOldRows)
+            if (l_jR.value("from", 0) > l_iMaxLevel + 1 && l_jRows.back()["points"].get<int>() != l_jR.value("points", 0)) l_jRows.push_back(l_jR);
+    return l_jRows;
 }
 
 // ---- the test setup ----
 
-ojson setupToScenario(const Setup& s) {
-    ojson j = ojson::object();
-    j["_comment"] = "battle_editor's test setup \"" + s.name + "\" (docs/gameplay/13_BATTLE_EDITOR.md §2): not a test, an editor file.";
-    j["scene"] = "battle";
-    ojson p = ojson::object();
-    if (s.player.weapon.empty()) p["unarmed"] = true;
+ojson f_SetupToScenario(const Setup& l_oS) {
+    ojson l_jJ = ojson::object();
+    l_jJ["_comment"] = "battle_editor's test setup \"" + l_oS.m_strName + "\" (docs/gameplay/13_BATTLE_EDITOR.md §2): not a test, an editor file.";
+    l_jJ["scene"] = "battle";
+    ojson l_jP = ojson::object();
+    if (l_oS.m_oPlayer.m_strWeapon.empty()) l_jP["unarmed"] = true;
     else {
-        p["give"] = ojson::array({s.player.weapon});
-        p["equip"] = ojson::array({s.player.weapon});
-        ojson uses = ojson::object();
-        uses[s.player.weapon] = s.player.weaponWins;
-        p["weaponUses"] = uses;
+        l_jP["give"] = ojson::array({l_oS.m_oPlayer.m_strWeapon});
+        l_jP["equip"] = ojson::array({l_oS.m_oPlayer.m_strWeapon});
+        ojson l_jUses = ojson::object();
+        l_jUses[l_oS.m_oPlayer.m_strWeapon] = l_oS.m_oPlayer.m_iWeaponWins;
+        l_jP["weaponUses"] = l_jUses;
     }
-    p["lv"] = s.player.lv;
-    p["maxhp"] = s.player.maxhp;
-    p["hp"] = std::min(s.player.hp, s.player.maxhp);
-    if (!s.player.attrs.empty()) p["attrs"] = s.player.attrs;
-    if (s.player.attrPoints > 0) p["attrPoints"] = s.player.attrPoints;
-    j["player"] = p;
-    ojson b = ojson::object();
-    if (!s.foes.empty()) {
-        b["enemy"] = s.foes[0].id;
-        for (auto it = s.foes[0].overrides.begin(); it != s.foes[0].overrides.end(); ++it) b[it.key()] = it.value();
-        ojson party = ojson::array();
-        for (size_t i = 1; i < s.foes.size(); i++) {
-            ojson m = ojson::object();
-            m["enemy"] = s.foes[i].id;
-            for (auto it = s.foes[i].overrides.begin(); it != s.foes[i].overrides.end(); ++it) m[it.key()] = it.value();
-            party.push_back(m);
+    l_jP["lv"] = l_oS.m_oPlayer.m_iLv;
+    l_jP["maxhp"] = l_oS.m_oPlayer.m_iMaxhp;
+    l_jP["hp"] = std::min(l_oS.m_oPlayer.m_iHp, l_oS.m_oPlayer.m_iMaxhp);
+    if (!l_oS.m_oPlayer.m_jAttrs.empty()) l_jP["attrs"] = l_oS.m_oPlayer.m_jAttrs;
+    if (l_oS.m_oPlayer.m_iAttrPoints > 0) l_jP["attrPoints"] = l_oS.m_oPlayer.m_iAttrPoints;
+    l_jJ["player"] = l_jP;
+    ojson l_jB = ojson::object();
+    if (!l_oS.m_vFoes.empty()) {
+        l_jB["enemy"] = l_oS.m_vFoes[0].m_strId;
+        for (auto l_oIt = l_oS.m_vFoes[0].m_jOverrides.begin(); l_oIt != l_oS.m_vFoes[0].m_jOverrides.end(); ++l_oIt) l_jB[l_oIt.key()] = l_oIt.value();
+        ojson l_jParty = ojson::array();
+        for (size_t l_nI = 1; l_nI < l_oS.m_vFoes.size(); l_nI++) {
+            ojson l_jM = ojson::object();
+            l_jM["enemy"] = l_oS.m_vFoes[l_nI].m_strId;
+            for (auto l_oIt = l_oS.m_vFoes[l_nI].m_jOverrides.begin(); l_oIt != l_oS.m_vFoes[l_nI].m_jOverrides.end(); ++l_oIt) l_jM[l_oIt.key()] = l_oIt.value();
+            l_jParty.push_back(l_jM);
         }
-        if (!party.empty()) b["party"] = party;
+        if (!l_jParty.empty()) l_jB["party"] = l_jParty;
     }
-    if (!s.pace.empty()) b["pace"] = s.pace;
-    b["play"] = "weapon";   // the weapon's own play (bow, sword, staff), as in the game
-    j["battle"] = b;
-    ojson ed = ojson::object();   // the setup as the editor holds it
-    ed["name"] = s.name;
-    ed["pace"] = s.pace;
-    ojson foes = ojson::array();
-    for (const SetupFoe& f : s.foes) foes.push_back(f.id);
-    ed["foes"] = foes;
-    ojson pl = ojson::object();
-    pl["lv"] = s.player.lv; pl["hp"] = s.player.hp; pl["maxhp"] = s.player.maxhp;
-    pl["weapon"] = s.player.weapon; pl["weaponWins"] = s.player.weaponWins;
-    pl["attrs"] = s.player.attrs; pl["attrPoints"] = s.player.attrPoints;
-    ed["player"] = pl;
-    j["_editor"] = ed;
-    return j;
+    if (!l_oS.m_strPace.empty()) l_jB["pace"] = l_oS.m_strPace;
+    l_jB["play"] = "weapon";   // the weapon's own play (bow, sword, staff), as in the game
+    l_jJ["battle"] = l_jB;
+    ojson l_jEd = ojson::object();   // the setup as the editor holds it
+    l_jEd["name"] = l_oS.m_strName;
+    l_jEd["pace"] = l_oS.m_strPace;
+    ojson l_jFoes = ojson::array();
+    for (const SetupFoe& l_oF : l_oS.m_vFoes) l_jFoes.push_back(l_oF.m_strId);
+    l_jEd["foes"] = l_jFoes;
+    ojson l_jPl = ojson::object();
+    l_jPl["lv"] = l_oS.m_oPlayer.m_iLv; l_jPl["hp"] = l_oS.m_oPlayer.m_iHp; l_jPl["maxhp"] = l_oS.m_oPlayer.m_iMaxhp;
+    l_jPl["weapon"] = l_oS.m_oPlayer.m_strWeapon; l_jPl["weaponWins"] = l_oS.m_oPlayer.m_iWeaponWins;
+    l_jPl["attrs"] = l_oS.m_oPlayer.m_jAttrs; l_jPl["attrPoints"] = l_oS.m_oPlayer.m_iAttrPoints;
+    l_jEd["player"] = l_jPl;
+    l_jJ["_editor"] = l_jEd;
+    return l_jJ;
 }
 
-bool setupFromScenario(const ojson& j, Setup& out) {
-    if (!j.is_object() || !j.contains("_editor") || !j["_editor"].is_object()) return false;
-    const ojson& ed = j["_editor"];
-    Setup s;
-    s.name = ed.value("name", std::string());
-    s.pace = ed.value("pace", std::string());
-    if (ed.contains("foes") && ed["foes"].is_array())
-        for (const auto& id : ed["foes"])
-            if (id.is_string()) s.foes.push_back({id.get<std::string>(), ojson::object()});
-    if (ed.contains("player") && ed["player"].is_object()) {
-        const ojson& p = ed["player"];
-        s.player.lv = p.value("lv", 1);
-        s.player.hp = p.value("hp", 120);
-        s.player.maxhp = p.value("maxhp", 120);
-        s.player.weapon = p.value("weapon", std::string("bow"));
-        s.player.weaponWins = p.value("weaponWins", 0);
-        if (p.contains("attrs") && p["attrs"].is_object()) s.player.attrs = p["attrs"];
-        s.player.attrPoints = p.value("attrPoints", 0);
+bool f_SetupFromScenario(const ojson& l_jJ, Setup& l_oOut) {
+    if (!l_jJ.is_object() || !l_jJ.contains("_editor") || !l_jJ["_editor"].is_object()) return false;
+    const ojson& l_jEd = l_jJ["_editor"];
+    Setup l_oS;
+    l_oS.m_strName = l_jEd.value("name", std::string());
+    l_oS.m_strPace = l_jEd.value("pace", std::string());
+    if (l_jEd.contains("foes") && l_jEd["foes"].is_array())
+        for (const auto& l_jId : l_jEd["foes"])
+            if (l_jId.is_string()) l_oS.m_vFoes.push_back({l_jId.get<std::string>(), ojson::object()});
+    if (l_jEd.contains("player") && l_jEd["player"].is_object()) {
+        const ojson& l_jP = l_jEd["player"];
+        l_oS.m_oPlayer.m_iLv = l_jP.value("lv", 1);
+        l_oS.m_oPlayer.m_iHp = l_jP.value("hp", 120);
+        l_oS.m_oPlayer.m_iMaxhp = l_jP.value("maxhp", 120);
+        l_oS.m_oPlayer.m_strWeapon = l_jP.value("weapon", std::string("bow"));
+        l_oS.m_oPlayer.m_iWeaponWins = l_jP.value("weaponWins", 0);
+        if (l_jP.contains("attrs") && l_jP["attrs"].is_object()) l_oS.m_oPlayer.m_jAttrs = l_jP["attrs"];
+        l_oS.m_oPlayer.m_iAttrPoints = l_jP.value("attrPoints", 0);
     }
-    out = s;
+    l_oOut = l_oS;
     return true;
 }
 
@@ -144,155 +144,155 @@ bool setupFromScenario(const ojson& j, Setup& out) {
 
 namespace {
 
-std::string oneLine(const ojson& j) {
-    if (j.is_object()) {
-        if (j.empty()) return "{}";
-        std::string s = "{ ";
-        bool first = true;
-        for (auto it = j.begin(); it != j.end(); ++it) {
-            if (!first) s += ", ";
-            first = false;
-            s += ojson(it.key()).dump(-1, ' ', false) + ": " + oneLine(it.value());
+std::string f_OneLine(const ojson& l_jJ) {
+    if (l_jJ.is_object()) {
+        if (l_jJ.empty()) return "{}";
+        std::string l_strS = "{ ";
+        bool l_bFirst = true;
+        for (auto l_oIt = l_jJ.begin(); l_oIt != l_jJ.end(); ++l_oIt) {
+            if (!l_bFirst) l_strS += ", ";
+            l_bFirst = false;
+            l_strS += ojson(l_oIt.key()).dump(-1, ' ', false) + ": " + f_OneLine(l_oIt.value());
         }
-        return s + " }";
+        return l_strS + " }";
     }
-    if (j.is_array()) {
-        if (j.empty()) return "[]";
-        std::string s = "[";
-        bool first = true;
-        for (const auto& v : j) {
-            if (!first) s += ", ";
-            first = false;
-            s += oneLine(v);
+    if (l_jJ.is_array()) {
+        if (l_jJ.empty()) return "[]";
+        std::string l_strS = "[";
+        bool l_bFirst = true;
+        for (const auto& l_jV : l_jJ) {
+            if (!l_bFirst) l_strS += ", ";
+            l_bFirst = false;
+            l_strS += f_OneLine(l_jV);
         }
-        return s + "]";
+        return l_strS + "]";
     }
-    return j.dump(-1, ' ', false);
+    return l_jJ.dump(-1, ' ', false);
 }
 
-int utf8Length(const std::string& s) {   // characters, not bytes (the width is what the eye sees)
-    int n = 0;
-    for (unsigned char c : s) n += (c & 0xC0) != 0x80 ? 1 : 0;
-    return n;
+int f_Utf8Length(const std::string& l_strS) {   // characters, not bytes (the width is what the eye sees)
+    int l_iN = 0;
+    for (unsigned char l_u8C : l_strS) l_iN += (l_u8C & 0xC0) != 0x80 ? 1 : 0;
+    return l_iN;
 }
 
-void dumpTo(std::string& out, const ojson& j, int depth, int inlineFrom, int width) {
-    const std::string pad((size_t)depth * 2, ' ');
-    if (!j.is_structured() || j.empty()) { out += oneLine(j); return; }
-    if (depth >= inlineFrom) {
-        const std::string one = oneLine(j);
-        if (utf8Length(one) + (int)pad.size() <= width) { out += one; return; }
+void f_DumpTo(std::string& l_strOut, const ojson& l_jJ, int l_iDepth, int l_iInlineFrom, int l_iWidth) {
+    const std::string l_strPad((size_t)l_iDepth * 2, ' ');
+    if (!l_jJ.is_structured() || l_jJ.empty()) { l_strOut += f_OneLine(l_jJ); return; }
+    if (l_iDepth >= l_iInlineFrom) {
+        const std::string l_strOne = f_OneLine(l_jJ);
+        if (f_Utf8Length(l_strOne) + (int)l_strPad.size() <= l_iWidth) { l_strOut += l_strOne; return; }
     }
-    const std::string inner((size_t)(depth + 1) * 2, ' ');
-    if (j.is_object()) {
-        out += "{\n";
-        bool first = true;
-        for (auto it = j.begin(); it != j.end(); ++it) {
-            if (!first) out += ",\n";
-            first = false;
-            out += inner + ojson(it.key()).dump(-1, ' ', false) + ": ";
-            dumpTo(out, it.value(), depth + 1, inlineFrom, width);
+    const std::string l_strInner((size_t)(l_iDepth + 1) * 2, ' ');
+    if (l_jJ.is_object()) {
+        l_strOut += "{\n";
+        bool l_bFirst = true;
+        for (auto l_oIt = l_jJ.begin(); l_oIt != l_jJ.end(); ++l_oIt) {
+            if (!l_bFirst) l_strOut += ",\n";
+            l_bFirst = false;
+            l_strOut += l_strInner + ojson(l_oIt.key()).dump(-1, ' ', false) + ": ";
+            f_DumpTo(l_strOut, l_oIt.value(), l_iDepth + 1, l_iInlineFrom, l_iWidth);
         }
-        out += "\n" + pad + "}";
+        l_strOut += "\n" + l_strPad + "}";
     } else {
-        out += "[\n";
-        bool first = true;
-        for (const auto& v : j) {
-            if (!first) out += ",\n";
-            first = false;
-            out += inner;
-            dumpTo(out, v, depth + 1, inlineFrom, width);
+        l_strOut += "[\n";
+        bool l_bFirst = true;
+        for (const auto& l_jV : l_jJ) {
+            if (!l_bFirst) l_strOut += ",\n";
+            l_bFirst = false;
+            l_strOut += l_strInner;
+            f_DumpTo(l_strOut, l_jV, l_iDepth + 1, l_iInlineFrom, l_iWidth);
         }
-        out += "\n" + pad + "]";
+        l_strOut += "\n" + l_strPad + "]";
     }
 }
 
-std::string trim(const std::string& s) {
-    const size_t a = s.find_first_not_of(" \t\r\n");
-    if (a == std::string::npos) return std::string();
-    return s.substr(a, s.find_last_not_of(" \t\r\n") - a + 1);
+std::string f_Trim(const std::string& l_strS) {
+    const size_t l_nA = l_strS.find_first_not_of(" \t\r\n");
+    if (l_nA == std::string::npos) return std::string();
+    return l_strS.substr(l_nA, l_strS.find_last_not_of(" \t\r\n") - l_nA + 1);
 }
 
-std::vector<std::string> splitComma(const std::string& text) {
-    std::vector<std::string> out;
-    std::stringstream ss(text);
-    std::string part;
-    while (std::getline(ss, part, ',')) {
-        part = trim(part);
-        if (!part.empty()) out.push_back(part);
+std::vector<std::string> f_SplitComma(const std::string& l_strText) {
+    std::vector<std::string> l_vOut;
+    std::stringstream l_oSs(l_strText);
+    std::string l_strPart;
+    while (std::getline(l_oSs, l_strPart, ',')) {
+        l_strPart = f_Trim(l_strPart);
+        if (!l_strPart.empty()) l_vOut.push_back(l_strPart);
     }
-    return out;
+    return l_vOut;
 }
 
 } // namespace
 
-std::string dumpCompact(const ojson& j, int inlineFrom, int width) {
-    std::string out;
-    dumpTo(out, j, 0, inlineFrom, width);
-    return out + "\n";
+std::string f_DumpCompact(const ojson& l_jJ, int l_iInlineFrom, int l_iWidth) {
+    std::string l_strOut;
+    f_DumpTo(l_strOut, l_jJ, 0, l_iInlineFrom, l_iWidth);
+    return l_strOut + "\n";
 }
 
-bool replaceLevelPoints(std::string& text, const ojson& rows) {
-    const size_t lu = text.find("\"levelUp\"");
-    if (lu == std::string::npos) return false;
-    const size_t key = text.find("\"points\"", lu);
-    if (key == std::string::npos) return false;
-    const size_t open = text.find('[', key);
-    if (open == std::string::npos) return false;
-    int depth = 0;
-    size_t close = std::string::npos;
-    for (size_t i = open; i < text.size(); i++) {
-        if (text[i] == '[') depth++;
-        else if (text[i] == ']' && --depth == 0) { close = i; break; }
+bool f_ReplaceLevelPoints(std::string& l_strText, const ojson& l_jRows) {
+    const size_t l_nLu = l_strText.find("\"levelUp\"");
+    if (l_nLu == std::string::npos) return false;
+    const size_t l_nKey = l_strText.find("\"points\"", l_nLu);
+    if (l_nKey == std::string::npos) return false;
+    const size_t l_nOpen = l_strText.find('[', l_nKey);
+    if (l_nOpen == std::string::npos) return false;
+    int l_iDepth = 0;
+    size_t l_nClose = std::string::npos;
+    for (size_t l_nI = l_nOpen; l_nI < l_strText.size(); l_nI++) {
+        if (l_strText[l_nI] == '[') l_iDepth++;
+        else if (l_strText[l_nI] == ']' && --l_iDepth == 0) { l_nClose = l_nI; break; }
     }
-    if (close == std::string::npos) return false;
+    if (l_nClose == std::string::npos) return false;
     // the rows one per line, indented as the "points" key is
-    const size_t lineStart = text.rfind('\n', key) + 1;
-    const std::string pad = text.substr(lineStart, key - lineStart);
-    std::string arr = "[\n";
-    for (size_t i = 0; i < rows.size(); i++)
-        arr += pad + "  " + oneLine(rows[i]) + (i + 1 < rows.size() ? ",\n" : "\n");
-    arr += pad + "]";
-    text.replace(open, close - open + 1, arr);
+    const size_t l_nLineStart = l_strText.rfind('\n', l_nKey) + 1;
+    const std::string l_strPad = l_strText.substr(l_nLineStart, l_nKey - l_nLineStart);
+    std::string l_strArr = "[\n";
+    for (size_t l_nI = 0; l_nI < l_jRows.size(); l_nI++)
+        l_strArr += l_strPad + "  " + f_OneLine(l_jRows[l_nI]) + (l_nI + 1 < l_jRows.size() ? ",\n" : "\n");
+    l_strArr += l_strPad + "]";
+    l_strText.replace(l_nOpen, l_nClose - l_nOpen + 1, l_strArr);
     return true;
 }
 
-ojson movesFromText(const std::string& text) {
-    ojson out = ojson::array();
-    for (const std::string& part : splitComma(text)) {
-        const size_t colon = part.find(':');
-        if (colon == std::string::npos) { out.push_back(part); continue; }
-        ojson m = ojson::object();
-        m["id"] = trim(part.substr(0, colon));
-        m["weight"] = std::max(0, std::atoi(part.substr(colon + 1).c_str()));
-        out.push_back(m);
+ojson f_MovesFromText(const std::string& l_strText) {
+    ojson l_jOut = ojson::array();
+    for (const std::string& l_strPart : f_SplitComma(l_strText)) {
+        const size_t l_nColon = l_strPart.find(':');
+        if (l_nColon == std::string::npos) { l_jOut.push_back(l_strPart); continue; }
+        ojson l_jM = ojson::object();
+        l_jM["id"] = f_Trim(l_strPart.substr(0, l_nColon));
+        l_jM["weight"] = std::max(0, std::atoi(l_strPart.substr(l_nColon + 1).c_str()));
+        l_jOut.push_back(l_jM);
     }
-    return out;
+    return l_jOut;
 }
 
-std::string movesToText(const ojson& moves) {
-    std::string s;
-    if (!moves.is_array()) return s;
-    for (const auto& m : moves) {
-        if (!s.empty()) s += ", ";
-        if (m.is_string()) s += m.get<std::string>();
-        else if (m.is_object()) s += m.value("id", std::string()) + ":" + std::to_string(m.value("weight", 1));
+std::string f_MovesToText(const ojson& l_jMoves) {
+    std::string l_strS;
+    if (!l_jMoves.is_array()) return l_strS;
+    for (const auto& l_jM : l_jMoves) {
+        if (!l_strS.empty()) l_strS += ", ";
+        if (l_jM.is_string()) l_strS += l_jM.get<std::string>();
+        else if (l_jM.is_object()) l_strS += l_jM.value("id", std::string()) + ":" + std::to_string(l_jM.value("weight", 1));
     }
-    return s;
+    return l_strS;
 }
 
-ojson idsFromText(const std::string& text) {
-    ojson out = ojson::array();
-    for (const std::string& part : splitComma(text)) out.push_back(part);
-    return out;
+ojson f_IdsFromText(const std::string& l_strText) {
+    ojson l_jOut = ojson::array();
+    for (const std::string& l_strPart : f_SplitComma(l_strText)) l_jOut.push_back(l_strPart);
+    return l_jOut;
 }
 
-std::string idsToText(const ojson& ids) {
-    std::string s;
-    if (!ids.is_array()) return s;
-    for (const auto& m : ids)
-        if (m.is_string()) s += (s.empty() ? "" : ", ") + m.get<std::string>();
-    return s;
+std::string f_IdsToText(const ojson& l_jIds) {
+    std::string l_strS;
+    if (!l_jIds.is_array()) return l_strS;
+    for (const auto& l_jM : l_jIds)
+        if (l_jM.is_string()) l_strS += (l_strS.empty() ? "" : ", ") + l_jM.get<std::string>();
+    return l_strS;
 }
 
 } // namespace bed

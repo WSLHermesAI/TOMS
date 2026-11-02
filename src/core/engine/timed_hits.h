@@ -22,35 +22,35 @@ namespace toms {
 class TimedTrack {
 public:
     enum class Grade { None, Perfect, Good, Miss };
-    struct Point { int appearMs = 0, dueMs = 0; Grade result = Grade::None; int offsetMs = 0; };
-    struct Tap { Grade grade = Grade::Miss; int index = -1; int offsetMs = 0; };   // offset: tap time - due (+ late)
+    struct Point { int m_iAppearMs = 0, m_iDueMs = 0; Grade m_eResult = Grade::None; int m_iOffsetMs = 0; };
+    struct Tap { Grade m_eGrade = Grade::Miss; int m_iIndex = -1; int m_iOffsetMs = 0; };   // offset: tap time - due (+ late)
 
     // perfectMs / goodMs: how far from the due time a tap still counts (each side). DEX widens them (the caller).
-    TimedTrack(int perfectMs = 40, int goodMs = 110, bool ordered = true)
-        : perfectMs_(perfectMs), goodMs_(goodMs < perfectMs ? perfectMs : goodMs), ordered_(ordered) {}
+    TimedTrack(int l_iPerfectMs = 40, int l_iGoodMs = 110, bool l_bOrdered = true)
+        : m_iPerfectMs(l_iPerfectMs), m_iGoodMs(l_iGoodMs < l_iPerfectMs ? l_iPerfectMs : l_iGoodMs), m_bOrdered(l_bOrdered) {}
 
-    int add(int appearMs, int dueMs);           // returns the point's index
-    void clear() { points_.clear(); nowMs_ = 0; missedQueue_.clear(); }
-    void update(int dtMs);                      // advances the clock; points past their window become missed
-    Tap tap();                                  // a tap now: the nearest open point within the good window
-    std::vector<int> takeMissed();              // points that became missed since the last call
+    int f_Add(int l_iAppearMs, int l_iDueMs);           // returns the point's index
+    void f_Clear() { m_vPoints.clear(); m_iNowMs = 0; m_vMissedQueue.clear(); }
+    void f_Update(int l_iDtMs);                      // advances the clock; points past their window become missed
+    Tap f_Tap();                                  // a tap now: the nearest open point within the good window
+    std::vector<int> f_TakeMissed();              // points that became missed since the last call
 
-    int now() const { return nowMs_; }
-    const std::vector<Point>& points() const { return points_; }
+    int f_Now() const { return m_iNowMs; }
+    const std::vector<Point>& f_Points() const { return m_vPoints; }
     // How far point i has grown: 0 before it appears, 1 at its due time (more after, until it is judged).
-    float growth(int i) const;
-    bool finished() const;                      // every point judged
-    int hits() const;                           // Perfect + Good
-    int perfects() const;
+    float f_Growth(int l_iI) const;
+    bool f_Finished() const;                      // every point judged
+    int f_Hits() const;                           // Perfect + Good
+    int f_Perfects() const;
 
 private:
-    bool open(const Point& p) const { return p.result == Grade::None; }
-    int nextOpen() const;
-    std::vector<Point> points_;
-    std::vector<int> missedQueue_;
-    int nowMs_ = 0;
-    int perfectMs_, goodMs_;
-    bool ordered_;
+    bool f_Open(const Point& l_oP) const { return l_oP.m_eResult == Grade::None; }
+    int f_NextOpen() const;
+    std::vector<Point> m_vPoints;
+    std::vector<int> m_vMissedQueue;
+    int m_iNowMs = 0;
+    int m_iPerfectMs, m_iGoodMs;
+    bool m_bOrdered;
 };
 
 } // namespace toms

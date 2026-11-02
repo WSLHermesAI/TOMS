@@ -9,520 +9,520 @@
 namespace toms {
 
 namespace {
-bool isWhite(const float t[4]) { return t[0] == 1 && t[1] == 1 && t[2] == 1 && t[3] == 1; }
+bool f_IsWhite(const float l_arrT[4]) { return l_arrT[0] == 1 && l_arrT[1] == 1 && l_arrT[2] == 1 && l_arrT[3] == 1; }
 
 // "file#name" -> (file, name); no '#': (s, "")
-std::pair<std::string, std::string> splitRef(const std::string& s) {
-    const size_t h = s.find('#');
-    return h == std::string::npos ? std::make_pair(s, std::string()) : std::make_pair(s.substr(0, h), s.substr(h + 1));
+std::pair<std::string, std::string> f_SplitRef(const std::string& l_strS) {
+    const size_t l_nH = l_strS.find('#');
+    return l_nH == std::string::npos ? std::make_pair(l_strS, std::string()) : std::make_pair(l_strS.substr(0, l_nH), l_strS.substr(l_nH + 1));
 }
 
-std::string str(const nlohmann::json& j, const char* key) {
-    auto it = j.find(key);
-    return it != j.end() && it->is_string() ? it->get<std::string>() : std::string();
+std::string f_Str(const nlohmann::json& l_jJ, const char* l_pszKey) {
+    auto l_oIt = l_jJ.find(l_pszKey);
+    return l_oIt != l_jJ.end() && l_oIt->is_string() ? l_oIt->get<std::string>() : std::string();
 }
 
-bool readNumbers(const nlohmann::json& j, const char* key, float* out, size_t n) {
-    auto it = j.find(key);
-    if (it == j.end() || !it->is_array() || it->size() < n) return false;
-    for (size_t i = 0; i < n; i++) {
-        if (!(*it)[i].is_number()) return false;
-        out[i] = (*it)[i].get<float>();
+bool f_ReadNumbers(const nlohmann::json& l_jJ, const char* l_pszKey, float* l_pOut, size_t l_nN) {
+    auto l_oIt = l_jJ.find(l_pszKey);
+    if (l_oIt == l_jJ.end() || !l_oIt->is_array() || l_oIt->size() < l_nN) return false;
+    for (size_t l_nI = 0; l_nI < l_nN; l_nI++) {
+        if (!(*l_oIt)[l_nI].is_number()) return false;
+        l_pOut[l_nI] = (*l_oIt)[l_nI].get<float>();
     }
     return true;
 }
 
-nlohmann::json numbers(const float* v, size_t n) {
-    nlohmann::json a = nlohmann::json::array();
-    for (size_t i = 0; i < n; i++) a.push_back(v[i]);
-    return a;
+nlohmann::json f_Numbers(const float* l_pV, size_t l_nN) {
+    nlohmann::json l_jA = nlohmann::json::array();
+    for (size_t l_nI = 0; l_nI < l_nN; l_nI++) l_jA.push_back(l_pV[l_nI]);
+    return l_jA;
 }
 
-const char* alignName(::BitmapFont::Align a) {
-    return a == ::BitmapFont::Align::Center ? "center" : a == ::BitmapFont::Align::Right ? "right" : "left";
+const char* f_AlignName(::BitmapFont::Align l_eA) {
+    return l_eA == ::BitmapFont::Align::Center ? "center" : l_eA == ::BitmapFont::Align::Right ? "right" : "left";
 }
 }  // namespace
 
 // ---- RenderObject ------------------------------------------------------------------------------------------------
 
-void RenderObject::applyTransform() {
-    SetLocalTransform(anim::flatten(anim::compose({pos_.x, pos_.y, 0}, {0, 0, rotation_}, {scale_.x, scale_.y, 1})));
+void RenderObject::f_ApplyTransform() {
+    f_SetLocalTransform(anim::f_Flatten(anim::f_Compose({m_v2Pos.x, m_v2Pos.y, 0}, {0, 0, m_fRotation}, {m_v2Scale.x, m_v2Scale.y, 1})));
 }
 
-void RenderObject::addChild(std::shared_ptr<RenderObject> child) {
-    if (!child) return;
-    AddChildToLast(child.get(), false);
-    owned_.push_back(std::move(child));
+void RenderObject::f_AddChild(std::shared_ptr<RenderObject> l_spChild) {
+    if (!l_spChild) return;
+    f_AddChildToLast(l_spChild.get(), false);
+    m_vOwned.push_back(std::move(l_spChild));
 }
 
-void RenderObject::update(float dt) {
-    for (const auto& c : owned_) c->update(dt);
+void RenderObject::f_Update(float l_fDt) {
+    for (const auto& l_spC : m_vOwned) l_spC->f_Update(l_fDt);
 }
 
-void RenderObject::setView(const glm::mat3& view) {
-    view_ = view;
-    for (const auto& c : owned_) c->setView(view);
+void RenderObject::f_SetView(const glm::mat3& l_mat3View) {
+    m_mat3View = l_mat3View;
+    for (const auto& l_spC : m_vOwned) l_spC->f_SetView(l_mat3View);
 }
 
-void RenderObject::Render(IRenderer* ren) {
-    if (ren) draw(ren, view_ * GetWorldTransform());
+void RenderObject::f_Render(IRenderer* l_pRen) {
+    if (l_pRen) f_Draw(l_pRen, m_mat3View * f_GetWorldTransform());
 }
 
-void RenderObject::copyCommonTo(RenderObject& o) const {
-    o.SetName(Name());
-    std::copy(tint, tint + 4, o.tint);
-    o.pos_ = pos_;
-    o.scale_ = scale_;
-    o.rotation_ = rotation_;
-    o.applyTransform();
-    o.SetVisible(IsVisible());
-    for (const auto& c : owned_) o.addChild(c->clone());
+void RenderObject::f_CopyCommonTo(RenderObject& l_oO) const {
+    l_oO.f_SetName(f_Name());
+    std::copy(m_arrTint, m_arrTint + 4, l_oO.m_arrTint);
+    l_oO.m_v2Pos = m_v2Pos;
+    l_oO.m_v2Scale = m_v2Scale;
+    l_oO.m_fRotation = m_fRotation;
+    l_oO.f_ApplyTransform();
+    l_oO.f_SetVisible(f_IsVisible());
+    for (const auto& l_spC : m_vOwned) l_oO.f_AddChild(l_spC->f_Clone());
 }
 
-nlohmann::json RenderObject::commonJson() const {
-    nlohmann::json j = nlohmann::json::object();
-    j["type"] = typeName();
-    if (!Name().empty()) j["name"] = Name();
-    if (pos_ != glm::vec2(0.0f)) j["pos"] = {pos_.x, pos_.y};
-    if (scale_ != glm::vec2(1.0f)) {
-        if (scale_.x == scale_.y) j["scale"] = scale_.x;
-        else j["scale"] = {scale_.x, scale_.y};
+nlohmann::json RenderObject::f_CommonJson() const {
+    nlohmann::json l_jJ = nlohmann::json::object();
+    l_jJ["type"] = f_TypeName();
+    if (!f_Name().empty()) l_jJ["name"] = f_Name();
+    if (m_v2Pos != glm::vec2(0.0f)) l_jJ["pos"] = {m_v2Pos.x, m_v2Pos.y};
+    if (m_v2Scale != glm::vec2(1.0f)) {
+        if (m_v2Scale.x == m_v2Scale.y) l_jJ["scale"] = m_v2Scale.x;
+        else l_jJ["scale"] = {m_v2Scale.x, m_v2Scale.y};
     }
-    if (rotation_ != 0) j["rotation"] = rotation_;
-    if (!isWhite(tint)) j["tint"] = numbers(tint, 4);
-    if (!IsVisible()) j["visible"] = false;
-    if (!owned_.empty()) {
-        nlohmann::json kids = nlohmann::json::array();
-        for (const auto& c : owned_) kids.push_back(c->toJson());
-        j["children"] = std::move(kids);
+    if (m_fRotation != 0) l_jJ["rotation"] = m_fRotation;
+    if (!f_IsWhite(m_arrTint)) l_jJ["tint"] = f_Numbers(m_arrTint, 4);
+    if (!f_IsVisible()) l_jJ["visible"] = false;
+    if (!m_vOwned.empty()) {
+        nlohmann::json l_jKids = nlohmann::json::array();
+        for (const auto& l_spC : m_vOwned) l_jKids.push_back(l_spC->f_ToJson());
+        l_jJ["children"] = std::move(l_jKids);
     }
-    return j;
+    return l_jJ;
 }
 
 // ---- the factory ---------------------------------------------------------------------------------------------------
 
-void RenderObjectFactory::add(const std::string& type, MakeFn make) { makers_[type] = make; }
+void RenderObjectFactory::f_Add(const std::string& l_strType, MakeFn l_fnMake) { m_mapMakers[l_strType] = l_fnMake; }
 
-std::vector<std::string> RenderObjectFactory::types() const {
-    std::vector<std::string> out;
-    for (const auto& [t, f] : makers_) out.push_back(t);
-    return out;
+std::vector<std::string> RenderObjectFactory::f_Types() const {
+    std::vector<std::string> l_vOut;
+    for (const auto& [l_strT, l_fnF] : m_mapMakers) l_vOut.push_back(l_strT);
+    return l_vOut;
 }
 
-std::shared_ptr<RenderObject> RenderObjectFactory::build(const nlohmann::json& j, BuildContext& ctx, std::string& error) const {
-    auto fail = [&](const std::string& why) {
-        error = (ctx.where.empty() ? std::string() : ctx.where + ": ") + why;
+std::shared_ptr<RenderObject> RenderObjectFactory::f_Build(const nlohmann::json& l_jJ, BuildContext& l_oCtx, std::string& l_strError) const {
+    auto l_fnFail = [&](const std::string& l_strWhy) {
+        l_strError = (l_oCtx.m_strWhere.empty() ? std::string() : l_oCtx.m_strWhere + ": ") + l_strWhy;
         return std::shared_ptr<RenderObject>();
     };
-    if (!j.is_object()) return fail("not a JSON object");
-    const std::string type = str(j, "type");
-    if (type.empty()) return fail("no \"type\"");
-    auto maker = makers_.find(type);
-    if (maker == makers_.end()) return fail("unknown type '" + type + "'");
-    std::string why;
-    std::shared_ptr<RenderObject> o = maker->second(j, ctx, why);
-    if (!o) return fail(type + ": " + why);
+    if (!l_jJ.is_object()) return l_fnFail("not a JSON object");
+    const std::string l_strType = f_Str(l_jJ, "type");
+    if (l_strType.empty()) return l_fnFail("no \"type\"");
+    auto l_itMaker = m_mapMakers.find(l_strType);
+    if (l_itMaker == m_mapMakers.end()) return l_fnFail("unknown type '" + l_strType + "'");
+    std::string l_strWhy;
+    std::shared_ptr<RenderObject> l_spO = l_itMaker->second(l_jJ, l_oCtx, l_strWhy);
+    if (!l_spO) return l_fnFail(l_strType + ": " + l_strWhy);
     // the fields every type shares
-    if (const std::string n = str(j, "name"); !n.empty()) o->SetName(n);
-    float v[4];
-    if (readNumbers(j, "pos", v, 2)) o->pos_ = {v[0], v[1]};
-    if (auto s = j.find("scale"); s != j.end()) {
-        if (s->is_number()) o->scale_ = glm::vec2(s->get<float>());
-        else if (readNumbers(j, "scale", v, 2)) o->scale_ = {v[0], v[1]};
+    if (const std::string l_strN = f_Str(l_jJ, "name"); !l_strN.empty()) l_spO->f_SetName(l_strN);
+    float l_arrV[4];
+    if (f_ReadNumbers(l_jJ, "pos", l_arrV, 2)) l_spO->m_v2Pos = {l_arrV[0], l_arrV[1]};
+    if (auto l_oS = l_jJ.find("scale"); l_oS != l_jJ.end()) {
+        if (l_oS->is_number()) l_spO->m_v2Scale = glm::vec2(l_oS->get<float>());
+        else if (f_ReadNumbers(l_jJ, "scale", l_arrV, 2)) l_spO->m_v2Scale = {l_arrV[0], l_arrV[1]};
     }
-    if (auto r = j.find("rotation"); r != j.end() && r->is_number()) o->rotation_ = r->get<float>();
-    o->applyTransform();
-    readNumbers(j, "tint", o->tint, 4);
-    if (auto vis = j.find("visible"); vis != j.end() && vis->is_boolean()) o->SetVisible(vis->get<bool>());
-    if (auto kids = j.find("children"); kids != j.end()) {
-        if (!kids->is_array()) return fail("\"children\" is not a list");
-        for (size_t i = 0; i < kids->size(); i++) {
-            BuildContext sub{ctx.res, ctx.factory, (ctx.where.empty() ? "" : ctx.where + ".") + "children[" + std::to_string(i) + "]"};
-            std::shared_ptr<RenderObject> c = build((*kids)[i], sub, error);
-            if (!c) return nullptr;   // error says where
-            o->addChild(std::move(c));
+    if (auto l_oR = l_jJ.find("rotation"); l_oR != l_jJ.end() && l_oR->is_number()) l_spO->m_fRotation = l_oR->get<float>();
+    l_spO->f_ApplyTransform();
+    f_ReadNumbers(l_jJ, "tint", l_spO->m_arrTint, 4);
+    if (auto l_oVis = l_jJ.find("visible"); l_oVis != l_jJ.end() && l_oVis->is_boolean()) l_spO->f_SetVisible(l_oVis->get<bool>());
+    if (auto l_oKids = l_jJ.find("children"); l_oKids != l_jJ.end()) {
+        if (!l_oKids->is_array()) return l_fnFail("\"children\" is not a list");
+        for (size_t l_nI = 0; l_nI < l_oKids->size(); l_nI++) {
+            BuildContext l_oSub{l_oCtx.m_oRes, l_oCtx.m_oFactory, (l_oCtx.m_strWhere.empty() ? "" : l_oCtx.m_strWhere + ".") + "children[" + std::to_string(l_nI) + "]"};
+            std::shared_ptr<RenderObject> l_spC = f_Build((*l_oKids)[l_nI], l_oSub, l_strError);
+            if (!l_spC) return nullptr;   // error says where
+            l_spO->f_AddChild(std::move(l_spC));
         }
     }
-    return o;
+    return l_spO;
 }
 
-std::shared_ptr<RenderObject> RenderObjectFactory::make(const nlohmann::json& j, res::ResourceManager& res, std::string* error) const {
-    BuildContext ctx{res, *this, std::string()};
-    std::string err;
-    std::shared_ptr<RenderObject> o = build(j, ctx, err);
-    if (error) *error = o ? std::string() : err;
-    return o;
+std::shared_ptr<RenderObject> RenderObjectFactory::f_Make(const nlohmann::json& l_jJ, res::ResourceManager& l_oRes, std::string* l_pError) const {
+    BuildContext l_oCtx{l_oRes, *this, std::string()};
+    std::string l_strErr;
+    std::shared_ptr<RenderObject> l_spO = f_Build(l_jJ, l_oCtx, l_strErr);
+    if (l_pError) *l_pError = l_spO ? std::string() : l_strErr;
+    return l_spO;
 }
 
-std::shared_ptr<RenderObject> RenderObjectFactory::makeOrMissing(const nlohmann::json& j, res::ResourceManager& res, std::string* error) const {
-    std::string err;
-    if (std::shared_ptr<RenderObject> o = make(j, res, &err)) {
-        if (error) error->clear();
-        return o;
+std::shared_ptr<RenderObject> RenderObjectFactory::f_MakeOrMissing(const nlohmann::json& l_jJ, res::ResourceManager& l_oRes, std::string* l_pError) const {
+    std::string l_strErr;
+    if (std::shared_ptr<RenderObject> l_spO = f_Make(l_jJ, l_oRes, &l_strErr)) {
+        if (l_pError) l_pError->clear();
+        return l_spO;
     }
-    auto m = std::make_shared<MissingObject>();
-    m->what = err;
-    float v[2];
-    if (j.is_object() && readNumbers(j, "pos", v, 2)) m->setPos(v[0], v[1]);
-    if (error) *error = err;
-    return m;
+    auto l_spM = std::make_shared<MissingObject>();
+    l_spM->m_strWhat = l_strErr;
+    float l_arrV[2];
+    if (l_jJ.is_object() && f_ReadNumbers(l_jJ, "pos", l_arrV, 2)) l_spM->f_SetPos(l_arrV[0], l_arrV[1]);
+    if (l_pError) *l_pError = l_strErr;
+    return l_spM;
 }
 
-std::shared_ptr<RenderObject> RenderObjectFactory::instance(const nlohmann::json& j, res::ResourceManager& res, std::string* error) {
-    const std::string key = j.dump();
-    auto it = prototypes_.find(key);
-    if (it == prototypes_.end()) {
-        std::shared_ptr<RenderObject> proto = make(j, res, error);
-        if (!proto) return nullptr;
-        it = prototypes_.emplace(key, std::move(proto)).first;
-    } else if (error) {
-        error->clear();
+std::shared_ptr<RenderObject> RenderObjectFactory::f_Instance(const nlohmann::json& l_jJ, res::ResourceManager& l_oRes, std::string* l_pError) {
+    const std::string l_strKey = l_jJ.dump();
+    auto l_itIt = m_mapPrototypes.find(l_strKey);
+    if (l_itIt == m_mapPrototypes.end()) {
+        std::shared_ptr<RenderObject> l_spProto = f_Make(l_jJ, l_oRes, l_pError);
+        if (!l_spProto) return nullptr;
+        l_itIt = m_mapPrototypes.emplace(l_strKey, std::move(l_spProto)).first;
+    } else if (l_pError) {
+        l_pError->clear();
     }
-    return it->second->clone();
+    return l_itIt->second->f_Clone();
 }
 
-void registerBuiltinRenderObjects(RenderObjectFactory& f) {
-    f.add<SpriteObject>();
-    f.add<ClipObject>();
-    f.add<ParticleObject>();
-    f.add<TextObject>();
-    f.add<GroupObject>();
-    f.add<MissingObject>();
+void f_RegisterBuiltinRenderObjects(RenderObjectFactory& l_oF) {
+    l_oF.f_Add<SpriteObject>();
+    l_oF.f_Add<ClipObject>();
+    l_oF.f_Add<ParticleObject>();
+    l_oF.f_Add<TextObject>();
+    l_oF.f_Add<GroupObject>();
+    l_oF.f_Add<MissingObject>();
 }
 
 // ---- sprite --------------------------------------------------------------------------------------------------------
 
-std::shared_ptr<RenderObject> SpriteObject::fromJson(const nlohmann::json& j, BuildContext& ctx, std::string& error) {
-    auto o = std::make_shared<SpriteObject>();
-    o->atlasPath_ = str(j, "atlas");
-    o->name_ = str(j, "name");
-    if (o->name_.empty()) { error = "no \"name\" (the sprite in the atlas)"; return nullptr; }
-    o->atlas_ = ctx.res.get<res::AtlasRes>(o->atlasPath_.empty() ? std::string(res::ResourceManager::kSpriteAtlas) : o->atlasPath_);
-    if (!o->atlas_->ok()) { error = "cannot load the atlas " + o->atlas_->path() + " (" + o->atlas_->error() + ")"; return nullptr; }
-    if (!o->atlas_->find(o->name_)) { error = "no sprite '" + o->name_ + "' in " + o->atlas_->path(); return nullptr; }
-    o->additive = str(j, "blend") == "add";
-    if (auto s = j.find("solid"); s != j.end() && s->is_boolean()) o->solid = s->get<bool>();
-    return o;
+std::shared_ptr<RenderObject> SpriteObject::f_FromJson(const nlohmann::json& l_jJ, BuildContext& l_oCtx, std::string& l_strError) {
+    auto l_spO = std::make_shared<SpriteObject>();
+    l_spO->m_strAtlasPath = f_Str(l_jJ, "atlas");
+    l_spO->m_strName = f_Str(l_jJ, "name");
+    if (l_spO->m_strName.empty()) { l_strError = "no \"name\" (the sprite in the atlas)"; return nullptr; }
+    l_spO->m_spAtlas = l_oCtx.m_oRes.f_Get<res::AtlasRes>(l_spO->m_strAtlasPath.empty() ? std::string(res::ResourceManager::m_pszSpriteAtlas) : l_spO->m_strAtlasPath);
+    if (!l_spO->m_spAtlas->f_Ok()) { l_strError = "cannot load the atlas " + l_spO->m_spAtlas->f_Path() + " (" + l_spO->m_spAtlas->f_Error() + ")"; return nullptr; }
+    if (!l_spO->m_spAtlas->f_Find(l_spO->m_strName)) { l_strError = "no sprite '" + l_spO->m_strName + "' in " + l_spO->m_spAtlas->f_Path(); return nullptr; }
+    l_spO->m_bAdditive = f_Str(l_jJ, "blend") == "add";
+    if (auto l_oS = l_jJ.find("solid"); l_oS != l_jJ.end() && l_oS->is_boolean()) l_spO->m_bSolid = l_oS->get<bool>();
+    return l_spO;
 }
 
-std::shared_ptr<RenderObject> SpriteObject::clone() const {
-    auto o = std::make_shared<SpriteObject>();
-    o->atlas_ = atlas_;
-    o->name_ = name_;
-    o->atlasPath_ = atlasPath_;
-    o->additive = additive;
-    o->solid = solid;
-    copyCommonTo(*o);
-    return o;
+std::shared_ptr<RenderObject> SpriteObject::f_Clone() const {
+    auto l_spO = std::make_shared<SpriteObject>();
+    l_spO->m_spAtlas = m_spAtlas;
+    l_spO->m_strName = m_strName;
+    l_spO->m_strAtlasPath = m_strAtlasPath;
+    l_spO->m_bAdditive = m_bAdditive;
+    l_spO->m_bSolid = m_bSolid;
+    f_CopyCommonTo(*l_spO);
+    return l_spO;
 }
 
-nlohmann::json SpriteObject::toJson() const {
-    nlohmann::json j = commonJson();
-    if (!atlasPath_.empty()) j["atlas"] = atlasPath_;
-    j["name"] = name_;
-    if (additive) j["blend"] = "add";
-    if (solid) j["solid"] = true;
-    return j;
+nlohmann::json SpriteObject::f_ToJson() const {
+    nlohmann::json l_jJ = f_CommonJson();
+    if (!m_strAtlasPath.empty()) l_jJ["atlas"] = m_strAtlasPath;
+    l_jJ["name"] = m_strName;
+    if (m_bAdditive) l_jJ["blend"] = "add";
+    if (m_bSolid) l_jJ["solid"] = true;
+    return l_jJ;
 }
 
 // As anim::makeQuad: the packed pixels inside the original image, around the region's pivot, through the transform.
-void SpriteObject::draw(IRenderer* ren, const glm::mat3& world) {
-    const int v = atlas_->contentVersion();
-    if (v != quadVersion_ || world != quadWorld_ || !std::equal(tint, tint + 4, quadTint_)) {
-        quadVersion_ = v;
-        quadWorld_ = world;
-        std::copy(tint, tint + 4, quadTint_);
-        hasQuad_ = false;
-        if (const AtlasRegion* r = atlas_->find(name_)) {
-            const float x0 = r->offX - r->pivot[0] * r->origW, y0 = r->offY - r->pivot[1] * r->origH;
-            const float x1 = x0 + r->w, y1 = y0 + r->h;
-            const glm::vec3 c[4] = {world * glm::vec3(x0, y0, 1), world * glm::vec3(x1, y0, 1), world * glm::vec3(x1, y1, 1),
-                                    world * glm::vec3(x0, y1, 1)};
-            Quad q;
-            q.hasCorners = true;
-            float minX = c[0].x, minY = c[0].y, maxX = c[0].x, maxY = c[0].y;
-            for (int i = 0; i < 4; i++) {
-                q.corners[i * 2] = c[i].x;
-                q.corners[i * 2 + 1] = c[i].y;
-                minX = std::min(minX, c[i].x); maxX = std::max(maxX, c[i].x);
-                minY = std::min(minY, c[i].y); maxY = std::max(maxY, c[i].y);
+void SpriteObject::f_Draw(IRenderer* l_pRen, const glm::mat3& l_mat3World) {
+    const int l_iV = m_spAtlas->f_ContentVersion();
+    if (l_iV != m_iQuadVersion || l_mat3World != m_mat3QuadWorld || !std::equal(m_arrTint, m_arrTint + 4, m_arrQuadTint)) {
+        m_iQuadVersion = l_iV;
+        m_mat3QuadWorld = l_mat3World;
+        std::copy(m_arrTint, m_arrTint + 4, m_arrQuadTint);
+        m_bHasQuad = false;
+        if (const AtlasRegion* l_pR = m_spAtlas->f_Find(m_strName)) {
+            const float l_fX0 = l_pR->m_iOffX - l_pR->m_arrPivot[0] * l_pR->m_iOrigW, l_fY0 = l_pR->m_iOffY - l_pR->m_arrPivot[1] * l_pR->m_iOrigH;
+            const float l_fX1 = l_fX0 + l_pR->m_iW, l_fY1 = l_fY0 + l_pR->m_iH;
+            const glm::vec3 l_arrC[4] = {l_mat3World * glm::vec3(l_fX0, l_fY0, 1), l_mat3World * glm::vec3(l_fX1, l_fY0, 1), l_mat3World * glm::vec3(l_fX1, l_fY1, 1),
+                                    l_mat3World * glm::vec3(l_fX0, l_fY1, 1)};
+            Quad l_oQ;
+            l_oQ.m_bHasCorners = true;
+            float l_fMinX = l_arrC[0].x, l_fMinY = l_arrC[0].y, l_fMaxX = l_arrC[0].x, l_fMaxY = l_arrC[0].y;
+            for (int l_iI = 0; l_iI < 4; l_iI++) {
+                l_oQ.m_arrCorners[l_iI * 2] = l_arrC[l_iI].x;
+                l_oQ.m_arrCorners[l_iI * 2 + 1] = l_arrC[l_iI].y;
+                l_fMinX = std::min(l_fMinX, l_arrC[l_iI].x); l_fMaxX = std::max(l_fMaxX, l_arrC[l_iI].x);
+                l_fMinY = std::min(l_fMinY, l_arrC[l_iI].y); l_fMaxY = std::max(l_fMaxY, l_arrC[l_iI].y);
             }
-            q.rect[0] = minX; q.rect[1] = minY; q.rect[2] = maxX - minX; q.rect[3] = maxY - minY;
-            std::copy(r->uv, r->uv + 4, q.uv);
-            std::copy(tint, tint + 4, q.tint);
-            q.additive = additive;
-            q.solid = solid;
-            const std::vector<uint16_t>& pages = atlas_->pageTextures();
-            q.texture = r->page >= 0 && r->page < (int)pages.size() ? pages[(size_t)r->page] : kSpriteAtlasTexture;
-            quad_ = q;
-            hasQuad_ = true;
+            l_oQ.m_arrRect[0] = l_fMinX; l_oQ.m_arrRect[1] = l_fMinY; l_oQ.m_arrRect[2] = l_fMaxX - l_fMinX; l_oQ.m_arrRect[3] = l_fMaxY - l_fMinY;
+            std::copy(l_pR->m_arrUv, l_pR->m_arrUv + 4, l_oQ.m_arrUv);
+            std::copy(m_arrTint, m_arrTint + 4, l_oQ.m_arrTint);
+            l_oQ.m_bAdditive = m_bAdditive;
+            l_oQ.m_bSolid = m_bSolid;
+            const std::vector<uint16_t>& l_vPages = m_spAtlas->f_PageTextures();
+            l_oQ.m_u16Texture = l_pR->m_iPage >= 0 && l_pR->m_iPage < (int)l_vPages.size() ? l_vPages[(size_t)l_pR->m_iPage] : g_u16SpriteAtlasTexture;
+            m_oQuad = l_oQ;
+            m_bHasQuad = true;
         }
     }
-    if (hasQuad_) ren->drawSprite(quad_);
+    if (m_bHasQuad) l_pRen->f_DrawSprite(m_oQuad);
 }
 
 // ---- clip ----------------------------------------------------------------------------------------------------------
 
-std::shared_ptr<RenderObject> ClipObject::fromJson(const nlohmann::json& j, BuildContext& ctx, std::string& error) {
-    auto o = std::make_shared<ClipObject>();
-    auto [file, clip] = splitRef(str(j, "anim"));
-    if (const std::string c = str(j, "clip"); !c.empty()) clip = c;
-    if (file.empty()) { error = "no \"anim\" (the .anim file)"; return nullptr; }
-    if (clip.empty()) { error = "no \"clip\""; return nullptr; }
-    o->animPath_ = file;
-    o->clip_ = clip;
-    o->anim_ = ctx.res.get<res::AnimRes>(file);
-    if (!o->anim_->ok()) { error = "cannot load " + o->anim_->path() + " (" + o->anim_->error() + ")"; return nullptr; }
-    if (!o->anim_->find(clip)) { error = o->anim_->path() + " has no clip '" + clip + "'"; return nullptr; }
-    if (auto l = j.find("loop"); l != j.end() && l->is_boolean()) o->loop = l->get<bool>();
-    if (auto p = j.find("phase"); p != j.end() && p->is_number()) o->phase = p->get<float>();
-    o->start();
-    return o;
+std::shared_ptr<RenderObject> ClipObject::f_FromJson(const nlohmann::json& l_jJ, BuildContext& l_oCtx, std::string& l_strError) {
+    auto l_spO = std::make_shared<ClipObject>();
+    auto [l_strFile, l_strClip] = f_SplitRef(f_Str(l_jJ, "anim"));
+    if (const std::string l_strC = f_Str(l_jJ, "clip"); !l_strC.empty()) l_strClip = l_strC;
+    if (l_strFile.empty()) { l_strError = "no \"anim\" (the .anim file)"; return nullptr; }
+    if (l_strClip.empty()) { l_strError = "no \"clip\""; return nullptr; }
+    l_spO->m_strAnimPath = l_strFile;
+    l_spO->m_strClip = l_strClip;
+    l_spO->m_spAnim = l_oCtx.m_oRes.f_Get<res::AnimRes>(l_strFile);
+    if (!l_spO->m_spAnim->f_Ok()) { l_strError = "cannot load " + l_spO->m_spAnim->f_Path() + " (" + l_spO->m_spAnim->f_Error() + ")"; return nullptr; }
+    if (!l_spO->m_spAnim->f_Find(l_strClip)) { l_strError = l_spO->m_spAnim->f_Path() + " has no clip '" + l_strClip + "'"; return nullptr; }
+    if (auto l_oL = l_jJ.find("loop"); l_oL != l_jJ.end() && l_oL->is_boolean()) l_spO->m_bLoop = l_oL->get<bool>();
+    if (auto l_oP = l_jJ.find("phase"); l_oP != l_jJ.end() && l_oP->is_number()) l_spO->m_fPhase = l_oP->get<float>();
+    l_spO->f_Start();
+    return l_spO;
 }
 
-void ClipObject::start() {
-    player_.play(anim_->find(clip_));
-    seenVersion_ = anim_->version();
-    seenContent_ = anim_->contentVersion();
-    carryMs_ = 0;
-    if (phase > 0) player_.update((int)std::lround(phase * 1000.0f));
-    player_.takeEvents();
+void ClipObject::f_Start() {
+    m_oPlayer.f_Play(m_spAnim->f_Find(m_strClip));
+    m_iSeenVersion = m_spAnim->f_Version();
+    m_iSeenContent = m_spAnim->f_ContentVersion();
+    m_fCarryMs = 0;
+    if (m_fPhase > 0) m_oPlayer.f_Update((int)std::lround(m_fPhase * 1000.0f));
+    m_oPlayer.f_TakeEvents();
 }
 
-std::shared_ptr<RenderObject> ClipObject::clone() const {
-    auto o = std::make_shared<ClipObject>();
-    o->anim_ = anim_;
-    o->clip_ = clip_;
-    o->animPath_ = animPath_;
-    o->loop = loop;
-    o->phase = phase;
-    copyCommonTo(*o);
-    o->start();
-    return o;
+std::shared_ptr<RenderObject> ClipObject::f_Clone() const {
+    auto l_spO = std::make_shared<ClipObject>();
+    l_spO->m_spAnim = m_spAnim;
+    l_spO->m_strClip = m_strClip;
+    l_spO->m_strAnimPath = m_strAnimPath;
+    l_spO->m_bLoop = m_bLoop;
+    l_spO->m_fPhase = m_fPhase;
+    f_CopyCommonTo(*l_spO);
+    l_spO->f_Start();
+    return l_spO;
 }
 
-nlohmann::json ClipObject::toJson() const {
-    nlohmann::json j = commonJson();
-    j["anim"] = animPath_;
-    j["clip"] = clip_;
-    if (loop) j["loop"] = true;
-    if (phase != 0) j["phase"] = phase;
-    return j;
+nlohmann::json ClipObject::f_ToJson() const {
+    nlohmann::json l_jJ = f_CommonJson();
+    l_jJ["anim"] = m_strAnimPath;
+    l_jJ["clip"] = m_strClip;
+    if (m_bLoop) l_jJ["loop"] = true;
+    if (m_fPhase != 0) l_jJ["phase"] = m_fPhase;
+    return l_jJ;
 }
 
-void ClipObject::update(float dt) {
-    if (anim_->version() != seenVersion_) start();   // the file was reloaded: the clip is a new one
-    carryMs_ += dt * 1000.0f;
-    const int ms = (int)carryMs_;
-    carryMs_ -= (float)ms;
-    if (ms > 0) player_.update(ms);
-    player_.takeEvents();
-    if (loop && player_.finished()) player_.play(anim_->find(clip_));
-    RenderObject::update(dt);
+void ClipObject::f_Update(float l_fDt) {
+    if (m_spAnim->f_Version() != m_iSeenVersion) f_Start();   // the file was reloaded: the clip is a new one
+    m_fCarryMs += l_fDt * 1000.0f;
+    const int l_iMs = (int)m_fCarryMs;
+    m_fCarryMs -= (float)l_iMs;
+    if (l_iMs > 0) m_oPlayer.f_Update(l_iMs);
+    m_oPlayer.f_TakeEvents();
+    if (m_bLoop && m_oPlayer.f_Finished()) m_oPlayer.f_Play(m_spAnim->f_Find(m_strClip));
+    RenderObject::f_Update(l_fDt);
 }
 
-void ClipObject::setTime(float seconds) {
-    if (anim_->version() != seenVersion_) start();
-    player_.seek(seconds);
+void ClipObject::f_SetTime(float l_fSeconds) {
+    if (m_spAnim->f_Version() != m_iSeenVersion) f_Start();
+    m_oPlayer.f_Seek(l_fSeconds);
 }
 
-float ClipObject::duration() const {
-    const anim::Clip* c = anim_ ? anim_->find(clip_) : nullptr;
-    return c ? c->duration() : 0.0f;
+float ClipObject::f_Duration() const {
+    const anim::Clip* l_pC = m_spAnim ? m_spAnim->f_Find(m_strClip) : nullptr;
+    return l_pC ? l_pC->f_Duration() : 0.0f;
 }
 
-void ClipObject::draw(IRenderer* ren, const glm::mat3& world) {
-    if (anim_->version() != seenVersion_) start();
-    if (anim_->contentVersion() != seenContent_) {   // an atlas changed under the same set
-        seenContent_ = anim_->contentVersion();
-        player_.refreshQuads();
+void ClipObject::f_Draw(IRenderer* l_pRen, const glm::mat3& l_mat3World) {
+    if (m_spAnim->f_Version() != m_iSeenVersion) f_Start();
+    if (m_spAnim->f_ContentVersion() != m_iSeenContent) {   // an atlas changed under the same set
+        m_iSeenContent = m_spAnim->f_ContentVersion();
+        m_oPlayer.f_RefreshQuads();
     }
-    if (player_.showing()) player_.draw(ren, anim_->atlases(), world, isWhite(tint) ? nullptr : tint);
+    if (m_oPlayer.f_Showing()) m_oPlayer.f_Draw(l_pRen, m_spAnim->f_Atlases(), l_mat3World, f_IsWhite(m_arrTint) ? nullptr : m_arrTint);
 }
 
 // ---- particle ------------------------------------------------------------------------------------------------------
 
-std::shared_ptr<RenderObject> ParticleObject::fromJson(const nlohmann::json& j, BuildContext& ctx, std::string& error) {
-    auto o = std::make_shared<ParticleObject>();
-    auto [file, effect] = splitRef(str(j, "file"));
-    if (const std::string e = str(j, "effect"); !e.empty()) effect = e;
-    if (file.empty()) { error = "no \"file\" (the .prt file)"; return nullptr; }
-    if (effect.empty()) { error = "no \"effect\""; return nullptr; }
-    o->filePath_ = file;
-    o->effect_ = effect;
-    o->file_ = ctx.res.get<res::ParticleRes>(file);
-    if (!o->file_->ok()) { error = "cannot load " + o->file_->path() + " (" + o->file_->error() + ")"; return nullptr; }
-    if (!o->file_->find(effect)) { error = o->file_->path() + " has no effect '" + effect + "'"; return nullptr; }
-    if (auto l = j.find("loop"); l != j.end() && l->is_boolean()) o->loop = l->get<bool>();
-    if (auto s = j.find("seed"); s != j.end() && s->is_number_unsigned()) o->seed = s->get<uint32_t>();
-    return o;
+std::shared_ptr<RenderObject> ParticleObject::f_FromJson(const nlohmann::json& l_jJ, BuildContext& l_oCtx, std::string& l_strError) {
+    auto l_spO = std::make_shared<ParticleObject>();
+    auto [l_strFile, l_strEffect] = f_SplitRef(f_Str(l_jJ, "file"));
+    if (const std::string l_strE = f_Str(l_jJ, "effect"); !l_strE.empty()) l_strEffect = l_strE;
+    if (l_strFile.empty()) { l_strError = "no \"file\" (the .prt file)"; return nullptr; }
+    if (l_strEffect.empty()) { l_strError = "no \"effect\""; return nullptr; }
+    l_spO->m_strFilePath = l_strFile;
+    l_spO->m_strEffect = l_strEffect;
+    l_spO->m_spFile = l_oCtx.m_oRes.f_Get<res::ParticleRes>(l_strFile);
+    if (!l_spO->m_spFile->f_Ok()) { l_strError = "cannot load " + l_spO->m_spFile->f_Path() + " (" + l_spO->m_spFile->f_Error() + ")"; return nullptr; }
+    if (!l_spO->m_spFile->f_Find(l_strEffect)) { l_strError = l_spO->m_spFile->f_Path() + " has no effect '" + l_strEffect + "'"; return nullptr; }
+    if (auto l_oL = l_jJ.find("loop"); l_oL != l_jJ.end() && l_oL->is_boolean()) l_spO->m_bLoop = l_oL->get<bool>();
+    if (auto l_oS = l_jJ.find("seed"); l_oS != l_jJ.end() && l_oS->is_number_unsigned()) l_spO->m_uSeed = l_oS->get<uint32_t>();
+    return l_spO;
 }
 
 // Started on the first draw: the effect's prewarm makes world-space particles where it is, so it needs its place.
-void ParticleObject::start(IRenderer* ren, const glm::mat3& world) {
-    const fx::Effect* e = file_->find(effect_);
-    seenVersion_ = file_->version();
-    placed_ = true;
-    if (!e) { fx_.stop(true); return; }
-    fx_.setTransform(world);
-    if (gpuThreshold > 0) fx_.setGpuSimulation(ren, gpuThreshold);
-    fx_.play(e, seed ? seed : (e->seed ? e->seed : 1u));
+void ParticleObject::f_Start(IRenderer* l_pRen, const glm::mat3& l_mat3World) {
+    const fx::Effect* l_pE = m_spFile->f_Find(m_strEffect);
+    m_iSeenVersion = m_spFile->f_Version();
+    m_bPlaced = true;
+    if (!l_pE) { m_oFx.f_Stop(true); return; }
+    m_oFx.f_SetTransform(l_mat3World);
+    if (m_iGpuThreshold > 0) m_oFx.f_SetGpuSimulation(l_pRen, m_iGpuThreshold);
+    m_oFx.f_Play(l_pE, m_uSeed ? m_uSeed : (l_pE->m_uSeed ? l_pE->m_uSeed : 1u));
 }
 
-std::shared_ptr<RenderObject> ParticleObject::clone() const {
-    auto o = std::make_shared<ParticleObject>();
-    o->file_ = file_;
-    o->effect_ = effect_;
-    o->filePath_ = filePath_;
-    o->loop = loop;
-    o->seed = seed;
-    o->gpuThreshold = gpuThreshold;
-    copyCommonTo(*o);
-    return o;
+std::shared_ptr<RenderObject> ParticleObject::f_Clone() const {
+    auto l_spO = std::make_shared<ParticleObject>();
+    l_spO->m_spFile = m_spFile;
+    l_spO->m_strEffect = m_strEffect;
+    l_spO->m_strFilePath = m_strFilePath;
+    l_spO->m_bLoop = m_bLoop;
+    l_spO->m_uSeed = m_uSeed;
+    l_spO->m_iGpuThreshold = m_iGpuThreshold;
+    f_CopyCommonTo(*l_spO);
+    return l_spO;
 }
 
-nlohmann::json ParticleObject::toJson() const {
-    nlohmann::json j = commonJson();
-    j["file"] = filePath_;
-    j["effect"] = effect_;
-    if (loop) j["loop"] = true;
-    if (seed) j["seed"] = seed;
-    return j;
+nlohmann::json ParticleObject::f_ToJson() const {
+    nlohmann::json l_jJ = f_CommonJson();
+    l_jJ["file"] = m_strFilePath;
+    l_jJ["effect"] = m_strEffect;
+    if (m_bLoop) l_jJ["loop"] = true;
+    if (m_uSeed) l_jJ["seed"] = m_uSeed;
+    return l_jJ;
 }
 
-void ParticleObject::update(float dt) {
-    if (placed_ && file_->version() != seenVersion_) placed_ = false;   // reloaded: start again on the next draw
-    if (placed_ && fx_.effect()) {
-        fx_.update(dt);
-        if (loop && fx_.finished()) fx_.play(fx_.effect(), fx_.seed());
+void ParticleObject::f_Update(float l_fDt) {
+    if (m_bPlaced && m_spFile->f_Version() != m_iSeenVersion) m_bPlaced = false;   // reloaded: start again on the next draw
+    if (m_bPlaced && m_oFx.f_Effect()) {
+        m_oFx.f_Update(l_fDt);
+        if (m_bLoop && m_oFx.f_Finished()) m_oFx.f_Play(m_oFx.f_Effect(), m_oFx.f_Seed());
     }
-    RenderObject::update(dt);
+    RenderObject::f_Update(l_fDt);
 }
 
-void ParticleObject::draw(IRenderer* ren, const glm::mat3& world) {
+void ParticleObject::f_Draw(IRenderer* l_pRen, const glm::mat3& l_mat3World) {
     // the particles live under the view (on the map), and are drawn through it (the camera)
-    const glm::mat3 placed = view() == glm::mat3(1.0f) ? world : glm::inverse(view()) * world;
-    if (!placed_) start(ren, placed);
-    if (!fx_.effect()) return;
-    fx_.setTransform(placed);
-    fx_.draw(ren, file_->atlases(), view(), isWhite(tint) ? nullptr : tint);
+    const glm::mat3 l_mat3Placed = f_View() == glm::mat3(1.0f) ? l_mat3World : glm::inverse(f_View()) * l_mat3World;
+    if (!m_bPlaced) f_Start(l_pRen, l_mat3Placed);
+    if (!m_oFx.f_Effect()) return;
+    m_oFx.f_SetTransform(l_mat3Placed);
+    m_oFx.f_Draw(l_pRen, m_spFile->f_Atlases(), f_View(), f_IsWhite(m_arrTint) ? nullptr : m_arrTint);
 }
 
 // ---- text ----------------------------------------------------------------------------------------------------------
 
-std::shared_ptr<RenderObject> TextObject::fromJson(const nlohmann::json& j, BuildContext& ctx, std::string& error) {
-    auto o = std::make_shared<TextObject>();
-    o->fontPath_ = str(j, "font");
-    if (o->fontPath_.empty()) { error = "no \"font\" (the .fnt file)"; return nullptr; }
-    o->font_ = ctx.res.get<res::FontRes>(o->fontPath_);
-    if (!o->font_->ok()) { error = "cannot load " + o->font_->path() + " (" + o->font_->error() + ")"; return nullptr; }
-    o->text = str(j, "text");
-    const std::string a = str(j, "align");
-    o->align = a == "center" ? ::BitmapFont::Align::Center : a == "right" ? ::BitmapFont::Align::Right : ::BitmapFont::Align::Left;
-    if (auto s = j.find("size"); s != j.end() && s->is_number()) o->size = s->get<float>();
-    return o;
+std::shared_ptr<RenderObject> TextObject::f_FromJson(const nlohmann::json& l_jJ, BuildContext& l_oCtx, std::string& l_strError) {
+    auto l_spO = std::make_shared<TextObject>();
+    l_spO->m_strFontPath = f_Str(l_jJ, "font");
+    if (l_spO->m_strFontPath.empty()) { l_strError = "no \"font\" (the .fnt file)"; return nullptr; }
+    l_spO->m_spFont = l_oCtx.m_oRes.f_Get<res::FontRes>(l_spO->m_strFontPath);
+    if (!l_spO->m_spFont->f_Ok()) { l_strError = "cannot load " + l_spO->m_spFont->f_Path() + " (" + l_spO->m_spFont->f_Error() + ")"; return nullptr; }
+    l_spO->m_strText = f_Str(l_jJ, "text");
+    const std::string l_strA = f_Str(l_jJ, "align");
+    l_spO->m_eAlign = l_strA == "center" ? ::BitmapFont::Align::Center : l_strA == "right" ? ::BitmapFont::Align::Right : ::BitmapFont::Align::Left;
+    if (auto l_oS = l_jJ.find("size"); l_oS != l_jJ.end() && l_oS->is_number()) l_spO->m_fSize = l_oS->get<float>();
+    return l_spO;
 }
 
-std::shared_ptr<RenderObject> TextObject::clone() const {
-    auto o = std::make_shared<TextObject>();
-    o->font_ = font_;
-    o->fontPath_ = fontPath_;
-    o->text = text;
-    o->align = align;
-    o->size = size;
-    copyCommonTo(*o);
-    return o;
+std::shared_ptr<RenderObject> TextObject::f_Clone() const {
+    auto l_spO = std::make_shared<TextObject>();
+    l_spO->m_spFont = m_spFont;
+    l_spO->m_strFontPath = m_strFontPath;
+    l_spO->m_strText = m_strText;
+    l_spO->m_eAlign = m_eAlign;
+    l_spO->m_fSize = m_fSize;
+    f_CopyCommonTo(*l_spO);
+    return l_spO;
 }
 
-nlohmann::json TextObject::toJson() const {
-    nlohmann::json j = commonJson();
-    j["font"] = fontPath_;
-    j["text"] = text;
-    if (align != ::BitmapFont::Align::Left) j["align"] = alignName(align);
-    if (size != 1) j["size"] = size;
-    return j;
+nlohmann::json TextObject::f_ToJson() const {
+    nlohmann::json l_jJ = f_CommonJson();
+    l_jJ["font"] = m_strFontPath;
+    l_jJ["text"] = m_strText;
+    if (m_eAlign != ::BitmapFont::Align::Left) l_jJ["align"] = f_AlignName(m_eAlign);
+    if (m_fSize != 1) l_jJ["size"] = m_fSize;
+    return l_jJ;
 }
 
 // The anchor is the transform's origin; its x scale sizes the text (fonts are not rotated).
-void TextObject::draw(IRenderer* ren, const glm::mat3& world) {
-    const float scale = size * glm::length(glm::vec2(world[0]));
-    quads_.clear();
-    font_->font().appendQuads(text, world[2].x, world[2].y, scale, align, tint, font_->texture(), quads_);
-    for (const Quad& q : quads_) ren->drawSprite(q);
+void TextObject::f_Draw(IRenderer* l_pRen, const glm::mat3& l_mat3World) {
+    const float l_fScale = m_fSize * glm::length(glm::vec2(l_mat3World[0]));
+    m_vQuads.clear();
+    m_spFont->f_Font().f_AppendQuads(m_strText, l_mat3World[2].x, l_mat3World[2].y, l_fScale, m_eAlign, m_arrTint, m_spFont->f_Texture(), m_vQuads);
+    for (const Quad& l_oQ : m_vQuads) l_pRen->f_DrawSprite(l_oQ);
 }
 
 // ---- group / missing -----------------------------------------------------------------------------------------------
 
-std::shared_ptr<RenderObject> GroupObject::fromJson(const nlohmann::json&, BuildContext&, std::string&) {
+std::shared_ptr<RenderObject> GroupObject::f_FromJson(const nlohmann::json&, BuildContext&, std::string&) {
     return std::make_shared<GroupObject>();
 }
 
-std::shared_ptr<RenderObject> GroupObject::clone() const {
-    auto o = std::make_shared<GroupObject>();
-    copyCommonTo(*o);
-    return o;
+std::shared_ptr<RenderObject> GroupObject::f_Clone() const {
+    auto l_spO = std::make_shared<GroupObject>();
+    f_CopyCommonTo(*l_spO);
+    return l_spO;
 }
 
-nlohmann::json GroupObject::toJson() const { return commonJson(); }
+nlohmann::json GroupObject::f_ToJson() const { return f_CommonJson(); }
 
-std::shared_ptr<RenderObject> MissingObject::fromJson(const nlohmann::json& j, BuildContext&, std::string&) {
-    auto o = std::make_shared<MissingObject>();
-    o->what = str(j, "what");
-    return o;
+std::shared_ptr<RenderObject> MissingObject::f_FromJson(const nlohmann::json& l_jJ, BuildContext&, std::string&) {
+    auto l_spO = std::make_shared<MissingObject>();
+    l_spO->m_strWhat = f_Str(l_jJ, "what");
+    return l_spO;
 }
 
-std::shared_ptr<RenderObject> MissingObject::clone() const {
-    auto o = std::make_shared<MissingObject>();
-    o->what = what;
-    copyCommonTo(*o);
-    return o;
+std::shared_ptr<RenderObject> MissingObject::f_Clone() const {
+    auto l_spO = std::make_shared<MissingObject>();
+    l_spO->m_strWhat = m_strWhat;
+    f_CopyCommonTo(*l_spO);
+    return l_spO;
 }
 
-nlohmann::json MissingObject::toJson() const {
-    nlohmann::json j = commonJson();
-    if (!what.empty()) j["what"] = what;
-    return j;
+nlohmann::json MissingObject::f_ToJson() const {
+    nlohmann::json l_jJ = f_CommonJson();
+    if (!m_strWhat.empty()) l_jJ["what"] = m_strWhat;
+    return l_jJ;
 }
 
-void MissingObject::draw(IRenderer* ren, const glm::mat3& world) {
-    Quad q;
-    q.solid = true;
-    q.hasCorners = true;
-    const glm::vec3 c[4] = {world * glm::vec3(-16, -16, 1), world * glm::vec3(16, -16, 1), world * glm::vec3(16, 16, 1),
-                            world * glm::vec3(-16, 16, 1)};
-    float minX = c[0].x, minY = c[0].y, maxX = c[0].x, maxY = c[0].y;
-    for (int i = 0; i < 4; i++) {
-        q.corners[i * 2] = c[i].x;
-        q.corners[i * 2 + 1] = c[i].y;
-        minX = std::min(minX, c[i].x); maxX = std::max(maxX, c[i].x);
-        minY = std::min(minY, c[i].y); maxY = std::max(maxY, c[i].y);
+void MissingObject::f_Draw(IRenderer* l_pRen, const glm::mat3& l_mat3World) {
+    Quad l_oQ;
+    l_oQ.m_bSolid = true;
+    l_oQ.m_bHasCorners = true;
+    const glm::vec3 l_arrC[4] = {l_mat3World * glm::vec3(-16, -16, 1), l_mat3World * glm::vec3(16, -16, 1), l_mat3World * glm::vec3(16, 16, 1),
+                            l_mat3World * glm::vec3(-16, 16, 1)};
+    float l_fMinX = l_arrC[0].x, l_fMinY = l_arrC[0].y, l_fMaxX = l_arrC[0].x, l_fMaxY = l_arrC[0].y;
+    for (int l_iI = 0; l_iI < 4; l_iI++) {
+        l_oQ.m_arrCorners[l_iI * 2] = l_arrC[l_iI].x;
+        l_oQ.m_arrCorners[l_iI * 2 + 1] = l_arrC[l_iI].y;
+        l_fMinX = std::min(l_fMinX, l_arrC[l_iI].x); l_fMaxX = std::max(l_fMaxX, l_arrC[l_iI].x);
+        l_fMinY = std::min(l_fMinY, l_arrC[l_iI].y); l_fMaxY = std::max(l_fMaxY, l_arrC[l_iI].y);
     }
-    q.rect[0] = minX; q.rect[1] = minY; q.rect[2] = maxX - minX; q.rect[3] = maxY - minY;
-    q.uv[0] = 0; q.uv[1] = 0; q.uv[2] = 1; q.uv[3] = 1;
-    q.tint[0] = 1; q.tint[1] = 0.2f; q.tint[2] = 0.2f; q.tint[3] = 0.85f * tint[3];
-    ren->drawSprite(q);
+    l_oQ.m_arrRect[0] = l_fMinX; l_oQ.m_arrRect[1] = l_fMinY; l_oQ.m_arrRect[2] = l_fMaxX - l_fMinX; l_oQ.m_arrRect[3] = l_fMaxY - l_fMinY;
+    l_oQ.m_arrUv[0] = 0; l_oQ.m_arrUv[1] = 0; l_oQ.m_arrUv[2] = 1; l_oQ.m_arrUv[3] = 1;
+    l_oQ.m_arrTint[0] = 1; l_oQ.m_arrTint[1] = 0.2f; l_oQ.m_arrTint[2] = 0.2f; l_oQ.m_arrTint[3] = 0.85f * m_arrTint[3];
+    l_pRen->f_DrawSprite(l_oQ);
 }
 
 // ---- the stage editor's look ---------------------------------------------------------------------------------------
 
-nlohmann::json lookToRenderJson(const nlohmann::json& look, const std::string& mediaDir, const std::string& spriteAtlas) {
-    if (!look.is_object()) return nlohmann::json();
-    nlohmann::json j;
-    const std::string dir = mediaDir.empty() || mediaDir.back() == '/' ? mediaDir : mediaDir + "/";
-    if (const auto [file, clip] = splitRef(str(look, "anim")); !file.empty() && !clip.empty()) {
-        j = {{"type", "clip"}, {"anim", res::ResourceManager::join(dir, file)}, {"clip", clip}, {"loop", true}};
-    } else if (std::string sprite = str(look, "sprite"); !sprite.empty()) {
-        if (sprite.size() > 4 && sprite.compare(sprite.size() - 4, 4, ".png") == 0) sprite.resize(sprite.size() - 4);
-        j = {{"type", "sprite"}, {"atlas", spriteAtlas}, {"name", sprite}};
+nlohmann::json f_LookToRenderJson(const nlohmann::json& l_jLook, const std::string& l_strMediaDir, const std::string& l_strSpriteAtlas) {
+    if (!l_jLook.is_object()) return nlohmann::json();
+    nlohmann::json l_jJ;
+    const std::string l_strDir = l_strMediaDir.empty() || l_strMediaDir.back() == '/' ? l_strMediaDir : l_strMediaDir + "/";
+    if (const auto [l_strFile, l_strClip] = f_SplitRef(f_Str(l_jLook, "anim")); !l_strFile.empty() && !l_strClip.empty()) {
+        l_jJ = {{"type", "clip"}, {"anim", res::ResourceManager::f_Join(l_strDir, l_strFile)}, {"clip", l_strClip}, {"loop", true}};
+    } else if (std::string l_strSprite = f_Str(l_jLook, "sprite"); !l_strSprite.empty()) {
+        if (l_strSprite.size() > 4 && l_strSprite.compare(l_strSprite.size() - 4, 4, ".png") == 0) l_strSprite.resize(l_strSprite.size() - 4);
+        l_jJ = {{"type", "sprite"}, {"atlas", l_strSpriteAtlas}, {"name", l_strSprite}};
     } else {
         return nlohmann::json();
     }
-    if (auto t = look.find("tint"); t != look.end() && t->is_array() && t->size() >= 3) {
-        nlohmann::json tint = *t;
-        if (tint.size() == 3) tint.push_back(1.0);
-        j["tint"] = tint;
+    if (auto l_oT = l_jLook.find("tint"); l_oT != l_jLook.end() && l_oT->is_array() && l_oT->size() >= 3) {
+        nlohmann::json l_jTint = *l_oT;
+        if (l_jTint.size() == 3) l_jTint.push_back(1.0);
+        l_jJ["tint"] = l_jTint;
     }
-    return j;
+    return l_jJ;
 }
 
 }  // namespace toms

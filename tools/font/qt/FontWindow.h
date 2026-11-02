@@ -20,82 +20,82 @@ class QTableWidget;
 class FontWindow : public QMainWindow {
     Q_OBJECT
 public:
-    explicit FontWindow(QWidget* parent = nullptr);
+    explicit FontWindow(QWidget* l_pParent = nullptr);
 
     // Adds PNG files as pictures; the character is guessed from each file name (0.png, dot.png,
     // U+00D7.png), else left empty for you to type. Returns how many were added.
-    int addPictures(const QStringList& files);
+    int f_AddPictures(const QStringList& l_oFiles);
     // Sets a picture's character: one character, a name (space, dot, comma, ...) or U+XXXX; "" clears it.
-    void setCharacter(int row, const QString& text);
-    void removePicture(int row);
-    void movePicture(int row, int delta);   // the order of the glyphs on the page
-    void clearPictures();
+    void f_SetCharacter(int l_iRow, const QString& l_oText);
+    void f_RemovePicture(int l_iRow);
+    void f_MovePicture(int l_iRow, int l_iDelta);   // the order of the glyphs on the page
+    void f_ClearPictures();
     // Replaces the pictures with a finished font's glyphs (to change it and save again).
-    bool openFont(const QString& fntPath);
+    bool f_OpenFont(const QString& l_oFntPath);
     // Writes <out>.fnt + .png. False while a picture has no character or a repeated one.
-    bool saveFont(const QString& fntPath);
+    bool f_SaveFont(const QString& l_oFntPath);
 
-    void setTestText(const QString& text);
-    QString testText() const;
-    void setScale(double scale);
-    void setLayout(fonttool::PageLayout layout);
-    void setSpaceAdvance(int px);        // -1: auto (a space picture's width, else the '1' picture's, else 5)
-    void setLineHeight(int px);          // -1: auto (the tallest picture)
+    void f_SetTestText(const QString& l_oText);
+    QString f_TestText() const;
+    void f_SetScale(double l_dScale);
+    void f_SetLayout(fonttool::PageLayout l_eLayout);
+    void f_SetSpaceAdvance(int l_iPx);        // -1: auto (a space picture's width, else the '1' picture's, else 5)
+    void f_SetLineHeight(int l_iPx);          // -1: auto (the tallest picture)
     // Selects a row: its glyph is highlighted on the combined picture.
-    void selectRow(int row);
-    int selectedRow() const;
+    void f_SelectRow(int l_iRow);
+    int f_SelectedRow() const;
     // What a click at this point of the combined picture (page pixels) does: selects that glyph's row.
-    void clickPage(const QPoint& pagePos);
-    int highlightedGlyph() const;        // on the combined picture, -1 none
-    const atlas::Image& page() const { return page_; }
+    void f_ClickPage(const QPoint& l_oPagePos);
+    int f_HighlightedGlyph() const;        // on the combined picture, -1 none
+    const atlas::Image& f_Page() const { return m_oPage; }
 
-    int pictureCount() const { return (int)pics_.size(); }
-    int problemCount() const { return (int)problems_.size(); }
-    const QImage& previewImage() const { return preview_; }
-    int missingChars() const { return missing_; }
-    const BitmapFont& font() const { return font_; }
-    int glyphCount() const { return (int)font_.glyphs.size(); }
-    QString log() const;
+    int f_PictureCount() const { return (int)m_vPics.size(); }
+    int f_ProblemCount() const { return (int)m_vProblems.size(); }
+    const QImage& f_PreviewImage() const { return m_oPreview; }
+    int f_MissingChars() const { return m_iMissing; }
+    const BitmapFont& f_Font() const { return m_oFont; }
+    int f_GlyphCount() const { return (int)m_oFont.m_vGlyphs.size(); }
+    QString f_Log() const;
 
 protected:
-    void dragEnterEvent(QDragEnterEvent* e) override;
-    void dropEvent(QDropEvent* e) override;
+    void dragEnterEvent(QDragEnterEvent* l_pE) override;
+    void dropEvent(QDropEvent* l_pE) override;
 
 private:
-    void browseAdd();
-    void browseOpen();
-    void browseSave();
-    void rebuild();          // pictures + options -> font_ (in memory), table marks, preview
-    void fillTable();
-    void updatePreview();
-    void message(const QString& line);
-    fonttool::BuildOptions options(const QString& face) const;
-    void showSelection();                // the selected row's glyph -> the page view
+    void f_BrowseAdd();
+    void f_BrowseOpen();
+    void f_BrowseSave();
+    void f_Rebuild();          // pictures + options -> font_ (in memory), table marks, preview
+    void f_FillTable();
+    void f_UpdatePreview();
+    void f_Message(const QString& l_oLine);
+    fonttool::BuildOptions f_Options(const QString& l_oFace) const;
+    void f_ShowSelection();                // the selected row's glyph -> the page view
 
-    QTableWidget* table_ = nullptr;
-    PageView* pageView_ = nullptr;
-    QLabel* pageLabel_ = nullptr;
-    QComboBox* layoutCombo_ = nullptr;
-    QLineEdit* faceEdit_ = nullptr;
-    QSpinBox* spaceSpin_ = nullptr;
-    QSpinBox* lineSpin_ = nullptr;
-    QSpinBox* padSpin_ = nullptr;
-    QSpinBox* maxWidthSpin_ = nullptr;
-    QPlainTextEdit* textEdit_ = nullptr;
-    QDoubleSpinBox* scaleSpin_ = nullptr;
-    QComboBox* bgCombo_ = nullptr;
-    QLabel* previewLabel_ = nullptr;
-    QLabel* infoLabel_ = nullptr;
-    QLabel* problemLabel_ = nullptr;
-    QPlainTextEdit* log_ = nullptr;
+    QTableWidget* m_pTable = nullptr;
+    PageView* m_pPageView = nullptr;
+    QLabel* m_pPageLabel = nullptr;
+    QComboBox* m_pLayoutCombo = nullptr;
+    QLineEdit* m_pFaceEdit = nullptr;
+    QSpinBox* m_pSpaceSpin = nullptr;
+    QSpinBox* m_pLineSpin = nullptr;
+    QSpinBox* m_pPadSpin = nullptr;
+    QSpinBox* m_pMaxWidthSpin = nullptr;
+    QPlainTextEdit* m_pTextEdit = nullptr;
+    QDoubleSpinBox* m_pScaleSpin = nullptr;
+    QComboBox* m_pBgCombo = nullptr;
+    QLabel* m_pPreviewLabel = nullptr;
+    QLabel* m_pInfoLabel = nullptr;
+    QLabel* m_pProblemLabel = nullptr;
+    QPlainTextEdit* m_pLog = nullptr;
 
-    std::vector<fonttool::GlyphPicture> pics_;
-    std::vector<std::string> problems_;
-    std::vector<int> rowGlyph_;          // row -> glyph index in font_ (-1: not built, a problem row)
-    std::vector<int> glyphRow_;          // glyph index -> row (-1: the space added for you)
-    bool filling_ = false;
-    BitmapFont font_;
-    atlas::Image page_;
-    QImage preview_;
-    int missing_ = 0;
+    std::vector<fonttool::GlyphPicture> m_vPics;
+    std::vector<std::string> m_vProblems;
+    std::vector<int> m_vRowGlyph;          // row -> glyph index in font_ (-1: not built, a problem row)
+    std::vector<int> m_vGlyphRow;          // glyph index -> row (-1: the space added for you)
+    bool m_bFilling = false;
+    BitmapFont m_oFont;
+    atlas::Image m_oPage;
+    QImage m_oPreview;
+    int m_iMissing = 0;
 };

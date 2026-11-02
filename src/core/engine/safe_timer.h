@@ -23,43 +23,43 @@ namespace toms {
 // The thing a delayed call belongs to. Destroying it, or reset(), cancels every call scheduled with it.
 class TimerOwner {
 public:
-    TimerOwner() : token_(std::make_shared<char>(0)) {}
-    TimerOwner(const TimerOwner&) : token_(std::make_shared<char>(0)) {}   // a copy owns nothing of the original's
-    TimerOwner& operator=(const TimerOwner&) { reset(); return *this; }
-    void reset() { token_ = std::make_shared<char>(0); }   // cancels everything scheduled so far
-    std::weak_ptr<char> token() const { return token_; }
+    TimerOwner() : m_spToken(std::make_shared<char>(0)) {}
+    TimerOwner(const TimerOwner&) : m_spToken(std::make_shared<char>(0)) {}   // a copy owns nothing of the original's
+    TimerOwner& operator=(const TimerOwner&) { f_Reset(); return *this; }
+    void f_Reset() { m_spToken = std::make_shared<char>(0); }   // cancels everything scheduled so far
+    std::weak_ptr<char> f_Token() const { return m_spToken; }
 private:
-    std::shared_ptr<char> token_;
+    std::shared_ptr<char> m_spToken;
 };
 
 class TimerQueue {
 public:
     using Id = uint32_t;
     // Calls fn once, delayMs from now (0: on the next update). Returns an id for cancel().
-    Id after(const TimerOwner& owner, int delayMs, std::function<void()> fn);
+    Id f_After(const TimerOwner& l_oOwner, int l_iDelayMs, std::function<void()> l_fnFn);
     // Calls fn every periodMs until cancelled or the owner is gone (the first call periodMs from now).
-    Id every(const TimerOwner& owner, int periodMs, std::function<void()> fn);
-    void cancel(Id id);
-    void clear() { timers_.clear(); }
+    Id f_Every(const TimerOwner& l_oOwner, int l_iPeriodMs, std::function<void()> l_fnFn);
+    void f_Cancel(Id l_uId);
+    void f_Clear() { m_vTimers.clear(); }
     // Advances the clock and runs what is due, in time order (equal times: the order they were scheduled).
     // A call may schedule or cancel others; one scheduled now for 0 ms runs on the next update, not this one.
-    void update(int dtMs);
-    size_t pending() const;   // live calls still waiting (a gone owner's are not counted)
-    int64_t now() const { return nowMs_; }
+    void f_Update(int l_iDtMs);
+    size_t f_Pending() const;   // live calls still waiting (a gone owner's are not counted)
+    int64_t f_Now() const { return m_i64NowMs; }
 
 private:
     struct Timer {
-        Id id;
-        int64_t dueMs;
-        int periodMs;           // 0: once
-        uint64_t order;         // scheduling order, for ties
-        std::weak_ptr<char> owner;
-        std::function<void()> fn;
+        Id m_uId;
+        int64_t m_i64DueMs;
+        int m_iPeriodMs;           // 0: once
+        uint64_t m_u64Order;         // scheduling order, for ties
+        std::weak_ptr<char> m_wpOwner;
+        std::function<void()> m_fnFn;
     };
-    std::vector<Timer> timers_;
-    int64_t nowMs_ = 0;
-    Id nextId_ = 1;
-    uint64_t nextOrder_ = 0;
+    std::vector<Timer> m_vTimers;
+    int64_t m_i64NowMs = 0;
+    Id m_uNextId = 1;
+    uint64_t m_u64NextOrder = 0;
 };
 
 } // namespace toms

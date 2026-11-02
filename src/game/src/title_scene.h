@@ -19,27 +19,27 @@ namespace toms::next {
 
 class TitleScene {
 public:
-    static constexpr uint16_t kFirstView = 16;   // after the game's views (0..3) and the host's
+    static constexpr uint16_t m_u16FirstView = 16;   // after the game's views (0..3) and the host's
 
     // path: the .glb / .gltf (read through vfs, so it works from an APK too). False + error when it
     // does not load or bgfx has no mesh shaders; the title then keeps its plain background.
-    bool load(const std::string& path, std::string& error);
-    void shutdown();
-    bool ready() const { return gpu_ != nullptr; }
+    bool f_Load(const std::string& l_strPath, std::string& l_strError);
+    void f_Shutdown();
+    bool f_Ready() const { return m_spGpu != nullptr; }
 
     // Advances the animation by dtSeconds and queues the scene for this frame (the whole backbuffer).
-    void draw(double dtSeconds, uint32_t width, uint32_t height);
+    void f_Draw(double l_dDtSeconds, uint32_t l_uWidth, uint32_t l_uHeight);
 
-    size_t cameraCount() const { return cameras_.size(); }
+    size_t f_CameraCount() const { return m_vCameras.size(); }
 
 private:
-    gltf::Model model_;
-    gltf::Pose pose_;
-    GltfRenderer renderer_;
-    std::shared_ptr<GltfRenderer::GpuModel> gpu_;
-    std::vector<int> cameras_;          // indices into pose_.cameras(): the perspective ones
-    double time_ = 0.0;
-    glm::vec3 boundsMin_{-1.0f}, boundsMax_{1.0f};
+    gltf::Model m_oModel;
+    gltf::Pose m_oPose;
+    GltfRenderer m_oRenderer;
+    std::shared_ptr<GltfRenderer::GpuModel> m_spGpu;
+    std::vector<int> m_vCameras;          // indices into pose_.cameras(): the perspective ones
+    double m_dTime = 0.0;
+    glm::vec3 m_v3BoundsMin{-1.0f}, m_v3BoundsMax{1.0f};
 };
 
 }  // namespace toms::next

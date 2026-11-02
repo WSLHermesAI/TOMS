@@ -19,299 +19,299 @@
 
 using namespace stage;
 
-static int g_checks = 0;
-static int g_failed = 0;
-#define CHECK(cond, ...) do { ++g_checks; if (!(cond)) { ++g_failed; \
+static int g_iChecks = 0;
+static int g_iFailed = 0;
+#define CHECK(cond, ...) do { ++g_iChecks; if (!(cond)) { ++g_iFailed; \
     std::printf("  FAIL: %s:%d  ", __FILE__, __LINE__); std::printf(__VA_ARGS__); std::printf("\n"); } } while (0)
 
-static bool near(double a, double b) { return std::fabs(a - b) < 1e-12; }
+static bool f_Near(double l_dA, double l_dB) { return std::fabs(l_dA - l_dB) < 1e-12; }
 
-static void testRandom() {
+static void f_TestRandom() {
     // node: hashStr("1:F02") = 3257597346, then mulberry gives these three
-    CHECK(hashStr("1:F02") == 3257597346u, "hashStr(1:F02) = %u", hashStr("1:F02"));
-    auto r = mulberry(hashStr("1:F02"));
-    const double a = r(), b = r(), c = r();
-    CHECK(near(a, 0.19637801591306925) && near(b, 0.4360330330673605) && near(c, 0.9664091821759939),
-          "mulberry(1:F02) = %.17g %.17g %.17g", a, b, c);
-    CHECK(hashStr("42:F10") == 834627190u, "hashStr(42:F10)");
-    auto r2 = mulberry(hashStr("42:F10"));
-    CHECK(near(r2(), 0.28418486448936164), "mulberry(42:F10)");
+    CHECK(f_HashStr("1:F02") == 3257597346u, "hashStr(1:F02) = %u", f_HashStr("1:F02"));
+    auto l_fnR = f_Mulberry(f_HashStr("1:F02"));
+    const double l_dA = l_fnR(), l_dB = l_fnR(), l_dC = l_fnR();
+    CHECK(f_Near(l_dA, 0.19637801591306925) && f_Near(l_dB, 0.4360330330673605) && f_Near(l_dC, 0.9664091821759939),
+          "mulberry(1:F02) = %.17g %.17g %.17g", l_dA, l_dB, l_dC);
+    CHECK(f_HashStr("42:F10") == 834627190u, "hashStr(42:F10)");
+    auto l_fnR2 = f_Mulberry(f_HashStr("42:F10"));
+    CHECK(f_Near(l_fnR2(), 0.28418486448936164), "mulberry(42:F10)");
 }
 
-static void testLoad(Project& p) {
-    CHECK(p.floors.size() == 70, "70 floors (%zu)", p.floors.size());
-    CHECK(!p.events.empty() && p.event("ev_village_well"), "events loaded, ev_village_well defined");
-    CHECK(!p.sprites.empty(), "sprite names loaded");
-    CHECK(p.typeRec("monster:slime") && p.typeRec("item:potion_red"), "type records: slime, potion_red");
-    int same = 0;
-    for (const Floor& f : p.floors) {
-        StageDoc& d = p.doc(f.id);
-        if (!p.isDirty(f.id)) same++;
-        else std::printf("  note: %s reads back changed (stage %s, spec %s)\n", f.id.c_str(),
-                         p.stageText(d) == d.origStage ? "same" : "differs", p.specText(d) == d.origSpec ? "same" : "differs");
+static void f_TestLoad(Project& l_oP) {
+    CHECK(l_oP.m_vFloors.size() == 70, "70 floors (%zu)", l_oP.m_vFloors.size());
+    CHECK(!l_oP.m_vEvents.empty() && l_oP.f_Event("ev_village_well"), "events loaded, ev_village_well defined");
+    CHECK(!l_oP.m_vSprites.empty(), "sprite names loaded");
+    CHECK(l_oP.f_TypeRec("monster:slime") && l_oP.f_TypeRec("item:potion_red"), "type records: slime, potion_red");
+    int l_iSame = 0;
+    for (const Floor& l_oF : l_oP.m_vFloors) {
+        StageDoc& l_oD = l_oP.f_Doc(l_oF.m_strId);
+        if (!l_oP.f_IsDirty(l_oF.m_strId)) l_iSame++;
+        else std::printf("  note: %s reads back changed (stage %s, spec %s)\n", l_oF.m_strId.c_str(),
+                         l_oP.f_StageText(l_oD) == l_oD.m_strOrigStage ? "same" : "differs", l_oP.f_SpecText(l_oD) == l_oD.m_strOrigSpec ? "same" : "differs");
         // the file as written by either editor: what this editor would write for it unchanged
-        std::string raw;
-        if (readText(p.abs(f.stagePath), raw)) CHECK(raw == d.origStage, "%s: written back byte for byte", f.stagePath.c_str());
-        if (readText(p.abs(f.specPath), raw)) CHECK(raw == d.origSpec, "%s: written back byte for byte", f.specPath.c_str());
+        std::string l_strRaw;
+        if (f_ReadText(l_oP.f_Abs(l_oF.m_strStagePath), l_strRaw)) CHECK(l_strRaw == l_oD.m_strOrigStage, "%s: written back byte for byte", l_oF.m_strStagePath.c_str());
+        if (f_ReadText(l_oP.f_Abs(l_oF.m_strSpecPath), l_strRaw)) CHECK(l_strRaw == l_oD.m_strOrigSpec, "%s: written back byte for byte", l_oF.m_strSpecPath.c_str());
     }
-    CHECK(same == (int)p.floors.size(), "untouched floors are not changed (%d of %zu)", same, p.floors.size());
-    CHECK(changedFiles(p).empty(), "nothing to save after loading (%zu)", changedFiles(p).size());
+    CHECK(l_iSame == (int)l_oP.m_vFloors.size(), "untouched floors are not changed (%d of %zu)", l_iSame, l_oP.m_vFloors.size());
+    CHECK(f_ChangedFiles(l_oP).empty(), "nothing to save after loading (%zu)", f_ChangedFiles(l_oP).size());
 }
 
-static void testEdits(Project& p) {
-    StageDoc& d = p.doc("F02");
+static void f_TestEdits(Project& l_oP) {
+    StageDoc& l_oD = l_oP.f_Doc("F02");
     // a free floor cell
-    int fx = -1, fy = -1;
-    for (int y = 1; y < d.height() - 1 && fx < 0; y++)
-        for (int x = 1; x < d.width() - 1; x++) if (d.at(x, y) == '.') { fx = x; fy = y; break; }
-    CHECK(fx >= 0, "F02 has a free cell");
-    p.beginEdit(d);
-    CHECK(p.putSem(d, fx, fy, "wall"), "paint a wall");
-    CHECK(p.commitEdit(d, "Paint wall"), "the edit is an undo step");
-    CHECK(p.isDirty("F02"), "F02 changed");
-    CHECK(p.undo(d), "undo");
-    CHECK(!p.isDirty("F02"), "after undo F02 is as on disk");
-    CHECK(p.redo(d) && p.isDirty("F02"), "redo");
-    p.undo(d);
+    int l_iFx = -1, l_iFy = -1;
+    for (int l_iY = 1; l_iY < l_oD.f_Height() - 1 && l_iFx < 0; l_iY++)
+        for (int l_iX = 1; l_iX < l_oD.f_Width() - 1; l_iX++) if (l_oD.f_At(l_iX, l_iY) == '.') { l_iFx = l_iX; l_iFy = l_iY; break; }
+    CHECK(l_iFx >= 0, "F02 has a free cell");
+    l_oP.f_BeginEdit(l_oD);
+    CHECK(l_oP.f_PutSem(l_oD, l_iFx, l_iFy, "wall"), "paint a wall");
+    CHECK(l_oP.f_CommitEdit(l_oD, "Paint wall"), "the edit is an undo step");
+    CHECK(l_oP.f_IsDirty("F02"), "F02 changed");
+    CHECK(l_oP.f_Undo(l_oD), "undo");
+    CHECK(!l_oP.f_IsDirty("F02"), "after undo F02 is as on disk");
+    CHECK(l_oP.f_Redo(l_oD) && l_oP.f_IsDirty("F02"), "redo");
+    l_oP.f_Undo(l_oD);
 
     // an object needs free floor; a monster's footprint; the same object again does nothing
-    const PlaceCheck onWall = p.placeCheck(d, 0, 0, "monster:slime");
-    CHECK(!onWall.ok && onWall.why == PlaceCheck::Wall, "nothing goes on a wall");
-    const PlaceCheck onFree = p.placeCheck(d, fx, fy, "item:coin");
-    CHECK(onFree.ok, "an item on free floor");
+    const PlaceCheck l_oOnWall = l_oP.f_PlaceCheck(l_oD, 0, 0, "monster:slime");
+    CHECK(!l_oOnWall.m_bOk && l_oOnWall.m_eWhy == PlaceCheck::Wall, "nothing goes on a wall");
+    const PlaceCheck l_oOnFree = l_oP.f_PlaceCheck(l_oD, l_iFx, l_iFy, "item:coin");
+    CHECK(l_oOnFree.m_bOk, "an item on free floor");
 
     // an event the floor does not list is added to its spec
-    bool listed = false;
-    p.beginEdit(d);
-    p.putSem(d, fx, fy, "event:ev_village_well_test", &listed);
-    CHECK(listed, "painting an unlisted event lists it");
-    p.commitEdit(d, "event");
-    p.undo(d);
-    CHECK(!p.isDirty("F02"), "undo removes the listed event too");
+    bool l_bListed = false;
+    l_oP.f_BeginEdit(l_oD);
+    l_oP.f_PutSem(l_oD, l_iFx, l_iFy, "event:ev_village_well_test", &l_bListed);
+    CHECK(l_bListed, "painting an unlisted event lists it");
+    l_oP.f_CommitEdit(l_oD, "event");
+    l_oP.f_Undo(l_oD);
+    CHECK(!l_oP.f_IsDirty("F02"), "undo removes the listed event too");
 
     // the reserved chars: a door always gets 'y'; whatever used 'y' moves to a free char
-    StageDoc& d3 = p.doc("F03");
-    p.beginEdit(d3);
-    d3.st["legend"]["y"] = "item:coin";
-    const char yc = p.charFor(d3, "door:yellow");
-    CHECK(yc == 'y' && d3.st["legend"]["y"] == "door:yellow", "door:yellow takes 'y'");
-    bool moved = false;
-    for (auto& [c, v] : d3.st["legend"].items()) if (v == "item:coin" && c != "y") moved = true;
-    CHECK(moved, "the item that used 'y' moved to another char");
-    p.commitEdit(d3, "reserved");
-    p.undo(d3);
-    CHECK(!p.isDirty("F03"), "undo restores the legend");
+    StageDoc& l_oD3 = l_oP.f_Doc("F03");
+    l_oP.f_BeginEdit(l_oD3);
+    l_oD3.m_jSt["legend"]["y"] = "item:coin";
+    const char l_cYc = l_oP.f_CharFor(l_oD3, "door:yellow");
+    CHECK(l_cYc == 'y' && l_oD3.m_jSt["legend"]["y"] == "door:yellow", "door:yellow takes 'y'");
+    bool l_bMoved = false;
+    for (auto& [l_strC, l_jV] : l_oD3.m_jSt["legend"].items()) if (l_jV == "item:coin" && l_strC != "y") l_bMoved = true;
+    CHECK(l_bMoved, "the item that used 'y' moved to another char");
+    l_oP.f_CommitEdit(l_oD3, "reserved");
+    l_oP.f_Undo(l_oD3);
+    CHECK(!l_oP.f_IsDirty("F03"), "undo restores the legend");
 
     // object settings go with the object: erased with it, kept with a move
-    const auto villager = p.find(d, "npc:villager");
-    CHECK(villager.has_value(), "F02 has the villager");
-    if (villager) {
-        p.beginEdit(d);
-        d.st["objects"][std::to_string(villager->x) + "," + std::to_string(villager->y)] = Json{{"events", Json::array({"ev_village_well"})}};
-        CHECK(Project::objOf(d, villager->x, villager->y) != nullptr, "object settings set");
-        p.putSem(d, villager->x, villager->y, "floor");
-        CHECK(Project::objOf(d, villager->x, villager->y) == nullptr, "painting over drops them");
-        p.commitEdit(d, "objects");
-        p.undo(d);
-        CHECK(!p.isDirty("F02"), "undo restores the cell");
+    const auto l_optVillager = l_oP.f_Find(l_oD, "npc:villager");
+    CHECK(l_optVillager.has_value(), "F02 has the villager");
+    if (l_optVillager) {
+        l_oP.f_BeginEdit(l_oD);
+        l_oD.m_jSt["objects"][std::to_string(l_optVillager->m_iX) + "," + std::to_string(l_optVillager->m_iY)] = Json{{"events", Json::array({"ev_village_well"})}};
+        CHECK(Project::f_ObjOf(l_oD, l_optVillager->m_iX, l_optVillager->m_iY) != nullptr, "object settings set");
+        l_oP.f_PutSem(l_oD, l_optVillager->m_iX, l_optVillager->m_iY, "floor");
+        CHECK(Project::f_ObjOf(l_oD, l_optVillager->m_iX, l_optVillager->m_iY) == nullptr, "painting over drops them");
+        l_oP.f_CommitEdit(l_oD, "objects");
+        l_oP.f_Undo(l_oD);
+        CHECK(!l_oP.f_IsDirty("F02"), "undo restores the cell");
     }
 
     // stable object ids (docs/gameplay/05_SAVE_SYSTEM.md): every saved-state object has a uid, which moves with it; a new object
     // gets a fresh one and a copied (duplicate) uid is replaced
-    if (const auto mon = p.find(d, "monster:slime")) {
-        const Json* o = Project::objOf(d, mon->x, mon->y);
-        CHECK(o && o->contains("uid"), "a shipped monster has a uid");
-        const std::string uid = o ? o->value("uid", std::string()) : std::string();
-        int fx = -1, fy = -1;
-        for (int y = 0; y < d.height() && fx < 0; y++)
-            for (int x = 0; x < d.width(); x++)
-                if (p.semAt(d, x, y) == "floor") { fx = x; fy = y; break; }
-        p.beginEdit(d);
-        const char ch = d.grid[(size_t)mon->y][(size_t)mon->x];
-        d.grid[(size_t)mon->y][(size_t)mon->x] = '.';
-        d.grid[(size_t)fy][(size_t)fx] = ch;
-        const Json keep = *Project::objOf(d, mon->x, mon->y);
-        Project::dropObj(d, mon->x, mon->y);
-        d.st["objects"][std::to_string(fx) + "," + std::to_string(fy)] = keep;
-        p.commitEdit(d, "move");
-        const Json* moved = Project::objOf(d, fx, fy);
-        CHECK(moved && moved->value("uid", std::string()) == uid, "a moved object keeps its uid");
-        p.undo(d);
-        p.beginEdit(d);
-        p.putSem(d, fx, fy, "monster:bat");
-        p.commitEdit(d, "new");
-        const Json* fresh = Project::objOf(d, fx, fy);
-        CHECK(fresh && !fresh->value("uid", std::string()).empty() && fresh->value("uid", std::string()) != uid,
+    if (const auto l_optMon = l_oP.f_Find(l_oD, "monster:slime")) {
+        const Json* l_pO = Project::f_ObjOf(l_oD, l_optMon->m_iX, l_optMon->m_iY);
+        CHECK(l_pO && l_pO->contains("uid"), "a shipped monster has a uid");
+        const std::string l_strUid = l_pO ? l_pO->value("uid", std::string()) : std::string();
+        int l_iFx = -1, l_iFy = -1;
+        for (int l_iY = 0; l_iY < l_oD.f_Height() && l_iFx < 0; l_iY++)
+            for (int l_iX = 0; l_iX < l_oD.f_Width(); l_iX++)
+                if (l_oP.f_SemAt(l_oD, l_iX, l_iY) == "floor") { l_iFx = l_iX; l_iFy = l_iY; break; }
+        l_oP.f_BeginEdit(l_oD);
+        const char l_cCh = l_oD.m_vGrid[(size_t)l_optMon->m_iY][(size_t)l_optMon->m_iX];
+        l_oD.m_vGrid[(size_t)l_optMon->m_iY][(size_t)l_optMon->m_iX] = '.';
+        l_oD.m_vGrid[(size_t)l_iFy][(size_t)l_iFx] = l_cCh;
+        const Json l_jKeep = *Project::f_ObjOf(l_oD, l_optMon->m_iX, l_optMon->m_iY);
+        Project::f_DropObj(l_oD, l_optMon->m_iX, l_optMon->m_iY);
+        l_oD.m_jSt["objects"][std::to_string(l_iFx) + "," + std::to_string(l_iFy)] = l_jKeep;
+        l_oP.f_CommitEdit(l_oD, "move");
+        const Json* l_pMoved = Project::f_ObjOf(l_oD, l_iFx, l_iFy);
+        CHECK(l_pMoved && l_pMoved->value("uid", std::string()) == l_strUid, "a moved object keeps its uid");
+        l_oP.f_Undo(l_oD);
+        l_oP.f_BeginEdit(l_oD);
+        l_oP.f_PutSem(l_oD, l_iFx, l_iFy, "monster:bat");
+        l_oP.f_CommitEdit(l_oD, "new");
+        const Json* l_pFresh = Project::f_ObjOf(l_oD, l_iFx, l_iFy);
+        CHECK(l_pFresh && !l_pFresh->value("uid", std::string()).empty() && l_pFresh->value("uid", std::string()) != l_strUid,
               "a new object gets its own uid");
-        p.beginEdit(d);
-        d.st["objects"][std::to_string(fx) + "," + std::to_string(fy)]["uid"] = uid;   // as if its entry were copied
-        p.commitEdit(d, "dup");
-        const Json* dup = Project::objOf(d, fx, fy);
-        const Json* orig = Project::objOf(d, mon->x, mon->y);
-        CHECK(dup && orig && dup->value("uid", std::string()) != orig->value("uid", std::string()), "a duplicate uid is replaced");
-        p.undo(d);
-        p.undo(d);
-        CHECK(!p.isDirty("F02"), "undo restores the uids");
+        l_oP.f_BeginEdit(l_oD);
+        l_oD.m_jSt["objects"][std::to_string(l_iFx) + "," + std::to_string(l_iFy)]["uid"] = l_strUid;   // as if its entry were copied
+        l_oP.f_CommitEdit(l_oD, "dup");
+        const Json* l_pDup = Project::f_ObjOf(l_oD, l_iFx, l_iFy);
+        const Json* l_pOrig = Project::f_ObjOf(l_oD, l_optMon->m_iX, l_optMon->m_iY);
+        CHECK(l_pDup && l_pOrig && l_pDup->value("uid", std::string()) != l_pOrig->value("uid", std::string()), "a duplicate uid is replaced");
+        l_oP.f_Undo(l_oD);
+        l_oP.f_Undo(l_oD);
+        CHECK(!l_oP.f_IsDirty("F02"), "undo restores the uids");
     }
 }
 
-static void testChecks(Project& p) {
-    int errors = 0, warnings = 0;
-    for (const Floor& f : p.floors)
-        for (const Issue& i : problems(p, p.doc(f.id))) (i.sev == Sev::Error ? errors : warnings)++;
-    std::printf("  checks: %d errors, %d warnings/info on %zu floors\n", errors, warnings, p.floors.size());
-    const std::vector<StoryRow>& rows = storyCheck(p);
-    CHECK(rows.size() == p.floors.size(), "one story row per floor");
-    CHECK(!rows.empty() && rows[0].fid == "F01", "the story starts on F01");
-    int se = 0, sw = 0;
-    for (const StoryRow& r : rows) for (const Issue& i : r.issues) (i.sev == Sev::Error ? se : sw)++;
-    std::printf("  story: %d blocking, %d warnings\n", se, sw);
-    CHECK(&storyCheck(p) == &rows, "the story check is cached until an edit");
-    CHECK(!safeCells(p, "F02").empty(), "F02 has safe cells");
+static void f_TestChecks(Project& l_oP) {
+    int l_iErrors = 0, l_iWarnings = 0;
+    for (const Floor& l_oF : l_oP.m_vFloors)
+        for (const Issue& l_oI : f_Problems(l_oP, l_oP.f_Doc(l_oF.m_strId))) (l_oI.m_eSev == Sev::Error ? l_iErrors : l_iWarnings)++;
+    std::printf("  checks: %d errors, %d warnings/info on %zu floors\n", l_iErrors, l_iWarnings, l_oP.m_vFloors.size());
+    const std::vector<StoryRow>& l_vRows = f_StoryCheck(l_oP);
+    CHECK(l_vRows.size() == l_oP.m_vFloors.size(), "one story row per floor");
+    CHECK(!l_vRows.empty() && l_vRows[0].m_strFid == "F01", "the story starts on F01");
+    int l_iSe = 0, l_iSw = 0;
+    for (const StoryRow& l_oR : l_vRows) for (const Issue& l_oI : l_oR.m_vIssues) (l_oI.m_eSev == Sev::Error ? l_iSe : l_iSw)++;
+    std::printf("  story: %d blocking, %d warnings\n", l_iSe, l_iSw);
+    CHECK(&f_StoryCheck(l_oP) == &l_vRows, "the story check is cached until an edit");
+    CHECK(!f_SafeCells(l_oP, "F02").empty(), "F02 has safe cells");
 }
 
-static void testAutoPlace(Project& p) {
-    StageDoc& d = p.doc("F02");
-    const auto label = [](int n) { return "Auto-place " + std::to_string(n); };
-    const AutoPlaceResult a = autoPlace(p, {"F02"}, "all", "7", label);
-    const std::vector<std::string> first = d.grid;
-    if (a.floors) p.undo(d);
-    CHECK(!p.isDirty("F02"), "auto-place undoes in one step");
-    const AutoPlaceResult b = autoPlace(p, {"F02"}, "all", "7", label);
-    CHECK(a.placed == b.placed && d.grid == first, "the same seed places the same cells (%d placed)", a.placed);
-    if (b.floors) p.undo(d);
+static void f_TestAutoPlace(Project& l_oP) {
+    StageDoc& l_oD = l_oP.f_Doc("F02");
+    const auto l_fnLabel = [](int l_iN) { return "Auto-place " + std::to_string(l_iN); };
+    const AutoPlaceResult l_oA = f_AutoPlace(l_oP, {"F02"}, "all", "7", l_fnLabel);
+    const std::vector<std::string> l_vFirst = l_oD.m_vGrid;
+    if (l_oA.m_iFloors) l_oP.f_Undo(l_oD);
+    CHECK(!l_oP.f_IsDirty("F02"), "auto-place undoes in one step");
+    const AutoPlaceResult l_oB = f_AutoPlace(l_oP, {"F02"}, "all", "7", l_fnLabel);
+    CHECK(l_oA.m_iPlaced == l_oB.m_iPlaced && l_oD.m_vGrid == l_vFirst, "the same seed places the same cells (%d placed)", l_oA.m_iPlaced);
+    if (l_oB.m_iFloors) l_oP.f_Undo(l_oD);
 }
 
-static void testFloorIndex(Project& p) {
-    std::string disk;
-    CHECK(readText(p.abs("assets/data/events/floor_index.json"), disk), "floor_index.json exists");
-    const std::string built = buildFloorIndex(p.root).dump(1, ' ', false, Json::error_handler_t::replace) + "\n";
-    CHECK(built == disk, "the floor index built here matches floor_index.json (%zu vs %zu bytes)", built.size(), disk.size());
-    if (built != disk) {
-        size_t i = 0;
-        while (i < built.size() && i < disk.size() && built[i] == disk[i]) i++;
-        std::printf("  first difference at byte %zu: built ...%s... disk ...%s...\n", i,
-                    built.substr(i > 40 ? i - 40 : 0, 80).c_str(), disk.substr(i > 40 ? i - 40 : 0, 80).c_str());
+static void f_TestFloorIndex(Project& l_oP) {
+    std::string l_strDisk;
+    CHECK(f_ReadText(l_oP.f_Abs("assets/data/events/floor_index.json"), l_strDisk), "floor_index.json exists");
+    const std::string l_strBuilt = f_BuildFloorIndex(l_oP.m_strRoot).dump(1, ' ', false, Json::error_handler_t::replace) + "\n";
+    CHECK(l_strBuilt == l_strDisk, "the floor index built here matches floor_index.json (%zu vs %zu bytes)", l_strBuilt.size(), l_strDisk.size());
+    if (l_strBuilt != l_strDisk) {
+        size_t l_nI = 0;
+        while (l_nI < l_strBuilt.size() && l_nI < l_strDisk.size() && l_strBuilt[l_nI] == l_strDisk[l_nI]) l_nI++;
+        std::printf("  first difference at byte %zu: built ...%s... disk ...%s...\n", l_nI,
+                    l_strBuilt.substr(l_nI > 40 ? l_nI - 40 : 0, 80).c_str(), l_strDisk.substr(l_nI > 40 ? l_nI - 40 : 0, 80).c_str());
     }
 }
 
 // The event editor's model: loads unchanged, writes nothing until edited, and an edit writes only its file, in the
 // format the file already has (the HTML event editor wrote it: JSON.stringify with 2 spaces).
-static void testEvents(const std::string& root) {
-    EventProject e;
-    std::string err;
-    CHECK(e.load(root, err), "the event project loads (%s)", err.c_str());
-    CHECK(e.S["events"].size() > 100, "events loaded (%zu)", e.S["events"].size());
-    CHECK(!e.dirty() && e.liveWrites({}).empty(), "nothing to write after loading");
+static void f_TestEvents(const std::string& l_strRoot) {
+    EventProject l_oE;
+    std::string l_strErr;
+    CHECK(l_oE.f_Load(l_strRoot, l_strErr), "the event project loads (%s)", l_strErr.c_str());
+    CHECK(l_oE.m_jS["events"].size() > 100, "events loaded (%zu)", l_oE.m_jS["events"].size());
+    CHECK(!l_oE.f_Dirty() && l_oE.f_LiveWrites({}).empty(), "nothing to write after loading");
     // every pool, vars and kinds file is in the format a save writes (so a save changes only the edited lines)
-    int same = 0, files = 0;
-    for (const auto& entry : std::filesystem::directory_iterator(std::filesystem::u8path(root + "/assets/data/events"))) {
-        const std::string n = entry.path().filename().u8string();
-        if (n.rfind("pool_", 0) != 0) continue;
-        std::string raw;
-        readText(entry.path().u8string(), raw);
-        Json j = Json::parse(raw, nullptr, false);
-        files++;
-        std::string out = j.dump(2) + "\n";
-        if (raw.find("\r\n") != std::string::npos) { std::string c; for (char ch : out) { if (ch == '\n') c += '\r'; c += ch; } out = c; }
-        if (out == raw) same++; else std::printf("  note: %s would be rewritten differently\n", n.c_str());
+    int l_iSame = 0, l_iFiles = 0;
+    for (const auto& l_oEntry : std::filesystem::directory_iterator(std::filesystem::u8path(l_strRoot + "/assets/data/events"))) {
+        const std::string l_strN = l_oEntry.path().filename().u8string();
+        if (l_strN.rfind("pool_", 0) != 0) continue;
+        std::string l_strRaw;
+        f_ReadText(l_oEntry.path().u8string(), l_strRaw);
+        Json l_jJ = Json::parse(l_strRaw, nullptr, false);
+        l_iFiles++;
+        std::string l_strOut = l_jJ.dump(2) + "\n";
+        if (l_strRaw.find("\r\n") != std::string::npos) { std::string l_strC; for (char l_cCh : l_strOut) { if (l_cCh == '\n') l_strC += '\r'; l_strC += l_cCh; } l_strOut = l_strC; }
+        if (l_strOut == l_strRaw) l_iSame++; else std::printf("  note: %s would be rewritten differently\n", l_strN.c_str());
     }
-    CHECK(files > 0 && same == files, "every pool file is in the save format (%d of %d)", same, files);
+    CHECK(l_iFiles > 0 && l_iSame == l_iFiles, "every pool file is in the save format (%d of %d)", l_iSame, l_iFiles);
     // a text edit: only text.json, only that key
-    const std::string key = (*e.ev("ev_village_well"))["text"].get<std::string>();
-    e.edit("text", [&] { e.S["texts"][key]["en"] = "core test"; });
-    auto w = e.liveWrites({});
-    CHECK(w.size() == 1 && w[0].path == "assets/data/text.json", "a text edit writes only text.json");
-    if (w.size() == 1) {
-        Json a = Json::parse(w[0].before), b = Json::parse(w[0].text);
-        CHECK(b["strings"][key]["en"] == "core test", "the new text is in it");
-        b["strings"][key] = a["strings"][key];
-        CHECK(a == b, "nothing else in text.json changes");
+    const std::string l_strKey = (*l_oE.f_Ev("ev_village_well"))["text"].get<std::string>();
+    l_oE.f_Edit("text", [&] { l_oE.m_jS["texts"][l_strKey]["en"] = "core test"; });
+    auto l_vW = l_oE.f_LiveWrites({});
+    CHECK(l_vW.size() == 1 && l_vW[0].m_strPath == "assets/data/text.json", "a text edit writes only text.json");
+    if (l_vW.size() == 1) {
+        Json l_jA = Json::parse(l_vW[0].m_strBefore), l_jB = Json::parse(l_vW[0].m_strText);
+        CHECK(l_jB["strings"][l_strKey]["en"] == "core test", "the new text is in it");
+        l_jB["strings"][l_strKey] = l_jA["strings"][l_strKey];
+        CHECK(l_jA == l_jB, "nothing else in text.json changes");
     }
-    CHECK(e.undo() && !e.dirty(), "undo restores it");
+    CHECK(l_oE.f_Undo() && !l_oE.f_Dirty(), "undo restores it");
     // a logic edit: only its pool, and the record keeps its other fields
-    e.edit("logic", [&] { (*e.ev("ev_village_well"))["actions"].push_back(makeAction("addCounter", "insight", 1)); });
-    w = e.liveWrites({});
-    CHECK(w.size() == 1 && w[0].path.find("events/pool_act01.json") != std::string::npos, "a logic edit writes only its pool");
-    e.undo();
+    l_oE.f_Edit("logic", [&] { (*l_oE.f_Ev("ev_village_well"))["actions"].push_back(f_MakeAction("addCounter", "insight", 1)); });
+    l_vW = l_oE.f_LiveWrites({});
+    CHECK(l_vW.size() == 1 && l_vW[0].m_strPath.find("events/pool_act01.json") != std::string::npos, "a logic edit writes only its pool");
+    l_oE.f_Undo();
     // a flag edit: flags.json keeps its hand-aligned lines; only the changed line differs
-    if (!e.S["flags"].empty()) {
-        const std::string fl = e.S["flags"].begin().key();
-        e.edit("flag", [&] { e.S["flags"][fl]["category"] = "core test"; });
-        w = e.liveWrites({});
-        CHECK(w.size() == 1 && w[0].path == "assets/data/story/flags.json", "a flag edit writes only flags.json");
-        if (w.size() == 1) {
-            int changed = 0;
-            for (const auto& [c, l] : lineDiff(w[0].before, w[0].text)) { (void)l; if (c == '+') changed++; }
-            CHECK(changed == 1, "one line of flags.json changes (%d)", changed);
+    if (!l_oE.m_jS["flags"].empty()) {
+        const std::string l_strFl = l_oE.m_jS["flags"].begin().key();
+        l_oE.f_Edit("flag", [&] { l_oE.m_jS["flags"][l_strFl]["category"] = "core test"; });
+        l_vW = l_oE.f_LiveWrites({});
+        CHECK(l_vW.size() == 1 && l_vW[0].m_strPath == "assets/data/story/flags.json", "a flag edit writes only flags.json");
+        if (l_vW.size() == 1) {
+            int l_iChanged = 0;
+            for (const auto& [l_cC, l_strL] : f_LineDiff(l_vW[0].m_strBefore, l_vW[0].m_strText)) { (void)l_strL; if (l_cC == '+') l_iChanged++; }
+            CHECK(l_iChanged == 1, "one line of flags.json changes (%d)", l_iChanged);
         }
-        e.undo();
+        l_oE.f_Undo();
     }
     // conditions as rows and back
-    const Json leaf = rowToLeaf("var:well_clues", ">=", 2);
-    CHECK(leafToRow(leaf).subj == "var:well_clues" && leafToRow(leaf).op == ">=", "a condition row round-trips");
-    const Json notLeaf = rowToLeaf("event:ev_village_well", "not", Json());
-    CHECK(leafToRow(notLeaf).op == "not", "an 'is not done' row round-trips");
-    CHECK(condToRows(Json{{"any", Json::array({leaf, notLeaf})}}).mode == "any", "any-of rows");
-    CHECK(condToRows(Json{{"all", Json::array({Json{{"any", Json::array({leaf})}}})}}).raw, "nested logic stays JSON");
+    const Json l_jLeaf = f_RowToLeaf("var:well_clues", ">=", 2);
+    CHECK(f_LeafToRow(l_jLeaf).m_strSubj == "var:well_clues" && f_LeafToRow(l_jLeaf).m_strOp == ">=", "a condition row round-trips");
+    const Json l_jNotLeaf = f_RowToLeaf("event:ev_village_well", "not", Json());
+    CHECK(f_LeafToRow(l_jNotLeaf).m_strOp == "not", "an 'is not done' row round-trips");
+    CHECK(f_CondToRows(Json{{"any", Json::array({l_jLeaf, l_jNotLeaf})}}).m_strMode == "any", "any-of rows");
+    CHECK(f_CondToRows(Json{{"all", Json::array({Json{{"any", Json::array({l_jLeaf})}}})}}).m_bRaw, "nested logic stays JSON");
     // the validator and the talk preview
-    const auto probs = e.problems();
-    std::printf("  event problems: %zu\n", probs.size());
-    TalkPreview pv;
-    pv.reset(e, "villager");
-    pv.talk(e, "villager", "en");
-    CHECK(!pv.log.empty(), "the talk preview talks to the villager");
+    const auto l_vProbs = l_oE.f_Problems();
+    std::printf("  event problems: %zu\n", l_vProbs.size());
+    TalkPreview l_oPv;
+    l_oPv.f_Reset(l_oE, "villager");
+    l_oPv.f_Talk(l_oE, "villager", "en");
+    CHECK(!l_oPv.m_vLog.empty(), "the talk preview talks to the villager");
 }
 
 // --dump: per floor, the checks and the story issues by severity, and auto-place's cells for seed 7 on F02 -- the
 // same lines a script prints from the HTML editor, to compare the two ports.
-static int dump(Project& p) {
-    for (const StoryRow& r : storyCheck(p)) {
-        int pc[3] = {0, 0, 0}, sc[3] = {0, 0, 0};
-        for (const Issue& i : problems(p, p.doc(r.fid))) pc[(int)i.sev]++;
-        for (const Issue& i : r.issues) sc[(int)i.sev]++;
-        std::printf("%s checks %d/%d/%d story %d/%d/%d safe %zu\n", r.fid.c_str(), pc[0], pc[1], pc[2], sc[0], sc[1], sc[2],
-                    safeCells(p, r.fid).size());
+static int f_Dump(Project& l_oP) {
+    for (const StoryRow& l_oR : f_StoryCheck(l_oP)) {
+        int l_arrPc[3] = {0, 0, 0}, l_arrSc[3] = {0, 0, 0};
+        for (const Issue& l_oI : f_Problems(l_oP, l_oP.f_Doc(l_oR.m_strFid))) l_arrPc[(int)l_oI.m_eSev]++;
+        for (const Issue& l_oI : l_oR.m_vIssues) l_arrSc[(int)l_oI.m_eSev]++;
+        std::printf("%s checks %d/%d/%d story %d/%d/%d safe %zu\n", l_oR.m_strFid.c_str(), l_arrPc[0], l_arrPc[1], l_arrPc[2], l_arrSc[0], l_arrSc[1], l_arrSc[2],
+                    f_SafeCells(l_oP, l_oR.m_strFid).size());
     }
-    autoPlace(p, {"F02"}, "all", "7", [](int n) { return std::to_string(n); });
-    const StageDoc& d = p.doc("F02");
-    for (int y = 0; y < d.height(); y++)
-        for (int x = 0; x < d.width(); x++)
-            if (p.semAt(d, x, y).rfind("event:", 0) == 0) std::printf("F02 %s %d,%d\n", p.semAt(d, x, y).c_str(), x, y);
+    f_AutoPlace(l_oP, {"F02"}, "all", "7", [](int l_iN) { return std::to_string(l_iN); });
+    const StageDoc& l_oD = l_oP.f_Doc("F02");
+    for (int l_iY = 0; l_iY < l_oD.f_Height(); l_iY++)
+        for (int l_iX = 0; l_iX < l_oD.f_Width(); l_iX++)
+            if (l_oP.f_SemAt(l_oD, l_iX, l_iY).rfind("event:", 0) == 0) std::printf("F02 %s %d,%d\n", l_oP.f_SemAt(l_oD, l_iX, l_iY).c_str(), l_iX, l_iY);
     return 0;
 }
 
-int main(int argc, char** argv) {
-    if (argc < 2) { std::printf("usage: stage_core_test <TOMS folder> [--dump]\n"); return 2; }
-    Project p;
-    std::string err;
-    if (!p.load(argv[1], err)) { std::printf("cannot load %s: %s\n", argv[1], err.c_str()); return 1; }
-    if (argc > 2 && std::string(argv[2]) == "--dump") return dump(p);
-    if (argc > 2 && std::string(argv[2]) == "--dump-write") {   // three edits, then what Save would write (vs the HTML editor)
-        EventProject e;
-        if (!e.load(argv[1], err)) return 1;
-        (*e.ev("ev_village_well"))["actions"].push_back(makeAction("addCounter", "insight", 1));
-        e.S["texts"][(*e.ev("ev_village_well"))["text"].get<std::string>()]["en"] = "port check";
-        e.S["flags"][e.S["flags"].begin().key()]["category"] = "port check";
-        for (const auto& f : e.liveWrites({})) std::fputs(("=== " + f.path + "\n" + f.text).c_str(), stdout);
+int main(int l_iArgc, char** l_pArgv) {
+    if (l_iArgc < 2) { std::printf("usage: stage_core_test <TOMS folder> [--dump]\n"); return 2; }
+    Project l_oP;
+    std::string l_strErr;
+    if (!l_oP.f_Load(l_pArgv[1], l_strErr)) { std::printf("cannot load %s: %s\n", l_pArgv[1], l_strErr.c_str()); return 1; }
+    if (l_iArgc > 2 && std::string(l_pArgv[2]) == "--dump") return f_Dump(l_oP);
+    if (l_iArgc > 2 && std::string(l_pArgv[2]) == "--dump-write") {   // three edits, then what Save would write (vs the HTML editor)
+        EventProject l_oE;
+        if (!l_oE.f_Load(l_pArgv[1], l_strErr)) return 1;
+        (*l_oE.f_Ev("ev_village_well"))["actions"].push_back(f_MakeAction("addCounter", "insight", 1));
+        l_oE.m_jS["texts"][(*l_oE.f_Ev("ev_village_well"))["text"].get<std::string>()]["en"] = "port check";
+        l_oE.m_jS["flags"][l_oE.m_jS["flags"].begin().key()]["category"] = "port check";
+        for (const auto& l_oF : l_oE.f_LiveWrites({})) std::fputs(("=== " + l_oF.m_strPath + "\n" + l_oF.m_strText).c_str(), stdout);
         return 0;
     }
-    if (argc > 2 && std::string(argv[2]) == "--dump-events") {   // one line per event problem, sorted (vs the HTML editor)
-        EventProject e;
-        if (!e.load(argv[1], err)) return 1;
-        std::vector<std::string> lines;
-        for (const EvProblem& x : e.problems()) lines.push_back(x.rule + " " + x.id);
-        std::sort(lines.begin(), lines.end());
-        for (const std::string& l : lines) std::fputs((l + "\n").c_str(), stdout);
+    if (l_iArgc > 2 && std::string(l_pArgv[2]) == "--dump-events") {   // one line per event problem, sorted (vs the HTML editor)
+        EventProject l_oE;
+        if (!l_oE.f_Load(l_pArgv[1], l_strErr)) return 1;
+        std::vector<std::string> l_vLines;
+        for (const EvProblem& l_oX : l_oE.f_Problems()) l_vLines.push_back(l_oX.m_strRule + " " + l_oX.m_strId);
+        std::sort(l_vLines.begin(), l_vLines.end());
+        for (const std::string& l_strL : l_vLines) std::fputs((l_strL + "\n").c_str(), stdout);
         return 0;
     }
-    testRandom();
-    testLoad(p);
-    testEdits(p);
-    testChecks(p);
-    testAutoPlace(p);
-    testFloorIndex(p);
-    testEvents(argv[1]);
-    std::printf("stage_core_test: %d checks, %d failed\n", g_checks, g_failed);
-    return g_failed ? 1 : 0;
+    f_TestRandom();
+    f_TestLoad(l_oP);
+    f_TestEdits(l_oP);
+    f_TestChecks(l_oP);
+    f_TestAutoPlace(l_oP);
+    f_TestFloorIndex(l_oP);
+    f_TestEvents(l_pArgv[1]);
+    std::printf("stage_core_test: %d checks, %d failed\n", g_iChecks, g_iFailed);
+    return g_iFailed ? 1 : 0;
 }

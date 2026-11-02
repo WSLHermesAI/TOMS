@@ -18,59 +18,59 @@
 namespace toms::next {
 
 struct SharedTexture {
-    uint16_t handle = 0xffff;   // bgfx::TextureHandle::idx
-    int w = 0, h = 0;
-    bool straightAlpha = true;  // BgfxRenderer's textures are not premultiplied
+    uint16_t m_u16Handle = 0xffff;   // bgfx::TextureHandle::idx
+    int m_iW = 0, m_iH = 0;
+    bool m_bStraightAlpha = true;  // BgfxRenderer's textures are not premultiplied
 };
 
 namespace shared_detail {
 struct Registry {
-    std::map<std::string, SharedTexture> byPath;
-    int version = 0;
+    std::map<std::string, SharedTexture> m_mapByPath;
+    int m_iVersion = 0;
 };
-inline Registry& registry() {
-    static Registry r;
-    return r;
+inline Registry& f_Registry() {
+    static Registry l_oR;
+    return l_oR;
 }
 }  // namespace shared_detail
 
 // The key a path is matched by: '/' separators, "a/b/../c" folded, and lower case (Windows paths
 // differ in case between the game's asset folder and the folder RmlUi joins a URL to).
-inline std::string sharedTextureKey(const std::string& path) {
-    std::vector<std::string> parts;
-    std::string seg;
-    auto flush = [&] {
-        if (seg == ".." && !parts.empty() && parts.back() != "..") parts.pop_back();
-        else if (!seg.empty() && seg != ".") parts.push_back(seg);
-        seg.clear();
+inline std::string f_SharedTextureKey(const std::string& l_strPath) {
+    std::vector<std::string> l_vParts;
+    std::string l_strSeg;
+    auto l_fnFlush = [&] {
+        if (l_strSeg == ".." && !l_vParts.empty() && l_vParts.back() != "..") l_vParts.pop_back();
+        else if (!l_strSeg.empty() && l_strSeg != ".") l_vParts.push_back(l_strSeg);
+        l_strSeg.clear();
     };
-    for (char c : path) {
-        if (c == '/' || c == '\\') flush();
-        else seg += (char)std::tolower((unsigned char)c);
+    for (char l_cC : l_strPath) {
+        if (l_cC == '/' || l_cC == '\\') l_fnFlush();
+        else l_strSeg += (char)std::tolower((unsigned char)l_cC);
     }
-    flush();
-    std::string out = !path.empty() && (path[0] == '/' || path[0] == '\\') ? "/" : "";
-    for (size_t i = 0; i < parts.size(); i++) out += (i ? "/" : "") + parts[i];
-    return out;
+    l_fnFlush();
+    std::string l_strOut = !l_strPath.empty() && (l_strPath[0] == '/' || l_strPath[0] == '\\') ? "/" : "";
+    for (size_t l_nI = 0; l_nI < l_vParts.size(); l_nI++) l_strOut += (l_nI ? "/" : "") + l_vParts[l_nI];
+    return l_strOut;
 }
 
-inline void lendTexture(const std::string& path, const SharedTexture& t) {
-    shared_detail::registry().byPath[sharedTextureKey(path)] = t;
-    shared_detail::registry().version++;
+inline void f_LendTexture(const std::string& l_strPath, const SharedTexture& l_oT) {
+    shared_detail::f_Registry().m_mapByPath[f_SharedTextureKey(l_strPath)] = l_oT;
+    shared_detail::f_Registry().m_iVersion++;
 }
 
-inline void withdrawAllTextures() {
-    if (shared_detail::registry().byPath.empty()) return;
-    shared_detail::registry().byPath.clear();
-    shared_detail::registry().version++;
+inline void f_WithdrawAllTextures() {
+    if (shared_detail::f_Registry().m_mapByPath.empty()) return;
+    shared_detail::f_Registry().m_mapByPath.clear();
+    shared_detail::f_Registry().m_iVersion++;
 }
 
-inline const SharedTexture* findLentTexture(const std::string& path) {
-    auto& m = shared_detail::registry().byPath;
-    auto it = m.find(sharedTextureKey(path));
-    return it == m.end() ? nullptr : &it->second;
+inline const SharedTexture* f_FindLentTexture(const std::string& l_strPath) {
+    auto& l_mapM = shared_detail::f_Registry().m_mapByPath;
+    auto l_itIt = l_mapM.find(f_SharedTextureKey(l_strPath));
+    return l_itIt == l_mapM.end() ? nullptr : &l_itIt->second;
 }
 
-inline int lentTexturesVersion() { return shared_detail::registry().version; }
+inline int f_LentTexturesVersion() { return shared_detail::f_Registry().m_iVersion; }
 
 }  // namespace toms::next

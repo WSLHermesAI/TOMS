@@ -3,19 +3,19 @@
 
 namespace toms {
 
-CyclesConfig loadCyclesConfig(const std::string& path) {
-    CyclesConfig c;   // documented defaults if the file is missing/malformed
-    nlohmann::json j = readJsonFileSafe(path);
-    if (!j.is_object()) return c;
-    c.maxCycles = j.value("maxCycles", c.maxCycles);
-    if (j.contains("carry") && j["carry"].is_object()) {
-        const auto& carry = j["carry"];
-        if (carry.contains("skills") && carry["skills"].is_object())
-            c.skillEffectScale = carry["skills"].value("effectScale", c.skillEffectScale);
-        if (carry.contains("atkDefBonus") && carry["atkDefBonus"].is_object())
-            c.statBonusScale = carry["atkDefBonus"].value("value", c.statBonusScale);
+CyclesConfig f_LoadCyclesConfig(const std::string& l_strPath) {
+    CyclesConfig l_oC;   // documented defaults if the file is missing/malformed
+    nlohmann::json l_jJ = f_ReadJsonFileSafe(l_strPath);
+    if (!l_jJ.is_object()) return l_oC;
+    l_oC.m_iMaxCycles = l_jJ.value("maxCycles", l_oC.m_iMaxCycles);
+    if (l_jJ.contains("carry") && l_jJ["carry"].is_object()) {
+        const auto& l_jCarry = l_jJ["carry"];
+        if (l_jCarry.contains("skills") && l_jCarry["skills"].is_object())
+            l_oC.m_fSkillEffectScale = l_jCarry["skills"].value("effectScale", l_oC.m_fSkillEffectScale);
+        if (l_jCarry.contains("atkDefBonus") && l_jCarry["atkDefBonus"].is_object())
+            l_oC.m_fStatBonusScale = l_jCarry["atkDefBonus"].value("value", l_oC.m_fStatBonusScale);
     }
-    return c;
+    return l_oC;
 }
 
 } // namespace toms
