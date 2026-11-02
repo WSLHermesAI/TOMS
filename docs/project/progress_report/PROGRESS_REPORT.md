@@ -15,6 +15,17 @@
 
 ## ▶ Next Step
 
+**The battle hero made like Spine; the C++ naming rule everywhere; no leaks** (2026-11-02; [DAILY_2026-11-02.md](DAILY_2026-11-02.md)):
+- The hero's art: painted key poses (B) and 3D (C) tried and rejected by the owner; **Spine-style 2D** kept
+  (`tools/art/make_hero_rig2d.py`, docs/engine/20 §5): bow, sword and staff in battle, the sword and staff as parts
+  held in the painted fist. **Not committed** (19 files).
+- `FighterView` (doc 18): 2D or 3D per fighter in the data (3D view not built). Captures record in a hidden window.
+- The C++ naming rule (doc 12) applied to all 417 files (committed `989e868`); Release and Debug build. Leak check: 70
+  scenarios on Debug, no leaks.
+- Last changed-only run: 0 of 233 selected (switched off). **Owner:** look at the GIFs (`Build/art_out/hero_*/gif/`);
+  commit; `test.cmd all` before it if wanted; web/Android not built since the rename. Next on the list: the monsters of
+  floors 1–10 (Q58), doc 17 W1–W10.
+
 **Skills and plays from reusable blocks; toms_editor removed; test switches; the design map** (2026-10-31, later; not
 committed; [DAILY_2026-10-31.md](DAILY_2026-10-31.md) "Later on 2026-10-31"):
 - Doc 16 written and built (S1–S7): cue track, gestures, special moves as data (`data/special_moves.json`), the sword /
