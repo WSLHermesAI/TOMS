@@ -1,8 +1,9 @@
 @echo off
-rem serve_web.cmd [release|debug|mt|dist|gltf|gltf-debug] [port] -- serve the web build over http and open it.
+rem serve_web.cmd [release|debug|mt|dist|gltf|gltf-debug|ocean|ocean-debug] [port] -- serve the web build over http and open it.
 rem   release/debug  the builds of tools\build_web.cmd     mt    the multithreaded build
 rem   dist           the published package of tools\release_web.cmd (both builds; the page picks one)
 rem   gltf/gltf-debug  the glTF viewer of tools\build_gltf_web.cmd (release / debug)
+rem   ocean/ocean-debug  the ocean viewer of tools\build_ocean_web.cmd (release / debug)
 rem Browsers refuse to run WebAssembly from file://, so a local web server is required. This uses
 rem the Python that ships inside emsdk (no separate Python install needed) and tools\serve_web.py,
 rem which also sends the cross-origin-isolation headers threads need. Ctrl+C stops it.
@@ -19,8 +20,11 @@ if /i "%KIND%"=="dist" set "PAGE=index.html"
 if /i "%KIND%"=="gltf" set "WEBDIR=%~dp0..\Build\web-release-windows\bin"
 if /i "%KIND%"=="gltf-debug" set "WEBDIR=%~dp0..\Build\web-debug-windows\bin"
 if /i "%KIND:~0,4%"=="gltf" set "PAGE=gltf_viewer.html"
+if /i "%KIND%"=="ocean" set "WEBDIR=%~dp0..\Build\web-release-windows\bin"
+if /i "%KIND%"=="ocean-debug" set "WEBDIR=%~dp0..\Build\web-debug-windows\bin"
+if /i "%KIND:~0,5%"=="ocean" set "PAGE=ocean_viewer.html"
 if not exist "%WEBDIR%\%PAGE%" (
-  echo [toms] %WEBDIR%\%PAGE% not found. Build it first: tools\build_web.cmd %KIND%  ^(dist: tools\release_web.cmd; gltf: tools\build_gltf_web.cmd^)
+  echo [toms] %WEBDIR%\%PAGE% not found. Build it first: tools\build_web.cmd %KIND%  ^(dist: tools\release_web.cmd; gltf: tools\build_gltf_web.cmd; ocean: tools\build_ocean_web.cmd^)
   exit /b 1
 )
 

@@ -59,6 +59,7 @@ Chinese copies in its own `zh_TW/` (中文版 in each row).
 | [18_NODE_EFFECTS.md](engine/18_NODE_EFFECTS.md) | node effects (shaders by hierarchy, afterimages) and the brawler showcase: the anim editor vs Spine | [zh_TW](engine/zh_TW/18_NODE_EFFECTS.md) |
 | [19_DESIGN_MAP.md](engine/19_DESIGN_MAP.md) | the design map: how the game is put together (layers, one frame, screens and switching, drawing order, events, talking, battle) and how extendable it is; an interactive page in [engine/design_map/](engine/design_map/design_map.html) | [zh_TW](engine/zh_TW/19_DESIGN_MAP.md) |
 | [20_CHARACTER_ART.md](engine/20_CHARACTER_ART.md) | character art for the battle: one picture cut into parts (A), painted key poses with IP-Adapter (B, being tried), a 3D glTF model (C, the fallback); what each needs installed (models, ComfyUI nodes, Blender) so a new PC can do the same | [zh_TW](engine/zh_TW/20_CHARACTER_ART.md) |
+| [21_OCEAN_VIEWER.md](engine/21_OCEAN_VIEWER.md) | `ocean_viewer`: a real-time FFT ocean and sky in an app of their own (desktop and web, with quality levels for phones), to try the first 3D battle background outside the game; how it works, its numbers, what is not done | [zh_TW](engine/zh_TW/21_OCEAN_VIEWER.md) |
 
 ## project
 

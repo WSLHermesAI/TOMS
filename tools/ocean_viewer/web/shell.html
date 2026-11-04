@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>TOMS Ocean</title>
+  <style>
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #05050a; }
+    /* The page sizes the canvas (full viewport) and SDL follows it (as src/game/web/shell.html). */
+    #canvas { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; height: 100dvh;
+              display: block; touch-action: none; outline: none; }
+    #toms-status { position: fixed; left: 0; right: 0; top: 45%; text-align: center; color: #e8e8f0;
+                   font: 600 18px/1.6 system-ui, -apple-system, sans-serif; pointer-events: none; }
+    #toms-error { display: none; position: fixed; left: 8%; right: 8%; top: 20%; padding: 20px; z-index: 100;
+                  background: #1b1020; color: #ffd9d9; border: 1px solid #a05; border-radius: 8px;
+                  font: 15px/1.6 system-ui, sans-serif; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
+  <div id="toms-status">Loading…</div>
+  <div id="toms-error"></div>
+  <script>
+    function tomsShowError(title, text) {
+      var e = document.getElementById('toms-error');
+      e.textContent = title + '\n\n' + text + '\n\nOpen the browser console (F12) for details.';
+      e.style.display = 'block';
+      document.getElementById('toms-status').style.display = 'none';
+    }
+    var Module = {
+      canvas: document.getElementById('canvas'),
+      print: function (t) { console.log(t); },
+      printErr: function (t) { console.warn(t); },
+      setStatus: function (t) { document.getElementById('toms-status').textContent = t || ''; },
+      onRuntimeInitialized: function () { window.tomsReady = true; document.getElementById('toms-status').style.display = 'none'; },
+      onAbort: function (what) { tomsShowError('The ocean stopped', String(what || 'unknown error')); }
+    };
+    window.onerror = function (msg) { tomsShowError('Script error', String(msg)); };
+  </script>
+  {{{ SCRIPT }}}
+</body>
+</html>

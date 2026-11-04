@@ -94,6 +94,8 @@ if(NOT WEB AND NOT ANDROID)
     # 3D models (docs/engine/08_GLTF.md): gltf_viewer, glTF 2.0 on the engine's renderer (skins, morph
     # targets, EXT_mesh_gpu_instancing, PBR), checked by the smoke.gltf_* tests.
     add_subdirectory(tools/gltf_viewer)
+    # An ocean and a sky to try outside the game (docs/engine/21_OCEAN_VIEWER.md).
+    add_subdirectory(tools/ocean_viewer)
     # Picture fonts (docs/engine/09_FONT_TOOL.md): fontpack and, with Qt, font_editor -- .fnt + .png from
     # one picture per character; the runtime is src/core/engine/bitmap_font.cpp.
     add_subdirectory(tools/font)
@@ -114,6 +116,7 @@ endif()
 # The glTF viewer in the browser (tools\build_gltf_web.cmd): built only when asked for, not with the game.
 if(EMSCRIPTEN)
     add_subdirectory(tools/gltf_viewer)
+    add_subdirectory(tools/ocean_viewer)   # the same: tools\build_ocean_web.cmd
 endif()
 
 toms_prerequisites_report()   # prints the summary and shows the popup if anything is missing

@@ -161,7 +161,7 @@ RULES = [
       'tools/launcher*', 'tools/build_android.cmd', 'tools/run_android.cmd',
       'tools/check_env.ps1', 'tools/check_git_ssh.*', 'tools/package.ps1', 'tools/publish_pages.ps1'], None,
      'setup, web publish, Android and packaging scripts: no automated test (run them by hand)'),
-    (['tools/build_gltf_web.cmd', 'tools/build_atlas_web.cmd'], None,
+    (['tools/build_gltf_web.cmd', 'tools/build_atlas_web.cmd', 'tools/build_ocean_web.cmd'], None,
      'the web glTF viewer / web atlas tool builds: no automated test (build and open them by hand)'),
     # global
     (['CMakeLists.txt', 'CMakePresets.json', 'cmake/*', 'external/*', 'tools/build.cmd'], DESKTOP,
@@ -174,6 +174,8 @@ RULES = [
     # glTF
     (['src/core/engine/gltf*', 'src/engine/src/gltf*', 'src/engine/shaders/*mesh*', 'src/engine/shaders/fs_shadow.sc',
       'tools/gltf_viewer/*'], GLTF, 'glTF: its unit tests and screenshots'),
+    # the ocean viewer: on its own, nothing else uses it
+    (['tools/ocean_viewer/*'], named('unit.ocean_sim_test', 'smoke.ocean_viewer'), 'the ocean viewer: its unit test and that it draws'),
     # particles, node animations, atlases, the Qt editors' shared code
     (['src/core/engine/particle*', 'tools/particle/*', 'src/engine/shaders/cs_fx_*'], PARTICLES,
      'particles: checks, unit test, fx screenshots'),

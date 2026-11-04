@@ -321,4 +321,8 @@ if(TOMS_NODE)
     toms_web_test(page_coi       "${TOMS_WEB_PACKAGE_DIR}"  --expect-threads=yes)
     toms_web_test(page_nothreads "${TOMS_WEB_PACKAGE_DIR}"  --query=nothreads --expect-threads=no)
     toms_web_test(page_gpu       "${TOMS_WEB_PACKAGE_DIR}"  --expect-threads=yes --gpu)
+    # The ocean viewer's page (tools\build_ocean_web.cmd): it starts on the real GPU and no shader fails.
+    add_test(NAME web.ocean_viewer
+             COMMAND "${TOMS_NODE}" "${CMAKE_SOURCE_DIR}/tools/ocean_viewer/web/ocean_web_test.mjs" "${TOMS_WEB_BUILD_DIR}" "${CMAKE_BINARY_DIR}/test-run/web_ocean_viewer" --seconds=3)
+    set_tests_properties(web.ocean_viewer PROPERTIES LABELS web SKIP_RETURN_CODE 77 RUN_SERIAL TRUE TIMEOUT 120)
 endif()
