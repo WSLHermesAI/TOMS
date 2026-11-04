@@ -24,6 +24,24 @@
   <div id="toms-status">Loading…</div>
   <div id="toms-error"></div>
   <script>
+    // index.html?gldebug: the GPU's limits and any shader that fails, on screen, for a phone or tablet with no console.
+    if (/[?&]gldebug/.test(location.search)) (function () {
+      var box = document.createElement('pre');
+      box.style.cssText = 'position:fixed;left:0;right:0;bottom:0;margin:0;padding:6px;z-index:200;max-height:45%;overflow:auto;background:#000c;color:#9f9;font:12px monospace;white-space:pre-wrap;pointer-events:none';
+      document.addEventListener('DOMContentLoaded', function () { document.body.appendChild(box); });
+      function say(t) { box.textContent += t + '\n'; }
+      var P = WebGL2RenderingContext.prototype, cs = P.compileShader, lp = P.linkProgram, told = false;
+      P.linkProgram = function (p) {
+        lp.call(this, p);
+        if (!told) {
+          told = true;
+          var d = this.getExtension('WEBGL_debug_renderer_info');
+          say('GPU ' + (d ? this.getParameter(d.UNMASKED_RENDERER_WEBGL) : '?') + '  vertex vectors ' + this.getParameter(this.MAX_VERTEX_UNIFORM_VECTORS) + ', fragment ' + this.getParameter(this.MAX_FRAGMENT_UNIFORM_VECTORS) + ', textures ' + this.getParameter(this.MAX_TEXTURE_IMAGE_UNITS));
+        }
+        say(this.getProgramParameter(p, this.LINK_STATUS) ? 'program ok' : 'PROGRAM FAILED: ' + this.getProgramInfoLog(p));
+      };
+      P.compileShader = function (s) { cs.call(this, s); if (!this.getShaderParameter(s, this.COMPILE_STATUS)) say('SHADER FAILED: ' + this.getShaderInfoLog(s)); };
+    })();
     function tomsShowError(title, text) {
       var e = document.getElementById('toms-error');
       e.textContent = title + '\n\n' + text + '\n\nOpen the browser console (F12) for details.';

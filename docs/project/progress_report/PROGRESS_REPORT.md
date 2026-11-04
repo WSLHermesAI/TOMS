@@ -16,13 +16,16 @@
 ## ▶ Next Step
 
 **A real-time ocean, on the desktop, the web and the title; a version number; the open decisions in one list** (2026-11-04; [DAILY_2026-11-04.md](DAILY_2026-11-04.md)):
-- `ocean_viewer` (docs/engine/21): FFT waves, foam, Preetham sky, sliders, four quality levels; a web build (`tools\build_ocean_web.cmd`)
-  that runs at 60 fps in Chrome, not yet tried on a real phone. Committed `efe0074`.
-- **Not committed:** the ocean moved into the engine; the title's background in turns (`background`: even the ocean, odd the glTF
-  model; `localStorage` on the web); the version number (`assets/data/version.json`, `tools\bump_version.ps1`, docs/project/07 §3b).
+- `ocean_viewer` (docs/engine/21): FFT waves, foam, Preetham sky, sliders, four quality levels; a web build (`tools\build_ocean_web.cmd`).
+  Committed `efe0074`.
+- The ocean in the engine; the title's background in turns (`background`: even the ocean, odd the glTF model; `localStorage` on the
+  web); the version number (`assets/data/version.json`, `tools\bump_version.ps1`, docs/project/07 §3b). Committed `bbed8e9`; published, the site is at `v2`.
+- **The glTF title on a tablet, confirmed by the owner on a Xiaomi Pad 6S Pro. Not committed:** the city's shader used 521 vertex uniform
+  vectors, over the 256 of OpenGL ES 3.0; joints are now 48 on ES (docs/engine/08 §3). The web test fails any program over those limits;
+  `index.html?gldebug` shows failures on the device.
 - Open decisions: docs/project/13, with a My Answer column; the owner's idea list checked against docs 14, 16 and 17 (14 §6).
-- Last changed-only run: 5 of 239, all pass. **Owner:** commit (stage by name); publish once, then commit `version.json`; fill My Answer
-  (new: Q59–Q69); try a real phone. All tests, a full publish, the multithreaded web game and Android not run.
+- Last changed-only run: 4 of 239, all pass. **Owner:** commit the 7 files and `version.json` (stage by name); fill My Answer (new: Q59–Q69).
+  All tests and Android not run.
 
 **The battle hero made like Spine; the C++ naming rule everywhere; no leaks** (2026-11-02; [DAILY_2026-11-02.md](DAILY_2026-11-02.md)):
 - The hero's art: painted key poses (B) and 3D (C) tried and rejected by the owner; **Spine-style 2D** kept

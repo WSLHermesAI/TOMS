@@ -773,3 +773,7 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   - The title: game_session.cpp f_NextTitleBackground (localStorage `background`; save/title_background.txt), title_scene.* f_LoadOcean.
   - Version: tools/bump_version.ps1 (+ test), publish_web.cmd, publish_pages.ps1 published.flag, package.ps1, version_label.h, title.rml #version.
   - Tests: changed-only 5 of 239 pass. All tests, a full publish, the multithreaded web game, Android, a real phone not run.
+- 2026-11-04, later: the glTF title on a Xiaomi Pad 6S Pro drew nothing; fixed, confirmed by the owner.
+  - u_joints[128] = 512 vertex uniform vectors, over ES 3.0's 256. mesh_common.sh: 48 under BGFX_SHADER_LANGUAGE_ESSL; gltf_model.h g_iMaxJoints: 48 on web, Android.
+  - web_smoke_test.mjs: fails a program over the ES 3.0 limits. shell.html: ?gldebug. src/engine/CMakeLists.txt: mesh shaders follow mesh_common.sh, env_common.sh.
+  - Tests: changed-only 4 of 239 pass; web_smoke_test --gpu fails before, passes after.

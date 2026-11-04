@@ -1,8 +1,14 @@
 // mesh_common.sh -- shared by vs_mesh.sc and vs_mesh_inst.sc: GPU skinning.
 //
-// u_joints: the skin's joint matrices (world x inverse bind), up to 128 (gltf_model.h kMaxJoints).
+// u_joints: the skin's joint matrices (world x inverse bind), up to gltf_model.h g_iMaxJoints: 128, or 48 on OpenGL ES. ES 3.0
+// guarantees only 256 vertex uniform vectors, and 128 matrices are 512: the program then does not link on a phone or tablet
+// and nothing is drawn, with no error on screen (2026-11-04: the glTF title on a Xiaomi Pad).
 // u_meshFlags.x > 0.5: the vertex is skinned (a_indices / a_weight); else they are ignored.
+#if BGFX_SHADER_LANGUAGE_ESSL
+uniform mat4 u_joints[48];
+#else
 uniform mat4 u_joints[128];
+#endif
 uniform vec4 u_meshFlags;
 
 mat4 skinMatrix(vec4 indices, vec4 weights)

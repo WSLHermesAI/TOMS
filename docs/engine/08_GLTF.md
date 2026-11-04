@@ -148,6 +148,9 @@ default (`src/game/src/title_scene.*`, owned by `GameSession`).
   the title is open.
 - **Choosing the scene:** `toms_game --title-scene=<file.glb|none|ocean>`. Without the file, or if it does
   not load, the title is plain as before (the log says why).
+- **Joints on OpenGL ES:** the web and Android allow 48 joints per skin, not 128 (`g_iMaxJoints`, `mesh_common.sh`). ES 3.0 guarantees
+  only 256 vertex uniform vectors; 128 matrices are 512, so the program does not link on a phone or tablet and nothing is drawn, while
+  it links on a PC. The web test now fails on a program over the ES 3.0 limits. On the device, `index.html?gldebug` shows the GPU's limits and any failed shader.
 - **In turns, in normal play** (the owner, 2026-11-04): with no `--title-scene`, the value `background` chooses: no value yet = 0,
   otherwise it goes up by 1 at each start. **Even: the ocean ([21](21_OCEAN_VIEWER.md)); odd: this model.** The web keeps it in the
   browser's `localStorage`, the desktop in `title_background.txt` beside the saves. A run with `--frames` or `--fixed-dt` (the tests)

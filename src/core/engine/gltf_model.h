@@ -25,7 +25,12 @@
 
 namespace toms::gltf {
 
-constexpr int g_iMaxJoints = 128;   // per skin: the vertex shader's joint matrix array
+// Per skin: the vertex shader's joint matrix array (mesh_common.sh). The web and Android draw on OpenGL ES, which has room for 48.
+#if defined(__EMSCRIPTEN__) || defined(__ANDROID__)
+constexpr int g_iMaxJoints = 48;
+#else
+constexpr int g_iMaxJoints = 128;
+#endif
 
 enum class AlphaMode { Opaque, Mask, Blend };
 

@@ -59,6 +59,11 @@ bgfx_compile_shaders(TYPE FRAGMENT
     PROFILES     ${TOMS_SHADER_PROFILES}
     AS_HEADERS)
 
+# bgfx's rule only follows the .sc file itself: the files they include must rebuild them too.
+foreach(_out ${TOMS_MESH_VS_FILES} ${TOMS_MESH_FS_FILES})
+    add_custom_command(OUTPUT ${_out} APPEND DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/shaders/mesh_common.sh ${CMAKE_CURRENT_SOURCE_DIR}/shaders/env_common.sh)
+endforeach()
+
 # The ocean (src/engine/src/ocean_renderer.*, docs/engine/21_OCEAN_VIEWER.md): its own varyings.
 set(_ocean ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
 bgfx_compile_shaders(TYPE VERTEX

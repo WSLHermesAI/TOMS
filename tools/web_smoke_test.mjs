@@ -11,7 +11,8 @@
 //   --gpu                the real GPU (Windows: ANGLE on Direct3D 11, what Chrome uses there) instead of
 //                        the SwiftShader software GPU. The real path is stricter: a shader that links on
 //                        SwiftShader can fail there (2026-10-05: fs_mesh with shadow lookups).
-// Every WebGL shader that fails to compile or link is logged ([webgl] ...) and fails the run.
+// Every WebGL shader that fails to compile or link is logged ([webgl] ...) and fails the run; so does a program over the limits
+// OpenGL ES 3.0 guarantees (it links on this PC and fails on a phone).
 //
 // Give it a folder (Build\web-release-windows\bin, or Build\dist\TOMS-web) and it serves that folder
 // itself; or give it the URL of a running server (tools\serve_web.cmd). Needs Node 22+ (built-in
@@ -105,11 +106,30 @@ ws.onmessage = ev => { const m = JSON.parse(ev.data); if (m.id && pending.has(m.
 await send('Runtime.enable'); await send('Page.enable');
 // Report every WebGL shader that fails to compile or link (bgfx itself only says "Failed to compile shader").
 await send('Page.addScriptToEvaluateOnNewDocument', { source: `(() => {
-  const P = WebGL2RenderingContext.prototype, cs = P.compileShader, lp = P.linkProgram;
+  const P = WebGL2RenderingContext.prototype, cs = P.compileShader, lp = P.linkProgram, ss = P.shaderSource, as = P.attachShader;
+  // The limits OpenGL ES 3.0 guarantees. A desktop GPU allows far more, so a shader over them links here and fails on a phone or
+  // tablet, silently: nothing is drawn (2026-11-04: the glTF title on a Xiaomi Pad, u_joints[128] = 512 vectors).
+  const VS_VEC = 256, FS_VEC = 224, SAMPLERS = 16, sources = new Map();
+  const VEC = { 0x8B5C: 4, 0x8B5B: 3, 0x8B5A: 2 }, SAMPLER = [0x8B5E, 0x8B5F, 0x8B60, 0x8B62, 0x8DC1, 0x8DC5, 0x8B62];
+  P.shaderSource = function (sh, text) { sources.set(sh, text); return ss.call(this, sh, text); };
+  P.attachShader = function (pr, sh) { (pr.tomsShaders = pr.tomsShaders || []).push(sh); return as.call(this, pr, sh); };
+  function checkLimits(gl, pr) {
+    const texts = (pr.tomsShaders || []).map(sh => sources.get(sh) || ''), vs = texts.find(t => /gl_Position/.test(t)) || '', fs = texts.find(t => !/gl_Position/.test(t)) || '';
+    let vsVec = 0, fsVec = 0, vsTex = 0, fsTex = 0;
+    for (let i = 0, n = gl.getProgramParameter(pr, gl.ACTIVE_UNIFORMS); i < n; i++) {
+      const u = gl.getActiveUniform(pr, i), name = u.name.split('[')[0], isSampler = SAMPLER.includes(u.type), count = (VEC[u.type] || 1) * u.size;
+      if (vs.includes(name)) { if (isSampler) vsTex += u.size; else vsVec += count; }
+      if (fs.includes(name)) { if (isSampler) fsTex += u.size; else fsVec += count; }
+    }
+    if (vsVec > VS_VEC || fsVec > FS_VEC || vsTex > SAMPLERS || fsTex > SAMPLERS)
+      console.log('[webgl] program over the ES 3.0 limits: vertex ' + vsVec + '/' + VS_VEC + ' vectors, fragment ' + fsVec + '/' + FS_VEC + ', samplers ' + vsTex + ' and ' + fsTex + '/' + SAMPLERS);
+    (window.tomsBudget = window.tomsBudget || []).push([vsVec, fsVec, vsTex, fsTex]);
+  }
   P.compileShader = function (sh) { cs.call(this, sh); if (!this.getShaderParameter(sh, this.COMPILE_STATUS))
     console.log('[webgl] shader compile failed: ' + JSON.stringify(this.getShaderInfoLog(sh)) + ' ' + JSON.stringify((this.getShaderSource(sh) || '').slice(0, 200))); };
-  P.linkProgram = function (p) { lp.call(this, p); if (!this.getProgramParameter(p, this.LINK_STATUS))
-    console.log('[webgl] program link failed: ' + JSON.stringify(this.getProgramInfoLog(p))); };
+  P.linkProgram = function (p) { lp.call(this, p); if (!this.getProgramParameter(p, this.LINK_STATUS)) {
+    console.log('[webgl] program link failed: ' + JSON.stringify(this.getProgramInfoLog(p))); return; }
+    checkLimits(this, p); };
 })();` });
 try {
   await send('Page.navigate', { url });

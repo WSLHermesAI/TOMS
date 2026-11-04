@@ -149,6 +149,7 @@ renderer.draw(*floorGpu, floorPose, floorPlacement, /*castShadows*/ false);
   場景畫得稍微暗一點（曝光 0.75），讓選單保持可讀。
 - **成本：** 桌機上有陰影（2048 atlas）；Android 和 web 上沒有。場景只在
   標題畫面開著時繪製。
+- **OpenGL ES 上的關節：** 網頁版與 Android 每個 skin 最多 48 個關節，不是 128（`g_iMaxJoints`、`mesh_common.sh`）。ES 3.0 只保證 256 個頂點 uniform 向量；128 個矩陣是 512 個，所以程式在手機或平板上無法連結、什麼也畫不出來，在電腦上卻可以連結。網頁測試現在會讓超過 ES 3.0 限制的程式失敗。在裝置上，`index.html?gldebug` 會顯示 GPU 的限制與失敗的著色器。
 - **輪流（一般遊玩，擁有者 2026-11-04）：** 沒有 `--title-scene` 時由 `background` 值決定：還沒有值 = 0，之後每次啟動 +1。**偶數：海洋（[21](21_OCEAN_VIEWER.md)）；奇數：這個模型。** 網頁版存在瀏覽器的 `localStorage`，桌面版存在存檔旁的 `title_background.txt`。使用 `--frames` 或 `--fixed-dt` 的執行（測試）一律畫模型、不動這個值，Android 目前也一律畫模型。
 - **選擇場景：** `toms_game --title-scene=<file.glb|none|ocean>`。沒有檔案或
   載入失敗時，標題和以前一樣是單純的（log 會說明原因）。
