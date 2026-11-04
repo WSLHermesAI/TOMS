@@ -56,6 +56,7 @@ void f_RegisterTypes(Rml::DataModelConstructor& l_oC) {
         l_oS.RegisterMember("scene", &UiTitle::m_bScene);
         l_oS.RegisterMember("title", &UiTitle::m_strTitle);
         l_oS.RegisterMember("subtitle", &UiTitle::m_strSubtitle);
+        l_oS.RegisterMember("version", &UiTitle::m_strVersion);
         l_oS.RegisterMember("hint", &UiTitle::m_strHint);
         l_oS.RegisterMember("page", &UiTitle::m_iPage);
         l_oS.RegisterMember("header", &UiTitle::m_strHeader);

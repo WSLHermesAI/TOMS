@@ -27,6 +27,7 @@ set(TOMS_UNIT_TESTS
     engine/anim_skin_test           engine/sprite_mesh_test        engine/anim_character_test
     engine/anim_lattice_test        engine/anim_fx_test
     engine/gltf_anim_texture_test   engine/gltf_physics_test       engine/gltf_environment_test
+    engine/ocean_sim_test
     engine/condition_eval_test      engine/encounter_resolve_test  engine/entity_status_test
     engine/job_system_test
     engine/event_bus_test           engine/log_test                engine/node_test
@@ -44,7 +45,7 @@ set(TOMS_UNIT_TESTS
     game/systems/player_menu_test   game/systems/stair_links_test  game/systems/floor_index_test
     game/systems/story_controller_test   game/systems/event_chain_test   game/systems/talk_system_test
     game/systems/weapon_play_test   game/systems/card_collection_test   game/systems/combo_play_test   game/systems/mini_game_test   game/systems/battle_party_test   game/systems/battle_rules_test   game/systems/touch_play_test   game/systems/play_blocks_test
-    game/ui/title_screen_test)
+    game/ui/title_screen_test      game/ui/version_label_test)
 
 get_filename_component(_data_parent "${TOMS_DATA_DIR}" DIRECTORY)
 set(_sources "")
@@ -143,6 +144,10 @@ endfunction()
 
 #                name        reference   backend tolerance  scene
 toms_smoke_test(title        title       d3d11   0.1  --frames=60)
+# The title over the sea (in normal play the host takes the sea and the model in turns). No reference picture: the look is still being chosen.
+add_test(NAME smoke.title_ocean COMMAND toms_game --title-scene=ocean --renderer=d3d11 --design=1024x768 --frames=20 --fixed-dt=33
+         "--screenshot=${CMAKE_BINARY_DIR}/test-run/title_ocean.png")
+set_tests_properties(smoke.title_ocean PROPERTIES LABELS smoke TIMEOUT 60 PASS_REGULAR_EXPRESSION "\\[title\\] the ocean")
 toms_smoke_test(stage        stage       d3d11   0.1  --frames=120 --keys=enter@30)
 # The player menu (docs/gameplay/03_PLAYER_MENU.md): one test per tab. --give hands the player items and gear
 # when the title closes, so the grids, the gear comparison and the scrolling have something to show.
@@ -293,6 +298,12 @@ toms_gltf_test(gltf_skin_opengl     gltf_skin           skin_tube      opengl   
 toms_gltf_test(gltf_pbr_opengl      gltf_pbr            pbr_materials  opengl   0.5  --yaw=15 --pitch=8)
 toms_gltf_test(gltf_shadow_all_vulkan gltf_shadow_all   instancing     vulkan   0.5  --light=all --pitch=40 --zoom=1.6)
 toms_gltf_test(gltf_shadow_all_opengl gltf_shadow_all   instancing     opengl   0.5  --light=all --pitch=40 --zoom=1.6)
+
+# The web publish's version number (assets/data/version.json): create, increase, undo, adopt.
+if(WIN32)
+    add_test(NAME tools.bump_version COMMAND powershell -NoProfile -ExecutionPolicy Bypass -File "${CMAKE_SOURCE_DIR}/tools/bump_version_test.ps1")
+    set_tests_properties(tools.bump_version PROPERTIES LABELS unit TIMEOUT 60)
+endif()
 
 # ---- web smoke tests --------------------------------------------------------------------------
 # tools/web_smoke_test.mjs in headless Chrome (title -> new game -> save -> reload). Each test is

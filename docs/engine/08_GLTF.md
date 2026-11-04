@@ -146,8 +146,12 @@ default (`src/game/src/title_scene.*`, owned by `GameSession`).
   drawn. The scene is drawn a little dark (exposure 0.75) so the menu stays readable.
 - **Cost:** shadows (2048 atlas) on desktop; none on Android and the web. The scene draws only while
   the title is open.
-- **Choosing the scene:** `toms_game --title-scene=<file.glb|none>`. Without the file, or if it does
+- **Choosing the scene:** `toms_game --title-scene=<file.glb|none|ocean>`. Without the file, or if it does
   not load, the title is plain as before (the log says why).
+- **In turns, in normal play** (the owner, 2026-11-04): with no `--title-scene`, the value `background` chooses: no value yet = 0,
+  otherwise it goes up by 1 at each start. **Even: the ocean ([21](21_OCEAN_VIEWER.md)); odd: this model.** The web keeps it in the
+  browser's `localStorage`, the desktop in `title_background.txt` beside the saves. A run with `--frames` or `--fixed-dt` (the tests)
+  always draws the model and leaves the value alone, and so does Android for now.
 - **Not verified:** the web and Android builds. The model adds 3 MB to their packed assets.
 
 ## 4. The viewer

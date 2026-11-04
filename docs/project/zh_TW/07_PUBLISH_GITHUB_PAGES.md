@@ -63,6 +63,28 @@ GitHub Pages 送出檔案時的快取時間大約 10 分鐘，瀏覽器也會保
 版本的檔案，這就是發佈時要在線上保留上一版戳記檔案的原因：
 快取的頁面在重新整理之前都能繼續運作。更舊的版本會在下一次發佈時移除。
 
+## 3b. 版本號
+
+標題畫面左下角顯示已發佈的版本，例如 `v12`。
+
+**`assets/data/version.json`：** `{ "number": 12, "sha": "abc1234" }`。`number` 是發佈的次數；`sha` 是發佈時的短 commit。由
+`tools\bump_version.ps1` 寫入。遊戲用 key `data.version` 讀取，打包時也會複製到網站，所以
+`https://wslhermesai.github.io/TOMS/version.json` 可以看到線上的版本。
+
+| `tools\publish_web.cmd` | 版本號 |
+|---|---|
+| 還沒有檔案 | 建立，值為 1 |
+| 已有檔案 | + 1，並寫入目前 commit 的 sha |
+| `dryrun`、詢問時回答「否」、沒有東西要發佈，或失敗 | 還原 |
+| `nobuild` | 不 + 1：該封裝裡已有版本號。推送後，若它較大，檔案就採用它 |
+
+- **發佈後請提交這個檔案。** 腳本不會提交，而次數就記在裡面。另一台電腦會從已提交的數字開始。
+- `sha` 是最後一個 commit：發佈時未提交的變更會在建置中，但不在該 commit 中。
+- 檔案損壞時會停止發佈，而不是從 1 重新開始。
+- 沒有檔案時，標題該處不顯示。Windows 封裝也會複製 `assets/data`，所以會顯示最後的網頁版號碼。
+- 使用 `--fixed-dt` 的執行（測試）會隱藏它，參考圖才不會每次發佈都改變。
+- 網頁版只有在連結時才打包資料檔，所以 `publish_web.cmd` 會刪除兩個 `toms_game.html` 來強制連結。
+
 ## 4. 檢查
 
 - 開啟 https://wslhermesai.github.io/TOMS/（1–2 分鐘後）。會出現標題畫面。

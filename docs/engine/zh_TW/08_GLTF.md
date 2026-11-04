@@ -149,7 +149,8 @@ renderer.draw(*floorGpu, floorPose, floorPlacement, /*castShadows*/ false);
   場景畫得稍微暗一點（曝光 0.75），讓選單保持可讀。
 - **成本：** 桌機上有陰影（2048 atlas）；Android 和 web 上沒有。場景只在
   標題畫面開著時繪製。
-- **選擇場景：** `toms_game --title-scene=<file.glb|none>`。沒有檔案或
+- **輪流（一般遊玩，擁有者 2026-11-04）：** 沒有 `--title-scene` 時由 `background` 值決定：還沒有值 = 0，之後每次啟動 +1。**偶數：海洋（[21](21_OCEAN_VIEWER.md)）；奇數：這個模型。** 網頁版存在瀏覽器的 `localStorage`，桌面版存在存檔旁的 `title_background.txt`。使用 `--frames` 或 `--fixed-dt` 的執行（測試）一律畫模型、不動這個值，Android 目前也一律畫模型。
+- **選擇場景：** `toms_game --title-scene=<file.glb|none|ocean>`。沒有檔案或
   載入失敗時，標題和以前一樣是單純的（log 會說明原因）。
 - **未驗證：** web 和 Android 版。模型會讓它們打包的資源多 3 MB。
 

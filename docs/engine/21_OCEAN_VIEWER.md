@@ -1,7 +1,11 @@
-# 21. Ocean viewer: a real-time ocean and sky, outside the game
+# 21. The ocean: a real-time sea and sky, and its viewer
 
-The first of the three 3D backgrounds in [17 §12](../gameplay/17_WEAPONS_AND_PLAYS.md). It is its own app, `ocean_viewer`, so the
-look can be tried and tuned first. **Nothing in the game uses it yet**: no game or engine file changed.
+The first of the three 3D backgrounds in [17 §12](../gameplay/17_WEAPONS_AND_PLAYS.md). It has its own app, `ocean_viewer`, so the
+look can be tried and tuned.
+
+**In the game: the title screen only.** Each start takes the sea and the city model in turns, the sea first (`--title-scene=ocean`
+forces the sea; [08 §3](08_GLTF.md)). It uses the default look, darker and with fewer clouds so the menu stays readable, at "high" on the
+desktop and "low" on the web. Android always draws the city for now. The battle does not use it yet (Q69).
 
 ## 1. Running it
 
@@ -28,8 +32,9 @@ Pictures without a window (it stays hidden): `--preset=storm --no-ui --frames=12
 
 | Part | What | Where |
 |---|---|---|
-| Waves | Tessendorf's FFT ocean with a JONSWAP spectrum and a cos^2s spread, on the CPU through the job system. Three square patches (700, 110, 19 m), each with its own band of wave lengths, so the repeat does not show | `ocean_sim.*` |
+| Waves | Tessendorf's FFT ocean with a JONSWAP spectrum and a cos^2s spread, on the CPU through the job system. Three square patches (700, 110, 19 m), each with its own band of wave lengths, so the repeat does not show | `src/core/engine/ocean_sim.*` |
 | Foam | where the surface squeezes (its Jacobian falls low), then fading with time | `ocean_sim.cpp`, `fs_ocean_water.sc` |
+| Drawing | everything below, and the quality table | `src/engine/src/ocean_renderer.*`, `src/engine/shaders/*ocean*` |
 | Water mesh | a grid over the screen: each vertex goes along its ray to the flat sea, then the waves move it. So it reaches the horizon, with its detail spread evenly on screen | `vs_ocean_water.sc` |
 | Water colour | Fresnel between the sky's reflection and the light inside the water, a glow through thin crests, the sun's glitter (GGX), haze toward the horizon | `fs_ocean_water.sc` |
 | Sky | Preetham's daylight model, a warm tint for a low sun, a flat layer of noise clouds, the sun's disc. No picture needed | `ocean_common.sh`, `fs_ocean_sky.sc` |
@@ -38,7 +43,7 @@ The waves' pictures are RGBA16F with their mip levels, uploaded each frame.
 
 ## 3. Quality, for the web and phones
 
-`--quality=` or the panel picks one (the table `g_arrQualities` in `main.cpp`):
+`--quality=` or the panel picks one (the table `g_arrQualities` in `ocean_renderer.h`):
 
 | Quality | Patches | Grid rows | Cloud noise: sky / in the water | Waves simulated |
 |---|---|---|---|---|
@@ -100,6 +105,7 @@ worst case, auto stepped down from medium to lowest (22 fps at 1254 x 620). **It
 - `unit.ocean_sim_test`: the FFT, the height's variance against the spectrum's integral (within 2 % when written), slopes against
   heights, repeatable runs, foam.
 - `smoke.ocean_viewer`: it starts, its shaders load and it draws. It has no reference picture, since the look is still being chosen.
+- `smoke.title_ocean`: the game's title with `--title-scene=ocean`; it fails if the sea did not start. No reference picture either.
 - `web.ocean_viewer` (only with the web tests): the page in headless Chrome on the real GPU: it draws and no shader fails.
   `tools/ocean_viewer/web/ocean_web_test.mjs` also takes `--phone`, `--cpu=<slower by>`, `--software`, and prints the numbers above.
 
@@ -108,7 +114,8 @@ It is not in the Android app: phones use the browser page.
 
 ## 7. Not done
 
-- Into the battle: the host would draw it in the scene views the title's city uses, and the battle's black backdrop would go. The open
+- Into the battle: the host would draw it in the scene views the title uses, and the battle's black backdrop would go. The open
   question is [Q69](../project/13_OPEN_DECISIONS.md).
+- "Save settings" is only the viewer's: the title does not read `ocean_settings.json`.
 - Spray, and objects floating on the water.
 - The other two backgrounds (a sky, a volcano). The sky here can be the start of the sky background.

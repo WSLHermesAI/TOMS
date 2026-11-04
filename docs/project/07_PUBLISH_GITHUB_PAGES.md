@@ -61,6 +61,28 @@ release is a new URL, so the files of one release always match.
 release's files, which is why the publish keeps the previous version's stamped files online: the
 cached page keeps working until it refreshes. Older versions are removed on the next publish.
 
+## 3b. The version number
+
+The title screen shows the published version in its bottom left corner, as `v12`.
+
+**`assets/data/version.json`:** `{ "number": 12, "sha": "abc1234" }`. `number` counts the publishes; `sha` is the short commit that was
+published. `tools\bump_version.ps1` writes it. The game reads it by its key, `data.version`, and the package also copies it to the site, so
+`https://wslhermesai.github.io/TOMS/version.json` shows what is live.
+
+| `tools\publish_web.cmd` | The number |
+|---|---|
+| no file yet | created with 1 |
+| a file | + 1, with the current commit's sha |
+| `dryrun`, "no" at the question, nothing to publish, or a failure | put back as it was |
+| `nobuild` | no + 1: the package already has its number inside. After the push, the file takes that number if it is higher |
+
+- **Commit the file after publishing.** The script does not commit it, and the count lives in it. Another PC starts from the committed number.
+- The `sha` is the last commit: changes not committed at publish time are in the build, but not in that commit.
+- A broken file stops the publish rather than starting again from 1.
+- No file: the title shows nothing there. The Windows package copies `assets/data` too, so it shows the last web number.
+- Runs with `--fixed-dt` (the tests) hide it, so reference pictures do not change with each publish.
+- The web build packs the data files only when it links, so `publish_web.cmd` removes the two `toms_game.html` files to force that.
+
 ## 4. Check it
 
 - Open https://wslhermesai.github.io/TOMS/ (after 1–2 minutes). The title screen appears.

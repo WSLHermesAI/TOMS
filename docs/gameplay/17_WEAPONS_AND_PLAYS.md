@@ -270,7 +270,7 @@ The battle editor's growth calculator (13 §4.3) and its test setups are the too
   (the volcano).
 
   **The ocean and skybox are being tried in an app of their own** (the owner, 2026-11-04):
-  [../engine/21_OCEAN_VIEWER.md](../engine/21_OCEAN_VIEWER.md). They are not in the game yet (Q69).
+  [../engine/21_OCEAN_VIEWER.md](../engine/21_OCEAN_VIEWER.md). They are on the title screen (in turns with the city), not yet in the battle (Q69).
 
 **Order** (the owner): the battle first, then the stage display, then the events bound into it.
 

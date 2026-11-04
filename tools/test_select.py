@@ -174,8 +174,13 @@ RULES = [
     # glTF
     (['src/core/engine/gltf*', 'src/engine/src/gltf*', 'src/engine/shaders/*mesh*', 'src/engine/shaders/fs_shadow.sc',
       'tools/gltf_viewer/*'], GLTF, 'glTF: its unit tests and screenshots'),
-    # the ocean viewer: on its own, nothing else uses it
-    (['tools/ocean_viewer/*'], named('unit.ocean_sim_test', 'smoke.ocean_viewer'), 'the ocean viewer: its unit test and that it draws'),
+    # the published version number: its script, the title's text
+    (['tools/bump_version*'], named('tools.bump_version'), 'the version number: its script test'),
+    (['src/core/game/ui/version_label*'], named('unit.version_label_test'), "the title's version text"),
+    # the ocean: the viewer and the title scene use it
+    (['tools/ocean_viewer/*', 'src/core/engine/ocean_*', 'src/engine/src/ocean_*', 'src/engine/shaders/*ocean*'],
+     named('unit.ocean_sim_test', 'smoke.ocean_viewer', 'smoke.title_ocean'), 'the ocean: its unit test, the viewer and the title over it'),
+    (['src/game/src/title_scene*'], named('smoke.title', 'smoke.title_ocean'), 'the title scene: the title over the city and over the sea'),
     # particles, node animations, atlases, the Qt editors' shared code
     (['src/core/engine/particle*', 'tools/particle/*', 'src/engine/shaders/cs_fx_*'], PARTICLES,
      'particles: checks, unit test, fx screenshots'),

@@ -53,13 +53,60 @@ bool TitleScene::f_Load(const std::string& l_strPath, std::string& l_strError) {
     return true;
 }
 
+bool TitleScene::f_LoadOcean(std::string& l_strError) {
+    auto l_upOcean = std::make_unique<ocean::OceanRenderer>();
+    if (!l_upOcean->f_Init(l_strError)) {
+        l_upOcean->f_Shutdown();
+        return false;
+    }
+#if defined(__EMSCRIPTEN__) || defined(__ANDROID__)
+    const ocean::Quality& l_oQ = ocean::g_arrQualities[2];   // "low": one thread on the web, a phone's GPU
+#else
+    const ocean::Quality& l_oQ = ocean::g_arrQualities[0];   // "high"
+#endif
+    m_oOceanLook.m_iSkyOctaves = l_oQ.m_iSkyOctaves;
+    m_oOceanLook.m_iReflectOctaves = l_oQ.m_iReflectOctaves;
+    m_oOceanLook.m_iFoamOctaves = l_oQ.m_iFoamOctaves;
+    m_oOceanLook.m_bGammaOut = TOMS_GAMMA_SPACE != 0;
+    // Dark, with few clouds: the title's pale gold letters vanish against a white cloud.
+    m_oOceanLook.m_fExposure = 0.4f;
+    m_oOceanLook.m_fCloudCover = 0.28f;
+    m_iOceanRows = l_oQ.m_iGridRows;
+    m_iOceanSimEvery = l_oQ.m_iSimEvery;
+    l_upOcean->f_SetWaves(ocean::WaveSettings(), ocean::f_QualityCascades(l_oQ));
+    m_upOcean = std::move(l_upOcean);
+    std::fprintf(stderr, "[title] the ocean, quality %s\n", l_oQ.m_pszName);
+    return true;
+}
+
 void TitleScene::f_Shutdown() {
+    if (m_upOcean) m_upOcean->f_Shutdown();
+    m_upOcean.reset();
     m_spGpu.reset();   // its buffers first, while bgfx is up
     m_oRenderer.f_Shutdown();
 }
 
+void TitleScene::f_DrawOcean(double l_dDtSeconds, uint32_t l_uWidth, uint32_t l_uHeight) {
+    const bool l_bFirst = m_iOceanFrame == 0;   // the wave pictures are empty until the first step
+    m_dTime += l_dDtSeconds;
+    m_fOceanPendingDt += (float)l_dDtSeconds;
+    m_upOcean->f_SetGridForScreen(m_iOceanRows, l_uWidth, l_uHeight);
+    if (l_bFirst || m_iOceanFrame % m_iOceanSimEvery == 0) {
+        m_upOcean->f_Step(m_dTime, m_fOceanPendingDt);
+        m_fOceanPendingDt = 0.0f;
+    }
+    m_iOceanFrame++;
+    ocean::f_PlaceBoatCamera(m_oOceanLook, ocean::BoatCamera(), m_dTime, l_uWidth, l_uHeight);
+    m_upOcean->f_Draw(m_u16FirstView, m_oOceanLook, m_dTime, l_uWidth, l_uHeight);
+}
+
 void TitleScene::f_Draw(double l_dDtSeconds, uint32_t l_uWidth, uint32_t l_uHeight) {
-    if (!m_spGpu || l_uWidth == 0 || l_uHeight == 0) return;
+    if (l_uWidth == 0 || l_uHeight == 0) return;
+    if (m_upOcean) {
+        f_DrawOcean(l_dDtSeconds, l_uWidth, l_uHeight);
+        return;
+    }
+    if (!m_spGpu) return;
     m_dTime += l_dDtSeconds;
     m_oPose.f_Reset();
     if (!m_oModel.m_vAnimations.empty()) {

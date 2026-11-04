@@ -521,6 +521,7 @@ public:
     // resumes one; Settings currently offers the language. See src/game/title_screen.h for the
     // page/selection state machine and docs/design/TITLE_PHASE.md for the flow.
     bool f_TitleOpen() const { return m_oTitle.f_IsOpen(); }
+    void f_SetShowVersion(bool l_bOn) { m_bShowVersion = l_bOn; }   // the title's corner; off in tests, or their reference pictures change with each publish
     const toms::TitleScreen& f_Title() const { return m_oTitle; }
     // Keyboard input, in the same shape the other overlays use: a direction move, a confirm and
     // a cancel. Each routes to the current title page (mouse/touch: uiEvent("title_row", ...)).
@@ -1001,6 +1002,8 @@ private:
     void f_SetBattleRigState(const std::string& l_strState, bool l_bRestart = false, const std::string& l_strClip = std::string());
     void f_UpdateBattleRig(int l_iDtMs);                     // picks the status; Game::update
     void f_DrawBattleRig();                               // the backdrop, the player and the monster; Game::draw
+    std::string m_strVersionLabel;                        // data/version.json as the title shows it (version_label.h)
+    bool m_bShowVersion = true;
     // The monster on the battle screen (assets/media/anim/monster_battle.anim, tools/make_monster_battle_anims.py): the
     // clip for the battle's status -- idle; attack (its clock fired); hurt (the player's hit landed); die (the fight is
     // won) -- with the enemy's own sprite in its `body` (fitCharacter). "<status>_<enemy id>" in the file wins over the

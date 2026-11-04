@@ -1,70 +1,24 @@
 // ocean_renderer.cpp -- see ocean_renderer.h.
 #include "ocean_renderer.h"
 
+#include "embedded_shaders.h"
 #include "job_system.h"
+
+#include <bgfx/bgfx.h>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <glm/gtc/type_ptr.hpp>
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cmath>
 #include <cstring>
-
-#if defined(__EMSCRIPTEN__)
-#include "essl/vs_ocean_water.sc.bin.h"
-#include "essl/fs_ocean_water.sc.bin.h"
-#include "essl/vs_ocean_sky.sc.bin.h"
-#include "essl/fs_ocean_sky.sc.bin.h"
-#else
-#if defined(_WIN32)
-#include "dxbc/vs_ocean_water.sc.bin.h"
-#include "dxbc/fs_ocean_water.sc.bin.h"
-#include "dxbc/vs_ocean_sky.sc.bin.h"
-#include "dxbc/fs_ocean_sky.sc.bin.h"
-#endif
-#include "spirv/vs_ocean_water.sc.bin.h"
-#include "spirv/fs_ocean_water.sc.bin.h"
-#include "spirv/vs_ocean_sky.sc.bin.h"
-#include "spirv/fs_ocean_sky.sc.bin.h"
-#include "glsl/vs_ocean_water.sc.bin.h"
-#include "glsl/fs_ocean_water.sc.bin.h"
-#include "glsl/vs_ocean_sky.sc.bin.h"
-#include "glsl/fs_ocean_sky.sc.bin.h"
-#endif
 
 namespace toms::ocean {
 namespace {
 
 constexpr float g_fPi = 3.14159265f;
-
-bgfx::ProgramHandle f_MakeProgram(const uint8_t* l_pVs, uint32_t l_uVs, const uint8_t* l_pFs, uint32_t l_uFs) {
-    const bgfx::ShaderHandle l_oV = bgfx::createShader(bgfx::makeRef(l_pVs, l_uVs));
-    const bgfx::ShaderHandle l_oF = bgfx::createShader(bgfx::makeRef(l_pFs, l_uFs));
-    return bgfx::createProgram(l_oV, l_oF, true);
-}
-
-#define TOMS_OCEAN_PROGRAM(name, ext) f_MakeProgram(vs_ocean_##name##_##ext, (uint32_t)sizeof(vs_ocean_##name##_##ext), fs_ocean_##name##_##ext, (uint32_t)sizeof(fs_ocean_##name##_##ext))
-
-bgfx::ProgramHandle f_Program(bool l_bWater) {
-    switch (bgfx::getRendererType()) {
-#if defined(__EMSCRIPTEN__)
-    case bgfx::RendererType::OpenGLES:   // bgfx's WebGL2 backend reports GLES
-        return l_bWater ? TOMS_OCEAN_PROGRAM(water, essl) : TOMS_OCEAN_PROGRAM(sky, essl);
-#else
-#if defined(_WIN32)
-    case bgfx::RendererType::Direct3D11:
-    case bgfx::RendererType::Direct3D12:
-        return l_bWater ? TOMS_OCEAN_PROGRAM(water, dxbc) : TOMS_OCEAN_PROGRAM(sky, dxbc);
-#endif
-    case bgfx::RendererType::Vulkan:
-        return l_bWater ? TOMS_OCEAN_PROGRAM(water, spv) : TOMS_OCEAN_PROGRAM(sky, spv);
-    case bgfx::RendererType::OpenGL:
-        return l_bWater ? TOMS_OCEAN_PROGRAM(water, glsl) : TOMS_OCEAN_PROGRAM(sky, glsl);
-#endif
-    default:
-        return BGFX_INVALID_HANDLE;
-    }
-}
 
 uint16_t f_ToHalf(float l_fV) {
     uint32_t l_uBits;
@@ -164,17 +118,50 @@ glm::vec3 f_SunColor(float l_fElevationDeg, float l_fT) {
 
 }  // namespace
 
-bool OceanRenderer::f_Init(std::string& l_strError) {
+struct OceanRenderer::Impl {
+    struct Gpu {
+        Cascade m_oSim;
+        bgfx::TextureHandle m_oDisp = BGFX_INVALID_HANDLE, m_oSlope = BGFX_INVALID_HANDLE;
+        std::vector<std::vector<uint16_t>> m_vDispMips, m_vSlopeMips;   // RGBA16F, ready to upload
+        std::vector<std::vector<float>> m_vDispWork, m_vSlopeWork;      // the smaller pictures as floats
+    };
+    bool f_Init(std::string& l_strError);
+    void f_Shutdown();
+    void f_SetWaves(const WaveSettings& l_oW, const std::vector<CascadeSettings>& l_vCascades);
+    void f_SetGrid(int l_iColumns, int l_iRows);
+    void f_Step(double l_dTime, float l_fDt);
+    void f_Draw(uint16_t l_u16View, const Look& l_oL, double l_dTime, uint32_t l_uWidth, uint32_t l_uHeight);
+    void f_FreeCascade(Gpu& l_oG);
+    void f_FreeGrid();
+
+    std::array<Gpu, OceanRenderer::m_iMaxCascades> m_arrCascades;
+    int m_iCascades = 0;
+    bgfx::ProgramHandle m_oWater = BGFX_INVALID_HANDLE, m_oSky = BGFX_INVALID_HANDLE;
+    bgfx::VertexBufferHandle m_oGridVb = BGFX_INVALID_HANDLE, m_oSkyVb = BGFX_INVALID_HANDLE;
+    bgfx::IndexBufferHandle m_oGridIb = BGFX_INVALID_HANDLE;
+    bgfx::TextureHandle m_oFlat = BGFX_INVALID_HANDLE;   // stands in for a cascade not used
+    int m_iColumns = 0, m_iRows = 0;
+    std::array<bgfx::UniformHandle, 3> m_arrSDisp{{BGFX_INVALID_HANDLE, BGFX_INVALID_HANDLE, BGFX_INVALID_HANDLE}};
+    std::array<bgfx::UniformHandle, 3> m_arrSSlope{{BGFX_INVALID_HANDLE, BGFX_INVALID_HANDLE, BGFX_INVALID_HANDLE}};
+    bgfx::UniformHandle m_oUInvVP = BGFX_INVALID_HANDLE, m_oUEye = BGFX_INVALID_HANDLE, m_oUGrid = BGFX_INVALID_HANDLE, m_oUGridB = BGFX_INVALID_HANDLE,
+                        m_oUInvSize = BGFX_INVALID_HANDLE, m_oUTexels = BGFX_INVALID_HANDLE, m_oUSun = BGFX_INVALID_HANDLE, m_oUSunColor = BGFX_INVALID_HANDLE,
+                        m_oUPerezY = BGFX_INVALID_HANDLE, m_oUPerezX = BGFX_INVALID_HANDLE, m_oUPerezZ = BGFX_INVALID_HANDLE, m_oUPerezE = BGFX_INVALID_HANDLE,
+                        m_oUZenith = BGFX_INVALID_HANDLE, m_oUClouds = BGFX_INVALID_HANDLE, m_oUDeep = BGFX_INVALID_HANDLE, m_oUScatter = BGFX_INVALID_HANDLE,
+                        m_oUFoam = BGFX_INVALID_HANDLE, m_oUDetail = BGFX_INVALID_HANDLE;
+    float m_fSimMs = 0.0f, m_fUploadMs = 0.0f;
+};
+
+bool OceanRenderer::Impl::f_Init(std::string& l_strError) {
     const bgfx::Caps* l_pCaps = bgfx::getCaps();
     // Only the plain 2D flag: bgfx does not set its vertex-texture flag on OpenGL, where every 4.3 driver can read them.
     if (!(l_pCaps->formats[bgfx::TextureFormat::RGBA16F] & BGFX_CAPS_FORMAT_TEXTURE_2D)) {
         l_strError = "this graphics card has no RGBA16F pictures";
         return false;
     }
-    m_oWater = f_Program(true);
-    m_oSky = f_Program(false);
+    m_oWater = next::f_CreateEmbeddedProgram(next::ShaderProgram::OceanWater);
+    m_oSky = next::f_CreateEmbeddedProgram(next::ShaderProgram::OceanSky);
     if (!bgfx::isValid(m_oWater) || !bgfx::isValid(m_oSky)) {
-        l_strError = "no ocean shaders for this renderer (use d3d11, d3d12, vulkan or opengl)";
+        l_strError = "no ocean shaders for this renderer";
         return false;
     }
     for (int l_iI = 0; l_iI < 3; l_iI++) {
@@ -212,21 +199,21 @@ bool OceanRenderer::f_Init(std::string& l_strError) {
     return true;
 }
 
-void OceanRenderer::f_FreeCascade(Gpu& l_oG) {
+void OceanRenderer::Impl::f_FreeCascade(Gpu& l_oG) {
     if (bgfx::isValid(l_oG.m_oDisp)) bgfx::destroy(l_oG.m_oDisp);
     if (bgfx::isValid(l_oG.m_oSlope)) bgfx::destroy(l_oG.m_oSlope);
     l_oG.m_oDisp = BGFX_INVALID_HANDLE;
     l_oG.m_oSlope = BGFX_INVALID_HANDLE;
 }
 
-void OceanRenderer::f_FreeGrid() {
+void OceanRenderer::Impl::f_FreeGrid() {
     if (bgfx::isValid(m_oGridVb)) bgfx::destroy(m_oGridVb);
     if (bgfx::isValid(m_oGridIb)) bgfx::destroy(m_oGridIb);
     m_oGridVb = BGFX_INVALID_HANDLE;
     m_oGridIb = BGFX_INVALID_HANDLE;
 }
 
-void OceanRenderer::f_Shutdown() {
+void OceanRenderer::Impl::f_Shutdown() {
     for (Gpu& l_oG : m_arrCascades) f_FreeCascade(l_oG);
     f_FreeGrid();
     for (bgfx::ProgramHandle l_oP : {m_oWater, m_oSky})
@@ -238,9 +225,9 @@ void OceanRenderer::f_Shutdown() {
         if (bgfx::isValid(l_oU)) bgfx::destroy(l_oU);
 }
 
-void OceanRenderer::f_SetWaves(const WaveSettings& l_oW, const std::vector<CascadeSettings>& l_vCascades) {
-    m_iCascades = std::min((int)l_vCascades.size(), m_iMaxCascades);
-    for (int l_iI = 0; l_iI < m_iMaxCascades; l_iI++) {
+void OceanRenderer::Impl::f_SetWaves(const WaveSettings& l_oW, const std::vector<CascadeSettings>& l_vCascades) {
+    m_iCascades = std::min((int)l_vCascades.size(), OceanRenderer::m_iMaxCascades);
+    for (int l_iI = 0; l_iI < OceanRenderer::m_iMaxCascades; l_iI++) {
         Gpu& l_oG = m_arrCascades[(size_t)l_iI];
         if (l_iI >= m_iCascades) {
             f_FreeCascade(l_oG);
@@ -262,7 +249,7 @@ void OceanRenderer::f_SetWaves(const WaveSettings& l_oW, const std::vector<Casca
     }
 }
 
-void OceanRenderer::f_SetGrid(int l_iColumns, int l_iRows) {
+void OceanRenderer::Impl::f_SetGrid(int l_iColumns, int l_iRows) {
     if (l_iColumns == m_iColumns && l_iRows == m_iRows && bgfx::isValid(m_oGridVb)) return;
     f_FreeGrid();
     m_iColumns = l_iColumns;
@@ -291,7 +278,7 @@ void OceanRenderer::f_SetGrid(int l_iColumns, int l_iRows) {
     m_oGridIb = bgfx::createIndexBuffer(l_pI, BGFX_BUFFER_INDEX32);
 }
 
-void OceanRenderer::f_Step(double l_dTime, float l_fDt) {
+void OceanRenderer::Impl::f_Step(double l_dTime, float l_fDt) {
     using Clock = std::chrono::steady_clock;
     const auto l_oT0 = Clock::now();
     for (int l_iI = 0; l_iI < m_iCascades; l_iI++) m_arrCascades[(size_t)l_iI].m_oSim.f_Step(l_dTime, l_fDt);
@@ -311,7 +298,7 @@ void OceanRenderer::f_Step(double l_dTime, float l_fDt) {
     m_fUploadMs = std::chrono::duration<float, std::milli>(l_oT2 - l_oT1).count();
 }
 
-void OceanRenderer::f_Draw(uint16_t l_u16View, const Look& l_oL, double l_dTime, uint32_t l_uWidth, uint32_t l_uHeight) {
+void OceanRenderer::Impl::f_Draw(uint16_t l_u16View, const Look& l_oL, double l_dTime, uint32_t l_uWidth, uint32_t l_uHeight) {
     bgfx::setViewRect(l_u16View, 0, 0, (uint16_t)l_uWidth, (uint16_t)l_uHeight);
     bgfx::setViewClear(l_u16View, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x000000ff, 1.0f, 0);
     bgfx::setViewTransform(l_u16View, glm::value_ptr(l_oL.m_mat4View), glm::value_ptr(l_oL.m_mat4Proj));
@@ -394,6 +381,52 @@ void OceanRenderer::f_Draw(uint16_t l_u16View, const Look& l_oL, double l_dTime,
     bgfx::setVertexBuffer(0, m_oSkyVb);
     bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_DEPTH_TEST_LEQUAL);
     bgfx::submit(l_u16View, m_oSky);
+}
+
+OceanRenderer::OceanRenderer() : m_upImpl(std::make_unique<Impl>()) {}
+OceanRenderer::~OceanRenderer() = default;
+bool OceanRenderer::f_Init(std::string& l_strError) { return m_upImpl->f_Init(l_strError); }
+void OceanRenderer::f_Shutdown() { m_upImpl->f_Shutdown(); }
+void OceanRenderer::f_SetWaves(const WaveSettings& l_oW, const std::vector<CascadeSettings>& l_vCascades) { m_upImpl->f_SetWaves(l_oW, l_vCascades); }
+void OceanRenderer::f_SetGrid(int l_iColumns, int l_iRows) { m_upImpl->f_SetGrid(l_iColumns, l_iRows); }
+void OceanRenderer::f_SetGridForScreen(int l_iRows, uint32_t l_uWidth, uint32_t l_uHeight) {
+    const float l_fAspect = (float)l_uWidth / (float)std::max(l_uHeight, 1u);
+    m_upImpl->f_SetGrid(std::clamp((int)((float)l_iRows * std::max(l_fAspect, 0.75f)), 16, 4096), l_iRows);   // (a phone's grid also reaches past its sides)
+}
+void OceanRenderer::f_Step(double l_dTime, float l_fDt) { m_upImpl->f_Step(l_dTime, l_fDt); }
+void OceanRenderer::f_Draw(uint16_t l_u16View, const Look& l_oLook, double l_dTime, uint32_t l_uWidth, uint32_t l_uHeight) { m_upImpl->f_Draw(l_u16View, l_oLook, l_dTime, l_uWidth, l_uHeight); }
+float OceanRenderer::f_SimMs() const { return m_upImpl->m_fSimMs; }
+float OceanRenderer::f_UploadMs() const { return m_upImpl->m_fUploadMs; }
+int OceanRenderer::f_Triangles() const { return m_upImpl->m_iColumns * m_upImpl->m_iRows * 2; }
+
+std::vector<CascadeSettings> f_QualityCascades(const Quality& l_oQ, float l_fSize0, float l_fSize1, float l_fSize2) {
+    const float l_arrSizes[] = {l_fSize0, l_fSize1, l_fSize2};
+    std::vector<CascadeSettings> l_vC;
+    for (int l_iI = 0; l_iI < l_oQ.m_iCascades; l_iI++) {
+        CascadeSettings l_oC;
+        l_oC.m_iN = l_oQ.m_iResolution;
+        l_oC.m_fSize = l_arrSizes[l_iI];
+        l_vC.push_back(l_oC);
+    }
+    return l_vC;
+}
+
+void f_PlaceBoatCamera(Look& l_oLook, const BoatCamera& l_oCamera, double l_dTime, uint32_t l_uWidth, uint32_t l_uHeight) {
+    const float l_fT = (float)l_dTime;
+    const float l_fSway = l_oCamera.m_fSway;
+    const float l_fPitch = glm::radians(l_oCamera.m_fPitchDeg + std::sin(l_fT * 0.37f) * 0.5f * l_fSway);
+    const float l_fYaw = glm::radians(l_oCamera.m_fYawDeg + std::sin(l_fT * 0.23f) * 0.6f * l_fSway);
+    const float l_fHeight = l_oCamera.m_fHeight + std::sin(l_fT * 0.5f) * 0.5f * l_fSway;
+    const glm::vec3 l_v3Eye(0.0f, l_fHeight, 0.0f);
+    const glm::vec3 l_v3Fwd(-std::sin(l_fYaw) * std::cos(l_fPitch), std::sin(l_fPitch), -std::cos(l_fYaw) * std::cos(l_fPitch));
+    const float l_fRoll = glm::radians(std::sin(l_fT * 0.31f) * 0.5f * l_fSway);
+    const glm::vec3 l_v3Up(std::sin(l_fRoll), std::cos(l_fRoll), 0.0f);
+    l_oLook.m_v3Eye = l_v3Eye;
+    l_oLook.m_fFovYDegrees = l_oCamera.m_fFovYDeg;
+    l_oLook.m_mat4View = glm::lookAt(l_v3Eye, l_v3Eye + l_v3Fwd, l_v3Up);
+    const float l_fAspect = (float)l_uWidth / (float)std::max(l_uHeight, 1u);
+    l_oLook.m_mat4Proj = bgfx::getCaps()->homogeneousDepth ? glm::perspectiveRH_NO(glm::radians(l_oCamera.m_fFovYDeg), l_fAspect, 0.5f, 60000.0f)
+                                                           : glm::perspectiveRH_ZO(glm::radians(l_oCamera.m_fFovYDeg), l_fAspect, 0.5f, 60000.0f);
 }
 
 }  // namespace toms::ocean

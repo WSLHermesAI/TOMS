@@ -766,3 +766,10 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   - Plays: per-battle random seed (`playRng_`), area kept on screen, armed after the layout is known.
   - docs/engine/19_DESIGN_MAP.md (+ zh_TW) and docs/engine/design_map/design_map.html.
   - Tests: changed-only 0 of 233 selected at the end (owner's switches); earlier 39 of 234 pass. All tests, web, Android not run.
+- 2026-11-04: the ocean, the title's background, the version number (DAILY_2026-11-04.md).
+  - docs/project/13_OPEN_DECISIONS.md (+ zh_TW), My Answer columns, the rule in CLAUDE.md; doc 14 §2.5, §6; Q59-Q69.
+  - tools/ocean_viewer, then src/core/engine/ocean_sim.*, src/engine/src/ocean_renderer.*, src/engine/shaders/*ocean*; unit.ocean_sim_test,
+    smoke.ocean_viewer, smoke.title_ocean, web.ocean_viewer; tools/build_ocean_web.cmd, serve_web.cmd ocean.
+  - The title: game_session.cpp f_NextTitleBackground (localStorage `background`; save/title_background.txt), title_scene.* f_LoadOcean.
+  - Version: tools/bump_version.ps1 (+ test), publish_web.cmd, publish_pages.ps1 published.flag, package.ps1, version_label.h, title.rml #version.
+  - Tests: changed-only 5 of 239 pass. All tests, a full publish, the multithreaded web game, Android, a real phone not run.

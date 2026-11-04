@@ -15,6 +15,15 @@
 
 ## ▶ Next Step
 
+**A real-time ocean, on the desktop, the web and the title; a version number; the open decisions in one list** (2026-11-04; [DAILY_2026-11-04.md](DAILY_2026-11-04.md)):
+- `ocean_viewer` (docs/engine/21): FFT waves, foam, Preetham sky, sliders, four quality levels; a web build (`tools\build_ocean_web.cmd`)
+  that runs at 60 fps in Chrome, not yet tried on a real phone. Committed `efe0074`.
+- **Not committed:** the ocean moved into the engine; the title's background in turns (`background`: even the ocean, odd the glTF
+  model; `localStorage` on the web); the version number (`assets/data/version.json`, `tools\bump_version.ps1`, docs/project/07 §3b).
+- Open decisions: docs/project/13, with a My Answer column; the owner's idea list checked against docs 14, 16 and 17 (14 §6).
+- Last changed-only run: 5 of 239, all pass. **Owner:** commit (stage by name); publish once, then commit `version.json`; fill My Answer
+  (new: Q59–Q69); try a real phone. All tests, a full publish, the multithreaded web game and Android not run.
+
 **The battle hero made like Spine; the C++ naming rule everywhere; no leaks** (2026-11-02; [DAILY_2026-11-02.md](DAILY_2026-11-02.md)):
 - The hero's art: painted key poses (B) and 3D (C) tried and rejected by the owner; **Spine-style 2D** kept
   (`tools/art/make_hero_rig2d.py`, docs/engine/20 §5): bow, sword and staff in battle, the sword and staff as parts
@@ -505,7 +514,8 @@ Short dated bullets: [WORKING_LOG.md](WORKING_LOG.md). Daily reports: [DAILY_202
 [DAILY_2026-10-21.md](DAILY_2026-10-21.md), [DAILY_2026-10-22.md](DAILY_2026-10-22.md),
 [DAILY_2026-10-23.md](DAILY_2026-10-23.md), [DAILY_2026-10-24.md](DAILY_2026-10-24.md),
 [DAILY_2026-10-25.md](DAILY_2026-10-25.md), [DAILY_2026-10-26.md](DAILY_2026-10-26.md),
-[DAILY_2026-10-28.md](DAILY_2026-10-28.md), [DAILY_2026-10-30.md](DAILY_2026-10-30.md).
+[DAILY_2026-10-28.md](DAILY_2026-10-28.md), [DAILY_2026-10-30.md](DAILY_2026-10-30.md),
+[DAILY_2026-10-31.md](DAILY_2026-10-31.md), [DAILY_2026-11-02.md](DAILY_2026-11-02.md), [DAILY_2026-11-04.md](DAILY_2026-11-04.md).
 
 ---
 

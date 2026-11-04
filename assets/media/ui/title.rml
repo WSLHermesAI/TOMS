@@ -34,6 +34,7 @@
         <div class="label">{{title.back_label}}</div>
     </div>
     <div id="hint">{{title.hint}}</div>
+    <div id="version" data-if="title.version != ''">{{title.version}}</div>
 
     <div data-if="title.confirm_open">
         <div class="fill scrim"></div>

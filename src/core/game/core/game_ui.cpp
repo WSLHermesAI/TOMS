@@ -126,6 +126,7 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
         l_oT.m_bVisible = true;
         l_oT.m_strTitle = l_oL.f_Tr("game.title");
         l_oT.m_strSubtitle = l_oL.f_Tr("game.subtitle");
+        l_oT.m_strVersion = m_bShowVersion ? m_strVersionLabel : std::string();
         l_oT.m_iPage = (int)m_oTitle.f_Page();
         l_oT.m_strBackLabel = l_oL.f_Tr("menu.back");
         l_oT.m_strYesLabel = l_oL.f_Tr("menu.yes");

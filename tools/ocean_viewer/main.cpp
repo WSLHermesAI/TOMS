@@ -111,21 +111,6 @@ struct Settings {
     int m_iSimEvery = 1;      // simulate the waves every nth frame
 };
 
-// What each quality costs. In order: the sim's patches and their size (CPU, and the web has one thread), the grid's rows
-// (vertices), noise octaves per pixel in the sky, in the water's reflections (0: no clouds there) and in the foam (GPU),
-// and how often the waves are simulated.
-struct Quality {
-    const char* m_pszName;
-    int m_iCascades, m_iResolution, m_iGridRows, m_iSkyOctaves, m_iReflectOctaves, m_iFoamOctaves, m_iSimEvery;
-};
-constexpr Quality g_arrQualities[] = {
-    {"high", 3, 256, 360, 5, 3, 3, 1},
-    {"medium", 3, 128, 220, 4, 2, 3, 1},
-    {"low", 2, 128, 140, 3, 0, 1, 2},
-    {"lowest", 2, 64, 90, 2, 0, 1, 2},
-};
-constexpr int g_iQualities = (int)(sizeof(g_arrQualities) / sizeof(g_arrQualities[0]));
-
 void f_ApplyQuality(Settings& l_oS, int l_iQuality) {
     const Quality& l_oQ = g_arrQualities[std::clamp(l_iQuality, 0, g_iQualities - 1)];
     l_oS.m_iQuality = std::clamp(l_iQuality, 0, g_iQualities - 1);
@@ -285,11 +270,6 @@ std::vector<CascadeSettings> f_CascadesOf(const Settings& l_oS) {
         l_vC.push_back(l_oC);
     }
     return l_vC;
-}
-
-// The grid's columns follow the window's shape, so its cells are about square on screen.
-int f_GridColumns(const Settings& l_oS, int l_iW, int l_iH) {
-    return std::clamp((int)((float)l_oS.m_iGridRows * std::max((float)l_iW / std::max(l_iH, 1), 0.75f)), 16, 4096);   // (a phone's grid also reaches past its sides)
 }
 
 // Returns true when the waves must be made again.
@@ -482,7 +462,7 @@ void App::f_Tick() {
     if (m_bShowUi) l_bWavesChanged = f_Panel(m_oS, m_bPaused, m_bAuto, m_oRenderer, m_fFps, l_bGridChanged, m_strSettingsPath, m_strNotice, m_iFbW, m_iFbH);
     f_AutoQuality(l_fRealDt, l_bWavesChanged, l_bGridChanged);
     if (l_bWavesChanged) m_oRenderer.f_SetWaves(m_oS.m_oWave, f_CascadesOf(m_oS));
-    if (l_bGridChanged) m_oRenderer.f_SetGrid(f_GridColumns(m_oS, m_iFbW, m_iFbH), m_oS.m_iGridRows);
+    if (l_bGridChanged) m_oRenderer.f_SetGridForScreen(m_oS.m_iGridRows, (uint32_t)m_iFbW, (uint32_t)m_iFbH);
 
     const float l_fDt = m_bPaused ? 0.0f : l_fFrameDt * m_oS.m_fTimeScale;
     m_dTime += l_fDt;
@@ -495,24 +475,14 @@ void App::f_Tick() {
     m_dSumSim += m_oRenderer.f_SimMs();
     m_dSumUpload += m_oRenderer.f_UploadMs();
 
-    // The camera: a slow bob, as from a boat.
-    const float l_fT = (float)m_dTime;
-    const float l_fSway = m_oS.m_fCameraSway;
-    const float l_fPitch = glm::radians(m_oS.m_fCameraPitch + std::sin(l_fT * 0.37f) * 0.5f * l_fSway);
-    const float l_fYaw = glm::radians(m_oS.m_fCameraYaw + std::sin(l_fT * 0.23f) * 0.6f * l_fSway);
-    const float l_fHeight = m_oS.m_fCameraHeight + std::sin(l_fT * 0.5f) * 0.5f * l_fSway;
-    const glm::vec3 l_v3Eye(0.0f, l_fHeight, 0.0f);
-    const glm::vec3 l_v3Fwd(-std::sin(l_fYaw) * std::cos(l_fPitch), std::sin(l_fPitch), -std::cos(l_fYaw) * std::cos(l_fPitch));
-    const float l_fRoll = glm::radians(std::sin(l_fT * 0.31f) * 0.5f * l_fSway);
-    const glm::vec3 l_v3Up(std::sin(l_fRoll), std::cos(l_fRoll), 0.0f);
     Look& l_oLook = m_oS.m_oLook;
-    l_oLook.m_v3Eye = l_v3Eye;
-    l_oLook.m_fFovYDegrees = m_oS.m_fFov;
-    l_oLook.m_mat4View = glm::lookAt(l_v3Eye, l_v3Eye + l_v3Fwd, l_v3Up);
-    const bool l_bZeroToOne = bgfx::getCaps()->homogeneousDepth == false;
-    const float l_fAspect = (float)m_iFbW / (float)std::max(m_iFbH, 1);
-    l_oLook.m_mat4Proj = l_bZeroToOne ? glm::perspectiveRH_ZO(glm::radians(m_oS.m_fFov), l_fAspect, 0.5f, 60000.0f)
-                                      : glm::perspectiveRH_NO(glm::radians(m_oS.m_fFov), l_fAspect, 0.5f, 60000.0f);
+    BoatCamera l_oCamera;
+    l_oCamera.m_fHeight = m_oS.m_fCameraHeight;
+    l_oCamera.m_fPitchDeg = m_oS.m_fCameraPitch;
+    l_oCamera.m_fYawDeg = m_oS.m_fCameraYaw;
+    l_oCamera.m_fFovYDeg = m_oS.m_fFov;
+    l_oCamera.m_fSway = m_oS.m_fCameraSway;
+    f_PlaceBoatCamera(l_oLook, l_oCamera, m_dTime, (uint32_t)m_iFbW, (uint32_t)m_iFbH);
     m_oRenderer.f_Draw(g_u16ViewScene, l_oLook, m_dTime, (uint32_t)m_iFbW, (uint32_t)m_iFbH);
     m_oGui.f_Render(g_u16ViewUi);
 
@@ -650,7 +620,7 @@ int main(int l_iArgc, char** l_pArgv) {
     ImGui::GetIO().FontGlobalScale = l_fUiScale;
     ImGui::GetStyle().ScaleAllSizes(l_fUiScale);
     l_oApp.m_oRenderer.f_SetWaves(l_oS.m_oWave, f_CascadesOf(l_oS));
-    l_oApp.m_oRenderer.f_SetGrid(f_GridColumns(l_oS, l_oApp.m_iFbW, l_oApp.m_iFbH), l_oS.m_iGridRows);
+    l_oApp.m_oRenderer.f_SetGridForScreen(l_oS.m_iGridRows, (uint32_t)l_oApp.m_iFbW, (uint32_t)l_oApp.m_iFbH);
 
     if (!l_oArgs.m_strRecord.empty()) {
         std::error_code l_oEc;

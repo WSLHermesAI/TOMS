@@ -15,8 +15,9 @@
 //   --fps                 start with the F3 performance line on (FPS, backend, GPU / CPU sprite path)
 //   --fx-gpu-threshold=N  particle emitters above N particles run on the GPU (0 = never); this run only,
 //                         the saved setting (particleGpuThreshold: desktop 5000, phones 3000) is unchanged
-//   --title-scene=<f|none> the 3D scene behind the title: a .glb / .gltf, or none (default:
-//                         assets/media/models/VirtualCity.glb when it is there; docs/engine/08_GLTF.md)
+//   --title-scene=<f|none|ocean> the 3D scene behind the title: a .glb / .gltf, none, or the sea (default on the desktop and the
+//                         web: in turns at each start, the sea first, then assets/media/models/VirtualCity.glb; with --frames
+//                         or --fixed-dt, and on Android, always that model; docs/engine/08_GLTF.md §3)
 //   --frames=<n>          quit after n frames (automated tests; desktop)
 //   --screenshot=<png>    save the last frame to a PNG (with --frames; desktop). The window stays hidden.
 //   --record=<folder>     save frames as <folder>/frame_00000.png, ... (desktop; the window stays hidden): every frame
@@ -114,7 +115,7 @@ struct Args {
     int m_iFxGpuThreshold = -1;
     bool m_bDefaultBattleTuning = false;  // --battle-tuning=default
     bool m_bBattleLog = false;            // --battle-log
-    std::string m_strTitleScene;            // --title-scene=<file|none>
+    std::string m_strTitleScene;            // --title-scene=<file|none|ocean>
     float m_fUiScale = 0.0f;              // --ui-scale=<x>: the phone UI scale on desktop (testing the web build's small-screen layout)
     int m_iWindowW = 1280, m_iWindowH = 720;   // --window=WxH
     int m_iResizeFrame = -1, m_iResizeW = 0, m_iResizeH = 0;   // --resize=frame:WxH
@@ -430,6 +431,10 @@ bool f_AppInit(App& l_oApp) {
     l_oOpts.m_bDefaultBattleTuning = l_oArgs.m_bDefaultBattleTuning;
     l_oOpts.m_bBattleLog = l_oArgs.m_bBattleLog;
     l_oOpts.m_strTitleScene = l_oArgs.m_strTitleScene;
+    l_oOpts.m_bShowVersion = l_oArgs.m_iFixedDtMs == 0;   // a scripted test's picture must not change with each publish
+#ifndef __ANDROID__
+    l_oOpts.m_bTitleSceneInTurns = l_oArgs.m_iFrames == 0 && l_oArgs.m_iFixedDtMs == 0;   // a test draws the same picture every time
+#endif
     if (l_oArgs.m_fUiScale > 0.0f) l_oOpts.m_fUiScale = l_oArgs.m_fUiScale;
     l_oOpts.m_uDesignW = l_oArgs.m_uDesignW;
     l_oOpts.m_uDesignH = l_oArgs.m_uDesignH;

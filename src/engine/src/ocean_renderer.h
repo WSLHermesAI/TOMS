@@ -4,11 +4,10 @@
 #pragma once
 #include "ocean_sim.h"
 
-#include <bgfx/bgfx.h>
 #include <glm/glm.hpp>
 
-#include <array>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -35,47 +34,55 @@ struct Look {
     bool m_bGammaOut = false;      // no sRGB screen (the web): the shaders encode
 };
 
+// What each quality costs. In order: the sim's patches and their size (CPU, and the web has one thread), the grid's rows
+// (vertices), noise octaves per pixel in the sky, in the water's reflections (0: no clouds there) and in the foam (GPU),
+// and how often the waves are simulated.
+struct Quality {
+    const char* m_pszName;
+    int m_iCascades, m_iResolution, m_iGridRows, m_iSkyOctaves, m_iReflectOctaves, m_iFoamOctaves, m_iSimEvery;
+};
+inline constexpr Quality g_arrQualities[] = {
+    {"high", 3, 256, 360, 5, 3, 3, 1},
+    {"medium", 3, 128, 220, 4, 2, 3, 1},
+    {"low", 2, 128, 140, 3, 0, 1, 2},
+    {"lowest", 2, 64, 90, 2, 0, 1, 2},
+};
+inline constexpr int g_iQualities = (int)(sizeof(g_arrQualities) / sizeof(g_arrQualities[0]));
+
+// The patches of a quality, at these sizes (metres).
+std::vector<CascadeSettings> f_QualityCascades(const Quality& l_oQ, float l_fSize0 = 700.0f, float l_fSize1 = 110.0f, float l_fSize2 = 19.0f);
+
+// Where the camera is: low over the water, with a slow bob, as from a boat.
+struct BoatCamera {
+    float m_fHeight = 10.0f, m_fPitchDeg = -3.0f, m_fYawDeg = 0.0f, m_fFovYDeg = 50.0f, m_fSway = 0.5f;
+};
+// Fills the look's eye, view, projection and field of view (bgfx must be up: the depth range is the backend's).
+void f_PlaceBoatCamera(Look& l_oLook, const BoatCamera& l_oCamera, double l_dTime, uint32_t l_uWidth, uint32_t l_uHeight);
+
 class OceanRenderer {
 public:
     static constexpr int m_iMaxCascades = 3;
 
+    OceanRenderer();
+    ~OceanRenderer();
     bool f_Init(std::string& l_strError);    // programs, uniforms, the grid (bgfx must be up)
     void f_Shutdown();
 
     // (Re)makes the cascades; each takes the band of waves its size can show best, so none is counted twice.
     void f_SetWaves(const WaveSettings& l_oW, const std::vector<CascadeSettings>& l_vCascades);
     void f_SetGrid(int l_iColumns, int l_iRows);
+    // The columns follow the screen's shape, so the cells are about square on it. Nothing happens if nothing changed.
+    void f_SetGridForScreen(int l_iRows, uint32_t l_uWidth, uint32_t l_uHeight);
     void f_Step(double l_dTime, float l_fDt);   // simulate and upload
     void f_Draw(uint16_t l_u16View, const Look& l_oLook, double l_dTime, uint32_t l_uWidth, uint32_t l_uHeight);
 
-    float f_SimMs() const { return m_fSimMs; }        // the last step's waves on the CPU
-    float f_UploadMs() const { return m_fUploadMs; }  // its mip pictures and half floats
-    int f_Triangles() const { return m_iColumns * m_iRows * 2; }
+    float f_SimMs() const;        // the last step's waves on the CPU
+    float f_UploadMs() const;     // its mip pictures and half floats
+    int f_Triangles() const;
 
 private:
-    struct Gpu {
-        Cascade m_oSim;
-        bgfx::TextureHandle m_oDisp = BGFX_INVALID_HANDLE, m_oSlope = BGFX_INVALID_HANDLE;
-        std::vector<std::vector<uint16_t>> m_vDispMips, m_vSlopeMips;   // RGBA16F, ready to upload
-        std::vector<std::vector<float>> m_vDispWork, m_vSlopeWork;      // the smaller pictures as floats
-    };
-    void f_FreeCascade(Gpu& l_oG);
-    void f_FreeGrid();
-
-    std::array<Gpu, m_iMaxCascades> m_arrCascades;
-    int m_iCascades = 0;
-    bgfx::ProgramHandle m_oWater = BGFX_INVALID_HANDLE, m_oSky = BGFX_INVALID_HANDLE;
-    bgfx::VertexBufferHandle m_oGridVb = BGFX_INVALID_HANDLE, m_oSkyVb = BGFX_INVALID_HANDLE;
-    bgfx::IndexBufferHandle m_oGridIb = BGFX_INVALID_HANDLE;
-    bgfx::TextureHandle m_oFlat = BGFX_INVALID_HANDLE;   // stands in for a cascade not used
-    int m_iColumns = 0, m_iRows = 0;
-    std::array<bgfx::UniformHandle, 3> m_arrSDisp{}, m_arrSSlope{};
-    bgfx::UniformHandle m_oUInvVP = BGFX_INVALID_HANDLE, m_oUEye = BGFX_INVALID_HANDLE, m_oUGrid = BGFX_INVALID_HANDLE, m_oUGridB = BGFX_INVALID_HANDLE,
-                        m_oUInvSize = BGFX_INVALID_HANDLE, m_oUTexels = BGFX_INVALID_HANDLE, m_oUSun = BGFX_INVALID_HANDLE, m_oUSunColor = BGFX_INVALID_HANDLE,
-                        m_oUPerezY = BGFX_INVALID_HANDLE, m_oUPerezX = BGFX_INVALID_HANDLE, m_oUPerezZ = BGFX_INVALID_HANDLE, m_oUPerezE = BGFX_INVALID_HANDLE,
-                        m_oUZenith = BGFX_INVALID_HANDLE, m_oUClouds = BGFX_INVALID_HANDLE, m_oUDeep = BGFX_INVALID_HANDLE, m_oUScatter = BGFX_INVALID_HANDLE,
-                        m_oUFoam = BGFX_INVALID_HANDLE, m_oUDetail = BGFX_INVALID_HANDLE;
-    float m_fSimMs = 0.0f, m_fUploadMs = 0.0f;
+    struct Impl;
+    std::unique_ptr<Impl> m_upImpl;
 };
 
 }  // namespace toms::ocean

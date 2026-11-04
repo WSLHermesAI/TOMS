@@ -11,6 +11,7 @@ body.scene { background-color: transparent; }
 }
 #name     { position: absolute; left: 0; right: 0; top: 88px; font-size: 60px; color: #f9e9b1; }
 #subtitle { position: absolute; left: 0; right: 0; top: 156px; font-size: 20px; color: #cad0e1; }
+#version  { position: absolute; left: 16px; bottom: 18px; font-size: 18px; color: #cad0e1; }   /* the published version (data/version.json) */
 
 /* The current page: a centred column of rows. Width and start depend on the page. */
 #page { position: absolute; left: 0; right: 0; top: 330px; }

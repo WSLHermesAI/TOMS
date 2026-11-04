@@ -1,9 +1,10 @@
 > 英文原文：[21_OCEAN_VIEWER.md](../21_OCEAN_VIEWER.md)
 
-# 21. 海洋檢視器：遊戲之外的即時海洋與天空
+# 21. 海洋：即時的海與天空，以及它的檢視器
 
-這是 [17 §12](../../gameplay/zh_TW/17_WEAPONS_AND_PLAYS.md) 三個 3D 背景中的第一個。它是獨立的程式 `ocean_viewer`，可以先試玩與調整外觀。
-**遊戲目前還沒有使用它**：沒有更動任何遊戲或引擎檔案。
+這是 [17 §12](../../gameplay/zh_TW/17_WEAPONS_AND_PLAYS.md) 三個 3D 背景中的第一個。它有自己的程式 `ocean_viewer`，可以試玩與調整外觀。
+
+**遊戲中：只有標題畫面。** 每次啟動輪流使用海與城市模型，先用海（`--title-scene=ocean` 強制用海；[08 §3](08_GLTF.md)）。它用預設外觀，較暗、雲較少以便看清選單，桌面版品質 high，網頁版 low。Android 目前一律用城市。戰鬥還沒有使用它（Q69）。
 
 ## 1. 執行
 
@@ -29,8 +30,9 @@
 
 | 部分 | 內容 | 位置 |
 |---|---|---|
-| 波浪 | Tessendorf 的 FFT 海洋，用 JONSWAP 波譜與 cos^2s 方向分布，透過 job system 在 CPU 上計算。三塊正方形區塊（700、110、19 公尺），各自負責一段波長，所以看不出重複 | `ocean_sim.*` |
+| 波浪 | Tessendorf 的 FFT 海洋，用 JONSWAP 波譜與 cos^2s 方向分布，透過 job system 在 CPU 上計算。三塊正方形區塊（700、110、19 公尺），各自負責一段波長，所以看不出重複 | `src/core/engine/ocean_sim.*` |
 | 泡沫 | 出現在水面被擠壓處（Jacobian 變低），之後隨時間淡去 | `ocean_sim.cpp`、`fs_ocean_water.sc` |
+| 繪製 | 以下全部，以及品質表 | `src/engine/src/ocean_renderer.*`、`src/engine/shaders/*ocean*` |
 | 水面網格 | 鋪在畫面上的格子：每個頂點沿視線到平坦海面，再由波浪移動。所以能延伸到地平線，細節在畫面上分布平均 | `vs_ocean_water.sc` |
 | 水的顏色 | 用 Fresnel 混合天空反射與水中的光、薄浪頂透出的光、太陽閃光（GGX）、往地平線的霧氣 | `fs_ocean_water.sc` |
 | 天空 | Preetham 日光模型、低太陽的暖色、一層平面的雜訊雲、太陽圓盤。不需要圖片 | `ocean_common.sh`、`fs_ocean_sky.sc` |
@@ -39,7 +41,7 @@
 
 ## 3. 品質：給網頁版與手機
 
-用 `--quality=` 或面板選擇（`main.cpp` 的 `g_arrQualities` 表）：
+用 `--quality=` 或面板選擇（`ocean_renderer.h` 的 `g_arrQualities` 表）：
 
 | 品質 | 區塊 | 網格列數 | 雲的雜訊：天空／水中 | 波浪模擬 |
 |---|---|---|---|---|
@@ -98,6 +100,7 @@ Vulkan，而本專案透過 bgfx 繪製。
 
 - `unit.ocean_sim_test`：FFT、高度變異數與波譜積分的比較（撰寫時誤差在 2% 內）、斜率與高度、可重複執行、泡沫。
 - `smoke.ocean_viewer`：能啟動、著色器能載入、能繪製。沒有參考圖，因為外觀還在挑選。
+- `smoke.title_ocean`：遊戲標題加上 `--title-scene=ocean`；海沒有啟動就會失敗。同樣沒有參考圖。
 - `web.ocean_viewer`（只在網頁測試中）：網頁在無頭 Chrome、真實 GPU 上：能繪製，沒有著色器失敗。
   `tools/ocean_viewer/web/ocean_web_test.mjs` 也接受 `--phone`、`--cpu=<慢幾倍>`、`--software`，並印出上面的數字。
 
@@ -106,6 +109,7 @@ Vulkan，而本專案透過 bgfx 繪製。
 
 ## 7. 尚未完成
 
-- 放進戰鬥：主程式要在標題城市使用的場景 view 中繪製它，並移除戰鬥的黑色背景。待決問題是 [Q69](../../project/zh_TW/13_OPEN_DECISIONS.md)。
+- 放進戰鬥：主程式要在標題使用的場景 view 中繪製它，並移除戰鬥的黑色背景。待決問題是 [Q69](../../project/zh_TW/13_OPEN_DECISIONS.md)。
+- 「Save settings」只屬於檢視器：標題不會讀取 `ocean_settings.json`。
 - 水花，以及漂在水上的物體。
 - 另外兩個背景（天空、火山）。這裡的天空可以當天空背景的起點。

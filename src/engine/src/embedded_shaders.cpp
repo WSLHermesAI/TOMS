@@ -52,6 +52,10 @@
 #if defined(TOMS_SHADER_HAS_DXBC)
 #include "dxbc/vs_sky.sc.bin.h"
 #include "dxbc/fs_sky.sc.bin.h"
+#include "dxbc/vs_ocean_water.sc.bin.h"
+#include "dxbc/fs_ocean_water.sc.bin.h"
+#include "dxbc/vs_ocean_sky.sc.bin.h"
+#include "dxbc/fs_ocean_sky.sc.bin.h"
 #endif
 #include "glsl/vs_mesh.sc.bin.h"
 #include "glsl/vs_mesh_inst.sc.bin.h"
@@ -62,6 +66,10 @@
 #include "glsl/fs_shadow.sc.bin.h"
 #include "glsl/vs_sky.sc.bin.h"
 #include "glsl/fs_sky.sc.bin.h"
+#include "glsl/vs_ocean_water.sc.bin.h"
+#include "glsl/fs_ocean_water.sc.bin.h"
+#include "glsl/vs_ocean_sky.sc.bin.h"
+#include "glsl/fs_ocean_sky.sc.bin.h"
 #include "glsl/vs_sprite.sc.bin.h"
 #include "glsl/vs_sprite_inst.sc.bin.h"
 #include "glsl/fs_sprite.sc.bin.h"
@@ -81,6 +89,10 @@
 #include "spirv/fs_shadow.sc.bin.h"
 #include "spirv/vs_sky.sc.bin.h"
 #include "spirv/fs_sky.sc.bin.h"
+#include "spirv/vs_ocean_water.sc.bin.h"
+#include "spirv/fs_ocean_water.sc.bin.h"
+#include "spirv/vs_ocean_sky.sc.bin.h"
+#include "spirv/fs_ocean_sky.sc.bin.h"
 #include "spirv/vs_sprite.sc.bin.h"
 #include "spirv/vs_sprite_inst.sc.bin.h"
 #include "spirv/fs_sprite.sc.bin.h"
@@ -99,6 +111,10 @@
 #include "essl/fs_shadow.sc.bin.h"
 #include "essl/vs_sky.sc.bin.h"
 #include "essl/fs_sky.sc.bin.h"
+#include "essl/vs_ocean_water.sc.bin.h"
+#include "essl/fs_ocean_water.sc.bin.h"
+#include "essl/vs_ocean_sky.sc.bin.h"
+#include "essl/fs_ocean_sky.sc.bin.h"
 #include "essl/vs_sprite.sc.bin.h"
 #include "essl/vs_sprite_inst.sc.bin.h"
 #include "essl/fs_sprite.sc.bin.h"
@@ -155,6 +171,8 @@ struct ProgramBlobs { Blob m_oVs, m_oFs; };
     case ShaderProgram::MeshAnimTex: l_oOut = { TOMS_BLOB(vs_mesh_animtex_##ext), TOMS_BLOB(fs_mesh_##ext) }; break;\
     case ShaderProgram::MeshShadowAnimTex: l_oOut = { TOMS_BLOB(vs_mesh_animtex_##ext), TOMS_BLOB(fs_shadow_##ext) }; break;\
     case ShaderProgram::Sky:    l_oOut = { TOMS_BLOB(vs_sky_##ext),    TOMS_BLOB(fs_sky_##ext) };    break;\
+    case ShaderProgram::OceanWater: l_oOut = { TOMS_BLOB(vs_ocean_water_##ext), TOMS_BLOB(fs_ocean_water_##ext) }; break;\
+    case ShaderProgram::OceanSky: l_oOut = { TOMS_BLOB(vs_ocean_sky_##ext), TOMS_BLOB(fs_ocean_sky_##ext) }; break;\
     default: return false;                                                                         \
     }                                                                                               \
     return true

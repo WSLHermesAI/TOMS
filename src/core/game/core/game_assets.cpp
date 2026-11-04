@@ -2,6 +2,7 @@
 // and stage JSON -> Stage grid (+entity placement). Split out of game.cpp 2026-09-13.
 #include "game_internal.h"
 #include "job_system.h"
+#include "version_label.h"
 #include "vfs.h"
 
 // The stb_image implementation is in engine/stb_image_impl.cpp.
@@ -199,6 +200,10 @@ bool Game::f_LoadAssets(const std::string& l_strAssetDir) {
     m_oMoves = toms::f_MovesFromJson(f_ReadJsonFile(f_PathOf(toms::key::g_pszDataMoves)));   // the monsters' moves (docs/gameplay/13 §6.1)
     m_oSpecialMoves = toms::f_SpecialMovesFromJson(f_ReadJsonFile(f_PathOf(toms::key::g_pszDataSpecialMoves)));   // moves and special guards (docs/gameplay/16 §6)
     m_oMiniGames = toms::f_LoadMiniGames(f_PathOf(toms::key::g_pszDataMinigames));      // docs/gameplay/07 phase 6
+    {   // the published version: no file until the first web publish (tools\bump_version.ps1)
+        const std::string l_strVersionPath = f_PathOf(toms::key::g_pszDataVersion);
+        if (toms::f_VfsExists(l_strVersionPath)) m_strVersionLabel = toms::f_VersionLabel(f_ReadJsonFile(l_strVersionPath));
+    }
     m_jCharacterFit = f_ReadJsonFile(f_PathOf(toms::key::g_pszDataCharacterFit));      // character clips' nudges (docs/engine/05)
     fprintf(stderr, "[assets] weapon_play.json: %d weapon(s)\n", (int)m_oWeaponPlay.m_mapWeapons.size());
     // load enemy templates

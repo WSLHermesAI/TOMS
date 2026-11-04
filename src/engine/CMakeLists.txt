@@ -59,6 +59,29 @@ bgfx_compile_shaders(TYPE FRAGMENT
     PROFILES     ${TOMS_SHADER_PROFILES}
     AS_HEADERS)
 
+# The ocean (src/engine/src/ocean_renderer.*, docs/engine/21_OCEAN_VIEWER.md): its own varyings.
+set(_ocean ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
+bgfx_compile_shaders(TYPE VERTEX
+    SHADERS      ${_ocean}/vs_ocean_water.sc ${_ocean}/vs_ocean_sky.sc
+    VARYING_DEF  ${_ocean}/varying_ocean.def.sc
+    OUTPUT_DIR   ${TOMS_SHADER_OUT}
+    OUT_FILES_VAR TOMS_OCEAN_VS_FILES
+    INCLUDE_DIRS ${bgfx_SOURCE_DIR}/bgfx/src ${_ocean}
+    PROFILES     ${TOMS_SHADER_PROFILES}
+    AS_HEADERS)
+bgfx_compile_shaders(TYPE FRAGMENT
+    SHADERS      ${_ocean}/fs_ocean_water.sc ${_ocean}/fs_ocean_sky.sc
+    VARYING_DEF  ${_ocean}/varying_ocean.def.sc
+    OUTPUT_DIR   ${TOMS_SHADER_OUT}
+    OUT_FILES_VAR TOMS_OCEAN_FS_FILES
+    INCLUDE_DIRS ${bgfx_SOURCE_DIR}/bgfx/src ${_ocean}
+    PROFILES     ${TOMS_SHADER_PROFILES}
+    AS_HEADERS)
+# bgfx's rule only follows the .sc file itself: the shared file must rebuild them too.
+foreach(_out ${TOMS_OCEAN_VS_FILES} ${TOMS_OCEAN_FS_FILES})
+    add_custom_command(OUTPUT ${_out} APPEND DEPENDS ${_ocean}/ocean_common.sh)
+endforeach()
+
 # The sprite batch's compute path (cs_sprite.sc + vs_sprite_cs.sc): only for the profiles that have
 # compute shaders -- not ESSL 3.00 (WebGL2 / GLES3), which keeps the instancing path.
 set(TOMS_COMPUTE_PROFILES ${TOMS_SHADER_PROFILES})
@@ -101,10 +124,12 @@ add_library(toms_bgfx STATIC
     src/imgui_bgfx.h      src/imgui_bgfx.cpp
     src/embedded_shaders.h src/embedded_shaders.cpp
     src/gltf_renderer.h   src/gltf_renderer.cpp
-    ${TOMS_VS_FILES} ${TOMS_FS_FILES} ${TOMS_CS_FILES} ${TOMS_MESH_VS_FILES} ${TOMS_MESH_FS_FILES}
+    src/ocean_renderer.h  src/ocean_renderer.cpp
+    ${TOMS_VS_FILES} ${TOMS_FS_FILES} ${TOMS_CS_FILES} ${TOMS_MESH_VS_FILES} ${TOMS_MESH_FS_FILES} ${TOMS_OCEAN_VS_FILES} ${TOMS_OCEAN_FS_FILES}
     shaders/varying.def.sc shaders/varying_mesh.def.sc shaders/mesh_common.sh
     shaders/vs_mesh.sc shaders/vs_mesh_inst.sc shaders/vs_mesh_animtex.sc shaders/fs_mesh.sc shaders/vs_line.sc shaders/fs_line.sc shaders/fs_shadow.sc
     shaders/env_common.sh shaders/vs_sky.sc shaders/fs_sky.sc
+    shaders/varying_ocean.def.sc shaders/ocean_common.sh shaders/vs_ocean_water.sc shaders/fs_ocean_water.sc shaders/vs_ocean_sky.sc shaders/fs_ocean_sky.sc
     shaders/cs_sprite.sc shaders/vs_sprite_cs.sc shaders/cs_fx_spawn.sc shaders/cs_fx_update.sc
     shaders/vs_sprite.sc shaders/fs_sprite.sc shaders/vs_sprite_inst.sc shaders/fs_layer.sc
     shaders/vs_imgui.sc  shaders/fs_imgui.sc

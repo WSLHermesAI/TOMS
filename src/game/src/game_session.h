@@ -61,8 +61,12 @@ struct SessionOptions {
     // 2026-10-25); a size = always that one, letterboxed (--design=WxH; the screenshot tests pin 1024 x 768).
     uint32_t    m_uDesignW = 0, m_uDesignH = 0;
     // The 3D scene behind the title (title_scene.h): a .glb / .gltf path, "" = the default
-    // (<assets>/models/VirtualCity.glb, when it exists), "none" = the plain title (--title-scene).
+    // (<assets>/models/VirtualCity.glb, when it exists), "none" = the plain title, "ocean" = the sea (--title-scene).
     std::string m_strTitleScene;
+    // With "": the sea and the default model in turns, one each start (game_session.cpp f_NextTitleBackground). Normal play only: a
+    // test must draw the same picture every time.
+    bool m_bTitleSceneInTurns = false;
+    bool m_bShowVersion = true;   // the published version in the title's corner (off in tests: their reference pictures)
     // Read changed art, clips and effects again while running (Game::setHotReload, docs/engine/12_RESOURCE_MANAGER.md §4.6).
     bool m_bHotReload = false;
 };

@@ -10,18 +10,56 @@
 #include "log.h"
 #include "rml_ui.h"
 #include "job_system.h"
+#include "save_slots.h"
 #include "vfs.h"
 
 #include <algorithm>
 #include <chrono>
 #include <cstdlib>
 #include <filesystem>
+#include <fstream>
 #include <imgui.h>
 #include <vector>
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>   // f_NextTitleBackground: localStorage
+#endif
 
 namespace fs = std::filesystem;
 
 namespace toms::next {
+
+namespace {
+
+// The title's background, in turns: no value yet = 0; else the value + 1, kept for the next start. Even: the sea, odd: the
+// model. The web keeps it in the browser's localStorage ("background"), the desktop in a file beside the saves.
+int f_NextTitleBackground() {
+#ifdef __EMSCRIPTEN__
+    return EM_ASM_INT({
+        var l_iNext = 0;
+        try {
+            var l_s = localStorage.getItem('background');
+            if (l_s !== null && /^[0-9]+$/.test(l_s)) l_iNext = parseInt(l_s) + 1;
+            localStorage.setItem('background', String(l_iNext));
+        } catch (e) {}
+        return l_iNext;
+    });
+#else
+    const std::string l_strPath = toms::f_DefaultSaveDir() + "/title_background.txt";
+    int l_iNext = 0, l_iValue = 0;
+    {
+        std::ifstream l_oIn(l_strPath);
+        if (l_oIn >> l_iValue && l_iValue >= 0) l_iNext = l_iValue + 1;
+    }
+    std::error_code l_oEc;
+    fs::create_directories(toms::f_DefaultSaveDir(), l_oEc);
+    std::ofstream l_oOut(l_strPath);
+    l_oOut << l_iNext << "\n";
+    return l_iNext;
+#endif
+}
+
+}  // namespace
 
 GameSession::GameSession() = default;
 GameSession::~GameSession() { f_Stop(); }
@@ -99,9 +137,23 @@ bool GameSession::f_Start(const SessionOptions& l_oOpts, std::string& l_strError
     if (l_oOpts.m_iFxGpuThreshold >= 0) m_upGame->f_OverrideParticleGpuThreshold(l_oOpts.m_iFxGpuThreshold);
     if (l_oOpts.m_bDefaultBattleTuning) m_upGame->f_UseDefaultBattleTuning();
     if (l_oOpts.m_bBattleLog) m_upGame->f_SetBattleLogToStderr(true);
-    if (l_oOpts.m_strTitleScene != "none") {   // the 3D scene behind the title; without it the title is plain
-        const std::string l_strPath = l_oOpts.m_strTitleScene.empty() ? m_strAssetDir + "/models/VirtualCity.glb" : l_oOpts.m_strTitleScene;
-        if (!l_oOpts.m_strTitleScene.empty() || toms::f_VfsExists(l_strPath)) {
+    m_upGame->f_SetShowVersion(l_oOpts.m_bShowVersion);
+    // The 3D scene behind the title: the sea, or a model; without either the title is plain.
+    bool l_bOcean = l_oOpts.m_strTitleScene == "ocean";
+    if (l_oOpts.m_bTitleSceneInTurns && l_oOpts.m_strTitleScene.empty()) l_bOcean = f_NextTitleBackground() % 2 == 0;
+    if (l_bOcean) {
+        m_upTitleScene = std::make_unique<TitleScene>();
+        std::string l_strWhy;
+        if (!m_upTitleScene->f_LoadOcean(l_strWhy)) {
+            std::fprintf(stderr, "[title] no ocean: %s\n", l_strWhy.c_str());
+            m_upTitleScene->f_Shutdown();
+            m_upTitleScene.reset();
+        }
+    }
+    if (!m_upTitleScene && l_oOpts.m_strTitleScene != "none") {   // (the sea could not start: the model after all)
+        const bool l_bDefault = l_oOpts.m_strTitleScene.empty() || l_oOpts.m_strTitleScene == "ocean";
+        const std::string l_strPath = l_bDefault ? m_strAssetDir + "/models/VirtualCity.glb" : l_oOpts.m_strTitleScene;
+        if (!l_bDefault || toms::f_VfsExists(l_strPath)) {
             m_upTitleScene = std::make_unique<TitleScene>();
             std::string l_strWhy;
             if (!m_upTitleScene->f_Load(l_strPath, l_strWhy)) {
@@ -373,7 +425,7 @@ bool GameSession::f_Frame(int l_iDtMs, const InputState& l_oIn, uint32_t l_uDevi
     // The title's 3D scene: its own views, run between the screen clear and the sprites.
     const bool l_bScene = m_upTitleScene && l_oG.f_TitleOpen();
     if (l_bScene) m_upTitleScene->f_Draw(l_iDtMs / 1000.0, l_uDeviceW, l_uDeviceH);
-    m_pRenderer->f_SetSceneViews(TitleScene::m_u16FirstView, l_bScene ? GltfRenderer::m_u16Views : 0);
+    m_pRenderer->f_SetSceneViews(TitleScene::m_u16FirstView, l_bScene ? m_upTitleScene->f_ViewCount() : 0);
     if (m_upUi) m_upUi->f_SetTitleScene(l_bScene);
     l_oG.f_Draw();   // the world -> BgfxRenderer::end(): views kViewClear + kViewGame
     {           // the UI over it, under ImGui

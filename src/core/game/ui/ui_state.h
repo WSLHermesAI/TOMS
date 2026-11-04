@@ -35,6 +35,7 @@ struct UiTitle {
     bool m_bVisible = false;
     bool m_bScene = false;                // a 3D scene is drawn behind the title (the host's TitleScene): see-through body
     std::string m_strTitle, m_strSubtitle, m_strHint;
+    std::string m_strVersion;             // "v12" in the corner ("": none; version_label.h)
     int m_iPage = 0;                      // 0 menu, 1 continue (save slots), 2 settings (languages)
     std::string m_strHeader, m_strSubheader;     // page heading ("" on the menu page)
     std::vector<UiRow> m_vRows;           // the current page's rows

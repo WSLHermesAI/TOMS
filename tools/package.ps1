@@ -129,6 +129,9 @@ else {
     }
     [IO.File]::WriteAllText((Join-Path $out 'index.html'), $html, $utf8)
     Set-Content -Encoding ASCII (Join-Path $out 'version.txt') $stamp
+    # The title's version number (tools\bump_version.ps1), also readable on the site as version.json.
+    $versionJson = Join-Path $root 'assets\data\version.json'
+    if (Test-Path $versionJson) { Copy-Item $versionJson (Join-Path $out 'version.json') }
     Write-Host "[toms] web version stamp: $stamp"
 
     # Servers must send .wasm as application/wasm. Most do already; these cover Apache and IIS.

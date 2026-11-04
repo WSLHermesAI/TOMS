@@ -77,6 +77,7 @@ try {
     Invoke-PagesGit commit --quiet -m "Deploy web build $stamp"
     Invoke-PagesGit push $Remote "HEAD:refs/heads/$Branch"
     Write-Host ""
+    Set-Content -Encoding ASCII (Join-Path $root 'Build\dist\published.flag') $stamp   # tools\publish_web.cmd: the version stays
     Write-Host "[toms] published $stamp."
     if ($pagesUrl) { Write-Host "[toms] live in about 1-2 minutes at $pagesUrl  (GitHub > Actions shows the 'pages build and deployment' run)" }
 }
