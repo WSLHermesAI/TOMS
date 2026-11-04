@@ -147820,6 +147820,7 @@ h·∆aà∂• èÑY0F.€Ç°´mË«OÌò∏bŸF†
     "data.story.cycles":   { "type": "json",     "path": "../data/story/cycles.json" },
     "data.story.vars":     { "type": "json",     "path": "../data/story/vars.json" },
     "data.event_kinds":    { "type": "json",     "path": "../data/events/kinds.json", "optional": true },
+    "data.version":        { "type": "json",     "path": "../data/version.json", "optional": true },
     "env.default":         { "type": "file",     "path": "env/artist_workshop_1k.hdr" },
 
     "folder.assets":       { "type": "folder",   "path": ".." },
@@ -156721,6 +156722,7 @@ body.scene { background-color: transparent; }
 }
 #name     { position: absolute; left: 0; right: 0; top: 88px; font-size: 60px; color: #f9e9b1; }
 #subtitle { position: absolute; left: 0; right: 0; top: 156px; font-size: 20px; color: #cad0e1; }
+#version  { position: absolute; left: 16px; bottom: 18px; font-size: 18px; color: #cad0e1; }   /* the published version (data/version.json) */
 
 /* The current page: a centred column of rows. Width and start depend on the page. */
 #page { position: absolute; left: 0; right: 0; top: 330px; }
@@ -156816,6 +156818,7 @@ body.scene { background-color: transparent; }
         <div class="label">{{title.back_label}}</div>
     </div>
     <div id="hint">{{title.hint}}</div>
+    <div id="version" data-if="title.version != ''">{{title.version}}</div>
 
     <div data-if="title.confirm_open">
         <div class="fill scrim"></div>
@@ -204047,6 +204050,10 @@ body.scene { background-color: transparent; }
       "es": ""
     }
   }
+}
+{
+  "number": 2,
+  "sha": "bbed8e9"
 }
 {
   "_comment": [
