@@ -16,6 +16,7 @@ namespace {
 
 // One shared scratch canvas. Setting canvas.width also resets the 2D context, so every call sets
 // the font state it needs.
+// An EM_JS parameter's C++ name is also its JavaScript name: renaming one means renaming it in the body.
 EM_JS(void, toms_text_metrics, (const char* l_pszFont, const char* l_pszLang, float l_fSize, float* l_pOut), {
     if (!Module.__tomsText) {
         var c = document.createElement('canvas');
@@ -24,28 +25,28 @@ EM_JS(void, toms_text_metrics, (const char* l_pszFont, const char* l_pszLang, fl
     }
     var t = Module.__tomsText;
     var ctx = t.ctx;
-    t.canvas.lang = UTF8ToString(lang);
-    if ('lang' in ctx) ctx.lang = UTF8ToString(lang);
-    ctx.font = UTF8ToString(font);
+    t.canvas.lang = UTF8ToString(l_pszLang);
+    if ('lang' in ctx) ctx.lang = UTF8ToString(l_pszLang);
+    ctx.font = UTF8ToString(l_pszFont);
     var m = ctx.measureText('Mg漢');
     var asc = m.fontBoundingBoxAscent;
     var desc = m.fontBoundingBoxDescent;
-    if (!(asc > 0)) asc = Math.max(m.actualBoundingBoxAscent || 0, size * 0.88);
-    if (!(desc > 0)) desc = Math.max(m.actualBoundingBoxDescent || 0, size * 0.24);
-    var x = ctx.measureText('x').actualBoundingBoxAscent || size * 0.5;
-    HEAPF32[(out >> 2) + 0] = asc;
-    HEAPF32[(out >> 2) + 1] = desc;
-    HEAPF32[(out >> 2) + 2] = x;
-    HEAPF32[(out >> 2) + 3] = ctx.measureText('…').width > 0 ? 1 : 0;
+    if (!(asc > 0)) asc = Math.max(m.actualBoundingBoxAscent || 0, l_fSize * 0.88);
+    if (!(desc > 0)) desc = Math.max(m.actualBoundingBoxDescent || 0, l_fSize * 0.24);
+    var x = ctx.measureText('x').actualBoundingBoxAscent || l_fSize * 0.5;
+    HEAPF32[(l_pOut >> 2) + 0] = asc;
+    HEAPF32[(l_pOut >> 2) + 1] = desc;
+    HEAPF32[(l_pOut >> 2) + 2] = x;
+    HEAPF32[(l_pOut >> 2) + 3] = ctx.measureText('…').width > 0 ? 1 : 0;
 });
 
 EM_JS(double, toms_text_width, (const char* l_pszFont, const char* l_pszLang, const char* l_pszText, float l_fLetterSpacing), {
     var t = Module.__tomsText;
     var ctx = t.ctx;
-    if ('lang' in ctx) ctx.lang = UTF8ToString(lang);
-    ctx.font = UTF8ToString(font);
-    if ('letterSpacing' in ctx) ctx.letterSpacing = letterSpacing + 'px';
-    return ctx.measureText(UTF8ToString(text)).width;
+    if ('lang' in ctx) ctx.lang = UTF8ToString(l_pszLang);
+    ctx.font = UTF8ToString(l_pszFont);
+    if ('letterSpacing' in ctx) ctx.letterSpacing = l_fLetterSpacing + 'px';
+    return ctx.measureText(UTF8ToString(l_pszText)).width;
 });
 
 // Draws `text` white on transparent into a w x h RGBA buffer at `out`; (x, baseline) in UI px,
@@ -54,18 +55,18 @@ EM_JS(void, toms_text_render, (const char* l_pszFont, const char* l_pszLang, con
                                int l_iRtl, float l_fScale, float l_fX, float l_fBaseline, int l_iW, int l_iH, unsigned char* l_pOut), {
     var t = Module.__tomsText;
     var c = t.canvas;
-    c.width = w; c.height = h;     // also clears it and resets the context
+    c.width = l_iW; c.height = l_iH;     // also clears it and resets the context
     var ctx = t.ctx;
-    ctx.setTransform(scale, 0, 0, scale, 0, 0);
-    if ('lang' in ctx) ctx.lang = UTF8ToString(lang);
-    ctx.font = UTF8ToString(font);
-    if ('letterSpacing' in ctx) ctx.letterSpacing = letterSpacing + 'px';
-    ctx.direction = rtl ? 'rtl' : 'ltr';
+    ctx.setTransform(l_fScale, 0, 0, l_fScale, 0, 0);
+    if ('lang' in ctx) ctx.lang = UTF8ToString(l_pszLang);
+    ctx.font = UTF8ToString(l_pszFont);
+    if ('letterSpacing' in ctx) ctx.letterSpacing = l_fLetterSpacing + 'px';
+    ctx.direction = l_iRtl ? 'rtl' : 'ltr';
     ctx.textAlign = 'left';        // x is the left edge in both directions
     ctx.textBaseline = 'alphabetic';
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(UTF8ToString(text), x, baseline);
-    HEAPU8.set(ctx.getImageData(0, 0, w, h).data, out);
+    ctx.fillText(UTF8ToString(l_pszText), l_fX, l_fBaseline);
+    HEAPU8.set(ctx.getImageData(0, 0, l_iW, l_iH).data, l_pOut);
 });
 
 constexpr size_t g_nMaxTextureBytes = 48u * 1024 * 1024;   // then drop the cache and re-render on demand

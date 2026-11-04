@@ -76,6 +76,7 @@ Chinese copies in its own `zh_TW/` (中文版 in each row).
 | [10_SSH_KEY_SETUP.md](project/10_SSH_KEY_SETUP.md) | SSH keys, and using them on another computer | [zh_TW](project/zh_TW/10_SSH_KEY_SETUP.md) |
 | [11_TEAM_PLAN.md](project/11_TEAM_PLAN.md) | the team plan: a programmer, a game designer and an artist | [zh_TW](project/zh_TW/11_TEAM_PLAN.md) |
 | [12_CPP_NAMING.md](project/12_CPP_NAMING.md) | C++ naming: `m_` / `l_` / `g_` scope and a type prefix in every variable's name (`m_strName`, `l_iCount`), `f_` on every function (`f_LoadBattleRig`); third-party code untouched | [zh_TW](project/zh_TW/12_CPP_NAMING.md) |
+| [13_OPEN_DECISIONS.md](project/13_OPEN_DECISIONS.md) | every decision the owner has not made yet, in one list: what blocks work, what runs on a proposal, where each is detailed | [zh_TW](project/zh_TW/13_OPEN_DECISIONS.md) |
 | [PROGRESS_REPORT.md](project/PROGRESS_REPORT.md) | the progress report | [zh_TW](project/zh_TW/PROGRESS_REPORT.md) |
 | [progress_report/](project/progress_report/PROGRESS_REPORT.md) | the status board, daily reports, the working log | [zh_TW](project/zh_TW/progress_report/) |
 

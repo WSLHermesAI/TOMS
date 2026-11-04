@@ -9,7 +9,7 @@ and a larger plan. In short:
 - a **battle talk bar** comments on the fight;
 - a bigger **battle screen**, **backgrounds**, and a **difficulty curve**.
 
-It changes some of 16's answers (§13). Built so far: the languages (§16). The owner answered Q47–Q56 on 2026-11-02 (§16); new questions are in §18.
+It changes some of 16's answers (§13). Built so far: the languages (§16). The owner answered Q47–Q56 on 2026-11-02 (§16); new questions are in §18 (Q64–Q67 added 2026-11-04).
 
 ## 1. The owner's notes (as written)
 
@@ -92,6 +92,8 @@ A weapon type has **no special moves**. It has **abilities** that grow with its 
 - The start weapons (long sword, hunting bow, wand) need no prelude and play as now.
 - Each weapon's description says how to play it. The battle screen shows a clear prompt for the prelude and the attack
   (an icon and one line: "Hold to charge", "Tap the arrows to load", "Swipe ↔ to set the volley").
+- The two-handed sword also has a memory play, an idea of 2026-11-04 ([14](14_WEAPON_PLAY_AND_LOOT.md) §2.5). Q59 decides
+  whether it replaces the V swipes above.
 
 ## 4. Every play is a type, set in data
 
@@ -167,7 +169,7 @@ DEX adds tolerance to every play (a sketch, all in data):
 - Each mastery has **5 moves** that every weapon of that class can use, chosen in the battle screen.
 - The moves are `special_moves.json` entries (16 §6), each with its play type (§4).
 - Some moves come from **special events**.
-- Each class has an **epic quest** and a **legendary quest** that teach a new move.
+- Each class has an **epic quest** and a **legendary quest** that teach a new move (the note says each weapon: Q65).
 
 ## 7. The bow's ammo and volley
 
@@ -199,7 +201,8 @@ DEX adds tolerance to every play (a sketch, all in data):
 - A line on the battle screen that updates by itself. It's the hero thinking out loud.
 
 **When it talks:**
-- **At the start:** it picks a line by the level gap, in five bands from much weaker to much stronger.
+- **At the start:** it jumps at random to one of the states that fit the fight (the level gap, a card hint, idle talk).
+  The level gap has five bands, from much weaker to much stronger.
 - **After moments:** resisted, weak spot hit, perfect, miss, the player's own HP low, the monster's HP low.
 - **With the monster's card:** what the monster resists, what hurts it, how to fight it.
 - **Idle talk** (weather, cold jokes) when nothing else is due.
@@ -222,7 +225,7 @@ DEX adds tolerance to every play (a sketch, all in data):
 
 **What the player sees:**
 - The monster's description marks its resistances and weaknesses once its **card** is held, and the card shows them.
-- Without the card, the player learns from the damage numbers and the talk bar.
+- Without the card, the player learns from the damage numbers and the talk bar (Q66).
 
 **Switching weapons in battle:**
 - The battle screen shows the owned weapons as **switch icons**.
@@ -234,6 +237,7 @@ DEX adds tolerance to every play (a sketch, all in data):
 - From floor 7: three monster kinds, about 50 % per type.
 - Later floors: 20–80 % of the monsters, by their data. A monster may fear one type and resist the other two.
 - Event bosses may resist all three by 50 %.
+- So the player may leave some monsters for later, and gets through by switching weapons and gear (Q67).
 
 ## 11. The difficulty curve
 
@@ -245,6 +249,8 @@ DEX adds tolerance to every play (a sketch, all in data):
 | From floor 7 | three monster kinds with 50 % resistances (§10) |
 | After the chapter 1 boss | weapon buying opens |
 | Later | 20–80 % of monsters with resistances or weaknesses; event bosses resisting everything by 50 % |
+
+The owner's words mix floors and chapters: Q64 asks how to read "Chapter 5" in the bands of Q47.
 
 The battle editor's growth calculator (13 §4.3) and its test setups are the tools to tune this.
 
@@ -353,3 +359,13 @@ Answered on 2026-11-02: see §16.
 | Q58 | **The art**: painted with AI the way the brawler was (ComfyUI), for the player and the monsters? | yes, the player first, then the monsters of floors 1–10 |
 
 **Answered 2026-11-02.** Q57: only a monster whose data has an `ultimateCharge` block gets the gauge (it fills as the monster lands hits; full, it uses its special move); the others have none. Q58: yes, the player first (concept pictures for the owner to pick, then cut into parts on the brawler's skeleton so its rig and battle clips are reused), then the monsters of floors 1–10.
+
+**New, 2026-11-04.** Comparing the owner's full list with this document found four places where it says something else. Answer them in
+[../project/13_OPEN_DECISIONS.md](../project/13_OPEN_DECISIONS.md).
+
+| # | Question | Proposal if no answer |
+|---|---|---|
+| Q64 | **The difficulty curve:** the notes go 第三層, 第五章, 第七層. With 14 bands of 5 floors (Q47), 第五章 would be F21–F25, after floor 7. Is it chapter 5, or floor 5? | chapter 5, F21–F25: 5-hit combos need that many levels; 第三層 and 第七層 stay floors |
+| Q65 | **Epic and legendary quests:** the note says each weapon (每個武器); §6 wrote each class. That is 6 quests or 24 | each class, because the moves come from the class's mastery |
+| Q66 | **Seeing resistances:** the note says the monster's description can mark them, and the card writes them after it is beaten; §10 wrote only once the card is held. Does the description show them before that? | no: until then the player learns from the damage (打下去不痛) |
+| Q67 | **Gear against resistances:** the note says the player switches weapons and gear (武器跟裝備); §10 has only weapons. What does gear do here, and can it change in battle? | gear changes between fights only; a piece can carry a bonus against a damage type |

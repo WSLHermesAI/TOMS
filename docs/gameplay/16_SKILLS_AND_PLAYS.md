@@ -144,6 +144,7 @@ each hit, or attack in the long gaps and take a hit.
 - Some strong monsters' attacks ask for **a play** instead of the guard button: draw a pentagram, tap quickly N
   times, swipe the shown ways.
 - **It belongs to the monster's move** (`guardPlay`, a skill id). The same skill can be used by several monsters.
+  The owner's note binds it to the monster (Q68).
 - The result decides the damage: all done = no damage (and maybe a stagger); part done = part of the damage.
 
 ## 5. The training ground: cards that level you up
@@ -240,6 +241,7 @@ A quick HTML prototype (as for 15) can try S2–S5 before they are built, if wan
 | Q44 | **The training ground:** spending cards changes the 10-20 rule (cards only a collection). OK? How many cards a run, how many runs a day, and what does it give (more EXP? weapon uses?) | OK; 1 card a run, 3 runs a day, ×2 EXP and weapon uses |
 | Q45 | **A move not finished in time:** the corners done count for part of the damage, or the move fails? | part: done / total of the hits and damage |
 | Q46 | **The camera close-up:** every ultimate, or only some moves (data)? And the "Reduce shaking and flashes" setting turns it off? | per move in data; the setting shortens it |
+| Q68 | **A special guard:** the note binds it to the monster (跟怪物綁定); the game has it on the move (`guardPlay`). Keep that? | keep it on the move: only the monster with that move uses it |
 
 ## 10. Built (2026-10-31)
 

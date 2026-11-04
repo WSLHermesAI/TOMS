@@ -511,6 +511,8 @@ Short dated bullets: [WORKING_LOG.md](WORKING_LOG.md). Daily reports: [DAILY_202
 
 ## Open Questions (need the owner)
 
+> **All the open decisions in one list, including Q34–Q46 and the unnumbered ones:** [../13_OPEN_DECISIONS.md](../13_OPEN_DECISIONS.md). The table below stops at Q33.
+
 | # | Question | Default if no answer |
 |---|---|---|
 | Q1 | ~~Commit the 2026-09-27 move?~~ Answered: committed (`ea386d6` and later) | — |

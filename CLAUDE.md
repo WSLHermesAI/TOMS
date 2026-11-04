@@ -51,6 +51,17 @@
 - **Prefer data naming data:** a file a data file can point to (a weapon's clips, its particles) stays in that data,
   with no key and no code.
 
+### Open decisions: one list, with the owner's answers in it
+
+- **Every question that stays undecided goes in `docs/project/13_OPEN_DECISIONS.md`** (EN + zh_TW), as a row with an empty
+  **My Answer** column (the owner, 2026-11-04). That includes a question a design document asks. A question needed
+  only to finish the current task can stay in the chat.
+- **When the owner asks to check the decisions:** read My Answer in both copies, and in any design document whose questions have that column (doc 14 §5). If an answer is unclear, incomplete or
+  conflicts with another, ask about it. If all the filled answers are clear, ask whether to do the work, and start only
+  after a yes.
+- **An empty My Answer is not a decision:** don't act on the row or apply its proposal. Once work is decided, write the
+  answer in the document the row links to and remove the row.
+
 ### Documents: local files only, nothing online
 
 - **Never upload project data or documents to an online service for viewing or sharing** (Claude Docs, published
