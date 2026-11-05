@@ -17,7 +17,7 @@ MiniGameDef f_MiniGameFromJson(const std::string& l_strId, const nlohmann::json&
     l_oG.m_iPerHit = std::max(0, l_jJ.value("perHit", l_oG.m_iPerHit));
     l_oG.m_iBonusAll = std::max(0, l_jJ.value("bonusAll", l_oG.m_iBonusAll));
     l_oG.m_iLimit = std::max(0, l_jJ.value("limit", l_oG.m_iLimit));
-    l_oG.m_oPlay.m_iPoints = std::clamp(l_jJ.value("points", 4), 1, g_iMaxComboPoints);
+    l_oG.m_oPlay.m_iPoints = std::max(1, l_jJ.value("points", 4));
     l_oG.m_oPlay.m_iSweepMs = std::max(200, l_jJ.value("sweepMs", 1600));
     l_oG.m_oPlay.m_bTurnBack = l_jJ.value("turnBack", true);
     l_oG.m_oPlay.m_iMaxSweeps = std::max(1, l_jJ.value("maxSweeps", 2));

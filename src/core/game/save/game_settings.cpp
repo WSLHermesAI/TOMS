@@ -15,6 +15,7 @@ nlohmann::json f_ToJson(const GameSettings& l_oS) {
     if (!l_oS.m_strPlayerLook.empty()) l_jJ["playerLook"] = l_oS.m_strPlayerLook;
     l_jJ["particleGpuThreshold"] = l_oS.m_iParticleGpuThreshold;
     l_jJ["reduceEffects"] = l_oS.m_bReduceEffects;
+    l_jJ["battleSpeed"] = l_oS.m_fBattleSpeed;
     l_jJ["bowTutorialDone"] = l_oS.m_bBowTutorialDone;
     return l_jJ;
 }
@@ -43,6 +44,8 @@ GameSettings f_GameSettingsFromJson(const nlohmann::json& l_jJ) {
     l_oS.m_strPlayerLook = l_jJ.value("playerLook", std::string());
     l_oS.m_iParticleGpuThreshold = std::max(0, l_jJ.value("particleGpuThreshold", g_iDefaultParticleGpuThreshold));
     l_oS.m_bReduceEffects = l_jJ.value("reduceEffects", false);
+    const float l_fSpeed = l_jJ.value("battleSpeed", 1.0f);
+    l_oS.m_fBattleSpeed = l_fSpeed >= 0.25f && l_fSpeed <= 3.0f ? l_fSpeed : 1.0f;
     l_oS.m_bBowTutorialDone = l_jJ.value("bowTutorialDone", false);
     return l_oS;
 }

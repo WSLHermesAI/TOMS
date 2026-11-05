@@ -13,8 +13,11 @@
 #include "save_slots.h"
 #include "vfs.h"
 
+#include <RmlUi/Core.h>
+
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -59,6 +62,12 @@ int f_NextTitleBackground() {
 #endif
 }
 
+struct ListDrag {   // a press on a scrollable list, which may become a drag (Session::f_Frame)
+    Rml::ObserverPtr<Rml::Element> m_oList;
+    float m_fFromY = 0.0f, m_fFromScroll = 0.0f;
+    bool m_bMoved = false;
+};
+ListDrag g_oListDrag;
 }  // namespace
 
 GameSession::GameSession() = default;
@@ -392,10 +401,29 @@ bool GameSession::f_Frame(int l_iDtMs, const InputState& l_oIn, uint32_t l_uDevi
         if (l_bOnGame) l_pCtx->ProcessMouseMove((int)l_fBx, (int)l_fBy, 0);
         if (l_bOnGame) {   // the battle's own plays read the pointer themselves (touch_play.h), but not a press on a button
             int l_iPhase = l_oIn.m_bMouseLeft ? (m_bMouseWasDown ? 1 : 0) : (m_bMouseWasDown ? 2 : -1);
-            if (l_iPhase == 0)
+            if (l_iPhase == 0 && !l_oG.f_FreePlayRunning())   // (a free mode's "anywhere" means a button too: 17 §5)
                 for (Rml::Element* l_pE = l_pCtx->GetHoverElement(); l_pE; l_pE = l_pE->GetParentNode())
                     if (l_pE->IsClassSet("btn")) { l_iPhase = -1; break; }
             if (l_iPhase >= 0) l_oG.f_BattlePointer(l_iPhase, l_fBx, l_fBy);
+        }
+        // A list follows a drag (RmlUi scrolls by the wheel and the scrollbar only; a finger has neither; 17 I4). A press
+        // on a scrollable list may become a drag; once it moved, the list follows and the press is no click on a row.
+        if (l_oIn.m_bMouseLeft && !m_bMouseWasDown) {
+            g_oListDrag = ListDrag{};
+            Rml::Element* l_pHover = l_bOnGame ? l_pCtx->GetHoverElement() : nullptr;
+            bool l_bOnBar = false;
+            for (Rml::Element* l_pE = l_pHover; l_pE; l_pE = l_pE->GetParentNode()) l_bOnBar = l_bOnBar || l_pE->GetTagName().rfind("scrollbar", 0) == 0;
+            if (Rml::Element* l_pList = l_pHover && !l_bOnBar ? l_pHover->GetClosestScrollableContainer() : nullptr) {
+                g_oListDrag.m_oList = l_pList->GetObserverPtr();
+                g_oListDrag.m_fFromY = l_fBy;
+                g_oListDrag.m_fFromScroll = l_pList->GetScrollTop();
+            }
+        } else if (l_oIn.m_bMouseLeft && g_oListDrag.m_oList && l_bOnGame) {
+            const float l_fDy = l_fBy - g_oListDrag.m_fFromY;
+            if (std::fabs(l_fDy) >= 10.0f) g_oListDrag.m_bMoved = true;
+            if (g_oListDrag.m_bMoved) g_oListDrag.m_oList->SetScrollTop(g_oListDrag.m_fFromScroll - l_fDy);
+        } else if (!l_oIn.m_bMouseLeft && m_bMouseWasDown && g_oListDrag.m_bMoved) {
+            l_pCtx->ProcessMouseMove(-10000, -10000, 0);   // off everything, so letting go clicks nothing
         }
         if (l_oIn.m_bMouseLeft && !m_bMouseWasDown) {
             const bool l_bFree = l_pCtx->ProcessMouseButtonDown(0, 0);

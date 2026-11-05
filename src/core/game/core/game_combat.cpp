@@ -28,7 +28,7 @@ void Game::f_StartCombat(const EnemyInst& l_oE, const std::vector<EnemyInst>& l_
     m_oCs.m_iClockMs = 0;
     // the revamp (docs/gameplay/15): no moment running, a fresh chain and grade, the guard unpressed
     m_oCs.m_iHitStopMs = m_oCs.m_iSlowMs = m_oCs.m_iShakeMs = m_oCs.m_iDimMs = m_oCs.m_iBannerMs = 0;
-    m_oCs.m_fSlowScale = 1.0f; m_oCs.m_fSlowCarry = 0.0f; m_oCs.m_bWinPending = false; m_oCs.m_fShakePx = 0.0f;
+    m_oCs.m_iEndLeftMs = 0; m_oCs.m_bLosePending = m_oCs.m_bEndClipDone = false; m_oCs.m_fSlowScale = 1.0f; m_oCs.m_fSlowCarry = 0.0f; m_oCs.m_bWinPending = false; m_oCs.m_fShakePx = 0.0f;
     m_oCs.m_strBanner.clear(); m_oCs.m_strBannerKind.clear();
     m_oCs.m_iChain = m_oCs.m_iBestChain = m_oCs.m_iPerfects = m_oCs.m_iAttacksDone = m_oCs.m_iDamageTaken = 0;
     m_oCs.m_iGuardAtMs = -1; m_oCs.m_iGuardCdMs = 0; m_oCs.m_bUltimate = false;
@@ -90,6 +90,17 @@ void Game::f_StartCombat(const EnemyInst& l_oE, const std::vector<EnemyInst>& l_
 
 // The battle's time this frame: a hit stop freezes it, the last hit's slow motion slows it (then the win). The
 // screen's effects (shake, dim, banner, the guard's wait) run on real time.
+float Game::f_BattleSpeed() const { return m_fScenarioBattleSpeed > 0.0f ? m_fScenarioBattleSpeed : m_oSettings.m_fBattleSpeed; }
+
+void Game::f_CycleBattleSpeed() {
+    if (m_vBattleSpeeds.empty()) return;
+    float l_fNext = m_vBattleSpeeds.front();
+    for (float l_fS : m_vBattleSpeeds) if (l_fS > m_oSettings.m_fBattleSpeed + 0.001f) { l_fNext = l_fS; break; }
+    m_oSettings.m_fBattleSpeed = l_fNext;
+    toms::f_EnsureSaveDir(toms::f_DefaultSaveDir());
+    toms::f_SaveGameSettings(toms::f_SettingsPath(), m_oSettings);
+}
+
 int Game::f_BattleFrame(int l_iDtMs) {
     m_oCs.m_iShakeMs = std::max(0, m_oCs.m_iShakeMs - l_iDtMs);
     m_oCs.m_iDimMs = std::max(0, m_oCs.m_iDimMs - l_iDtMs);
@@ -108,8 +119,18 @@ int Game::f_BattleFrame(int l_iDtMs) {
         m_oCs.m_fSlowCarry -= (float)l_iBdt;
         if (m_oCs.m_iSlowMs <= 0) {
             m_oCs.m_iSlowMs = 0;
-            if (m_oCs.m_bWinPending) { m_oCs.m_bWinPending = false; f_FinishCombatWin(); }
         }
+    } else if (m_oCs.m_bWinPending) {   // the last attack clip and the end clip play out (updateBattleRig), then the result
+        m_oCs.m_iEndLeftMs -= l_iDtMs;
+        if (m_oCs.m_bEndClipDone || m_oCs.m_iEndLeftMs <= 0) {
+            m_oCs.m_bWinPending = false;
+            if (m_oCs.m_bLosePending) { m_oCs.m_bLosePending = false; f_FinishCombatLose(); }
+            else f_FinishCombatWin();
+        }
+    } else if (m_oCs.m_bActive && f_BattleSpeed() != 1.0f) {   // the player's battle speed (17 I10, Q53)
+        m_oCs.m_fSlowCarry += l_iDtMs * f_BattleSpeed();
+        l_iBdt = (int)m_oCs.m_fSlowCarry;
+        m_oCs.m_fSlowCarry -= (float)l_iBdt;
     }
     m_oCs.m_iFrameDt = l_iBdt;
     return l_iBdt;
@@ -140,11 +161,29 @@ void Game::f_ShowBanner(const std::string& l_strText, const std::string& l_strKi
 // The last monster fell (15 §3.8): the moment plays in slow motion, then the win and its result screen.
 void Game::f_StartWinMoment() {
     const int l_iMs = m_oSettings.m_bReduceEffects ? 0 : (int)std::lround(m_oFeel.m_iSlowMoMs * std::min(1.0f, m_oFeel.m_fStrength));
-    if (l_iMs <= 0 || m_oArena.m_bOn) { f_FinishCombatWin(); return; }   // (the arena: the next fight at once, as before)
+    if (m_oFeel.m_iEndMaxMs <= 0 || m_oArena.m_bOn) { f_FinishCombatWin(); return; }   // (the arena: the next fight at once, as before)
     m_oCs.m_bWinPending = true;
+    m_oCs.m_bEndClipDone = false;
+    m_oCs.m_iEndLeftMs = m_oFeel.m_iEndMaxMs;
     m_oCs.m_iSlowMs = l_iMs;
     m_oCs.m_fSlowScale = m_oFeel.m_fSlowMoScale;
     m_oCs.m_fSlowCarry = 0.0f;
+}
+
+void Game::f_StartLoseMoment() {
+    if (m_oFeel.m_iEndMaxMs <= 0 || m_oArena.m_bOn) { f_FinishCombatLose(); return; }
+    f_StopOwnAttack();
+    m_oCs.m_iPlayerHP = 0;   // (the screen shows it during the fall)
+    m_oCs.m_bWinPending = m_oCs.m_bLosePending = true;   // nothing moves on now: the monsters stop too
+    m_oCs.m_bEndClipDone = false;
+    m_oCs.m_iEndLeftMs = m_oFeel.m_iEndMaxMs;
+    m_oCs.m_iSlowMs = 0;
+}
+
+std::string Game::f_EndClip() const {
+    if (m_oCs.m_bLosePending) return m_oFeel.m_strLoseClip;
+    if (m_oCs.m_iDamageTaken <= 0) return m_oFeel.m_strWinBigClip;
+    return (float)m_oCs.m_iPlayerHP <= m_oFeel.m_fWinParHp * (float)f_EffectiveMaxHp() ? m_oFeel.m_strWinParClip : m_oFeel.m_strWinClip;
 }
 
 void Game::f_SetReduceEffects(bool l_bOn) {
@@ -379,6 +418,7 @@ void Game::f_DebugUpdateMonster(const std::string& l_strId, const nlohmann::json
         l_oE.m_iAtk = l_jM.value("atk", l_oE.m_iAtk);
         l_oE.m_iDef = l_jM.value("def", l_oE.m_iDef);
         l_oE.m_iExp = l_jM.value("exp", l_oE.m_iExp);
+        l_oE.m_iWeaponExp = std::max(0, l_jM.value("weaponExp", l_oE.m_iWeaponExp));
         l_oE.m_iGold = l_jM.value("gold", l_oE.m_iGold);
         l_oE.m_strLook = l_jM.value("look", std::string("monster"));
         l_oE.m_iBreakPoints = l_jM.value("break", 0);
@@ -532,9 +572,22 @@ void Game::f_UpdateBattleRig(int l_iDtMs) {
         return;
     }
     f_LoadBattleRig();
-    if (!f_BattleRigReady()) return;
+    if (!f_BattleRigReady()) { m_oCs.m_bEndClipDone = m_oCs.m_bWinPending; return; }   // no picture: nothing to wait for
+    if (m_strBattleRigState == "win" || m_strBattleRigState == "lose") {   // the end clip: it stays on its last pose
+        m_upPlayerView->f_Update(l_iDtMs);
+        if (m_oCs.m_bWinPending && m_upPlayerView->f_Finished()) m_oCs.m_bEndClipDone = true;
+        return;
+    }
     // An attack or a miss plays to its end; then the bar decides: waiting for the tap = charge, recovering = idle.
     const bool l_bShooting = (m_strBattleRigState == "attack" || m_strBattleRigState == "miss") && !m_upPlayerView->f_Finished();
+    // the end: a win lets the last attack finish first; a fall starts at once
+    if (m_oCs.m_bWinPending && m_oCs.m_iSlowMs <= 0 && (!l_bShooting || m_oCs.m_bLosePending)) {
+        const std::string l_strClip = f_EndClip();
+        if (m_upPlayerView->f_Has(l_strClip)) f_SetBattleRigState(m_oCs.m_bLosePending ? "lose" : "win", true, l_strClip);
+        else m_oCs.m_bEndClipDone = true;
+        m_upPlayerView->f_Update(l_iDtMs);
+        return;
+    }
     if (!l_bShooting) f_SetBattleRigState(m_oCs.m_bActive && !m_oCs.m_oAtkBar.m_bCooling ? "charge" : "idle");
     m_upPlayerView->f_Update(l_iDtMs);   // (its events: the battle's own timers place the numbers)
 }
@@ -803,12 +856,15 @@ void Game::f_FinishCombatWin() {
         // Select hub) -- see entityStatus_'s declaration in game.h.
         toms::f_SetEntityStatus(m_mapEntityStatus, f_StatusKeyAt(l_oLead.m_iX, l_oLead.m_iY), toms::EntityStatus::Defeated);
     }
-    {   // the weapon's win (docs/gameplay/07 phase 1): enough of them raise its level -- more points, bigger bonuses
+    {   // the monsters beaten give the weapon EXP (docs/gameplay/17 §19): enough raises its level -- more points, bigger bonuses
         const std::string l_strKey = f_WeaponKey();
         const int l_iBefore = f_WeaponLevel(l_strKey);
-        m_mapWeaponUses[l_strKey]++;
+        int l_iWeaponGain = 0;
+        for (const CombatState::Foe& l_oF : m_oCs.m_vFoes) if (!l_oF.m_bFled) l_iWeaponGain += l_oF.m_oEnemy.m_iWeaponExp;
+        m_mapWeaponExp[l_strKey] += l_iWeaponGain;
+        l_oRes.m_iWeaponExpGained = l_iWeaponGain;
         const int l_iAfter = f_WeaponLevel(l_strKey);
-        l_oRes.m_strWeapon = l_strKey; l_oRes.m_iLvBefore = l_iBefore; l_oRes.m_iLvAfter = l_iAfter; l_oRes.m_iUses = m_mapWeaponUses[l_strKey];   // (the result shows it)
+        l_oRes.m_strWeapon = l_strKey; l_oRes.m_iLvBefore = l_iBefore; l_oRes.m_iLvAfter = l_iAfter; l_oRes.m_iWeaponExp = m_mapWeaponExp[l_strKey];   // (the result shows it)
     }
     bool l_bBoss = false;
     for (const CombatState::Foe& l_oF : m_oCs.m_vFoes) {
@@ -1009,11 +1065,11 @@ void Game::f_ResolveEnemyClockFire(int l_iFoe) {
     } else if (m_oCs.m_iPlayerHP <= 0) {
         m_oCs.m_strLog = m_oLocale.f_Tr("battle.player_down");
         f_BattleEvent("down", -1, -1);
-        f_FinishCombatLose();
+        f_StartLoseMoment();
     } else if (!f_AttackRunning() || l_oM.m_eKind != toms::MoveKind::Jabs) {
         m_oCs.m_strLog = l_iDmg == 0 ? m_oLocale.f_Tr("battle.perfect_guard") : f_TrParam(m_oLocale.f_Tr("battle.guard_hit"), "dmg", std::to_string(l_iDmg));
     }
-    if (!m_oCs.m_bActive) return;
+    if (!m_oCs.m_bActive || m_oCs.m_bLosePending) return;
     if (l_bVolley && l_oF.m_iVolleyHit + 1 < l_oM.m_iHits) {   // more hits to come: the next after its gap (its "!" before it)
         l_oF.m_iVolleyHit++;
         l_oF.m_iVolleyMs = l_oM.f_GapBefore(l_oF.m_iVolleyHit);
@@ -1035,7 +1091,7 @@ void Game::f_ResolveEnemyClockFire(int l_iFoe) {
 // points. The combo's end (all hit, the sweeps run out, or two misses) resolves the attack.
 void Game::f_BattleTapAttack() {
     if (!m_oCs.m_bActive || m_oCs.m_bWinPending || (m_oCs.m_ePace == toms::Pace::Cooldown && m_oCs.m_oAtkBar.m_bCooling)) return;
-    if (f_BattlePlayKind() != toms::PlayKind::Track) return;   // the weapon's own play: by touch (battlePointer)
+    if (f_BattlePlayType() != toms::PlayType::eTRACK) return;   // the weapon's own play: by touch (battlePointer)
     if (!m_oCs.m_oCombo.f_Running()) {
         if (m_oCs.m_ePace == toms::Pace::Stamina) {   // the stamina pace: starting an attack costs it (docs/gameplay/13 §6.3)
             if (m_oCs.m_fStamina < (float)m_oPaceSettings.m_iAttackCost) {
@@ -1124,7 +1180,12 @@ void Game::f_ResolveCombo(const toms::ComboResult* l_pPlayed) {
     if (l_pRes && !l_pRes->m_strSound.empty()) m_oAudio.f_Play(l_pRes->m_strSound);
     else f_PlayerLook("attack");
     f_StartAttackPause();
-    f_FeelMoment(l_bUlt ? "ultimate" : l_strTier);
+    // a weapon whose count goes on from attack to attack (the bow): each attack is one hit of its combo (17 §19)
+    const bool l_bKeepCombo = l_oWp.m_bComboKeep && !l_bUlt;
+    if (l_bKeepCombo) m_oCs.m_iComboCount = l_oR.m_bFailed || l_oR.m_iHits == 0 ? 0 : m_oCs.m_iComboCount + 1;
+    const toms::ComboTier* l_pComboTier = l_bKeepCombo ? l_oWp.f_ComboTierAt(m_oCs.m_iComboCount) : nullptr;
+    if (l_bKeepCombo) f_ComboWord();
+    f_FeelMoment(l_bUlt ? std::string("ultimate") : l_pComboTier && !l_pComboTier->m_strFeel.empty() ? l_pComboTier->m_strFeel : l_strTier);
     if (l_iDmg > 0 || l_iDealt == 0) f_PopDamage(l_iDmg, l_iT, l_bUlt ? "perfect" : l_strTier);
     // its named move (07 §5.4): the result row's "move", over the monster; the chain by the player
     if (l_pRes && !l_pRes->m_strMove.empty() && m_oLocale.f_Has(l_pRes->m_strMove)) f_PopWord(m_oLocale.f_Tr(l_pRes->m_strMove), l_iT, "move-" + l_strTier);
@@ -1132,13 +1193,14 @@ void Game::f_ResolveCombo(const toms::ComboResult* l_pPlayed) {
     if (m_iLastAttackDamage > 0) {   // the weapon's particles for its level (or the result's): off it now, on the monster with the number
         if (const toms::WeaponFx* l_pFx = f_BattleWeaponFx(l_bUlt)) {
             f_PlayBattleFx(l_pFx->m_strRelease, -1);
-            f_PlayBattleFx(l_pRes && !l_pRes->m_strFx.empty() ? l_pRes->m_strFx : l_pFx->m_strHit, l_iT, m_iHitNumberDelayMs);
+            const std::string& l_strHitFx = l_pComboTier && !l_pComboTier->m_strFx.empty() ? l_pComboTier->m_strFx : l_pRes && !l_pRes->m_strFx.empty() ? l_pRes->m_strFx : l_pFx->m_strHit;
+            f_PlayBattleFx(l_strHitFx, l_iT, m_iHitNumberDelayMs);
         }
     } else if (l_pRes && !l_pRes->m_strFx.empty()) {
         f_PlayBattleFx(l_pRes->m_strFx, -1);   // a miss: the result's effect at the player (weapon_play.json "miss_puff")
     }
     if (f_BattleRigReady()) {
-        const std::string l_strBigClip = l_bUlt ? std::string("attack_big") : l_pRes ? l_pRes->m_strAnim : std::string();   // the ultimate: the big clip
+        const std::string l_strBigClip = l_bUlt ? std::string("attack_big") : l_pComboTier ? l_pComboTier->m_strClip : l_pRes ? l_pRes->m_strAnim : std::string();   // the ultimate: the big clip
         const bool l_bBig = m_iLastAttackDamage > 0 && !l_strBigClip.empty() && m_upPlayerView && m_upPlayerView->f_Has(l_strBigClip);
         f_SetBattleRigState(m_iLastAttackDamage > 0 ? "attack" : "miss", true, l_bBig ? l_strBigClip : std::string());
     }
@@ -1251,7 +1313,11 @@ void Game::f_BattleTapSuper() {
     m_oCs.m_iSuperCharge = 0;
     m_oCs.m_bUltimate = true;
     const std::string l_strKey = f_WeaponKey();
-    if (const toms::SpecialMove* l_pD = m_oSpecialMoves.f_ForWeapon(l_strKey, "ultimate")) {   // the weapon's own move (16 §6): it cuts in
+    // the move bound to the weapon in data (17 §16 Q49; a scenario may bind another), else one naming this weapon
+    const std::string l_strBound = !m_strUltimateOverride.empty() ? m_strUltimateOverride : f_WeaponPlayOf(l_strKey).m_strUltimate;
+    const toms::SpecialMove* l_pBound = l_strBound.empty() ? nullptr : m_oSpecialMoves.f_Find(l_strBound);
+    if (!l_strBound.empty() && !l_pBound) std::fprintf(stderr, "[battle] the ultimate '%s' is not in special_moves.json\n", l_strBound.c_str());
+    if (const toms::SpecialMove* l_pD = l_pBound ? l_pBound : m_oSpecialMoves.f_ForWeapon(l_strKey, "ultimate")) {   // the weapon's own move (16 §6): it cuts in
         const std::string l_strS = m_oFeel.f_Sound("ultimate");
         if (!l_strS.empty()) m_oAudio.f_Play(l_strS);
         f_StartSkill(*l_pD, -1);
@@ -1263,9 +1329,9 @@ void Game::f_BattleTapSuper() {
     const std::string l_strS = m_oFeel.f_Sound("ultimate");
     if (!l_strS.empty()) m_oAudio.f_Play(l_strS);
     toms::ComboSettings l_oCset = toms::f_ComboSettings(f_WeaponPlayOf(l_strKey), f_WeaponLevel(l_strKey));
-    l_oCset.m_iPoints = std::min(toms::g_iMaxComboPoints, l_oCset.m_iPoints + 2);
+    l_oCset.m_iPoints += 2;
     m_oCs.m_oAtkBar.m_bCooling = false;
-    if (f_BattlePlayKind() != toms::PlayKind::Track) {   // the weapon's own play, harder (it cuts in over the normal one)
+    if (f_BattlePlayType() != toms::PlayType::eTRACK) {   // the weapon's own play, harder (it cuts in over the normal one)
         m_oCs.m_oTouch.f_Stop();
         m_oCs.m_bTouchPaid = false;
         m_oCs.m_iPlayDealt = 0;

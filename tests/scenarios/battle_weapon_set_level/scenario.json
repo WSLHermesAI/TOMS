@@ -1,0 +1,25 @@
+{
+  "_comment": "A battle can set a weapon's level directly, as the battle editor does: Lv 10 is the top.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "sword"
+    ],
+    "weaponLevel": {
+      "sword": 10
+    }
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000
+  },
+  "test": {
+    "frames": 10
+  },
+  "expect": {
+    "weaponLevel": {
+      "sword": 10
+    }
+  }
+}

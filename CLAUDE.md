@@ -26,6 +26,22 @@
   Android and other versions are tested and updated only when the owner asks for that version. `tools\test.cmd` picks
   desktop tests only, so don't add web tests to a run. The exception is "test all", which the owner asks for directly.
 
+### Sound: nothing is heard from a run in the background
+
+- **Anything running offscreen or in the background has every sound and BGM at volume 0** (the owner, 2026-11-05): a
+  hidden window (`--screenshot`, `--record`), a minimized or covered one, a window without focus, an app in the
+  background on a phone or a hidden browser tab, a scripted run (tests, `--frames`, `--fixed-dt`, `--scenario-test`,
+  `--bench`), and an editor's self-test or an editor that is not the active app.
+- `Audio::f_SetBackgroundMuted` does it, called every frame by each host (`src/game/src/main_sdl.cpp`,
+  `src/editor/src/bgfx_viewport.cpp`). **A new host of the game calls it too, and new sound or BGM plays through the
+  `Audio` engine** so the mute covers it.
+
+### Git: no commit and no new branch until the owner asks
+
+- **Don't commit and don't create a branch until the owner asks for that** (the owner, 2026-11-05). Finished work stays
+  uncommitted in the working files. Don't offer to commit as a next step, and don't treat earlier approval as lasting:
+  each commit or branch needs its own request.
+
 ### Git: never commit the AIGamestyle submodule
 
 - **Don't commit anything in `AIGamestyle`**: no commits inside the submodule, and no staging of its pointer in TOMS

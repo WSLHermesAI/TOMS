@@ -23,16 +23,15 @@ int main() {
         const WeaponPlay l_oW = f_WeaponPlayFromJson("bow", nlohmann::json::parse(R"({
             "levels": [ {"lv": 3, "points": 4, "stats": {"str": 12, "agi": 10}}, {"lv": 1, "points": 3, "stats": {"str": 10}},
                         {"lv": 5, "points": 9} ],
-            "usesToLevel": [2, 3, 4, 5]})"));
+            "levelExp": { "first": 2, "scale": 2 }})"));
         CHECK(l_oW.m_vLevels.size() == 3 && l_oW.m_vLevels[0].m_iLv == 1, "levels sorted");
         CHECK(f_WeaponLevelEntry(l_oW, 1).m_iPoints == 3 && f_WeaponLevelEntry(l_oW, 2).m_iPoints == 3 && f_WeaponLevelEntry(l_oW, 3).m_iPoints == 4,
               "the highest entry at or below the level");
-        CHECK(f_WeaponLevelEntry(l_oW, 5).m_iPoints == g_iMaxComboPoints, "points capped at five");
         CHECK(f_WeaponLevelEntry(l_oW, 3).m_mapStats.at("agi") == 10, "the level's stats");
-        CHECK(f_WeaponLevelFromUses(l_oW, 0) == 1 && f_WeaponLevelFromUses(l_oW, 1) == 1 && f_WeaponLevelFromUses(l_oW, 2) == 2 &&
-                  f_WeaponLevelFromUses(l_oW, 5) == 3 && f_WeaponLevelFromUses(l_oW, 999) == 5,
-              "levels from wins (2, then 3 more, ...), capped at the last entry");
-        CHECK(f_UsesToNextLevel(l_oW, 1) == 2 && f_UsesToNextLevel(l_oW, 2) == 3 && f_UsesToNextLevel(l_oW, 5) == 0, "wins to the next level");
+        CHECK(f_WeaponLevelFromExp(l_oW, 0) == 1 && f_WeaponLevelFromExp(l_oW, 1) == 1 && f_WeaponLevelFromExp(l_oW, 2) == 2 &&
+                  f_WeaponLevelFromExp(l_oW, 6) == 3 && f_WeaponLevelFromExp(l_oW, 99999) == 5,
+              "the level follows the weapon EXP, and stops at the top");
+        CHECK(f_ExpToNextLevel(l_oW, 1) == 2 && f_ExpToNextLevel(l_oW, 2) == 4 && f_ExpToNextLevel(l_oW, 5) == 0, "EXP to the next level; none at the top");
         const WeaponPlay l_oNone = f_WeaponPlayFromJson("x", nlohmann::json::object());
         CHECK(f_WeaponLevelEntry(l_oNone, 7).m_iPoints == 3 && f_WeaponMaxLevel(l_oNone) == 1 && l_oNone.m_bTurnBack, "no data: Lv 1, 3 points");
     }
@@ -124,8 +123,7 @@ int main() {
         const WeaponPlayTable l_oT = f_LoadWeaponPlay("data/weapon_play.json");
         const WeaponPlay& l_oBow = l_oT.f_Get("bow");
         CHECK(!l_oBow.m_vLevels.empty() && f_WeaponLevelEntry(l_oBow, 1).m_iPoints == 3, "bow: Lv 1 has 3 points");
-        CHECK(f_WeaponLevelEntry(l_oBow, f_WeaponMaxLevel(l_oBow)).m_iPoints == g_iMaxComboPoints, "bow: the top level has five");
-        CHECK(!l_oBow.m_vUsesToLevel.empty(), "bow: wins per level");
+        CHECK(f_WeaponLevelEntry(l_oBow, f_WeaponMaxLevel(l_oBow)).m_iPoints >= 5, "bow: the top level has five or more");
         const ComboSettings l_oCs = f_ComboSettings(l_oBow, 1);
         CHECK(l_oCs.m_iPoints == 3 && l_oCs.m_iSweepMs == l_oBow.m_iSweepMs, "comboSettings from the weapon");
     }

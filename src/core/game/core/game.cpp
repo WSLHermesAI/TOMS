@@ -135,7 +135,7 @@ void Game::f_NewGame(int l_iSlot) {
     f_ResetAttrs();
     m_oEquipped = toms::EquippedSet{};
     m_vGearOwned.clear();
-    m_mapWeaponUses.clear();               // every weapon back to Lv 1
+    m_mapWeaponExp.clear();               // every weapon back to Lv 1
     f_OwnGear(m_pszStartingWeapon, true);   // the bow, worn from the start (not "new" in the gear menu)
     m_bNewsStore = m_bNewsGear = m_bNewsEvents = false;
     m_nEventLogSeen = 0;
@@ -272,7 +272,9 @@ void Game::f_Update(int l_iDtMs) {
         for (int l_iP : m_oCs.m_oCombo.f_TakeEntered()) f_ComboHint(l_iP, /*hit=*/false);   // "tap now"
         if (m_oCs.m_oCombo.f_Done()) f_ResolveCombo();
     };
-    if (m_oCs.m_bActive && m_oCs.m_oSkill.m_bOn) {   // a move or a special guard (docs/gameplay/16 §6): the fight waits for its show
+    if (m_oCs.m_bWinPending) {
+        // the fight is decided: its end plays (battleFrame, updateBattleRig); nothing else moves on
+    } else if (m_oCs.m_bActive && m_oCs.m_oSkill.m_bOn) {   // a move or a special guard (docs/gameplay/16 §6): the fight waits for its show
         m_oCs.m_iClockMs += l_iDtMs;
         f_UpdateSkill(l_iDtMs);
     } else {
@@ -322,7 +324,7 @@ void Game::f_Update(int l_iDtMs) {
             const bool l_bCanPay = m_oCs.m_ePace != toms::Pace::Stamina || m_oCs.m_fStamina >= (float)m_oPaceSettings.m_iAttackCost;
             const glm::vec4 l_v4Area = f_TouchArea();
             const bool l_bMoved = std::fabs(l_v4Area.x - m_v4TouchArmedArea.x) + std::fabs(l_v4Area.y - m_v4TouchArmedArea.y) > 4.0f;
-            if (m_oCs.m_bActive && !m_oCs.m_bWinPending && l_bCanPay && m_bBattleBoxesKnown && f_BattlePlayKind() != toms::PlayKind::Track &&
+            if (m_oCs.m_bActive && !m_oCs.m_bWinPending && l_bCanPay && m_bBattleBoxesKnown && f_BattlePlayType() != toms::PlayType::eTRACK &&
                 (!m_oCs.m_oTouch.f_Running() || (!m_oCs.m_oTouch.f_Started() && l_bMoved)))
                 f_ArmTouchPlay(false, toms::f_ComboSettings(f_WeaponPlayOf(l_strKey), f_WeaponLevel(l_strKey)).m_iPoints);
         }

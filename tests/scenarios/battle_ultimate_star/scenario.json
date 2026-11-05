@@ -10,7 +10,8 @@
     "enemy": "slime",
     "hp": 9999,
     "atk_interval_ms": 60000,
-    "super": true
+    "super": true,
+    "ultimate": "star_seal"
   },
   "test": {
     "frames": 660,

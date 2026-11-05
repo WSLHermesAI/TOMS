@@ -4,7 +4,7 @@
   "player": {
     "give": ["sword"],
     "equip": ["sword"],
-    "weaponUses": { "sword": 4 },
+    "weaponLevel": { "sword": 2 },
     "lv": 5,
     "maxhp": 160,
     "hp": 160,
@@ -18,6 +18,6 @@
     "name": "3 bats Lv5 sword",
     "pace": "",
     "foes": ["bat", "bat", "bat"],
-    "player": { "lv": 5, "hp": 160, "maxhp": 160, "weapon": "sword", "weaponWins": 4, "attrs": { "str": 6, "agi": 4 }, "attrPoints": 0 }
+    "player": { "lv": 5, "hp": 160, "maxhp": 160, "weapon": "sword", "weaponLevel": 2, "attrs": { "str": 6, "agi": 4 }, "attrPoints": 0 }
   }
 }

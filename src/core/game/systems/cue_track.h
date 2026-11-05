@@ -25,7 +25,8 @@ struct CueTiming {
 class CueTrack {
 public:
     enum State { Waiting = 0, Answered = 1, Missed = 2 };
-    void f_Start(int l_iCount, const CueTiming& l_oT);
+    // l_vExtraMs: more time for a cue (a longer gesture), added to its window; missing entries: none.
+    void f_Start(int l_iCount, const CueTiming& l_oT, const std::vector<int>& l_vExtraMs = {});
     // The time. Returns how many cues ran out unanswered (missed) in this step.
     int f_Update(int l_iDtMs);
     // Answer the current cue (only while its window is open; else ignored, returns false). ok: right or wrong.
@@ -41,10 +42,10 @@ public:
     float f_TimeLeft() const;                                       // 0..1 of the current cue
 private:
     CueTiming m_oT;
-    std::vector<int> m_vStates;
+    std::vector<int> m_vStates, m_vExtraMs;
     int m_iIndex = 0, m_iAgeMs = 0, m_iGapLeft = 0;
     int f_WindowFrom() const { return m_oT.m_bWindowAtEnd ? m_oT.m_iCueMs - m_oT.m_iInputMs : 0; }
-    int f_WindowTo() const { return m_oT.m_bWindowAtEnd ? m_oT.m_iCueMs : m_oT.m_iInputMs; }
+    int f_WindowTo() const { return (m_oT.m_bWindowAtEnd ? m_oT.m_iCueMs : m_oT.m_iInputMs) + (m_iIndex < (int)m_vExtraMs.size() ? m_vExtraMs[(size_t)m_iIndex] : 0); }
 };
 
 } // namespace toms

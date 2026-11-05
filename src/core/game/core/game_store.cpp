@@ -128,7 +128,7 @@ void Game::f_InGameMenuMove(int l_iDelta) {
         m_iInGameMenuSel = ((m_iInGameMenuSel + l_iDelta) % l_iN + l_iN) % l_iN;
     } else {
         // languages, the art style rows (none when only the original exists), the camera row, the reduce-effects row
-        int l_iN = std::max(1, m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount() + 2);
+        int l_iN = std::max(1, m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount() + 3);
         m_iInGameMenuSel = ((m_iInGameMenuSel + l_iDelta) % l_iN + l_iN) % l_iN;
     }
 }
@@ -233,6 +233,9 @@ void Game::f_InGameMenuActivate() {
     } else if (m_iInGameMenuSel == m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount() + 1) {
         f_SetReduceEffects(!m_oSettings.m_bReduceEffects);   // "Reduce shaking and flashes" (docs/gameplay/15 §3.8)
         m_oAudio.f_Play("confirm_click");
+    } else if (m_iInGameMenuSel == m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount() + 2) {
+        f_CycleBattleSpeed();   // docs/gameplay/17 I10
+        m_oAudio.f_Play("confirm_click");
     }
 }
 
@@ -324,11 +327,13 @@ void Game::f_BuyStoreItem(int l_iIdx) {
     m_oPl.m_iGold -= l_iCost;
     // A weapon / armor / talent joins the owned gear and is worn at once (the Equipment tab swaps it
     // later); a consumable is used right away, as the store always did.
-    if (f_IsGearType(f_ItemType(l_oD.m_strId))) f_OwnGear(l_oD.m_strId, true);
+    const bool l_bGear = f_IsGearType(f_ItemType(l_oD.m_strId));
+    if (l_bGear) f_OwnGear(l_oD.m_strId, true);
     else f_ApplyStats(l_oD.m_strId, f_ItemStats(l_oD.m_strId));
     l_oD.m_iPurchases++;
-    m_strToastMsg = f_TrParam(m_oLocale.f_Tr("store.toast_purchase_success"), "name", f_ItemName(l_oD.m_strId));
-    m_iToastTimer = 1400;
+    // gear is worn at once: say so, and where to change it (docs/gameplay/17 I7)
+    m_strToastMsg = f_TrParam(m_oLocale.f_Tr(l_bGear ? "store.toast_gear_worn" : "store.toast_purchase_success"), "name", f_ItemName(l_oD.m_strId));
+    m_iToastTimer = l_bGear ? 2600 : 1400;
     m_oAudio.f_Play("get_item");
     f_MarkProgressDirty();   // a purchase changes gold/stats/equipment: autosave will flush it
 }

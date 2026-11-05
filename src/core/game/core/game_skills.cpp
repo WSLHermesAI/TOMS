@@ -13,16 +13,16 @@ using namespace toms::game_detail;
 
 // ---- each weapon's own play ----
 
-toms::PlayKind Game::f_BattlePlayKind() const {
-    if (!m_strPlayOverride.empty() && m_strPlayOverride != "weapon") return toms::f_PlayKindFromString(m_strPlayOverride);
-    return toms::f_PlayKindFromString(f_WeaponPlayOf(f_WeaponKey()).m_strPlay);
+toms::PlayType Game::f_BattlePlayType() const {
+    if (!m_strPlayOverride.empty() && m_strPlayOverride != "weapon") return toms::f_PlayTypeFromString(m_strPlayOverride);
+    return toms::f_PlayTypeFromString(f_WeaponPlayOf(f_WeaponKey()).m_strPlay);
 }
 
 glm::vec4 Game::f_TouchArea() const {
     const glm::vec4 l_v4B = f_FighterBox(std::clamp(m_oCs.m_iTarget, 0, std::max(0, (int)m_oCs.m_vFoes.size() - 1)));
     // the bow's targets on the monster; the circles from it down into the free space under the fighters; the
     // sword's prompts in that space (TouchPlay::promptAt), clear of the monster
-    glm::vec4 l_v4A = f_BattlePlayKind() == toms::PlayKind::Bow && !m_oCs.m_oSkill.m_bOn ? glm::vec4(l_v4B.x - 30.0f, l_v4B.y - 20.0f, l_v4B.z + 60.0f, l_v4B.w + 40.0f)
+    glm::vec4 l_v4A = f_BattlePlayType() == toms::PlayType::ePULL_RELEASE && !m_oCs.m_oSkill.m_bOn ? glm::vec4(l_v4B.x - 30.0f, l_v4B.y - 20.0f, l_v4B.z + 60.0f, l_v4B.w + 40.0f)
                                                                             : glm::vec4(l_v4B.x - 120.0f, l_v4B.y - 10.0f, l_v4B.z + 240.0f, l_v4B.w + 210.0f);
     // On the screen, where a finger can reach it: a monster at the edge (the third of three) would push it past the
     // side; the bottom keeps clear of the GUARD / attack panels and the ultimate's row. Moved in, not shrunk, so the
@@ -36,9 +36,18 @@ glm::vec4 Game::f_TouchArea() const {
     return l_v4A;
 }
 
-toms::TouchPlaySettings Game::f_TouchSettingsFor(toms::PlayKind l_eKind) const {
+toms::TouchPlaySettings Game::f_TouchSettingsFor(toms::PlayType l_eType) const {
     toms::TouchPlaySettings l_oS = m_oTouchSettings;
-    if (l_eKind == toms::PlayKind::Bow) {   // STR holds the pull longer, DEX keeps the aim still (16 §3.2)
+    // DEX widens every play's tolerance (17 §4.4), each with its own limit
+    const int l_iDex = std::max(0, f_AttrValue("dex"));
+    const float l_fDexDeg = (float)l_iDex * l_oS.m_fDexWayDeg;
+    l_oS.m_fSliceTolerance = std::max(l_oS.m_fSliceTolerance, std::min(l_oS.m_fSliceTolerance + l_fDexDeg / 57.29578f, l_oS.m_fDexWayMaxDeg / 57.29578f));
+    l_oS.m_fGestureExtraDeg = std::min(l_fDexDeg, l_oS.m_fDexGestureMaxDeg);
+    l_oS.m_fShapeTolerance = std::min(0.35f, l_oS.m_fShapeTolerance + (float)l_iDex * l_oS.m_fDexCornerPct / 100.0f);
+    l_oS.m_fCornerBonus = std::min(0.5f, (float)l_iDex * l_oS.m_fDexCornerPct / 100.0f);
+    l_oS.m_oSliceCue.m_iInputMs = std::max(l_oS.m_oSliceCue.m_iInputMs, std::min(l_oS.m_oSliceCue.m_iInputMs + l_iDex * l_oS.m_iDexWindowMs, l_oS.m_oSliceCue.m_iCueMs - 100));
+    l_oS.m_iCircleTapMs += l_iDex * l_oS.m_iDexWindowMs;
+    if (l_eType == toms::PlayType::ePULL_RELEASE) {   // STR holds the pull longer, DEX keeps the aim still (16 §3.2)
         l_oS.m_iBowHoldMs += std::max(0, f_AttrValue("str")) * l_oS.m_iBowHoldPerStr;
         l_oS.m_fBowShakePx /= 1.0f + (float)std::max(0, f_AttrValue("dex")) * l_oS.m_fBowShakePerDex;
     }
@@ -46,18 +55,19 @@ toms::TouchPlaySettings Game::f_TouchSettingsFor(toms::PlayKind l_eKind) const {
 }
 
 void Game::f_ArmTouchPlay(bool l_bUltimate, int l_iPoints) {
-    const toms::PlayKind l_eKind = f_BattlePlayKind();
-    if (l_eKind == toms::PlayKind::Bow && !l_bUltimate) l_iPoints = 1;   // a normal attack is one arrow (16 §3.2)
-    toms::TouchPlaySettings l_oS = f_TouchSettingsFor(l_eKind);
-    if (l_eKind == toms::PlayKind::Slice) {   // the level's shape prompts take the last places (16 §3.1)
+    const toms::PlayType l_eType = f_BattlePlayType();
+    if (l_eType == toms::PlayType::ePULL_RELEASE && !l_bUltimate) l_iPoints = 1;   // a normal attack is one arrow (16 §3.2)
+    toms::TouchPlaySettings l_oS = f_TouchSettingsFor(l_eType);
+    if (toms::f_IsSwipePlay(l_eType)) {   // the level's gesture prompts take the last places (17 §4.2)
         const std::string l_strKey = f_WeaponKey();
-        const std::vector<std::string> l_vShapes = f_WeaponPlayOf(l_strKey).f_ShapeCuesAt(f_WeaponLevel(l_strKey));
-        l_oS.m_vSliceCues.assign((size_t)l_iPoints, "way");
+        const std::vector<std::string> l_vShapes = f_WeaponPlayOf(l_strKey).f_SwipeCuesAt(f_WeaponLevel(l_strKey));
+        l_oS.m_vSliceCues.assign((size_t)l_iPoints, l_eType == toms::PlayType::eSWIPE_GESTURE ? "v" : "way");
         for (size_t l_nK = 0; l_nK < l_vShapes.size() && l_nK < l_oS.m_vSliceCues.size(); l_nK++) l_oS.m_vSliceCues[l_oS.m_vSliceCues.size() - l_vShapes.size() + l_nK] = l_vShapes[l_nK];
     }
     m_v4TouchArmedArea = f_TouchArea();
-    m_oCs.m_oTouch.f_Start(l_eKind, l_iPoints, l_bUltimate, m_v4TouchArmedArea, (uint32_t)m_oPlayRng(), l_oS);   // new places and order each attack
+    m_oCs.m_oTouch.f_Start(l_eType, l_iPoints, l_bUltimate, m_v4TouchArmedArea, (uint32_t)m_oPlayRng(), l_oS);   // new places and order each attack
     m_oCs.m_iPlayDealt = 0;
+    if (!f_WeaponPlayOf(f_WeaponKey()).m_bComboKeep) m_oCs.m_iComboCount = 0;   // a new attack, a new combo (the bow's goes on)
     m_oCs.m_bTouchPaid = l_bUltimate;   // the ultimate costs no stamina and runs at once with a full charge
     m_oCs.m_fTouchCharge = l_bUltimate ? 1.0f : 0.0f;
     if (!l_bUltimate && m_oCs.m_oTouch.f_Started()) {   // the sword and the staff start by themselves: the attack starts now
@@ -97,7 +107,7 @@ void Game::f_StepTouchPlay(int l_iDtMs) {
 }
 
 void Game::f_TouchPlayed(int l_iIndexBefore, int l_iHitsBefore) {
-    const toms::PlayKind l_eKind = m_oCs.m_oTouch.f_Kind();
+    const toms::PlayType l_eType = m_oCs.m_oTouch.f_Type();
     const bool l_bSkillPlay = m_oCs.m_oSkill.m_bOn && m_oCs.m_oSkill.m_ePhase == CombatState::SkillRun::Phase::Play;
     for (const toms::TouchPlay::Hit& l_oH : m_oCs.m_oTouch.f_TakeHits()) {
         if (l_bSkillPlay) {   // a move's step: its burst, "2/5", the next part of its name (the skill's "step" show)
@@ -105,13 +115,19 @@ void Game::f_TouchPlayed(int l_iIndexBefore, int l_iHitsBefore) {
             m_oCs.m_oSkill.m_iSteps++;
             for (const toms::ShowBeat& l_oB : m_oCs.m_oSkill.m_pDef->m_vStep) f_SkillBeat(l_oB, {l_oH.m_fX, l_oH.m_fY});
             m_oAudio.f_Play("confirm_click");
-        } else if (l_eKind == toms::PlayKind::Slice || l_eKind == toms::PlayKind::Circles) {
+            if (m_oCs.m_oSkill.m_iOwner < 0) {   // the player's move: an attack clip per answer, growing with the combo (17 I1, §19)
+                m_oCs.m_iComboCount++;
+                f_PlayAnswerClip();
+                f_ComboWord();
+            }
+            if (toms::f_IsFreePlay(l_eType) && f_FreeHit(l_oH)) return;   // the last monster fell: the move is over
+        } else if (toms::f_IsSwipePlay(l_eType) || l_eType == toms::PlayType::eSEQUENCE_CLICK) {
             f_PlayHit(l_oH);   // each cut, each spell hits at once (16 §3.1, §3.3)
         }
     }
-    if (!l_bSkillPlay && l_eKind != toms::PlayKind::Slice && l_eKind != toms::PlayKind::Circles && m_oCs.m_oTouch.f_Index() > l_iIndexBefore)
+    if (!l_bSkillPlay && !toms::f_IsSwipePlay(l_eType) && l_eType != toms::PlayType::eSEQUENCE_CLICK && m_oCs.m_oTouch.f_Index() > l_iIndexBefore)
         m_oAudio.f_Play(m_oCs.m_oTouch.f_Result().m_iHits > l_iHitsBefore ? "confirm_click" : "deny");
-    if (l_eKind == toms::PlayKind::Bow && m_oCs.m_oTouch.f_Index() > l_iIndexBefore && !m_oSettings.m_bBowTutorialDone) {
+    if (l_eType == toms::PlayType::ePULL_RELEASE && m_oCs.m_oTouch.f_Index() > l_iIndexBefore && !m_oSettings.m_bBowTutorialDone) {
         m_oSettings.m_bBowTutorialDone = true;   // the first shot: the tutorial has done its job
         toms::f_EnsureSaveDir(toms::f_DefaultSaveDir());
         toms::f_SaveGameSettings(toms::f_SettingsPath(), m_oSettings);
@@ -123,7 +139,7 @@ void Game::f_TouchPlayed(int l_iIndexBefore, int l_iHitsBefore) {
     m_oCs.m_bTouchPaid = false;   // resolved once (the done play stays, its marks fading, until the next is armed)
     m_oCs.m_oTouch.f_Stop();
     toms::ComboResult l_oR = m_oCs.m_oTouch.f_Result();
-    l_oR.m_fCharge = l_eKind == toms::PlayKind::Bow ? m_oCs.m_oTouch.f_ShotCharge() : m_oCs.m_fTouchCharge;   // the bow: its pull's charge
+    l_oR.m_fCharge = l_eType == toms::PlayType::ePULL_RELEASE ? m_oCs.m_oTouch.f_ShotCharge() : m_oCs.m_fTouchCharge;   // the bow: its pull's charge
     f_ResolveCombo(&l_oR);
 }
 
@@ -133,8 +149,47 @@ int Game::f_NormalHitDamage(int l_iFoe) const {
     return toms::f_ComputeAttackDamage(l_iBaseHit, 100.0f, toms::f_EffectiveMaxMult(m_oEquipped, m_mapEquipmentDefs));
 }
 
+// An answer's attack clip, started again each time, so every cut and every spell shows (17 I1); the play's end keeps its big clip.
+void Game::f_PlayAnswerClip() {
+    if (!f_BattleRigReady()) return;
+    const toms::ComboTier* l_pTier = f_ComboTier();
+    const bool l_bHas = l_pTier && m_upPlayerView && !l_pTier->m_strClip.empty() && m_upPlayerView->f_Has(l_pTier->m_strClip);
+    f_SetBattleRigState("attack", true, l_bHas ? l_pTier->m_strClip : std::string());
+}
+
+const toms::ComboTier* Game::f_ComboTier() const { return f_WeaponPlayOf(f_WeaponKey()).f_ComboTierAt(m_oCs.m_iComboCount); }
+
+void Game::f_ComboWord() {
+    if (m_oCs.m_iComboCount >= 2) f_PopWord(f_TrParam(m_oLocale.f_Tr("battle.word_combo"), "n", std::to_string(m_oCs.m_iComboCount)), -1, "chain");
+}
+
+// One swipe or tap of a free mode (17 §5): a hit at once, of the move's hitDamage times a normal attack. True: the fight is won.
+bool Game::f_FreeHit(const toms::TouchPlay::Hit& l_oH) {
+    const int l_iT = m_oCs.m_iTarget;
+    if (l_iT < 0 || l_iT >= (int)m_oCs.m_vFoes.size() || m_oCs.m_vFoes[(size_t)l_iT].f_Down() || !m_oCs.m_oSkill.m_pDef) return false;
+    const int l_iDmg = std::max(1, (int)std::lround((float)f_NormalHitDamage(l_iT) * m_oCs.m_oSkill.m_pDef->m_oPlay.m_fHitDamage * m_oCs.m_vFoes[(size_t)l_iT].m_fStaggerDamage));
+    f_BattleEvent("hit", -1, l_iT, l_iDmg, "free");
+    const toms::ComboTier* l_pTier = f_ComboTier();
+    if (l_pTier && !l_pTier->m_strFx.empty()) f_PlayBattleFx(l_pTier->m_strFx, l_iT);
+    else if (const toms::WeaponFx* l_pFx = f_BattleWeaponFx(true)) f_PlayBattleFx(l_pFx->m_strHit, l_iT);
+    f_FeelMoment(l_pTier && !l_pTier->m_strFeel.empty() ? l_pTier->m_strFeel : std::string("hit"));
+    f_PopDamage(l_iDmg, l_iT, "hit");
+    f_DamageFoe(l_iT, l_iDmg);
+    if (!m_oCs.m_bActive) return true;
+    if (!m_oCs.m_vFoes[(size_t)l_iT].f_Down()) return false;
+    const std::string l_strWin = f_TrParam(m_oLocale.f_Tr("battle.crit_win"), "dmg", std::to_string(l_iDmg));
+    if (!toms::f_AllDown(m_oCs.f_FoeHp())) {   // another stands: the target moves on and the move goes on
+        f_AfterPlayerHit(std::string(), l_strWin);
+        return false;
+    }
+    m_oCs.m_oSkill.m_fShare = 1.0f;
+    f_EndSkill();
+    f_AfterPlayerHit(std::string(), l_strWin);
+    return true;
+}
+
 void Game::f_PlayHit(const toms::TouchPlay::Hit& l_oH) {
-    if (!l_oH.m_bOk) { m_oAudio.f_Play("deny"); return; }
+    if (!l_oH.m_bOk) { m_oCs.m_iComboCount = 0; m_oAudio.f_Play("deny"); return; }   // a miss ends the combo
     const int l_iT = m_oCs.m_iTarget;
     if (l_iT < 0 || l_iT >= (int)m_oCs.m_vFoes.size() || m_oCs.m_vFoes[(size_t)l_iT].f_Down()) return;
     // half a normal hit shared over the answers; the play's end deals the rest of the attack (resolveCombo)
@@ -145,11 +200,19 @@ void Game::f_PlayHit(const toms::TouchPlay::Hit& l_oH) {
     m_oCs.m_iPlayDealt += l_iDmg;
     f_BattleEvent("hit", -1, l_iT, l_iDmg, "answer");
     if (const toms::WeaponFx* l_pFx = f_BattleWeaponFx()) {
-        if (m_oCs.m_oTouch.f_Kind() == toms::PlayKind::Circles) f_PlayBattleFxAt(l_pFx->m_strRelease, l_oH.m_fX, l_oH.m_fY, true);   // the spell leaves the circle
-        f_PlayBattleFx(l_pFx->m_strHit, l_iT);
+        if (m_oCs.m_oTouch.f_Type() == toms::PlayType::eSEQUENCE_CLICK) f_PlayBattleFxAt(l_pFx->m_strRelease, l_oH.m_fX, l_oH.m_fY, true);   // the spell leaves the circle
+        const toms::ComboTier* l_pHitTier = f_WeaponPlayOf(f_WeaponKey()).f_ComboTierAt(m_oCs.m_iComboCount + 1);
+        f_PlayBattleFx(l_pHitTier && !l_pHitTier->m_strFx.empty() ? l_pHitTier->m_strFx : l_pFx->m_strHit, l_iT);
     }
     m_oAudio.f_Play("confirm_click");
-    f_FeelMoment(l_oH.m_bPerfect ? "great" : "hit");
+    m_oCs.m_iComboCount++;
+    {   // the feel grows with the combo too; a perfect answer is at least "great"
+        const toms::ComboTier* l_pTier = f_ComboTier();
+        const std::string l_strFeel = l_pTier && !l_pTier->m_strFeel.empty() ? l_pTier->m_strFeel : std::string("hit");
+        f_FeelMoment(l_oH.m_bPerfect && l_strFeel == "hit" ? std::string("great") : l_strFeel);
+    }
+    f_PlayAnswerClip();
+    f_ComboWord();
     f_PopDamage(l_iDmg, l_iT, l_oH.m_bPerfect ? "great" : "hit");
     f_DamageFoe(l_iT, l_iDmg);
 }
@@ -199,6 +262,7 @@ void Game::f_StartSkill(const toms::SpecialMove& l_oDef, int l_iOwner) {
     m_oCs.m_oSkill.m_bOn = true;
     m_oCs.m_oSkill.m_pDef = &l_oDef;
     m_oCs.m_oSkill.m_iOwner = l_iOwner;
+    if (l_iOwner < 0) m_oCs.m_iComboCount = 0;   // a move builds its own combo
     f_BattleEvent("skill", l_iOwner, m_oCs.m_iTarget, 0, l_oDef.m_strId);
     for (const toms::ShowBeat* l_pB : toms::f_BeatsDue(l_oDef.m_vDemo, -1, 0)) f_SkillBeat(*l_pB, f_SkillCentre());
 }
@@ -275,16 +339,16 @@ void Game::f_UpdateSkill(int l_iDtMs) {
         for (const toms::ShowBeat* l_pB : toms::f_BeatsDue(l_oD.m_vDemo, l_iBefore, l_oS.m_iPhaseMs)) f_SkillBeat(*l_pB, f_SkillCentre());
         if (l_oS.m_iPhaseMs < toms::f_ShowLength(l_oD.m_vDemo)) return;
         // the play (16 §6.1 step 4): the move's own kind and numbers
-        const toms::PlayKind l_eKind = toms::f_PlayKindFromString(l_oD.m_oPlay.m_strKind);
-        toms::TouchPlaySettings l_oTs = f_TouchSettingsFor(l_eKind);
+        const toms::PlayType l_eType = l_oD.m_oPlay.m_eType;
+        toms::TouchPlaySettings l_oTs = f_TouchSettingsFor(l_eType);
         l_oTs.m_strShape = l_oD.m_oPlay.m_strShape;
         l_oTs.m_fShapeSize = l_oD.m_oPlay.m_fSize;
         l_oTs.m_fShapeCornerRadius = l_oD.m_oPlay.m_fCornerRadius;
-        l_oTs.m_iShapeTimeMs = l_oTs.m_iMashTimeMs = l_oD.m_oPlay.m_iTimeMs;
+        l_oTs.m_iShapeTimeMs = l_oTs.m_iMashTimeMs = l_oTs.m_iFreeTimeMs = l_oD.m_oPlay.m_iTimeMs;
         l_oTs.m_vSliceCues = l_oD.m_oPlay.m_vCues;
         const glm::vec2 l_v2C = f_SkillCentre();
-        const glm::vec4 l_v4Area = l_eKind == toms::PlayKind::Shape ? glm::vec4(l_v2C.x - 100.0f, l_v2C.y - 100.0f, 200.0f, 200.0f) : f_TouchArea();
-        m_oCs.m_oTouch.f_Start(l_eKind, l_oD.m_oPlay.m_iPoints, true, l_v4Area, (uint32_t)m_oPlayRng(), l_oTs);
+        const glm::vec4 l_v4Area = l_eType == toms::PlayType::eDRAW_SHAPE ? glm::vec4(l_v2C.x - 100.0f, l_v2C.y - 100.0f, 200.0f, 200.0f) : f_TouchArea();
+        m_oCs.m_oTouch.f_Start(l_eType, l_oD.m_oPlay.m_iPoints, true, l_v4Area, (uint32_t)m_oPlayRng(), l_oTs);
         m_bTouchHeld = false;
         l_oS.m_ePhase = P::Play;
         l_oS.m_iPhaseMs = 0;
@@ -417,6 +481,6 @@ void Game::f_EndTraining() {
     m_oCs = CombatState{};
     m_oPl.m_iHp = l_oA.m_iHpBefore;
     f_ShowNotice(f_TrParam(f_TrParam(f_TrParam(m_oLocale.f_Tr("training.done"), "w", std::to_string(l_oA.m_iWins)), "exp", std::to_string(l_oA.m_iExpGained)),
-                       "uses", std::to_string(l_oA.m_iUsesGained)));
+                       "uses", std::to_string(l_oA.m_iWeaponExpGained)));
     f_MarkProgressDirty();
 }

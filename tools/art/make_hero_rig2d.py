@@ -381,6 +381,11 @@ def main():
     top = joints['idle']['head_top'][1]
     rig.s = round(HEIGHT / ((GROUND_Y - top) * DOWN), 5)
     st = rig.state
+    strike = 'attack' if 'attack' in joints else 'charge'   # (no painting of the strike: the drawn pose, moved by bones)
+
+    def to_strike(t, pose, root):   # the Spine way: the bones turn toward the strike, then its painting takes over
+        return [(t, st(pose, strike, root=root, f=0.5)), (t + 0.01, st(strike, pose, root=root, f=0.5))]
+
     clips = [
         # idle: breathing -- the chest leans in, the head and arms follow, the cape sways
         rig.clip('idle', 1.6, [
@@ -416,6 +421,99 @@ def main():
             (0.36, st('charge', 'idle', f=0.4)),
             (0.38, st('idle', 'charge', f=0.6)),
             (0.6, st('idle'))]),
+        # the combo's later hits, each bigger than the last (docs/gameplay/17 §19; weapon_play.json "comboTiers")
+        # attack_2: a harder strike with a lunge
+        rig.clip('attack_2', 0.55, [
+            (0.0, st('charge')),
+            (0.05, st('charge', rot={'weapon': -18.0, 'chest': -5.0, 'shoulder_near': -8.0, 'cape': 5.0}, root=(-6.0, 2.0))),
+            *to_strike(0.1, 'charge', root=(6.0, 0.0)),
+            (0.15, st(strike, rot={'weapon': 14.0, 'chest': 4.0, 'cape': -8.0}, root=(14.0, 0.0))),
+            (0.26, st(strike, rot={'cape': -10.0}, root=(12.0, 0.0))),
+            (0.38, st(strike, rot={'chest': 1.0, 'cape': -8.0}, root=(8.0, 0.0))),
+            (0.46, st(strike, 'idle', root=(4.0, 0.0), f=0.4)),
+            (0.48, st('idle', strike, root=(3.0, 0.0), f=0.6)),
+            (0.55, st('idle'))]),
+        # attack_3: a crouch, a hop and two strikes in the air, a landing
+        rig.clip('attack_3', 0.7, [
+            (0.0, st('charge')),
+            (0.05, st('charge', rot={'hip_far': -10.0, 'knee_far': 18.0, 'hip_near': -12.0, 'knee_near': 20.0, 'chest': -4.0, 'weapon': -16.0},
+                      root=(-8.0, 8.0), squash=(1.03, 0.95))),
+            *to_strike(0.1, 'charge', root=(4.0, -6.0)),
+            (0.14, st(strike, rot={'weapon': 12.0, 'cape': -8.0}, root=(12.0, -12.0))),
+            (0.22, st(strike, rot={'weapon': -20.0, 'chest': -3.0, 'cape': 4.0}, root=(12.0, -16.0))),
+            (0.3, st(strike, rot={'weapon': 22.0, 'chest': 5.0, 'cape': -12.0}, root=(22.0, -18.0), squash=(1.03, 0.98))),
+            (0.42, st(strike, rot={'cape': -10.0}, root=(18.0, -10.0))),
+            (0.52, st(strike, 'idle', root=(8.0, -2.0), f=0.4)),
+            (0.54, st('idle', strike, root=(6.0, 0.0), f=0.6)),
+            (0.6, st('idle', rot={'hip_far': -8.0, 'knee_far': 14.0, 'hip_near': -10.0, 'knee_near': 16.0}, root=(2.0, 8.0), squash=(1.04, 0.95))),
+            (0.7, st('idle'))]),
+        # attack_4: three strikes, each further forward and higher, a heavy landing
+        rig.clip('attack_4', 0.82, [
+            (0.0, st('charge')),
+            (0.05, st('charge', rot={'hip_far': -14.0, 'knee_far': 24.0, 'hip_near': -16.0, 'knee_near': 26.0, 'chest': -6.0, 'weapon': -20.0, 'cape': 6.0},
+                      root=(-10.0, 12.0), squash=(1.05, 0.93))),
+            *to_strike(0.1, 'charge', root=(4.0, -8.0)),
+            (0.13, st(strike, rot={'weapon': 14.0, 'cape': -8.0}, root=(10.0, -14.0))),
+            (0.2, st(strike, rot={'weapon': -22.0, 'chest': -3.0, 'cape': 4.0}, root=(12.0, -20.0))),
+            (0.27, st(strike, rot={'weapon': 20.0, 'chest': 4.0, 'cape': -10.0}, root=(20.0, -26.0))),
+            (0.34, st(strike, rot={'weapon': -24.0, 'chest': -4.0, 'cape': 6.0}, root=(22.0, -32.0))),
+            (0.42, st(strike, rot={'weapon': 26.0, 'chest': 7.0, 'cape': -14.0}, root=(32.0, -36.0), squash=(1.04, 0.97))),
+            (0.54, st(strike, rot={'cape': -12.0}, root=(26.0, -20.0))),
+            (0.64, st(strike, 'idle', root=(12.0, -4.0), f=0.4)),
+            (0.66, st('idle', strike, root=(10.0, 0.0), f=0.6)),
+            (0.72, st('idle', rot={'hip_far': -12.0, 'knee_far': 20.0, 'hip_near': -14.0, 'knee_near': 22.0}, root=(4.0, 12.0), squash=(1.06, 0.92))),
+            (0.82, st('idle'))]),
+        # the fight's end (docs/gameplay/17 §19; battle.json feel): quick, and they stay on their last pose
+        # win: a quick victory pose
+        rig.clip('win', 0.45, [
+            (0.0, st('idle')),
+            (0.06, st('idle', rot={'knee_far': 10.0, 'knee_near': 12.0, 'hip_far': -6.0, 'hip_near': -7.0}, root=(0.0, 6.0), squash=(1.02, 0.97))),
+            (0.14, st('idle', 'attack_big', root=(0.0, -8.0), f=0.5)),
+            (0.15, st('attack_big', 'idle', root=(0.0, -10.0), f=0.5)),
+            (0.24, st('attack_big', rot={'cape': 6.0}, root=(0.0, -6.0))),
+            (0.34, st('attack_big', rot={'cape': -3.0}, root=(0.0, 0.0), squash=(1.02, 0.98))),
+            (0.45, st('attack_big', rot={'cape': 2.0}))]),
+        # win_big: no damage taken: a deep crouch, a high jump with the weapon up, a landing that bounces once
+        rig.clip('win_big', 0.7, [
+            (0.0, st('idle')),
+            (0.07, st('idle', rot={'hip_far': -16.0, 'knee_far': 28.0, 'hip_near': -18.0, 'knee_near': 30.0, 'chest': 5.0, 'cape': -5.0},
+                      root=(0.0, 16.0), squash=(1.05, 0.93))),
+            (0.15, st('idle', 'attack_big', root=(0.0, -40.0), f=0.5)),
+            (0.16, st('attack_big', 'idle', root=(0.0, -50.0), f=0.5)),
+            (0.27, st('attack_big', rot={'weapon': 18.0, 'cape': 9.0}, root=(0.0, -92.0), squash=(0.98, 1.03))),
+            (0.36, st('attack_big', rot={'weapon': -14.0, 'cape': 7.0}, root=(0.0, -78.0))),
+            (0.46, st('attack_big', rot={'cape': -4.0}, root=(0.0, 0.0), squash=(1.05, 0.93))),
+            (0.54, st('attack_big', rot={'weapon': 8.0, 'cape': 4.0}, root=(0.0, -24.0))),
+            (0.62, st('attack_big', rot={'cape': -2.0}, root=(0.0, 0.0), squash=(1.02, 0.98))),
+            (0.7, st('attack_big', rot={'cape': 2.0}))]),
+        # win_par: almost beaten: bent over, the weapon hanging low, panting
+        rig.clip('win_par', 0.6, [
+            (0.0, st('idle')),
+            (0.14, st('idle', rot={'chest': 16.0, 'neck': 10.0, 'shoulder_near': 22.0, 'shoulder_far': 18.0, 'elbow_near': 10.0, 'weapon': 75.0, 'knee_far': 18.0, 'knee_near': 20.0, 'hip_far': -10.0, 'hip_near': -12.0, 'cape': -4.0},
+                      root=(0.0, 14.0), squash=(1.03, 0.96))),
+            (0.28, st('idle', rot={'chest': 12.0, 'neck': 6.0, 'shoulder_near': 20.0, 'shoulder_far': 16.0, 'elbow_near': 8.0, 'weapon': 72.0, 'knee_far': 14.0, 'knee_near': 16.0, 'hip_far': -8.0, 'hip_near': -9.0},
+                      root=(0.0, 10.0))),
+            (0.42, st('idle', rot={'chest': 18.0, 'neck': 12.0, 'shoulder_near': 23.0, 'shoulder_far': 19.0, 'elbow_near': 10.0, 'weapon': 78.0, 'knee_far': 19.0, 'knee_near': 21.0, 'hip_far': -11.0, 'hip_near': -12.0},
+                      root=(0.0, 15.0), squash=(1.03, 0.96))),
+            (0.6, st('idle', rot={'chest': 15.0, 'neck': 9.0, 'shoulder_near': 22.0, 'shoulder_far': 18.0, 'elbow_near': 9.0, 'weapon': 75.0, 'knee_far': 17.0, 'knee_near': 19.0, 'hip_far': -10.0, 'hip_near': -11.0},
+                     root=(0.0, 13.0)))]),
+        # lose: HP gone: the knees give, the body falls backward and stays down
+        rig.clip('lose', 0.8, [
+            (0.0, st('idle')),
+            (0.08, st('idle', 'miss', rot={'chest': -6.0, 'neck': -8.0}, root=(-6.0, 0.0), f=0.5)),
+            (0.09, st('miss', 'idle', rot={'chest': -6.0, 'neck': -8.0}, root=(-6.0, 0.0), f=0.5)),
+            (0.2, st('miss', rot={'chest': 6.0, 'neck': 8.0, 'hip_far': -14.0, 'knee_far': 26.0, 'hip_near': -16.0, 'knee_near': 30.0, 'weapon': -30.0},
+                     root=(-8.0, 16.0), squash=(1.03, 0.95))),
+            (0.34, st('miss', rot={'hips': -22.0, 'chest': 4.0, 'neck': 6.0, 'hip_far': -24.0, 'knee_far': 40.0, 'hip_near': -26.0, 'knee_near': 44.0, 'weapon': -45.0, 'cape': 8.0},
+                      root=(-16.0, 30.0))),
+            (0.52, st('miss', rot={'hips': -70.0, 'neck': 10.0, 'hip_far': -12.0, 'knee_far': 22.0, 'hip_near': -8.0, 'knee_near': 14.0, 'shoulder_far': 25.0, 'shoulder_near': 30.0, 'weapon': -60.0, 'cape': 14.0},
+                      root=(-30.0, 62.0))),
+            (0.62, st('miss', rot={'hips': -84.0, 'neck': 6.0, 'hip_far': -6.0, 'knee_far': 12.0, 'hip_near': -4.0, 'knee_near': 8.0, 'shoulder_far': 30.0, 'shoulder_near': 36.0, 'weapon': -70.0, 'cape': 10.0},
+                      root=(-34.0, 74.0))),
+            (0.7, st('miss', rot={'hips': -80.0, 'neck': 8.0, 'hip_far': -7.0, 'knee_far': 14.0, 'hip_near': -5.0, 'knee_near': 10.0, 'shoulder_far': 28.0, 'shoulder_near': 34.0, 'weapon': -66.0, 'cape': 8.0},
+                     root=(-35.0, 72.0))),
+            (0.8, st('miss', rot={'hips': -84.0, 'neck': 6.0, 'hip_far': -6.0, 'knee_far': 12.0, 'hip_near': -4.0, 'knee_near': 8.0, 'shoulder_far': 30.0, 'shoulder_near': 36.0, 'weapon': -70.0, 'cape': 6.0},
+                     root=(-36.0, 74.0)))]),
         # miss: the stumble -- toward the stumbling pose, its painting, a wobble, back to ready
         rig.clip('miss', 0.7, [
             (0.0, st('idle')),

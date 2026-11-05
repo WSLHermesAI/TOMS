@@ -1,0 +1,28 @@
+{
+  "_comment": "The sword's ultimate (docs/gameplay/17 §5): full super charge, g at frame 10; after its 0.7 s name, 3 s when any swipe hits. Three swipes in three directions, far from the monster: three hits, no combo.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "sword"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000,
+    "super": true,
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 320,
+    "keys": "g@10",
+    "drags": "200:560:330:560:4@90,500:600:500:500:4@110,800:500:700:600:4@130"
+  },
+  "expect": {
+    "battleEvents": {
+      "skill": 1,
+      "combo": 0,
+      "hit": 3
+    }
+  }
+}

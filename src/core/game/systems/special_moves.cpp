@@ -64,7 +64,8 @@ SpecialMoveTable f_SpecialMovesFromJson(const nlohmann::json& l_jJ) {
         l_oS.m_fDamage = std::max(0.0f, l_jE.value("damage", l_oS.m_fDamage));
         if (l_jE.contains("play") && l_jE["play"].is_object()) {
             const nlohmann::json& l_jP = l_jE["play"];
-            l_oS.m_oPlay.m_strKind = l_jP.value("kind", l_oS.m_oPlay.m_strKind);
+            l_oS.m_oPlay.m_eType = f_PlayTypeFromString(l_jP.value("kind", std::string("drawShape")));
+            l_oS.m_oPlay.m_fHitDamage = std::max(0.0f, l_jP.value("hitDamage", l_oS.m_oPlay.m_fHitDamage));
             l_oS.m_oPlay.m_strShape = l_jP.value("shape", l_oS.m_oPlay.m_strShape);
             l_oS.m_oPlay.m_iPoints = std::max(1, l_jP.value("points", l_oS.m_oPlay.m_iPoints));
             l_oS.m_oPlay.m_iTimeMs = std::max(500, l_jP.value("timeMs", l_oS.m_oPlay.m_iTimeMs));
@@ -73,11 +74,11 @@ SpecialMoveTable f_SpecialMovesFromJson(const nlohmann::json& l_jJ) {
             if (l_jP.contains("cues") && l_jP["cues"].is_array())
                 for (const auto& l_jC : l_jP["cues"]) if (l_jC.is_string()) l_oS.m_oPlay.m_vCues.push_back(l_jC.get<std::string>());
         }
-        if (l_oS.m_oPlay.m_strKind == "shape") {   // a shape's steps: its corners after the first (a pentagram: 5)
+        if (l_oS.m_oPlay.m_eType == PlayType::eDRAW_SHAPE) {   // a shape's steps: its corners after the first (a pentagram: 5)
             const int l_iN = (int)f_ShapeCorners(l_oS.m_oPlay.m_strShape).size();
             if (l_iN > 1) l_oS.m_oPlay.m_iPoints = l_iN - 1;
         }
-        if (l_oS.m_oPlay.m_strKind == "slice" && !l_oS.m_oPlay.m_vCues.empty()) l_oS.m_oPlay.m_iPoints = (int)l_oS.m_oPlay.m_vCues.size();
+        if (f_IsSwipePlay(l_oS.m_oPlay.m_eType) && !l_oS.m_oPlay.m_vCues.empty()) l_oS.m_oPlay.m_iPoints = (int)l_oS.m_oPlay.m_vCues.size();
         l_oS.m_vDemo = f_BeatsFromJson(l_jE, "demo");
         l_oS.m_vStep = f_BeatsFromJson(l_jE, "step");
         l_oS.m_vFinish = f_BeatsFromJson(l_jE, "finish");

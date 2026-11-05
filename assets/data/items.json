@@ -178,7 +178,7 @@
       "greenHalf": 12,
       "blueOuter": 32,
       "redOuter": 60,
-      "maxMult": 2.2
+      "maxMult": 1.6
     },
     "battleAnim": {
       "character": "anim/hero_bow.anim"

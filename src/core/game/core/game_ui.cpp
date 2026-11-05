@@ -395,11 +395,10 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
                     for (int l_iI = 0; l_iI < l_iN; l_iI++) l_oC.m_vPoints.push_back({100.0f * float(l_iI + 1) / float(l_iN + 1), false});
                 }
                 const std::string l_strName = m_mapEquipmentDefs.count(l_strKey) ? f_ItemName(l_strKey) : l_oL.f_Tr("battle.unarmed");
-                const int l_iNext = toms::f_UsesToNextLevel(l_oWp, l_iLv);
+                const int l_iNext = toms::f_ExpToNextLevel(l_oWp, l_iLv);
                 int l_iDone = 0;
-                if (auto l_itU = m_mapWeaponUses.find(l_strKey); l_itU != m_mapWeaponUses.end()) {
-                    l_iDone = l_itU->second;
-                    for (int l_iL = 1; l_iL < l_iLv; l_iL++) l_iDone -= toms::f_UsesToNextLevel(l_oWp, l_iL);
+                if (auto l_itU = m_mapWeaponExp.find(l_strKey); l_itU != m_mapWeaponExp.end()) {
+                    l_iDone = l_itU->second - toms::f_WeaponExpForLevel(l_oWp, l_iLv);
                 }
                 l_oC.m_strLevelText = f_TrParam(f_TrParam(l_oL.f_Tr("battle.weapon_level"), "name", l_strName), "lv", std::to_string(l_iLv)) +
                                (l_iNext > 0 ? "  " + std::to_string(std::max(0, l_iDone)) + "/" + std::to_string(l_iNext) : std::string());
@@ -433,13 +432,13 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
             if (m_oCs.m_oSkill.m_bOn && m_oCs.m_oSkill.m_ePhase == CombatState::SkillRun::Phase::Play && m_oCs.m_oSkill.m_pDef) {   // a move's play (16 §6)
                 const toms::SpecialMove& l_oD = *m_oCs.m_oSkill.m_pDef;
                 l_oB.m_strSkillPrompt = l_oL.f_Has(l_oD.m_strPrompt) ? l_oL.f_Tr(l_oD.m_strPrompt) : l_oD.m_strPrompt;
-                if (l_oD.m_oPlay.m_strKind == "shape" || l_oD.m_oPlay.m_strKind == "mash") {
+                if (l_oD.m_oPlay.m_eType == toms::PlayType::eDRAW_SHAPE || l_oD.m_oPlay.m_eType == toms::PlayType::eMASH || toms::f_IsFreePlay(l_oD.m_oPlay.m_eType)) {
                     char l_pszT[16];
                     std::snprintf(l_pszT, sizeof l_pszT, "%.1f", m_oCs.m_oTouch.f_TimeLeft() * (float)l_oD.m_oPlay.m_iTimeMs / 1000.0f);
                     l_oB.m_strSkillTime = l_pszT;
                 }
             }
-            const toms::PlayKind l_ePlay = f_BattlePlayKind();
+            const toms::PlayType l_ePlayType = f_BattlePlayType();
             if (f_AttackRunning()) { l_oB.m_strAttackState = "running"; l_oB.m_strAttackLabel = l_oL.f_Tr("battle.attack_running"); }
             else if (m_oCs.m_ePace == toms::Pace::Cooldown && m_oCs.m_oAtkBar.m_bCooling) {
                 l_oB.m_strAttackState = "recovering";
@@ -449,10 +448,10 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
             else {
                 l_oB.m_strAttackState = "ready";
                 l_oB.m_strAttackLabel = l_oL.f_Tr("battle.attack_ready");
-                l_oB.m_strAttackHint = l_oL.f_Tr(l_ePlay == toms::PlayKind::Track ? "battle.attack_ready_hint"
-                                     : std::string("battle.play_hint_") + toms::f_PlayKindName(l_ePlay));
+                l_oB.m_strAttackHint = l_oL.f_Tr(l_ePlayType == toms::PlayType::eTRACK ? "battle.attack_ready_hint"
+                                     : std::string("battle.play_hint_") + toms::f_PlayTypeName(l_ePlayType));
             }
-            if (l_ePlay != toms::PlayKind::Track || m_oCs.m_oSkill.m_bOn) f_TouchPlayUi(l_oB);
+            if (l_ePlayType != toms::PlayType::eTRACK || m_oCs.m_oSkill.m_bOn) f_TouchPlayUi(l_oB);
             if (m_oCs.m_iChain > 1) l_oB.m_strChainText = f_TrParam(l_oL.f_Tr("battle.word_chain"), "n", std::to_string(m_oCs.m_iChain));
             auto l_vActiveIds = toms::f_EquippedActives(m_oEquipped, m_mapEquipmentDefs);
             if (!l_vActiveIds.empty() && toms::f_CanUseActive(l_vActiveIds[0], m_mapActiveDefs, m_oCs.m_mapActiveRuntime, m_oCs.m_oActiveStatus)) {
@@ -485,13 +484,12 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
             const toms::WeaponPlay& l_oWp = f_WeaponPlayOf(l_oR.m_strWeapon);
             const std::string l_strName = m_mapEquipmentDefs.count(l_oR.m_strWeapon) ? f_ItemName(l_oR.m_strWeapon) : l_oL.f_Tr("battle.unarmed");
             l_oB.m_strResultWeapon = f_TrParam(f_TrParam(l_oL.f_Tr("battle.result_weapon"), "name", l_strName), "lv", std::to_string(l_oR.m_iLvAfter));
-            const int l_iNeed = toms::f_UsesToNextLevel(l_oWp, l_oR.m_iLvAfter);
-            int l_iDone = l_oR.m_iUses;
-            for (int l_iL = 1; l_iL < l_oR.m_iLvAfter; l_iL++) l_iDone -= toms::f_UsesToNextLevel(l_oWp, l_iL);
-            if (l_iNeed > 0) {   // the wins to the next level, and what that level adds (07 pillar 2: the reason to go on)
+            const int l_iNeed = toms::f_ExpToNextLevel(l_oWp, l_oR.m_iLvAfter);
+            const int l_iDone = l_oR.m_iWeaponExp - toms::f_WeaponExpForLevel(l_oWp, l_oR.m_iLvAfter);
+            if (l_iNeed > 0) {   // the EXP to the next level, and what that level adds (07 pillar 2: the reason to go on)
                 l_oB.m_fResultPct = f_Pct((float)std::max(0, l_iDone), (float)l_iNeed);
-                l_oB.m_strResultProgress = f_TrParam(f_TrParam(l_oL.f_Tr("battle.result_progress"), "n", std::to_string(std::max(0, l_iDone))), "m",
-                                            std::to_string(l_iNeed));
+                l_oB.m_strResultProgress = f_TrParam(f_TrParam(f_TrParam(l_oL.f_Tr("battle.result_progress"), "n", std::to_string(std::max(0, l_iDone))), "m",
+                                            std::to_string(l_iNeed)), "g", std::to_string(l_oR.m_iWeaponExpGained));
                 const toms::WeaponLevel& l_oCur = toms::f_WeaponLevelEntry(l_oWp, l_oR.m_iLvAfter);
                 const toms::WeaponLevel& l_oNxt = toms::f_WeaponLevelEntry(l_oWp, l_oR.m_iLvAfter + 1);
                 std::string l_strWhat;
@@ -680,6 +678,11 @@ void Game::f_BuildMenuUi(toms::UiMenu& l_oM) const {
             l_oM.m_vRows[l_nCam].m_strSection = l_oL.f_Tr("settings.other_section");
             l_oM.m_vRows.push_back({l_oL.f_Tr(m_oSettings.m_bReduceEffects ? "settings.reduce_effects_on" : "settings.reduce_effects_off"),
                               "", l_fnSel(l_nCam + 1), true});   // docs/gameplay/15 §3.8
+            {   // the battle speed (17 I10): activating the row takes the next step
+                char l_pszSpeed[16];
+                std::snprintf(l_pszSpeed, sizeof l_pszSpeed, "%g", m_oSettings.m_fBattleSpeed);
+                l_oM.m_vRows.push_back({f_TrParam(l_oL.f_Tr("settings.battle_speed"), "x", l_pszSpeed), "", l_fnSel(l_nCam + 2), true});
+            }
             break;
         }
         case InGameMenuPage::Skills: {
@@ -813,7 +816,7 @@ void Game::f_UiEvent(const std::string& l_strName, int l_iArg) {
 // "!" and the taps; a move's shape and its corners; and where each answer landed (a ring, or a cross), fading.
 void Game::f_TouchPlayUi(toms::UiBattle& l_oB) const {
     const toms::TouchPlay& l_oP = m_oCs.m_oTouch;
-    l_oB.m_strTouchKind = toms::f_PlayKindName(m_oCs.m_oSkill.m_bOn ? l_oP.f_Kind() : f_BattlePlayKind());
+    l_oB.m_strTouchKind = toms::f_PlayTypeName(m_oCs.m_oSkill.m_bOn ? l_oP.f_Type() : f_BattlePlayType());
     auto l_fnAdd = [&](const std::string& l_strCls, float l_fCx, float l_fCy, float l_fW, float l_fH, float l_fRot = 0.0f, float l_fRadius = 0.0f,
                    float l_fOpacity = 1.0f, std::string l_strText = {}) {
         l_oB.m_vTouch.push_back({l_strCls, l_fCx - l_fW * 0.5f, l_fCy - l_fH * 0.5f, l_fW, l_fH, l_fRot, l_fRadius, l_fOpacity, std::move(l_strText)});
@@ -831,8 +834,8 @@ void Game::f_TouchPlayUi(toms::UiBattle& l_oB) const {
     }
     if (!l_oP.f_Running() || (m_oCs.m_oSkill.m_bOn && m_oCs.m_oSkill.m_ePhase != CombatState::SkillRun::Phase::Play)) return;
     const std::string l_strCount = std::to_string(std::min(l_oP.f_Index() + 1, l_oP.f_Points())) + "/" + std::to_string(l_oP.f_Points());
-    switch (l_oP.f_Kind()) {
-    case toms::PlayKind::Bow: {
+    switch (l_oP.f_Type()) {
+    case toms::PlayType::ePULL_RELEASE: {
         const toms::TouchPlay::Target& l_oT = l_oP.f_Target();
         l_fnAdd(l_oP.f_Started() ? "target" : "target idle", l_oT.m_fX, l_oT.m_fY, 2 * l_oT.m_fR, 2 * l_oT.m_fR, 0.0f, l_oT.m_fR);
         l_fnAdd("bull", l_oT.m_fX, l_oT.m_fY, 0.8f * l_oT.m_fR, 0.8f * l_oT.m_fR, 0.0f, 0.4f * l_oT.m_fR);
@@ -856,11 +859,23 @@ void Game::f_TouchPlayUi(toms::UiBattle& l_oB) const {
                 if (l_fDrag > 0.0f) l_fnLine("pull", l_v2From, l_v2F, 4, 0.6f);
                 l_fnAdd("ghost", l_v2F.x, l_v2F.y, 34, 34, 0.0f, 17, l_fK < 0.15f ? l_fK / 0.15f : 1.0f);
             }
-            l_fnAdd("tutorial", l_oT.m_fX, l_oT.m_fY + 190.0f, 360, 28, 0.0f, 0.0f, 1.0f, m_oLocale.f_Tr("battle.play_hint_bow"));
+            l_fnAdd("tutorial", l_oT.m_fX, l_oT.m_fY + 190.0f, 360, 28, 0.0f, 0.0f, 1.0f, m_oLocale.f_Tr("battle.play_hint_pullRelease"));
         }
         break;
     }
-    case toms::PlayKind::Slice: {
+    case toms::PlayType::eFREE_SWIPE:
+    case toms::PlayType::eFREE_TAP:
+    case toms::PlayType::eFREE_SHOT: {   // the ultimates (17 §5): the time left, how many so far, the swipe's trail
+        const glm::vec4 l_v4A = f_TouchArea();
+        const float l_fCx = l_v4A.x + l_v4A.z * 0.5f, l_fBase = l_v4A.y + l_v4A.w;
+        l_fnAdd("count", l_fCx, l_fBase - 24.0f, 120, 28, 0.0f, 0.0f, 1.0f, std::to_string(l_oP.f_Hits()));
+        l_fnAdd("time open", l_fCx, l_fBase + 6.0f, 320.0f * l_oP.f_TimeLeft(), 8, 0.0f, 4.0f);
+        if (l_oP.f_Swiping())
+            for (size_t l_nI = 1; l_nI < l_oP.f_Stroke().size(); l_nI++) l_fnLine("swipe", l_oP.f_Stroke()[l_nI - 1], l_oP.f_Stroke()[l_nI], 8);
+        break;
+    }
+    case toms::PlayType::eSWIPE_WAY:
+    case toms::PlayType::eSWIPE_GESTURE: {
         const toms::CueTrack& l_oCues = l_oP.f_Cues();
         const glm::vec2 l_v2At = l_oP.f_PromptAt();
         l_fnAdd("count", l_v2At.x, l_v2At.y - 56.0f, 80, 24, 0.0f, 0.0f, 1.0f, l_strCount);
@@ -875,7 +890,15 @@ void Game::f_TouchPlayUi(toms::UiBattle& l_oB) const {
                 l_fnAdd(l_strCls, l_v2At.x - l_v2Dir.x * 8.0f * l_fPop, l_v2At.y - l_v2Dir.y * 8.0f * l_fPop, 56 * l_fPop, 12 * l_fPop, l_fAng, 6 * l_fPop);
                 l_fnAdd(l_strCls + " head", l_v2At.x + l_v2Dir.x * 16.0f * l_fPop, l_v2At.y + l_v2Dir.y * 16.0f * l_fPop, 26 * l_fPop, 26 * l_fPop, l_fAng + 45.0f);
             } else {   // a shape to draw: its outline
-                const std::vector<glm::vec2> l_vC = toms::f_ShapeCorners(l_oP.f_CueKind(l_iK));
+                const std::string& l_strCue = l_oP.f_CueKind(l_iK);
+                std::vector<glm::vec2> l_vC = toms::f_ShapeCorners(l_strCue);
+                if (l_strCue == "v" || l_strCue == "m") {   // a tick or an M can face any way (17 §4.2): each prompt turned its own way
+                    const float l_fTurn = (float)l_oP.f_CueDir(l_iK) * 45.0f / 57.29578f, l_fCos = std::cos(l_fTurn), l_fSin = std::sin(l_fTurn);
+                    for (glm::vec2& l_v2C : l_vC) {
+                        const glm::vec2 l_v2D = l_v2C - glm::vec2(0.5f);
+                        l_v2C = glm::vec2(0.5f) + glm::vec2(l_v2D.x * l_fCos - l_v2D.y * l_fSin, l_v2D.x * l_fSin + l_v2D.y * l_fCos);
+                    }
+                }
                 for (size_t l_nI = 1; l_nI < l_vC.size(); l_nI++)
                     l_fnLine(l_strCls, l_v2At + (l_vC[l_nI - 1] - glm::vec2(0.5f)) * 70.0f * l_fPop, l_v2At + (l_vC[l_nI] - glm::vec2(0.5f)) * 70.0f * l_fPop, 7);
             }
@@ -885,7 +908,7 @@ void Game::f_TouchPlayUi(toms::UiBattle& l_oB) const {
             for (size_t l_nI = 1; l_nI < l_oP.f_Stroke().size(); l_nI++) l_fnLine("swipe", l_oP.f_Stroke()[l_nI - 1], l_oP.f_Stroke()[l_nI], 8);
         break;
     }
-    case toms::PlayKind::Circles: {
+    case toms::PlayType::eSEQUENCE_CLICK: {
         const auto& l_vCircles = l_oP.f_Circles();
         const float l_fR = 34.0f;
         const auto l_ePhase = l_oP.f_CirclePhase();
@@ -906,7 +929,7 @@ void Game::f_TouchPlayUi(toms::UiBattle& l_oB) const {
         }
         break;
     }
-    case toms::PlayKind::Shape: {   // a move's shape: its lines, the corners reached, the next one (16 §6.1)
+    case toms::PlayType::eDRAW_SHAPE: {   // a move's shape: its lines, the corners reached, the next one (16 §6.1)
         const toms::ShapeTrace& l_oTr = l_oP.f_Trace();
         const auto& l_vPts = l_oTr.f_Points();
         for (size_t l_nI = 1; l_nI < l_vPts.size(); l_nI++) l_fnLine((int)l_nI < l_oTr.f_Reached() ? "star done" : "star", l_vPts[l_nI - 1], l_vPts[l_nI], 6);
@@ -918,7 +941,7 @@ void Game::f_TouchPlayUi(toms::UiBattle& l_oB) const {
         if (l_oTr.f_Drawing()) l_fnAdd("cross", l_oTr.f_Last().x, l_oTr.f_Last().y, 24, 24, 0.0f, 12);
         break;
     }
-    case toms::PlayKind::Mash: {
+    case toms::PlayType::eMASH: {
         const glm::vec4 l_v4A = f_TouchArea();
         const float l_fPulse = 1.0f + 0.08f * std::sin((float)l_oP.f_ClockMs() * 0.025f);
         l_fnAdd("circle", l_v4A.x + l_v4A.z * 0.5f, l_v4A.y + l_v4A.w * 0.5f, 110 * l_fPulse, 110 * l_fPulse, 0.0f, 55 * l_fPulse, 1.0f, l_strCount);

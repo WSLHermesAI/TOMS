@@ -7,8 +7,8 @@
     "missWaitMs: after a miss, how long before the next tap counts (the sword puts itself back).",
     "Keys: an items.json weapon id, \"unarmed\" (no weapon worn), or \"default\" (any weapon without its own entry).",
     "Battle v3's point play (docs/gameplay/07 §4, §5.1; phase 1, the owner 2026-10-22): levels: per weapon level, the points on the",
-    "combo track (1-5) and the attribute bonuses it gives (data/stats.json ids). usesToLevel: wins needed from Lv 1 to 2,",
-    "2 to 3, ... (the level stops at the last levels entry). turnBack: the marker turns back at the ends; false: one sweep.",
+    "combo track and the attribute bonuses it gives (data/stats.json ids). levelExp: the weapon EXP from Lv 1 to 2 (first), each next level that many times the last (scale); monsters give it (enemies.json weaponExp); the level stops at the last levels entry (docs/gameplay/17 §19).",
+    "turnBack: the marker turns back at the ends; false: one sweep.",
     "sweepMs: one sweep with no charge; maxSweeps: turning back, the combo ends after this many. chargeMs: waiting this long",
     "fills the charge; chargeSpeedUp / chargeDamage: a full charge makes the marker and the damage this much more (1 = x2).",
     "hitWindow: how close a tap must be to a point (a fraction of the track). The values are first guesses (made up for now).",
@@ -24,8 +24,10 @@
     "breakAdd: more on its break gauge. A weapon without results uses the default entry's.",
     "pace: \"cooldown\" or \"stamina\" for this weapon (empty: data/battle.json's; 13 §6.3).",
     "move: a result row's named move (a text.json key, docs/gameplay/07 §5.4 and 15 §3.3), shown over the monster.",
-    "play: the weapon's own attack (docs/gameplay/15 §3.3, touch_play.h): track (the point track), bow (drag back and let go at the target), slice (swipe the arrows' ways), circles (tap each circle as its ring closes). Each counts its points like the track, so the results, fx and clips stay the same. Scenarios play the track unless their battle sets \"play\".",
-    "shapeCues: the sword's shape prompts by level (docs/gameplay/16 §3.1): from lv on, the last prompts ask for these shapes (triangle, circle) instead of a way."
+    "play: the weapon's own attack, a play type (docs/gameplay/17 §4.1, play_type.h): track (the point track), pullRelease (drag back and let go at the target), swipeWay (swipe the arrows' ways), swipeGesture (draw gestures), sequenceClick (tap the circles in order). Each counts its points like the track, so the results, fx and clips stay the same. Scenarios play the track unless their battle sets \"play\".",
+    "comboTiers: how the combo grows (17 §19): from `from` hits in a row on, the player's clip, the hit effect and the feel moment (battle.json feel). A miss starts it again; each attack starts it again unless comboKeep (the bow: one arrow an attack, so the count goes on until a miss).",
+    "ultimate: the special_moves.json move this weapon uses when the super charge is full (17 §16 Q49): change the id to bind another.",
+    "swipeCues: the gesture prompts by level (17 §4.2): from lv on, the last prompts ask for these (v, m, square; or a shape: triangle, circle) instead of a way."
   ],
   "default": {
     "missBack": [
@@ -94,14 +96,52 @@
           "str": 20,
           "agi": 15
         }
+      },
+      {
+        "lv": 6,
+        "points": 5,
+        "stats": {
+          "str": 22,
+          "agi": 17
+        }
+      },
+      {
+        "lv": 7,
+        "points": 5,
+        "stats": {
+          "str": 24,
+          "agi": 19
+        }
+      },
+      {
+        "lv": 8,
+        "points": 5,
+        "stats": {
+          "str": 26,
+          "agi": 21
+        }
+      },
+      {
+        "lv": 9,
+        "points": 5,
+        "stats": {
+          "str": 28,
+          "agi": 23
+        }
+      },
+      {
+        "lv": 10,
+        "points": 5,
+        "stats": {
+          "str": 30,
+          "agi": 25
+        }
       }
     ],
-    "usesToLevel": [
-      3,
-      5,
-      8,
-      12
-    ],
+    "levelExp": {
+      "first": 5,
+      "scale": 2
+    },
     "turnBack": true,
     "sweepMs": 1600,
     "maxSweeps": 3,
@@ -185,14 +225,32 @@
       {
         "lv": 5,
         "points": 5
+      },
+      {
+        "lv": 6,
+        "points": 5
+      },
+      {
+        "lv": 7,
+        "points": 5
+      },
+      {
+        "lv": 8,
+        "points": 5
+      },
+      {
+        "lv": 9,
+        "points": 5
+      },
+      {
+        "lv": 10,
+        "points": 5
       }
     ],
-    "usesToLevel": [
-      3,
-      5,
-      8,
-      12
-    ],
+    "levelExp": {
+      "first": 5,
+      "scale": 2
+    },
     "sweepMs": 1500
   },
   "qingxiao_blade": {
@@ -250,14 +308,52 @@
           "str": 20,
           "dex": 15
         }
+      },
+      {
+        "lv": 6,
+        "points": 5,
+        "stats": {
+          "str": 22,
+          "dex": 17
+        }
+      },
+      {
+        "lv": 7,
+        "points": 5,
+        "stats": {
+          "str": 24,
+          "dex": 19
+        }
+      },
+      {
+        "lv": 8,
+        "points": 5,
+        "stats": {
+          "str": 26,
+          "dex": 21
+        }
+      },
+      {
+        "lv": 9,
+        "points": 5,
+        "stats": {
+          "str": 28,
+          "dex": 23
+        }
+      },
+      {
+        "lv": 10,
+        "points": 5,
+        "stats": {
+          "str": 30,
+          "dex": 25
+        }
       }
     ],
-    "usesToLevel": [
-      3,
-      5,
-      8,
-      12
-    ],
+    "levelExp": {
+      "first": 5,
+      "scale": 2
+    },
     "turnBack": false,
     "sweepMs": 1400,
     "fx": [
@@ -333,14 +429,52 @@
           "int": 20,
           "dex": 15
         }
+      },
+      {
+        "lv": 6,
+        "points": 5,
+        "stats": {
+          "int": 22,
+          "dex": 17
+        }
+      },
+      {
+        "lv": 7,
+        "points": 5,
+        "stats": {
+          "int": 24,
+          "dex": 19
+        }
+      },
+      {
+        "lv": 8,
+        "points": 5,
+        "stats": {
+          "int": 26,
+          "dex": 21
+        }
+      },
+      {
+        "lv": 9,
+        "points": 5,
+        "stats": {
+          "int": 28,
+          "dex": 23
+        }
+      },
+      {
+        "lv": 10,
+        "points": 5,
+        "stats": {
+          "int": 30,
+          "dex": 25
+        }
       }
     ],
-    "usesToLevel": [
-      3,
-      5,
-      8,
-      12
-    ],
+    "levelExp": {
+      "first": 5,
+      "scale": 2
+    },
     "fx": [
       {
         "lv": 1,
@@ -418,14 +552,52 @@
           "agi": 20,
           "dex": 15
         }
+      },
+      {
+        "lv": 6,
+        "points": 5,
+        "stats": {
+          "agi": 22,
+          "dex": 17
+        }
+      },
+      {
+        "lv": 7,
+        "points": 5,
+        "stats": {
+          "agi": 24,
+          "dex": 19
+        }
+      },
+      {
+        "lv": 8,
+        "points": 5,
+        "stats": {
+          "agi": 26,
+          "dex": 21
+        }
+      },
+      {
+        "lv": 9,
+        "points": 5,
+        "stats": {
+          "agi": 28,
+          "dex": 23
+        }
+      },
+      {
+        "lv": 10,
+        "points": 5,
+        "stats": {
+          "agi": 30,
+          "dex": 25
+        }
       }
     ],
-    "usesToLevel": [
-      3,
-      5,
-      8,
-      12
-    ],
+    "levelExp": {
+      "first": 5,
+      "scale": 2
+    },
     "sweepMs": 1200
   },
   "war_hammer": {
@@ -479,14 +651,52 @@
           "str": 20,
           "vit": 15
         }
+      },
+      {
+        "lv": 6,
+        "points": 5,
+        "stats": {
+          "str": 22,
+          "vit": 17
+        }
+      },
+      {
+        "lv": 7,
+        "points": 5,
+        "stats": {
+          "str": 24,
+          "vit": 19
+        }
+      },
+      {
+        "lv": 8,
+        "points": 5,
+        "stats": {
+          "str": 26,
+          "vit": 21
+        }
+      },
+      {
+        "lv": 9,
+        "points": 5,
+        "stats": {
+          "str": 28,
+          "vit": 23
+        }
+      },
+      {
+        "lv": 10,
+        "points": 5,
+        "stats": {
+          "str": 30,
+          "vit": 25
+        }
       }
     ],
-    "usesToLevel": [
-      3,
-      5,
-      8,
-      12
-    ],
+    "levelExp": {
+      "first": 5,
+      "scale": 2
+    },
     "sweepMs": 2000,
     "chargeDamage": 1.4
   },
@@ -496,14 +706,14 @@
         "lv": 1,
         "points": 3,
         "stats": {
-          "str": 10
+          "str": 2
         }
       },
       {
         "lv": 2,
         "points": 3,
         "stats": {
-          "str": 12,
+          "str": 4,
           "agi": 5
         }
       },
@@ -511,7 +721,7 @@
         "lv": 3,
         "points": 4,
         "stats": {
-          "str": 14,
+          "str": 6,
           "agi": 10
         }
       },
@@ -519,7 +729,7 @@
         "lv": 4,
         "points": 4,
         "stats": {
-          "str": 16,
+          "str": 8,
           "agi": 12
         }
       },
@@ -527,22 +737,60 @@
         "lv": 5,
         "points": 5,
         "stats": {
-          "str": 20,
+          "str": 12,
           "agi": 15
+        }
+      },
+      {
+        "lv": 6,
+        "points": 5,
+        "stats": {
+          "str": 14,
+          "agi": 17
+        }
+      },
+      {
+        "lv": 7,
+        "points": 5,
+        "stats": {
+          "str": 16,
+          "agi": 19
+        }
+      },
+      {
+        "lv": 8,
+        "points": 5,
+        "stats": {
+          "str": 18,
+          "agi": 21
+        }
+      },
+      {
+        "lv": 9,
+        "points": 5,
+        "stats": {
+          "str": 20,
+          "agi": 23
+        }
+      },
+      {
+        "lv": 10,
+        "points": 5,
+        "stats": {
+          "str": 22,
+          "agi": 25
         }
       }
     ],
-    "usesToLevel": [
-      3,
-      5,
-      8,
-      12
-    ],
+    "levelExp": {
+      "first": 5,
+      "scale": 2
+    },
     "turnBack": true,
     "sweepMs": 1700,
     "chargeMs": 2200,
     "chargeSpeedUp": 1.0,
-    "chargeDamage": 1.2,
+    "chargeDamage": 0.4,
     "hitWindow": 0.07,
     "fx": [
       {
@@ -565,7 +813,7 @@
       {
         "hits": "all",
         "name": "perfect",
-        "damage": 1.2,
+        "damage": 1.0,
         "stunMs": 500,
         "breakAdd": 1,
         "fx": "bow_perfect",
@@ -585,7 +833,41 @@
         "move": "battle.move.bow.miss"
       }
     ],
-    "play": "bow"
+    "comboKeep": true,
+    "comboTiers": [
+      {
+        "from": 1,
+        "clip": "attack",
+        "fx": "bow_hit_1",
+        "feel": "hit"
+      },
+      {
+        "from": 2,
+        "clip": "attack_2",
+        "fx": "bow_hit_2",
+        "feel": "hit"
+      },
+      {
+        "from": 3,
+        "clip": "attack_3",
+        "fx": "bow_hit_3",
+        "feel": "great"
+      },
+      {
+        "from": 4,
+        "clip": "attack_4",
+        "fx": "bow_great",
+        "feel": "great"
+      },
+      {
+        "from": 5,
+        "clip": "attack_big",
+        "fx": "bow_perfect",
+        "feel": "perfect"
+      }
+    ],
+    "play": "pullRelease",
+    "ultimate": "free_shot"
   },
   "sword": {
     "missBack": [
@@ -642,14 +924,52 @@
           "str": 20,
           "dex": 15
         }
+      },
+      {
+        "lv": 6,
+        "points": 5,
+        "stats": {
+          "str": 22,
+          "dex": 17
+        }
+      },
+      {
+        "lv": 7,
+        "points": 5,
+        "stats": {
+          "str": 24,
+          "dex": 19
+        }
+      },
+      {
+        "lv": 8,
+        "points": 5,
+        "stats": {
+          "str": 26,
+          "dex": 21
+        }
+      },
+      {
+        "lv": 9,
+        "points": 5,
+        "stats": {
+          "str": 28,
+          "dex": 23
+        }
+      },
+      {
+        "lv": 10,
+        "points": 5,
+        "stats": {
+          "str": 30,
+          "dex": 25
+        }
       }
     ],
-    "usesToLevel": [
-      3,
-      5,
-      8,
-      12
-    ],
+    "levelExp": {
+      "first": 5,
+      "scale": 2
+    },
     "turnBack": false,
     "sweepMs": 1500,
     "chargeMs": 1800,
@@ -697,19 +1017,52 @@
         "move": "battle.move.sword.miss"
       }
     ],
-    "play": "slice",
-    "shapeCues": [
+    "comboTiers": [
+      {
+        "from": 1,
+        "clip": "attack",
+        "fx": "sword_hit_1",
+        "feel": "hit"
+      },
+      {
+        "from": 2,
+        "clip": "attack_2",
+        "fx": "sword_hit_2",
+        "feel": "hit"
+      },
+      {
+        "from": 3,
+        "clip": "attack_3",
+        "fx": "sword_hit_3",
+        "feel": "great"
+      },
+      {
+        "from": 4,
+        "clip": "attack_4",
+        "fx": "sword_great",
+        "feel": "great"
+      },
+      {
+        "from": 5,
+        "clip": "attack_big",
+        "fx": "sword_perfect",
+        "feel": "perfect"
+      }
+    ],
+    "play": "swipeWay",
+    "ultimate": "free_swipe",
+    "swipeCues": [
       {
         "lv": 3,
         "cues": [
-          "triangle"
+          "v"
         ]
       },
       {
         "lv": 5,
         "cues": [
-          "triangle",
-          "circle"
+          "v",
+          "v"
         ]
       }
     ]
@@ -729,50 +1082,88 @@
     "levels": [
       {
         "lv": 1,
-        "points": 3,
+        "points": 10,
         "stats": {
           "int": 10
         }
       },
       {
         "lv": 2,
-        "points": 3,
+        "points": 10,
         "stats": {
-          "int": 12,
-          "dex": 5
+          "dex": 5,
+          "int": 12
         }
       },
       {
         "lv": 3,
-        "points": 4,
+        "points": 10,
         "stats": {
-          "int": 14,
-          "dex": 10
+          "dex": 10,
+          "int": 14
         }
       },
       {
         "lv": 4,
-        "points": 4,
+        "points": 10,
         "stats": {
-          "int": 16,
-          "dex": 12
+          "dex": 12,
+          "int": 16
         }
       },
       {
         "lv": 5,
         "points": 5,
         "stats": {
-          "int": 20,
-          "dex": 15
+          "dex": 15,
+          "int": 20
+        }
+      },
+      {
+        "lv": 6,
+        "points": 5,
+        "stats": {
+          "dex": 17,
+          "int": 22
+        }
+      },
+      {
+        "lv": 7,
+        "points": 5,
+        "stats": {
+          "dex": 19,
+          "int": 24
+        }
+      },
+      {
+        "lv": 8,
+        "points": 5,
+        "stats": {
+          "dex": 21,
+          "int": 26
+        }
+      },
+      {
+        "lv": 9,
+        "points": 5,
+        "stats": {
+          "dex": 23,
+          "int": 28
+        }
+      },
+      {
+        "lv": 10,
+        "points": 10,
+        "stats": {
+          "dex": 25,
+          "int": 30
         }
       }
     ],
-    "usesToLevel": [
-      3,
-      5,
-      8,
-      12
-    ],
+    "levelExp": {
+      "first": 5,
+      "scale": 2.0
+    },
     "turnBack": true,
     "sweepMs": 1900,
     "maxSweeps": 3,
@@ -802,25 +1193,58 @@
         "hits": "all",
         "name": "perfect",
         "damage": 1.2,
-        "stunMs": 500,
-        "breakAdd": 1,
         "fx": "staff_perfect",
-        "anim": "attack_big",
-        "move": "battle.move.staff.perfect"
+        "stunMs": 500,
+        "breakAdd": 1.0
       },
       {
         "hits": 2,
         "name": "great",
-        "fx": "staff_great",
-        "move": "battle.move.staff.great"
+        "damage": 1.0,
+        "fx": "staff_great"
       },
       {
         "hits": 0,
         "name": "miss",
-        "fx": "miss_puff",
-        "move": "battle.move.staff.miss"
+        "damage": 1.0,
+        "fx": "miss_puff"
       }
     ],
-    "play": "circles"
+    "comboTiers": [
+      {
+        "from": 1,
+        "clip": "attack",
+        "fx": "staff_hit_1",
+        "feel": "hit"
+      },
+      {
+        "from": 2,
+        "clip": "attack_2",
+        "fx": "staff_hit_2",
+        "feel": "hit"
+      },
+      {
+        "from": 3,
+        "clip": "attack_3",
+        "fx": "staff_hit_3",
+        "feel": "great"
+      },
+      {
+        "from": 4,
+        "clip": "attack_4",
+        "fx": "staff_great",
+        "feel": "great"
+      },
+      {
+        "from": 5,
+        "clip": "attack_big",
+        "fx": "staff_perfect",
+        "feel": "perfect"
+      }
+    ],
+    "play": "sequenceClick",
+    "ultimate": "free_tap",
+    "hitWindowMs": 140,
+    "lateMs": 80
   }
 }

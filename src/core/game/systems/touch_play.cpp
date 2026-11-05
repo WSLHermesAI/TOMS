@@ -10,43 +10,27 @@ namespace {
 constexpr float g_fPi = 3.14159265f;
 }
 
-PlayKind f_PlayKindFromString(const std::string& l_strS) {
-    if (l_strS == "bow") return PlayKind::Bow;
-    if (l_strS == "slice") return PlayKind::Slice;
-    if (l_strS == "circles") return PlayKind::Circles;
-    if (l_strS == "shape") return PlayKind::Shape;
-    if (l_strS == "mash") return PlayKind::Mash;
-    return PlayKind::Track;
-}
-
-const char* f_PlayKindName(PlayKind l_eK) {
-    switch (l_eK) {
-    case PlayKind::Bow: return "bow";
-    case PlayKind::Slice: return "slice";
-    case PlayKind::Circles: return "circles";
-    case PlayKind::Shape: return "shape";
-    case PlayKind::Mash: return "mash";
-    default: return "track";
-    }
-}
-
-void TouchPlay::f_Start(PlayKind l_eKind, int l_iPoints, bool l_bUltimate, const glm::vec4& l_v4Area, uint32_t l_uSeed,
+void TouchPlay::f_Start(PlayType l_eType, int l_iPoints, bool l_bUltimate, const glm::vec4& l_v4Area, uint32_t l_uSeed,
                       const TouchPlaySettings& l_oS) {
     *this = TouchPlay{};
-    m_eKind = l_eKind; m_oS = l_oS; m_v4Area = l_v4Area; m_oRng.seed(l_uSeed);
+    m_eType = l_eType; m_oS = l_oS; m_v4Area = l_v4Area; m_oRng.seed(l_uSeed);
     m_iPoints = std::max(1, l_iPoints); m_bUltimate = l_bUltimate;
     m_bRunning = true;
-    m_bStarted = l_bUltimate || m_eKind != PlayKind::Bow;   // the bow waits for its first pull; the others run at once
+    m_bStarted = l_bUltimate || m_eType != PlayType::ePULL_RELEASE;   // the bow waits for its first pull; the others run at once
     std::uniform_real_distribution<float> l_oU(0.0f, 1.0f);
-    if (m_eKind == PlayKind::Bow) f_NextTarget();
-    if (m_eKind == PlayKind::Slice) {
+    if (m_eType == PlayType::ePULL_RELEASE) f_NextTarget();
+    if (f_IsSwipePlay(m_eType)) {
+        const char* l_pszDefault = m_eType == PlayType::eSWIPE_GESTURE ? "v" : "way";
+        std::vector<int> l_vExtra;
         for (int l_iK = 0; l_iK < m_iPoints; l_iK++) {
-            m_vCueKinds.push_back(l_iK < (int)m_oS.m_vSliceCues.size() && !m_oS.m_vSliceCues[(size_t)l_iK].empty() ? m_oS.m_vSliceCues[(size_t)l_iK] : "way");
+            m_vCueKinds.push_back(l_iK < (int)m_oS.m_vSliceCues.size() && !m_oS.m_vSliceCues[(size_t)l_iK].empty() ? m_oS.m_vSliceCues[(size_t)l_iK] : l_pszDefault);
             m_vCueDirs.push_back(std::uniform_int_distribution<int>(0, 7)(m_oRng));
+            const auto l_itExtra = m_oS.m_mapCueExtraMs.find(m_vCueKinds.back());
+            l_vExtra.push_back(l_itExtra == m_oS.m_mapCueExtraMs.end() ? 0 : l_itExtra->second);
         }
-        m_oCueTrack.f_Start(m_iPoints, m_oS.m_oSliceCue);
+        m_oCueTrack.f_Start(m_iPoints, m_oS.m_oSliceCue, l_vExtra);
     }
-    if (m_eKind == PlayKind::Circles) {
+    if (m_eType == PlayType::eSEQUENCE_CLICK) {
         const float l_fM = m_oS.m_fCircleRadius;
         for (int l_iK = 0; l_iK < m_iPoints; l_iK++) {   // apart from the others (a few tries; a small area takes what it gets)
             Circle l_oC;
@@ -60,8 +44,8 @@ void TouchPlay::f_Start(PlayKind l_eKind, int l_iPoints, bool l_bUltimate, const
             m_vCircles.push_back(l_oC);
         }
     }
-    if (m_eKind == PlayKind::Shape) {
-        m_oTrace.f_Start(m_oS.m_strShape, {m_v4Area.x + m_v4Area.z * 0.5f, m_v4Area.y + m_v4Area.w * 0.5f}, m_oS.m_fShapeSize, m_oS.m_fShapeCornerRadius);
+    if (m_eType == PlayType::eDRAW_SHAPE) {
+        m_oTrace.f_Start(m_oS.m_strShape, {m_v4Area.x + m_v4Area.z * 0.5f, m_v4Area.y + m_v4Area.w * 0.5f}, m_oS.m_fShapeSize, m_oS.m_fShapeCornerRadius * (1.0f + m_oS.m_fCornerBonus));
         m_iPoints = std::max(1, m_oTrace.f_StepCount());
     }
 }
@@ -139,8 +123,14 @@ void TouchPlay::f_JudgeStroke() {
         glm::vec2 l_v2Lo = m_vStroke[0], l_v2Hi = m_vStroke[0];
         for (glm::vec2 l_v2P : m_vStroke) { l_v2Lo = glm::min(l_v2Lo, l_v2P); l_v2Hi = glm::max(l_v2Hi, l_v2P); }
         if (std::max(l_v2Hi.x - l_v2Lo.x, l_v2Hi.y - l_v2Lo.y) < m_oS.m_fSliceMinLength) return;   // too small to be a shape
-        l_bOk = f_MatchStroke(m_vStroke, m_vCueKinds[(size_t)l_iK]);
-        l_bPerfect = l_bOk && f_MatchStroke(m_vStroke, m_vCueKinds[(size_t)l_iK], 0.13f);
+        const std::string& l_strCue = m_vCueKinds[(size_t)l_iK];
+        if (f_GestureTier(l_strCue) > 1) {
+            l_bOk = f_MatchGesture(m_vStroke, l_strCue, m_oS.m_fGestureExtraDeg);
+            l_bPerfect = l_bOk && f_MatchGesture(m_vStroke, l_strCue, m_oS.m_fGestureExtraDeg - 12.0f);
+        } else {
+            l_bOk = f_MatchStroke(m_vStroke, l_strCue, m_oS.m_fShapeTolerance);
+            l_bPerfect = l_bOk && f_MatchStroke(m_vStroke, l_strCue, m_oS.m_fShapeTolerance * 0.65f);
+        }
     }
     m_oCueTrack.f_Answer(l_bOk);
     const glm::vec2 l_v2At = f_PromptAt();
@@ -157,12 +147,16 @@ int TouchPlay::f_CirclesLit() const {
 float TouchPlay::f_TimeLeft() const {
     if (!m_bStarted) return 1.0f;
     auto l_fnLeft = [](int l_iUsed, int l_iAll) { return std::clamp(1.0f - (float)l_iUsed / (float)std::max(1, l_iAll), 0.0f, 1.0f); };
-    switch (m_eKind) {
-    case PlayKind::Bow: return l_fnLeft(m_iOneMs, m_oS.m_iBowTimeMs);
-    case PlayKind::Slice: return m_oCueTrack.f_TimeLeft();
-    case PlayKind::Circles: return m_eCirclePhase == CirclePhase::Tap ? l_fnLeft(m_iPhaseMs, m_oS.m_iCircleTapMs * m_iPoints) : 1.0f;
-    case PlayKind::Shape: return l_fnLeft(m_iClockMs, m_oS.m_iShapeTimeMs);
-    case PlayKind::Mash: return l_fnLeft(m_iClockMs, m_oS.m_iMashTimeMs);
+    switch (m_eType) {
+    case PlayType::ePULL_RELEASE: return l_fnLeft(m_iOneMs, m_oS.m_iBowTimeMs);
+    case PlayType::eSWIPE_WAY:
+    case PlayType::eSWIPE_GESTURE: return m_oCueTrack.f_TimeLeft();
+    case PlayType::eFREE_SWIPE:
+    case PlayType::eFREE_TAP:
+    case PlayType::eFREE_SHOT: return l_fnLeft(m_iClockMs, m_oS.m_iFreeTimeMs);
+    case PlayType::eSEQUENCE_CLICK: return m_eCirclePhase == CirclePhase::Tap ? l_fnLeft(m_iPhaseMs, m_oS.m_iCircleTapMs * m_iPoints) : 1.0f;
+    case PlayType::eDRAW_SHAPE: return l_fnLeft(m_iClockMs, m_oS.m_iShapeTimeMs);
+    case PlayType::eMASH: return l_fnLeft(m_iClockMs, m_oS.m_iMashTimeMs);
     default: return 1.0f;
     }
 }
@@ -174,27 +168,46 @@ void TouchPlay::f_FinishOne(bool l_bOk, bool l_bPerfect, float l_fX, float l_fY)
     m_iLastAnswerMs = m_iClockMs;
     m_iIndex++;
     m_iOneMs = 0;
+    if (f_IsFreePlay(m_eType)) { m_iPoints = std::max(1, m_iHitCount); return; }   // as many as the player makes, until the time is up
     if (m_iIndex >= m_iPoints) { m_bDone = true; return; }
-    if (m_eKind == PlayKind::Bow) f_NextTarget();
+    if (m_eType == PlayType::ePULL_RELEASE) f_NextTarget();
 }
 
 void TouchPlay::f_Pointer(int l_iPhase, float l_fX, float l_fY) {
     if (!f_Running()) return;
     const glm::vec2 l_v2P(l_fX, l_fY);
-    switch (m_eKind) {
-    case PlayKind::Bow:
+    switch (m_eType) {
+    case PlayType::ePULL_RELEASE:
         if (l_iPhase == 0) { m_bAiming = true; m_v2AimFrom = m_v2AimTo = l_v2P; m_iHoldMs = 0; m_bStarted = true; return; }
         if (!m_bAiming) return;
         m_v2AimTo = l_v2P;
         if (l_iPhase == 2) f_Release();
         return;
-    case PlayKind::Slice:
+    case PlayType::eFREE_TAP:
+        if (l_iPhase == 0) f_FinishOne(true, false, l_fX, l_fY);
+        return;
+    case PlayType::eFREE_SWIPE:
+    case PlayType::eFREE_SHOT:
+        if (l_iPhase == 0) { m_bAiming = true; m_vStroke.assign(1, l_v2P); return; }
+        if (!m_bAiming) return;
+        if (glm::length(l_v2P - m_vStroke.back()) >= 3.0f) m_vStroke.push_back(l_v2P);
+        if (l_iPhase == 2) {
+            m_bAiming = false;
+            if (glm::length(l_v2P - m_vStroke.front()) >= m_oS.m_fFreeMinSwipe) {   // a shot always hits: it lands on the monster
+                if (m_eType == PlayType::eFREE_SHOT) f_FinishOne(true, false, m_v4Area.x + m_v4Area.z * 0.5f, m_v4Area.y + m_v4Area.w * 0.5f);
+                else f_FinishOne(true, false, l_fX, l_fY);
+            }
+            m_vStroke.clear();
+        }
+        return;
+    case PlayType::eSWIPE_WAY:
+    case PlayType::eSWIPE_GESTURE:
         if (l_iPhase == 0) { m_bAiming = true; m_vStroke.assign(1, l_v2P); return; }
         if (!m_bAiming) return;
         if (m_vStroke.empty() || glm::length(l_v2P - m_vStroke.back()) >= 3.0f) m_vStroke.push_back(l_v2P);
         if (l_iPhase == 2) { m_bAiming = false; f_JudgeStroke(); m_vStroke.clear(); }
         return;
-    case PlayKind::Circles: {
+    case PlayType::eSEQUENCE_CLICK: {
         if (l_iPhase != 0 || m_eCirclePhase != CirclePhase::Tap) return;   // only once they are back and the "!" has gone
         for (size_t l_nK = 0; l_nK < m_vCircles.size(); l_nK++) {
             Circle& l_oC = m_vCircles[l_nK];
@@ -212,7 +225,7 @@ void TouchPlay::f_Pointer(int l_iPhase, float l_fX, float l_fY) {
         }
         return;
     }
-    case PlayKind::Shape: {
+    case PlayType::eDRAW_SHAPE: {
         const int l_iBefore = m_oTrace.f_Steps();
         if (m_oTrace.f_Pointer(l_iPhase, l_fX, l_fY) <= 0) return;
         for (int l_iK = l_iBefore; l_iK < m_oTrace.f_Steps(); l_iK++) {
@@ -221,7 +234,7 @@ void TouchPlay::f_Pointer(int l_iPhase, float l_fX, float l_fY) {
         }
         return;
     }
-    case PlayKind::Mash:
+    case PlayType::eMASH:
         if (l_iPhase == 0) f_FinishOne(true, true, l_fX, l_fY);
         return;
     default:
@@ -233,7 +246,7 @@ void TouchPlay::f_Update(int l_iDtMs) {
     for (Mark& l_oM : m_vMarks) l_oM.m_iAgeMs += l_iDtMs;
     if (!f_Running()) return;
     m_iAgeMs += l_iDtMs;
-    if (m_eKind == PlayKind::Bow) {   // the target moves a moment, then stops; it does so before the first pull too
+    if (m_eType == PlayType::ePULL_RELEASE) {   // the target moves a moment, then stops; it does so before the first pull too
         m_iTargetAgeMs += l_iDtMs;
         const glm::vec2 l_v2P = f_TargetPos();
         m_oTarget.m_fX = l_v2P.x; m_oTarget.m_fY = l_v2P.y;
@@ -245,11 +258,23 @@ void TouchPlay::f_Update(int l_iDtMs) {
     if (!m_bStarted || !f_Running()) return;
     m_iClockMs += l_iDtMs;
     m_iOneMs += l_iDtMs;
-    switch (m_eKind) {
-    case PlayKind::Bow:
+    switch (m_eType) {
+    case PlayType::ePULL_RELEASE:
         if (m_iOneMs > m_oS.m_iBowTimeMs) { m_bAiming = false; m_iHoldMs = 0; f_FinishOne(false, false, m_oTarget.m_fX, m_oTarget.m_fY); }
         break;
-    case PlayKind::Slice: {
+    case PlayType::eFREE_SWIPE:
+    case PlayType::eFREE_TAP:
+    case PlayType::eFREE_SHOT:
+        if (m_iClockMs >= m_oS.m_iFreeTimeMs) {   // time up: what was done counts
+            m_bAiming = false;
+            m_bFailed = m_iHitCount == 0;
+            m_iPoints = std::max(1, m_iHitCount);
+            m_iIndex = m_iPoints;
+            m_bDone = true;
+        }
+        break;
+    case PlayType::eSWIPE_WAY:
+    case PlayType::eSWIPE_GESTURE: {
         const int l_iMissed = m_oCueTrack.f_Update(l_iDtMs);
         for (int l_iK = 0; l_iK < l_iMissed; l_iK++) {   // a prompt let pass: a miss (finishOne counts it; the track has moved on)
             const glm::vec2 l_v2At = f_PromptAt();
@@ -257,7 +282,7 @@ void TouchPlay::f_Update(int l_iDtMs) {
         }
         break;
     }
-    case PlayKind::Circles: {
+    case PlayType::eSEQUENCE_CLICK: {
         m_iPhaseMs += l_iDtMs;
         const int l_iN = (int)m_vCircles.size();
         if (m_eCirclePhase == CirclePhase::Count && m_iPhaseMs >= l_iN * m_oS.m_iCircleCountMs) { m_eCirclePhase = CirclePhase::Hide; m_iPhaseMs = 0; }
@@ -269,9 +294,9 @@ void TouchPlay::f_Update(int l_iDtMs) {
             while (!m_bDone) { m_vCircles[(size_t)m_iIndex].m_iState = 3; f_FinishOne(false, false, m_vCircles[(size_t)m_iIndex].m_fX, m_vCircles[(size_t)m_iIndex].m_fY); }
         break;
     }
-    case PlayKind::Shape:
-    case PlayKind::Mash:
-        if (m_iClockMs >= (m_eKind == PlayKind::Shape ? m_oS.m_iShapeTimeMs : m_oS.m_iMashTimeMs)) {   // time up: what is done counts
+    case PlayType::eDRAW_SHAPE:
+    case PlayType::eMASH:
+        if (m_iClockMs >= (m_eType == PlayType::eDRAW_SHAPE ? m_oS.m_iShapeTimeMs : m_oS.m_iMashTimeMs)) {   // time up: what is done counts
             m_bFailed = m_iHitCount == 0;
             m_iIndex = m_iPoints;
             m_bDone = true;
@@ -304,6 +329,15 @@ TouchPlaySettings f_TouchPlayFromJson(const nlohmann::json& l_jB) {
     l_oS.m_iCircleWarnMs = std::max(0, l_jJ.value("circleWarnMs", l_oS.m_iCircleWarnMs));
     l_oS.m_iCircleTapMs = std::max(200, l_jJ.value("circleTapMs", l_oS.m_iCircleTapMs));
     l_oS.m_iCirclePerfectMs = std::max(0, l_jJ.value("circlePerfectMs", l_oS.m_iCirclePerfectMs));
+    if (l_jJ.contains("cueExtraMs") && l_jJ["cueExtraMs"].is_object())
+        for (auto l_oIt = l_jJ["cueExtraMs"].begin(); l_oIt != l_jJ["cueExtraMs"].end(); ++l_oIt)
+            if (l_oIt.value().is_number()) l_oS.m_mapCueExtraMs[l_oIt.key()] = std::max(0, l_oIt.value().get<int>());
+    l_oS.m_fFreeMinSwipe = std::max(1.0f, l_jJ.value("freeMinSwipe", l_oS.m_fFreeMinSwipe));
+    l_oS.m_fDexWayDeg = std::max(0.0f, l_jJ.value("dexWayDeg", l_oS.m_fDexWayDeg));
+    l_oS.m_fDexWayMaxDeg = std::max(0.0f, l_jJ.value("dexWayMaxDeg", l_oS.m_fDexWayMaxDeg));
+    l_oS.m_fDexGestureMaxDeg = std::max(0.0f, l_jJ.value("dexGestureMaxDeg", l_oS.m_fDexGestureMaxDeg));
+    l_oS.m_fDexCornerPct = std::max(0.0f, l_jJ.value("dexCornerPct", l_oS.m_fDexCornerPct));
+    l_oS.m_iDexWindowMs = std::max(0, l_jJ.value("dexWindowMs", l_oS.m_iDexWindowMs));
     return l_oS;
 }
 

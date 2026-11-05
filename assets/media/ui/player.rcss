@@ -85,7 +85,7 @@ body { z-index: 45; }
 .chip.active { background-color: #ead98f; color: #2e3140; }
 
 /* Equipment: what each slot wears (click = that slot) */
-#worn { height: 112px; }
+#worn { height: 150px; }
 .worn-line { height: 34px; line-height: 34px; padding: 0 12px; margin-bottom: 4px; font-size: 19px; border-radius: 6px; cursor: pointer; background-color: #616678; }
 .worn-line.current { background-color: #73809e; }
 

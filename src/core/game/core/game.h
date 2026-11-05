@@ -73,6 +73,7 @@ struct Player : public Trackable {
 
 struct EnemyInst : public Trackable {
     std::string m_strId; std::string m_strName; int m_iHp, m_iAtk, m_iDef, m_iExp, m_iGold; int m_iX, m_iY; bool m_bBoss=false;
+    int m_iWeaponExp = 1;   // what beating it gives the weapon used (enemies.json "weaponExp")
     // Battle System v2 (docs/design/BATTLE_SYSTEM_V2_PROPOSALS.md): how often, in ms, this enemy attacks
     // on its own real-time clock -- independent of anything the player does. Read from
     // data/enemies.json's "atk_interval_ms" (engageMonster()); defaults to 4000 when absent.
@@ -220,6 +221,9 @@ struct CombatState : public Trackable {
     int m_iFrameDt = 0;               // the battle's time this frame: 0 in a hit stop, slower in the last hit's slow motion
     int m_iHitStopMs = 0;             // both sides freeze (15 §3.8)
     int m_iSlowMs = 0;                // the last hit in slow motion, then the win
+    int m_iEndLeftMs = 0;             // the longest the end may still wait for its clips (battle.json feel.endMaxMs)
+    bool m_bLosePending = false;      // m_bWinPending's end is a loss: the hero falls, then finishCombatLose
+    bool m_bEndClipDone = false;      // the end clip played out (or there is none to play)
     float m_fSlowScale = 1.0f, m_fSlowCarry = 0.0f;
     bool m_bWinPending = false;       // won, the slow motion still running (finishCombatWin follows)
     float m_fShakePx = 0.0f;          // the screen shakes this far, fading over shakeMsMax
@@ -227,6 +231,7 @@ struct CombatState : public Trackable {
     int m_iDimMs = 0;                 // a break dims the screen a moment
     std::string m_strBanner, m_strBannerKind;   // across the screen: "BREAK!" (break), a monster's line (line), the ultimate (ultimate)
     int m_iBannerMs = 0, m_iBannerMsMax = 1;
+    int m_iComboCount = 0;   // hits in a row: which comboTiers row plays (docs/gameplay/17 §19)
     int m_iChain = 0, m_iBestChain = 0;  // perfects in a row (15 §3.4); a miss resets it
     int m_iPerfects = 0, m_iAttacksDone = 0, m_iDamageTaken = 0;   // for the grade
     int m_iGuardAtMs = -1;            // the timed guard: when it was pressed (battle time), -1 none
@@ -257,7 +262,7 @@ struct CombatState : public Trackable {
         int m_iGold = 0, m_iExp = 0;
         std::string m_strCard;          // its line ("New card: Slime"), or ""
         std::string m_strWeapon;        // the weapon's key in weapon_play.json
-        int m_iLvBefore = 1, m_iLvAfter = 1, m_iUses = 0;
+        int m_iLvBefore = 1, m_iLvAfter = 1, m_iWeaponExp = 0, m_iWeaponExpGained = 0;
     } m_oResult;
     TOMS_OBJECT(CombatState)
 };
@@ -401,6 +406,7 @@ public:
     // Settings > "Reduce shaking and flashes" (docs/gameplay/15 §3.8): hit stops, shakes and flashes a quarter as
     // strong, no slow motion. Saved in the settings file.
     bool f_ReduceEffects() const { return m_oSettings.m_bReduceEffects; }
+    bool f_FreePlayRunning() const { return m_oCs.m_oTouch.f_Running() && toms::f_IsFreePlay(m_oCs.m_oTouch.f_Type()); }
     void f_SetReduceEffects(bool l_bOn);
     void f_DebugFireFoeEvent(int l_iFoe, int l_iEvent);
     int f_BattleFoeCount() const { return m_oCs.m_bActive ? (int)m_oCs.m_vFoes.size() : 0; }
@@ -548,6 +554,7 @@ public:
     int f_ScenarioTestFrames() const { return m_iScenarioTestFrames; }
     const std::string& f_ScenarioTestKeys() const { return m_strScenarioTestKeys; }
     const std::string& f_ScenarioTestClicks() const { return m_strScenarioTestClicks; }
+    const std::string& f_ScenarioTestDrags() const { return m_strScenarioTestDrags; }
     // Resumes slot N (1-based). Returns false (and leaves the title open) when that slot has no
     // save, so the caller can show "no save here" instead of dropping the player into nothing.
     bool f_ContinueFromSlot(int l_iSlot);
@@ -688,15 +695,21 @@ private:
     void f_ResolveAttackTap();
     // Battle v3: the combo ended -- its damage, then the cooldown. played: a touch play's result (else the track's)
     void f_ResolveCombo(const toms::ComboResult* l_pPlayed = nullptr);
-    toms::PlayKind f_BattlePlayKind() const;          // the worn weapon's play; a scenario's "play" (scenarios: the track)
+    toms::PlayType f_BattlePlayType() const;          // the worn weapon's play; a scenario's "play" (scenarios: the track)
     bool f_AttackRunning() const { return m_oCs.m_oCombo.f_Running() || (m_oCs.m_oTouch.f_Running() && m_oCs.m_oTouch.f_Started()); }
     glm::vec4 f_TouchArea() const;                    // where a touch play's targets go: around the target monster
     void f_ArmTouchPlay(bool l_bUltimate, int l_iPoints);   // a new touch play over the target (waits for its first touch)
-    toms::TouchPlaySettings f_TouchSettingsFor(toms::PlayKind l_eKind) const;   // battle.json "plays", the weapon's, STR / DEX
+    toms::TouchPlaySettings f_TouchSettingsFor(toms::PlayType l_eType) const;   // battle.json "plays", the weapon's, STR / DEX
     toms::TouchPlaySettings m_oTouchSettings;         // battle.json "plays"
     glm::vec4 m_v4TouchArmedArea{0.0f};                // where the waiting play was armed (re-armed if the layout moves)
     bool m_bBattleBoxesKnown = false;                 // the battle screen has laid out this battle's fighters (a play waits for it)
     int f_NormalHitDamage(int l_iFoe) const;             // a normal attack's full hit on the monster (the moves' unit)
+    void f_StartLoseMoment();                            // HP gone: the fall, then finishCombatLose (17 §19)
+    std::string f_EndClip() const;                       // the clip for this end: big win, win, par win or lose
+    void f_PlayAnswerClip();                             // an attack clip for one answer, by the combo so far (17 I1, §19)
+    const toms::ComboTier* f_ComboTier() const;          // the weapon's tier for the combo so far
+    void f_ComboWord();                                  // "3 Combo!" from the second hit
+    bool f_FreeHit(const toms::TouchPlay::Hit& l_oH);    // one swipe or tap of a free mode (17 §5); true: the fight is won
     void f_PlayHit(const toms::TouchPlay::Hit& l_oH);    // a play's answer that hits at once (the sword's cut, the staff's spell)
     void f_StopOwnAttack();                           // the "warn" guard stops the player's attack (16 §4.2)
     // the monsters' rhythm and the "!" (16 §4): its "!" shows; the "!" length of its move
@@ -747,6 +760,8 @@ private:
     std::vector<EnemyInst> f_PartyOf(const EnemyInst& l_oLead);
     bool f_AfterPlayerHit(const std::string& l_strHitLog, const std::string& l_strWinLog);   // true: the battle was won
     // ---- the revamp (docs/gameplay/15) ----
+    float f_BattleSpeed() const;                          // the player's setting, or a scenario's (17 I10)
+    void f_CycleBattleSpeed();                            // Settings: the next of battle.json "battleSpeeds"
     int f_BattleFrame(int l_iDtMs);                       // the battle's time this frame (hit stop, slow motion) and its effects
     void f_FeelMoment(const std::string& l_strMoment);      // a moment's hit stop, shake and sound (data/battle.json "feel")
     void f_PopWord(const std::string& l_strText, int l_iWho, const std::string& l_strStyle);   // a word over a fighter, now
@@ -1117,7 +1132,7 @@ private:
     LevelUpRule m_oLevelUp;
     // The weapons / armor / talents the player owns (bought or forged), in the order they were got.
     std::vector<std::string> m_vGearOwned;
-    std::map<std::string, int> m_mapWeaponUses;   // wins with each weapon (weaponKey()); its level comes from them
+    std::map<std::string, int> m_mapWeaponExp;   // weapon EXP of each weapon (weaponKey()); its level comes from it
     // ---- the player menu's state (inGameMenuOpen_ = it is open) ----
     MenuTab m_eMenuTab = MenuTab::Status;
     int m_iAttrSel = -1;          // Status: the attribute whose description shows (-1 none)
@@ -1262,6 +1277,9 @@ private:
     toms::GradeSettings m_oGrade;          // "grade" (§3.6)
     toms::GuardSettings m_oGuard;          // "guard" (§3.2): the timed button, or the bar
     std::mt19937 m_oShakeRng{20261031u};
+    std::string m_strUltimateOverride;       // a scenario's battle "ultimate": a move id instead of the weapon's
+    float m_fScenarioBattleSpeed = 0.0f;     // a scenario's battle "speed" (a test keeps 1 whatever the player chose); 0: the setting
+    std::vector<float> m_vBattleSpeeds{0.75f, 1.0f, 1.25f, 1.5f};   // battle.json "battleSpeeds"
     std::string m_strPlayOverride;           // a scenario's battle "play" ("" = the weapon's; scenarios: "track" unless set)
     std::string m_strPaceOverride;           // setBattlePace / a scenario's "pace" ("" = the weapon's or the file's)
     bool m_bComboHoldsMonsters = false;    // data/battle.json "combo_holds_monsters": their clocks wait for a running combo
@@ -1504,6 +1522,7 @@ private:
     int m_iScenarioTestFrames = 0;
     std::string m_strScenarioTestKeys;
     std::string m_strScenarioTestClicks;
+    std::string m_strScenarioTestDrags;
     // The weapon test arena (scene "arena", toms_game --arena; docs/gameplay/07_GAMEPLAY_PLAN.md phase 0): fight after fight
     // against the listed enemies in turn, full HP each time, no rewards and no story effects (no deaths counted).
     struct Arena {
@@ -1514,7 +1533,7 @@ private:
         int m_iFights = 0, m_iWins = 0, m_iLosses = 0;
         bool m_bTrial = false;           // the start story's weapon trial (docs/gameplay/07 phase 3): one fight, then back to the master
         bool m_bTraining = false;        // the training ground (docs/gameplay/16 §5): fightsMax fights, EXP and weapon wins x2
-        int m_iFightsMax = 0, m_iHpBefore = 0, m_iExpGained = 0, m_iUsesGained = 0;
+        int m_iFightsMax = 0, m_iHpBefore = 0, m_iExpGained = 0, m_iWeaponExpGained = 0;
     };
     Arena m_oArena;
 public:

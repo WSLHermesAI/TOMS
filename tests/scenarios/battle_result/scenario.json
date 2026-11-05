@@ -3,6 +3,6 @@
   "scene": "battle",
   "player": { "equip": ["bow"] },
   "battle": { "enemy": "slime", "hp": 1, "atk_interval_ms": 60000 },
-  "test": { "frames": 170, "keys": "enter@40,enter@61,enter@81,enter@102" },
+  "test": { "frames": 240, "keys": "enter@40,enter@61,enter@81,enter@102" },
   "expect": { "scene": "battleWon", "grade": "S" }
 }

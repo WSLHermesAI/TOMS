@@ -3,12 +3,19 @@
 #include "save_system.h"   // readJsonFileSafe
 
 #include <algorithm>
+#include <cmath>
 
 namespace toms {
 
-std::vector<std::string> WeaponPlay::f_ShapeCuesAt(int l_iLv) const {
+const ComboTier* WeaponPlay::f_ComboTierAt(int l_iCount) const {
+    const ComboTier* l_pBest = nullptr;
+    for (const ComboTier& l_oT : m_vComboTiers) if (l_oT.m_iFrom <= l_iCount) l_pBest = &l_oT;
+    return l_pBest;
+}
+
+std::vector<std::string> WeaponPlay::f_SwipeCuesAt(int l_iLv) const {
     std::vector<std::string> l_vOut;
-    for (const ShapeCues& l_oC : m_vShapeCues) if (l_oC.m_iLv <= l_iLv) l_vOut = l_oC.m_vCues;
+    for (const SwipeCues& l_oC : m_vSwipeCues) if (l_oC.m_iLv <= l_iLv) l_vOut = l_oC.m_vCues;
     return l_vOut;
 }
 
@@ -34,7 +41,7 @@ WeaponPlay f_WeaponPlayFromJson(const std::string& l_strId, const nlohmann::json
             if (!l_jL.is_object()) continue;
             WeaponLevel l_oLv;
             l_oLv.m_iLv = std::max(1, l_jL.value("lv", 1));
-            l_oLv.m_iPoints = std::clamp(l_jL.value("points", 3), 1, g_iMaxComboPoints);
+            l_oLv.m_iPoints = std::max(1, l_jL.value("points", 3));
             if (l_jL.contains("stats") && l_jL["stats"].is_object())
                 for (auto l_oS = l_jL["stats"].begin(); l_oS != l_jL["stats"].end(); ++l_oS)
                     if (l_oS.value().is_number_integer()) l_oLv.m_mapStats[l_oS.key()] = l_oS.value().get<int>();
@@ -42,9 +49,10 @@ WeaponPlay f_WeaponPlayFromJson(const std::string& l_strId, const nlohmann::json
         }
         std::stable_sort(l_oW.m_vLevels.begin(), l_oW.m_vLevels.end(), [](const WeaponLevel& l_oA, const WeaponLevel& l_oB) { return l_oA.m_iLv < l_oB.m_iLv; });
     }
-    if (l_jJ.contains("usesToLevel") && l_jJ["usesToLevel"].is_array())
-        for (const auto& l_jU : l_jJ["usesToLevel"])
-            if (l_jU.is_number_integer()) l_oW.m_vUsesToLevel.push_back(std::max(1, l_jU.get<int>()));
+    if (l_jJ.contains("levelExp") && l_jJ["levelExp"].is_object()) {
+        l_oW.m_iLevelExpFirst = std::max(1, l_jJ["levelExp"].value("first", l_oW.m_iLevelExpFirst));
+        l_oW.m_fLevelExpScale = std::max(1.0f, l_jJ["levelExp"].value("scale", l_oW.m_fLevelExpScale));
+    }
     l_oW.m_bTurnBack = l_jJ.value("turnBack", l_oW.m_bTurnBack);
     l_oW.m_iSweepMs = std::max(200, l_jJ.value("sweepMs", l_oW.m_iSweepMs));
     l_oW.m_iMaxSweeps = std::max(1, l_jJ.value("maxSweeps", l_oW.m_iMaxSweeps));
@@ -85,16 +93,30 @@ WeaponPlay f_WeaponPlayFromJson(const std::string& l_strId, const nlohmann::json
     }
     l_oW.m_strPace = l_jJ.value("pace", std::string());
     l_oW.m_strPlay = l_jJ.value("play", std::string("track"));
-    if (l_jJ.contains("shapeCues") && l_jJ["shapeCues"].is_array()) {
-        for (const auto& l_jE : l_jJ["shapeCues"]) {
+    l_oW.m_strUltimate = l_jJ.value("ultimate", std::string());
+    l_oW.m_bComboKeep = l_jJ.value("comboKeep", false);
+    if (l_jJ.contains("comboTiers") && l_jJ["comboTiers"].is_array()) {
+        for (const auto& l_jE : l_jJ["comboTiers"]) {
             if (!l_jE.is_object()) continue;
-            WeaponPlay::ShapeCues l_oC;
+            ComboTier l_oT;
+            l_oT.m_iFrom = std::max(1, l_jE.value("from", 1));
+            l_oT.m_strClip = l_jE.value("clip", std::string());
+            l_oT.m_strFx = l_jE.value("fx", std::string());
+            l_oT.m_strFeel = l_jE.value("feel", std::string());
+            l_oW.m_vComboTiers.push_back(l_oT);
+        }
+        std::sort(l_oW.m_vComboTiers.begin(), l_oW.m_vComboTiers.end(), [](const ComboTier& l_oA, const ComboTier& l_oB) { return l_oA.m_iFrom < l_oB.m_iFrom; });
+    }
+    if (l_jJ.contains("swipeCues") && l_jJ["swipeCues"].is_array()) {
+        for (const auto& l_jE : l_jJ["swipeCues"]) {
+            if (!l_jE.is_object()) continue;
+            WeaponPlay::SwipeCues l_oC;
             l_oC.m_iLv = std::max(1, l_jE.value("lv", 1));
             if (l_jE.contains("cues") && l_jE["cues"].is_array())
                 for (const auto& l_jS : l_jE["cues"]) if (l_jS.is_string()) l_oC.m_vCues.push_back(l_jS.get<std::string>());
-            l_oW.m_vShapeCues.push_back(l_oC);
+            l_oW.m_vSwipeCues.push_back(l_oC);
         }
-        std::sort(l_oW.m_vShapeCues.begin(), l_oW.m_vShapeCues.end(), [](const auto& l_oA, const auto& l_oB) { return l_oA.m_iLv < l_oB.m_iLv; });
+        std::sort(l_oW.m_vSwipeCues.begin(), l_oW.m_vSwipeCues.end(), [](const auto& l_oA, const auto& l_oB) { return l_oA.m_iLv < l_oB.m_iLv; });
     }
     return l_oW;
 }
@@ -127,19 +149,24 @@ const WeaponLevel& f_WeaponLevelEntry(const WeaponPlay& l_oW, int l_iWeaponLevel
 
 int f_WeaponMaxLevel(const WeaponPlay& l_oW) { return l_oW.m_vLevels.empty() ? 1 : std::max(1, l_oW.m_vLevels.back().m_iLv); }
 
-int f_WeaponLevelFromUses(const WeaponPlay& l_oW, int l_iUses) {
-    int l_iLv = 1, l_iNeed = 0;
-    for (int l_iStep : l_oW.m_vUsesToLevel) {
-        l_iNeed += l_iStep;
-        if (l_iUses < l_iNeed) break;
-        l_iLv++;
-    }
-    return std::min(l_iLv, f_WeaponMaxLevel(l_oW));
+int f_ExpToNextLevel(const WeaponPlay& l_oW, int l_iWeaponLevel) {
+    if (l_iWeaponLevel < 1 || l_iWeaponLevel >= f_WeaponMaxLevel(l_oW)) return 0;
+    return std::max(1, (int)std::lround((float)l_oW.m_iLevelExpFirst * std::pow(l_oW.m_fLevelExpScale, (float)(l_iWeaponLevel - 1))));
 }
 
-int f_UsesToNextLevel(const WeaponPlay& l_oW, int l_iWeaponLevel) {
-    if (l_iWeaponLevel >= f_WeaponMaxLevel(l_oW) || l_iWeaponLevel - 1 >= (int)l_oW.m_vUsesToLevel.size()) return 0;
-    return l_oW.m_vUsesToLevel[(size_t)(l_iWeaponLevel - 1)];
+int f_WeaponLevelFromExp(const WeaponPlay& l_oW, int l_iExp) {
+    int l_iLv = 1;
+    for (int l_iNeed = f_ExpToNextLevel(l_oW, l_iLv); l_iNeed > 0 && l_iExp >= l_iNeed; l_iNeed = f_ExpToNextLevel(l_oW, l_iLv)) {
+        l_iExp -= l_iNeed;
+        l_iLv++;
+    }
+    return l_iLv;
+}
+
+int f_WeaponExpForLevel(const WeaponPlay& l_oW, int l_iWeaponLevel) {
+    int l_iAll = 0;
+    for (int l_iLv = 1; l_iLv < l_iWeaponLevel; l_iLv++) l_iAll += f_ExpToNextLevel(l_oW, l_iLv);
+    return l_iAll;
 }
 
 WeaponPlayTable f_LoadWeaponPlay(const std::string& l_strPath) {

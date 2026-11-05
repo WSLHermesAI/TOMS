@@ -43,6 +43,10 @@ public:
     bool f_AddToBattle(const QString& l_oId);           // "+ Again": one more of it (three bats), up to three in all
     QStringList f_InBattle() const { return m_oInBattle; }
     bool f_SelectMonster(const QString& l_oId);
+    bool f_SelectWeapon(const QString& l_oKey);                                       // on the Weapon tab
+    bool f_SetWeaponLevelCell(int l_iLv, const QString& l_oColumn, int l_iValue);     // "points" or an attribute id, as typed
+    QString f_WeaponLevelsJson(const QString& l_oKey) const;                          // its "levels" as they stand, not saved
+    bool f_GrabWeaponTab(const QString& l_oPng);                                      // a picture of the tab (no window needed)
     QString f_CurrentMonster() const { return m_oCurrent; }
     void f_SetMonsterNumber(const QString& l_oKey, int l_iValue);   // hp, atk, def, ... as typed in the form
     bed::Setup f_CurrentSetup() const;
@@ -88,6 +92,7 @@ private:
     void f_MonsterEdited();                // the form -> enemies_[current_], and the running battle
     void f_ApplyToRunningBattle(const QString& l_oId);
     void f_ShowWeapon(const QString& l_oKey);
+    void f_ShowLevelExp();                  // the table's EXP column, from levelExp
     void f_WeaponEdited();
     void f_FillSetups();
     void f_ShowEvents();
@@ -142,12 +147,15 @@ private:
     QComboBox* m_pWPace = nullptr;
     QTableWidget* m_pResults = nullptr;
     QLabel* m_pWLabel = nullptr;
+    QTableWidget* m_pWLevels = nullptr;     // each level: its EXP to the next, points, attribute bonuses
+    QSpinBox* m_pWExpFirst = nullptr;       // levelExp: Lv 1 to 2
+    QDoubleSpinBox* m_pWExpScale = nullptr; // levelExp: each next level this many times the last
     // player
     QSpinBox* m_pPLv = nullptr;
     QSpinBox* m_pPHp = nullptr;
     QSpinBox* m_pPMaxHp = nullptr;
     QComboBox* m_pPWeapon = nullptr;
-    QSpinBox* m_pPWins = nullptr;
+    QSpinBox* m_pPWeaponLevel = nullptr;
     QSpinBox* m_pPPoints = nullptr;
     QMap<QString, QSpinBox*>* m_pPAttrs = nullptr;
     QSpinBox* m_pCTotal = nullptr;

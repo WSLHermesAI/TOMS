@@ -1,0 +1,25 @@
+{
+  "_comment": "HP gone: the hero falls (the monster's first hit at about frame 31); the loss itself comes after the clip, so at frame 60 it has not come yet.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "sword"
+    ],
+    "hp": 1
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 500,
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 60
+  },
+  "expect": {
+    "battleEvents": {
+      "lose": 0
+    },
+    "battleClip": "lose"
+  }
+}

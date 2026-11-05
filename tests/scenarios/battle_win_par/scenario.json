@@ -1,0 +1,29 @@
+{
+  "_comment": "Hit by the monster, little HP left: the par win.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "sword"
+    ],
+    "hp": 26
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 1,
+    "atk_interval_ms": 500,
+    "super": true,
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 280,
+    "keys": "g@70",
+    "drags": "200:560:330:560:4@130"
+  },
+  "expect": {
+    "scene": "battleWon",
+    "battleEvents": {
+      "win": 1
+    },
+    "battleClip": "win_par"
+  }
+}

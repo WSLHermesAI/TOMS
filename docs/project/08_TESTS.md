@@ -116,7 +116,7 @@ They run on Direct3D 11, and the map scene also runs on Direct3D 12, Vulkan and 
 
 ## How the screenshot tests work
 
-- `toms_game --fixed-dt=16 --frames=N --keys=… --clicks=… --screenshot=…`: every frame advances exactly 16 ms and
+- `toms_game --fixed-dt=16 --frames=N --keys=… --clicks=… --drag=… --wheel=… --screenshot=…`: every frame advances exactly 16 ms and
   real mouse/keyboard input is ignored, so a scene is the same pixels on every run.
 - Each test runs in a fresh folder under `Build\<preset>\test-run\<name>\`, so no earlier save changes the
   title screen.

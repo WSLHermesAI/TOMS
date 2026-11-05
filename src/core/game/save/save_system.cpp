@@ -107,7 +107,7 @@ nlohmann::json f_ToJson(const RunSaveData& l_oR) {
     l_jP["gear"] = l_oR.m_oPlayer.m_vGear;
     l_jP["weapon"] = l_oR.m_oPlayer.m_strWeapon; l_jP["armor"] = l_oR.m_oPlayer.m_strArmor; l_jP["talent"] = l_oR.m_oPlayer.m_strTalent;
     l_jP["attrPoints"] = l_oR.m_oPlayer.m_iAttrPoints;
-    l_jP["weaponUses"] = l_oR.m_oPlayer.m_mapWeaponUses;
+    l_jP["weaponExp"] = l_oR.m_oPlayer.m_mapWeaponExp;
     l_jP["crystals"] = l_oR.m_oPlayer.m_iCrystals;
     l_jJ["player"] = l_jP;
     l_jJ["entityStatus"] = l_oR.m_mapEntityStatus;
@@ -164,9 +164,11 @@ RunSaveData f_RunFromJson(const nlohmann::json& l_jIn, bool* l_pVersionMismatch)
         l_oR.m_oPlayer.m_strTalent = l_jP.value("talent", std::string());
         l_oR.m_oPlayer.m_iAttrPoints = l_jP.value("attrPoints", 0);
         l_oR.m_oPlayer.m_iCrystals = std::max(0, l_jP.value("crystals", 0));
-        if (l_jP.contains("weaponUses") && l_jP["weaponUses"].is_object())   // optional: an older save has none (every weapon Lv 1)
-            for (auto& [l_strK, l_jV] : l_jP["weaponUses"].items())
-                if (l_jV.is_number_integer()) l_oR.m_oPlayer.m_mapWeaponUses[l_strK] = std::max(0, l_jV.get<int>());
+        // (a save from before weapon EXP has "weaponUses": its wins count as EXP)
+        const char* l_pszWeaponKey = l_jP.contains("weaponExp") ? "weaponExp" : "weaponUses";
+        if (l_jP.contains(l_pszWeaponKey) && l_jP[l_pszWeaponKey].is_object())   // optional: an older save has none (every weapon Lv 1)
+            for (auto& [l_strK, l_jV] : l_jP[l_pszWeaponKey].items())
+                if (l_jV.is_number_integer()) l_oR.m_oPlayer.m_mapWeaponExp[l_strK] = std::max(0, l_jV.get<int>());
     }
     if (l_jJ.contains("entityStatus") && l_jJ["entityStatus"].is_object())
         for (auto& [l_strK, l_jV] : l_jJ["entityStatus"].items())

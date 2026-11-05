@@ -8,7 +8,7 @@ namespace toms {
 
 ComboSettings f_ComboSettings(const WeaponPlay& l_oW, int l_iWeaponLevel) {
     ComboSettings l_oS;
-    l_oS.m_iPoints = std::clamp(f_WeaponLevelEntry(l_oW, l_iWeaponLevel).m_iPoints, 1, g_iMaxComboPoints);
+    l_oS.m_iPoints = std::max(1, f_WeaponLevelEntry(l_oW, l_iWeaponLevel).m_iPoints);
     l_oS.m_bTurnBack = l_oW.m_bTurnBack;
     l_oS.m_iSweepMs = l_oW.m_iSweepMs;
     l_oS.m_iMaxSweeps = l_oW.m_iMaxSweeps;
@@ -23,7 +23,7 @@ ComboSettings f_ComboSettings(const WeaponPlay& l_oW, int l_iWeaponLevel) {
 
 void ComboPlay::f_Start(const ComboSettings& l_oS, float l_fCharge) {
     m_oS = l_oS;
-    m_oS.m_iPoints = std::clamp(m_oS.m_iPoints, 1, g_iMaxComboPoints);
+    m_oS.m_iPoints = std::max(1, m_oS.m_iPoints);
     m_fCharge = std::clamp(l_fCharge, 0.0f, 1.0f);
     m_fPos = 0;
     m_iDir = 1;

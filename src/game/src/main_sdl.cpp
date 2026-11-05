@@ -25,6 +25,8 @@
 //                         --fixed-dt, a clip or a battle as pictures, merged by tools/frames_to_gif.py
 //   --keys=<k@f,...>      press key k at frame f, e.g. enter@30,enter@60 (automated tests)
 //   --clicks=<x:y@f,...>  left-click at design point (x,y) (1024x768 space) at frame f (tests)
+//   --drag=<x0:y0:x1:y1:n@f,...> press at (x0,y0) at frame f, move to (x1,y1) over n frames, let go (tests)
+//   --wheel=<x:y:d@f,...> turn the mouse wheel by d at design point (x,y) at frame f (tests)
 //   --fixed-dt=<ms>       every frame advances exactly this long, so a scripted run is identical
 //                         every time (screenshot smoke tests, tests/CMakeLists.txt)
 //   --anim=<file>#<clip>  play one clip of an .anim file over the screen (anim_clip.h; tests)
@@ -125,6 +127,10 @@ struct Args {
     std::vector<Press> m_vPresses;
     struct Click { float m_fX, m_fY; int m_iFrame; };
     std::vector<Click> m_vClicks;
+    struct Wheel { float m_fX, m_fY, m_fDelta; int m_iFrame; };
+    struct Drag { float m_fX0, m_fY0, m_fX1, m_fY1; int m_iFrames, m_iFrame; };
+    std::vector<Drag> m_vDrags;     // --drag=<x0:y0:x1:y1:frames@f,...>: press, move, let go (tests)
+    std::vector<Wheel> m_vWheels;   // --wheel=<x:y:delta@f,...>: the mouse wheel at a design point (tests)
     std::vector<std::string> m_vGive;     // --give=<id,...>
     std::string m_strStairLock;             // --stair-lock=<floor>:<event>
     std::vector<std::string> m_vEventsDone;   // --events-done=<id,...>
@@ -173,6 +179,30 @@ void f_ParseClicks(const std::string& l_strList, Args& l_oA) {
     }
 }
 
+void f_ParseDrags(const std::string& l_strList, Args& l_oA) {
+    size_t l_nPos = 0;
+    while (l_nPos < l_strList.size()) {
+        size_t l_nComma = l_strList.find(',', l_nPos);
+        std::string l_strItem = l_strList.substr(l_nPos, l_nComma == std::string::npos ? std::string::npos : l_nComma - l_nPos);
+        Args::Drag l_oD{};
+        if (std::sscanf(l_strItem.c_str(), "%f:%f:%f:%f:%d@%d", &l_oD.m_fX0, &l_oD.m_fY0, &l_oD.m_fX1, &l_oD.m_fY1, &l_oD.m_iFrames, &l_oD.m_iFrame) == 6) l_oA.m_vDrags.push_back(l_oD);
+        if (l_nComma == std::string::npos) break;
+        l_nPos = l_nComma + 1;
+    }
+}
+
+void f_ParseWheels(const std::string& l_strList, Args& l_oA) {
+    size_t l_nPos = 0;
+    while (l_nPos < l_strList.size()) {
+        size_t l_nComma = l_strList.find(',', l_nPos);
+        std::string l_strItem = l_strList.substr(l_nPos, l_nComma == std::string::npos ? std::string::npos : l_nComma - l_nPos);
+        float l_fX = 0, l_fY = 0, l_fD = 0; int l_iF = 0;
+        if (std::sscanf(l_strItem.c_str(), "%f:%f:%f@%d", &l_fX, &l_fY, &l_fD, &l_iF) == 4) l_oA.m_vWheels.push_back({l_fX, l_fY, l_fD, l_iF});
+        if (l_nComma == std::string::npos) break;
+        l_nPos = l_nComma + 1;
+    }
+}
+
 Args f_ParseArgs(const std::vector<std::string>& l_vArgv) {
     Args l_oA;
     auto l_fnValue = [](const std::string& l_strArg, const char* l_pszPrefix) -> const char* {
@@ -190,6 +220,8 @@ Args f_ParseArgs(const std::vector<std::string>& l_vArgv) {
         else if (const char* l_pszV = l_fnValue(l_strS, "--record-step=")) l_oA.m_iRecordStep = std::max(1, std::atoi(l_pszV));
         else if (const char* l_pszV = l_fnValue(l_strS, "--keys=")) f_ParseKeys(l_pszV, l_oA);
         else if (const char* l_pszV = l_fnValue(l_strS, "--clicks=")) f_ParseClicks(l_pszV, l_oA);
+        else if (const char* l_pszV = l_fnValue(l_strS, "--wheel=")) f_ParseWheels(l_pszV, l_oA);
+        else if (const char* l_pszV = l_fnValue(l_strS, "--drag=")) f_ParseDrags(l_pszV, l_oA);
         else if (const char* l_pszV = l_fnValue(l_strS, "--fixed-dt=")) l_oA.m_iFixedDtMs = std::atoi(l_pszV);
         else if (const char* l_pszV = l_fnValue(l_strS, "--anim=")) l_oA.m_strAnim = l_pszV;
         else if (const char* l_pszV = l_fnValue(l_strS, "--anim-crowd=")) l_oA.m_iAnimCrowd = std::atoi(l_pszV);
@@ -486,6 +518,15 @@ bool f_AppFrame(App& l_oApp) {
         else if (l_oE.type == SDL_EVENT_KEY_DOWN && l_oE.key.scancode < SDL_SCANCODE_COUNT) l_oApp.m_arrPressedKeys[l_oE.key.scancode] = true;
         else if (l_oE.type == SDL_EVENT_MOUSE_BUTTON_DOWN && l_oE.button.button == SDL_BUTTON_LEFT) l_oApp.m_bPressedLeft = true;
     }
+    {   // A project rule (CLAUDE.md): nothing is heard from a run in the background, or from a scripted run.
+        const SDL_WindowFlags l_u64Window = SDL_GetWindowFlags(l_oApp.m_pWindow);
+        bool l_bBackground = l_oApp.m_bSuspended || (l_u64Window & (SDL_WINDOW_HIDDEN | SDL_WINDOW_MINIMIZED | SDL_WINDOW_OCCLUDED)) != 0 ||
+                             l_oArgs.m_iFixedDtMs > 0 || l_oArgs.m_iFrames > 0 || l_oArgs.m_bScenarioTest || l_oArgs.m_bBench;
+#if !defined(__EMSCRIPTEN__) && !defined(__ANDROID__)
+        l_bBackground = l_bBackground || (l_u64Window & SDL_WINDOW_INPUT_FOCUS) == 0;   // alt-tabbed away (a page or a phone: the flags above)
+#endif
+        Audio::f_SetBackgroundMuted(l_bBackground);
+    }
 #if defined(__ANDROID__)
     // In the background there is no surface to draw on: skip the frame (SDL blocks the loop while the
     // activity is paused anyway). Back in the foreground the surface is NEW, and bgfx must make its
@@ -553,6 +594,28 @@ bool f_AppFrame(App& l_oApp) {
         l_oIn.m_bHasMouse = true;
     }
 
+    for (const auto& l_oD : l_oArgs.m_vDrags) {                       // scripted drags (tests): hover 2 frames, press, move, let go
+        const int l_iF = l_oApp.m_iFrameNo - l_oD.m_iFrame, l_iN = std::max(1, l_oD.m_iFrames);
+        if (l_iF < -2 || l_iF > l_iN + 1) continue;
+        const float l_fK = std::clamp((float)l_iF / (float)l_iN, 0.0f, 1.0f);
+        const auto l_oVp = BgfxRenderer::f_ComputeAspectFitViewport((uint32_t)l_iPw, (uint32_t)l_iPh,
+                                                               BgfxRenderer::m_uDesignW, BgfxRenderer::m_uDesignH);
+        l_oIn.m_fMouseX = l_oVp.m_fX + (l_oD.m_fX0 + (l_oD.m_fX1 - l_oD.m_fX0) * l_fK) * l_oVp.m_fWidth / (float)BgfxRenderer::m_uDesignW;
+        l_oIn.m_fMouseY = l_oVp.m_fY + (l_oD.m_fY0 + (l_oD.m_fY1 - l_oD.m_fY0) * l_fK) * l_oVp.m_fHeight / (float)BgfxRenderer::m_uDesignH;
+        l_oIn.m_bMouseLeft = l_iF >= 0 && l_iF <= l_iN;
+        l_oIn.m_bHasMouse = true;
+    }
+    for (const auto& l_oW : l_oArgs.m_vWheels) {                      // scripted wheel (tests): hover 2 frames, then turn it
+        const int l_iD = l_oApp.m_iFrameNo - l_oW.m_iFrame;
+        if (l_iD < -2 || l_iD > 0) continue;
+        const auto l_oVp = BgfxRenderer::f_ComputeAspectFitViewport((uint32_t)l_iPw, (uint32_t)l_iPh,
+                                                               BgfxRenderer::m_uDesignW, BgfxRenderer::m_uDesignH);
+        l_oIn.m_fMouseX = l_oVp.m_fX + l_oW.m_fX * l_oVp.m_fWidth / (float)BgfxRenderer::m_uDesignW;
+        l_oIn.m_fMouseY = l_oVp.m_fY + l_oW.m_fY * l_oVp.m_fHeight / (float)BgfxRenderer::m_uDesignH;
+        l_oIn.m_bHasMouse = true;
+        if (l_iD == 0) l_oIn.m_fWheel = l_oW.m_fDelta;
+    }
+
     if (l_oArgs.m_bSkipStartStory)
         if (::Game* l_pG = l_oApp.m_oSession.f_Game()) l_pG->f_SetSkipStartStory(true);
     // --scenario: once the game is up, straight into the scene (the title closes, unless the scenario is the title).
@@ -586,6 +649,9 @@ bool f_AppFrame(App& l_oApp) {
             const size_t l_nBefore = l_oApp.m_oArgs.m_vPresses.size();
             f_ParseKeys(l_pG->f_ScenarioTestKeys(), l_oApp.m_oArgs);
             for (size_t l_nI = l_nBefore; l_nI < l_oApp.m_oArgs.m_vPresses.size(); ++l_nI) l_oApp.m_oArgs.m_vPresses[l_nI].m_iFrame += l_oApp.m_iFrameNo;
+            const size_t l_nDragsBefore = l_oApp.m_oArgs.m_vDrags.size();   // and its drags ("test": { "drags": "x0:y0:x1:y1:frames@f,..." })
+            f_ParseDrags(l_pG->f_ScenarioTestDrags(), l_oApp.m_oArgs);
+            for (size_t l_nI = l_nDragsBefore; l_nI < l_oApp.m_oArgs.m_vDrags.size(); ++l_nI) l_oApp.m_oArgs.m_vDrags[l_nI].m_iFrame += l_oApp.m_iFrameNo;
             const size_t l_nClicksBefore = l_oApp.m_oArgs.m_vClicks.size();   // and its clicks ("test": { "clicks": "x:y@f,..." })
             f_ParseClicks(l_pG->f_ScenarioTestClicks(), l_oApp.m_oArgs);
             for (size_t l_nI = l_nClicksBefore; l_nI < l_oApp.m_oArgs.m_vClicks.size(); ++l_nI) l_oApp.m_oArgs.m_vClicks[l_nI].m_iFrame += l_oApp.m_iFrameNo;

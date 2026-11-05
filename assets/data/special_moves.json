@@ -2,15 +2,46 @@
   "_comment": [
     "Special moves and special guards as data (docs/gameplay/16_SKILLS_AND_PLAYS.md §6; src/core/game/systems/special_moves.h).",
     "A new move is a new entry: its name (a text.json key), its play, three shows and its damage.",
-    "use: ultimate (a weapon's, when the super charge is full), guard (a monster's move names it: moves.json guardPlay).",
-    "play.kind: shape (trace the shape shown), slice (the sword's prompts: cues), bow (aim `points` moving targets),",
-    "  mash (tap `points` times); timeMs: a shape's or a mash's time; size / cornerRadius: a shape on the screen.",
+    "use: ultimate (a weapon's, when the super charge is full: weapon_play.json \"ultimate\" names the move), guard (a monster's move names it: moves.json guardPlay).",
+    "play.kind, a play type (docs/gameplay/17 §4.1): drawShape (trace the shape shown), swipeWay (the sword's prompts: cues), pullRelease (aim `points` moving targets),",
+    "  mash (tap `points` times), freeSwipe / freeTap / freeShot (any swipe or tap counts for timeMs, 17 §5); timeMs: a shape's, a mash's or a free mode's time;",
+    "  hitDamage: a free mode's each swipe or tap, times a normal attack; size / cornerRadius: a shape on the screen.",
     "demo: before the play; step: at each step done (at the step's place); finish: after the play.",
     "A beat: at (ms), do: pathFx (particles along the shape, `corner` at each corner) fx (on player / monster, else at the",
     "  step) dim countdown banner (text) name namePart (the name a step's share at a time) count (3/5) camera (zoom, on",
     "  player / monster, ms) clip (the player's clip) hits (count x gapMs: the move's damage over them) shake sound.",
     "damage: times a normal attack (the owner: N = 10 to start), times the share of the play done (Q45)."
   ],
+  "free_swipe": {
+    "name": "skill.free_swipe",
+    "use": "ultimate",
+    "prompt": "skill.prompt_free_swipe",
+    "damage": 0,
+    "play": { "kind": "freeSwipe", "timeMs": 3000, "hitDamage": 0.6 },
+    "demo": [ { "at": 0, "do": "name", "ms": 700 }, { "at": 0, "do": "fx", "fx": "sword_great", "on": "player" }, { "at": 600, "do": "dim" } ],
+    "step": [ { "do": "fx", "fx": "sword_great" } ],
+    "finish": [ { "at": 0, "do": "shake", "value": 5, "ms": 300 } ]
+  },
+  "free_shot": {
+    "name": "skill.free_shot",
+    "use": "ultimate",
+    "prompt": "skill.prompt_free_shot",
+    "damage": 0,
+    "play": { "kind": "freeShot", "timeMs": 2000, "hitDamage": 0.8 },
+    "demo": [ { "at": 0, "do": "name", "ms": 700 }, { "at": 0, "do": "fx", "fx": "bow_great", "on": "player" }, { "at": 600, "do": "dim" } ],
+    "step": [ { "do": "fx", "fx": "bow_perfect" } ],
+    "finish": [ { "at": 0, "do": "shake", "value": 5, "ms": 300 } ]
+  },
+  "free_tap": {
+    "name": "skill.free_tap",
+    "use": "ultimate",
+    "prompt": "skill.prompt_free_tap",
+    "damage": 0,
+    "play": { "kind": "freeTap", "timeMs": 2000, "hitDamage": 0.4 },
+    "demo": [ { "at": 0, "do": "name", "ms": 700 }, { "at": 0, "do": "fx", "fx": "staff_great", "on": "player" }, { "at": 600, "do": "dim" } ],
+    "step": [ { "do": "fx", "fx": "staff_perfect" } ],
+    "finish": [ { "at": 0, "do": "shake", "value": 5, "ms": 300 } ]
+  },
   "star_seal": {
     "name": "skill.star_seal",
     "weapon": "staff",
@@ -18,7 +49,7 @@
     "prompt": "skill.prompt_draw",
     "damage": 10,
     "play": {
-      "kind": "shape",
+      "kind": "drawShape",
       "shape": "pentagram",
       "timeMs": 6000,
       "size": 230,
@@ -92,13 +123,13 @@
     "prompt": "skill.prompt_cut",
     "damage": 4,
     "play": {
-      "kind": "slice",
+      "kind": "swipeWay",
       "cues": [
         "way",
         "way",
         "way",
         "way",
-        "triangle"
+        "v"
       ]
     },
     "demo": [
@@ -164,7 +195,7 @@
     "prompt": "skill.prompt_aim",
     "damage": 5,
     "play": {
-      "kind": "bow",
+      "kind": "pullRelease",
       "points": 3
     },
     "demo": [
@@ -222,7 +253,7 @@
     "use": "guard",
     "prompt": "skill.prompt_draw",
     "play": {
-      "kind": "shape",
+      "kind": "drawShape",
       "shape": "pentagram",
       "timeMs": 5000,
       "size": 210,

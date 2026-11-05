@@ -21,7 +21,7 @@ int main() {
     // 1. Bow: the target moves 0.5 s, then stops; a pull charges and shakes; a normal attack is one arrow.
     {
         TouchPlay l_oP;
-        l_oP.f_Start(PlayKind::Bow, 1, false, l_v4Area, 7);
+        l_oP.f_Start(PlayType::ePULL_RELEASE, 1, false, l_v4Area, 7);
         CHECK(l_oP.f_Running() && !l_oP.f_Started(), "the bow waits for its pull");
         const auto l_oA = l_oP.f_Target();
         l_oP.f_Update(250);
@@ -47,7 +47,7 @@ int main() {
         TouchPlaySettings l_oS;
         l_oS.m_fBowShakePx = 0.0f;
         TouchPlay l_oP;
-        l_oP.f_Start(PlayKind::Bow, 1, false, l_v4Area, 3, l_oS);
+        l_oP.f_Start(PlayType::ePULL_RELEASE, 1, false, l_v4Area, 3, l_oS);
         l_oP.f_Update(600);
         const auto l_oT = l_oP.f_Target();
         l_oP.f_Pointer(0, l_oT.m_fX, l_oT.m_fY + 90);
@@ -57,7 +57,7 @@ int main() {
     }
     {   // a short pull is not a shot; an arrow not shot in time is a miss
         TouchPlay l_oP;
-        l_oP.f_Start(PlayKind::Bow, 1, false, l_v4Area, 4);
+        l_oP.f_Start(PlayType::ePULL_RELEASE, 1, false, l_v4Area, 4);
         l_oP.f_Pointer(0, 600, 300); l_oP.f_Pointer(2, 605, 300);
         CHECK(l_oP.f_Started() && l_oP.f_Index() == 0, "too short a pull: no shot");
         l_oP.f_Update(4100);
@@ -68,7 +68,7 @@ int main() {
         TouchPlaySettings l_oS;
         l_oS.m_vSliceCues = {"way", "way", "triangle"};
         TouchPlay l_oP;
-        l_oP.f_Start(PlayKind::Slice, 3, false, l_v4Area, 11, l_oS);
+        l_oP.f_Start(PlayType::eSWIPE_WAY, 3, false, l_v4Area, 11, l_oS);
         CHECK(l_oP.f_Started() && l_oP.f_CueKind(2) == "triangle", "the sword starts at once; its third prompt a triangle");
         f_Swipe(l_oP, 650, 200, l_oP.f_CueDir(0) * 45.0f, 160);
         CHECK(l_oP.f_Index() == 0, "a swipe before the window: nothing");
@@ -93,7 +93,7 @@ int main() {
     // 3. Circles: count, hide, "!", then tapped in the remembered order; each tap a spell.
     {
         TouchPlay l_oP;
-        l_oP.f_Start(PlayKind::Circles, 3, false, l_v4Area, 9);
+        l_oP.f_Start(PlayType::eSEQUENCE_CLICK, 3, false, l_v4Area, 9);
         CHECK(l_oP.f_Started() && l_oP.f_CirclePhase() == TouchPlay::CirclePhase::Count && l_oP.f_CirclesLit() == 1, "starts by itself, counting");
         const auto l_vC = l_oP.f_Circles();
         for (size_t l_nI = 0; l_nI < l_vC.size(); l_nI++)
@@ -121,7 +121,7 @@ int main() {
         TouchPlaySettings l_oS;
         l_oS.m_iShapeTimeMs = 3000;
         TouchPlay l_oP;
-        l_oP.f_Start(PlayKind::Shape, 0, true, l_v4Area, 1, l_oS);
+        l_oP.f_Start(PlayType::eDRAW_SHAPE, 0, true, l_v4Area, 1, l_oS);
         CHECK(l_oP.f_Points() == 5 && l_oP.f_Trace().f_Points().size() == 6, "a pentagram: 5 steps");
         const auto& l_vPts = l_oP.f_Trace().f_Points();
         l_oP.f_Pointer(0, l_vPts[0].x, l_vPts[0].y);
@@ -132,12 +132,12 @@ int main() {
     }
     {   // mash
         TouchPlay l_oP;
-        l_oP.f_Start(PlayKind::Mash, 4, false, l_v4Area, 1);
+        l_oP.f_Start(PlayType::eMASH, 4, false, l_v4Area, 1);
         for (int l_iK = 0; l_iK < 4; l_iK++) l_oP.f_Pointer(0, 600, 200);
         CHECK(l_oP.f_Done() && l_oP.f_Result().m_iHits == 4, "four taps");
     }
-    CHECK(f_PlayKindFromString("bow") == PlayKind::Bow && f_PlayKindFromString("shape") == PlayKind::Shape &&
-              f_PlayKindFromString("anything") == PlayKind::Track && std::string(f_PlayKindName(PlayKind::Mash)) == "mash", "names");
+    CHECK(f_PlayTypeFromString("bow") == PlayType::ePULL_RELEASE && f_PlayTypeFromString("shape") == PlayType::eDRAW_SHAPE &&
+              f_PlayTypeFromString("anything") == PlayType::eTRACK && std::string(f_PlayTypeName(PlayType::eMASH)) == "mash", "names (the older data names too)");
     if (g_iFail) { std::printf("touch_play_test: %d failure(s)\n", g_iFail); return 1; }
     std::printf("touch_play_test: all passed\n");
     return 0;

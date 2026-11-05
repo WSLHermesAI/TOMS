@@ -172,6 +172,10 @@ struct FeelSettings {
     std::map<std::string, std::string> m_mapSounds; // a sound id per moment
     int m_iSlowMoMs = 450;                        // the last hit of a battle: this long...
     float m_fSlowMoScale = 0.3f;                  // ...at this speed
+    // the fight's end (docs/gameplay/17 §19): the last attack clip plays out, then one of these, then the result
+    std::string m_strWinClip = "win", m_strWinBigClip = "win_big", m_strWinParClip = "win_par", m_strLoseClip = "lose";
+    float m_fWinParHp = 0.25f;                    // a win with this share of HP or less, after taking damage: the par win
+    int m_iEndMaxMs = 2500;                       // the longest the end may wait for its clips
     float m_fReducedScale = 0.25f;                // "Reduce shaking and flashes": stops and shakes times this, no slow motion
     float m_fChainStep = 0.1f;                    // each perfect in a row: +10 % damage...
     int m_iChainMax = 10;                         // ...up to this many

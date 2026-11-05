@@ -54,6 +54,7 @@ struct GameSettings {
     // Settings > "Reduce shaking and flashes" (docs/gameplay/15 §3.8): the battle's hit stops and shakes a quarter as
     // strong, no flashes, no slow motion.
     bool m_bReduceEffects = false;
+    float m_fBattleSpeed = 1.0f;       // Settings > Battle speed (docs/gameplay/17 I10): the battle's own time
     bool m_bBowTutorialDone = false;   // the bow's first-pull tutorial was shown and followed (docs/gameplay/16 §3.2)
 };
 

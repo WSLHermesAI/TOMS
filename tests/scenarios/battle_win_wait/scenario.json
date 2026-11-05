@@ -1,0 +1,28 @@
+{
+  "_comment": "The end of a win (docs/gameplay/17 §19): the last hit lands at about frame 75; slow motion and the attack clip take it past frame 130, so the win has not come yet.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "sword"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 1,
+    "atk_interval_ms": 60000,
+    "super": true,
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 130,
+    "keys": "g@10",
+    "drags": "200:560:330:560:4@70"
+  },
+  "expect": {
+    "battleEvents": {
+      "hit": 1,
+      "down": 1,
+      "win": 0
+    }
+  }
+}

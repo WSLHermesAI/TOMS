@@ -2,6 +2,7 @@
 #include "bgfx_viewport.h"
 
 #include <QFileInfo>
+#include <QGuiApplication>
 
 #include "bgfx_host.h"
 #include "bgfx_renderer.h"
@@ -129,6 +130,8 @@ void BgfxViewport::resizeEvent(QResizeEvent* l_pE) {
 }
 
 void BgfxViewport::f_Tick() {
+    // A project rule (CLAUDE.md): nothing is heard from a run in the background, or from an editor's self-test.
+    Audio::f_SetBackgroundMuted(QGuiApplication::applicationState() != Qt::ApplicationActive || !isVisible() || m_iSmokeFrames > 0);
     if (!m_bBgfxReady || !m_oSession.f_Running() || !isVisible()) return;
     const qint64 l_i64Dt = m_oClock.restart();
     const double l_dScaled = l_i64Dt * m_dTimeScale + m_dTimeCarry;   // setTimeScale (1: as is)

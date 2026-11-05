@@ -23,10 +23,9 @@ struct MissBackRule {
 // bonuses the weapon gives at that level (data/stats.json ids: "str", "agi", ...).
 struct WeaponLevel {
     int m_iLv = 1;
-    int m_iPoints = 3;                       // 1 .. kMaxComboPoints
+    int m_iPoints = 3;                       // the prompts or circles of an attack, at least 1 (from the file, no upper limit)
     std::map<std::string, int> m_mapStats;
 };
-constexpr int g_iMaxComboPoints = 5;
 
 // The battle's particles for a weapon level and up (the owner 2026-10-24: a higher level attacks with bigger effects).
 // Effect names in media/fx/battle.particle; "" = none at that moment.
@@ -51,13 +50,17 @@ struct WeaponResult {
     float m_fBreakAdd = 0.0f;       // more on its break gauge (13 §6.4)
 };
 
+// How the combo grows (docs/gameplay/17 §19): from this many hits in a row on, this clip, hit effect and feel.
+struct ComboTier { int m_iFrom = 1; std::string m_strClip, m_strFx, m_strFeel; };
+
 struct WeaponPlay {
     std::string m_strId;                       // an items.json weapon id, "unarmed", or "default"
     std::vector<MissBackRule> m_vMissBack;   // sorted by lv
     int m_iMissWaitMs = 0;                   // after a miss, the wait before the next tap counts (the sword's "put back")
     // Battle v3's point play (docs/gameplay/07 §4, §5.1): the marker sweeps a track with the level's points.
     std::vector<WeaponLevel> m_vLevels;      // sorted by lv; empty: Lv 1 with 3 points, no bonus
-    std::vector<int> m_vUsesToLevel;         // wins needed from Lv 1 to 2, 2 to 3, ...; the level stops at levels.back()
+    int m_iLevelExpFirst = 5;                // weapon EXP from Lv 1 to 2 ("levelExp"; monsters give it: enemies.json "weaponExp")
+    float m_fLevelExpScale = 2.0f;           // each next level needs this many times the last; the level stops at levels.back()
     bool m_bTurnBack = true;                 // the marker turns back at the ends (a missed point can be saved); false: one sweep
     int m_iSweepMs = 1600;                   // one end-to-end sweep with no charge
     int m_iMaxSweeps = 3;                    // turning back: the combo ends after this many sweeps
@@ -70,11 +73,15 @@ struct WeaponPlay {
     std::vector<WeaponFx> m_vFx;             // sorted by lv; empty: the "default" entry's
     std::vector<WeaponResult> m_vResults;    // by points matched (13 §4.2); empty: the "default" entry's, else none
     std::string m_strPace;                     // "cooldown" / "stamina": this weapon's pace ("" = the battle's; 13 §6.3)
-    std::string m_strPlay = "track";           // its attack (touch_play.h, docs/gameplay/15 §3.3): track, bow, slice, circles
-    // the sword's shape prompts by level (docs/gameplay/16 §3.1): from `lv` on, its last prompts ask for these shapes
-    struct ShapeCues { int m_iLv = 1; std::vector<std::string> m_vCues; };
-    std::vector<ShapeCues> m_vShapeCues;     // sorted by lv
-    std::vector<std::string> f_ShapeCuesAt(int l_iLv) const;
+    std::string m_strPlay = "track";           // its attack: a play type's data name (play_type.h, docs/gameplay/17 §4.1)
+    std::vector<ComboTier> m_vComboTiers;      // sorted by from; empty: the plain attack clip
+    bool m_bComboKeep = false;                 // the count goes on from attack to attack until a miss (the bow: one arrow an attack)
+    const ComboTier* f_ComboTierAt(int l_iCount) const;   // the highest reached; null: none
+    std::string m_strUltimate;                 // its ultimate: a special_moves.json id (17 §16 Q49); "": the move naming this weapon, else a harder play
+    // the swipe prompts by level (docs/gameplay/17 §4.2): from `lv` on, its last prompts ask for these gestures
+    struct SwipeCues { int m_iLv = 1; std::vector<std::string> m_vCues; };
+    std::vector<SwipeCues> m_vSwipeCues;     // sorted by lv
+    std::vector<std::string> f_SwipeCuesAt(int l_iLv) const;
 };
 
 struct WeaponPlayTable {
@@ -89,10 +96,12 @@ WeaponPlayTable f_LoadWeaponPlay(const std::string& l_strPath);
 
 // The level entry for a weapon level: the highest at or below it (a built-in Lv 1, 3 points, when none).
 const WeaponLevel& f_WeaponLevelEntry(const WeaponPlay& l_oW, int l_iWeaponLevel);
-// The weapon level reached after `uses` wins with it (Lv 1 at 0; capped at the last level entry).
-int f_WeaponLevelFromUses(const WeaponPlay& l_oW, int l_iUses);
-// The wins needed from `weaponLevel` to the next level; 0 at the top.
-int f_UsesToNextLevel(const WeaponPlay& l_oW, int l_iWeaponLevel);
+// The weapon level reached with this much weapon EXP (Lv 1 at 0; capped at the last level entry).
+int f_WeaponLevelFromExp(const WeaponPlay& l_oW, int l_iExp);
+// The weapon EXP from `weaponLevel` to the next level; 0 at the top.
+int f_ExpToNextLevel(const WeaponPlay& l_oW, int l_iWeaponLevel);
+// The whole weapon EXP that reaches this level (Lv 1: 0).
+int f_WeaponExpForLevel(const WeaponPlay& l_oW, int l_iWeaponLevel);
 // The highest level the weapon can reach.
 int f_WeaponMaxLevel(const WeaponPlay& l_oW);
 

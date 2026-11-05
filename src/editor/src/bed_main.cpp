@@ -64,12 +64,12 @@ void f_LogicTests(const QString& l_oDataDir) {
     l_oS.m_vFoes = {{"bat", ojson::parse(R"({ "hp": 30 })")}, {"bat", ojson::object()}};
     l_oS.m_oPlayer.m_iLv = 5;
     l_oS.m_oPlayer.m_strWeapon = "sword";
-    l_oS.m_oPlayer.m_iWeaponWins = 4;
+    l_oS.m_oPlayer.m_iWeaponLevel = 4;
     l_oS.m_strPace = "stamina";
     const ojson l_jSc = bed::f_SetupToScenario(l_oS);
     f_Check(l_jSc["scene"] == "battle" && l_jSc["battle"]["enemy"] == "bat" && l_jSc["battle"]["hp"] == 30 &&
               l_jSc["battle"]["party"].size() == 1 && l_jSc["battle"]["pace"] == "stamina" && l_jSc["player"]["equip"][0] == "sword" &&
-              l_jSc["player"]["weaponUses"]["sword"] == 4, "a setup is a battle scenario");
+              l_jSc["player"]["weaponLevel"]["sword"] == 4, "a setup is a battle scenario");
     bed::Setup l_oBack;
     f_Check(bed::f_SetupFromScenario(l_jSc, l_oBack) && l_oBack.m_strName == "two bats" && l_oBack.m_vFoes.size() == 2 && l_oBack.m_oPlayer.m_iLv == 5 &&
               l_oBack.m_strPace == "stamina", "and loads back");
@@ -94,10 +94,11 @@ int main(int l_iArgc, char** l_pArgv) {
         QApplication::setOrganizationName(QStringLiteral("TOMS"));
         Language::f_Init();
         bool l_bSelftest = false;
-        QString l_oSmoke;
+        QString l_oSmoke, l_oGrabWeapon;
         for (const QString& l_oA : QApplication::arguments()) {
             if (l_oA == QStringLiteral("--selftest")) l_bSelftest = true;
             else if (l_oA.startsWith(QStringLiteral("--smoke="))) l_oSmoke = l_oA.mid(8);
+            else if (l_oA.startsWith(QStringLiteral("--grab-weapon="))) l_oGrabWeapon = l_oA.mid(14);   // <weapon>:<png>; with -platform offscreen: no window
         }
 
         BattleEditorWindow l_oW;
@@ -121,9 +122,18 @@ int main(int l_iArgc, char** l_pArgv) {
                       l_oW.f_CurrentSetup().m_oPlayer.m_strWeapon == "sword" && l_oW.f_CurrentSetup().m_oPlayer.m_iLv == 5,
                   "a saved setup loads (three of the same monster, the sword, Lv 5)");
             f_Check(l_oW.f_SetInBattle(QStringLiteral("bat"), false) && l_oW.f_InBattle().isEmpty(), "untick: every copy leaves");
+            f_Check(l_oW.f_SelectWeapon(QStringLiteral("staff")) && l_oW.f_SetWeaponLevelCell(9, QStringLiteral("points"), 7) && l_oW.f_SetWeaponLevelCell(9, QStringLiteral("int"), 99) &&
+                      l_oW.f_WeaponLevelsJson(QStringLiteral("staff")).contains(QStringLiteral("\"lv\":9,\"points\":7")), "a level's detail edited on the Weapon tab");
             f_Check(l_oW.f_ScenarioCount() >= 20, "the Scenarios tab lists tests/scenarios");
             std::printf(g_iFailed ? "battle_editor selftest: %d failed\n" : "battle_editor selftest: all passed\n", g_iFailed);
             l_iRc = g_iFailed ? 1 : 0;
+        } else if (!l_oGrabWeapon.isEmpty()) {
+            l_oW.f_SetQuiet(true);
+            const QString l_oKey = l_oGrabWeapon.section(QLatin1Char(':'), 0, 0), l_oPng = l_oGrabWeapon.section(QLatin1Char(':'), 1);
+            l_iRc = l_oW.f_SelectWeapon(l_oKey) && l_oW.f_GrabWeaponTab(l_oPng) ? 0 : 1;
+            std::printf("%s\n", l_oW.f_WeaponLevelsJson(l_oKey).toStdString().c_str());
+            l_oW.f_SetWeaponLevelCell(9, QStringLiteral("points"), 7);
+            std::printf("after an edit: %s\n", l_oW.f_WeaponLevelsJson(l_oKey).toStdString().c_str());
         } else if (!l_oSmoke.isEmpty()) {
             l_oW.f_SetQuiet(true);
             l_oW.show();

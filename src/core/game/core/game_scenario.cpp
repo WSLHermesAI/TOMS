@@ -80,6 +80,7 @@ bool Game::f_EnemyFromData(const std::string& l_strId, const nlohmann::json& l_j
     l_oEn.m_iHp = l_jB.value("hp", l_itT->second.value("hp", 1)); l_oEn.m_iAtk = l_jB.value("atk", l_itT->second.value("atk", 0));
     l_oEn.m_iDef = l_jB.value("def", l_itT->second.value("def", 0));
     l_oEn.m_iExp = l_itT->second.value("exp", 0); l_oEn.m_iGold = l_itT->second.value("gold", 0);
+    l_oEn.m_iWeaponExp = std::max(0, l_itT->second.value("weaponExp", 1));
     l_oEn.m_iX = l_oEn.m_iY = -1;   // not on the map: winning removes nothing
     l_oEn.m_bBoss = l_itT->second.value("boss", false);
     l_oEn.m_iAtkIntervalMs = l_jB.value("atk_interval_ms", l_itT->second.value("atk_interval_ms", 4000));
@@ -112,16 +113,18 @@ bool Game::f_ArenaEndFight(bool l_bWon) {
     m_oCs.m_bWon = l_bWon;   // a win waits for the player's tap; a loss shows briefly
     if (l_bWon) { m_oArena.m_iWins++; m_oCs.m_strLog = m_oLocale.f_Tr("arena.won"); }
     else { m_oArena.m_iLosses++; m_oCs.m_strLog = m_oLocale.f_Tr("arena.lost"); m_oCs.m_iResultPauseMs = 1200; }
-    if (l_bWon && m_oArena.m_bTraining) {   // the training ground (docs/gameplay/16 §5): more EXP and weapon wins
+    if (l_bWon && m_oArena.m_bTraining) {   // the training ground (docs/gameplay/16 §5): more EXP and weapon EXP
         const nlohmann::json l_jTr = m_jBattleJson.value("training", nlohmann::json::object());
         int l_iExp = 0;
         for (const CombatState::Foe& l_oF : m_oCs.m_vFoes) l_iExp += l_oF.m_oEnemy.m_iExp;
         l_iExp = (int)std::lround(l_iExp * std::max(0.0f, l_jTr.value("exp", 2.0f)));
-        const int l_iUses = std::max(0, l_jTr.value("uses", 2));
+        int l_iUses = 0;
+        for (const CombatState::Foe& l_oF : m_oCs.m_vFoes) l_iUses += l_oF.m_oEnemy.m_iWeaponExp;
+        l_iUses = (int)std::lround(l_iUses * std::max(0.0f, l_jTr.value("weaponExp", 2.0f)));
         f_GainExp(l_iExp);
-        m_mapWeaponUses[f_WeaponKey()] += l_iUses;
+        m_mapWeaponExp[f_WeaponKey()] += l_iUses;
         m_oArena.m_iExpGained += l_iExp;
-        m_oArena.m_iUsesGained += l_iUses;
+        m_oArena.m_iWeaponExpGained += l_iUses;
         m_oCs.m_strLog = f_TrParam(f_TrParam(m_oLocale.f_Tr("training.won"), "exp", std::to_string(l_iExp)), "uses", std::to_string(l_iUses));
         f_MarkProgressDirty();
     }
@@ -135,9 +138,12 @@ bool Game::f_StartScenarioJson(const nlohmann::json& l_jSc, const std::string& l
     m_jScenarioExpect = l_jSc.value("expect", nlohmann::json::object());
     // the attack's play (touch_play.h): scenarios play the track unless their battle sets "play" ("weapon": the weapon's)
     m_strPlayOverride = l_jSc.value("battle", nlohmann::json::object()).value("play", std::string("track"));
+    m_strUltimateOverride = l_jSc.value("battle", nlohmann::json::object()).value("ultimate", std::string());
+    m_fScenarioBattleSpeed = std::max(0.1f, l_jSc.value("battle", nlohmann::json::object()).value("speed", 1.0f));
     const nlohmann::json l_jTest = l_jSc.value("test", nlohmann::json::object());
     m_iScenarioTestFrames = l_jTest.value("frames", 0);
     m_strScenarioTestKeys = l_jTest.value("keys", std::string());
+    m_strScenarioTestDrags = l_jTest.value("drags", std::string());     // "x0:y0:x1:y1:frames@frame,..." (design px), like --drag
     m_strScenarioTestClicks = l_jTest.value("clicks", std::string());   // "x:y@frame,..." (design px), like --clicks
     auto l_fnBad = [&](const std::string& l_strWhat) { l_strError = m_strScenarioName + ": " + l_strWhat; return false; };
 
@@ -198,8 +204,11 @@ bool Game::f_StartScenarioJson(const nlohmann::json& l_jSc, const std::string& l
     if (l_jP.contains("attrs"))
         for (auto l_oIt = l_jP["attrs"].begin(); l_oIt != l_jP["attrs"].end(); ++l_oIt) m_oPl.m_mapAttrs[l_oIt.key()] = l_oIt.value().get<int>();
     if (l_jP.contains("inventory")) m_oPl.m_vInv = f_Strings(l_jP, "inventory");
-    if (l_jP.contains("weaponUses") && l_jP["weaponUses"].is_object())   // wins with each weapon: its level (docs/gameplay/07 phase 1)
-        for (auto l_oIt = l_jP["weaponUses"].begin(); l_oIt != l_jP["weaponUses"].end(); ++l_oIt) m_mapWeaponUses[l_oIt.key()] = l_oIt.value().get<int>();
+    if (l_jP.contains("weaponExp") && l_jP["weaponExp"].is_object())   // each weapon's EXP (docs/gameplay/17 §19)
+        for (auto l_oIt = l_jP["weaponExp"].begin(); l_oIt != l_jP["weaponExp"].end(); ++l_oIt) m_mapWeaponExp[l_oIt.key()] = l_oIt.value().get<int>();
+    if (l_jP.contains("weaponLevel") && l_jP["weaponLevel"].is_object())   // or its level: the EXP that reaches it
+        for (auto l_oIt = l_jP["weaponLevel"].begin(); l_oIt != l_jP["weaponLevel"].end(); ++l_oIt)
+            m_mapWeaponExp[l_oIt.key()] = toms::f_WeaponExpForLevel(f_WeaponPlayOf(l_oIt.key()), l_oIt.value().get<int>());
 
     // 5. The scene.
     const std::string& l_strS = m_strScenarioScene;

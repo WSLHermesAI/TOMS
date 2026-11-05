@@ -248,6 +248,12 @@ FeelSettings f_FeelFromJson(const nlohmann::json& l_jB) {
     l_oF.m_iShakeMs = std::max(0, l_jJ.value("shakeMs", l_oF.m_iShakeMs));
     l_oF.m_iSlowMoMs = std::max(0, l_jJ.value("slowMoMs", l_oF.m_iSlowMoMs));
     l_oF.m_fSlowMoScale = std::clamp(l_jJ.value("slowMoScale", l_oF.m_fSlowMoScale), 0.05f, 1.0f);
+    l_oF.m_strWinClip = l_jJ.value("winClip", l_oF.m_strWinClip);
+    l_oF.m_strWinBigClip = l_jJ.value("winBigClip", l_oF.m_strWinBigClip);
+    l_oF.m_strWinParClip = l_jJ.value("winParClip", l_oF.m_strWinParClip);
+    l_oF.m_strLoseClip = l_jJ.value("loseClip", l_oF.m_strLoseClip);
+    l_oF.m_fWinParHp = std::clamp(l_jJ.value("winParHp", l_oF.m_fWinParHp), 0.0f, 1.0f);
+    l_oF.m_iEndMaxMs = std::max(0, l_jJ.value("endMaxMs", l_oF.m_iEndMaxMs));
     l_oF.m_fReducedScale = std::clamp(l_jJ.value("reducedScale", l_oF.m_fReducedScale), 0.0f, 1.0f);
     l_oF.m_fChainStep = std::max(0.0f, l_jJ.value("chainStep", l_oF.m_fChainStep));
     l_oF.m_iChainMax = std::max(1, l_jJ.value("chainMax", l_oF.m_iChainMax));

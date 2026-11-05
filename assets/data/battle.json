@@ -23,7 +23,7 @@
     "when a monster attacks in the middle of it; false = the marker stops for that pause (as before).",
     "The revamp (docs/gameplay/15_BATTLE_REVAMP.md): feel = the moments' hit stop (stopMs: both sides freeze), screen",
     "shake (shakePx, over shakeMs) and sound per moment (hit, great, perfect, miss, parry, block, break, hurt, heavyHurt,",
-    "ultimate, phase, win); strength scales them all (Q34); slowMoMs / slowMoScale: the last hit in slow motion;",
+    "ultimate, phase, win); strength scales them all (Q34); slowMoMs / slowMoScale: the last hit in slow motion; then the last attack clip ends, and the end clip plays before the result: winBigClip with no damage taken, winParClip with winParHp of the HP or less, else winClip; loseClip when HP is gone; endMaxMs: the longest this may wait;",
     "reducedScale: the player's 'Reduce shaking and flashes'; chainStep: each perfect in a row adds this much damage.",
     "grade = the win's S / A / B / C (Q35): 100 - seconds over par x timePenalty - HP lost share x damagePenalty +",
     "perfect rate x perfectBonus + best chain x chainBonus; s / a / b the lowest score of each; an S gives sGold more gold",
@@ -34,7 +34,9 @@
     "plays: the weapons' plays (touch_play.h): the bow's target move (bowMoveMs, bowMoveDist), its charge limit (bowHoldMs",
     "+ bowHoldPerStr per STR) and shake (bowShakePx / (1 + DEX x bowShakePerDex)); the sword's prompts (cueMs, of which",
     "inputMs take the answer, at the end when inputAtEnd); the staff's count / hide / warn / tap times.",
-    "training: the training ground (16 §5): cards spent per run, runs per day, fights per run, EXP and weapon wins x."
+    "cueExtraMs: more time for a prompt that takes longer to draw (17 §4.2). dexWayDeg / dexWayMaxDeg: a swipe's tolerance per DEX point and its limit; dexGestureMaxDeg: a gesture's limit; dexCornerPct: a shape's corners per point; dexWindowMs: the answer window per point (17 §4.4). freeMinSwipe: a shorter drag is no swipe in a free mode (17 §5).",
+    "battleSpeeds: the steps of Settings > Battle speed (17 I10).",
+    "training: the training ground (16 §5): cards spent per run, runs per day, fights per run, EXP and weapon EXP x."
   ],
   "bar_slow_speed_scale": 0.5,
   "bar_fast_speed_scale": 10,
@@ -55,15 +57,19 @@
     "sounds": { "hit": "battle_hit", "great": "battle_great", "perfect": "battle_perfect", "miss": "battle_miss",
                 "parry": "battle_parry", "block": "battle_block", "break": "battle_break", "ultimate": "battle_ultimate",
                 "phase": "battle_phase", "win": "battle_win" },
-    "slowMoMs": 450, "slowMoScale": 0.3, "reducedScale": 0.25, "chainStep": 0.1, "chainMax": 10
+    "slowMoMs": 450, "slowMoScale": 0.3,
+    "winClip": "win", "winBigClip": "win_big", "winParClip": "win_par", "loseClip": "lose", "winParHp": 0.25, "endMaxMs": 2500, "reducedScale": 0.25, "chainStep": 0.1, "chainMax": 10
   },
   "grade": { "parSeconds": 25, "timePenalty": 1.5, "damagePenalty": 60, "perfectBonus": 30, "chainBonus": 3,
              "s": 95, "a": 75, "b": 55, "sGold": 0.2, "sCard": 0.25 },
   "guard": { "mode": "warn", "warnMs": 500, "parryShare": 0.4, "missLockMs": 400,
              "parryMs": 160, "blockMs": 550, "earlyMs": 1200, "blockPower": 70, "cooldownMs": 700 },
+  "battleSpeeds": [0.75, 1, 1.25, 1.5],
   "plays": { "bowTimeMs": 4000, "bowMoveMs": 500, "bowMoveDist": 90, "bowHoldMs": 1500, "bowHoldPerStr": 40,
              "bowShakePx": 10, "bowShakePerDex": 0.05,
-             "cueMs": 1000, "inputMs": 500, "inputAtEnd": true, "cueGapMs": 150,
+             "cueMs": 1000, "inputMs": 750, "inputAtEnd": true, "cueGapMs": 150,
+             "cueExtraMs": { "v": 400, "m": 900, "square": 1100, "triangle": 800, "circle": 800 },
+             "dexWayDeg": 1.5, "dexWayMaxDeg": 40, "dexGestureMaxDeg": 15, "dexCornerPct": 1.5, "dexWindowMs": 10, "freeMinSwipe": 25,
              "circleCountMs": 450, "circleHideMs": 500, "circleWarnMs": 500, "circleTapMs": 900, "circlePerfectMs": 500 },
-  "training": { "cards": 1, "runsPerDay": 3, "fights": 3, "exp": 2.0, "uses": 2 }
+  "training": { "cards": 1, "runsPerDay": 3, "fights": 3, "exp": 2.0, "weaponExp": 2 }
 }

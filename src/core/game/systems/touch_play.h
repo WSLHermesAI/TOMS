@@ -3,12 +3,13 @@
 //   Bow      the target moves a moment, then stops; touch anywhere, drag back and let go (a slingshot): the crosshair
 //            goes the other way. Holding the pull charges the shot (up to a limit: then it goes) and shakes the aim.
 //            A normal attack is one arrow; a move asks for several.
-//   Slice    the sword's prompts, one at a time on a cue track: each pops in, and only its input window takes the
-//            answer: a swipe the arrow's way, or a shape drawn (a triangle, a circle). Each answer is a hit at once.
+//   Swipe    the sword's prompts, one at a time on a cue track: each pops in, and only its input window takes the
+//            answer: a swipe the arrow's way, a gesture (V, M, square; 17 §4.2) or a shape drawn. Each answer is a hit at once.
 //   Circles  the staff's circles: they count in order with their numbers, hide, come back together with an "!", and
 //            are tapped in the order remembered. Each tap casts a spell at once.
 //   Shape    a shape shown on the screen, traced corner by corner in a time (the staff's pentagram, a special guard).
 //   Mash     tap quickly, `points` times in a time (a special guard).
+//   Free     the ultimates (17 §5): for a time, any swipe or any tap anywhere counts, as many as the player makes.
 // Every play reports on the track's scale (combo_play.h's ComboResult: hits of points, perfects, failed), so the
 // result rows, their particles and clips, the break gauge and the grade work the same for all; takeHits() gives each
 // answer as it happens, for the plays whose answers hit at once.
@@ -18,20 +19,18 @@
 #include "combo_play.h"
 #include "cue_track.h"
 #include "gesture.h"
+#include "play_type.h"
 
 #include <glm/glm.hpp>
 #include <json.hpp>
 
 #include <cstdint>
+#include <map>
 #include <random>
 #include <string>
 #include <vector>
 
 namespace toms {
-
-enum class PlayKind { Track, Bow, Slice, Circles, Shape, Mash };
-PlayKind f_PlayKindFromString(const std::string& l_strS);   // "bow", "slice", "circles", "shape", "mash"; else the track
-const char* f_PlayKindName(PlayKind l_eK);
 
 struct TouchPlaySettings {
     // bow
@@ -47,7 +46,10 @@ struct TouchPlaySettings {
     CueTiming m_oSliceCue;                    // each prompt 1000 ms, of which the last 500 ms take the answer
     float m_fSliceMinLength = 70.0f;          // a shorter swipe is not a cut
     float m_fSliceTolerance = 0.5f;           // radians off the arrow's way that still cut
-    std::vector<std::string> m_vSliceCues;    // each prompt: "way" or a shape name ("triangle", "circle"); empty: ways
+    std::vector<std::string> m_vSliceCues;    // each prompt: "way", a gesture ("v", "m", "square") or a shape ("triangle", "circle"); empty: the play's own
+    std::map<std::string, int> m_mapCueExtraMs = {{"v", 400}, {"m", 900}, {"square", 1100}, {"triangle", 800}, {"circle", 800}};   // more time to draw it
+    float m_fGestureExtraDeg = 0.0f;          // DEX: a gesture's angles are this much wider (Game)
+    float m_fShapeTolerance = 0.2f;           // a drawn shape's corners, a share of its box (Game: wider with DEX)
     // circles
     int m_iCircleCountMs = 450;       // each circle lit in turn with its number
     int m_iCircleHideMs = 500;        // then all hidden (the owner: 0.5 s)
@@ -59,13 +61,23 @@ struct TouchPlaySettings {
     std::string m_strShape = "pentagram";
     float m_fShapeSize = 220.0f;
     float m_fShapeCornerRadius = 44.0f;
+    float m_fCornerBonus = 0.0f;      // DEX: the corners are this share bigger (Game)
     int m_iShapeTimeMs = 6000;
     int m_iShapeStepPerfectMs = 1200; // a corner this soon after the last is perfect
     // mash
     int m_iMashTimeMs = 2000;
+    // free
+    int m_iFreeTimeMs = 3000;
+    float m_fFreeMinSwipe = 25.0f;    // a shorter drag is not a swipe
     // the player's stats (Game applies them): STR lengthens the bow's charge limit, DEX calms its shake
     int m_iBowHoldPerStr = 40;        // ms more per STR point
     float m_fBowShakePerDex = 0.05f;  // the shake / (1 + DEX x this)
+    // DEX widens every play's tolerance (docs/gameplay/17 §4.4)
+    float m_fDexWayDeg = 1.5f;        // a swipe's and a gesture's angle: degrees per point
+    float m_fDexWayMaxDeg = 40.0f;    // a way's whole tolerance stops here (the eight ways are 45 degrees apart)
+    float m_fDexGestureMaxDeg = 15.0f;// a gesture's extra stops here
+    float m_fDexCornerPct = 1.5f;     // a shape's corners: percent per point
+    int m_iDexWindowMs = 10;          // the answer window: ms per point
 };
 
 // data/battle.json "plays" (anything missing keeps its default above).
@@ -81,7 +93,7 @@ public:
 
     // A new play of `points` over `area` (x, y, w, h: where its targets and circles may go). A move (`ultimate`) and
     // the sword, staff, shape and mash plays start at once; the bow waits for its first touch.
-    void f_Start(PlayKind l_eKind, int l_iPoints, bool l_bUltimate, const glm::vec4& l_v4Area, uint32_t l_uSeed,
+    void f_Start(PlayType l_eType, int l_iPoints, bool l_bUltimate, const glm::vec4& l_v4Area, uint32_t l_uSeed,
                const TouchPlaySettings& l_oS = TouchPlaySettings());
     void f_Stop() { m_bRunning = false; }
     // The pointer: 0 down, 1 move (held), 2 up; design pixels.
@@ -93,7 +105,8 @@ public:
     bool f_Started() const { return m_bStarted; }
     bool f_Done() const { return m_bDone; }
     ComboResult f_Result() const;
-    PlayKind f_Kind() const { return m_eKind; }
+    PlayType f_Type() const { return m_eType; }
+    int f_Hits() const { return m_iHitCount; }
     bool f_Ultimate() const { return m_bUltimate; }
     int f_Index() const { return m_iIndex; }
     int f_Points() const { return m_iPoints; }
@@ -114,7 +127,7 @@ public:
     const std::string& f_CueKind(int l_iK) const { return m_vCueKinds[(size_t)l_iK]; }   // "way" or a shape
     int f_CueDir(int l_iK) const { return m_vCueDirs[(size_t)l_iK]; }                      // a way: 0..7 (×45°, 0 = right, clockwise)
     glm::vec2 f_PromptAt() const;                   // where the prompt shows
-    bool f_Swiping() const { return m_bAiming && m_eKind == PlayKind::Slice; }
+    bool f_Swiping() const { return m_bAiming && (f_IsSwipePlay(m_eType) || m_eType == PlayType::eFREE_SWIPE || m_eType == PlayType::eFREE_SHOT); }
     const std::vector<glm::vec2>& f_Stroke() const { return m_vStroke; }
     // circles
     const std::vector<Circle>& f_Circles() const { return m_vCircles; }
@@ -129,7 +142,7 @@ private:
     void f_FinishOne(bool l_bOk, bool l_bPerfect, float l_fX, float l_fY);
     void f_Release();
     void f_JudgeStroke();
-    PlayKind m_eKind = PlayKind::Track;
+    PlayType m_eType = PlayType::eTRACK;
     TouchPlaySettings m_oS;
     glm::vec4 m_v4Area{0.0f};
     std::mt19937 m_oRng;

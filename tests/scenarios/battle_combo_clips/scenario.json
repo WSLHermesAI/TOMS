@@ -1,0 +1,27 @@
+{
+  "_comment": "The combo grows (docs/gameplay/17 §19): in the sword's free mode, the third swipe in a row plays attack_3; right after it the battle picture still shows it.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "sword"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000,
+    "super": true,
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 146,
+    "keys": "g@10",
+    "drags": "200:560:330:560:4@90,500:600:500:500:4@110,800:500:700:600:4@130"
+  },
+  "expect": {
+    "battleEvents": {
+      "hit": 3
+    },
+    "battleClip": "attack_3"
+  }
+}

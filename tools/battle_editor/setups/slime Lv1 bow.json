@@ -4,7 +4,7 @@
   "player": {
     "give": ["bow"],
     "equip": ["bow"],
-    "weaponUses": { "bow": 0 },
+    "weaponLevel": { "bow": 1 },
     "lv": 1,
     "maxhp": 120,
     "hp": 120
@@ -16,6 +16,6 @@
     "name": "slime Lv1 bow",
     "pace": "",
     "foes": ["slime"],
-    "player": { "lv": 1, "hp": 120, "maxhp": 120, "weapon": "bow", "weaponWins": 0, "attrs": {}, "attrPoints": 0 }
+    "player": { "lv": 1, "hp": 120, "maxhp": 120, "weapon": "bow", "weaponLevel": 1, "attrs": {}, "attrPoints": 0 }
   }
 }

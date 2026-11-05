@@ -69,7 +69,7 @@ tests/scenarios/
 | `flags` | 要設定的流程旗標（例如 `hub.village` 解鎖村莊）。 |
 | `eventsDone` | 像玩家一樣完成的事件。它們的獎勵、解鎖與通知都會發生。 |
 | `cards` | 持有的怪物卡片：`{ "slime": 2 }`（練習場，[16](16_SKILLS_AND_PLAYS.md) §5）。 |
-| `player` | 新遊戲開始時裝備著弓（初始武器）；`"unarmed": true` 會卸下它。接著 `give` 與 `equip`（依 `items.json` 的 id 給道具與裝備；`give` 中也可以用 `gold:<n>`、`exp:<n>`、`points:<n>`），再套用給定的數值。`inventory` 會取代背包內容。`weaponUses`（`{ "<武器 id>": <勝場> }`）設定每把武器的勝場，也就是它的等級（[07](07_GAMEPLAY_PLAN.md) 第 13 節）。 |
+| `player` | 新遊戲開始時裝備著弓（初始武器）；`"unarmed": true` 會卸下它。接著 `give` 與 `equip`（依 `items.json` 的 id 給道具與裝備；`give` 中也可以用 `gold:<n>`、`exp:<n>`、`points:<n>`），再套用給定的數值。`inventory` 會取代背包內容。`weaponExp`（`{ "<武器 id>": <經驗> }`）或 `weaponLevel`（`{ "<武器 id>": <等級> }`）設定武器等級。 |
 | `test` | 自動測試用：場景開啟後執行幾個畫格，以及要按的鍵（`鍵@畫格`，從場景的第一個畫格算起；鍵名和 `--keys` 相同），以及 `clicks`：在設計座標上按滑鼠左鍵（`x:y@畫格`，1024 x 768，同 `--clicks`；一次點擊先懸停 2 畫格、按下 2 畫格，再放開）。 |
 | `expect` | 測試結束時檢查什麼（第 4 節）。沒有的話只檢查場景是否正在顯示。 |
 

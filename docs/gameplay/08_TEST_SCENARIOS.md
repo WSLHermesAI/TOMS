@@ -70,7 +70,7 @@ Everything except `scene` is optional. The game applies the fields in this order
 | `flags` | Run flags to set (e.g. `hub.village` unlocks the village). |
 | `eventsDone` | Events to finish as the player would. Their rewards, unlocks and notices happen. |
 | `cards` | Monster cards held: `{ "slime": 2 }` (the training ground, [16](16_SKILLS_AND_PLAYS.md) §5). |
-| `player` | A new game starts with the bow equipped (the starting weapon); `"unarmed": true` takes it off. Then `give` and `equip` (items and gear by `items.json` id; `gold:<n>`, `exp:<n>` and `points:<n>` work in `give`), then the numbers as given. `inventory` replaces the backpack. `weaponUses` (`{ "<weapon id>": <wins> }`) sets each weapon's wins, so its level ([07](07_GAMEPLAY_PLAN.md) §13). |
+| `player` | A new game starts with the bow equipped (the starting weapon); `"unarmed": true` takes it off. Then `give` and `equip` (items and gear by `items.json` id; `gold:<n>`, `exp:<n>` and `points:<n>` work in `give`), then the numbers as given. `inventory` replaces the backpack. `weaponExp` (`{ "<weapon id>": <EXP> }`) or `weaponLevel` (`{ "<weapon id>": <level> }`) sets a weapon's level.md) §13). |
 | `test` | For the automated test: how many frames to run after the scene opens, and keys to press (`key@frame`, counted from the scene's first frame; the keys are those of `--keys`), and `clicks`: left clicks at design points (`x:y@frame`, 1024 x 768, as `--clicks`; a click hovers 2 frames, presses 2, then lets go). |
 | `expect` | What the test checks at the end (section 4). Without it, only that the scene is showing. |
 

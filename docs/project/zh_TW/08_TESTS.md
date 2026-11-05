@@ -111,7 +111,7 @@ Smoke 場景有標題、地圖（HUD + 方向盤）、玩家選單的五個分�
 
 ## 截圖測試如何運作
 
-- `toms_game --fixed-dt=16 --frames=N --keys=… --clicks=… --screenshot=…`：每個畫面剛好前進 16 ms，
+- `toms_game --fixed-dt=16 --frames=N --keys=… --clicks=… --drag=… --wheel=… --screenshot=…`：每個畫面剛好前進 16 ms，
   真正的滑鼠/鍵盤輸入會被忽略，所以同一個場景每次執行都是相同的像素。
 - 每個測試在 `Build\<preset>\test-run\<name>\` 底下的全新資料夾中執行，所以先前的存檔不會改變
   標題畫面。

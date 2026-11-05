@@ -1036,12 +1036,8 @@
       "es": "{name}  Nv {lv}"
     },
     "battle.result_progress": {
-      "zh_TW": "再 {n} / {m} 勝升到下一級",
-      "en": "{n} / {m} wins to the next level",
-      "zh_CN": "再 {n} / {m} 胜升到下一级",
-      "ja": "次のレベルまで {n} / {m} 勝",
-      "ko": "다음 레벨까지 {n} / {m}승",
-      "es": "{n} / {m} victorias para el siguiente nivel"
+      "zh_TW": "武器經驗 +{g}：{n} / {m}",
+      "en": "Weapon EXP +{g}: {n} / {m}"
     },
     "battle.result_top": {
       "zh_TW": "已達最高等級",
@@ -1099,7 +1095,7 @@
       "ko": "[x] 흔들림과 섬광 줄이기",
       "es": "[x] Reducir sacudidas y destellos"
     },
-    "battle.play_hint_bow": {
+    "battle.play_hint_pullRelease": {
       "zh_TW": "往後拉再放開，瞄準靶心",
       "en": "drag back and let go at the target",
       "zh_CN": "往后拉再放开，瞄准靶心",
@@ -1107,7 +1103,7 @@
       "ko": "뒤로 당겼다 놓아 과녁을 노려라",
       "es": "tira hacia atrás y suelta hacia la diana"
     },
-    "battle.play_hint_slice": {
+    "battle.play_hint_swipeWay": {
       "zh_TW": "箭頭發光時照方向劃過",
       "en": "swipe each arrow's way while it glows",
       "zh_CN": "箭头发光时照方向划过",
@@ -1115,7 +1111,7 @@
       "ko": "화살표가 빛날 때 그 방향으로",
       "es": "desliza hacia la flecha mientras brilla"
     },
-    "battle.play_hint_circles": {
+    "battle.play_hint_sequenceClick": {
       "zh_TW": "記住順序，再依序點擊",
       "en": "watch the order, then tap them in turn",
       "zh_CN": "记住顺序，再依序点击",
@@ -1194,6 +1190,70 @@
       "ja": "動く的を射抜け！",
       "ko": "움직이는 과녁을 맞혀라!",
       "es": "¡Acierta a las dianas móviles!"
+    },
+    "battle.play_hint_swipeGesture": {
+      "zh_TW": "依提示一筆畫出手勢",
+      "en": "Draw the gesture in one stroke"
+    },
+    "skill.free_swipe": {
+      "zh_TW": "亂刃",
+      "en": "Blade Storm"
+    },
+    "skill.free_shot": {
+      "zh_TW": "必中連射",
+      "en": "Sure-Shot Barrage"
+    },
+    "skill.free_tap": {
+      "zh_TW": "魔彈連發",
+      "en": "Spell Barrage"
+    },
+    "skill.prompt_free_swipe": {
+      "zh_TW": "任意方向狂劃！",
+      "en": "Swipe anywhere, any way!"
+    },
+    "skill.prompt_free_shot": {
+      "zh_TW": "任意滑動，箭箭命中！",
+      "en": "Swipe anywhere: every arrow hits!"
+    },
+    "skill.prompt_free_tap": {
+      "zh_TW": "任意地方連點！",
+      "en": "Tap anywhere, fast!"
+    },
+    "settings.battle_speed": {
+      "zh_TW": "戰鬥速度：{x} 倍",
+      "en": "Battle speed: x{x}"
+    },
+    "store.toast_gear_worn": {
+      "zh_TW": "已購買並裝備：{name}（可在「裝備」分頁更換）",
+      "en": "Bought and worn: {name} (change it in the Equipment tab)"
+    },
+    "gear.weapon_level": {
+      "zh_TW": "武器等級",
+      "en": "Level"
+    },
+    "gear.combo": {
+      "zh_TW": "連擊數",
+      "en": "Combo"
+    },
+    "gear.to_next": {
+      "zh_TW": "下一級",
+      "en": "Next level"
+    },
+    "gear.wins": {
+      "zh_TW": "還需 {n} 經驗",
+      "en": "{n} more EXP"
+    },
+    "gear.max_level": {
+      "zh_TW": "已達最高",
+      "en": "Top level"
+    },
+    "gear.play": {
+      "zh_TW": "玩法：",
+      "en": "How to play: "
+    },
+    "battle.word_combo": {
+      "zh_TW": "{n} 連擊！",
+      "en": "{n} Combo!"
     },
     "skill.prompt_mash": {
       "zh_TW": "快速連點撐住！",

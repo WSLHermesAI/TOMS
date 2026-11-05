@@ -61,7 +61,7 @@ struct PlayerSaveData {
     std::string m_strWeapon, m_strArmor, m_strTalent;           // what is worn ("" = nothing)
     int m_iAttrPoints = 0;                          // attribute points not placed yet
     // 2026-10-22 (Battle v3, docs/gameplay/07 phase 1): wins with each weapon ("unarmed" for none) -- its level comes from them.
-    std::map<std::string, int> m_mapWeaponUses;
+    std::map<std::string, int> m_mapWeaponExp;
     int m_iCrystals = 0;                            // 2026-10-22 (docs/gameplay/07 phase 6): the second currency; optional
 };
 

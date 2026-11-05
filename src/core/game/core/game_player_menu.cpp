@@ -83,7 +83,7 @@ std::vector<Game::ItemCell> Game::f_ItemCells() const {
 }
 
 std::vector<std::string> Game::f_GearCells() const {
-    const toms::EquipmentSlot l_eWant = m_iGearSlot == 0 ? toms::EquipmentSlot::Weapon : toms::EquipmentSlot::Armor;
+    const toms::EquipmentSlot l_eWant = m_iGearSlot == 0 ? toms::EquipmentSlot::Weapon : m_iGearSlot == 1 ? toms::EquipmentSlot::Armor : toms::EquipmentSlot::Talent;
     std::vector<std::string> l_vOut;
     for (const std::string& l_strId : m_vGearOwned) {
         auto l_itIt = m_mapEquipmentDefs.find(l_strId);
@@ -392,7 +392,7 @@ void Game::f_PlayerMenuMove(int l_iDx, int l_iDy) {
         case MenuTab::Gear: {
             const int l_iN = (int)f_GearCells().size();
             m_iGearSel = f_ClampSel(m_iGearSel, l_iN);
-            if (!f_GridMove(m_iGearSel, l_iN, l_iDx, l_iDy)) { m_iGearSlot = 1 - m_iGearSlot; m_iGearSel = 0; }
+            if (!f_GridMove(m_iGearSel, l_iN, l_iDx, l_iDy)) { m_iGearSlot = (m_iGearSlot + (l_iDx > 0 || l_iDy > 0 ? 1 : 2)) % 3; m_iGearSel = 0; }
             break;
         }
         case MenuTab::Items: {
@@ -513,10 +513,10 @@ void Game::f_PlayerMenuEvent(const std::string& l_strName, int l_iArg) {
     if (l_strName == "pm_attr_sub") { if (l_iArg >= 0 && l_iArg < (int)m_vAttrDefs.size()) { m_iAttrSel = l_iArg; f_UnspendAttrPoint(l_iArg); } return; }
     if (l_strName == "pm_attr_confirm") { f_ConfirmAttrPoints(); return; }
     if (l_strName == "pm_attr_reset") { f_ResetAttrDraft(); return; }
-    if (l_strName == "pm_slot") { if ((l_iArg == 0 || l_iArg == 1) && l_iArg != m_iGearSlot) { m_iGearSlot = l_iArg; m_iGearSel = 0; } return; }
+    if (l_strName == "pm_slot") { if (l_iArg >= 0 && l_iArg <= 2 && l_iArg != m_iGearSlot) { m_iGearSlot = l_iArg; m_iGearSel = 0; } return; }
     if (l_strName == "pm_filter") {
         if (m_eMenuTab == MenuTab::Items && l_iArg >= 0 && l_iArg < 4 && l_iArg != m_iItemFilter) { m_iItemFilter = l_iArg; m_iItemSel = 0; }
-        if (m_eMenuTab == MenuTab::Gear && (l_iArg == 0 || l_iArg == 1) && l_iArg != m_iGearSlot) { m_iGearSlot = l_iArg; m_iGearSel = 0; }
+        if (m_eMenuTab == MenuTab::Gear && l_iArg >= 0 && l_iArg <= 2 && l_iArg != m_iGearSlot) { m_iGearSlot = l_iArg; m_iGearSel = 0; }
         if (m_eMenuTab == MenuTab::Events && (l_iArg == 0 || l_iArg == 1) && l_iArg != m_iEventFilter) { m_iEventFilter = l_iArg; m_iEventSel = 0; }
         return;
     }
@@ -624,6 +624,21 @@ void Game::f_BuildPlayerUi(toms::UiState& l_oU) const {
         const std::string l_strNa = l_fnActiveNames(l_pCur), l_strNb = l_fnActiveNames(&l_oD);
         if (l_strNa != l_strNone || l_strNb != l_strNone) l_oP.m_vDCompareLines.push_back({l_oL.f_Tr("gear.skill"), l_strNa, l_strNb, 0});
     };
+    // A weapon's detail (docs/gameplay/17 I6): its level, its combo, the EXP to the next level, how it plays.
+    auto l_fnWeaponLines = [&](const std::string& l_strId) {
+        auto l_itIt = m_mapEquipmentDefs.find(l_strId);
+        if (l_itIt == m_mapEquipmentDefs.end() || l_itIt->second.m_eSlot != toms::EquipmentSlot::Weapon) return;
+        const toms::WeaponPlay& l_oWp = f_WeaponPlayOf(l_strId);
+        const int l_iLv = f_WeaponLevel(l_strId), l_iNext = toms::f_ExpToNextLevel(l_oWp, l_iLv);
+        auto l_itExp = m_mapWeaponExp.find(l_strId);
+        const int l_iLeft = std::max(0, toms::f_WeaponExpForLevel(l_oWp, l_iLv + 1) - (l_itExp == m_mapWeaponExp.end() ? 0 : l_itExp->second));
+        l_oP.m_vDLines.push_back({l_oL.f_Tr("gear.weapon_level"), "Lv " + std::to_string(l_iLv) + " / " + std::to_string(toms::f_WeaponMaxLevel(l_oWp)), "", 0});
+        l_oP.m_vDLines.push_back({l_oL.f_Tr("gear.combo"), std::to_string(toms::f_WeaponLevelEntry(l_oWp, l_iLv).m_iPoints), "", 0});
+        l_oP.m_vDLines.push_back({l_oL.f_Tr("gear.to_next"), l_iNext > 0 ? f_TrParam(l_oL.f_Tr("gear.wins"), "n", std::to_string(l_iLeft)) : l_oL.f_Tr("gear.max_level"), "", 0});
+        const toms::PlayType l_eType = toms::f_PlayTypeFromString(l_oWp.m_strPlay);
+        const std::string l_strHint = l_oL.f_Tr(l_eType == toms::PlayType::eTRACK ? std::string("battle.attack_ready_hint") : std::string("battle.play_hint_") + toms::f_PlayTypeName(l_eType));
+        l_oP.m_strDNote = (l_oP.m_strDNote.empty() ? std::string() : l_oP.m_strDNote + "  ·  ") + l_oL.f_Tr("gear.play") + l_strHint;
+    };
     auto l_fnButtonsUi = [&](const std::vector<ItemButton>& l_vBs) {
         for (const ItemButton& l_oB : l_vBs) {
             const char* l_pszKey = l_oB.m_eAction == ItemAction::Use ? "inventory.use" : l_oB.m_eAction == ItemAction::Equip ? "gear.equip"
@@ -645,6 +660,7 @@ void Game::f_BuildPlayerUi(toms::UiState& l_oU) const {
         l_fnButtonsUi(f_ItemButtons(l_oC));
         if (l_oC.m_eKind == ItemCell::Key || f_ItemImportant(l_oC.m_strId)) l_oP.m_strDNote = l_oL.f_Tr("items.important");
         else if (l_oC.m_eKind == ItemCell::Gear && f_Worn(m_oEquipped, l_oC.m_strId)) l_oP.m_strDNote = l_oL.f_Tr("items.worn");
+        if (l_oC.m_eKind == ItemCell::Gear) l_fnWeaponLines(l_oC.m_strId);
     };
 
     // Status, Events and System are filled every frame whichever tab shows: their lists sit in
@@ -764,14 +780,16 @@ void Game::f_BuildPlayerUi(toms::UiState& l_oU) const {
         case MenuTab::Gear: {
             l_oP.m_vFilters.push_back({l_oL.f_Tr("status.weapon"), m_iGearSlot == 0, false});
             l_oP.m_vFilters.push_back({l_oL.f_Tr("status.armor"), m_iGearSlot == 1, false});
+            l_oP.m_vFilters.push_back({l_oL.f_Tr("store.tab.talent"), m_iGearSlot == 2, false});
             l_oP.m_strWornTitle = l_oL.f_Tr("gear.worn");
             l_oP.m_vWorn.push_back({l_oL.f_Tr("status.weapon"), m_oEquipped.m_strWeaponId.empty() ? l_strNone : f_ItemName(m_oEquipped.m_strWeaponId), "", m_iGearSlot == 0 ? 1 : 0});
             l_oP.m_vWorn.push_back({l_oL.f_Tr("status.armor"), m_oEquipped.m_strArmorId.empty() ? l_strNone : f_ItemName(m_oEquipped.m_strArmorId), "", m_iGearSlot == 1 ? 1 : 0});
+            l_oP.m_vWorn.push_back({l_oL.f_Tr("store.tab.talent"), m_oEquipped.m_strTalentId.empty() ? l_strNone : f_ItemName(m_oEquipped.m_strTalentId), "", m_iGearSlot == 2 ? 1 : 0});
             const auto l_vCells = f_GearCells();
             const int l_iSel = f_ClampSel(m_iGearSel, (int)l_vCells.size());
             for (size_t l_nI = 0; l_nI < l_vCells.size(); l_nI++)
                 l_oP.m_vCells.push_back({f_ItemSprite(l_vCells[l_nI]), f_ItemName(l_vCells[l_nI]), "", (int)l_nI == l_iSel, f_Worn(m_oEquipped, l_vCells[l_nI]), false});
-            if (l_vCells.empty()) l_oP.m_strEmptyText = f_TrParam(l_oL.f_Tr("gear.empty"), "slot", l_oL.f_Tr(m_iGearSlot == 0 ? "status.weapon" : "status.armor"));
+            if (l_vCells.empty()) l_oP.m_strEmptyText = f_TrParam(l_oL.f_Tr("gear.empty"), "slot", l_oL.f_Tr(m_iGearSlot == 0 ? "status.weapon" : m_iGearSlot == 1 ? "status.armor" : "store.tab.talent"));
             l_oP.m_strSelectHint = l_oL.f_Tr("gear.select");
             if (!l_vCells.empty()) {
                 const ItemCell l_oC{ItemCell::Gear, l_vCells[l_iSel], 1};
@@ -781,6 +799,7 @@ void Game::f_BuildPlayerUi(toms::UiState& l_oU) const {
                 l_oP.m_strDDesc = f_ItemDesc(l_oC.m_strId);
                 if (!f_Worn(m_oEquipped, l_oC.m_strId)) l_fnCompare(l_oC.m_strId);
                 else l_oP.m_strDNote = l_oL.f_Tr("gear.worn");
+                l_fnWeaponLines(l_oC.m_strId);
                 std::vector<ItemButton> l_vBs;
                 for (const ItemButton& l_oB : f_ItemButtons(l_oC)) if (l_oB.m_eAction != ItemAction::Drop) l_vBs.push_back(l_oB);
                 l_fnButtonsUi(l_vBs);

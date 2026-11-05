@@ -15,6 +15,14 @@
 
 ## ▶ Next Step
 
+**Gameplay: doc 17's W1, W2 and W3; combo and end animations; weapon levels from EXP** (2026-11-05; [DAILY_2026-11-05.md](DAILY_2026-11-05.md)):
+- W1 the fixes, W2 play types and swipe tiers, W3 free-mode ultimates; details in docs/gameplay/17 §19.
+- Combo levels (`comboTiers`), end clips (`win_big`, `win`, `win_par`, `lose`), monsters ×2, the bow lowered (2 arrows for a slime).
+- Weapon EXP: `weaponExp` on monsters, `levelExp` 5 doubling, 10 levels; no limit in code on points; a Levels table on the battle editor's Weapon tab.
+- Rules added: silence in the background; no commit or branch until the owner asks.
+- **Nothing committed.** Last changed-only run: 17 of 253, all pass; 130 selected tests are switched off. All tests, web and Android not run.
+  **Owner:** play it, look at `Build/art_out/combo/`, try **Save weapons**, fill My Answer. Next from doc 17: W4.
+
 **A real-time ocean, on the desktop, the web and the title; a version number; the open decisions in one list** (2026-11-04; [DAILY_2026-11-04.md](DAILY_2026-11-04.md)):
 - `ocean_viewer` (docs/engine/21): FFT waves, foam, Preetham sky, sliders, four quality levels; a web build (`tools\build_ocean_web.cmd`).
   Committed `efe0074`.
@@ -518,7 +526,7 @@ Short dated bullets: [WORKING_LOG.md](WORKING_LOG.md). Daily reports: [DAILY_202
 [DAILY_2026-10-23.md](DAILY_2026-10-23.md), [DAILY_2026-10-24.md](DAILY_2026-10-24.md),
 [DAILY_2026-10-25.md](DAILY_2026-10-25.md), [DAILY_2026-10-26.md](DAILY_2026-10-26.md),
 [DAILY_2026-10-28.md](DAILY_2026-10-28.md), [DAILY_2026-10-30.md](DAILY_2026-10-30.md),
-[DAILY_2026-10-31.md](DAILY_2026-10-31.md), [DAILY_2026-11-02.md](DAILY_2026-11-02.md), [DAILY_2026-11-04.md](DAILY_2026-11-04.md).
+[DAILY_2026-10-31.md](DAILY_2026-10-31.md), [DAILY_2026-11-02.md](DAILY_2026-11-02.md), [DAILY_2026-11-04.md](DAILY_2026-11-04.md), [DAILY_2026-11-05.md](DAILY_2026-11-05.md).
 
 ---
 

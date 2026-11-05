@@ -1,0 +1,24 @@
+{
+  "_comment": "The battle speed (docs/gameplay/17 I10): at x1.5 the sword's three unanswered prompts (about 3.8 s at x1, 240 frames) end in 170 frames, so the combo has resolved. battle_play_slice shows x1 needs longer.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "sword"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000,
+    "play": "weapon",
+    "speed": 1.5
+  },
+  "test": {
+    "frames": 170
+  },
+  "expect": {
+    "battleEvents": {
+      "combo": 1
+    }
+  }
+}

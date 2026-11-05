@@ -34,7 +34,7 @@ struct SetupFoe {
 struct TestPlayer {
     int m_iLv = 1, m_iHp = 120, m_iMaxhp = 120;
     std::string m_strWeapon = "bow";          // items.json id; "" = unarmed
-    int m_iWeaponWins = 0;                  // its wins (its level)
+    int m_iWeaponLevel = 1;                 // its level
     ojson m_jAttrs = ojson::object();       // { "str": 3, ... } placed points
     int m_iAttrPoints = 0;                  // points still to place
 };

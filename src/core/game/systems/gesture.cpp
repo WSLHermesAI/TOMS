@@ -17,6 +17,45 @@ std::vector<glm::vec2> f_Ring(int l_iN, float l_fStartDeg, int l_iStep) {   // n
     }
     return l_vV;
 }
+// The stroke's corners: Douglas-Peucker, the points further than `tol` from the straight line between two kept ones.
+void f_Simplify(const std::vector<glm::vec2>& l_vS, size_t l_nA, size_t l_nB, float l_fTol, std::vector<size_t>& l_vKeep) {
+    if (l_nB <= l_nA + 1) return;
+    const glm::vec2 l_v2D = l_vS[l_nB] - l_vS[l_nA];
+    const float l_fLen = glm::length(l_v2D);
+    float l_fFar = -1.0f;
+    size_t l_nFar = l_nA;
+    for (size_t l_nI = l_nA + 1; l_nI < l_nB; l_nI++) {
+        const glm::vec2 l_v2P = l_vS[l_nI] - l_vS[l_nA];
+        const float l_fDist = l_fLen > 0.001f ? std::fabs(l_v2P.x * l_v2D.y - l_v2P.y * l_v2D.x) / l_fLen : glm::length(l_v2P);
+        if (l_fDist > l_fFar) { l_fFar = l_fDist; l_nFar = l_nI; }
+    }
+    if (l_fFar <= l_fTol) return;
+    f_Simplify(l_vS, l_nA, l_nFar, l_fTol, l_vKeep);
+    l_vKeep.push_back(l_nFar);
+    f_Simplify(l_vS, l_nFar, l_nB, l_fTol, l_vKeep);
+}
+
+// The stroke's straight parts, a part much shorter than the rest (a shake at a corner) melted into its neighbours.
+std::vector<glm::vec2> f_StrokeParts(const std::vector<glm::vec2>& l_vS) {
+    glm::vec2 l_v2Lo = l_vS[0], l_v2Hi = l_vS[0];
+    for (glm::vec2 l_v2P : l_vS) { l_v2Lo = glm::min(l_v2Lo, l_v2P); l_v2Hi = glm::max(l_v2Hi, l_v2P); }
+    const float l_fSide = std::max(l_v2Hi.x - l_v2Lo.x, l_v2Hi.y - l_v2Lo.y);
+    std::vector<size_t> l_vKeep{0};
+    f_Simplify(l_vS, 0, l_vS.size() - 1, l_fSide * 0.14f, l_vKeep);
+    l_vKeep.push_back(l_vS.size() - 1);
+    std::vector<glm::vec2> l_vParts;
+    for (size_t l_nK = 1; l_nK < l_vKeep.size(); l_nK++) {
+        const glm::vec2 l_v2D = l_vS[l_vKeep[l_nK]] - l_vS[l_vKeep[l_nK - 1]];
+        if (glm::length(l_v2D) < l_fSide * 0.12f && !l_vParts.empty()) { l_vParts.back() += l_v2D; continue; }
+        l_vParts.push_back(l_v2D);
+    }
+    return l_vParts;
+}
+
+// The turn from one part to the next in degrees, -180..180.
+float f_TurnDeg(glm::vec2 l_v2A, glm::vec2 l_v2B) {
+    return std::atan2(l_v2A.x * l_v2B.y - l_v2A.y * l_v2B.x, l_v2A.x * l_v2B.x + l_v2A.y * l_v2B.y) * 180.0f / g_fPi;
+}
 }  // namespace
 
 std::vector<glm::vec2> f_ShapeCorners(const std::string& l_strName) {
@@ -25,7 +64,41 @@ std::vector<glm::vec2> f_ShapeCorners(const std::string& l_strName) {
     if (l_strName == "square") return {{0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f}};
     if (l_strName == "circle") return f_Ring(8, -90.0f, 1);
     if (l_strName == "line") return {{0.0f, 0.5f}, {1.0f, 0.5f}};
+    if (l_strName == "v") return {{0.0f, 0.45f}, {0.35f, 1.0f}, {1.0f, 0.0f}};
+    if (l_strName == "m") return {{0.0f, 1.0f}, {0.2f, 0.0f}, {0.5f, 0.7f}, {0.8f, 0.0f}, {1.0f, 1.0f}};
     return {};
+}
+
+int f_GestureTier(const std::string& l_strCue) {
+    if (l_strCue == "way") return 1;
+    if (l_strCue == "v") return 2;
+    if (l_strCue == "m") return 3;
+    if (l_strCue == "square") return 4;
+    return 0;
+}
+
+bool f_MatchGesture(const std::vector<glm::vec2>& l_vStroke, const std::string& l_strCue, float l_fExtraDeg) {
+    if (l_vStroke.size() < 3) return false;
+    const std::vector<glm::vec2> l_vP = f_StrokeParts(l_vStroke);
+    std::vector<float> l_vT;
+    for (size_t l_nK = 1; l_nK < l_vP.size(); l_nK++) l_vT.push_back(f_TurnDeg(l_vP[l_nK - 1], l_vP[l_nK]));
+    if (l_strCue == "v") {   // not a straight line, and not straight back along itself
+        return l_vP.size() == 2 && std::fabs(l_vT[0]) >= 50.0f - l_fExtraDeg && std::fabs(l_vT[0]) <= 172.0f + std::max(0.0f, l_fExtraDeg);
+    }
+    if (l_strCue == "m") {
+        if (l_vP.size() != 4) return false;
+        for (float l_fT : l_vT) if (std::fabs(l_fT) < 60.0f - l_fExtraDeg) return false;
+        return l_vT[0] * l_vT[1] < 0.0f && l_vT[1] * l_vT[2] < 0.0f;
+    }
+    if (l_strCue == "square") {
+        if (l_vP.size() != 4) return false;
+        for (float l_fT : l_vT) if (std::fabs(std::fabs(l_fT) - 90.0f) > 35.0f + l_fExtraDeg) return false;
+        if (l_vT[0] * l_vT[1] < 0.0f || l_vT[1] * l_vT[2] < 0.0f) return false;
+        float l_fLen = 0.0f;
+        for (glm::vec2 l_v2D : l_vP) l_fLen += glm::length(l_v2D);
+        return glm::length(l_vStroke.back() - l_vStroke.front()) <= l_fLen * 0.15f;   // a quarter of it is one side: back near the start
+    }
+    return false;
 }
 
 bool f_ShapeClosed(const std::string& l_strName) { return l_strName == "pentagram" || l_strName == "triangle" || l_strName == "square" || l_strName == "circle"; }

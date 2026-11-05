@@ -9,7 +9,7 @@ and a larger plan. In short:
 - a **battle talk bar** comments on the fight;
 - a bigger **battle screen**, **backgrounds**, and a **difficulty curve**.
 
-It changes some of 16's answers (§13). Built so far: the languages (§16). The owner answered Q47–Q56 on 2026-11-02 (§16); new questions are in §18 (Q64–Q67 added 2026-11-04).
+It changes some of 16's answers (§13). Built so far: the languages (§16), and W1, W2 and W3 (§19). The owner answered Q47–Q56 on 2026-11-02 (§16); new questions are in §18 (Q64–Q67 added 2026-11-04).
 
 ## 1. The owner's notes (as written)
 
@@ -372,3 +372,80 @@ Answered on 2026-11-02: see §16.
 | Q65 | **Epic and legendary quests:** the note says each weapon (每個武器); §6 wrote each class. That is 6 quests or 24 | each class, because the moves come from the class's mastery |
 | Q66 | **Seeing resistances:** the note says the monster's description can mark them, and the card writes them after it is beaten; §10 wrote only once the card is held. Does the description show them before that? | no: until then the player learns from the damage (打下去不痛) |
 | Q67 | **Gear against resistances:** the note says the player switches weapons and gear (武器跟裝備); §10 has only weapons. What does gear do here, and can it change in battle? | gear changes between fights only; a piece can carry a bonus against a damage type |
+
+## 19. Built: W1, W2 and W3 (2026-11-05)
+
+**W1, the fixes:**
+
+| # | What the game does now |
+|---|---|
+| I1 | Every answered cut, spell or move step plays the attack clip, started again each time |
+| I2 | The sword's triangle and circle prompts are gone; its prompts are swipe tiers (below). A shape prompt stays possible in data |
+| I3 | The answer window is 0.75 s (`battle.json` `plays.inputMs`) |
+| I4 | **The wheel was never broken; a drag did nothing.** Every scrolling list now follows a mouse or finger drag, and letting go after a drag selects no row |
+| I6 | A weapon's detail shows its level, combo, wins to the next level and how to play it. The level's abilities come with W4 |
+| I7 | Talents have their own slot in the Equipment tab. Buying gear says it is worn and where to change it. **The weapon half was not reproduced:** the code lists a bought weapon in both tabs, so the owner's exact steps are still needed |
+| I10 | Settings > Battle speed cycles through `battle.json` `battleSpeeds` and is saved. A scenario runs at ×1 unless its battle sets `speed` |
+
+**I1, added the same day (the owner: higher combo counts should look fancier):** the clip now grows with the hits in a row (`weapon_play.json` `comboTiers`, for the sword, bow and staff):
+
+| Hits in a row | Clip | Effect | Feel |
+|---|---|---|---|
+| 1 | `attack` | `<weapon>_hit_1` | hit |
+| 2 | `attack_2`: a lunge | `<weapon>_hit_2` | hit |
+| 3 | `attack_3`: a hop, two strikes, a landing | `<weapon>_hit_3` | great |
+| 4 | `attack_4`: three rising strikes, a heavy landing | `<weapon>_great` | great |
+| 5 or more | `attack_big`: the leap | `<weapon>_perfect` | perfect |
+
+- From the second hit, a counter shows "N Combo!". A miss starts the count again.
+- Each attack starts it again, except the bow (`comboKeep`): one arrow is one attack, so its count goes on until a miss. An ultimate builds its own count.
+- These effects replace the level-based hit effects for answered hits.
+- The three new clips are made by `tools/art/make_hero_rig2d.py`, from the painted poses already there, moved by bones; no new painting.
+
+**The end of a fight (the owner, the same day):** the character now plays an end animation, set in `battle.json` `feel`:
+
+| End | When | Clip |
+|---|---|---|
+| Big win | no damage taken | `win_big` |
+| Win | anything between | `win` |
+| Par win | damage taken, and `winParHp` (25 %) of the HP or less | `win_par` |
+| Lose | HP gone | `lose`: the hero falls and stays down |
+
+- A win: the last hit's slow motion, the last attack clip plays out, the win clip, then the result. A loss starts the fall at once, and the monsters stop.
+- `endMaxMs` (2.5 s) is the longest this may wait. A character without these clips goes on at once.
+- The clips use the painted poses already there, moved by bones (`make_hero_rig2d.py`): no new painting.
+- The arena and training skip this and go straight to their next fight.
+
+**Weapon levels now come from EXP (the owner, the same day), replacing wins:**
+- Each monster has `weaponExp` in `enemies.json`. Beating it gives that much to the weapon used. To start: its `exp` / 6, at least 1 (a slime 1, the toughest normal monsters 7), and 10 for the boss, whose `exp` is 0.
+- Each weapon has `levelExp` in `weapon_play.json`: `first` 5, `scale` 2, so 5, 10, 20, 40, 80, 160, 320, 640, 1280: 2555 EXP to Lv 10.
+- Every weapon has at least 10 levels. Lv 6 to 10 add +2 to each of the weapon's stats per level; the combo stays at 5 points until changed in the data.
+- The training ground gives double weapon EXP (`battle.json` `training.weaponExp`).
+- The battle editor sets **weapon level** on the Player tab and a monster's **weapon EXP** on the Monster tab. Scenarios use `weaponLevel` or `weaponExp`.
+- A save from before keeps working: its wins count as EXP, so a weapon may read a lower level than it did.
+
+**Each level's detail is edited in the battle editor (the owner, the same day):** the Weapon tab has a **Levels** table: EXP to next (shown), `points` (the prompts or circles of an attack) and each attribute's bonus, for every level; above it, **EXP to Lv 2** and **EXP growth** (`levelExp`). **Save weapons** writes them to `weapon_play.json`. There is no limit on `points` in code any more: the file decides.
+
+**W2, play types (`play_type.h`):**
+- Data now names plays with the §4.1 names: `swipeWay`, `swipeGesture`, `drawShape`, `sequenceClick`, `pullRelease`, `mash`, `track`. The older names (`bow`, `slice`, `circles`, `shape`) still read.
+- **Not in the enum yet:** `rhythmTap`, `holdCharge`, `tapTarget`, `reload` and `volleySet`. They join it with their plays in W4 and W7.
+- Swipe tiers are read from one stroke in any direction: `v`, `m`, `square` (`f_MatchGesture`). Each has extra time (`plays.cueExtraMs`).
+- The sword asks for one tick at Lv 3 and two at Lv 5 (`swipeCues`, renamed from `shapeCues`). M and square are ready but no weapon asks for them yet.
+- DEX widens the swipe angle, gesture angles, shape corners and the answer window, each with a limit in data (§4.4). The swipe angle stops at 40°, because the eight ways are 45° apart.
+
+**W3, ultimates:**
+- `free_swipe` (3 s), `free_shot` (2 s) and `free_tap` (2 s) are in `special_moves.json`. Each swipe or tap is a hit at once.
+- Each weapon names its ultimate in `weapon_play.json` (`"ultimate": "<move id>"`, Q49). Star Seal, Tiger Wind and Falcon Rain stay as moves that can be bound. Tiger Wind's triangle became a `v`.
+- "Anywhere" includes the battle buttons while a free mode runs.
+- **First guesses to tune:** `hitDamage` per hit is 0.6 (sword), 0.8 (bow) and 0.4 (staff).
+
+**Still open:**
+- The store's wand, twin daggers and war hammer have no play of their own, so buying one brings back the old point track. W4 replaces them with the weapon types of §3.
+
+**The owner's answers (2026-11-05):**
+- **Bow target:** it stays as it is: it waits still until the press, then slides for 0.5 s. Not to be changed.
+- **Bow strength:** a slime (48 HP) takes 2 arrows, and that is right. The bow's numbers: STR by level 2, 4, 6, 8, 12; `chargeDamage` 0.4; the `perfect` row's `damage` 1.0; `maxMult` 1.6.
+- **Sword and staff:** not lowered.
+- **All monsters:** HP and attack doubled in `enemies.json`.
+
+**Test input added:** `--drag`, `--wheel` and the scenario's `test.drags`. Their positions are in design pixels (1024x768), not screen pixels.

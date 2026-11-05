@@ -1,0 +1,32 @@
+{
+  "_comment": "The bow's combo goes on from arrow to arrow (docs/gameplay/17 Â§19): the target is made huge so both shots hit; the second plays attack_2.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000,
+    "play": "weapon",
+    "rules": {
+      "plays": {
+        "bowRadius": 900,
+        "bowMoveMs": 0,
+        "bowShakePx": 0
+      }
+    }
+  },
+  "test": {
+    "frames": 240,
+    "drags": "500:300:500:350:4@110,500:300:500:350:4@225"
+  },
+  "expect": {
+    "battleEvents": {
+      "combo": 2
+    },
+    "battleClip": "attack_2"
+  }
+}

@@ -30,7 +30,7 @@ toms::RunSaveData Game::f_RunSaveFromState() const {
     l_oR.m_oPlayer.m_mapAttrs = m_oPl.m_mapAttrs;
     l_oR.m_oPlayer.m_iAttrPoints = m_oPl.m_iAttrPoints;
     l_oR.m_oPlayer.m_vGear = m_vGearOwned;
-    l_oR.m_oPlayer.m_mapWeaponUses = m_mapWeaponUses;
+    l_oR.m_oPlayer.m_mapWeaponExp = m_mapWeaponExp;
     l_oR.m_oPlayer.m_iCrystals = m_oPl.m_iCrystals;
     l_oR.m_oPlayer.m_strWeapon = m_oEquipped.m_strWeaponId; l_oR.m_oPlayer.m_strArmor = m_oEquipped.m_strArmorId; l_oR.m_oPlayer.m_strTalent = m_oEquipped.m_strTalentId;
     l_oR.m_mapEntityStatus = m_mapEntityStatus;
@@ -112,7 +112,7 @@ void Game::f_ApplyLoadedRun(const toms::MetaSaveData& l_oM, const toms::RunSaveD
     m_vGearOwned.clear();
     for (const std::string& l_strG : l_oR.m_oPlayer.m_vGear) if (m_mapEquipmentDefs.count(l_strG)) m_vGearOwned.push_back(l_strG);
     m_oEquipped = toms::EquippedSet{};
-    m_mapWeaponUses = l_oR.m_oPlayer.m_mapWeaponUses;
+    m_mapWeaponExp = l_oR.m_oPlayer.m_mapWeaponExp;
     for (const std::string& l_strG : {l_oR.m_oPlayer.m_strWeapon, l_oR.m_oPlayer.m_strArmor, l_oR.m_oPlayer.m_strTalent})
         if (!l_strG.empty()) f_OwnGear(l_strG, true);          // worn gear is owned gear, even in a hand-edited save
     m_bNewsGear = m_bNewsEvents = false;

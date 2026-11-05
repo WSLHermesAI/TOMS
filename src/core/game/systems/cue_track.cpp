@@ -5,12 +5,13 @@
 
 namespace toms {
 
-void CueTrack::f_Start(int l_iCount, const CueTiming& l_oT) {
+void CueTrack::f_Start(int l_iCount, const CueTiming& l_oT, const std::vector<int>& l_vExtraMs) {
     *this = CueTrack{};
     m_oT = l_oT;
     m_oT.m_iCueMs = std::max(1, m_oT.m_iCueMs);
     m_oT.m_iInputMs = std::clamp(m_oT.m_iInputMs, 1, m_oT.m_iCueMs);
     m_vStates.assign((size_t)std::max(0, l_iCount), Waiting);
+    m_vExtraMs = l_vExtraMs;
 }
 
 bool CueTrack::f_Open() const {

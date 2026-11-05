@@ -777,3 +777,10 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   - u_joints[128] = 512 vertex uniform vectors, over ES 3.0's 256. mesh_common.sh: 48 under BGFX_SHADER_LANGUAGE_ESSL; gltf_model.h g_iMaxJoints: 48 on web, Android.
   - web_smoke_test.mjs: fails a program over the ES 3.0 limits. shell.html: ?gldebug. src/engine/CMakeLists.txt: mesh shaders follow mesh_common.sh, env_common.sh.
   - Tests: changed-only 4 of 239 pass; web_smoke_test --gpu fails before, passes after.
+- 2026-11-05: doc 17 W1-W3, combo and end animations, weapon EXP (DAILY_2026-11-05.md; docs/gameplay/17 §19).
+  - play_type.h (new); touch_play.*, gesture.* f_MatchGesture, cue_track.* per-cue extra time, special_moves.*, game_skills.cpp f_FreeHit, f_PlayAnswerClip, f_ComboTier.
+  - game_combat.cpp f_StartLoseMoment, f_EndClip, f_BattleSpeed; game_session.cpp list drag; main_sdl.cpp --drag, --wheel; Audio f_SetBackgroundMuted.
+  - weapon_play.* comboTiers, comboKeep, ultimate, swipeCues, levelExp (f_ExpToNextLevel, f_WeaponExpForLevel); g_iMaxComboPoints removed; save "weaponExp" (reads old "weaponUses").
+  - tools/art/make_hero_rig2d.py: attack_2-4, win, win_big, win_par, lose. Data: enemies.json, weapon_play.json, battle.json, items.json, special_moves.json, text.json.
+  - bed_window.cpp: Levels table, weapon level, weapon EXP; bed_main.cpp --grab-weapon.
+  - Tests: changed-only 17 of 253 pass. Not committed. All tests, the switched-off tests, web, Android not run.

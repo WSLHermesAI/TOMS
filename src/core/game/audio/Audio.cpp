@@ -10,6 +10,24 @@
 
 struct ma_engine_wrapper { ma_engine m_oE; };
 
+namespace {
+bool g_bBackgroundMuted = false;
+Audio* g_pLiveAudio = nullptr;   // the engine now in use (a session that restarts makes a new one)
+}
+
+void Audio::f_ApplyVolume() {
+    if (m_bOk && m_pEngine) ma_engine_set_volume(&((ma_engine_wrapper*)m_pEngine)->m_oE, g_bBackgroundMuted ? 0.0f : m_fMaster);
+}
+
+void Audio::f_SetBackgroundMuted(bool l_bMuted) {
+    if (l_bMuted == g_bBackgroundMuted) return;
+    g_bBackgroundMuted = l_bMuted;
+    fprintf(stderr, "[audio] %s\n", l_bMuted ? "muted: running in the background" : "back in the foreground: sound on");
+    if (g_pLiveAudio) g_pLiveAudio->f_ApplyVolume();
+}
+
+bool Audio::f_BackgroundMuted() { return g_bBackgroundMuted; }
+
 bool Audio::f_Init(const std::string& l_strSfxDir) {
     m_strDir = l_strSfxDir;
     m_pEngine = new ma_engine_wrapper();
@@ -22,8 +40,9 @@ bool Audio::f_Init(const std::string& l_strSfxDir) {
         return false;
     }
     m_bOk = true;
-    ma_engine_set_volume(l_pE, m_fMaster);
-    fprintf(stderr, "[audio] initialized OK (sfx dir: %s)\n", m_strDir.c_str());
+    g_pLiveAudio = this;
+    f_ApplyVolume();
+    fprintf(stderr, "[audio] initialized OK (sfx dir: %s)%s\n", m_strDir.c_str(), g_bBackgroundMuted ? ", muted" : "");
     return true;
 }
 
@@ -76,9 +95,10 @@ void Audio::f_Play(const std::string& l_strName) {
 
 void Audio::f_SetVolume(float l_fV) {
     m_fMaster = l_fV;
-    if (m_bOk && m_pEngine) ma_engine_set_volume(&((ma_engine_wrapper*)m_pEngine)->m_oE, m_fMaster);
+    f_ApplyVolume();
 }
 
 Audio::~Audio() {
+    if (g_pLiveAudio == this) g_pLiveAudio = nullptr;
     if (m_pEngine) { ma_engine_uninit(&((ma_engine_wrapper*)m_pEngine)->m_oE); delete (ma_engine_wrapper*)m_pEngine; }
 }

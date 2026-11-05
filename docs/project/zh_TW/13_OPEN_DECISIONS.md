@@ -31,6 +31,7 @@
 | **Q65 史詩與傳說任務：** 您的筆記寫每個武器；文件 17 寫成每個系列。那是 6 個或 24 個任務。 | 每個系列，因為招式來自系列的熟練度 | W8 | [17](../../gameplay/zh_TW/17_WEAPONS_AND_PLAYS.md) §6、§18 |  |
 | **Q66 看到抗性：** 您的筆記說怪獸的說明可以標記，打倒後卡片也會寫；文件 17 寫成持有卡片後才有。在那之前說明會顯示嗎？ | 不會：在那之前玩家從傷害得知（打下去不痛） | W5 | [17](../../gameplay/zh_TW/17_WEAPONS_AND_PLAYS.md) §10、§18 |  |
 | **Q67 裝備與抗性：** 您的筆記說玩家要切換武器跟裝備；文件 17 只有武器。裝備在這裡有什麼作用？戰鬥中能換嗎？ | 裝備只能在戰鬥之間更換；裝備可以帶有對某種傷害類型的加成 | W5 | [17](../../gameplay/zh_TW/17_WEAPONS_AND_PLAYS.md) §10、§18 |  |
+| **劍的打勾角度：** 打勾提示現在以隨機角度顯示。玩家必須照顯示的角度畫，還是任何角度都算？您的筆記寫任意方向。 | 任何角度都算（目前的做法） | 劍的打勾 | [17](../../gameplay/zh_TW/17_WEAPONS_AND_PLAYS.md) §19 |  |
 | **Q69 戰鬥中的海洋：** 試過 `ocean_viewer` 後，要放到戰鬥背景嗎？用哪種外觀？戰鬥者需要站在東西上（甲板、木筏、岩石），還是站在水面上？ | 要，前景放一片船的甲板讓戰鬥者有地方站；外觀用您在檢視器儲存的設定 | 海洋背景 | [engine 21](../../engine/zh_TW/21_OCEAN_VIEWER.md) §7 |  |
 | **Q22 測試情境：** 放在哪裡共用（雲端儲存、Google Drive、自己的伺服器）？ | 雲端儲存（R2） | 下載（W39） | [09](../../gameplay/zh_TW/09_DOWNLOADS_AND_DLC.md) §7 |  |
 | **Q23 上傳：** 每位開發者各自的金鑰，還是共用一把？ | 各自的金鑰 | 下載（W39） | [09](../../gameplay/zh_TW/09_DOWNLOADS_AND_DLC.md) §7 |  |
@@ -74,7 +75,7 @@
 |---|---|---|
 | **您對調整後英雄外觀的判斷**（弓、劍、法杖） | `Build/art_out/hero_*/gif/`、[20](../../engine/zh_TW/20_CHARACTER_ART.md) §5 |  |
 | **怪物美術：** 概念圖與選用結果。`tools/art/make_monster_concepts.py`（16 隊共 48 隻）尚未提交 | `Build/art_out/monster_concepts/teams.png` |  |
-| **下一步做什麼：** 文件 17 的順序 W1–W10 | [17](../../gameplay/zh_TW/17_WEAPONS_AND_PLAYS.md) |  |
+| **下一步做什麼：** 文件 17 的順序：W1–W3 已完成（§19），下一步 W4，然後 W5–W10 | [17](../../gameplay/zh_TW/17_WEAPONS_AND_PLAYS.md) |  |
 | **在遊戲中試玩法**，並說說手感 | [15](../../gameplay/zh_TW/15_BATTLE_REVAMP.md)、[16](../../gameplay/zh_TW/16_SKILLS_AND_PLAYS.md) |  |
 | **`tools\test.cmd all`：** C++ 改名後還沒執行；大部分測試被關閉 | [08](08_TESTS.md) |  |
 | **`smoke.battle` 參考圖：** 等您滿意戰鬥畫面後再製作 | [08](08_TESTS.md) |  |

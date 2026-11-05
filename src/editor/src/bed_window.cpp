@@ -4,6 +4,7 @@
 #include "battle_party.h"
 #include "bgfx_viewport.h"
 #include "game.h"
+#include "weapon_play.h"
 
 #include <QApplication>
 #include <QCheckBox>
@@ -271,7 +272,7 @@ QWidget* BattleEditorWindow::f_BuildMonsterList() {
         l_jName["en"] = f_Ss(l_oId);
         l_jM["name"] = l_jName;
         l_jM["sprite"] = f_Ss(l_oId) + ".png";
-        l_jM["hp"] = 20; l_jM["atk"] = 8; l_jM["def"] = 2; l_jM["exp"] = 5; l_jM["gold"] = 3;
+        l_jM["hp"] = 20; l_jM["atk"] = 8; l_jM["def"] = 2; l_jM["exp"] = 5; l_jM["weaponExp"] = 1; l_jM["gold"] = 3;
         m_jEnemies[f_Ss(l_oId)] = l_jM;
         m_bMonstersDirty = true;
         f_FillMonsterList();
@@ -469,7 +470,7 @@ bed::Setup BattleEditorWindow::f_CurrentSetup() const {
     l_oS.m_oPlayer.m_iHp = m_pPHp->value();
     l_oS.m_oPlayer.m_iMaxhp = m_pPMaxHp->value();
     l_oS.m_oPlayer.m_strWeapon = f_Ss(m_pPWeapon->currentData().toString());
-    l_oS.m_oPlayer.m_iWeaponWins = m_pPWins->value();
+    l_oS.m_oPlayer.m_iWeaponLevel = m_pPWeaponLevel->value();
     l_oS.m_oPlayer.m_iAttrPoints = m_pPPoints->value();
     for (auto l_oIt = m_pPAttrs->begin(); l_oIt != m_pPAttrs->end(); ++l_oIt)
         if (l_oIt.value()->value() > 0) l_oS.m_oPlayer.m_jAttrs[f_Ss(l_oIt.key())] = l_oIt.value()->value();
@@ -520,7 +521,7 @@ QWidget* BattleEditorWindow::f_BuildMonsterTab() {
     struct N { const char* m_pszKey; const char* m_pszLabel; int m_iMax; };
     for (const N& l_oN : {N{"hp", "HP", 99999}, N{"atk", "ATK", 9999}, N{"def", "DEF", 9999},
                        N{"atk_interval_ms", "attack interval (ms)", 60000}, N{"break", "break points (0: battle.json)", 999},
-                       N{"exp", "EXP", 99999}, N{"gold", "gold", 99999}}) {
+                       N{"exp", "EXP", 99999}, N{"weaponExp", "weapon EXP", 9999}, N{"gold", "gold", 99999}}) {
         auto* l_pSb = new QSpinBox();
         l_pSb->setRange(0, l_oN.m_iMax);
         (*m_pMNumbers)[QString::fromLatin1(l_oN.m_pszKey)] = l_pSb;
@@ -641,7 +642,27 @@ QWidget* BattleEditorWindow::f_BuildWeaponTab() {
     m_pWPace->addItem(QStringLiteral("stamina"), QStringLiteral("stamina"));
     l_pForm->addRow(tr("pace"), m_pWPace);
     connect(m_pWPace, qOverload<int>(&QComboBox::currentIndexChanged), this, [this] { f_WeaponEdited(); });
+    m_pWExpFirst = new QSpinBox();
+    m_pWExpFirst->setRange(1, 1000000);
+    m_pWExpFirst->setToolTip(tr("Weapon EXP from Lv 1 to Lv 2 (levelExp first)."));
+    l_pForm->addRow(tr("EXP to Lv 2"), m_pWExpFirst);
+    m_pWExpScale = new QDoubleSpinBox();
+    m_pWExpScale->setRange(1.0, 10.0);
+    m_pWExpScale->setSingleStep(0.1);
+    m_pWExpScale->setToolTip(tr("Each next level needs this many times the last (levelExp scale)."));
+    l_pForm->addRow(tr("EXP growth x"), m_pWExpScale);
+    connect(m_pWExpFirst, qOverload<int>(&QSpinBox::valueChanged), this, [this] { f_WeaponEdited(); f_ShowLevelExp(); });
+    connect(m_pWExpScale, qOverload<double>(&QDoubleSpinBox::valueChanged), this, [this] { f_WeaponEdited(); f_ShowLevelExp(); });
     l_pV->addLayout(l_pForm);
+    l_pV->addWidget(new QLabel(tr("<b>Levels</b>: points = the prompts or circles of an attack; the rest = what the level adds to the player's attributes.")));
+    QStringList l_oLevelHeads{tr("Lv"), tr("EXP to next"), QStringLiteral("points")};
+    for (const QString& l_oId : m_oAttrIds) l_oLevelHeads << l_oId;
+    m_pWLevels = new QTableWidget(0, l_oLevelHeads.size());
+    m_pWLevels->setHorizontalHeaderLabels(l_oLevelHeads);
+    m_pWLevels->verticalHeader()->setVisible(false);
+    m_pWLevels->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    l_pV->addWidget(m_pWLevels, 2);
+    connect(m_pWLevels, &QTableWidget::cellChanged, this, [this] { f_WeaponEdited(); });
     l_pV->addWidget(new QLabel(tr("<b>Results</b> by points matched (13 §4.2): the highest row reached applies; hits \"all\" = every point. "
                                "A particle not in battle.particle is red.")));
     m_pResults = new QTableWidget(0, 8);
@@ -696,6 +717,31 @@ void BattleEditorWindow::f_ShowWeapon(const QString& l_oKey) {
     m_pWPace->setCurrentIndex(std::max(0, m_pWPace->findData(f_Qs(l_jW.value("pace", std::string())))));
     const bool l_bOwn = l_jW.contains("results");
     m_pWLabel->setText(l_bOwn ? tr("Its own results:") : tr("No results of its own: the default's apply (adding a row gives it its own)."));
+    {   // each level: a sparse list in the file shows every level, each with what it has from the entry at or below it
+        const ojson l_jLevels = l_jW.value("levels", ojson::array());
+        const ojson l_jExp = l_jW.value("levelExp", ojson::object());
+        m_pWExpFirst->setValue(l_jExp.value("first", 5));
+        m_pWExpScale->setValue(l_jExp.value("scale", 2.0));
+        int l_iTop = 10;
+        for (const auto& l_jL : l_jLevels) l_iTop = std::max(l_iTop, l_jL.value("lv", 1));
+        m_pWLevels->setRowCount(l_iTop);
+        for (int l_iLv = 1; l_iLv <= l_iTop; l_iLv++) {
+            ojson l_jAt = ojson::object();
+            for (const auto& l_jL : l_jLevels) if (l_jL.value("lv", 1) <= l_iLv) l_jAt = l_jL;
+            auto l_fnSet = [&](int l_iC, const QString& l_oT, bool l_bEditable) {
+                auto* l_pIt = new QTableWidgetItem(l_oT);
+                l_pIt->setTextAlignment(Qt::AlignCenter);
+                if (!l_bEditable) { l_pIt->setFlags(l_pIt->flags() & ~Qt::ItemIsEditable); l_pIt->setForeground(QColor(120, 120, 120)); }
+                m_pWLevels->setItem(l_iLv - 1, l_iC, l_pIt);
+            };
+            l_fnSet(0, QString::number(l_iLv), false);
+            l_fnSet(1, QString(), false);
+            l_fnSet(2, QString::number(l_jAt.value("points", 3)), true);
+            const ojson l_jStat = l_jAt.value("stats", ojson::object());
+            for (int l_iA = 0; l_iA < m_oAttrIds.size(); l_iA++) l_fnSet(3 + l_iA, QString::number(l_jStat.value(f_Ss(m_oAttrIds[l_iA]), 0)), true);
+        }
+        f_ShowLevelExp();
+    }
     m_pResults->setRowCount(0);
     const ojson l_jRows = l_bOwn ? l_jW["results"] : ojson::array();
     for (const auto& l_jR : l_jRows) {
@@ -714,6 +760,49 @@ void BattleEditorWindow::f_ShowWeapon(const QString& l_oKey) {
         if (!l_oFx.isEmpty() && !m_oEffects.contains(l_oFx)) m_pResults->item(l_iI, 3)->setBackground(QColor(255, 200, 200));
     }
     m_bFilling = false;
+}
+
+void BattleEditorWindow::f_ShowLevelExp() {
+    const bool l_bWasFilling = m_bFilling;
+    m_bFilling = true;
+    toms::WeaponPlay l_oW;
+    l_oW.m_iLevelExpFirst = m_pWExpFirst->value();
+    l_oW.m_fLevelExpScale = (float)m_pWExpScale->value();
+    toms::WeaponLevel l_oTop;
+    l_oTop.m_iLv = m_pWLevels->rowCount();
+    l_oW.m_vLevels.push_back(l_oTop);
+    for (int l_iR = 0; l_iR < m_pWLevels->rowCount(); l_iR++) {
+        const int l_iNeed = toms::f_ExpToNextLevel(l_oW, l_iR + 1);
+        if (QTableWidgetItem* l_pIt = m_pWLevels->item(l_iR, 1)) l_pIt->setText(l_iNeed > 0 ? QString::number(l_iNeed) : tr("top"));
+    }
+    m_bFilling = l_bWasFilling;
+}
+
+bool BattleEditorWindow::f_SelectWeapon(const QString& l_oKey) {
+    const auto l_vFound = m_pWeapons->findItems(l_oKey, Qt::MatchExactly);
+    if (l_vFound.isEmpty()) return false;
+    m_pWeapons->setCurrentItem(l_vFound.first());
+    m_pTabs->setCurrentIndex(1);
+    return m_oCurrentWeapon == l_oKey;
+}
+
+bool BattleEditorWindow::f_SetWeaponLevelCell(int l_iLv, const QString& l_oColumn, int l_iValue) {
+    const int l_iC = l_oColumn == QStringLiteral("points") ? 2 : m_oAttrIds.indexOf(l_oColumn) < 0 ? -1 : 3 + (int)m_oAttrIds.indexOf(l_oColumn);
+    QTableWidgetItem* l_pIt = l_iC >= 0 && l_iLv >= 1 && l_iLv <= m_pWLevels->rowCount() ? m_pWLevels->item(l_iLv - 1, l_iC) : nullptr;
+    if (!l_pIt) return false;
+    l_pIt->setText(QString::number(l_iValue));
+    return true;
+}
+
+QString BattleEditorWindow::f_WeaponLevelsJson(const QString& l_oKey) const {
+    return f_Qs(m_jWeaponPlay.value(f_Ss(l_oKey), ojson::object()).value("levels", ojson::array()).dump());
+}
+
+bool BattleEditorWindow::f_GrabWeaponTab(const QString& l_oPng) {
+    resize(1500, 1000);
+    m_pTabs->setCurrentIndex(1);
+    m_pTabs->resize(760, 980);
+    return m_pTabs->grab().save(l_oPng);
 }
 
 void BattleEditorWindow::f_WeaponEdited() {
@@ -744,6 +833,24 @@ void BattleEditorWindow::f_WeaponEdited() {
         }
     }
     if (l_jRows.empty()) l_jW.erase("results"); else l_jW["results"] = l_jRows;
+    {   // each level, every one written out; a stat at 0 is left out
+        ojson l_jLevels = ojson::array();
+        for (int l_iR = 0; l_iR < m_pWLevels->rowCount(); l_iR++) {
+            auto l_fnNum = [&](int l_iC) { QTableWidgetItem* l_pIt = m_pWLevels->item(l_iR, l_iC); return l_pIt ? l_pIt->text().trimmed().toInt() : 0; };
+            ojson l_jLv = ojson::object();
+            l_jLv["lv"] = l_iR + 1;
+            l_jLv["points"] = std::max(1, l_fnNum(2));
+            ojson l_jStat = ojson::object();
+            for (int l_iA = 0; l_iA < m_oAttrIds.size(); l_iA++) if (l_fnNum(3 + l_iA) != 0) l_jStat[f_Ss(m_oAttrIds[l_iA])] = l_fnNum(3 + l_iA);
+            if (!l_jStat.empty()) l_jLv["stats"] = l_jStat;
+            l_jLevels.push_back(l_jLv);
+        }
+        if (!l_jLevels.empty()) l_jW["levels"] = l_jLevels;
+        ojson l_jExp = ojson::object();
+        l_jExp["first"] = m_pWExpFirst->value();
+        l_jExp["scale"] = m_pWExpScale->value();
+        l_jW["levelExp"] = l_jExp;
+    }
     m_bWeaponsDirty = true;
     setWindowTitle(tr("TOMS Battle Editor *"));
 }
@@ -765,14 +872,14 @@ QWidget* BattleEditorWindow::f_BuildPlayerTab() {
         if (!l_oIt.key().empty() && l_oIt.key()[0] != '_' && l_oIt.key() != "default" && l_oIt.key() != "unarmed")
             m_pPWeapon->addItem(f_Qs(l_oIt.key()), f_Qs(l_oIt.key()));
     m_pPWeapon->setCurrentIndex(std::max(0, m_pPWeapon->findData(QStringLiteral("bow"))));
-    m_pPWins = l_fnSpin(0, 9999, 0);
-    m_pPWins->setToolTip(tr("Wins with the weapon: its level (weapon_play.json usesToLevel)."));
+    m_pPWeaponLevel = l_fnSpin(1, 99, 1);
+    m_pPWeaponLevel->setToolTip(tr("The weapon's level for this battle (the game stops at its top level). EXP per level: weapon_play.json levelExp."));
     m_pPPoints = l_fnSpin(0, 9999, 0);
     l_pF->addRow(tr("level"), m_pPLv);
     l_pF->addRow(tr("HP"), m_pPHp);
     l_pF->addRow(tr("max HP"), m_pPMaxHp);
     l_pF->addRow(tr("weapon"), m_pPWeapon);
-    l_pF->addRow(tr("weapon wins"), m_pPWins);
+    l_pF->addRow(tr("weapon level"), m_pPWeaponLevel);
     for (const QString& l_oId : m_oAttrIds) {
         auto* l_pS = l_fnSpin(0, 999, 0);
         (*m_pPAttrs)[l_oId] = l_pS;
@@ -1149,7 +1256,7 @@ bool BattleEditorWindow::f_LoadSetup(const QString& l_oName) {
     m_pPMaxHp->setValue(l_oS.m_oPlayer.m_iMaxhp);
     m_pPHp->setValue(l_oS.m_oPlayer.m_iHp);
     m_pPWeapon->setCurrentIndex(std::max(0, m_pPWeapon->findData(f_Qs(l_oS.m_oPlayer.m_strWeapon))));
-    m_pPWins->setValue(l_oS.m_oPlayer.m_iWeaponWins);
+    m_pPWeaponLevel->setValue(l_oS.m_oPlayer.m_iWeaponLevel);
     m_pPPoints->setValue(l_oS.m_oPlayer.m_iAttrPoints);
     for (auto l_oIt = m_pPAttrs->begin(); l_oIt != m_pPAttrs->end(); ++l_oIt) l_oIt.value()->setValue(l_oS.m_oPlayer.m_jAttrs.value(f_Ss(l_oIt.key()), 0));
     f_SetPace(f_Qs(l_oS.m_strPace));

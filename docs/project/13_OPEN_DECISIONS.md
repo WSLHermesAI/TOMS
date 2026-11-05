@@ -32,6 +32,7 @@ An empty **My Answer** means not decided: nothing happens for that row, and its 
 | **Q65 Epic and legendary quests:** your note says each weapon (每個武器); doc 17 wrote each class. That is 6 quests or 24. | each class, because the moves come from the class's mastery | W8 | [17](../gameplay/17_WEAPONS_AND_PLAYS.md) §6, §18 |  |
 | **Q66 Seeing resistances:** your note says the monster's description can mark them, and the card writes them after it is beaten; doc 17 wrote only once the card is held. Does the description show them before that? | no: until then the player learns from the damage (打下去不痛) | W5 | [17](../gameplay/17_WEAPONS_AND_PLAYS.md) §10, §18 |  |
 | **Q67 Gear against resistances:** your note says the player switches weapons and gear (武器跟裝備); doc 17 has only weapons. What does gear do here, and can it change in battle? | gear changes between fights only; a piece can carry a bonus against a damage type | W5 | [17](../gameplay/17_WEAPONS_AND_PLAYS.md) §10, §18 |  |
+| **Sword tick angle:** the tick prompt now shows at a random rotation. Must the player draw it at the angle shown, or does any angle count? Your note says any direction (任意方向). | any angle counts (as built) | the sword's ticks | [17](../gameplay/17_WEAPONS_AND_PLAYS.md) §19 |  |
 | **Q69 Ocean in the battle:** after trying `ocean_viewer`, do you want it behind the battle? Which look, and do the fighters need something to stand on (a deck, a raft, rocks), or do they stand over the water? | yes, with a ship's deck in front so the fighters stand on something; the look you save in the viewer | the ocean background | [engine 21](../engine/21_OCEAN_VIEWER.md) §7 |  |
 | **Q22 Test scenarios:** where are they shared (cloud bucket, Google Drive, own server)? | a cloud bucket (R2) | downloads (W39) | [09](../gameplay/09_DOWNLOADS_AND_DLC.md) §7 |  |
 | **Q23 Uploads:** each developer's own key, or one shared key? | each their own | downloads (W39) | [09](../gameplay/09_DOWNLOADS_AND_DLC.md) §7 |  |
@@ -75,7 +76,7 @@ These were not answered, so the proposal was built. Nothing waits on them.
 |---|---|---|
 | **Your verdict on the hero's look** after the tuning (bow, sword, staff) | `Build/art_out/hero_*/gif/`, [20](../engine/20_CHARACTER_ART.md) §5 |  |
 | **Monster art:** the concept pictures and their picks. `tools/art/make_monster_concepts.py` (48 monsters in 16 teams) is not committed | `Build/art_out/monster_concepts/teams.png` |  |
-| **What to build next** from doc 17's order W1–W10 | [17](../gameplay/17_WEAPONS_AND_PLAYS.md) |  |
+| **What to build next** from doc 17's order: W1–W3 are built (§19), W4 is next, then W5–W10 | [17](../gameplay/17_WEAPONS_AND_PLAYS.md) |  |
 | **Try the plays** in the game and say how they feel | [15](../gameplay/15_BATTLE_REVAMP.md), [16](../gameplay/16_SKILLS_AND_PLAYS.md) |  |
 | **`tools\test.cmd all`:** not run since the C++ rename; most tests are switched off | [08](08_TESTS.md) |  |
 | **The `smoke.battle` reference image:** make it once you like the battle screen's look | [08](08_TESTS.md) |  |

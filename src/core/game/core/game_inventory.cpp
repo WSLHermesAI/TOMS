@@ -195,8 +195,8 @@ std::string Game::f_WeaponKey() const { return m_oEquipped.m_strWeaponId.empty()
 const toms::WeaponPlay& Game::f_WeaponPlayOf(const std::string& l_strKey) const { return m_oWeaponPlay.f_Get(l_strKey); }
 
 int Game::f_WeaponLevel(const std::string& l_strKey) const {
-    auto l_itIt = m_mapWeaponUses.find(l_strKey);
-    return toms::f_WeaponLevelFromUses(f_WeaponPlayOf(l_strKey), l_itIt == m_mapWeaponUses.end() ? 0 : l_itIt->second);
+    auto l_itIt = m_mapWeaponExp.find(l_strKey);
+    return toms::f_WeaponLevelFromExp(f_WeaponPlayOf(l_strKey), l_itIt == m_mapWeaponExp.end() ? 0 : l_itIt->second);
 }
 
 float Game::f_ComboCharge() const {

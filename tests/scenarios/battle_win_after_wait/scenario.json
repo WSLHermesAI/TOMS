@@ -1,0 +1,29 @@
+{
+  "_comment": "No damage taken: the big win plays, then the result.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "sword"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 1,
+    "atk_interval_ms": 60000,
+    "super": true,
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 240,
+    "keys": "g@10",
+    "drags": "200:560:330:560:4@70"
+  },
+  "expect": {
+    "scene": "battleWon",
+    "battleEvents": {
+      "hit": 1,
+      "win": 1
+    },
+    "battleClip": "win_big"
+  }
+}

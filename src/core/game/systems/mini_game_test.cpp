@@ -17,7 +17,7 @@ int main() {
         const MiniGameDef l_oG = f_MiniGameFromJson("x", nlohmann::json::parse(R"({"currency": "crystals", "perHit": 2, "bonusAll": 5,
             "points": 9, "sweepMs": 1200, "limit": 1, "title": {"zh_TW": "測試"}})"));
         CHECK(l_oG.m_strCurrency == "crystals" && l_oG.m_iPerHit == 2 && l_oG.m_iBonusAll == 5 && l_oG.m_iLimit == 1, "fields read");
-        CHECK(l_oG.m_oPlay.m_iPoints == g_iMaxComboPoints && l_oG.m_oPlay.m_iSweepMs == 1200, "points capped at five; the sweep");
+        CHECK(l_oG.m_oPlay.m_iPoints == 9 && l_oG.m_oPlay.m_iSweepMs == 1200, "the points from the file; the sweep");
         CHECK(l_oG.m_oPlay.m_fSpeedUp == 0 && l_oG.m_oPlay.m_iMissBack == 0, "no charge; a miss keeps the hits");
         CHECK(f_MiniGameFromJson("y", nlohmann::json::parse(R"({"currency": "diamonds"})")).m_strCurrency == "gold", "unknown currency: gold");
     }

@@ -846,7 +846,7 @@ bool Game::f_Rebirth() {
     f_ResetAttrs();
     m_oEquipped = toms::EquippedSet{};
     m_vGearOwned.clear();
-    m_mapWeaponUses.clear();
+    m_mapWeaponExp.clear();
     f_OwnGear(m_pszStartingWeapon, true);
 
     m_strActiveEndingId.clear();

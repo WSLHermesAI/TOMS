@@ -1,0 +1,20 @@
+{
+  "_comment": "Monsters give weapon EXP (docs/gameplay/17 §19): the bow at 4 EXP beats a slime (1 EXP): 5 reaches Lv 2.",
+  "scene": "battleWon",
+  "player": {
+    "weaponExp": {
+      "bow": 4
+    }
+  },
+  "battle": {
+    "enemy": "slime"
+  },
+  "test": {
+    "frames": 10
+  },
+  "expect": {
+    "weaponLevel": {
+      "bow": 2
+    }
+  }
+}

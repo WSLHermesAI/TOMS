@@ -76,9 +76,9 @@ ojson f_SetupToScenario(const Setup& l_oS) {
     else {
         l_jP["give"] = ojson::array({l_oS.m_oPlayer.m_strWeapon});
         l_jP["equip"] = ojson::array({l_oS.m_oPlayer.m_strWeapon});
-        ojson l_jUses = ojson::object();
-        l_jUses[l_oS.m_oPlayer.m_strWeapon] = l_oS.m_oPlayer.m_iWeaponWins;
-        l_jP["weaponUses"] = l_jUses;
+        ojson l_jLevel = ojson::object();
+        l_jLevel[l_oS.m_oPlayer.m_strWeapon] = l_oS.m_oPlayer.m_iWeaponLevel;
+        l_jP["weaponLevel"] = l_jLevel;
     }
     l_jP["lv"] = l_oS.m_oPlayer.m_iLv;
     l_jP["maxhp"] = l_oS.m_oPlayer.m_iMaxhp;
@@ -110,7 +110,7 @@ ojson f_SetupToScenario(const Setup& l_oS) {
     l_jEd["foes"] = l_jFoes;
     ojson l_jPl = ojson::object();
     l_jPl["lv"] = l_oS.m_oPlayer.m_iLv; l_jPl["hp"] = l_oS.m_oPlayer.m_iHp; l_jPl["maxhp"] = l_oS.m_oPlayer.m_iMaxhp;
-    l_jPl["weapon"] = l_oS.m_oPlayer.m_strWeapon; l_jPl["weaponWins"] = l_oS.m_oPlayer.m_iWeaponWins;
+    l_jPl["weapon"] = l_oS.m_oPlayer.m_strWeapon; l_jPl["weaponLevel"] = l_oS.m_oPlayer.m_iWeaponLevel;
     l_jPl["attrs"] = l_oS.m_oPlayer.m_jAttrs; l_jPl["attrPoints"] = l_oS.m_oPlayer.m_iAttrPoints;
     l_jEd["player"] = l_jPl;
     l_jJ["_editor"] = l_jEd;
@@ -132,7 +132,7 @@ bool f_SetupFromScenario(const ojson& l_jJ, Setup& l_oOut) {
         l_oS.m_oPlayer.m_iHp = l_jP.value("hp", 120);
         l_oS.m_oPlayer.m_iMaxhp = l_jP.value("maxhp", 120);
         l_oS.m_oPlayer.m_strWeapon = l_jP.value("weapon", std::string("bow"));
-        l_oS.m_oPlayer.m_iWeaponWins = l_jP.value("weaponWins", 0);
+        l_oS.m_oPlayer.m_iWeaponLevel = l_jP.value("weaponLevel", 1);
         if (l_jP.contains("attrs") && l_jP["attrs"].is_object()) l_oS.m_oPlayer.m_jAttrs = l_jP["attrs"];
         l_oS.m_oPlayer.m_iAttrPoints = l_jP.value("attrPoints", 0);
     }

@@ -14,8 +14,10 @@
 //     "damage": 10
 //   }
 //
-// play.kind: shape (trace a shown shape), slice (the sword's prompts: "cues" ["way", "way", "triangle"]), bow (aim the
-// moving targets), circles (the staff's circles), mash (tap `points` times). A show is a list of beats, each at a time
+// play.kind: a play type's data name (play_type.h): drawShape (trace a shown shape), swipeWay (the sword's prompts: "cues"
+// ["way", "way", "v"]), pullRelease (aim the moving targets), sequenceClick (the staff's circles), mash (tap `points` times),
+// freeSwipe / freeTap / freeShot (any swipe or tap counts for timeMs, each a hit of hitDamage times a normal attack).
+// A show is a list of beats, each at a time
 // ("at", ms from the show's start; "step" beats at each step): pathFx (particles along a shape, and a "corner" effect
 // at each corner), fx (an effect: at the step, the player or the monster), dim, countdown, banner (a text key), name /
 // namePart (the move's name, whole or a step's share), count ("3/5"), camera (a close-up), clip (the player's clip),
@@ -24,6 +26,8 @@
 // Pure: data and functions only; no Game dependency.
 #pragma once
 #include <json.hpp>
+
+#include "play_type.h"
 
 #include <map>
 #include <string>
@@ -42,13 +46,14 @@ struct ShowBeat {
 };
 
 struct SkillPlaySpec {
-    std::string m_strKind = "shape";     // shape slice bow circles mash
+    PlayType m_eType = PlayType::eDRAW_SHAPE;
     std::string m_strShape = "pentagram";
     int m_iPoints = 5;                 // shape: its corners (set from the shape); others: how many
-    int m_iTimeMs = 6000;              // shape / mash: the whole play's time
+    int m_iTimeMs = 6000;              // shape / mash / free: the whole play's time
+    float m_fHitDamage = 1.0f;         // free: each swipe or tap, times a normal attack
     float m_fSize = 220.0f;            // shape: on the screen
     float m_fCornerRadius = 44.0f;
-    std::vector<std::string> m_vCues;  // slice: each prompt, "way" or a shape name
+    std::vector<std::string> m_vCues;  // swipe: each prompt, "way", a gesture or a shape name
 };
 
 struct SpecialMove {
