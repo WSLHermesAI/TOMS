@@ -26,5 +26,7 @@
   "toad_near": { "kind": "strike", "damage": 1.0, "chargeMs": 2800, "shape": "near", "text": "battle.intent.toad_near" },
   "toad_line": { "kind": "strike", "damage": 1.1, "chargeMs": 2400, "shape": "line", "text": "battle.intent.toad_line" },
   "toad_fan":  { "kind": "strike", "damage": 1.3, "chargeMs": 3200, "shape": "fan", "text": "battle.intent.toad_fan" },
+  "toad_lesson_line":  { "kind": "strike", "damage": 1.0, "chargeMs": 3800, "shape": "line", "text": "battle.intent.toad_line" },
+  "toad_lesson_crush": { "kind": "strike", "damage": 1.0, "chargeMs": 3800, "warnMs": 1000, "text": "battle.intent.toad_crush" },
   "ground_pound": { "kind": "heavy", "damage": 1.6, "chargeMs": 2200, "guardPlay": "guard_mash", "text": "battle.intent.ground_pound" }
 }

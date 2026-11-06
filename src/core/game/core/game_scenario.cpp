@@ -380,6 +380,8 @@ bool Game::f_ScenarioCheck(std::string& l_strReport) const {
         std::sort(l_vHave.begin(), l_vHave.end());
         if (l_vWant != l_vHave) l_fnFail("the owned gear is not what was expected");
     }
+    if (m_jScenarioExpect.contains("tutorialStep") && m_oArena.m_iTutorialStep != m_jScenarioExpect["tutorialStep"].get<int>())
+        l_fnFail("the tutorial is at step " + std::to_string(m_oArena.m_iTutorialStep) + ", expected " + std::to_string(m_jScenarioExpect["tutorialStep"].get<int>()));
     if (m_jScenarioExpect.contains("dialogueNode") && (!m_bInDialogue || m_strDlgNode != m_jScenarioExpect["dialogueNode"].get<std::string>()))
         l_fnFail("the dialogue is not at node \"" + m_jScenarioExpect["dialogueNode"].get<std::string>() + "\"");
     if (m_jScenarioExpect.contains("weaponLevel") && m_jScenarioExpect["weaponLevel"].is_object())   // weapon id -> its level

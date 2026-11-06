@@ -1,0 +1,20 @@
+{
+  "_comment": "The new game's tutorial, every step: two shots (attack), left out of the red line (move: dodge), f on the crush's \"!\" (guard), then the last step, the free fight. Guarding is frame-sensitive: its hit lands at about frame 841.",
+  "scene": "weaponTrial",
+  "battle": {
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 860,
+    "keys": "down@10,enter@20,left@500,f@820",
+    "drags": "832:394:832:454:6@130,832:394:832:454:6@300"
+  },
+  "expect": {
+    "scene": "arena",
+    "tutorialStep": 3,
+    "battleEvents": {
+      "danger": 1,
+      "dodge": 1
+    }
+  }
+}

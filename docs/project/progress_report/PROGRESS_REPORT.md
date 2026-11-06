@@ -15,11 +15,16 @@
 
 ## ▶ Next Step
 
+**The new game's tutorial with 苔蛙** (2026-11-06; [DAILY_2026-11-06.md](DAILY_2026-11-06.md), row 8):
+- The weapon master's trial fight: attack, move out of the red, guard on the "!", finish. In data: `battle.json` `tutorial`.
+- **Not committed since `064d7cf`.** Last changed-only run: 25 of 261, all pass; 128 selected tests are switched off. All tests, web and Android not run. Run by script with the bow only.
+  **Owner:** play it with all three weapons (New Game) and answer the two questions in the daily report. The trial-fight verdict and Q73–Q81 are still open.
+
 **The battle takes the shape of the owner's pictures; a plan in three parts; a trial of moving in battle** (2026-11-06; [DAILY_2026-11-06.md](DAILY_2026-11-06.md)):
 - The layout (`battle.rcss`), an animated forest (`battle.json` `backdrops`), three painted monsters (`monster_moss.anim`), a hint star on the map for a monster with company.
 - docs/gameplay/19: 1. a fun battle, 2. tower events bound to the story, 3. the main screen and growth. Decisions now use Question, Default, Yours, Answer.
 - The trial (19 B2): six cells, attack shapes, `battle_cells.h`; only `thicketoad` turns it on.
-- **Nothing committed since `8b705b2`.** Last changed-only run: 23 of 259, all pass; 166 selected tests are switched off. All tests, web and Android not run.
+- **Committed in `64a247e`** (by the owner). Changed-only run then: 23 of 259, all pass; 166 selected tests were switched off. All tests, web and Android not run.
   **Owner:** play the trial fight (battle editor: only `thicketoad`) and say if it is fun: that decides B3, the staff. Fill Answer: Q73–Q81.
 
 **Gameplay: doc 17's W1, W2 and W3; combo and end animations; weapon levels from EXP** (2026-11-05; [DAILY_2026-11-05.md](DAILY_2026-11-05.md)):

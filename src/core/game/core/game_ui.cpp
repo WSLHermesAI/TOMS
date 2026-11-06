@@ -337,6 +337,7 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
                     l_oUf.m_strIntent = (l_oL.f_Has(l_oM.m_strText) ? l_oL.f_Tr(l_oM.m_strText) : l_oM.m_strText) + l_pszSecs;
                     l_oUf.m_fIntentPct = f_Pct((float)std::max(0, l_oF.m_iClockMs), (float)std::max(1, l_oF.m_iMoveMs));
                 }
+                if (const toms::TutorialStep* l_pStep = f_TutorialStepNow(); l_pStep && l_pStep->m_bHold) { l_oUf.m_strIntent.clear(); l_oUf.m_fIntentPct = 0.0f; }   // it waits: no clock to read
                 l_oUf.m_fBreakPct = f_Pct(l_oF.m_fBreakGauge, (float)f_FoeBreakPoints((int)l_nI));
                 l_oUf.m_bWarn = f_FoeWarning((int)l_nI) && !m_oCs.m_oSkill.m_bOn;   // the "!" before its hit (docs/gameplay/16 §4)
             }
@@ -466,6 +467,13 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
                 l_oB.m_strAttackLabel = l_oL.f_Tr("battle.attack_ready");
                 l_oB.m_strAttackHint = l_oL.f_Tr(l_ePlayType == toms::PlayType::eTRACK ? "battle.attack_ready_hint"
                                      : std::string("battle.play_hint_") + toms::f_PlayTypeName(l_ePlayType));
+            }
+            if (const toms::TutorialStep* l_pStep = f_TutorialStepNow()) {   // the new game's tutorial (docs/gameplay/19 B6)
+                l_oB.m_strTutorial = f_TrParam(l_oL.f_Tr(l_pStep->m_strText), "play",
+                    l_oL.f_Tr(l_ePlayType == toms::PlayType::eTRACK ? "battle.attack_ready_hint"
+                                                                    : std::string("battle.play_hint_") + toms::f_PlayTypeName(l_ePlayType)));
+                l_oB.m_strTutorialMark = l_pStep->m_strMark;
+                if (l_pStep->m_bHideCells) { l_oB.m_bCellsOn = false; l_oB.m_vCells.clear(); }
             }
             if (l_ePlayType != toms::PlayType::eTRACK || m_oCs.m_oSkill.m_bOn) f_TouchPlayUi(l_oB);
             if (m_oCs.m_iChain > 1) l_oB.m_strChainText = f_TrParam(l_oL.f_Tr("battle.word_chain"), "n", std::to_string(m_oCs.m_iChain));
@@ -866,7 +874,8 @@ void Game::f_TouchPlayUi(toms::UiBattle& l_oB) const {
             l_fnAdd("anchor", l_v2A.x, l_v2A.y, 14, 14, 0.0f, 7);
             l_fnAdd(l_fCh >= 1.0f ? "charge full" : "charge", l_v2A.x, l_v2A.y, l_fS, l_fS, 0.0f, l_fS * 0.5f);   // the pull's charge (16 §3.2)
             l_fnAdd("cross", l_v2C.x, l_v2C.y, 28, 28, 0.0f, 14);
-        } else if (!m_oSettings.m_bBowTutorialDone && !l_oP.f_Started() && !m_oCs.m_oSkill.m_bOn) {
+        } else if ((!m_oSettings.m_bBowTutorialDone || l_oB.m_strTutorialMark == "attack") && (l_oB.m_strTutorial.empty() || l_oB.m_strTutorialMark == "attack")
+                   && !l_oP.f_Started() && !m_oCs.m_oSkill.m_bOn) {
             // the first pull's tutorial: a ghost finger touches under the target, drags back and lets go (16 §3.2)
             const float l_fK = (float)(m_oCs.m_iClockMs % 1600) / 1600.0f;
             const float l_fDrag = std::clamp((l_fK - 0.25f) / 0.45f, 0.0f, 1.0f);
@@ -876,7 +885,7 @@ void Game::f_TouchPlayUi(toms::UiBattle& l_oB) const {
                 if (l_fDrag > 0.0f) l_fnLine("pull", l_v2From, l_v2F, 4, 0.6f);
                 l_fnAdd("ghost", l_v2F.x, l_v2F.y, 34, 34, 0.0f, 17, l_fK < 0.15f ? l_fK / 0.15f : 1.0f);
             }
-            l_fnAdd("tutorial", l_oT.m_fX, l_oT.m_fY + 190.0f, 360, 28, 0.0f, 0.0f, 1.0f, m_oLocale.f_Tr("battle.play_hint_pullRelease"));
+            if (l_oB.m_strTutorial.empty()) l_fnAdd("tutorial", l_oT.m_fX, l_oT.m_fY + 190.0f, 360, 28, 0.0f, 0.0f, 1.0f, m_oLocale.f_Tr("battle.play_hint_pullRelease"));
         }
         break;
     }

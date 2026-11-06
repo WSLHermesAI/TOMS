@@ -790,3 +790,8 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   - stage.h objects."x,y".party, game_input.cpp f_PartyOf, map_objects.cpp MonsterObject::f_Render; looks.json moss; enemies.json sproutle, mossbun, thicketoad.
   - docs/gameplay/19 (+ zh_TW), docs/project/13 converted to Question, Default, Yours, Answer; the rule in CLAUDE.md.
   - Tests: changed-only 23 of 259 pass. Not committed. All tests, the switched-off tests, web, Android not run; the trial fight not yet played by hand.
+- 2026-11-06: the new game's tutorial with thicketoad (DAILY_2026-11-06.md row 8).
+  - battle.json tutorial; moves.json toad_lesson_line, toad_lesson_crush; text.json tutorial.*, battle.intent.toad_crush; dialogue/weapon_master.json.
+  - battle_rules.* TutorialStep, BattleTutorial, f_TutorialFromJson; game_combat.cpp f_TutorialStepNow, f_TutorialGoTo, f_TutorialEvent; game_story.cpp f_TryWeapon; game_ui.cpp; battle.rml, battle.rcss #tutorial.
+  - tests/scenarios/battle_tutorial_hold, battle_tutorial_steps; expect tutorialStep. docs/gameplay/19 (+ zh_TW).
+  - Tests: changed-only 25 of 261 pass. Not committed. All tests, the switched-off tests, web, Android not run; sword and staff not run; not played by hand.

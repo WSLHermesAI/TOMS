@@ -445,7 +445,7 @@ void Game::f_CloseMiniGame() {
 
 // ---- the start story: the weapon trial (docs/gameplay/07 phase 3) ----
 
-void Game::f_StartWeaponTrial() { f_StartDialogue("weapon_master"); }
+void Game::f_StartWeaponTrial() { m_setTutorialSeen.clear(); f_StartDialogue("weapon_master"); }
 
 void Game::f_TryWeapon(const std::string& l_strWeaponId) {
     if (!m_mapEquipmentDefs.count(l_strWeaponId)) return;
@@ -454,9 +454,10 @@ void Game::f_TryWeapon(const std::string& l_strWeaponId) {
     m_oArena = Arena{};
     m_oArena.m_bOn = true;
     m_oArena.m_bTrial = true;
-    m_oArena.m_vEnemies = {"slime"};      // a training slime: weak, slow to strike back
-    m_oArena.m_jOverrides = {{"hp", 40}, {"atk", 2}, {"atk_interval_ms", 5000}};
+    m_oArena.m_vEnemies = {m_oTutorial.m_strEnemy};   // the tutorial's monster, gentler (battle.json "tutorial")
+    m_oArena.m_jOverrides = m_oTutorial.m_jOverrides;
     f_ArenaNextFight();
+    f_TutorialGoTo(0);
     m_oCs.m_strLog = m_oLocale.f_Tr("trial.fight_log");
 }
 

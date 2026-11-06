@@ -321,4 +321,25 @@ GuardTiming f_GuardTiming(int l_iSinceMs, const GuardSettings& l_oG) {
     return GuardTiming::None;
 }
 
+BattleTutorial f_TutorialFromJson(const nlohmann::json& l_jBattle) {
+    BattleTutorial l_oT;
+    const nlohmann::json l_jT = l_jBattle.value("tutorial", nlohmann::json::object());
+    l_oT.m_strEnemy = l_jT.value("enemy", std::string());
+    l_oT.m_jOverrides = l_jT.value("overrides", nlohmann::json::object());
+    for (const nlohmann::json& l_jS : l_jT.value("steps", nlohmann::json::array())) {
+        TutorialStep l_oS;
+        l_oS.m_strText = l_jS.value("text", std::string());
+        l_oS.m_strMark = l_jS.value("mark", std::string());
+        l_oS.m_strDoneOn = l_jS.value("doneOn", std::string());
+        l_oS.m_strMove = l_jS.value("move", std::string());
+        l_oS.m_iCount = std::max(1, l_jS.value("count", 1));
+        l_oS.m_iFoeHpFloor = std::clamp(l_jS.value("foeHpFloor", 0), 0, 100);
+        l_oS.m_bHold = l_jS.value("hold", false);
+        l_oS.m_bHideCells = l_jS.value("hideCells", false);
+        l_oS.m_bOnce = l_jS.value("once", false);
+        l_oT.m_vSteps.push_back(l_oS);
+    }
+    return l_oT;
+}
+
 } // namespace toms

@@ -1263,6 +1263,26 @@
       "zh_TW": "閃開！",
       "en": "Dodged!"
     },
+    "battle.intent.toad_crush": {
+      "zh_TW": "重壓（躲不開）",
+      "en": "Crush (no dodging it)"
+    },
+    "tutorial.attack": {
+      "zh_TW": "攻擊苔蛙！{play}",
+      "en": "Attack the toad! {play}"
+    },
+    "tutorial.move": {
+      "zh_TW": "紅色的格子要被打中了！點別的格子（或按方向鍵）離開紅色",
+      "en": "The red cells are about to be hit! Tap another cell (or use the arrow keys) to leave the red"
+    },
+    "tutorial.guard": {
+      "zh_TW": "這招躲不開！牠頭上出現「!」時，按防禦",
+      "en": "You can't dodge this one! When \"!\" shows over it, press Guard"
+    },
+    "tutorial.finish": {
+      "zh_TW": "很好！把苔蛙打倒吧",
+      "en": "Well done! Now finish the toad"
+    },
     "battle.intent.toad_near": {
       "zh_TW": "拍擊（前排）",
       "en": "Slam (near row)"

@@ -70,7 +70,8 @@
         <div id="chain" data-if="battle.chain_text != ''">{{battle.chain_text}}</div>
 
         <!-- the six cells (docs/gameplay/19 §2.1): tap one to move there; the lit ones are in danger, filling as the hit comes -->
-        <div id="cells" data-if="battle.cells_on">
+        <div id="tutorial" data-if="battle.tutorial != ''">{{battle.tutorial}}</div>
+        <div id="cells" data-if="battle.cells_on" data-class-tutmark="battle.tutorial_mark == 'cells'">
             <div data-for="c, i : battle.cells"><div class="cellbox btn" data-class-here="c.here" data-class-danger="c.danger"
                  data-style-left="c.x + 'px'" data-style-top="c.y + 'px'" data-event-click="act('battle_cell', i)">
                 <div class="cfill" data-if="c.danger" data-style-width="c.fill + '%'"></div>
@@ -90,7 +91,7 @@
         <div id="crit" data-if="battle.crit_armed">{{battle.crit_hint}}</div>
 
         <!-- the thumbs: GUARD (one button, just before a hit) and the attack's state (not a button) -->
-        <div id="guard" class="panel btn" data-class-lit="battle.guard_lit" data-class-cooling="battle.guard_cooling"
+        <div id="guard" class="panel btn" data-class-lit="battle.guard_lit" data-class-cooling="battle.guard_cooling" data-class-tutmark="battle.tutorial_mark == 'guard'"
              data-if="battle.guard_timing" data-event-click="act('battle_defend')">
             <div class="plabel">{{battle.guard_label}}</div>
             <div class="phint">{{battle.guard_hint}}</div>

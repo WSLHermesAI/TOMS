@@ -115,6 +115,19 @@ Test the fun first, on one monster, before making content for it.
 **What this means for doc 17:** W5 (resistances, switching) and W6 (the talk bar) still fit. W4's 12 weapon types and W7's bow and staff plays should wait,
 because B3–B5 change how the weapons play (Q74).
 
+**The new game's tutorial (built 2026-11-06, ahead of B6):** the weapon master's trial fight is now a lesson against 苔蛙 (`thicketoad`),
+set in `battle.json` `tutorial`, with its words in `text.json` `tutorial.*`. Each step shows its words in a box at the top and waits until the player does it:
+
+| Step | The player must | Meanwhile |
+|---|---|---|
+| Attack | Attack twice (a missed bow shot counts) | The toad waits; the cells are hidden; the bow shows its ghost finger |
+| Move | Stand clear of the red cells when the hit lands | `toad_lesson_line`, again until dodged |
+| Guard | Press Guard on the "!" | `toad_lesson_crush`, which has no cells, so it cannot be dodged; again until guarded |
+| Finish | Beat the toad | Its usual moves, then the win clip |
+
+The toad keeps a share of its HP until each step is done (`foeHpFloor`), and nobody falls in the tutorial: the hero stops at 1 HP. Trying another weapon repeats only Attack and Finish (`once`).
+So the owner's note "without defending you fall after a few hits" is not shown yet.
+
 ## 3. Part 2: tower events and story
 
 **The goal:** going up the tower is more than beating monsters. Events give reasons to collect things, finish missions and follow the story.

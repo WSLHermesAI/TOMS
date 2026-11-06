@@ -157,6 +157,7 @@ struct UiBattle {
     std::string m_strTouchKind;            // the weapon's own play: bow, slice, circles ("" = the track; docs/gameplay/15 §3.3)
     bool m_bCellsOn = false;
     std::string m_strCellHint;
+    std::string m_strTutorial, m_strTutorialMark;   // the new game's tutorial: its words, and what it points at
     std::vector<UiBattleCell> m_vCells;
     std::vector<UiTouchItem> m_vTouch;    // what it draws over the monster
     std::string m_strSkillPrompt, m_strSkillTime;   // a move's play: "Draw the pentagram!", its seconds left (16 §6)

@@ -206,6 +206,8 @@ void f_RegisterTypes(Rml::DataModelConstructor& l_oC) {
         l_oS.RegisterMember("popups", &UiBattle::m_vPopups);
         l_oS.RegisterMember("cells_on", &UiBattle::m_bCellsOn);
         l_oS.RegisterMember("cell_hint", &UiBattle::m_strCellHint);
+        l_oS.RegisterMember("tutorial", &UiBattle::m_strTutorial);
+        l_oS.RegisterMember("tutorial_mark", &UiBattle::m_strTutorialMark);
         l_oS.RegisterMember("cells", &UiBattle::m_vCells);
         l_oS.RegisterMember("touch_kind", &UiBattle::m_strTouchKind);
         l_oS.RegisterMember("touch", &UiBattle::m_vTouch);

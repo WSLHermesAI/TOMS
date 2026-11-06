@@ -4,6 +4,7 @@
 #include <array>
 #include <memory>
 #include <vector>
+#include <set>
 #include <string>
 #include <map>
 #include <random>
@@ -1553,8 +1554,14 @@ private:
         bool m_bTrial = false;           // the start story's weapon trial (docs/gameplay/07 phase 3): one fight, then back to the master
         bool m_bTraining = false;        // the training ground (docs/gameplay/16 §5): fightsMax fights, EXP and weapon wins x2
         int m_iFightsMax = 0, m_iHpBefore = 0, m_iExpGained = 0, m_iWeaponExpGained = 0;
+        int m_iTutorialStep = -1, m_iTutorialCount = 0;   // the new game's tutorial: this fight's step (-1: none)
     };
     Arena m_oArena;
+    toms::BattleTutorial m_oTutorial;      // battle.json "tutorial" (docs/gameplay/19 B6)
+    std::set<int> m_setTutorialSeen;       // its "once" steps done since this new game began
+    const toms::TutorialStep* f_TutorialStepNow() const;
+    void f_TutorialGoTo(int l_iStep);
+    void f_TutorialEvent(const std::string& l_strType, int l_iWho, const std::string& l_strDetail);
 public:
     // The start story (docs/gameplay/07 phase 3): the weapon master lets the player try the weapons (dialogue/weapon_master.json),
     // a trial fight each, until one is chosen; the run then begins on stage 1. Opened by the title's New Game.

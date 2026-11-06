@@ -1,12 +1,12 @@
 {
   "npcId": "weapon_master",
-  "_comment": "The start story (docs/gameplay/07 phase 3): the player tries the weapons (tryWeapon: a fight with a training slime), comes back to 'after' each time, and keeps one (chooseWeapon). Opened by the title's New Game.",
+  "_comment": "The start story (docs/gameplay/07 phase 3): the player tries the weapons (tryWeapon: the tutorial fight with a toad, battle.json tutorial), comes back to 'after' each time, and keeps one (chooseWeapon). Opened by the title's New Game.",
   "start": "intro",
   "nodes": {
     "intro": {
       "text": {
-        "zh_TW": "村口，一位老武師攔住了你：「要上塔？先挑一把趁手的兵器。拿我的練習史萊姆試試，不合手就換。」",
-        "en": "At the edge of the village an old weapon master stops you: \"Climbing the tower? Pick a weapon that fits your hand first. Try them on my training slime, and change if one does not suit you.\""
+        "zh_TW": "村口，一位老武師攔住了你：「要上塔？先挑一把趁手的兵器。先拿林邊那隻苔蛙練練手，我教你怎麼打，不合手就換。」",
+        "en": "At the edge of the village an old weapon master stops you: \"Climbing the tower? Pick a weapon that fits your hand first. Practise on the toad at the edge of the woods, and I will show you how to fight. Change if one does not suit you.\""
       },
       "choices": [
         {
@@ -53,8 +53,8 @@
     },
     "weapons": {
       "text": {
-        "zh_TW": "「弓：拉得越久越有力，標記會折返，射偏了還能補救。劍：一揮到底，不回頭，失手要收劍。法杖：要聚氣，慢，但滿氣時最重。」",
-        "en": "\"The bow: the longer the draw, the harder the shot, and the marker turns back, so a miss can be saved. The sword: one sweep, no turning back, and a miss means putting it back first. The staff: it needs focus and is slow, but a full charge hits hardest.\""
+        "zh_TW": "「弓：往後拉再放開，拉得越久越有力。劍：照著指示的方向揮砍。法杖：依序點中出現的圓圈。」",
+        "en": "\"The bow: draw back and let go, and the longer the draw, the harder the shot. The sword: slash the way it shows you. The staff: touch the circles in their order.\""
       },
       "choices": [
         {

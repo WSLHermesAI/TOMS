@@ -1,0 +1,20 @@
+{
+  "_comment": "The new game's tutorial (docs/gameplay/19 B6, battle.json tutorial): the bow chosen from the weapon master, the fight is the toad. It waits at step 0 until the player attacks: no danger, no hit, however long.",
+  "scene": "weaponTrial",
+  "battle": {
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 400,
+    "keys": "down@10,enter@20"
+  },
+  "expect": {
+    "scene": "arena",
+    "equipped": "bow",
+    "tutorialStep": 0,
+    "battleEvents": {
+      "danger": 0,
+      "hit": 0
+    }
+  }
+}

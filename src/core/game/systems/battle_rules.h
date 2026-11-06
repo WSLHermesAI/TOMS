@@ -219,6 +219,25 @@ enum class GuardTiming { None, Parry, Block, Early };
 GuardSettings f_GuardFromJson(const nlohmann::json& l_jBattleJson);
 // What a guard pressed `sinceMs` before a hit does (sinceMs < 0: not pressed).
 GuardTiming f_GuardTiming(int l_iSinceMs, const GuardSettings& l_oG);
+// The new game's tutorial (battle.json "tutorial", docs/gameplay/19 B6): the trial fight, one step at a time.
+struct TutorialStep {
+    std::string m_strText;       // a text.json key; "{play}" in it becomes how this weapon attacks
+    std::string m_strMark;       // what it points at: "attack", "cells", "guard"
+    std::string m_strDoneOn;     // "heroHit", "dodge", "guarded"; empty: the step lasts to the end of the fight
+    std::string m_strMove;       // the move the monster must use in this step (moves.json)
+    int m_iCount = 1;            // how many times, before the next step
+    int m_iFoeHpFloor = 0;       // % of its HP the monster keeps until the step is done
+    bool m_bHold = false;        // the monster's clock waits
+    bool m_bHideCells = false;   // the six cells are not shown yet
+    bool m_bOnce = false;        // not again when the player tries another weapon
+};
+struct BattleTutorial {
+    std::string m_strEnemy;      // enemies.json
+    nlohmann::json m_jOverrides; // its gentler numbers: hp, atk, def
+    std::vector<TutorialStep> m_vSteps;
+};
+BattleTutorial f_TutorialFromJson(const nlohmann::json& l_jBattle);
+
 // The "warn" mode: a press `sinceMs` before a hit whose "!" showed `warnMs` (pressed while it showed: a parry in its
 // first parryShare, else a block; before it, or not pressed: none).
 GuardTiming f_GuardWarn(int l_iSinceMs, int l_iWarnMs, const GuardSettings& l_oG);

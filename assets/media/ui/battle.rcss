@@ -289,6 +289,11 @@ body { z-index: 30; }
 .cellbox.danger { border-color: #ff5a4a; background-color: #80201890; }
 .cfill { position: absolute; left: 0; top: 0; bottom: 0; background-color: #ff5a3ab0; }
 .cme { position: absolute; left: 50%; margin-left: -13px; top: 16px; width: 26px; height: 26px; border-radius: 13px; background-color: #ffe27a; border-width: 2px; border-color: #3a2a00; }
+/* the new game's tutorial (docs/gameplay/19 B6): its words across the top of the fight, and a gold edge on what they mean */
+#tutorial { position: absolute; left: 50%; margin-left: -330px; width: 660px; top: 6px; padding: 10px 14px; text-align: center;
+            font-size: 26px; color: #fff2c0; background-color: #1a1408; border: 2px #e8c060; border-radius: 10px; }
+#cells.tutmark .cellbox { border-color: #ffd860; }
+#guard.tutmark { border: 4px #ffd860; }
 #cell-hint { position: absolute; left: 0; width: 450px; top: -24px; text-align: center; font-size: 16px; color: #f3e0ba; font-effect: outline(2px #000000); }
 /* with or without cells, the ultimate and the active button sit in the right column */
 #super-btn { left: auto; right: 24px; margin-left: 0; top: 452px; width: 190px; }

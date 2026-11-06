@@ -168,7 +168,7 @@ void Game::f_ShowBanner(const std::string& l_strText, const std::string& l_strKi
 // The last monster fell (15 §3.8): the moment plays in slow motion, then the win and its result screen.
 void Game::f_StartWinMoment() {
     const int l_iMs = m_oSettings.m_bReduceEffects ? 0 : (int)std::lround(m_oFeel.m_iSlowMoMs * std::min(1.0f, m_oFeel.m_fStrength));
-    if (m_oFeel.m_iEndMaxMs <= 0 || m_oArena.m_bOn) { f_FinishCombatWin(); return; }   // (the arena: the next fight at once, as before)
+    if (m_oFeel.m_iEndMaxMs <= 0 || (m_oArena.m_bOn && !f_TutorialStepNow())) { f_FinishCombatWin(); return; }   // (the arena: the next fight at once, as before)
     m_oCs.m_bWinPending = true;
     m_oCs.m_bEndClipDone = false;
     m_oCs.m_iEndLeftMs = m_oFeel.m_iEndMaxMs;
@@ -229,10 +229,42 @@ float Game::f_PlayerHpPct() const {
     return 100.0f * (float)std::max(0, m_oCs.m_iPlayerHP) / (float)std::max(1, f_EffectiveMaxHp());
 }
 
+const toms::TutorialStep* Game::f_TutorialStepNow() const {
+    if (!m_oArena.m_bOn || m_oArena.m_iTutorialStep < 0 || m_oArena.m_iTutorialStep >= (int)m_oTutorial.m_vSteps.size()) return nullptr;
+    return &m_oTutorial.m_vSteps[(size_t)m_oArena.m_iTutorialStep];
+}
+
+void Game::f_TutorialGoTo(int l_iStep) {
+    const int l_iCount = (int)m_oTutorial.m_vSteps.size();
+    while (l_iStep < l_iCount && m_oTutorial.m_vSteps[(size_t)l_iStep].m_bOnce && m_setTutorialSeen.count(l_iStep)) l_iStep++;
+    m_oArena.m_iTutorialStep = l_iStep < l_iCount ? l_iStep : -1;
+    m_oArena.m_iTutorialCount = 0;
+    const toms::TutorialStep* l_pStep = f_TutorialStepNow();
+    if (!l_pStep || l_pStep->m_strMove.empty()) return;
+    for (size_t l_nI = 0; l_nI < m_oCs.m_vFoes.size(); l_nI++) {   // the step's move, from the start of its wind-up
+        if (m_oCs.m_vFoes[l_nI].f_Down()) continue;
+        m_oCs.m_vFoes[l_nI].m_iClockMs = 0;
+        f_ChooseFoeMove((int)l_nI);
+    }
+}
+
+void Game::f_TutorialEvent(const std::string& l_strType, int l_iWho, const std::string& l_strDetail) {
+    const toms::TutorialStep* l_pStep = f_TutorialStepNow();
+    if (!l_pStep || l_pStep->m_strDoneOn.empty()) return;
+    const bool l_bDone = l_pStep->m_strDoneOn == "heroHit" ? l_strType == "hit" && l_iWho < 0
+                       : l_pStep->m_strDoneOn == "dodge" ? l_strType == "dodge"
+                       : l_pStep->m_strDoneOn == "guarded" ? l_strType == "parry" || (l_strType == "hit" && l_iWho >= 0 && l_strDetail.find(" guarded") != std::string::npos)
+                       : false;
+    if (!l_bDone || ++m_oArena.m_iTutorialCount < l_pStep->m_iCount) return;
+    if (l_pStep->m_bOnce) m_setTutorialSeen.insert(m_oArena.m_iTutorialStep);
+    f_TutorialGoTo(m_oArena.m_iTutorialStep + 1);
+}
+
 void Game::f_ChooseFoeMove(int l_iFoe) {
     CombatState::Foe& l_oF = m_oCs.m_vFoes[(size_t)l_iFoe];
     const float l_fRoll = std::uniform_real_distribution<float>(0.0f, 1.0f)(m_oMoveRng);
     l_oF.m_strMove = toms::f_PickMove(l_oF.m_oEnemy.m_vMoves, l_fRoll);
+    if (const toms::TutorialStep* l_pStep = f_TutorialStepNow(); l_pStep && !l_pStep->m_strMove.empty()) l_oF.m_strMove = l_pStep->m_strMove;
     l_oF.m_uDanger = 0u;
     const toms::MoveDef& l_oM = m_oMoves.f_Get(l_oF.m_strMove);
     l_oF.m_iMoveMs = l_oM.m_iChargeMs > 0 ? std::max(300, (int)std::lround(l_oM.m_iChargeMs * l_oF.m_fIntervalMul))   // its wind-up in ms (16 §4.1)
@@ -253,6 +285,7 @@ void Game::f_StepFoes(int l_iDtMs) {
         if (!m_oCs.m_bActive) return;
         CombatState::Foe& l_oF = m_oCs.m_vFoes[l_nI];
         if (l_oF.f_Down()) continue;
+        if (const toms::TutorialStep* l_pStep = f_TutorialStepNow(); l_pStep && l_pStep->m_bHold) continue;   // the tutorial: it waits
         if (l_oF.m_iStaggerMs > 0) {   // stunned: its clock stops
             l_oF.m_iStaggerMs -= l_iDtMs;
             if (l_oF.m_iStaggerMs <= 0) { l_oF.m_iStaggerMs = 0; l_oF.m_fStaggerDamage = 1.0f; l_oF.m_bBroken = false; }
@@ -302,6 +335,8 @@ void Game::f_DamageFoe(int l_iFoe, int l_iDmg) {
     const float l_fMaxHp = (float)std::max(1, l_oF.m_oEnemy.m_iHp);
     const float l_fBefore = 100.0f * (float)std::max(0, l_oF.m_iHp) / l_fMaxHp;
     l_oF.m_iHp -= l_iDmg;
+    if (const toms::TutorialStep* l_pStep = f_TutorialStepNow(); l_pStep && l_pStep->m_iFoeHpFloor > 0)   // it stands until the lesson is done
+        l_oF.m_iHp = std::max(l_oF.m_iHp, std::max(1, l_oF.m_oEnemy.m_iHp * l_pStep->m_iFoeHpFloor / 100));
     toms::EventCheck l_oC;
     l_oC.m_strOn = "hpBelow";
     l_oC.m_fHpPctBefore = l_fBefore;
@@ -500,6 +535,7 @@ void Game::f_BattleEvent(const std::string& l_strType, int l_iWho, int l_iWhom, 
         for (const CombatState::Foe& l_oF : m_oCs.m_vFoes) l_vIds.push_back(l_oF.m_oEnemy.m_strId);
         std::fprintf(stderr, "[battle] %s\n", toms::f_BattleEventLine(l_oE, l_vIds).c_str());
     }
+    f_TutorialEvent(l_strType, l_iWho, l_oE.m_strNote);
 }
 
 void Game::f_BattleSetTarget(int l_iFoe) {
@@ -1145,6 +1181,7 @@ void Game::f_ResolveEnemyClockFire(int l_iFoe) {
 
     const float l_fHpBefore = f_PlayerHpPct();
     m_oCs.m_iPlayerHP -= l_iDmg;
+    if (f_TutorialStepNow()) m_oCs.m_iPlayerHP = std::max(1, m_oCs.m_iPlayerHP);   // nobody falls in the tutorial
     m_oCs.m_iDamageTaken += l_iDmg;
     if (l_iDmg > 0) f_FeelMoment(l_oM.m_eKind == toms::MoveKind::Heavy || l_oM.m_eKind == toms::MoveKind::Spell ? "heavyHurt" : "hurt");
     f_BattleEvent("hit", l_iFoe, -1, l_iDmg, l_oF.m_strMove + (l_bGuarded ? " guarded " + std::to_string((int)std::lround(l_fPower)) : std::string()));
