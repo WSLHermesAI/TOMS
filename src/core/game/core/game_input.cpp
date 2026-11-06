@@ -357,6 +357,7 @@ void Game::f_EngageMonster(const Entity& l_oE) {
     EnemyInst l_oEn;
     if (!f_EnemyFromData(l_oE.m_strId, nlohmann::json::object(), l_oEn)) return;   // enemies.json, with its moves, look and events
     l_oEn.m_iX = l_oE.m_iX; l_oEn.m_iY = l_oE.m_iY;
+    l_oEn.m_vStageParty = l_oE.m_vParty;
     // Milestone 4 (Encounter Resolution): resolveEncounterKind returns DirectBattle for every
     // monster tile in every shipped stage today (no stage sets encounter_overrides yet), so this is
     // byte-for-byte the same behavior as before unless/until a stage opts a tile into dialogue_gate.
@@ -371,9 +372,17 @@ void Game::f_EngageMonster(const Entity& l_oE) {
     }
 }
 
-// The monsters fighting beside a map monster (enemies.json "party": up to two ids; docs/gameplay/13 §4.6).
+// The monsters fighting beside a map monster: the stage's for this one, else enemies.json "party" (up to two ids; docs/gameplay/13 §4.6, 19 §2.0).
 std::vector<EnemyInst> Game::f_PartyOf(const EnemyInst& l_oLead) {
     std::vector<EnemyInst> l_vParty;
+    if (!l_oLead.m_vStageParty.empty()) {
+        for (const std::string& l_strId : l_oLead.m_vStageParty) {
+            EnemyInst l_oM;
+            if (f_EnemyFromData(l_strId, nlohmann::json::object(), l_oM)) l_vParty.push_back(l_oM);
+            if ((int)l_vParty.size() + 1 >= toms::g_iMaxFoes) break;
+        }
+        return l_vParty;
+    }
     auto l_itT = m_mapEnemyTpl.find(l_oLead.m_strId);
     if (l_itT == m_mapEnemyTpl.end() || !l_itT->second.contains("party") || !l_itT->second["party"].is_array()) return l_vParty;
     for (const auto& l_jId : l_itT->second["party"]) {

@@ -35,6 +35,8 @@
     "+ bowHoldPerStr per STR) and shake (bowShakePx / (1 + DEX x bowShakePerDex)); the sword's prompts (cueMs, of which",
     "inputMs take the answer, at the end when inputAtEnd); the staff's count / hide / warn / tap times.",
     "cueExtraMs: more time for a prompt that takes longer to draw (17 §4.2). dexWayDeg / dexWayMaxDeg: a swipe's tolerance per DEX point and its limit; dexGestureMaxDeg: a gesture's limit; dexCornerPct: a shape's corners per point; dexWindowMs: the answer window per point (17 §4.4). freeMinSwipe: a shorter drag is no swipe in a free mode (17 §5).",
+    "backdrops: the battle's background by floor (17 §19): the first row whose from..to holds the floor, else the first. anim, clip: covers the screen (size: the picture's size); fx: looping effects of battle.particle over it. tools/art/make_battle_backdrop.py writes the forest.",
+    "cells: moving in battle (docs/gameplay/19 §2.1): six cells, 0 1 2 the near row and 3 4 5 the far row; start: where the hero begins; warnMs: the danger lights this long before the hit; shapes: each a list of variants, each the cells it covers (a move names one in moves.json \"shape\"; the variant reaching the hero is chosen); shiftX, shiftNear, shiftY: how far the hero's picture moves.",
     "battleSpeeds: the steps of Settings > Battle speed (17 I10).",
     "training: the training ground (16 §5): cards spent per run, runs per day, fights per run, EXP and weapon EXP x."
   ],
@@ -64,6 +66,11 @@
              "s": 95, "a": 75, "b": 55, "sGold": 0.2, "sCard": 0.25 },
   "guard": { "mode": "warn", "warnMs": 500, "parryShare": 0.4, "missLockMs": 400,
              "parryMs": 160, "blockMs": 550, "earlyMs": 1200, "blockPower": 70, "cooldownMs": 700 },
+  "backdrops": [
+    { "from": 1, "to": 9999, "anim": "anim/battle_forest.anim", "clip": "idle", "size": [1792, 1024], "fx": ["forest_motes", "forest_fireflies"] }
+  ],
+  "cells": { "warnMs": 1400, "start": 4, "shiftX": 55, "shiftNear": 40, "shiftY": 18,
+             "shapes": { "near": [[0, 1, 2]], "line": [[0, 3], [1, 4], [2, 5]], "fan": [[0, 1, 2, 3, 5]] } },
   "battleSpeeds": [0.75, 1, 1.25, 1.5],
   "plays": { "bowTimeMs": 4000, "bowMoveMs": 500, "bowMoveDist": 90, "bowHoldMs": 1500, "bowHoldPerStr": 40,
              "bowShakePx": 10, "bowShakePerDex": 0.05,

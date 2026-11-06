@@ -745,5 +745,44 @@
     "weaponExp": 7,
     "gold": 25,
     "draft": true
+  },
+  "sproutle": {
+    "name": { "zh_TW": "芽球", "en": "Sproutle" },
+    "sprite": "slime.png",
+    "look": "moss",
+    "hp": 48,
+    "atk": 16,
+    "def": 2,
+    "exp": 6,
+    "weaponExp": 1,
+    "gold": 4,
+    "draft": true
+  },
+  "mossbun": {
+    "name": { "zh_TW": "苔兔", "en": "Mossbun" },
+    "sprite": "slime.png",
+    "look": "moss",
+    "hp": 80,
+    "atk": 32,
+    "def": 4,
+    "exp": 14,
+    "weaponExp": 2,
+    "gold": 9,
+    "moves": [ { "id": "strike", "weight": 2 }, "heavy" ],
+    "draft": true
+  },
+  "thicketoad": {
+    "name": { "zh_TW": "苔蛙", "en": "Thicketoad" },
+    "sprite": "slime.png",
+    "look": "moss",
+    "hp": 140,
+    "atk": 28,
+    "def": 8,
+    "exp": 20,
+    "weaponExp": 3,
+    "gold": 12,
+    "break": 10,
+    "moves": [ "toad_near", "toad_line", "toad_fan" ],
+    "draft": true
   }
 }

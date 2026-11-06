@@ -235,6 +235,7 @@ bool Game::f_StartScenarioJson(const nlohmann::json& l_jSc, const std::string& l
             m_oPaceSettings = toms::f_PaceFromJson(l_jRules);
             m_oBreakSettings = toms::f_BreakFromJson(l_jRules);
             m_oFeel = toms::f_FeelFromJson(l_jRules);
+            m_oCellRules = toms::f_CellRulesFromJson(l_jRules);
             m_oTouchSettings = toms::f_TouchPlayFromJson(l_jRules);
             m_oGrade = toms::f_GradeFromJson(l_jRules);
             m_oGuard = toms::f_GuardFromJson(l_jRules);
@@ -386,6 +387,14 @@ bool Game::f_ScenarioCheck(std::string& l_strReport) const {
             if (f_WeaponLevel(l_oIt.key()) != l_oIt.value().get<int>())
                 l_fnFail("the weapon \"" + l_oIt.key() + "\" is Lv " + std::to_string(f_WeaponLevel(l_oIt.key())) + ", expected " +
                      std::to_string(l_oIt.value().get<int>()));
+    if (m_jScenarioExpect.contains("backdrop") && !(m_spBackdrop && m_strBackdropAnim == m_jScenarioExpect["backdrop"].get<std::string>()))
+        l_fnFail("the battle's background is \"" + m_strBackdropAnim + "\", expected " + m_jScenarioExpect["backdrop"].get<std::string>());
+    if (m_jScenarioExpect.contains("foeClips") && m_jScenarioExpect["foeClips"].is_array())   // each monster's clip now
+        for (size_t l_nI = 0; l_nI < m_jScenarioExpect["foeClips"].size(); l_nI++) {
+            const std::string l_strHas = l_nI < m_vFoeRigs.size() ? m_vFoeRigs[l_nI].m_strClip : std::string();
+            if (l_strHas != m_jScenarioExpect["foeClips"][l_nI].get<std::string>())
+                l_fnFail("monster " + std::to_string(l_nI) + " plays \"" + l_strHas + "\", expected " + m_jScenarioExpect["foeClips"][l_nI].get<std::string>());
+        }
     if (m_jScenarioExpect.contains("battleClip") && m_strBattleRigClip != m_jScenarioExpect["battleClip"].get<std::string>())
         l_fnFail("the battle picture plays the clip \"" + m_strBattleRigClip + "\", expected \"" + m_jScenarioExpect["battleClip"].get<std::string>() + "\"");
     const std::string l_strLeadState = m_vFoeRigs.empty() ? std::string() : m_vFoeRigs[0].m_strState;

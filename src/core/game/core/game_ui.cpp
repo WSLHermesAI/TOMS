@@ -413,6 +413,22 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
                 : l_oL.f_Tr("battle.shield_none");
             l_oB.m_bCritArmed = m_oCs.m_bNextAttackGuaranteedCrit;
             l_oB.m_strCritHint = l_oL.f_Tr("battle.active_armed_hint");
+            if (m_oCs.m_bCellsOn) {   // the six cells: where the hero stands, what is in danger and how soon (docs/gameplay/19 §2.1)
+                l_oB.m_bCellsOn = true;
+                l_oB.m_strCellHint = l_oL.f_Tr("battle.cell_hint");
+                for (int l_iC = 0; l_iC < toms::g_iCellCols * toms::g_iCellRows; l_iC++) {
+                    toms::UiBattleCell l_oCell;
+                    l_oCell.m_fX = 152.0f * (float)(l_iC % toms::g_iCellCols);
+                    l_oCell.m_fY = 64.0f * (float)(l_iC / toms::g_iCellCols);
+                    l_oCell.m_bHere = l_iC == m_oCs.m_iHeroCell;
+                    for (const CombatState::Foe& l_oF : m_oCs.m_vFoes)
+                        if (!l_oF.f_Down() && (l_oF.m_uDanger & (1u << l_iC))) {
+                            l_oCell.m_bDanger = true;
+                            l_oCell.m_fFill = std::max(l_oCell.m_fFill, std::clamp(100.0f * (1.0f - (float)(l_oF.m_iMoveMs - l_oF.m_iClockMs) / (float)m_oCellRules.m_iWarnMs), 0.0f, 100.0f));
+                        }
+                    l_oB.m_vCells.push_back(l_oCell);
+                }
+            }
             l_oB.m_strSuperLabel = l_oL.f_Tr("battle.super_label");
             for (int l_iI = 0; l_iI < m_oRun.f_SuperMax(); l_iI++) l_oB.m_vSuperDots.push_back(l_iI < m_oCs.m_iSuperCharge ? 1 : 0);
             l_oB.m_bSuperReady = m_oCs.m_iSuperCharge >= m_oRun.f_SuperMax() && !m_oCs.m_oCombo.f_Running() && !m_oCs.m_oSkill.m_bOn && !m_oCs.m_bWinPending;
@@ -768,6 +784,7 @@ void Game::f_UiEvent(const std::string& l_strName, int l_iArg) {
     if (l_strName == "battle_super")    { f_BattleTapSuper(); return; }
     if (l_strName == "battle_active")   { f_BattleTapActive(); return; }
     if (l_strName == "battle_target")   { f_BattleSetTarget(l_iArg); return; }
+    if (l_strName == "battle_cell")     { f_BattleMoveToCell(l_iArg); return; }
     if (l_strName == "battle_continue") { if (m_oCs.m_bWon) f_DismissVictory(); return; }
     // ---- dialogue ----
     if (l_strName == "dlg_choose")  { if (m_bInDialogue && l_iArg >= 0 && l_iArg < (int)m_vDlgChoices.size()) { m_iDlgSel = l_iArg; f_ChooseDialogue(l_iArg); } return; }

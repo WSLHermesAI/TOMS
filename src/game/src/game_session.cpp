@@ -372,7 +372,11 @@ bool GameSession::f_Frame(int l_iDtMs, const InputState& l_oIn, uint32_t l_uDevi
             else l_oG.f_Interact();
         }
         if (f_KeyPressed(l_oIn, Key::F) && l_oG.f_CombatActive()) l_oG.f_BattleTapDefense();
-        if (l_oG.f_CombatActive() && (l_bLeftPressed || l_bRightPressed)) l_oG.f_BattleCycleTarget(l_bLeftPressed ? -1 : 1);   // the target
+        if (l_oG.f_BattleCellsOn()) {   // the arrows move the hero between the cells (docs/gameplay/19 §2.1); a monster is targeted by tapping it
+            if (l_bLeftPressed || l_bRightPressed) l_oG.f_BattleStepCell(l_bLeftPressed ? -1 : 1, 0);
+            if (l_bUpPressed || l_bDownPressed) l_oG.f_BattleStepCell(0, l_bUpPressed ? -1 : 1);
+        } else
+            if (l_oG.f_CombatActive() && (l_bLeftPressed || l_bRightPressed)) l_oG.f_BattleCycleTarget(l_bLeftPressed ? -1 : 1);   // the target
         if (f_KeyPressed(l_oIn, Key::G) && l_oG.f_CombatActive()) l_oG.f_BattleTapSuper();
         if (f_KeyPressed(l_oIn, Key::H) && l_oG.f_CombatActive()) l_oG.f_BattleTapActive();
         if (f_KeyPressed(l_oIn, Key::I)) l_oG.f_ToggleInventory();

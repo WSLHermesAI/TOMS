@@ -1,0 +1,37 @@
+{
+ "version": 2,
+ "atlases": ["../atlas/fx.atlas"],
+ "clips": [
+  {
+   "name": "party_hint",
+   "length": 1.2,
+   "playCount": -1,
+   "root": {
+    "name": "hint",
+    "pos": [0, -16, 0],
+    "children": [
+     {
+      "name": "glow", "sprite": "fx:glow", "pivot": [0.5, 0.5], "order": 0, "blend": "add", "scale": [0.62, 0.62, 1], "color": [1, 0.55, 0.15, 0.9],
+      "tracks": {
+       "scale": [
+        {"t": 0.0, "v": [0.55, 0.55, 1], "ease": "sinusoidalInOut"},
+        {"t": 0.6, "v": [0.72, 0.72, 1], "ease": "sinusoidalInOut"},
+        {"t": 1.2, "v": [0.55, 0.55, 1]}
+       ]
+      }
+     },
+     {
+      "name": "star", "sprite": "fx:star", "pivot": [0.5, 0.5], "order": 1, "scale": [0.62, 0.62, 1], "color": [1, 0.88, 0.3, 1],
+      "tracks": {
+       "scale": [
+        {"t": 0.0, "v": [0.58, 0.58, 1], "ease": "sinusoidalInOut"},
+        {"t": 0.6, "v": [0.7, 0.7, 1], "ease": "sinusoidalInOut"},
+        {"t": 1.2, "v": [0.58, 0.58, 1]}
+       ]
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

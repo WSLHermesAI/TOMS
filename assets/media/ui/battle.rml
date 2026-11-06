@@ -69,6 +69,16 @@
         </div>
         <div id="chain" data-if="battle.chain_text != ''">{{battle.chain_text}}</div>
 
+        <!-- the six cells (docs/gameplay/19 §2.1): tap one to move there; the lit ones are in danger, filling as the hit comes -->
+        <div id="cells" data-if="battle.cells_on">
+            <div data-for="c, i : battle.cells"><div class="cellbox btn" data-class-here="c.here" data-class-danger="c.danger"
+                 data-style-left="c.x + 'px'" data-style-top="c.y + 'px'" data-event-click="act('battle_cell', i)">
+                <div class="cfill" data-if="c.danger" data-style-width="c.fill + '%'"></div>
+                <div class="cme" data-if="c.here"></div>
+            </div></div>
+            <div id="cell-hint">{{battle.cell_hint}}</div>
+        </div>
+
         <div id="super">
             <span id="super-label">{{battle.super_label}}</span>
             <div class="dot-slot" data-for="d : battle.super_dots"><div class="dot" data-class-on="d == 1"></div></div>

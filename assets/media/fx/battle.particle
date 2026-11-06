@@ -11165,6 +11165,200 @@
      }
     }
    ]
+  },
+  {
+   "name": "forest_fireflies",
+   "duration": 6,
+   "loop": true,
+   "emitters": [
+    {
+     "name": "fireflies",
+     "maxParticles": 60,
+     "emission": {
+      "rate": 7
+     },
+     "shape": {
+      "type": "box",
+      "size": [
+       1800,
+       1500
+      ]
+     },
+     "life": [
+      3.5,
+      6.5
+     ],
+     "speed": [
+      6,
+      22
+     ],
+     "size": [
+      7,
+      15
+     ],
+     "color": [
+      [
+       0.75,
+       1,
+       0.55,
+       1
+      ],
+      [
+       1,
+       0.9,
+       0.45,
+       1
+      ]
+     ],
+     "sprite": "fx:glow",
+     "direction": -90,
+     "spread": 180,
+     "forces": {
+      "gravity": [
+       0,
+       -3
+      ]
+     },
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       },
+       {
+        "t": 0.2,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         0.35
+        ]
+       },
+       {
+        "t": 0.75,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    }
+   ]
+  },
+  {
+   "name": "forest_motes",
+   "duration": 6,
+   "loop": true,
+   "emitters": [
+    {
+     "name": "motes",
+     "maxParticles": 90,
+     "emission": {
+      "rate": 13
+     },
+     "shape": {
+      "type": "box",
+      "size": [
+       1900,
+       1500
+      ]
+     },
+     "life": [
+      4,
+      7
+     ],
+     "speed": [
+      8,
+      26
+     ],
+     "size": [
+      2,
+      5
+     ],
+     "color": [
+      [
+       0.75,
+       0.9,
+       1,
+       0.7
+      ],
+      [
+       0.8,
+       0.7,
+       1,
+       0.6
+      ]
+     ],
+     "sprite": "fx:glow",
+     "direction": 75,
+     "spread": 35,
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       },
+       {
+        "t": 0.25,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    }
+   ]
   }
  ]
 }

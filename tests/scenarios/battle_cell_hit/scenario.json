@@ -1,0 +1,28 @@
+{
+  "_comment": "The same slam, the hero moved up into the near row by the arrow key: it is hit.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "thicketoad",
+    "hp": 9999,
+    "moves": [
+      "toad_near"
+    ]
+  },
+  "test": {
+    "frames": 215,
+    "keys": "up@10"
+  },
+  "expect": {
+    "battleEvents": {
+      "move": 1,
+      "danger": 1,
+      "dodge": 0,
+      "hit": 1
+    }
+  }
+}

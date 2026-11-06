@@ -779,9 +779,9 @@ void BattleEditorWindow::f_ShowLevelExp() {
 }
 
 bool BattleEditorWindow::f_SelectWeapon(const QString& l_oKey) {
-    const auto l_vFound = m_pWeapons->findItems(l_oKey, Qt::MatchExactly);
-    if (l_vFound.isEmpty()) return false;
-    m_pWeapons->setCurrentItem(l_vFound.first());
+    const auto l_oFound = m_pWeapons->findItems(l_oKey, Qt::MatchExactly);
+    if (l_oFound.isEmpty()) return false;
+    m_pWeapons->setCurrentItem(l_oFound.first());
     m_pTabs->setCurrentIndex(1);
     return m_oCurrentWeapon == l_oKey;
 }

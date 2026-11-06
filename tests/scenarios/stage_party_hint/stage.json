@@ -1,0 +1,36 @@
+{
+ "id": "test_party",
+ "name": {
+  "zh_TW": "測試",
+  "en": "Test"
+ },
+ "index": 0,
+ "width": 9,
+ "height": 5,
+ "legend": {
+  "#": "wall",
+  ".": "floor",
+  "@": "player_start",
+  "2": "monster:slime",
+  "1": "monster:bat"
+ },
+ "tiles": [
+  "#########",
+  "#.......#",
+  "#.@2..1.#",
+  "#.......#",
+  "#########"
+ ],
+ "objects": {
+  "3,2": {
+   "uid": "a",
+   "party": [
+    "sproutle",
+    "sproutle"
+   ]
+  }
+ },
+ "subtitle": "Party hint test",
+ "story_note": null,
+ "connect": null
+}

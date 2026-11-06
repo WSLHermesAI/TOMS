@@ -1,0 +1,27 @@
+{
+  "_comment": "Standing in the near row when the danger lights, then stepping back in time: dodged. Lit at about frame 88; the hit lands at about 175.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "thicketoad",
+    "hp": 9999,
+    "moves": [
+      "toad_near"
+    ]
+  },
+  "test": {
+    "frames": 215,
+    "keys": "up@10,down@130"
+  },
+  "expect": {
+    "battleEvents": {
+      "move": 2,
+      "dodge": 1,
+      "hit": 0
+    }
+  }
+}

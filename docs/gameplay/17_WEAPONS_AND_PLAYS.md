@@ -426,6 +426,12 @@ Answered on 2026-11-02: see §16.
 
 **Each level's detail is edited in the battle editor (the owner, the same day):** the Weapon tab has a **Levels** table: EXP to next (shown), `points` (the prompts or circles of an attack) and each attribute's bonus, for every level; above it, **EXP to Lv 2** and **EXP growth** (`levelExp`). **Save weapons** writes them to `weapon_play.json`. There is no limit on `points` in code any more: the file decides.
 
+**The battle scene, a first try (the owner's two pictures, 2026-11-06):** only the layout and the background; the fighters' art and the UI's look are not changed.
+- **Layout** (`battle.rcss`): the monsters large in the middle (with three, the middle one large at the back), the hero large at the left or, upright, the bottom left; the monsters' clocks in a row at the top; the HP bar at the bottom; the buttons in a column at the right.
+- **Background** (`battle.json` `backdrops`, by floor; one forest for now): `tools/art/make_battle_backdrop.py` paints it with the local ComfyUI and writes `anim/battle_forest.anim` (two light rays and two ferns move; opens in the anim editor) and two looping effects in `battle.particle` (`forest_fireflies`, `forest_motes`; opens in the particle editor).
+
+**Three painted monsters (the owner's pick, 2026-11-06):** the moss team of the reference pictures: `sproutle` (芽球), `thicketoad` (苔蛙), `mossbun` (苔兔) in `enemies.json`, with stats copied from the slime, golem and skeleton, and the look `moss` in `looks.json`. `tools/art/make_monster_rig.py` cuts each concept into two parts and writes `anim/monster_moss.anim` (idle, attack, hurt, die, special, transform for each; opens in the anim editor). They are not on any floor yet, and their map and card icon is still the slime's.
+
 **W2, play types (`play_type.h`):**
 - Data now names plays with the §4.1 names: `swipeWay`, `swipeGesture`, `drawShape`, `sequenceClick`, `pullRelease`, `mash`, `track`. The older names (`bow`, `slice`, `circles`, `shape`) still read.
 - **Not in the enum yet:** `rhythmTap`, `holdCharge`, `tapTarget`, `reload` and `volleySet`. They join it with their plays in W4 and W7.
@@ -447,5 +453,7 @@ Answered on 2026-11-02: see §16.
 - **Bow strength:** a slime (48 HP) takes 2 arrows, and that is right. The bow's numbers: STR by level 2, 4, 6, 8, 12; `chargeDamage` 0.4; the `perfect` row's `damage` 1.0; `maxMult` 1.6.
 - **Sword and staff:** not lowered.
 - **All monsters:** HP and attack doubled in `enemies.json`.
+
+**The ticks angle (the owner, 2026-11-06):** any angle counts; the rotation only changes how the prompt looks.
 
 **Test input added:** `--drag`, `--wheel` and the scenario's `test.drags`. Their positions are in design pixels (1024x768), not screen pixels.

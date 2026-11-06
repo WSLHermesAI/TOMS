@@ -417,6 +417,12 @@ DEX 為每種玩法增加容許度（草案，都在資料中）：
 
 **每一級的細節在戰鬥編輯器中修改（擁有者，同一天）：** Weapon 分頁有 **Levels** 表格：每一級的升級所需經驗（僅顯示）、`points`（一次攻擊的提示或圓圈數）與各屬性加成；上方是 **EXP to Lv 2** 與 **EXP growth**（`levelExp`）。**Save weapons** 會寫入 `weapon_play.json`。程式中不再限制 `points`，由檔案決定。
 
+**戰鬥場景，第一次嘗試（擁有者的兩張圖，2026-11-06）：** 只改版面與背景；角色美術與 UI 外觀不變。
+- **版面**（`battle.rcss`）：怪物放大置中（三隻時，中間那隻較大在後方），主角放大在左邊，直向時在左下；怪物的計時在上方排成一列；HP 條在下方；按鈕在右邊排成一欄。
+- **背景**（`battle.json` `backdrops`，依樓層；目前只有一座森林）：`tools/art/make_battle_backdrop.py` 用本機 ComfyUI 繪製，並寫出 `anim/battle_forest.anim`（兩道光束與兩叢蕨類會動；可用動畫編輯器開啟）與 `battle.particle` 中兩個循環特效（`forest_fireflies`、`forest_motes`；可用粒子編輯器開啟）。
+
+**三隻繪製的怪物（擁有者挑選，2026-11-06）：** 參考圖中的苔蘚隊：`enemies.json` 的 `sproutle`（芽球）、`thicketoad`（苔蛙）、`mossbun`（苔兔），數值取自史萊姆、石巨人、骷髏兵，並使用 `looks.json` 的 `moss`。`tools/art/make_monster_rig.py` 把每張概念圖切成兩部分，並寫出 `anim/monster_moss.anim`（每隻都有 idle、attack、hurt、die、special、transform；可用動畫編輯器開啟）。牠們還沒放到任何樓層，地圖與卡片圖示也還是史萊姆的。
+
 **W2，遊玩型態（`play_type.h`）：**
 - 資料現在使用 §4.1 的名稱：`swipeWay`、`swipeGesture`、`drawShape`、`sequenceClick`、`pullRelease`、`mash`、`track`。舊名稱（`bow`、`slice`、`circles`、`shape`）仍可讀取。
 - **尚未加入列舉：** `rhythmTap`、`holdCharge`、`tapTarget`、`reload`、`volleySet`。它們會在 W4 與 W7 隨玩法一起加入。
@@ -438,5 +444,7 @@ DEX 為每種玩法增加容許度（草案，都在資料中）：
 - **弓的強度：** 史萊姆（48 HP）要 2 箭，這樣就對了。弓的數值：各等級 STR 為 2、4、6、8、12；`chargeDamage` 0.4；`perfect` 那列的 `damage` 1.0；`maxMult` 1.6。
 - **劍與魔杖：** 不調降。
 - **所有怪物：** `enemies.json` 中的 HP 與攻擊力加倍。
+
+**打勾的角度（擁有者，2026-11-06）：** 任何角度都算；旋轉只改變提示的樣子。
 
 **新增的測試輸入：** `--drag`、`--wheel` 與情境的 `test.drags`。位置使用設計座標（1024x768），不是螢幕座標。

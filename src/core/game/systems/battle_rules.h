@@ -106,6 +106,7 @@ struct MoveDef {
     int m_iChargeMs = 0;           // the wind-up in ms (0: `time` x the monster's attack interval)
     std::vector<int> m_vGapsMs;    // the time before each next hit (one value: every gap); empty: the hits land at once
     int m_iWarnMs = -1;            // the "!" before each hit (-1: battle.json guard.warnMs)
+    std::string m_strShape;          // the cells it covers (battle.json "cells" "shapes"; battle_cells.h); "": it always reaches the hero
     std::string m_strGuardPlay;      // a skills.json id: a special guard play instead of the button (16 §4.3)
     int f_GapBefore(int l_iHit) const;   // hit 1, 2, ...: the gap before it (0 for the first)
 };

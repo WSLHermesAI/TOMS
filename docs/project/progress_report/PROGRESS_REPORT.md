@@ -15,6 +15,13 @@
 
 ## ▶ Next Step
 
+**The battle takes the shape of the owner's pictures; a plan in three parts; a trial of moving in battle** (2026-11-06; [DAILY_2026-11-06.md](DAILY_2026-11-06.md)):
+- The layout (`battle.rcss`), an animated forest (`battle.json` `backdrops`), three painted monsters (`monster_moss.anim`), a hint star on the map for a monster with company.
+- docs/gameplay/19: 1. a fun battle, 2. tower events bound to the story, 3. the main screen and growth. Decisions now use Question, Default, Yours, Answer.
+- The trial (19 B2): six cells, attack shapes, `battle_cells.h`; only `thicketoad` turns it on.
+- **Nothing committed since `8b705b2`.** Last changed-only run: 23 of 259, all pass; 166 selected tests are switched off. All tests, web and Android not run.
+  **Owner:** play the trial fight (battle editor: only `thicketoad`) and say if it is fun: that decides B3, the staff. Fill Answer: Q73–Q81.
+
 **Gameplay: doc 17's W1, W2 and W3; combo and end animations; weapon levels from EXP** (2026-11-05; [DAILY_2026-11-05.md](DAILY_2026-11-05.md)):
 - W1 the fixes, W2 play types and swipe tiers, W3 free-mode ultimates; details in docs/gameplay/17 §19.
 - Combo levels (`comboTiers`), end clips (`win_big`, `win`, `win_par`, `lose`), monsters ×2, the bow lowered (2 arrows for a slime).
@@ -526,7 +533,7 @@ Short dated bullets: [WORKING_LOG.md](WORKING_LOG.md). Daily reports: [DAILY_202
 [DAILY_2026-10-23.md](DAILY_2026-10-23.md), [DAILY_2026-10-24.md](DAILY_2026-10-24.md),
 [DAILY_2026-10-25.md](DAILY_2026-10-25.md), [DAILY_2026-10-26.md](DAILY_2026-10-26.md),
 [DAILY_2026-10-28.md](DAILY_2026-10-28.md), [DAILY_2026-10-30.md](DAILY_2026-10-30.md),
-[DAILY_2026-10-31.md](DAILY_2026-10-31.md), [DAILY_2026-11-02.md](DAILY_2026-11-02.md), [DAILY_2026-11-04.md](DAILY_2026-11-04.md), [DAILY_2026-11-05.md](DAILY_2026-11-05.md).
+[DAILY_2026-10-31.md](DAILY_2026-10-31.md), [DAILY_2026-11-02.md](DAILY_2026-11-02.md), [DAILY_2026-11-04.md](DAILY_2026-11-04.md), [DAILY_2026-11-05.md](DAILY_2026-11-05.md), [DAILY_2026-11-06.md](DAILY_2026-11-06.md).
 
 ---
 

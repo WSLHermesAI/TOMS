@@ -784,3 +784,9 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   - tools/art/make_hero_rig2d.py: attack_2-4, win, win_big, win_par, lose. Data: enemies.json, weapon_play.json, battle.json, items.json, special_moves.json, text.json.
   - bed_window.cpp: Levels table, weapon level, weapon EXP; bed_main.cpp --grab-weapon.
   - Tests: changed-only 17 of 253 pass. Not committed. All tests, the switched-off tests, web, Android not run.
+- 2026-11-06: the battle's layout and background, painted monsters, doc 19, the trial fight (DAILY_2026-11-06.md).
+  - battle.rcss, battle.rml #cells; tools/art/make_battle_backdrop.py, make_monster_rig.py; anim/battle_forest, monster_moss, map_hint; atlas/battle_forest, monster_moss; battle.particle forest_*.
+  - game_combat.cpp f_UpdateBattleBackdrop, f_DrawBattleBackdrop, f_LoadBattleFxFile, f_BattleMoveToCell, f_BattleStepCell; battle_cells.h; moves.json "shape"; battle.json backdrops, cells.
+  - stage.h objects."x,y".party, game_input.cpp f_PartyOf, map_objects.cpp MonsterObject::f_Render; looks.json moss; enemies.json sproutle, mossbun, thicketoad.
+  - docs/gameplay/19 (+ zh_TW), docs/project/13 converted to Question, Default, Yours, Answer; the rule in CLAUDE.md.
+  - Tests: changed-only 23 of 259 pass. Not committed. All tests, the switched-off tests, web, Android not run; the trial fight not yet played by hand.

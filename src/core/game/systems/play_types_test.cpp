@@ -1,6 +1,7 @@
 // play_types_test.cpp -- the play types of docs/gameplay/17 §4-5: the swipe tiers (gesture.h), a cue with more time
 // (cue_track.h), gesture prompts, DEX and the free modes (touch_play.h), a free mode as data (special_moves.h).
 // Exits 0 on success.
+#include "battle_cells.h"
 #include "cue_track.h"
 #include "gesture.h"
 #include "special_moves.h"
@@ -182,6 +183,16 @@ int main() {
         const WeaponPlayTable l_oT = f_LoadWeaponPlay("data/weapon_play.json");
         CHECK(!l_oT.m_mapWeapons.empty(), "the shipped weapons");
         for (const auto& [l_strId, l_oOne] : l_oT.m_mapWeapons) CHECK(f_WeaponMaxLevel(l_oOne) >= 10 && f_ExpToNextLevel(l_oOne, 1) == 5, "every weapon has ten levels, from 5 EXP");
+    }
+    {   // the cells (19 §2.1): a shape's variant reaches the hero when one can; steps stop at the edges
+        const CellRules l_oR = f_CellRulesFromJson(nlohmann::json::parse(R"({ "cells": { "warnMs": 900, "start": 1,
+          "shapes": { "near": [[0, 1, 2]], "line": [[0, 3], [1, 4], [2, 5]], "fan": [[0, 1, 2, 3, 5]] } } })"));
+        CHECK(l_oR.m_iWarnMs == 900 && l_oR.m_iStart == 1 && l_oR.m_mapShapes.size() == 3, "the rules from the file");
+        CHECK(f_PickDanger(l_oR, "near", 4, 0.5f) == 0b000111u, "near: the near row, the hero clear of it");
+        for (int l_iHero = 0; l_iHero < 6; l_iHero++) CHECK(f_PickDanger(l_oR, "line", l_iHero, 0.9f) & (1u << l_iHero), "a line is aimed at the hero's column");
+        CHECK(f_PickDanger(l_oR, "fan", 4, 0.0f) == 0b101111u, "a half circle: only the middle of the far row is clear");
+        CHECK(f_PickDanger(l_oR, "nothing", 0, 0.0f) == 0u, "an unknown shape: none");
+        CHECK(f_CellStep(4, 0, -1) == 1 && f_CellStep(0, -1, 0) == 0 && f_CellStep(2, 1, 0) == 2 && f_CellStep(3, 0, 1) == 3 && f_CellStep(4, 1, 0) == 5, "steps, stopped at the edges");
     }
     CHECK(f_PlayTypeFromString("swipeGesture") == PlayType::eSWIPE_GESTURE && f_PlayTypeFromString("freeShot") == PlayType::eFREE_SHOT &&
               std::string(f_PlayTypeName(PlayType::eSEQUENCE_CLICK)) == "sequenceClick" && f_IsSwipePlay(PlayType::eSWIPE_GESTURE) && f_IsFreePlay(PlayType::eFREE_TAP) && !f_IsFreePlay(PlayType::eMASH), "the types");

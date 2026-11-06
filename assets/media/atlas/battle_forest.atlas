@@ -1,0 +1,13 @@
+battle_forest.png
+size: 2048, 2048
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+bg
+  bounds: 2, 2, 1792, 1024
+ray
+  bounds: 2, 1030, 360, 900
+fern_a
+  bounds: 366, 1030, 520, 520
+fern_b
+  bounds: 890, 1030, 520, 520

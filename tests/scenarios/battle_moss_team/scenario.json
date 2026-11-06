@@ -1,0 +1,27 @@
+{
+  "_comment": "The painted moss team (docs/gameplay/17 §19; tools/art/make_monster_rig.py): each monster plays its own idle clip from monster_moss.anim.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "sproutle",
+    "atk_interval_ms": 60000,
+    "party": [
+      "thicketoad",
+      "mossbun"
+    ]
+  },
+  "test": {
+    "frames": 30
+  },
+  "expect": {
+    "foeClips": [
+      "idle_sproutle",
+      "idle_thicketoad",
+      "idle_mossbun"
+    ]
+  }
+}

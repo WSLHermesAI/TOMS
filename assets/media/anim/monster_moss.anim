@@ -1,0 +1,3710 @@
+{
+ "version": 2,
+ "atlases": [
+  "../atlas/monster_moss.atlas"
+ ],
+ "clips": [
+  {
+   "name": "idle_sproutle",
+   "length": 1.6,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_moss:sproutle_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -434,
+         0
+        ],
+        "sprite": "monster_moss:sproutle_top",
+        "pivot": [
+         0.5,
+         0.8087
+        ],
+        "order": 1,
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            -3.5
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.8,
+           "v": [
+            0,
+            0,
+            3.5
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.6,
+           "v": [
+            0,
+            0,
+            -3.5
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.6,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.8,
+         "v": [
+          1.025,
+          0.97,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.6,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "playCount": -1
+  },
+  {
+   "name": "attack_sproutle",
+   "length": 0.55,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_moss:sproutle_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -434,
+         0
+        ],
+        "sprite": "monster_moss:sproutle_top",
+        "pivot": [
+         0.5,
+         0.8087
+        ],
+        "order": 1,
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.12,
+           "v": [
+            0,
+            0,
+            7.0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.22,
+           "v": [
+            0,
+            0,
+            -11.200000000000001
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.55,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.12,
+         "v": [
+          58.125,
+          7.75,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.22,
+         "v": [
+          -251.875,
+          -77.5,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.32,
+         "v": [
+          -174.375,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.55,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "rot": [
+        {
+         "t": 0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.12,
+         "v": [
+          0,
+          0,
+          5
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.22,
+         "v": [
+          0,
+          0,
+          -9
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.55,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.12,
+         "v": [
+          1.08,
+          0.9,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.22,
+         "v": [
+          0.95,
+          1.08,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.34,
+         "v": [
+          1.05,
+          0.95,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.55,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "hurt_sproutle",
+   "length": 0.4,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_moss:sproutle_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            0.45,
+            0.45,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.25,
+           "v": [
+            1,
+            0.45,
+            0.45,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.4,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -434,
+         0
+        ],
+        "sprite": "monster_moss:sproutle_top",
+        "pivot": [
+         0.5,
+         0.8087
+        ],
+        "order": 1,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            0.45,
+            0.45,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.25,
+           "v": [
+            1,
+            0.45,
+            0.45,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.4,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ],
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.08,
+           "v": [
+            0,
+            0,
+            12.6
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.4,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.06,
+         "v": [
+          77.5,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.4,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "rot": [
+        {
+         "t": 0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.06,
+         "v": [
+          0,
+          0,
+          7
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.4,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.06,
+         "v": [
+          0.94,
+          1.04,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.4,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "die_sproutle",
+   "length": 0.7,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_moss:sproutle_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.35,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            1,
+            1,
+            1,
+            0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -434,
+         0
+        ],
+        "sprite": "monster_moss:sproutle_top",
+        "pivot": [
+         0.5,
+         0.8087
+        ],
+        "order": 1,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.35,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            1,
+            1,
+            1,
+            0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ],
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            0,
+            0,
+            14.0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.15,
+         "v": [
+          38.75,
+          -38.75,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.7,
+         "v": [
+          58.125,
+          19.375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "rot": [
+        {
+         "t": 0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.7,
+         "v": [
+          0,
+          0,
+          14
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.15,
+         "v": [
+          1.05,
+          0.95,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.7,
+         "v": [
+          1.15,
+          0.3,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "special_sproutle",
+   "length": 0.9,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_moss:sproutle_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.35,
+           "v": [
+            1.5,
+            1.5,
+            1.2,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.9,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -434,
+         0
+        ],
+        "sprite": "monster_moss:sproutle_top",
+        "pivot": [
+         0.5,
+         0.8087
+        ],
+        "order": 1,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.35,
+           "v": [
+            1.5,
+            1.5,
+            1.2,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.9,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ],
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.2,
+           "v": [
+            0,
+            0,
+            7.0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.4,
+           "v": [
+            0,
+            0,
+            -7.0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.6,
+           "v": [
+            0,
+            0,
+            7.0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.9,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.35,
+         "v": [
+          0.0,
+          -58.125,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.9,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.35,
+         "v": [
+          1.1,
+          1.1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.9,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "transform_sproutle",
+   "length": 1.0,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_moss:sproutle_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.45,
+           "v": [
+            2,
+            2,
+            2,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -434,
+         0
+        ],
+        "sprite": "monster_moss:sproutle_top",
+        "pivot": [
+         0.5,
+         0.8087
+        ],
+        "order": 1,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.45,
+           "v": [
+            2,
+            2,
+            2,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ],
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.4,
+           "v": [
+            0,
+            0,
+            10.5
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            0,
+            0,
+            -10.5
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.0,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "rot": [
+        {
+         "t": 0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.4,
+         "v": [
+          0.75,
+          1.2,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.65,
+         "v": [
+          1.2,
+          0.85,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "idle_mossbun",
+   "length": 1.6,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_moss:mossbun_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -428,
+         0
+        ],
+        "sprite": "monster_moss:mossbun_top",
+        "pivot": [
+         0.5,
+         0.8136
+        ],
+        "order": 1,
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            -3.0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.8,
+           "v": [
+            0,
+            0,
+            3.0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.6,
+           "v": [
+            0,
+            0,
+            -3.0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.6,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.8,
+         "v": [
+          1.025,
+          0.97,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.6,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "playCount": -1
+  },
+  {
+   "name": "attack_mossbun",
+   "length": 0.55,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_moss:mossbun_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -428,
+         0
+        ],
+        "sprite": "monster_moss:mossbun_top",
+        "pivot": [
+         0.5,
+         0.8136
+        ],
+        "order": 1,
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.12,
+           "v": [
+            0,
+            0,
+            6.0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.22,
+           "v": [
+            0,
+            0,
+            -9.600000000000001
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.55,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.12,
+         "v": [
+          58.125,
+          7.75,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.22,
+         "v": [
+          -251.875,
+          -77.5,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.32,
+         "v": [
+          -174.375,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.55,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "rot": [
+        {
+         "t": 0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.12,
+         "v": [
+          0,
+          0,
+          5
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.22,
+         "v": [
+          0,
+          0,
+          -9
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.55,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.12,
+         "v": [
+          1.08,
+          0.9,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.22,
+         "v": [
+          0.95,
+          1.08,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.34,
+         "v": [
+          1.05,
+          0.95,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.55,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "hurt_mossbun",
+   "length": 0.4,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_moss:mossbun_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            0.45,
+            0.45,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.25,
+           "v": [
+            1,
+            0.45,
+            0.45,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.4,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -428,
+         0
+        ],
+        "sprite": "monster_moss:mossbun_top",
+        "pivot": [
+         0.5,
+         0.8136
+        ],
+        "order": 1,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            0.45,
+            0.45,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.25,
+           "v": [
+            1,
+            0.45,
+            0.45,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.4,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ],
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.08,
+           "v": [
+            0,
+            0,
+            10.8
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.4,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.06,
+         "v": [
+          77.5,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.4,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "rot": [
+        {
+         "t": 0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.06,
+         "v": [
+          0,
+          0,
+          7
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.4,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.06,
+         "v": [
+          0.94,
+          1.04,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.4,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "die_mossbun",
+   "length": 0.7,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_moss:mossbun_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.35,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            1,
+            1,
+            1,
+            0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -428,
+         0
+        ],
+        "sprite": "monster_moss:mossbun_top",
+        "pivot": [
+         0.5,
+         0.8136
+        ],
+        "order": 1,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.35,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            1,
+            1,
+            1,
+            0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ],
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            0,
+            0,
+            12.0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.15,
+         "v": [
+          38.75,
+          -38.75,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.7,
+         "v": [
+          58.125,
+          19.375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "rot": [
+        {
+         "t": 0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.7,
+         "v": [
+          0,
+          0,
+          14
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.15,
+         "v": [
+          1.05,
+          0.95,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.7,
+         "v": [
+          1.15,
+          0.3,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "special_mossbun",
+   "length": 0.9,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_moss:mossbun_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.35,
+           "v": [
+            1.5,
+            1.5,
+            1.2,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.9,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -428,
+         0
+        ],
+        "sprite": "monster_moss:mossbun_top",
+        "pivot": [
+         0.5,
+         0.8136
+        ],
+        "order": 1,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.35,
+           "v": [
+            1.5,
+            1.5,
+            1.2,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.9,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ],
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.2,
+           "v": [
+            0,
+            0,
+            6.0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.4,
+           "v": [
+            0,
+            0,
+            -6.0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.6,
+           "v": [
+            0,
+            0,
+            6.0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.9,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.35,
+         "v": [
+          0.0,
+          -58.125,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.9,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.35,
+         "v": [
+          1.1,
+          1.1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.9,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "transform_mossbun",
+   "length": 1.0,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_moss:mossbun_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.45,
+           "v": [
+            2,
+            2,
+            2,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -428,
+         0
+        ],
+        "sprite": "monster_moss:mossbun_top",
+        "pivot": [
+         0.5,
+         0.8136
+        ],
+        "order": 1,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.45,
+           "v": [
+            2,
+            2,
+            2,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ],
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.4,
+           "v": [
+            0,
+            0,
+            9.0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            0,
+            0,
+            -9.0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.0,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "rot": [
+        {
+         "t": 0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.4,
+         "v": [
+          0.75,
+          1.2,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.65,
+         "v": [
+          1.2,
+          0.85,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "idle_thicketoad",
+   "length": 1.6,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_moss:thicketoad_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -321,
+         0
+        ],
+        "sprite": "monster_moss:thicketoad_top",
+        "pivot": [
+         0.5,
+         0.8612
+        ],
+        "order": 1,
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            -1.1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.8,
+           "v": [
+            0,
+            0,
+            1.1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.6,
+           "v": [
+            0,
+            0,
+            -1.1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.6,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.8,
+         "v": [
+          1.025,
+          0.97,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.6,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "playCount": -1
+  },
+  {
+   "name": "attack_thicketoad",
+   "length": 0.55,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_moss:thicketoad_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -321,
+         0
+        ],
+        "sprite": "monster_moss:thicketoad_top",
+        "pivot": [
+         0.5,
+         0.8612
+        ],
+        "order": 1,
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.12,
+           "v": [
+            0,
+            0,
+            2.2
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.22,
+           "v": [
+            0,
+            0,
+            -3.5200000000000005
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.55,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.12,
+         "v": [
+          58.125,
+          7.75,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.22,
+         "v": [
+          -251.875,
+          -77.5,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.32,
+         "v": [
+          -174.375,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.55,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "rot": [
+        {
+         "t": 0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.12,
+         "v": [
+          0,
+          0,
+          5
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.22,
+         "v": [
+          0,
+          0,
+          -9
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.55,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.12,
+         "v": [
+          1.08,
+          0.9,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.22,
+         "v": [
+          0.95,
+          1.08,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.34,
+         "v": [
+          1.05,
+          0.95,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.55,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "hurt_thicketoad",
+   "length": 0.4,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_moss:thicketoad_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            0.45,
+            0.45,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.25,
+           "v": [
+            1,
+            0.45,
+            0.45,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.4,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -321,
+         0
+        ],
+        "sprite": "monster_moss:thicketoad_top",
+        "pivot": [
+         0.5,
+         0.8612
+        ],
+        "order": 1,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            0.45,
+            0.45,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.25,
+           "v": [
+            1,
+            0.45,
+            0.45,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.4,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ],
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.08,
+           "v": [
+            0,
+            0,
+            3.9600000000000004
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.4,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.06,
+         "v": [
+          77.5,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.4,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "rot": [
+        {
+         "t": 0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.06,
+         "v": [
+          0,
+          0,
+          7
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.4,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.06,
+         "v": [
+          0.94,
+          1.04,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.4,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "die_thicketoad",
+   "length": 0.7,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_moss:thicketoad_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.35,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            1,
+            1,
+            1,
+            0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -321,
+         0
+        ],
+        "sprite": "monster_moss:thicketoad_top",
+        "pivot": [
+         0.5,
+         0.8612
+        ],
+        "order": 1,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.35,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            1,
+            1,
+            1,
+            0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ],
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            0,
+            0,
+            4.4
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.15,
+         "v": [
+          38.75,
+          -38.75,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.7,
+         "v": [
+          58.125,
+          19.375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "rot": [
+        {
+         "t": 0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.7,
+         "v": [
+          0,
+          0,
+          14
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.15,
+         "v": [
+          1.05,
+          0.95,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.7,
+         "v": [
+          1.15,
+          0.3,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "special_thicketoad",
+   "length": 0.9,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_moss:thicketoad_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.35,
+           "v": [
+            1.5,
+            1.5,
+            1.2,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.9,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -321,
+         0
+        ],
+        "sprite": "monster_moss:thicketoad_top",
+        "pivot": [
+         0.5,
+         0.8612
+        ],
+        "order": 1,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.35,
+           "v": [
+            1.5,
+            1.5,
+            1.2,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.9,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ],
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.2,
+           "v": [
+            0,
+            0,
+            2.2
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.4,
+           "v": [
+            0,
+            0,
+            -2.2
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.6,
+           "v": [
+            0,
+            0,
+            2.2
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.9,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.35,
+         "v": [
+          0.0,
+          -58.125,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.9,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.35,
+         "v": [
+          1.1,
+          1.1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.9,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "transform_thicketoad",
+   "length": 1.0,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_moss:thicketoad_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.45,
+           "v": [
+            2,
+            2,
+            2,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -321,
+         0
+        ],
+        "sprite": "monster_moss:thicketoad_top",
+        "pivot": [
+         0.5,
+         0.8612
+        ],
+        "order": 1,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.45,
+           "v": [
+            2,
+            2,
+            2,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ],
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.4,
+           "v": [
+            0,
+            0,
+            3.3000000000000003
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            0,
+            0,
+            -3.3000000000000003
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.0,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "rot": [
+        {
+         "t": 0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.4,
+         "v": [
+          0.75,
+          1.2,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.65,
+         "v": [
+          1.2,
+          0.85,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

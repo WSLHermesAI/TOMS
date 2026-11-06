@@ -25,11 +25,13 @@ glm::vec4 Game::f_TouchArea() const {
     glm::vec4 l_v4A = f_BattlePlayType() == toms::PlayType::ePULL_RELEASE && !m_oCs.m_oSkill.m_bOn ? glm::vec4(l_v4B.x - 30.0f, l_v4B.y - 20.0f, l_v4B.z + 60.0f, l_v4B.w + 40.0f)
                                                                             : glm::vec4(l_v4B.x - 120.0f, l_v4B.y - 10.0f, l_v4B.z + 240.0f, l_v4B.w + 210.0f);
     // On the screen, where a finger can reach it: a monster at the edge (the third of three) would push it past the
-    // side; the bottom keeps clear of the GUARD / attack panels and the ultimate's row. Moved in, not shrunk, so the
+    // side; the bottom keeps clear of the HP bar and the ultimate's row. Moved in, not shrunk, so the
     // circles keep their room.
     const float l_fW = m_pRen ? (float)m_pRen->f_Width() : 1024.0f, l_fH = m_pRen ? (float)m_pRen->f_Height() : 768.0f;
-    const float l_fMargin = 12.0f, l_fTop = 60.0f, l_fBottom = l_fH - 290.0f;
+    const float l_fMargin = 12.0f, l_fTop = 60.0f;
+    float l_fBottom = l_fH - 170.0f;
     l_v4A.z = std::min(l_v4A.z, l_fW - 2.0f * l_fMargin);
+    if (m_oCs.m_bCellsOn) l_fBottom = std::min(l_fBottom, l_fH >= 1300.0f ? 800.0f : l_fH > l_fW ? 590.0f : 540.0f);   // above the cells: a press on one moves the hero
     l_v4A.w = std::min(l_v4A.w, std::max(40.0f, l_fBottom - l_fTop));
     l_v4A.x = std::clamp(l_v4A.x, l_fMargin, std::max(l_fMargin, l_fW - l_fMargin - l_v4A.z));
     l_v4A.y = std::clamp(l_v4A.y, l_fTop, std::max(l_fTop, l_fBottom - l_v4A.w));

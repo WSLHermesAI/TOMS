@@ -190,6 +190,7 @@ bool Game::f_LoadAssets(const std::string& l_strAssetDir) {
                 for (const auto& l_jS : l_jBj["battleSpeeds"]) if (l_jS.is_number() && l_jS.get<float>() > 0.0f) m_vBattleSpeeds.push_back(l_jS.get<float>());
                 std::sort(m_vBattleSpeeds.begin(), m_vBattleSpeeds.end());
             }
+            m_oCellRules = toms::f_CellRulesFromJson(l_jBj);
             m_oTouchSettings = toms::f_TouchPlayFromJson(l_jBj);   // the plays' numbers (docs/gameplay/16 §3)
             m_oGrade = toms::f_GradeFromJson(l_jBj);           // §3.6
             m_oGuard = toms::f_GuardFromJson(l_jBj);           // §3.2

@@ -1,0 +1,359 @@
+{
+ "version": 2,
+ "atlases": [
+  "../atlas/battle_forest.atlas"
+ ],
+ "clips": [
+  {
+   "name": "idle",
+   "length": 8.0,
+   "root": {
+    "name": "forest",
+    "pos": [
+     0,
+     0,
+     0
+    ],
+    "children": [
+     {
+      "name": "painting",
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "sprite": "battle_forest:bg",
+      "pivot": [
+       0.5,
+       0.5
+      ],
+      "order": 0
+     },
+     {
+      "name": "ray_a",
+      "pos": [
+       420,
+       -560,
+       0
+      ],
+      "rot": [
+       0,
+       0,
+       20
+      ],
+      "sprite": "battle_forest:ray",
+      "pivot": [
+       0.5,
+       0.0
+      ],
+      "order": 1,
+      "blend": "add",
+      "scale": [
+       1.7,
+       1.25,
+       1
+      ],
+      "tracks": {
+       "color": [
+        {
+         "t": 0.0,
+         "v": [
+          0.65,
+          0.82,
+          1,
+          0.15300000000000002
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 4.0,
+         "v": [
+          0.8,
+          0.92,
+          1,
+          0.34
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 8.0,
+         "v": [
+          0.65,
+          0.82,
+          1,
+          0.15300000000000002
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "rot": [
+        {
+         "t": 0.0,
+         "v": [
+          0,
+          0,
+          18.5
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 4.0,
+         "v": [
+          0,
+          0,
+          21.5
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 8.0,
+         "v": [
+          0,
+          0,
+          18.5
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     },
+     {
+      "name": "ray_b",
+      "pos": [
+       120,
+       -560,
+       0
+      ],
+      "rot": [
+       0,
+       0,
+       24
+      ],
+      "sprite": "battle_forest:ray",
+      "pivot": [
+       0.5,
+       0.0
+      ],
+      "order": 1,
+      "blend": "add",
+      "scale": [
+       1.7,
+       1.25,
+       1
+      ],
+      "tracks": {
+       "color": [
+        {
+         "t": 0.0,
+         "v": [
+          0.8,
+          0.92,
+          1,
+          0.24
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 4.0,
+         "v": [
+          0.65,
+          0.82,
+          1,
+          0.108
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 8.0,
+         "v": [
+          0.8,
+          0.92,
+          1,
+          0.24
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "rot": [
+        {
+         "t": 0.0,
+         "v": [
+          0,
+          0,
+          22.5
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 4.0,
+         "v": [
+          0,
+          0,
+          25.5
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 8.0,
+         "v": [
+          0,
+          0,
+          22.5
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     },
+     {
+      "name": "fern_left",
+      "pos": [
+       -760,
+       520,
+       0
+      ],
+      "rot": [
+       0,
+       0,
+       0.0
+      ],
+      "scale": [
+       1.25,
+       1.25,
+       1
+      ],
+      "sprite": "battle_forest:fern_a",
+      "pivot": [
+       0.5,
+       1.0
+      ],
+      "order": 2,
+      "tracks": {
+       "rot": [
+        {
+         "t": 0.0,
+         "v": [
+          0,
+          0,
+          0.0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 2.0,
+         "v": [
+          0,
+          0,
+          2.6
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 4.0,
+         "v": [
+          0,
+          0,
+          3.1840816777831187e-16
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 6.0,
+         "v": [
+          0,
+          0,
+          -2.6
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 8.0,
+         "v": [
+          0,
+          0,
+          -6.368163355566237e-16
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     },
+     {
+      "name": "fern_right",
+      "pos": [
+       780,
+       520,
+       0
+      ],
+      "rot": [
+       0,
+       0,
+       2.1198280079178247
+      ],
+      "scale": [
+       -1.25,
+       1.25,
+       1
+      ],
+      "sprite": "battle_forest:fern_b",
+      "pivot": [
+       0.5,
+       1.0
+      ],
+      "order": 2,
+      "tracks": {
+       "rot": [
+        {
+         "t": 0.0,
+         "v": [
+          0,
+          0,
+          2.1198280079178247
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 2.0,
+         "v": [
+          0,
+          0,
+          0.5884974229740928
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 4.0,
+         "v": [
+          0,
+          0,
+          -2.119828007917824
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 6.0,
+         "v": [
+          0,
+          0,
+          -0.588497422974093
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 8.0,
+         "v": [
+          0,
+          0,
+          2.119828007917824
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "playCount": -1
+  }
+ ]
+}

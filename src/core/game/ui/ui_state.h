@@ -125,6 +125,12 @@ struct UiFoe {                         // one monster of the battle (docs/gamepl
     bool m_bWarn = false;                 // the "!" over it: its hit comes, guard now (docs/gameplay/16 §4)
 };
 
+struct UiBattleCell {                  // one of the battle's six cells (battle_cells.h)
+    float m_fX = 0, m_fY = 0;           // in #cells
+    bool m_bHere = false, m_bDanger = false;
+    float m_fFill = 0;                  // how near the hit is, percent
+};
+
 struct UiBattle {
     bool m_bVisible = false;
     bool m_bActive = false;               // fighting (false: won, showing "tap to continue")
@@ -149,6 +155,9 @@ struct UiBattle {
     std::string m_strActiveButton;
     std::vector<UiPopup> m_vPopups;
     std::string m_strTouchKind;            // the weapon's own play: bow, slice, circles ("" = the track; docs/gameplay/15 §3.3)
+    bool m_bCellsOn = false;
+    std::string m_strCellHint;
+    std::vector<UiBattleCell> m_vCells;
     std::vector<UiTouchItem> m_vTouch;    // what it draws over the monster
     std::string m_strSkillPrompt, m_strSkillTime;   // a move's play: "Draw the pentagram!", its seconds left (16 §6)
     std::vector<UiFoe> m_vFoes;           // 1..3; foes[0] is enemy_* above

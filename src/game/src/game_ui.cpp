@@ -138,6 +138,14 @@ void f_RegisterTypes(Rml::DataModelConstructor& l_oC) {
         l_oS.RegisterMember("style", &UiPopup::m_strStyle);
     }
     l_oC.RegisterArray<std::vector<UiPopup>>();
+    if (auto l_oS = l_oC.RegisterStruct<UiBattleCell>()) {
+        l_oS.RegisterMember("x", &UiBattleCell::m_fX);
+        l_oS.RegisterMember("y", &UiBattleCell::m_fY);
+        l_oS.RegisterMember("here", &UiBattleCell::m_bHere);
+        l_oS.RegisterMember("danger", &UiBattleCell::m_bDanger);
+        l_oS.RegisterMember("fill", &UiBattleCell::m_fFill);
+    }
+    l_oC.RegisterArray<std::vector<UiBattleCell>>();
     if (auto l_oS = l_oC.RegisterStruct<UiTouchItem>()) {
         l_oS.RegisterMember("cls", &UiTouchItem::m_strCls);
         l_oS.RegisterMember("x", &UiTouchItem::m_fX);
@@ -196,6 +204,9 @@ void f_RegisterTypes(Rml::DataModelConstructor& l_oC) {
         l_oS.RegisterMember("active_ready", &UiBattle::m_bActiveReady);
         l_oS.RegisterMember("active_button", &UiBattle::m_strActiveButton);
         l_oS.RegisterMember("popups", &UiBattle::m_vPopups);
+        l_oS.RegisterMember("cells_on", &UiBattle::m_bCellsOn);
+        l_oS.RegisterMember("cell_hint", &UiBattle::m_strCellHint);
+        l_oS.RegisterMember("cells", &UiBattle::m_vCells);
         l_oS.RegisterMember("touch_kind", &UiBattle::m_strTouchKind);
         l_oS.RegisterMember("touch", &UiBattle::m_vTouch);
         l_oS.RegisterMember("skill_prompt", &UiBattle::m_strSkillPrompt);

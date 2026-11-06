@@ -70,13 +70,16 @@
 ### Open decisions: one list, with the owner's answers in it
 
 - **Every question that stays undecided goes in `docs/project/13_OPEN_DECISIONS.md`** (EN + zh_TW), as a row with an empty
-  **My Answer** column (the owner, 2026-11-04). That includes a question a design document asks. A question needed
+  **Answer** column (the owner, 2026-11-04). That includes a question a design document asks. A question needed
   only to finish the current task can stay in the chat.
-- **When the owner asks to check the decisions:** read My Answer in both copies, and in any design document whose questions have that column (doc 14 §5). If an answer is unclear, incomplete or
+- **When the owner asks to check the decisions:** read Answer in both copies, and My Answer in any design document whose questions have that column (doc 14 §5). If an answer is unclear, incomplete or
   conflicts with another, ask about it. If all the filled answers are clear, ask whether to do the work, and start only
   after a yes.
-- **An empty My Answer is not a decision:** don't act on the row or apply its proposal. Once work is decided, write the
+- **An empty Answer is not a decision:** don't act on the row or apply its proposal. Once work is decided, write the
   answer in the document the row links to and remove the row.
+- **A decision for the owner is a table with at least these 4 columns, in this order** (the owner, 2026-11-06), in the chat
+  and in new decision lists: **Question | Default | Yours | Answer**. Default: what happens or stays if nobody decides.
+  Yours: Claude's recommendation. Answer: left empty for the owner. More columns may follow them (`13_OPEN_DECISIONS.md` uses these).
 
 ### Documents: local files only, nothing online
 

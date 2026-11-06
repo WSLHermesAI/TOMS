@@ -134,6 +134,7 @@ MovesTable f_MovesFromJson(const nlohmann::json& l_jJ) {
             l_oM.m_vGapsMs.push_back(std::max(50, l_jV["gapsMs"].get<int>()));
         }
         l_oM.m_iWarnMs = l_jV.value("warnMs", -1);
+        l_oM.m_strShape = l_jV.value("shape", std::string());
         l_oM.m_strGuardPlay = l_jV.value("guardPlay", std::string());
         l_oT.m_mapMoves[l_oM.m_strId] = l_oM;
     }

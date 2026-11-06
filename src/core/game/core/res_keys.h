@@ -10,6 +10,7 @@ namespace toms {
 
 namespace key {
 inline constexpr const char g_pszAnimDoorOpen[]      = "anim.door_open";          // anim anim/door_open.anim
+inline constexpr const char g_pszAnimMapHint[]       = "anim.map_hint";           // anim anim/map_hint.anim
 inline constexpr const char g_pszAnimMonsterBattle[] = "anim.monster_battle";     // anim anim/monster_battle.anim
 inline constexpr const char g_pszAnimMonsterIdle[]   = "anim.monster_idle";       // anim anim/monster_idle.anim
 inline constexpr const char g_pszAnimNpcIdle[]       = "anim.npc_idle";           // anim anim/npc_idle.anim
@@ -64,6 +65,7 @@ inline constexpr const char g_pszUiTitle[]           = "ui.title";              
 // every key, for the test that keeps this file and the manifest the same
 inline constexpr const char* g_arrAll[] = {
     g_pszAnimDoorOpen,
+    g_pszAnimMapHint,
     g_pszAnimMonsterBattle,
     g_pszAnimMonsterIdle,
     g_pszAnimNpcIdle,

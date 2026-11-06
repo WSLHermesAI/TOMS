@@ -44,6 +44,7 @@
 #include "special_moves.h"          // toms::SpecialMoveTable -- special moves and special guards as data (docs/gameplay/16 §6)
 #include "battle_party.h"    // toms::nextStanding, BattleEvent -- 1-3 monsters, the battle log (docs/gameplay/13 §4.6)
 #include "battle_rules.h"    // toms::LooksTable, MonsterEvent, MovesTable, PaceSettings, BreakSettings (docs/gameplay/13)
+#include "battle_cells.h"
 #include "mini_game.h"       // toms::MiniGameTable -- reusable reward events (docs/gameplay/07 phase 6)
 #include "art_styles.h"      // toms::ArtStyle — the selectable art styles (assets/media/styles)
 #include "atlas_file.h"      // toms::AtlasFile — the prebuilt sprite atlas (tools/atlas)
@@ -74,6 +75,7 @@ struct Player : public Trackable {
 struct EnemyInst : public Trackable {
     std::string m_strId; std::string m_strName; int m_iHp, m_iAtk, m_iDef, m_iExp, m_iGold; int m_iX, m_iY; bool m_bBoss=false;
     int m_iWeaponExp = 1;   // what beating it gives the weapon used (enemies.json "weaponExp")
+    std::vector<std::string> m_vStageParty;   // the stage's own company for it (objects."x,y".party); empty: enemies.json "party"
     // Battle System v2 (docs/design/BATTLE_SYSTEM_V2_PROPOSALS.md): how often, in ms, this enemy attacks
     // on its own real-time clock -- independent of anything the player does. Read from
     // data/enemies.json's "atk_interval_ms" (engageMonster()); defaults to 4000 when absent.
@@ -140,6 +142,7 @@ struct CombatState : public Trackable {
         // Its next move (docs/gameplay/13 §6.1): shown over it with the time left (its intent).
         std::string m_strMove = "strike";
         int m_iMoveMs = 4000;
+        uint32_t m_uDanger = 0u;         // the cells its coming hit covers, lit (battle_cells.h); 0: not yet
         int m_iStaggerMs = 0;            // stunned (a parry, a break, a result's stun): its clock stops...
         float m_fStaggerDamage = 1.0f;   // ...and hits on it do this much more
         bool m_bBroken = false;          // the stun came from its break gauge (the intent shows "Broken!")
@@ -220,6 +223,8 @@ struct CombatState : public Trackable {
     // ---- the revamp (docs/gameplay/15_BATTLE_REVAMP.md) ----
     int m_iFrameDt = 0;               // the battle's time this frame: 0 in a hit stop, slower in the last hit's slow motion
     int m_iHitStopMs = 0;             // both sides freeze (15 §3.8)
+    bool m_bCellsOn = false;          // a monster here has moves with a danger shape: the hero moves between cells (docs/gameplay/19 §2.1)
+    int m_iHeroCell = 4;
     int m_iSlowMs = 0;                // the last hit in slow motion, then the win
     int m_iEndLeftMs = 0;             // the longest the end may still wait for its clips (battle.json feel.endMaxMs)
     bool m_bLosePending = false;      // m_bWinPending's end is a loss: the hero falls, then finishCombatLose
@@ -406,6 +411,9 @@ public:
     // Settings > "Reduce shaking and flashes" (docs/gameplay/15 §3.8): hit stops, shakes and flashes a quarter as
     // strong, no slow motion. Saved in the settings file.
     bool f_ReduceEffects() const { return m_oSettings.m_bReduceEffects; }
+    bool f_BattleCellsOn() const { return m_oCs.m_bActive && m_oCs.m_bCellsOn; }
+    void f_BattleMoveToCell(int l_iCell);                // the hero steps there (docs/gameplay/19 §2.1)
+    void f_BattleStepCell(int l_iDx, int l_iDy);         // by the arrow keys
     bool f_FreePlayRunning() const { return m_oCs.m_oTouch.f_Running() && toms::f_IsFreePlay(m_oCs.m_oTouch.f_Type()); }
     void f_SetReduceEffects(bool l_bOn);
     void f_DebugFireFoeEvent(int l_iFoe, int l_iEvent);
@@ -704,6 +712,8 @@ private:
     glm::vec4 m_v4TouchArmedArea{0.0f};                // where the waiting play was armed (re-armed if the layout moves)
     bool m_bBattleBoxesKnown = false;                 // the battle screen has laid out this battle's fighters (a play waits for it)
     int f_NormalHitDamage(int l_iFoe) const;             // a normal attack's full hit on the monster (the moves' unit)
+    toms::CellRules m_oCellRules;                        // battle.json "cells"
+    glm::vec2 m_v2HeroShift{0.0f};                       // the hero's picture, easing toward its cell
     void f_StartLoseMoment();                            // HP gone: the fall, then finishCombatLose (17 §19)
     std::string f_EndClip() const;                       // the clip for this end: big win, win, par win or lose
     void f_PlayAnswerClip();                             // an attack clip for one answer, by the combo so far (17 I1, §19)
@@ -1043,6 +1053,15 @@ private:
     // The battle's particles (media/fx/battle.particle; weapon_play.json "fx" picks them by weapon level): one-shot
     // effects at the player's weapon or the monster, drawn over both. Cleared when a battle starts or the screen closes.
     static constexpr const char* m_pszBattleFxFile = toms::key::g_pszFxBattle;
+    // the battle's background (battle.json "backdrops", by floor; docs/gameplay/17 §19): an .anim covering the screen, particles over it
+    std::string m_strBackdropAnim;
+    std::shared_ptr<toms::res::AnimRes> m_spBackdrop;
+    toms::anim::AnimPlayer m_oBackdrop;
+    std::vector<toms::fx::EffectInstance> m_vBackdropFx;
+    float m_fBackdropW = 1.0f, m_fBackdropH = 1.0f;
+    void f_UpdateBattleBackdrop(int l_iDtMs);
+    bool f_DrawBattleBackdrop();                          // false: none (the plain dark backdrop)
+    void f_LoadBattleFxFile();
     std::shared_ptr<toms::res::ParticleRes> m_spBattleFxFile;
     bool m_bBattleFxTried = false;
     struct BattleFx { toms::fx::EffectInstance m_oFx; bool m_bOverUi = false; };   // overUi: drawn over the UI (a track hint)

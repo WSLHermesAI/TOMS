@@ -1,0 +1,20 @@
+{
+  "_comment": "The battle's background (docs/gameplay/17 §19): battle.json backdrops names the forest .anim, and it loads.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000
+  },
+  "test": {
+    "frames": 20
+  },
+  "expect": {
+    "backdrop": "anim/battle_forest.anim"
+  }
+}

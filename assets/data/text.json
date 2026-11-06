@@ -1255,6 +1255,26 @@
       "zh_TW": "{n} 連擊！",
       "en": "{n} Combo!"
     },
+    "battle.cell_hint": {
+      "zh_TW": "點格子移動，避開紅色",
+      "en": "Tap a cell to move. Stay out of the red"
+    },
+    "battle.word_dodge": {
+      "zh_TW": "閃開！",
+      "en": "Dodged!"
+    },
+    "battle.intent.toad_near": {
+      "zh_TW": "拍擊（前排）",
+      "en": "Slam (near row)"
+    },
+    "battle.intent.toad_line": {
+      "zh_TW": "舌擊（直線）",
+      "en": "Tongue (a line)"
+    },
+    "battle.intent.toad_fan": {
+      "zh_TW": "橫掃（半圓）",
+      "en": "Sweep (half circle)"
+    },
     "skill.prompt_mash": {
       "zh_TW": "快速連點撐住！",
       "en": "Tap fast to hold it off!",

@@ -1,0 +1,17 @@
+{
+  "_comment": "A monster with company on the map (docs/gameplay/19 §2.0): the stage's objects give the slime two beside it; the star shows on it and not on the bat; walking into it starts the fight with all three.",
+  "scene": "stage",
+  "stage": "stage.json",
+  "test": {
+    "frames": 50,
+    "keys": "right@20"
+  },
+  "expect": {
+    "scene": "battle",
+    "foeClips": [
+      "idle",
+      "idle_sproutle",
+      "idle_sproutle"
+    ]
+  }
+}

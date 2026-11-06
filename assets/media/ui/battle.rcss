@@ -225,83 +225,136 @@ body { z-index: 30; }
 #wbar  { width: 420px; height: 16px; margin: 10px auto 0 auto; background-color: #3a3f50; border-radius: 8px; }
 #wfill { height: 100%; background-color: #ffd54a; border-radius: 8px; }
 
-/* ---- portrait: rows across the 768 px width; the controls on the bottom, for thumbs ---- */
-@media (orientation: portrait) {
-    #title { left: 40px; margin-left: 0; top: 14px; font-size: 30px; }   /* clear of the monsters' intents */
-    /* side by side (a short portrait screen; a tall phone stacks them below) */
-    .fighter    { top: 80px; }
-    #player     { left: 118px; margin-left: 0; }
-    .hp         { top: 230px; width: 330px; }
-    #player-hp  { left: 40px; margin-left: 0; }
-    .hp-text    { top: 256px; }
-    #player-hp-text { left: 40px; margin-left: 0; }
-    /* the monsters: the right half, 330 px from x 398 */
-    .foe.n1, .foe.n2, .foe.n3 { margin-left: 0; top: 80px; }
-    .foe.n1 { left: 398px; width: 330px; }
-    .foe.n1 .fbox { left: 118px; }
-    .foe.n1 .fhp  { top: 150px; width: 330px; }
-    .foe.n1 .ftext { top: 176px; width: 330px; }
-    .foe.n2 { left: 398px; width: 160px; }
-    .foe.n2.f1 { left: 568px; margin-left: 0; }
-    .foe.n2 .fbox { left: 25px; }
-    .foe.n2 .fhp  { top: 126px; width: 160px; }
-    .foe.n2 .ftext { top: 146px; width: 160px; }
-    .foe.n3 { left: 398px; width: 105px; }
-    .foe.n3.f1 { left: 510px; margin-left: 0; }
-    .foe.n3.f2 { left: 622px; margin-left: 0; }
-    .foe.n3 .fbox { left: 7px; }
-    .foe.n3 .fhp  { top: 104px; width: 105px; }
-    .foe.n3 .ftext { top: 122px; width: 105px; }
-    .foe.n3 .itext { font-size: 14px; }
-    #continue   { left: 40px; margin-left: 0; top: 370px; }
-    /* the play under the fighters; the rest from the bottom up (for thumbs) */
-    /* the play just above the thumbs' row (a phone in one hand: within reach) */
-    #play        { left: 40px; margin-left: 0; width: 688px; top: auto; bottom: 282px; }
-    #chain       { left: 40px; margin-left: 0; top: auto; bottom: 392px; }
-    #clock-label { left: 40px; margin-left: 0; top: auto; bottom: 330px; }
-    #clock       { left: 40px; margin-left: 0; width: 688px; top: auto; bottom: 310px; }
-    #super       { left: 40px; margin-left: 0; top: auto; bottom: 238px; }
-    #super-btn   { left: 330px; margin-left: 0; top: auto; bottom: 226px; width: 230px; }
-    #active-btn  { left: 578px; margin-left: 0; top: auto; bottom: 226px; width: 150px; }
-    #crit        { left: 40px; margin-left: 0; top: auto; bottom: 200px; }
-    .panel       { top: auto; bottom: 30px; height: 160px; width: 334px; }
-    .plabel      { margin-top: 48px; }
-    #guard       { left: 40px; margin-left: 0; }
-    #guard-bar   { left: 40px; margin-left: 0; top: auto; bottom: 30px; width: 334px; }
-    #guard-bar .panel { bottom: auto; height: 124px; }
-    #attack-state { left: 394px; margin-left: 0; }
-    #banner      { top: 440px; }
-    #result-box  { margin-left: -330px; width: 660px; top: 80px; }
-    #skill-prompt { top: 520px; }
+/* ---- the scene layout (docs/gameplay/17 §19, the owner's two pictures, 2026-11-06): the monsters large in the middle, the hero large at the
+   left (landscape) or the bottom left (portrait), the HP bar under the monsters, the buttons in a column at the right. On a canvas 768 px high. ---- */
+#title { left: 0; right: 0; margin-left: 0; top: 12px; text-align: center; font-size: 38px; color: #f6e2b8; font-effect: outline(2px #1a1208); }
+#player { left: 10px; margin-left: 0; top: 270px; width: 480px; height: 480px; }
+#player-hp { left: 50%; margin-left: -70px; top: 688px; width: 330px; height: 22px; }
+#player-hp-text { left: 50%; margin-left: -70px; top: 712px; font-effect: outline(2px #000000); }
+#super { margin-left: -300px; top: 692px; }
+#super-label { font-effect: outline(2px #000000); }
+#super-btn { margin-left: -300px; top: 636px; width: 200px; height: 44px; line-height: 44px; }
+#active-btn { margin-left: -90px; top: 636px; height: 44px; line-height: 44px; }
+#crit { margin-left: -300px; top: 664px; }
+#chain { margin-left: -70px; top: 652px; }
+#play { margin-left: -250px; width: 500px; top: 560px; }
+#clock-label { margin-left: -70px; top: 640px; }
+#clock { margin-left: -70px; top: 664px; width: 330px; }
+#continue { margin-left: -70px; top: 640px; font-effect: outline(2px #000000); }
+#skill-prompt { top: 540px; }
+/* the thumbs: a column at the right */
+.panel { width: 190px; height: 100px; border-radius: 12px; }
+.plabel { margin-top: 22px; font-size: 26px; }
+.phint { font-size: 13px; }
+#guard { left: auto; right: 24px; margin-left: 0; top: 628px; height: 120px; }
+#guard-bar { left: auto; right: 24px; margin-left: 0; top: 590px; width: 190px; }
+#attack-state { left: auto; right: 24px; margin-left: 0; top: 516px; }
+/* the monsters, across the middle */
+.ftext { text-align: center; font-size: 19px; font-effect: outline(2px #000000); }
+.itext { font-effect: outline(1px #000000); }
+.fhp { height: 8px; background-color: #00000090; }
+.fbreak { height: 3px; }
+.foe.n1, .foe.n2, .foe.n3 { left: 50%; }
+.foe.n1 { margin-left: -150px; top: 170px; width: 340px; height: 420px; }
+.foe.n1 .fbox { left: 0; top: 0; width: 340px; height: 340px; }
+.foe.n1 .fhp { top: 352px; width: 340px; height: 8px; }
+.foe.n1 .ftext { top: 364px; width: 340px; font-size: 22px; }
+.foe.n2 { margin-left: -330px; top: 240px; width: 270px; height: 340px; }
+.foe.n2.f1 { margin-left: 70px; }
+.foe.n2 .fbox { left: 0; top: 0; width: 270px; height: 270px; }
+.foe.n2 .fhp { top: 282px; width: 270px; height: 8px; }
+.foe.n2 .ftext { top: 294px; width: 270px; font-size: 19px; }
+/* three: the middle one large at the back, the other two smaller in front; their clocks in one row at the top */
+.foe.n3 { margin-left: -245px; top: 420px; width: 170px; height: 220px; z-index: 2; }
+.foe.n3 .fbox { left: 0; top: 0; width: 170px; height: 170px; }
+.foe.n3 .fhp { top: 178px; width: 170px; height: 8px; }
+.foe.n3 .ftext { top: 188px; width: 170px; font-size: 18px; }
+.foe.n3 .intent { left: 8px; top: -262px; width: 154px; }
+.foe.n3.f1 { margin-left: -160px; top: 180px; width: 360px; height: 420px; z-index: 1; }
+.foe.n3.f1 .fbox { width: 360px; height: 360px; }
+.foe.n3.f1 .fhp { top: 428px; left: 95px; width: 170px; }
+.foe.n3.f1 .ftext { top: 438px; width: 360px; }
+.foe.n3.f1 .intent { left: 103px; top: -22px; width: 154px; }
+.foe.n3.f2 { margin-left: 125px; top: 400px; width: 190px; height: 240px; z-index: 2; }
+.foe.n3.f2 .fbox { width: 190px; height: 190px; }
+.foe.n3.f2 .fhp { top: 198px; width: 190px; }
+.foe.n3.f2 .ftext { top: 208px; width: 190px; }
+.foe.n3.f2 .intent { left: 18px; top: -242px; width: 154px; }
+
+/* the six cells (docs/gameplay/19 §2.1): in front of the monster, the near row on top */
+#cells { position: absolute; left: 50%; margin-left: -225px; top: 556px; width: 450px; height: 122px; }
+.cellbox { position: absolute; width: 146px; height: 58px; border-radius: 10px; border-width: 2px; border-color: #ffffff60; background-color: #10182880; overflow: hidden; cursor: pointer; }
+.cellbox:hover { background-color: #2a3a5890; }
+.cellbox.here { border-color: #ffe27a; border-width: 3px; }
+.cellbox.danger { border-color: #ff5a4a; background-color: #80201890; }
+.cfill { position: absolute; left: 0; top: 0; bottom: 0; background-color: #ff5a3ab0; }
+.cme { position: absolute; left: 50%; margin-left: -13px; top: 16px; width: 26px; height: 26px; border-radius: 13px; background-color: #ffe27a; border-width: 2px; border-color: #3a2a00; }
+#cell-hint { position: absolute; left: 0; width: 450px; top: -24px; text-align: center; font-size: 16px; color: #f3e0ba; font-effect: outline(2px #000000); }
+/* with or without cells, the ultimate and the active button sit in the right column */
+#super-btn { left: auto; right: 24px; margin-left: 0; top: 452px; width: 190px; }
+#active-btn { left: auto; right: 24px; margin-left: 0; top: 402px; width: 190px; }
+/* one monster: large */
+.foe.n1 { margin-left: -190px; top: 102px; width: 380px; }
+.foe.n1 .fbox { width: 380px; height: 380px; }
+.foe.n1 .fhp { top: 386px; width: 380px; }
+.foe.n1 .ftext { top: 396px; width: 380px; }
+
+/* a canvas close to 4:3: the hero smaller, so it stays clear of the monsters */
+@media (orientation: landscape) and (max-width: 1200px) {
+    #player { left: -30px; top: 400px; width: 340px; height: 340px; }
 }
 
-/* a tall phone: the monster above, the player below it, each with its HP under it */
+/* ---- portrait: the same scene upright; the bottom row is anchored to the bottom, for thumbs ---- */
+@media (orientation: portrait) {
+    #title { top: 14px; font-size: 32px; }
+    #player { left: -10px; top: auto; bottom: 16px; width: 270px; height: 270px; }
+    .hp { top: auto; }
+    .hp-text { top: auto; }
+    #player-hp { left: 270px; margin-left: 0; top: auto; bottom: 70px; width: 280px; }
+    #player-hp-text { left: 270px; margin-left: 0; top: auto; bottom: 38px; }
+    #super { left: 24px; margin-left: 0; top: auto; bottom: 8px; }
+    #super-btn { left: 290px; margin-left: 0; top: auto; bottom: 110px; width: 150px; }
+    #active-btn { left: 448px; margin-left: 0; top: auto; bottom: 110px; width: 110px; }
+    #crit { left: 24px; margin-left: 0; top: auto; bottom: 36px; }
+    #chain { left: 290px; margin-left: 0; top: auto; bottom: 160px; }
+    #play { left: 40px; margin-left: 0; width: 688px; top: auto; bottom: 340px; }
+    #clock-label { left: 290px; margin-left: 0; top: auto; bottom: 126px; }
+    #clock { left: 290px; margin-left: 0; width: 260px; top: auto; bottom: 104px; }
+    #continue { left: 290px; margin-left: 0; top: auto; bottom: 150px; }
+    #skill-prompt { top: 560px; }
+    #cells { top: 612px; margin-left: -225px; }
+    #super-btn { left: 270px; right: auto; top: auto; bottom: 110px; width: 150px; }
+    #active-btn { left: 428px; right: auto; top: auto; bottom: 110px; width: 110px; }
+    .foe.n1 { margin-left: -190px; top: 110px; }
+    #banner { top: 440px; }
+    .panel { top: auto; width: 170px; }
+    #guard { right: 16px; top: auto; bottom: 24px; height: 120px; }
+    #guard-bar { right: 16px; top: auto; bottom: 24px; width: 170px; }
+    #guard-bar .panel { bottom: auto; }
+    #attack-state { right: 16px; top: auto; bottom: 154px; }
+    #result-box { margin-left: -330px; width: 660px; top: 80px; }
+    .foe.n1 { margin-left: -170px; top: 150px; }
+    .foe.n2 { margin-left: -350px; top: 220px; width: 330px; }
+    .foe.n2.f1 { margin-left: 20px; }
+    .foe.n2 .fbox { left: 30px; }
+    .foe.n2 .fhp, .foe.n2 .ftext { width: 330px; }
+    .foe.n3 { margin-left: -300px; top: 410px; }
+    .foe.n3 .intent { left: 30px; top: -335px; width: 110px; }
+    .foe.n3 .itext { font-size: 14px; }
+    .foe.n3.f1 { margin-left: -180px; top: 100px; }
+    .foe.n3.f1 .intent { left: 125px; top: -25px; width: 110px; }
+    .foe.n3.f2 { margin-left: 120px; top: 400px; }
+    .foe.n3.f2 .intent { left: 40px; top: -325px; width: 110px; }
+}
+
+/* a tall phone: the monsters lower, nearer the thumbs */
 @media (orientation: portrait) and (min-height: 1300px) {
-    .fighter    { width: 180px; height: 180px; }
-    #player     { left: 294px; top: 352px; }
-    .hp         { width: 688px; }
-    /* the monsters across the width, 688 px from x 40 */
-    .foe.n1, .foe.n2, .foe.n3 { top: 88px; }
-    .foe.n1 { left: 40px; width: 688px; }
-    .foe.n1 .fbox { left: 254px; width: 180px; }
-    .foe.n1 .fbox { height: 180px; }
-    .foe.n1 .fhp  { top: 192px; width: 688px; }
-    .foe.n1 .ftext { top: 218px; width: 688px; }
-    .foe.n2 { left: 40px; width: 334px; }
-    .foe.n2.f1 { left: 394px; }
-    .foe.n2 .fbox { left: 87px; width: 160px; }
-    .foe.n2 .fbox { height: 160px; }
-    .foe.n2 .fhp  { top: 172px; width: 334px; height: 22px; }
-    .foe.n2 .ftext { top: 198px; width: 334px; font-size: 22px; }
-    .foe.n3 { left: 40px; width: 220px; }
-    .foe.n3.f1 { left: 274px; }
-    .foe.n3.f2 { left: 508px; }
-    .foe.n3 .fbox { left: 35px; width: 150px; }
-    .foe.n3 .fbox { height: 150px; }
-    .foe.n3 .fhp  { top: 162px; width: 220px; height: 20px; }
-    .foe.n3 .ftext { top: 188px; width: 220px; font-size: 19px; }
-    #player-hp  { left: 40px; top: 544px; }
-    #player-hp-text { left: 40px; top: 570px; }
-    #continue   { top: 692px; }
-    #banner     { top: 700px; }
+    .foe.n1 { top: 350px; }
+    .foe.n2 { top: 430px; }
+    .foe.n3 { top: 620px; }
+    .foe.n3.f1 { top: 310px; }
+    .foe.n3.f2 { top: 610px; }
+    #skill-prompt { top: 800px; }
+    #cells { top: 850px; }
+    #banner { top: 640px; }
 }

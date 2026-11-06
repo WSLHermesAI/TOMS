@@ -252,6 +252,31 @@ nlohmann::json MapObject::f_Details() const {
 
 // S1: a multi-grid monster is not walked into: entering a 4-grid boss's cell would put the player inside it, so big
 // footprints are fought from the adjacent tile (doc F4: the player can only circle it).
+// A small star at the monster's shoulder: others fight beside it. The same star for any number: the player finds out how many in the fight (docs/gameplay/19 §2.0).
+void MonsterObject::f_Render(const MapView& l_oV) {
+    MapObject::f_Render(l_oV);
+    const Entity* l_pE = f_Entity();
+    if (!l_pE || f_Status() == "gone") return;
+    bool l_bParty = !l_pE->m_vParty.empty();
+    if (!l_bParty) {
+        auto l_itT = m_oG.m_mapEnemyTpl.find(l_pE->m_strId);
+        l_bParty = l_itT != m_oG.m_mapEnemyTpl.end() && l_itT->second.contains("party") && l_itT->second["party"].is_array() && !l_itT->second["party"].empty();
+    }
+    if (!l_bParty || !m_oG.m_upRes) return;
+    if (!m_bPartyHintMade) {
+        m_bPartyHintMade = true;
+        auto l_upHint = std::make_unique<RenderLook>();
+        l_upHint->f_Add(RenderLook::f_ClipObject(m_oG, toms::key::g_pszAnimMapHint, "party_hint", g_arrWhite), 32.0f, 32.0f);
+        if (!l_upHint->f_Empty()) m_oPartyHint.m_vLooks.push_back(std::move(l_upHint));
+    }
+    MapRect l_oR = f_Rect(l_oV);
+    l_oR.m_fX += l_oR.m_fW * 0.5f;
+    l_oR.m_fY -= l_oR.m_fH * 0.2f;
+    l_oR.m_fW *= 0.62f;
+    l_oR.m_fH *= 0.62f;
+    m_oPartyHint.f_Draw(m_oG, l_oV, l_oR, l_pE->m_iX, l_pE->m_iY, 0.0f);
+}
+
 bool MonsterObject::f_BumpBig(int l_iX, int l_iY) {
     const Entity* l_pE = f_Entity();
     if (!l_pE || l_pE->m_bConsumed || !l_pE->m_oFp.f_Big() || !f_Covers(l_iX, l_iY)) return false;

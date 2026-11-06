@@ -19,6 +19,10 @@
       "broken": { "clip": "hurt", "fx": "monster_broken" }
     }
   },
+  "moss": {
+    "base": "monster",
+    "character": "anim/monster_moss.anim"
+  },
   "player": {
     "states": {
       "attack": { "sound": "player_attack" },

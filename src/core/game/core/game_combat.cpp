@@ -25,6 +25,13 @@ void Game::f_StartCombat(const EnemyInst& l_oE, const std::vector<EnemyInst>& l_
     for (size_t l_nI = 1; l_nI < m_oCs.m_vFoes.size(); l_nI++) m_oCs.m_vFoes[l_nI].m_iClockMs = -700 * (int)l_nI;
     m_oCs.m_iTarget = 0;
     m_oCs.m_vEvents.clear();
+    // the cells (docs/gameplay/19 §2.1): only when a monster here has a move with a danger shape
+    m_oCs.m_bCellsOn = false;
+    for (const CombatState::Foe& l_oF : m_oCs.m_vFoes)
+        for (const auto& l_oChoice : l_oF.m_oEnemy.m_vMoves)
+            if (!m_oMoves.f_Get(l_oChoice.m_strId).m_strShape.empty()) m_oCs.m_bCellsOn = true;
+    m_oCs.m_iHeroCell = m_oCellRules.m_iStart;
+    m_v2HeroShift = glm::vec2(0.0f);
     m_oCs.m_iClockMs = 0;
     // the revamp (docs/gameplay/15): no moment running, a fresh chain and grade, the guard unpressed
     m_oCs.m_iHitStopMs = m_oCs.m_iSlowMs = m_oCs.m_iShakeMs = m_oCs.m_iDimMs = m_oCs.m_iBannerMs = 0;
@@ -226,6 +233,7 @@ void Game::f_ChooseFoeMove(int l_iFoe) {
     CombatState::Foe& l_oF = m_oCs.m_vFoes[(size_t)l_iFoe];
     const float l_fRoll = std::uniform_real_distribution<float>(0.0f, 1.0f)(m_oMoveRng);
     l_oF.m_strMove = toms::f_PickMove(l_oF.m_oEnemy.m_vMoves, l_fRoll);
+    l_oF.m_uDanger = 0u;
     const toms::MoveDef& l_oM = m_oMoves.f_Get(l_oF.m_strMove);
     l_oF.m_iMoveMs = l_oM.m_iChargeMs > 0 ? std::max(300, (int)std::lround(l_oM.m_iChargeMs * l_oF.m_fIntervalMul))   // its wind-up in ms (16 §4.1)
                               : std::max(300, (int)std::lround(std::max(500, l_oF.m_oEnemy.m_iAtkIntervalMs) * l_oM.m_fTime * l_oF.m_fIntervalMul));
@@ -248,6 +256,7 @@ void Game::f_StepFoes(int l_iDtMs) {
         if (l_oF.m_iStaggerMs > 0) {   // stunned: its clock stops
             l_oF.m_iStaggerMs -= l_iDtMs;
             if (l_oF.m_iStaggerMs <= 0) { l_oF.m_iStaggerMs = 0; l_oF.m_fStaggerDamage = 1.0f; l_oF.m_bBroken = false; }
+            l_oF.m_uDanger = 0u;   // stunned: the danger goes out, and lights again when its hit comes near
             continue;
         }
         // the owner 2026-10-26: they keep charging while the player's combo runs (their attack lands in the middle of
@@ -259,6 +268,13 @@ void Game::f_StepFoes(int l_iDtMs) {
         }
         if (m_bComboHoldsMonsters && f_AttackRunning() && m_oMoves.f_Get(l_oF.m_strMove).m_eKind != toms::MoveKind::Jabs) continue;
         l_oF.m_iClockMs += l_iDtMs;
+        {   // the cells its hit covers light up, aimed at where the hero is now (docs/gameplay/19 §2.1)
+            const toms::MoveDef& l_oMv = m_oMoves.f_Get(l_oF.m_strMove);
+            if (!l_oMv.m_strShape.empty() && !l_oF.m_uDanger && l_oF.m_iMoveMs - l_oF.m_iClockMs <= m_oCellRules.m_iWarnMs) {
+                l_oF.m_uDanger = toms::f_PickDanger(m_oCellRules, l_oMv.m_strShape, m_oCs.m_iHeroCell, std::uniform_real_distribution<float>(0.0f, 1.0f)(m_oMoveRng));
+                f_BattleEvent("danger", l_iFoe, -1, (int)l_oF.m_uDanger, l_oMv.m_strShape);
+            }
+        }
         if (l_oF.m_iClockMs >= l_oF.m_iMoveMs) {
             l_oF.m_iClockMs = 0;
             f_ResolveEnemyClockFire(l_iFoe);
@@ -596,13 +612,14 @@ void Game::f_DrawBattleRig() {
     // The battle screen's backdrop (common.rcss .focus: black at 80%). The UI draws over the game, so with the backdrop
     // in battle.rml the player and the monster would sit under it, drawn at a fifth of their brightness; it is drawn
     // here instead, under them (battle.rml has none).
+    const bool l_bBackdrop = f_DrawBattleBackdrop();
     Quad l_oBackdrop;
     l_oBackdrop.m_arrRect[0] = -4096.0f; l_oBackdrop.m_arrRect[1] = -4096.0f; l_oBackdrop.m_arrRect[2] = 16384.0f; l_oBackdrop.m_arrRect[3] = 16384.0f;
     l_oBackdrop.m_arrUv[0] = 0; l_oBackdrop.m_arrUv[1] = 0; l_oBackdrop.m_arrUv[2] = 1; l_oBackdrop.m_arrUv[3] = 1;
     l_oBackdrop.m_bSolid = true;
     l_oBackdrop.m_arrTint[0] = l_oBackdrop.m_arrTint[1] = l_oBackdrop.m_arrTint[2] = 0.0f;
-    l_oBackdrop.m_arrTint[3] = std::min(1.0f, 0xcc / 255.0f + 0.15f * (float)m_oCs.m_iDimMs / 700.0f);   // a break dims it a moment
-    if (m_pRen) m_pRen->f_DrawSprite(l_oBackdrop);
+    l_oBackdrop.m_arrTint[3] = std::min(1.0f, (l_bBackdrop ? 0.0f : 0xcc / 255.0f) + (l_bBackdrop ? 0.45f : 0.15f) * (float)m_oCs.m_iDimMs / 700.0f);   // a break dims it a moment
+    if (m_pRen && l_oBackdrop.m_arrTint[3] > 0.0f) m_pRen->f_DrawSprite(l_oBackdrop);
     // the screen shake (docs/gameplay/15 §3.8): the fighters and their effects move together, fading out
     float l_fOx = 0.0f, l_fOy = 0.0f;
     if (m_oCs.m_iShakeMs > 0 && m_oCs.m_fShakePx > 0.0f) {
@@ -625,7 +642,7 @@ void Game::f_DrawBattleRig() {
     };
     // The player's place on the battle screen (battle.rcss #player, wherever the layout put it: playerBox_) and each
     // monster's (battle.rcss .foe .fbox: foeBox_): the view fills its box, the feet at the bottom centre.
-    if (f_BattleRigReady() && !m_strBattleRigState.empty()) m_upPlayerView->f_Draw(m_pRen, l_fnZoomed(m_v4PlayerBox));
+    if (f_BattleRigReady() && !m_strBattleRigState.empty()) m_upPlayerView->f_Draw(m_pRen, l_fnZoomed(m_v4PlayerBox + glm::vec4(m_v2HeroShift.x, m_v2HeroShift.y, 0.0f, 0.0f)));
     for (size_t l_nI = 0; l_nI < m_vFoeRigs.size() && l_nI < m_oCs.m_vFoes.size(); l_nI++) {
         const FoeRig& l_oFr = m_vFoeRigs[l_nI];
         if (l_oFr.m_upView && !l_oFr.m_strState.empty()) l_oFr.m_upView->f_Draw(m_pRen, l_fnZoomed(f_FighterBox((int)l_nI)));
@@ -643,7 +660,74 @@ void Game::f_DrawBattleRig() {
     }
 }
 
+// ---- the battle's background (battle.json "backdrops", docs/gameplay/17 §19) ----
+
+void Game::f_UpdateBattleBackdrop(int l_iDtMs) {
+    if (!(m_oCs.m_bActive || m_oCs.m_bWon || m_oCs.m_iResultPauseMs > 0)) {
+        m_strBackdropAnim.clear();
+        m_oBackdrop.f_Stop();
+        m_vBackdropFx.clear();
+        return;
+    }
+    if (m_strBackdropAnim.empty() && m_upRes) {   // this floor's row: the first whose floors hold it, else the first
+        const nlohmann::json l_jRows = m_jBattleJson.value("backdrops", nlohmann::json::array());
+        const std::string& l_strHere = m_strCurFloorId.empty() ? m_strCurStage : m_strCurFloorId;
+        std::string l_strDigits;
+        for (char l_cC : l_strHere) if (l_cC >= '0' && l_cC <= '9') l_strDigits += l_cC;
+        const int l_iFloor = l_strDigits.empty() || l_strDigits.size() > 6 ? 1 : std::stoi(l_strDigits);
+        nlohmann::json l_jRow = l_jRows.empty() ? nlohmann::json::object() : l_jRows[0];
+        for (const auto& l_jR : l_jRows)
+            if (l_iFloor >= l_jR.value("from", 1) && l_iFloor <= l_jR.value("to", 9999)) { l_jRow = l_jR; break; }
+        const std::string l_strAnim = l_jRow.value("anim", std::string());
+        if (l_strAnim.empty()) return;
+        m_strBackdropAnim = l_strAnim;
+        auto l_spA = m_upRes->f_Get<toms::res::AnimRes>(l_strAnim);
+        if (!l_spA->f_Ok()) { std::fprintf(stderr, "[battle] %s: %s\n", l_strAnim.c_str(), l_spA->f_Error().c_str()); return; }
+        m_spBackdrop = l_spA;
+        m_oBackdrop.f_Play(l_spA->f_Find(l_jRow.value("clip", std::string("idle"))));
+        const nlohmann::json l_jSize = l_jRow.value("size", nlohmann::json::array({1, 1}));
+        m_fBackdropW = l_jSize[0].get<float>();
+        m_fBackdropH = l_jSize[1].get<float>();
+        f_LoadBattleFxFile();
+        m_vBackdropFx.clear();
+        if (m_spBattleFxFile)
+            for (const auto& l_jFx : l_jRow.value("fx", nlohmann::json::array()))
+                if (const toms::fx::Effect* l_pE = m_spBattleFxFile->f_Find(l_jFx.get<std::string>())) {
+                    m_vBackdropFx.emplace_back();
+                    m_vBackdropFx.back().f_Play(l_pE, (uint32_t)m_vBackdropFx.size());
+                    for (int l_iK = 0; l_iK < 60; l_iK++) m_vBackdropFx.back().f_Update(0.1f);   // already in the air when the battle opens
+                }
+    }
+    if (m_oCs.m_bCellsOn) {   // the hero's picture eases toward its cell
+        const int l_iCol = m_oCs.m_iHeroCell % toms::g_iCellCols, l_iRow = m_oCs.m_iHeroCell / toms::g_iCellCols;
+        const glm::vec2 l_v2Want((float)(l_iCol - 1) * m_oCellRules.m_fShiftX + (l_iRow == 0 ? m_oCellRules.m_fShiftNear : 0.0f), l_iRow == 0 ? -m_oCellRules.m_fShiftY : 0.0f);
+        m_v2HeroShift += (l_v2Want - m_v2HeroShift) * std::min(1.0f, (float)l_iDtMs * 0.015f);
+    }
+    m_oBackdrop.f_Update(l_iDtMs);
+    for (toms::fx::EffectInstance& l_oFx : m_vBackdropFx) l_oFx.f_Update(l_iDtMs / 1000.0f);
+}
+
+bool Game::f_DrawBattleBackdrop() {
+    if (!m_pRen || !m_spBackdrop || !m_oBackdrop.f_Clip()) return false;
+    const float l_fW = (float)m_pRen->f_Width(), l_fH = (float)m_pRen->f_Height();
+    const float l_fScale = std::max(l_fW / m_fBackdropW, l_fH / m_fBackdropH);   // it covers the screen, any shape, cut at the sides or top and bottom
+    const glm::mat3 l_mat3At = toms::anim::f_Placement(l_fW * 0.5f, l_fH * 0.5f, l_fScale);
+    m_oBackdrop.f_Draw(m_pRen, m_spBackdrop->f_Atlases(), l_mat3At);
+    if (m_spBattleFxFile)
+        for (toms::fx::EffectInstance& l_oFx : m_vBackdropFx) l_oFx.f_Draw(m_pRen, m_spBattleFxFile->f_Atlases(), l_mat3At, nullptr);
+    return true;
+}
+
 // ---- the battle's particles (Game::battleFx_) ----
+
+void Game::f_LoadBattleFxFile() {
+    if (!m_spBattleFxFile && !m_bBattleFxTried && m_upRes) {   // once: without the file the battle has no particles
+        m_bBattleFxTried = true;
+        auto l_spF = m_upRes->f_Get<toms::res::ParticleRes>(m_pszBattleFxFile);
+        if (l_spF->f_Ok()) m_spBattleFxFile = l_spF;
+        else std::fprintf(stderr, "[battle] %s: %s\n", m_pszBattleFxFile, l_spF->f_Error().c_str());
+    }
+}
 
 const toms::WeaponFx* Game::f_BattleWeaponFx(bool l_bTop) const {
     const std::string l_strKey = f_WeaponKey();
@@ -661,12 +745,7 @@ void Game::f_PlayBattleFx(const std::string& l_strEffect, int l_iWho, int l_iDel
 
 void Game::f_PlayBattleFxAt(const std::string& l_strEffect, float l_fX, float l_fY, bool l_bOverUi, int l_iDelayMs) {
     if (l_strEffect.empty()) return;
-    if (!m_spBattleFxFile && !m_bBattleFxTried && m_upRes) {   // once: without the file the battle has no particles
-        m_bBattleFxTried = true;
-        auto l_spF = m_upRes->f_Get<toms::res::ParticleRes>(m_pszBattleFxFile);
-        if (l_spF->f_Ok()) m_spBattleFxFile = l_spF;
-        else std::fprintf(stderr, "[battle] %s: %s\n", m_pszBattleFxFile, l_spF->f_Error().c_str());
-    }
+    f_LoadBattleFxFile();
     if (!m_spBattleFxFile) return;
     const toms::fx::Effect* l_pE = m_spBattleFxFile->f_Find(l_strEffect);
     if (!l_pE) { std::fprintf(stderr, "[battle] %s has no effect '%s'\n", m_pszBattleFxFile, l_strEffect.c_str()); return; }
@@ -980,8 +1059,15 @@ void Game::f_ResolveDefenseTap() {
 void Game::f_ResolveEnemyClockFire(int l_iFoe) {
     CombatState::Foe& l_oF = m_oCs.m_vFoes[(size_t)l_iFoe];
     const toms::MoveDef& l_oM = m_oMoves.f_Get(l_oF.m_strMove);   // its move, shown as its intent (docs/gameplay/13 §6.1, 6.2)
+    // a hit with a danger shape reaches only its cells: a hero standing clear takes nothing (docs/gameplay/19 §2.1)
+    bool l_bClear = false;
+    if (!l_oM.m_strShape.empty() && l_oF.m_iVolleyHit == 0) {
+        const uint32_t l_uDanger = l_oF.m_uDanger ? l_oF.m_uDanger
+                                                 : toms::f_PickDanger(m_oCellRules, l_oM.m_strShape, m_oCs.m_iHeroCell, 0.0f);
+        l_bClear = l_uDanger != 0u && !(l_uDanger & (1u << m_oCs.m_iHeroCell));
+    }
     // a special guard play (docs/gameplay/16 §4.3): the hit waits for it; endSkill comes back here with its result
-    if (!l_oM.m_strGuardPlay.empty() && l_oF.m_fGuardShare < 0.0f && l_oF.m_iVolleyHit == 0 && !m_oCs.m_oSkill.m_bOn)
+    if (!l_bClear && !l_oM.m_strGuardPlay.empty() && l_oF.m_fGuardShare < 0.0f && l_oF.m_iVolleyHit == 0 && !m_oCs.m_oSkill.m_bOn)
         if (const toms::SpecialMove* l_pD = m_oSpecialMoves.f_Find(l_oM.m_strGuardPlay)) { f_StartSkill(*l_pD, l_iFoe); return; }
     const bool l_bVolley = !l_oM.m_vGapsMs.empty() && l_oM.m_iHits > 1;   // its hits one by one, each with its "!" (16 §4.1)
     if (l_oF.m_iVolleyHit == 0) l_oF.m_iAttacks++;
@@ -993,6 +1079,15 @@ void Game::f_ResolveEnemyClockFire(int l_iFoe) {
         l_oC.m_iAttacks = m_oCs.m_vFoes[(size_t)l_iFoe].m_iAttacks;
         f_RunFoeEvents(l_iFoe, l_oC);
     };
+    if (l_bClear) {   // it strikes where the hero is not
+        f_BattleEvent("dodge", -1, l_iFoe, 0, l_oF.m_strMove);
+        f_FoeLook(l_iFoe, "attack");
+        f_PopWord(m_oLocale.f_Tr("battle.word_dodge"), -1, "parry");
+        m_oCs.m_iGuardAtMs = -1;
+        f_StartAttackPause();
+        l_fnAfterMove();
+        return;
+    }
     if (l_oM.m_eKind == toms::MoveKind::Guard) {   // its guard is over: no attack
         f_BattleEvent("guardEnd", l_iFoe, -1);
         l_fnAfterMove();
@@ -1252,6 +1347,16 @@ void Game::f_ResolveCombo(const toms::ComboResult* l_pPlayed) {
         m_oCs.m_oAtkBar.m_iCooldownMs = f_BarCooldownMs();   // AGI shortens it
     }
 }
+
+void Game::f_BattleMoveToCell(int l_iCell) {
+    if (!f_BattleCellsOn() || m_oCs.m_bWinPending || m_oCs.m_oSkill.m_bOn) return;
+    if (l_iCell < 0 || l_iCell >= toms::g_iCellCols * toms::g_iCellRows || l_iCell == m_oCs.m_iHeroCell) return;
+    m_oCs.m_iHeroCell = l_iCell;
+    f_BattleEvent("move", -1, -1, l_iCell);
+    m_oAudio.f_Play("confirm_click");
+}
+
+void Game::f_BattleStepCell(int l_iDx, int l_iDy) { f_BattleMoveToCell(toms::f_CellStep(m_oCs.m_iHeroCell, l_iDx, l_iDy)); }
 
 void Game::f_BattleTapDefense() {
     if (!m_oCs.m_bActive || m_oCs.m_bWinPending || m_oCs.m_oSkill.m_bOn) return;

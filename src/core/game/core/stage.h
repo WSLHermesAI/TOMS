@@ -37,6 +37,7 @@ struct Entity {
     // events linked to it, which fire when the player interacts with it (Game::fireLinkedEvents).
     nlohmann::json m_jLook;
     std::vector<std::string> m_vLinks;
+    std::vector<std::string> m_vParty;     // the monsters fighting beside this one ("party": ids; docs/gameplay/19 §2.0): the map shows only a hint
     // Its stable id on this floor (objects."x,y".uid, given by the stage editor): what the save keys its status by,
     // so moving it in the editor keeps a defeated monster defeated (docs/gameplay/05_SAVE_SYSTEM.md). Empty in an old file.
     std::string m_strUid;
@@ -140,6 +141,8 @@ inline Stage f_ParseStage(const std::string& l_strPath, const toms::Locale& l_oL
                 if (l_oO != l_pObjects->end() && l_oO->is_object()) {
                     if (l_oO->contains("look") && (*l_oO)["look"].is_object()) l_oE.m_jLook = (*l_oO)["look"];
                     if (l_oO->contains("uid") && (*l_oO)["uid"].is_string()) l_oE.m_strUid = (*l_oO)["uid"].get<std::string>();
+                    if (l_oO->contains("party") && (*l_oO)["party"].is_array())
+                        for (const auto& l_jId : (*l_oO)["party"]) if (l_jId.is_string()) l_oE.m_vParty.push_back(l_jId.get<std::string>());
                     if (l_oO->contains("events") && (*l_oO)["events"].is_array())
                         for (const auto& l_jId : (*l_oO)["events"]) if (l_jId.is_string()) l_oE.m_vLinks.push_back(l_jId.get<std::string>());
                 }

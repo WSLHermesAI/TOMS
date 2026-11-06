@@ -1,0 +1,17 @@
+monster_moss.png
+size: 2048, 2048
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+sproutle_top
+  bounds: 2, 2, 552, 230
+sproutle_body
+  bounds: 556, 2, 552, 448
+mossbun_top
+  bounds: 1110, 2, 513, 236
+mossbun_body
+  bounds: 2, 452, 513, 442
+thicketoad_top
+  bounds: 517, 452, 620, 317
+thicketoad_body
+  bounds: 1139, 452, 620, 335

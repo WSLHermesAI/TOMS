@@ -130,9 +130,13 @@ class MonsterObject : public MapObject {
     TOMS_OBJECT(MonsterObject)
 public:
     using MapObject::MapObject;
+    void f_Render(const MapView& l_oV) override;   // its look, and a hint when others fight beside it
     bool f_BumpBig(int l_iX, int l_iY) override;
     Touch f_OnTouch(int l_iX, int l_iY) override;
     nlohmann::json f_Details() const override;
+private:
+    LookChain m_oPartyHint;          // made once, when first needed
+    bool m_bPartyHintMade = false;
 };
 
 class ItemObject : public MapObject {

@@ -201,6 +201,7 @@ void Game::f_Update(int l_iDtMs) {
     f_UpdateBattleRig(l_iBattleDt);   // the bow and the player's character on the battle screen (battleRigState)
     f_UpdateMonsterRig(l_iBattleDt);  // the monster: idle, attack, hurt, die (monster_battle.anim)
     f_UpdateBattleFx(l_iDtMs);    // the weapon's particles (battle.particle)
+    f_UpdateBattleBackdrop(l_iDtMs);   // the battle's background keeps moving through a hit stop
     if (m_oPreviewRig.f_Character() || m_oPreviewRig.f_Held()) {   // --anim with --held: both clips, one clock
         m_oPreviewRig.f_Update(l_iDtMs);
         for (const std::string& l_strE : m_oPreviewRig.f_TakeEvents()) std::fprintf(stderr, "[anim] event %s\n", l_strE.c_str());

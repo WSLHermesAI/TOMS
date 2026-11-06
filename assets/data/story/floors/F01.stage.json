@@ -82,7 +82,7 @@
       "uid": "o7"
     },
     "14,8": {
-      "uid": "o8"
+      "uid": "o8", "party": ["sproutle", "sproutle"]
     },
     "13,9": {
       "uid": "o9"
