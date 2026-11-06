@@ -23,6 +23,10 @@ struct CellRules {
     int m_iWarnMs = 1400;   // the cells light up this long before the hit
     int m_iStart = 4;       // where the hero starts
     float m_fShiftX = 55.0f, m_fShiftNear = 40.0f, m_fShiftY = 18.0f;   // how far the hero's picture moves for a cell
+    // the first danger of a fight stops everything and shows the monster (battle.json cells.intro)
+    int m_iIntroMs = 2200, m_iIntroUiMs = 1200, m_iPopMs = 350;   // how long; when the cells pop up; how long the pop takes
+    float m_fIntroZoom = 1.25f;
+    std::string m_strIntroClip = "special", m_strIntroFx, m_strIntroText;
     std::map<std::string, std::vector<std::vector<int>>> m_mapShapes;   // a shape: its variants, each the cells it covers
 };
 
@@ -35,6 +39,16 @@ inline CellRules f_CellRulesFromJson(const nlohmann::json& l_jBattle) {
     l_oR.m_fShiftX = l_jC.value("shiftX", l_oR.m_fShiftX);
     l_oR.m_fShiftNear = l_jC.value("shiftNear", l_oR.m_fShiftNear);
     l_oR.m_fShiftY = l_jC.value("shiftY", l_oR.m_fShiftY);
+    if (l_jC.contains("intro") && l_jC["intro"].is_object()) {
+        const nlohmann::json& l_jI = l_jC["intro"];
+        l_oR.m_iIntroMs = std::max(0, l_jI.value("ms", l_oR.m_iIntroMs));
+        l_oR.m_iIntroUiMs = std::clamp(l_jI.value("uiAtMs", l_oR.m_iIntroUiMs), 0, l_oR.m_iIntroMs);
+        l_oR.m_iPopMs = std::max(1, l_jI.value("popMs", l_oR.m_iPopMs));
+        l_oR.m_fIntroZoom = l_jI.value("zoom", l_oR.m_fIntroZoom);
+        l_oR.m_strIntroClip = l_jI.value("clip", l_oR.m_strIntroClip);
+        l_oR.m_strIntroFx = l_jI.value("fx", l_oR.m_strIntroFx);
+        l_oR.m_strIntroText = l_jI.value("text", l_oR.m_strIntroText);
+    }
     if (l_jC.contains("shapes") && l_jC["shapes"].is_object())
         for (auto l_oIt = l_jC["shapes"].begin(); l_oIt != l_jC["shapes"].end(); ++l_oIt)
             if (l_oIt.value().is_array())

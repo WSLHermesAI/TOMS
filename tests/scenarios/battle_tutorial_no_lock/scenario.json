@@ -1,0 +1,16 @@
+{
+  "_comment": "The new game's tutorial has no HP lock: the player only shoots, never dodges or guards, and the toad still falls, so the fight ends and the weapon master replies. The shots miss on purpose, about 3 damage each; a later one also closes the win screen.",
+  "scene": "weaponTrial",
+  "battle": {
+    "play": "weapon",
+    "hp": 40
+  },
+  "test": {
+    "frames": 2300,
+    "keys": "down@10,enter@20",
+    "drags": "832:394:832:454:6@130,832:394:832:454:6@240,832:394:832:454:6@350,832:394:832:454:6@460,832:394:832:454:6@570,832:394:832:454:6@680,832:394:832:454:6@790,832:394:832:454:6@900,832:394:832:454:6@1010,832:394:832:454:6@1120,832:394:832:454:6@1230,832:394:832:454:6@1340,832:394:832:454:6@1450,832:394:832:454:6@1560,832:394:832:454:6@1670,832:394:832:454:6@1780,832:394:832:454:6@1890,832:394:832:454:6@2000,832:394:832:454:6@2110"
+  },
+  "expect": {
+    "dialogueNode": "after"
+  }
+}

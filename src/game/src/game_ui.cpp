@@ -208,6 +208,9 @@ void f_RegisterTypes(Rml::DataModelConstructor& l_oC) {
         l_oS.RegisterMember("cell_hint", &UiBattle::m_strCellHint);
         l_oS.RegisterMember("tutorial", &UiBattle::m_strTutorial);
         l_oS.RegisterMember("tutorial_mark", &UiBattle::m_strTutorialMark);
+        l_oS.RegisterMember("tutorial_scale", &UiBattle::m_fTutorialScale);
+        l_oS.RegisterMember("cells_scale", &UiBattle::m_fCellsScale);
+        l_oS.RegisterMember("focus", &UiBattle::m_bFocus);
         l_oS.RegisterMember("cells", &UiBattle::m_vCells);
         l_oS.RegisterMember("touch_kind", &UiBattle::m_strTouchKind);
         l_oS.RegisterMember("touch", &UiBattle::m_vTouch);

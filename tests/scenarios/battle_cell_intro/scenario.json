@@ -1,0 +1,28 @@
+{
+  "_comment": "The first danger of a fight stops everything for its moment (battle.json cells.intro), once: two of the toad's slams, one cellIntro. A key pressed during the moment does nothing (the left at frame 150 is not a move).",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "thicketoad",
+    "hp": 9999,
+    "moves": [
+      "toad_near"
+    ]
+  },
+  "test": {
+    "frames": 560,
+    "keys": "left@150"
+  },
+  "expect": {
+    "battleEvents": {
+      "cellIntro": 1,
+      "danger": 2,
+      "move": 0,
+      "dodge": 2
+    }
+  }
+}

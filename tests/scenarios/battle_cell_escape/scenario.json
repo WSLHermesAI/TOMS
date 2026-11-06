@@ -14,8 +14,8 @@
     ]
   },
   "test": {
-    "frames": 215,
-    "keys": "up@10,down@130"
+    "frames": 365,
+    "keys": "up@10,down@240"
   },
   "expect": {
     "battleEvents": {

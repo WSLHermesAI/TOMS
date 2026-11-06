@@ -414,8 +414,15 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
                 : l_oL.f_Tr("battle.shield_none");
             l_oB.m_bCritArmed = m_oCs.m_bNextAttackGuaranteedCrit;
             l_oB.m_strCritHint = l_oL.f_Tr("battle.active_armed_hint");
-            if (m_oCs.m_bCellsOn) {   // the six cells: where the hero stands, what is in danger and how soon (docs/gameplay/19 §2.1)
+            l_oB.m_bFocus = f_CellIntroOn() && !m_oCs.m_bCellsShown;
+            const auto l_fnPop = [this](int l_iAgeMs) {   // grows past its size and settles (back-out)
+                if (m_oSettings.m_bReduceEffects) return 1.0f;
+                const float l_fK = std::clamp((float)l_iAgeMs / (float)m_oCellRules.m_iPopMs, 0.0f, 1.0f) - 1.0f;
+                return std::max(0.01f, 1.0f + 2.70158f * l_fK * l_fK * l_fK + 1.70158f * l_fK * l_fK);
+            };
+            if (m_oCs.m_bCellsOn && m_oCs.m_bCellsShown) {   // the six cells: where the hero stands, what is in danger and how soon (docs/gameplay/19 §2.1)
                 l_oB.m_bCellsOn = true;
+                l_oB.m_fCellsScale = l_fnPop(m_oCs.m_iCellsPopMs);
                 l_oB.m_strCellHint = l_oL.f_Tr("battle.cell_hint");
                 for (int l_iC = 0; l_iC < toms::g_iCellCols * toms::g_iCellRows; l_iC++) {
                     toms::UiBattleCell l_oCell;
@@ -473,7 +480,8 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
                     l_oL.f_Tr(l_ePlayType == toms::PlayType::eTRACK ? "battle.attack_ready_hint"
                                                                     : std::string("battle.play_hint_") + toms::f_PlayTypeName(l_ePlayType)));
                 l_oB.m_strTutorialMark = l_pStep->m_strMark;
-                if (l_pStep->m_bHideCells) { l_oB.m_bCellsOn = false; l_oB.m_vCells.clear(); }
+                l_oB.m_fTutorialScale = l_fnPop(m_oArena.m_iTutorialPopMs);
+                if (l_pStep->m_strMark == "cells" && !m_oCs.m_bCellsShown) l_oB.m_strTutorial.clear();   // it comes with the cells
             }
             if (l_ePlayType != toms::PlayType::eTRACK || m_oCs.m_oSkill.m_bOn) f_TouchPlayUi(l_oB);
             if (m_oCs.m_iChain > 1) l_oB.m_strChainText = f_TrParam(l_oL.f_Tr("battle.word_chain"), "n", std::to_string(m_oCs.m_iChain));

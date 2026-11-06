@@ -775,7 +775,7 @@
     "name": { "zh_TW": "苔蛙", "en": "Thicketoad" },
     "sprite": "slime.png",
     "look": "moss",
-    "hp": 140,
+    "hp": 150,
     "atk": 28,
     "def": 8,
     "exp": 20,

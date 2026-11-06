@@ -199,7 +199,7 @@ void Game::f_Update(int l_iDtMs) {
     if (!m_strPreviewMeshSprite.empty()) m_dPreviewMeshMs += l_iDtMs;   // --mesh-test: the wave's clock
     const int l_iBattleDt = f_BattleFrame(l_iDtMs);   // the battle's time: 0 in a hit stop, slower in slow motion (docs/gameplay/15)
     f_UpdateBattleRig(l_iBattleDt);   // the bow and the player's character on the battle screen (battleRigState)
-    f_UpdateMonsterRig(l_iBattleDt);  // the monster: idle, attack, hurt, die (monster_battle.anim)
+    f_UpdateMonsterRig(f_CellIntroOn() ? l_iDtMs : l_iBattleDt);  // the monster (alone in the first danger's moment): idle, attack, hurt, die (monster_battle.anim)
     f_UpdateBattleFx(l_iDtMs);    // the weapon's particles (battle.particle)
     f_UpdateBattleBackdrop(l_iDtMs);   // the battle's background keeps moving through a hit stop
     if (m_oPreviewRig.f_Character() || m_oPreviewRig.f_Held()) {   // --anim with --held: both clips, one clock

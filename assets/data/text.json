@@ -1263,6 +1263,10 @@
       "zh_TW": "閃開！",
       "en": "Dodged!"
     },
+    "battle.cell_intro": {
+      "zh_TW": "{name}要使出特殊攻擊！",
+      "en": "{name} is about to use a special attack!"
+    },
     "battle.intent.toad_crush": {
       "zh_TW": "重壓（躲不開）",
       "en": "Crush (no dodging it)"
@@ -1272,8 +1276,8 @@
       "en": "Attack the toad! {play}"
     },
     "tutorial.move": {
-      "zh_TW": "紅色的格子要被打中了！點別的格子（或按方向鍵）離開紅色",
-      "en": "The red cells are about to be hit! Tap another cell (or use the arrow keys) to leave the red"
+      "zh_TW": "紅色格子要被打中了！點別的格子（或方向鍵）避開",
+      "en": "The red cells are about to be hit! Tap another cell (or use arrow keys)"
     },
     "tutorial.guard": {
       "zh_TW": "這招躲不開！牠頭上出現「!」時，按防禦",

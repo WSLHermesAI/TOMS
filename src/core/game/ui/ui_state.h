@@ -158,6 +158,8 @@ struct UiBattle {
     bool m_bCellsOn = false;
     std::string m_strCellHint;
     std::string m_strTutorial, m_strTutorialMark;   // the new game's tutorial: its words, and what it points at
+    float m_fTutorialScale = 1.0f, m_fCellsScale = 1.0f;   // their pop as they appear
+    bool m_bFocus = false;                 // the first danger's moment: only the monster is shown
     std::vector<UiBattleCell> m_vCells;
     std::vector<UiTouchItem> m_vTouch;    // what it draws over the monster
     std::string m_strSkillPrompt, m_strSkillTime;   // a move's play: "Draw the pentagram!", its seconds left (16 §6)

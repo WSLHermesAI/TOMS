@@ -795,3 +795,8 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   - battle_rules.* TutorialStep, BattleTutorial, f_TutorialFromJson; game_combat.cpp f_TutorialStepNow, f_TutorialGoTo, f_TutorialEvent; game_story.cpp f_TryWeapon; game_ui.cpp; battle.rml, battle.rcss #tutorial.
   - tests/scenarios/battle_tutorial_hold, battle_tutorial_steps; expect tutorialStep. docs/gameplay/19 (+ zh_TW).
   - Tests: changed-only 25 of 261 pass. Not committed. All tests, the switched-off tests, web, Android not run; sword and staff not run; not played by hand.
+- 2026-11-06: the first danger's moment; the tutorial's HP lock removed; thicketoad HP (DAILY_2026-11-06.md rows 8-10).
+  - battle.json cells.intro, tutorial.overrides hp 300; enemies.json thicketoad hp 150; battle.particle danger_intro; text.json battle.cell_intro.
+  - battle_cells.h intro fields; game_combat.cpp f_StartCellIntro, f_BattleFrame; game.cpp the monster's rig in the moment; game_ui.cpp the pop; battle.rml, battle.rcss body.focus; game_scenario.cpp battle.hp for the tutorial.
+  - tests/scenarios/battle_cell_intro, battle_tutorial_no_lock; timings in battle_cell_dodge, hit, escape, battle_tutorial_steps. docs/gameplay/19 (+ zh_TW).
+  - Tests: changed-only 27 of 263 pass. Not committed. All tests, the switched-off tests, web, Android not run; sword and staff not run; not played by hand; sound not heard.

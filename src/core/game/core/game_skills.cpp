@@ -81,6 +81,7 @@ void Game::f_ArmTouchPlay(bool l_bUltimate, int l_iPoints) {
 }
 
 void Game::f_BattlePointer(int l_iPhase, float l_fX, float l_fY) {
+    if (l_iPhase == 0 && f_CellIntroOn()) return;   // no new press while everything waits; a pull already held can still let go
     if (!m_oCs.m_bActive || m_oCs.m_bWinPending || !m_oCs.m_oTouch.f_Running()) { m_bTouchHeld = false; return; }
     if (m_oCs.m_oSkill.m_bOn && m_oCs.m_oSkill.m_ePhase != CombatState::SkillRun::Phase::Play) return;   // a move's show: watch it
     if (l_iPhase == 0 && !m_oCs.m_oTouch.f_Started() && m_oCs.m_ePace == toms::Pace::Stamina && m_oCs.m_fStamina < (float)m_oPaceSettings.m_iAttackCost) {

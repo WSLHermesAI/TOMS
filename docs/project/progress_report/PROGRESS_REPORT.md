@@ -15,10 +15,15 @@
 
 ## ▶ Next Step
 
+**The first danger's moment; the tutorial's HP** (2026-11-06; [DAILY_2026-11-06.md](DAILY_2026-11-06.md), rows 9 and 10):
+- The first lit cells of a fight: 2.2 s frozen, focus on the monster, `danger_intro` particles, then the cells and the tutorial box pop up (`battle.json` `cells.intro`).
+- `thicketoad` HP: tutorial 300, normal 150. No HP lock in the tutorial.
+- **Not committed since `7a002ad`.** Last changed-only run: 27 of 263, all pass; 130 selected tests are switched off. All tests, web and Android not run. Sword and staff not run; not played by hand.
+  **Owner:** play it with all three weapons (New Game): are 300 HP and 2.2 s right, and is the first red-cell attack the right moment? The trial-fight verdict, the two tutorial questions and Q73–Q81 are still open.
+
 **The new game's tutorial with 苔蛙** (2026-11-06; [DAILY_2026-11-06.md](DAILY_2026-11-06.md), row 8):
 - The weapon master's trial fight: attack, move out of the red, guard on the "!", finish. In data: `battle.json` `tutorial`.
-- **Not committed since `064d7cf`.** Last changed-only run: 25 of 261, all pass; 128 selected tests are switched off. All tests, web and Android not run. Run by script with the bow only.
-  **Owner:** play it with all three weapons (New Game) and answer the two questions in the daily report. The trial-fight verdict and Q73–Q81 are still open.
+- **Committed in `7a002ad`** (by the owner). Changed-only run then: 25 of 261, all pass; 128 selected tests were switched off. All tests, web and Android not run. Run by script with the bow only.
 
 **The battle takes the shape of the owner's pictures; a plan in three parts; a trial of moving in battle** (2026-11-06; [DAILY_2026-11-06.md](DAILY_2026-11-06.md)):
 - The layout (`battle.rcss`), an animated forest (`battle.json` `backdrops`), three painted monsters (`monster_moss.anim`), a hint star on the map for a monster with company.

@@ -333,9 +333,7 @@ BattleTutorial f_TutorialFromJson(const nlohmann::json& l_jBattle) {
         l_oS.m_strDoneOn = l_jS.value("doneOn", std::string());
         l_oS.m_strMove = l_jS.value("move", std::string());
         l_oS.m_iCount = std::max(1, l_jS.value("count", 1));
-        l_oS.m_iFoeHpFloor = std::clamp(l_jS.value("foeHpFloor", 0), 0, 100);
         l_oS.m_bHold = l_jS.value("hold", false);
-        l_oS.m_bHideCells = l_jS.value("hideCells", false);
         l_oS.m_bOnce = l_jS.value("once", false);
         l_oT.m_vSteps.push_back(l_oS);
     }

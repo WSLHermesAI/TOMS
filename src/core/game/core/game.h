@@ -224,6 +224,9 @@ struct CombatState : public Trackable {
     // ---- the revamp (docs/gameplay/15_BATTLE_REVAMP.md) ----
     int m_iFrameDt = 0;               // the battle's time this frame: 0 in a hit stop, slower in the last hit's slow motion
     int m_iHitStopMs = 0;             // both sides freeze (15 §3.8)
+    int m_iCellIntroMs = 0;           // the first danger's moment: time left; everything waits, only the monster moves
+    bool m_bCellIntroStarted = false, m_bCellsShown = false;   // (the cells stay hidden until it reveals them)
+    int m_iCellsPopMs = 0;            // how long since they popped up
     bool m_bCellsOn = false;          // a monster here has moves with a danger shape: the hero moves between cells (docs/gameplay/19 §2.1)
     int m_iHeroCell = 4;
     int m_iSlowMs = 0;                // the last hit in slow motion, then the win
@@ -413,6 +416,8 @@ public:
     // strong, no slow motion. Saved in the settings file.
     bool f_ReduceEffects() const { return m_oSettings.m_bReduceEffects; }
     bool f_BattleCellsOn() const { return m_oCs.m_bActive && m_oCs.m_bCellsOn; }
+    bool f_CellIntroOn() const { return m_oCs.m_iCellIntroMs > 0; }
+    void f_StartCellIntro(int l_iFoe);
     void f_BattleMoveToCell(int l_iCell);                // the hero steps there (docs/gameplay/19 §2.1)
     void f_BattleStepCell(int l_iDx, int l_iDy);         // by the arrow keys
     bool f_FreePlayRunning() const { return m_oCs.m_oTouch.f_Running() && toms::f_IsFreePlay(m_oCs.m_oTouch.f_Type()); }
@@ -1555,6 +1560,7 @@ private:
         bool m_bTraining = false;        // the training ground (docs/gameplay/16 §5): fightsMax fights, EXP and weapon wins x2
         int m_iFightsMax = 0, m_iHpBefore = 0, m_iExpGained = 0, m_iWeaponExpGained = 0;
         int m_iTutorialStep = -1, m_iTutorialCount = 0;   // the new game's tutorial: this fight's step (-1: none)
+        int m_iTutorialPopMs = 0;        // how long since its box popped up
     };
     Arena m_oArena;
     toms::BattleTutorial m_oTutorial;      // battle.json "tutorial" (docs/gameplay/19 B6)

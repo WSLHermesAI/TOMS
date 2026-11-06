@@ -14,7 +14,7 @@
     ]
   },
   "test": {
-    "frames": 215,
+    "frames": 365,
     "keys": "up@10"
   },
   "expect": {

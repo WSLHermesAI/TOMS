@@ -226,9 +226,7 @@ struct TutorialStep {
     std::string m_strDoneOn;     // "heroHit", "dodge", "guarded"; empty: the step lasts to the end of the fight
     std::string m_strMove;       // the move the monster must use in this step (moves.json)
     int m_iCount = 1;            // how many times, before the next step
-    int m_iFoeHpFloor = 0;       // % of its HP the monster keeps until the step is done
     bool m_bHold = false;        // the monster's clock waits
-    bool m_bHideCells = false;   // the six cells are not shown yet
     bool m_bOnce = false;        // not again when the player tries another weapon
 };
 struct BattleTutorial {

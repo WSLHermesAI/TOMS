@@ -27,6 +27,7 @@ void Game::f_StartCombat(const EnemyInst& l_oE, const std::vector<EnemyInst>& l_
     m_oCs.m_vEvents.clear();
     // the cells (docs/gameplay/19 §2.1): only when a monster here has a move with a danger shape
     m_oCs.m_bCellsOn = false;
+    m_oCs.m_iCellIntroMs = 0; m_oCs.m_bCellIntroStarted = m_oCs.m_bCellsShown = false; m_oCs.m_iCellsPopMs = 0;
     for (const CombatState::Foe& l_oF : m_oCs.m_vFoes)
         for (const auto& l_oChoice : l_oF.m_oEnemy.m_vMoves)
             if (!m_oMoves.f_Get(l_oChoice.m_strId).m_strShape.empty()) m_oCs.m_bCellsOn = true;
@@ -115,8 +116,20 @@ int Game::f_BattleFrame(int l_iDtMs) {
     m_oCs.m_iGuardCdMs = std::max(0, m_oCs.m_iGuardCdMs - l_iDtMs);
     m_oCs.m_iGuardLockMs = std::max(0, m_oCs.m_iGuardLockMs - l_iDtMs);
     m_oCs.m_iCamMs = std::max(0, m_oCs.m_iCamMs - l_iDtMs);
+    m_oCs.m_iCellsPopMs += l_iDtMs;
+    m_oArena.m_iTutorialPopMs += l_iDtMs;
     int l_iBdt = l_iDtMs;
-    if (m_oCs.m_iHitStopMs > 0) {
+    if (m_oCs.m_iCellIntroMs > 0) {   // the first danger's moment: everything waits (f_StartCellIntro)
+        m_oCs.m_iCellIntroMs = std::max(0, m_oCs.m_iCellIntroMs - l_iDtMs);
+        if (!m_oSettings.m_bReduceEffects) m_oCs.m_iDimMs = std::min(700, m_oCs.m_iCellIntroMs);
+        if (!m_oCs.m_bCellsShown && m_oCellRules.m_iIntroMs - m_oCs.m_iCellIntroMs >= m_oCellRules.m_iIntroUiMs) {
+            m_oCs.m_bCellsShown = true;   // they pop up, and the player has a moment to read them
+            m_oCs.m_iCellsPopMs = 0;
+            m_oArena.m_iTutorialPopMs = 0;
+            f_FeelMoment("phase");
+        }
+        l_iBdt = 0;
+    } else if (m_oCs.m_iHitStopMs > 0) {
         m_oCs.m_iHitStopMs = std::max(0, m_oCs.m_iHitStopMs - l_iDtMs);
         l_iBdt = 0;
     } else if (m_oCs.m_iSlowMs > 0) {
@@ -239,6 +252,7 @@ void Game::f_TutorialGoTo(int l_iStep) {
     while (l_iStep < l_iCount && m_oTutorial.m_vSteps[(size_t)l_iStep].m_bOnce && m_setTutorialSeen.count(l_iStep)) l_iStep++;
     m_oArena.m_iTutorialStep = l_iStep < l_iCount ? l_iStep : -1;
     m_oArena.m_iTutorialCount = 0;
+    m_oArena.m_iTutorialPopMs = 0;
     const toms::TutorialStep* l_pStep = f_TutorialStepNow();
     if (!l_pStep || l_pStep->m_strMove.empty()) return;
     for (size_t l_nI = 0; l_nI < m_oCs.m_vFoes.size(); l_nI++) {   // the step's move, from the start of its wind-up
@@ -258,6 +272,22 @@ void Game::f_TutorialEvent(const std::string& l_strType, int l_iWho, const std::
     if (!l_bDone || ++m_oArena.m_iTutorialCount < l_pStep->m_iCount) return;
     if (l_pStep->m_bOnce) m_setTutorialSeen.insert(m_oArena.m_iTutorialStep);
     f_TutorialGoTo(m_oArena.m_iTutorialStep + 1);
+}
+
+void Game::f_StartCellIntro(int l_iFoe) {
+    m_oCs.m_bCellIntroStarted = true;
+    m_oCs.m_iCellIntroMs = m_oCellRules.m_iIntroMs;
+    if (m_oCellRules.m_iIntroMs <= 0) { m_oCs.m_bCellsShown = true; return; }
+    f_BattleEvent("cellIntro", l_iFoe, -1, m_oCellRules.m_iIntroMs);
+    f_FoeLook(l_iFoe, m_oCellRules.m_strIntroClip);
+    f_PlayBattleFx(m_oCellRules.m_strIntroFx, l_iFoe);
+    const bool l_bReduced = m_oSettings.m_bReduceEffects;
+    m_oCs.m_fCamZoom = l_bReduced ? 1.0f + (m_oCellRules.m_fIntroZoom - 1.0f) * 0.4f : m_oCellRules.m_fIntroZoom;
+    m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = m_oCellRules.m_iIntroMs;
+    m_oCs.m_iCamOn = l_iFoe;
+    if (!m_oCellRules.m_strIntroText.empty())
+        f_ShowBanner(f_TrParam(m_oLocale.f_Tr(m_oCellRules.m_strIntroText), "name", m_oCs.m_vFoes[(size_t)l_iFoe].m_oEnemy.m_strName), "line", m_oCellRules.m_iIntroUiMs);
+    f_FeelMoment("phase");
 }
 
 void Game::f_ChooseFoeMove(int l_iFoe) {
@@ -306,6 +336,7 @@ void Game::f_StepFoes(int l_iDtMs) {
             if (!l_oMv.m_strShape.empty() && !l_oF.m_uDanger && l_oF.m_iMoveMs - l_oF.m_iClockMs <= m_oCellRules.m_iWarnMs) {
                 l_oF.m_uDanger = toms::f_PickDanger(m_oCellRules, l_oMv.m_strShape, m_oCs.m_iHeroCell, std::uniform_real_distribution<float>(0.0f, 1.0f)(m_oMoveRng));
                 f_BattleEvent("danger", l_iFoe, -1, (int)l_oF.m_uDanger, l_oMv.m_strShape);
+                if (!m_oCs.m_bCellIntroStarted) f_StartCellIntro(l_iFoe);   // the fight's first: a moment of its own
             }
         }
         if (l_oF.m_iClockMs >= l_oF.m_iMoveMs) {
@@ -335,8 +366,6 @@ void Game::f_DamageFoe(int l_iFoe, int l_iDmg) {
     const float l_fMaxHp = (float)std::max(1, l_oF.m_oEnemy.m_iHp);
     const float l_fBefore = 100.0f * (float)std::max(0, l_oF.m_iHp) / l_fMaxHp;
     l_oF.m_iHp -= l_iDmg;
-    if (const toms::TutorialStep* l_pStep = f_TutorialStepNow(); l_pStep && l_pStep->m_iFoeHpFloor > 0)   // it stands until the lesson is done
-        l_oF.m_iHp = std::max(l_oF.m_iHp, std::max(1, l_oF.m_oEnemy.m_iHp * l_pStep->m_iFoeHpFloor / 100));
     toms::EventCheck l_oC;
     l_oC.m_strOn = "hpBelow";
     l_oC.m_fHpPctBefore = l_fBefore;
@@ -678,7 +707,8 @@ void Game::f_DrawBattleRig() {
     };
     // The player's place on the battle screen (battle.rcss #player, wherever the layout put it: playerBox_) and each
     // monster's (battle.rcss .foe .fbox: foeBox_): the view fills its box, the feet at the bottom centre.
-    if (f_BattleRigReady() && !m_strBattleRigState.empty()) m_upPlayerView->f_Draw(m_pRen, l_fnZoomed(m_v4PlayerBox + glm::vec4(m_v2HeroShift.x, m_v2HeroShift.y, 0.0f, 0.0f)));
+    const bool l_bFocus = f_CellIntroOn() && !m_oCs.m_bCellsShown;   // the first danger's moment: only the monster
+    if (!l_bFocus && f_BattleRigReady() && !m_strBattleRigState.empty()) m_upPlayerView->f_Draw(m_pRen, l_fnZoomed(m_v4PlayerBox + glm::vec4(m_v2HeroShift.x, m_v2HeroShift.y, 0.0f, 0.0f)));
     for (size_t l_nI = 0; l_nI < m_vFoeRigs.size() && l_nI < m_oCs.m_vFoes.size(); l_nI++) {
         const FoeRig& l_oFr = m_vFoeRigs[l_nI];
         if (l_oFr.m_upView && !l_oFr.m_strState.empty()) l_oFr.m_upView->f_Draw(m_pRen, l_fnZoomed(f_FighterBox((int)l_nI)));
@@ -1222,6 +1252,7 @@ void Game::f_ResolveEnemyClockFire(int l_iFoe) {
 // Battle v3 (docs/gameplay/07 phase 1): the first tap starts the combo with the charge built so far; the next taps hit the
 // points. The combo's end (all hit, the sweeps run out, or two misses) resolves the attack.
 void Game::f_BattleTapAttack() {
+    if (f_CellIntroOn()) return;
     if (!m_oCs.m_bActive || m_oCs.m_bWinPending || (m_oCs.m_ePace == toms::Pace::Cooldown && m_oCs.m_oAtkBar.m_bCooling)) return;
     if (f_BattlePlayType() != toms::PlayType::eTRACK) return;   // the weapon's own play: by touch (battlePointer)
     if (!m_oCs.m_oCombo.f_Running()) {
@@ -1386,6 +1417,7 @@ void Game::f_ResolveCombo(const toms::ComboResult* l_pPlayed) {
 }
 
 void Game::f_BattleMoveToCell(int l_iCell) {
+    if (f_CellIntroOn()) return;
     if (!f_BattleCellsOn() || m_oCs.m_bWinPending || m_oCs.m_oSkill.m_bOn) return;
     if (l_iCell < 0 || l_iCell >= toms::g_iCellCols * toms::g_iCellRows || l_iCell == m_oCs.m_iHeroCell) return;
     m_oCs.m_iHeroCell = l_iCell;
@@ -1396,6 +1428,7 @@ void Game::f_BattleMoveToCell(int l_iCell) {
 void Game::f_BattleStepCell(int l_iDx, int l_iDy) { f_BattleMoveToCell(toms::f_CellStep(m_oCs.m_iHeroCell, l_iDx, l_iDy)); }
 
 void Game::f_BattleTapDefense() {
+    if (f_CellIntroOn()) return;
     if (!m_oCs.m_bActive || m_oCs.m_bWinPending || m_oCs.m_oSkill.m_bOn) return;
     if (m_oGuard.m_strMode == "warn") {   // only while an "!" shows over a monster (16 §4.2); it stops the player's attack
         if (m_oCs.m_iGuardLockMs > 0 || m_oCs.m_iGuardAtMs >= 0) return;
@@ -1451,6 +1484,7 @@ void Game::f_BattleTapDefense() {
 // fight a moment, then a harder play starts at once with a full charge (two more points); its hit does ×2, ×4 in a
 // break, with the weapon's best effects and its big clip (resolveCombo).
 void Game::f_BattleTapSuper() {
+    if (f_CellIntroOn()) return;
     if (!m_oCs.m_bActive || m_oCs.m_bWinPending || m_oCs.m_iSuperCharge < m_oRun.f_SuperMax() || m_oCs.m_oCombo.f_Running() || m_oCs.m_oSkill.m_bOn) return;
     m_oCs.m_iSuperCharge = 0;
     m_oCs.m_bUltimate = true;
@@ -1498,6 +1532,7 @@ void Game::f_BattleTapSuper() {
 // ActiveDefinition carries no display name yet (a real, still-open content gap) -- the log falls
 // back to the raw id rather than inventing a name lookup this rewire doesn't own.
 void Game::f_BattleTapActive() {
+    if (f_CellIntroOn()) return;
     if (!m_oCs.m_bActive) return;
     auto l_vIds = toms::f_EquippedActives(m_oEquipped, m_mapEquipmentDefs);
     if (l_vIds.empty()) return;

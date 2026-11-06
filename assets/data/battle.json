@@ -70,15 +70,16 @@
     { "from": 1, "to": 9999, "anim": "anim/battle_forest.anim", "clip": "idle", "size": [1792, 1024], "fx": ["forest_motes", "forest_fireflies"] }
   ],
   "cells": { "warnMs": 1400, "start": 4, "shiftX": 55, "shiftNear": 40, "shiftY": 18,
+             "intro": { "ms": 2200, "uiAtMs": 1200, "popMs": 350, "zoom": 1.25, "clip": "special", "fx": "danger_intro", "text": "battle.cell_intro" },
              "shapes": { "near": [[0, 1, 2]], "line": [[0, 3], [1, 4], [2, 5]], "fan": [[0, 1, 2, 3, 5]] } },
   "tutorial": {
-    "_comment": "The new game's trial fight (docs/gameplay/19 B6). Each step shows its text until doneOn happens count times; foeHpFloor: % of HP the monster keeps until then; once: not again for the next weapon tried.",
+    "_comment": "The new game's trial fight (docs/gameplay/19 B6). Each step shows its text until doneOn happens count times; once: not again for the next weapon tried.",
     "enemy": "thicketoad",
-    "overrides": { "hp": 80, "atk": 8, "def": 0 },
+    "overrides": { "hp": 300, "atk": 8, "def": 0 },
     "steps": [
-      { "text": "tutorial.attack", "mark": "attack", "doneOn": "heroHit", "count": 2, "hold": true, "hideCells": true, "foeHpFloor": 75 },
-      { "text": "tutorial.move", "mark": "cells", "doneOn": "dodge", "move": "toad_lesson_line", "once": true, "foeHpFloor": 50 },
-      { "text": "tutorial.guard", "mark": "guard", "doneOn": "guarded", "move": "toad_lesson_crush", "once": true, "foeHpFloor": 25 },
+      { "text": "tutorial.attack", "mark": "attack", "doneOn": "heroHit", "count": 2, "hold": true },
+      { "text": "tutorial.move", "mark": "cells", "doneOn": "dodge", "move": "toad_lesson_line", "once": true },
+      { "text": "tutorial.guard", "mark": "guard", "doneOn": "guarded", "move": "toad_lesson_crush", "once": true },
       { "text": "tutorial.finish" }
     ]
   },

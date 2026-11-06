@@ -263,6 +263,7 @@ bool Game::f_StartScenarioJson(const nlohmann::json& l_jSc, const std::string& l
         f_OpenMiniGame(l_jSc.value("miniGame", std::string()));
         if (!m_oMiniGame.m_bOpen) return l_fnBad("no mini-game \"" + l_jSc.value("miniGame", std::string()) + "\" (data/minigames.json)");
     } else if (l_strS == "weaponTrial") {   // the start story (docs/gameplay/07 phase 3): the weapon master's dialogue
+        if (l_jSc.value("battle", nlohmann::json::object()).contains("hp")) m_oTutorial.m_jOverrides["hp"] = l_jSc["battle"]["hp"];   // a short tutorial fight
         f_StartWeaponTrial();
     } else if (l_strS == "dialogue") {
         const nlohmann::json l_jD = l_jSc.value("dialogue", nlohmann::json::object());
