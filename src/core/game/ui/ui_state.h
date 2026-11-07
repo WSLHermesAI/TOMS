@@ -125,8 +125,9 @@ struct UiFoe {                         // one monster of the battle (docs/gamepl
     bool m_bWarn = false;                 // the "!" over it: its hit comes, guard now (docs/gameplay/16 §4)
 };
 
-struct UiBattleCell {                  // one of the battle's six cells (battle_cells.h)
-    float m_fX = 0, m_fY = 0;           // in #cells
+struct UiBattleCell {                  // one of the battle's cells (battle_cells.h)
+    float m_fX = 0, m_fY = 0, m_fW = 0, m_fH = 0;   // in #cells
+    float m_fSkew = 0;                  // the outer columns lean in, as a floor seen in perspective
     bool m_bHere = false, m_bDanger = false;
     float m_fFill = 0;                  // how near the hit is, percent
 };
@@ -158,6 +159,7 @@ struct UiBattle {
     bool m_bCellsOn = false;
     std::string m_strCellHint;
     std::string m_strTutorial, m_strTutorialMark;   // the new game's tutorial: its words, and what it points at
+    float m_fCellHintY = -24.0f;           // the words above the grid, whatever its height
     float m_fTutorialScale = 1.0f, m_fCellsScale = 1.0f;   // their pop as they appear
     bool m_bFocus = false;                 // the first danger's moment: only the monster is shown
     std::vector<UiBattleCell> m_vCells;

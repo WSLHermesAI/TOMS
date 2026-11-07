@@ -141,6 +141,9 @@ void f_RegisterTypes(Rml::DataModelConstructor& l_oC) {
     if (auto l_oS = l_oC.RegisterStruct<UiBattleCell>()) {
         l_oS.RegisterMember("x", &UiBattleCell::m_fX);
         l_oS.RegisterMember("y", &UiBattleCell::m_fY);
+        l_oS.RegisterMember("w", &UiBattleCell::m_fW);
+        l_oS.RegisterMember("h", &UiBattleCell::m_fH);
+        l_oS.RegisterMember("skew", &UiBattleCell::m_fSkew);
         l_oS.RegisterMember("here", &UiBattleCell::m_bHere);
         l_oS.RegisterMember("danger", &UiBattleCell::m_bDanger);
         l_oS.RegisterMember("fill", &UiBattleCell::m_fFill);
@@ -210,6 +213,7 @@ void f_RegisterTypes(Rml::DataModelConstructor& l_oC) {
         l_oS.RegisterMember("tutorial_mark", &UiBattle::m_strTutorialMark);
         l_oS.RegisterMember("tutorial_scale", &UiBattle::m_fTutorialScale);
         l_oS.RegisterMember("cells_scale", &UiBattle::m_fCellsScale);
+        l_oS.RegisterMember("cell_hint_y", &UiBattle::m_fCellHintY);
         l_oS.RegisterMember("focus", &UiBattle::m_bFocus);
         l_oS.RegisterMember("cells", &UiBattle::m_vCells);
         l_oS.RegisterMember("touch_kind", &UiBattle::m_strTouchKind);

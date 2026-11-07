@@ -255,7 +255,7 @@ or recovering). The prototype `battle_editor/revamp_prototype.html` was the mode
 | R4 break and burst | the BREAK! banner and dim; a monster's line as a banner; the perfect chain (+10 % damage per step, up to 10); the ultimate: a cut-in, then a harder play (2 more points, full charge), ×2 damage, ×4 in a break, the big clip | `stunFoe`, `resolveCombo`, `battleTapSuper` |
 | R5 each weapon's play | the bow: drag back and let go, the crosshair goes the other way (one target per arrow, 3 s each); the sword: swipe each arrow's way (1.6 s per cut; the ultimate shows the arrows, then hides them, and a wrong way ends it); the staff: tap each circle as its ring closes (perfect within 80 ms, a hit within 200 ms). Each counts its points like the track, so the result rows, named moves, fx, clips, break and grade stay the same. Named moves per result row | `touch_play.h` (unit test `touch_play_test`); `weapon_play.json` `"play"` and each row's `"move"`; `Game::battlePointer`, `armTouchPlay` |
 
-**Sounds:** `tools/make_battle_sfx.py` writes the ten moment sounds (`assets/media/sfx/battle_*.wav`); better ones can
+**Sounds:** `tools/make_battle_sfx.py` writes the ten moment sounds (`assets/media/sfx/battle_*.ogg`); better ones can
 replace them under the same names.
 
 **Tests:** scenarios play the old track unless their battle sets `"play"` ([08](08_TEST_SCENARIOS.md)), so the

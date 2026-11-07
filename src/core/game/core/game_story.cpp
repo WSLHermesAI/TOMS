@@ -56,7 +56,7 @@ bool Game::f_OpenDialogue(const nlohmann::json& l_jData, DlgMode l_eMode) {
     m_strDlgNode = l_strStart;
     m_iDlgSel = 0;
     f_EnterNode(m_strDlgNode);
-    if (m_bInDialogue) m_oAudio.f_Play("dialogue_popup");
+    if (m_bInDialogue) m_oAudio.f_Play(toms::key::g_pszSfxDialoguePopup);
     return m_bInDialogue;
 }
 
@@ -90,7 +90,7 @@ void Game::f_ChooseDialogue(int l_iIdx) {
     if (!m_bInDialogue) return;
     if (l_iIdx < 0 || l_iIdx >= (int)m_vDlgChoices.size()) return;
     f_MarkProgressDirty();   // dialogue choices move story flags/beats, which the meta save holds
-    m_oAudio.f_Play("confirm_click");
+    m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
     auto l_oCh = m_vDlgChoices[l_iIdx];   // copy: runDialogueAction (e.g. enterBattle) may resize dlgChoices
     toms::f_GlobalEventBus().f_Publish(toms::ChoiceMade{m_strDlgNpc, l_oCh.m_strLabel});
     if (m_eDlgMode == DlgMode::Menu) {   // the topic menu: the action says which line (openTopicMenu)
@@ -404,7 +404,7 @@ void Game::f_OpenMiniGame(const std::string& l_strId) {
     m_oMiniGame = MiniGameState{};
     m_oMiniGame.m_bOpen = true;
     m_oMiniGame.m_strId = l_strId;
-    m_oAudio.f_Play("dialogue_popup");
+    m_oAudio.f_Play(toms::key::g_pszSfxDialoguePopup);
 }
 
 void Game::f_MiniGameTap() {
@@ -414,12 +414,12 @@ void Game::f_MiniGameTap() {
     if (m_oMiniGame.m_iPhase == 0) {   // start
         m_oMiniGame.m_oPlay.f_Start(l_pDef->m_oPlay, 0.0f);
         m_oMiniGame.m_iPhase = 1;
-        m_oAudio.f_Play("confirm_click");
+        m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
         return;
     }
     if (m_oMiniGame.m_iPhase == 1) {
         const auto l_eT = m_oMiniGame.m_oPlay.f_Tap();
-        m_oAudio.f_Play(l_eT == toms::ComboPlay::Tap::Hit ? "confirm_click" : "deny");
+        m_oAudio.f_Play(l_eT == toms::ComboPlay::Tap::Hit ? toms::key::g_pszSfxConfirmClick : toms::key::g_pszSfxDeny);
         if (m_oMiniGame.m_oPlay.f_Done()) f_FinishMiniGame();
         return;
     }
@@ -434,7 +434,7 @@ void Game::f_FinishMiniGame() {
     if (l_pDef->m_strCurrency == "crystals") m_oPl.m_iCrystals += m_oMiniGame.m_iReward;
     else m_oPl.m_iGold += m_oMiniGame.m_iReward;
     m_oRun.f_AddCounter("minigame." + m_oMiniGame.m_strId, 1);
-    m_oAudio.f_Play(m_oMiniGame.m_iReward > 0 ? "get_item" : "deny");
+    m_oAudio.f_Play(m_oMiniGame.m_iReward > 0 ? toms::key::g_pszSfxGetItem : toms::key::g_pszSfxDeny);
     f_MarkProgressDirty();
 }
 
@@ -621,7 +621,7 @@ bool Game::f_TryUnlockSkill(const std::string& l_strSkillId) {
     if (!toms::f_CanUnlockSkill(m_mapSkillDefs, m_oRun.f_SkillsOwned(), m_oRun.f_SkillPoints(), l_strSkillId)) return false;
     m_oRun.f_UnlockSkill(l_strSkillId, m_mapSkillDefs.at(l_strSkillId).m_iCost);
     f_MarkProgressDirty();
-    m_oAudio.f_Play("confirm_click");
+    m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
     return true;
 }
 
@@ -672,7 +672,7 @@ bool Game::f_TryCraft(const std::string& l_strRecipeId) {
     }
     f_OwnGear(l_oDef.m_strResultEquipmentId, true);   // forged gear is owned and worn at once
     f_MarkProgressDirty();
-    m_oAudio.f_Play("get_item");
+    m_oAudio.f_Play(toms::key::g_pszSfxGetItem);
     return true;
 }
 

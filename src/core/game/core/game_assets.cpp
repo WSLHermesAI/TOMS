@@ -338,7 +338,7 @@ bool Game::f_LoadAssets(const std::string& l_strAssetDir) {
         if (!l_bHaveSettings) f_ApplyLanguage();   // write defaults once, so the file exists
     }
     // init SFX subsystem (no-op if no audio device/context; headless-safe).
-    m_oAudio.f_Init(f_PathOf(toms::key::g_pszFolderSfx));
+    m_oAudio.f_Init([this](const std::string& l_strKey) { return f_PathOf(l_strKey.c_str()); });
     f_WireMissionEvents(); // Milestone 4: subscribe mission-progress handlers once per session
     f_RollDailyMissions(); // Milestone 5: daily-mission reset check, once per session start
     return true;

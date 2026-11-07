@@ -185,6 +185,8 @@ ssh -T git@github.com
 
 ---
 
+**只有製作音效或音樂時才需要：** 雙擊一次 `tools\get_ffmpeg.cmd`。它會把 ffmpeg 下載到不在 git 中的 `tools\ffmpeg\`。建置與執行遊戲不需要它（[22_AUDIO_GENERATION.md](../../engine/zh_TW/22_AUDIO_GENERATION.md)）。
+
 ## 4. 建置與執行（Windows）
 
 | 指令 | 產出 |

@@ -1,0 +1,17 @@
+{
+  "_comment": "When the fight is over, its music stops: a tutorial fight with a toad of 4 HP, beaten by missed shots, a later shot closing the win screen; back at the weapon master there is no music.",
+  "scene": "weaponTrial",
+  "battle": {
+    "play": "weapon",
+    "hp": 4
+  },
+  "test": {
+    "frames": 700,
+    "keys": "down@10,enter@20",
+    "drags": "832:394:832:454:6@130,832:394:832:454:6@300,832:394:832:454:6@470,832:394:832:454:6@620"
+  },
+  "expect": {
+    "dialogueNode": "after",
+    "music": ""
+  }
+}

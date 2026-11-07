@@ -87,6 +87,13 @@ bool Game::f_EnemyFromData(const std::string& l_strId, const nlohmann::json& l_j
     // the battle's rules for it (docs/gameplay/13), each overridable by the battle setup
     const nlohmann::json& l_jTp = l_itT->second;
     l_oEn.m_strMapId = l_strId;
+    {
+        const nlohmann::json l_jGrid = l_jB.value("cellGrid", l_jTp.value("cellGrid", nlohmann::json()));
+        if (l_jGrid.is_array() && l_jGrid.size() == 2 && l_jGrid[0].is_number_integer() && l_jGrid[1].is_number_integer()) {
+            l_oEn.m_iCellCols = std::clamp(l_jGrid[0].get<int>(), 1, toms::g_iCellMaxCount);
+            l_oEn.m_iCellRows = std::clamp(l_jGrid[1].get<int>(), 1, toms::g_iCellMaxCount / l_oEn.m_iCellCols);
+        }
+    }
     l_oEn.m_strLook = l_jB.value("look", l_jTp.value("look", std::string("monster")));
     l_oEn.m_vMoves = toms::f_MoveChoicesFromJson(l_jB.contains("moves") ? l_jB["moves"] : l_jTp.value("moves", nlohmann::json::array()));
     l_oEn.m_iBreakPoints = l_jB.value("break", l_jTp.value("break", 0));
@@ -381,6 +388,15 @@ bool Game::f_ScenarioCheck(std::string& l_strReport) const {
         std::sort(l_vHave.begin(), l_vHave.end());
         if (l_vWant != l_vHave) l_fnFail("the owned gear is not what was expected");
     }
+    if (m_jScenarioExpect.contains("music")) {   // the key of the music playing; "": none
+        const std::string l_strWant = m_jScenarioExpect["music"].get<std::string>();
+        if (m_oAudio.f_MusicKey() != l_strWant) l_fnFail("the music is \"" + m_oAudio.f_MusicKey() + "\", expected \"" + l_strWant + "\"");
+        else if (!l_strWant.empty() && m_oAudio.f_Available() && !m_oAudio.f_MusicPlaying()) l_fnFail("the music \"" + l_strWant + "\" is not really playing");
+    }
+    if (m_jScenarioExpect.contains("cellGrid") && (m_oCs.m_iCellCols != m_jScenarioExpect["cellGrid"][0].get<int>() || m_oCs.m_iCellRows != m_jScenarioExpect["cellGrid"][1].get<int>()))
+        l_fnFail("the grid is " + std::to_string(m_oCs.m_iCellCols) + "x" + std::to_string(m_oCs.m_iCellRows));
+    if (m_jScenarioExpect.contains("heroCell") && m_oCs.m_iHeroCell != m_jScenarioExpect["heroCell"].get<int>())
+        l_fnFail("the hero is on cell " + std::to_string(m_oCs.m_iHeroCell) + ", expected " + std::to_string(m_jScenarioExpect["heroCell"].get<int>()));
     if (m_jScenarioExpect.contains("tutorialStep") && m_oArena.m_iTutorialStep != m_jScenarioExpect["tutorialStep"].get<int>())
         l_fnFail("the tutorial is at step " + std::to_string(m_oArena.m_iTutorialStep) + ", expected " + std::to_string(m_jScenarioExpect["tutorialStep"].get<int>()));
     if (m_jScenarioExpect.contains("dialogueNode") && (!m_bInDialogue || m_strDlgNode != m_jScenarioExpect["dialogueNode"].get<std::string>()))

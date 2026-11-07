@@ -86,7 +86,7 @@ void Game::f_BattlePointer(int l_iPhase, float l_fX, float l_fY) {
     if (m_oCs.m_oSkill.m_bOn && m_oCs.m_oSkill.m_ePhase != CombatState::SkillRun::Phase::Play) return;   // a move's show: watch it
     if (l_iPhase == 0 && !m_oCs.m_oTouch.f_Started() && m_oCs.m_ePace == toms::Pace::Stamina && m_oCs.m_fStamina < (float)m_oPaceSettings.m_iAttackCost) {
         m_oCs.m_strLog = m_oLocale.f_Tr("battle.no_stamina");   // the stamina pace: starting an attack costs it (13 §6.3)
-        m_oAudio.f_Play("deny");
+        m_oAudio.f_Play(toms::key::g_pszSfxDeny);
         return;
     }
     if (l_iPhase == 0) m_bTouchHeld = true;
@@ -114,10 +114,10 @@ void Game::f_TouchPlayed(int l_iIndexBefore, int l_iHitsBefore) {
     const bool l_bSkillPlay = m_oCs.m_oSkill.m_bOn && m_oCs.m_oSkill.m_ePhase == CombatState::SkillRun::Phase::Play;
     for (const toms::TouchPlay::Hit& l_oH : m_oCs.m_oTouch.f_TakeHits()) {
         if (l_bSkillPlay) {   // a move's step: its burst, "2/5", the next part of its name (the skill's "step" show)
-            if (!l_oH.m_bOk) { m_oAudio.f_Play("deny"); continue; }
+            if (!l_oH.m_bOk) { m_oAudio.f_Play(toms::key::g_pszSfxDeny); continue; }
             m_oCs.m_oSkill.m_iSteps++;
             for (const toms::ShowBeat& l_oB : m_oCs.m_oSkill.m_pDef->m_vStep) f_SkillBeat(l_oB, {l_oH.m_fX, l_oH.m_fY});
-            m_oAudio.f_Play("confirm_click");
+            m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
             if (m_oCs.m_oSkill.m_iOwner < 0) {   // the player's move: an attack clip per answer, growing with the combo (17 I1, §19)
                 m_oCs.m_iComboCount++;
                 f_PlayAnswerClip();
@@ -129,7 +129,7 @@ void Game::f_TouchPlayed(int l_iIndexBefore, int l_iHitsBefore) {
         }
     }
     if (!l_bSkillPlay && !toms::f_IsSwipePlay(l_eType) && l_eType != toms::PlayType::eSEQUENCE_CLICK && m_oCs.m_oTouch.f_Index() > l_iIndexBefore)
-        m_oAudio.f_Play(m_oCs.m_oTouch.f_Result().m_iHits > l_iHitsBefore ? "confirm_click" : "deny");
+        m_oAudio.f_Play(m_oCs.m_oTouch.f_Result().m_iHits > l_iHitsBefore ? toms::key::g_pszSfxConfirmClick : toms::key::g_pszSfxDeny);
     if (l_eType == toms::PlayType::ePULL_RELEASE && m_oCs.m_oTouch.f_Index() > l_iIndexBefore && !m_oSettings.m_bBowTutorialDone) {
         m_oSettings.m_bBowTutorialDone = true;   // the first shot: the tutorial has done its job
         toms::f_EnsureSaveDir(toms::f_DefaultSaveDir());
@@ -192,7 +192,7 @@ bool Game::f_FreeHit(const toms::TouchPlay::Hit& l_oH) {
 }
 
 void Game::f_PlayHit(const toms::TouchPlay::Hit& l_oH) {
-    if (!l_oH.m_bOk) { m_oCs.m_iComboCount = 0; m_oAudio.f_Play("deny"); return; }   // a miss ends the combo
+    if (!l_oH.m_bOk) { m_oCs.m_iComboCount = 0; m_oAudio.f_Play(toms::key::g_pszSfxDeny); return; }   // a miss ends the combo
     const int l_iT = m_oCs.m_iTarget;
     if (l_iT < 0 || l_iT >= (int)m_oCs.m_vFoes.size() || m_oCs.m_vFoes[(size_t)l_iT].f_Down()) return;
     // half a normal hit shared over the answers; the play's end deals the rest of the attack (resolveCombo)
@@ -207,7 +207,7 @@ void Game::f_PlayHit(const toms::TouchPlay::Hit& l_oH) {
         const toms::ComboTier* l_pHitTier = f_WeaponPlayOf(f_WeaponKey()).f_ComboTierAt(m_oCs.m_iComboCount + 1);
         f_PlayBattleFx(l_pHitTier && !l_pHitTier->m_strFx.empty() ? l_pHitTier->m_strFx : l_pFx->m_strHit, l_iT);
     }
-    m_oAudio.f_Play("confirm_click");
+    m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
     m_oCs.m_iComboCount++;
     {   // the feel grows with the combo too; a perfect answer is at least "great"
         const toms::ComboTier* l_pTier = f_ComboTier();
@@ -456,7 +456,7 @@ bool Game::f_StartTraining(const std::string& l_strMonster) {
     EnemyInst l_oProbe;
     if (l_itIt == m_oMeta.m_mapCards.end() || l_itIt->second.m_iCopies < l_iCost || f_TrainingRunsLeft() <= 0 ||
         !f_EnemyFromData(l_strMonster, nlohmann::json::object(), l_oProbe)) {
-        m_oAudio.f_Play("deny");
+        m_oAudio.f_Play(toms::key::g_pszSfxDeny);
         return false;
     }
     l_itIt->second.m_iCopies -= l_iCost;   // the run spends the card (the owner's rule; Q44)

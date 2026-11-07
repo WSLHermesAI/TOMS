@@ -120,7 +120,7 @@ void Game::f_OpenDoor(int l_iX, int l_iY, char l_cC) {
         if (!l_oE.m_bConsumed && l_oE.m_iX == l_iX && l_oE.m_iY == l_iY && l_oE.m_strKind.rfind("door:", 0) == 0) l_oE.m_bConsumed = true;
     toms::f_SetEntityStatus(m_mapEntityStatus, f_StatusKeyAt(l_iX, l_iY), toms::EntityStatus::Opened);
     for (const auto& l_oE : m_oSt.m_vEntities) if (l_oE.m_iX == l_iX && l_oE.m_iY == l_iY && l_oE.m_strKind.rfind("door:", 0) == 0) f_FireLinkedEvents(l_oE);
-    m_oAudio.f_Play("confirm_click");
+    m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
     (void)l_cC;
     if (MapObject* l_pDoor = m_oFloor.f_ObjectAt(l_iX, l_iY, "door:")) l_pDoor->f_Play("opening");   // its clip plays on the tile
 }
@@ -155,7 +155,7 @@ void Game::f_MovePlayer(int l_iDx, int l_iDy) {
     for (const auto& l_spO : m_oFloor.f_Objects())
         if (l_spO->f_BumpBig(l_iNx, l_iNy)) return;
     m_oPl.m_iX = l_iNx; m_oPl.m_iY = l_iNy;
-    m_oAudio.f_Play("walk");
+    m_oAudio.f_Play(toms::key::g_pszSfxWalk);
     // The player acted -> the world takes its turn (roamers step once; S1).
     f_AdvanceRoamers();
     // What is on the new cell, in the stage file's order: each object does what its kind does (a monster's battle,
@@ -200,7 +200,7 @@ void Game::f_BumpLockedStairs(const toms::StairLink& l_oS) {
         ? toms::f_FillText(m_oLocale.f_Tr("stairs.locked.many"), {{"events", l_strNames}, {"n", std::to_string(l_iLeft)}})
         : toms::f_FillText(m_oLocale.f_Tr("stairs.locked"), {{"event", l_strNames.size() >= 2 ? l_strNames.substr(1, l_strNames.size() - 2) : l_strNames}});
     if (m_vNotifications.empty() || m_vNotifications.back().first != l_strMsg) m_vNotifications.push_back({l_strMsg, 3200});
-    m_oAudio.f_Play("confirm_click");
+    m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
 }
 
 const toms::StairLink* Game::f_FindStair(const std::string& l_strFloor, const std::string& l_strTo) const {
@@ -253,7 +253,7 @@ void Game::f_BumpGate(Entity& l_oGate) {
     if (l_itIt == m_oPl.m_vInv.end()) {
         const std::string l_strMsg = toms::f_FillText(m_oLocale.f_Tr("gate.locked"), l_mapVars);
         if (m_vNotifications.empty() || m_vNotifications.back().first != l_strMsg) m_vNotifications.push_back({l_strMsg, 3200});
-        m_oAudio.f_Play("confirm_click");
+        m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
         return;
     }
     m_oPl.m_vInv.erase(l_itIt);   // the key goes into the lock
@@ -262,14 +262,14 @@ void Game::f_BumpGate(Entity& l_oGate) {
     toms::f_SetEntityStatus(m_mapEntityStatus, f_StatusKeyAt(l_oGate.m_iX, l_oGate.m_iY), toms::EntityStatus::Opened);
     f_FireLinkedEvents(l_oGate);
     m_vNotifications.push_back({toms::f_FillText(m_oLocale.f_Tr("gate.opened"), l_mapVars), 3200});
-    m_oAudio.f_Play("confirm_click");
+    m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
     f_MarkProgressDirty();   // (GateObject plays its opening clip)
 }
 
 void Game::f_DismissNotice() {
     if (m_vNotices.empty()) return;
     m_vNotices.erase(m_vNotices.begin());
-    m_oAudio.f_Play("confirm_click");
+    m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
 }
 
 void Game::f_LoadStairLocks() {

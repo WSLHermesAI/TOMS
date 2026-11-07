@@ -83,6 +83,7 @@ struct EnemyInst : public Trackable {
     int m_iAtkIntervalMs = 4000;
     // The battle's rules for it (docs/gameplay/13; enemies.json, a scenario's "battle" can override each):
     std::string m_strMapId;                       // the map monster's id (a transformed monster keeps it: its tile is cleared)
+    int m_iCellCols = 0, m_iCellRows = 0;         // "cellGrid": [cols, rows], its own grid (0: battle.json's)
     std::string m_strLook = "monster";            // "look": its status map in data/looks.json
     std::vector<toms::MoveChoice> m_vMoves;     // "moves": what it may do next (data/moves.json); none: a plain strike
     int m_iBreakPoints = 0;                     // "break": matched points that break it (0: data/battle.json's)
@@ -229,6 +230,7 @@ struct CombatState : public Trackable {
     int m_iCellsPopMs = 0;            // how long since they popped up
     bool m_bCellsOn = false;          // a monster here has moves with a danger shape: the hero moves between cells (docs/gameplay/19 §2.1)
     int m_iHeroCell = 4;
+    int m_iCellCols = 3, m_iCellRows = 2;   // this fight's grid
     int m_iSlowMs = 0;                // the last hit in slow motion, then the win
     int m_iEndLeftMs = 0;             // the longest the end may still wait for its clips (battle.json feel.endMaxMs)
     bool m_bLosePending = false;      // m_bWinPending's end is a loss: the hero falls, then finishCombatLose

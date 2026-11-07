@@ -423,11 +423,27 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
             if (m_oCs.m_bCellsOn && m_oCs.m_bCellsShown) {   // the six cells: where the hero stands, what is in danger and how soon (docs/gameplay/19 §2.1)
                 l_oB.m_bCellsOn = true;
                 l_oB.m_fCellsScale = l_fnPop(m_oCs.m_iCellsPopMs);
-                l_oB.m_strCellHint = l_oL.f_Tr("battle.cell_hint");
-                for (int l_iC = 0; l_iC < toms::g_iCellCols * toms::g_iCellRows; l_iC++) {
+                if (m_oCs.m_iCellRows <= 2) l_oB.m_strCellHint = l_oL.f_Tr("battle.cell_hint");   // (a tall grid fills that place)
+                // any grid: the width is shared out, the rows grow upward from the bottom of #cells and shrink past maxH
+                const int l_iCols = m_oCs.m_iCellCols, l_iRows = m_oCs.m_iCellRows;
+                const float l_fGap = m_oCellRules.m_fGap;
+                const float l_fCw = (m_oCellRules.m_fAreaW - l_fGap * (float)(l_iCols - 1)) / (float)l_iCols;
+                const float l_fCh = std::min(m_oCellRules.m_fRowH, (m_oCellRules.m_fMaxH - l_fGap * (float)(l_iRows - 1)) / (float)l_iRows);
+                const float l_fTotal = l_fCh * (float)l_iRows + l_fGap * (float)(l_iRows - 1);
+                const float l_fBase = m_oCellRules.m_fRowH * 2.0f + l_fGap - l_fTotal;   // (#cells is two default rows high)
+                l_oB.m_fCellHintY = l_fBase - 24.0f;
+                for (int l_iC = 0; l_iC < l_iCols * l_iRows; l_iC++) {
                     toms::UiBattleCell l_oCell;
-                    l_oCell.m_fX = 152.0f * (float)(l_iC % toms::g_iCellCols);
-                    l_oCell.m_fY = 64.0f * (float)(l_iC / toms::g_iCellCols);
+                    // the floor in perspective: the near rows (toward the monster) narrower, each column leaning toward the middle
+                    const int l_iCellRow = l_iC / l_iCols;
+                    const float l_fStep = l_iRows > 1 ? m_oCellRules.m_fPerspective / (float)(l_iRows - 1) : 0.0f;
+                    const float l_fRowK = 1.0f - l_fStep * (float)(l_iRows - 1 - l_iCellRow);
+                    const float l_fFromMid = (float)(l_iC % l_iCols) - (float)(l_iCols - 1) * 0.5f;
+                    const float l_fPitch = l_fCw + l_fGap;
+                    l_oCell.m_fW = l_fCw * l_fRowK; l_oCell.m_fH = l_fCh;
+                    l_oCell.m_fX = m_oCellRules.m_fAreaW * 0.5f + l_fFromMid * l_fPitch * l_fRowK - l_oCell.m_fW * 0.5f;
+                    l_oCell.m_fY = l_fBase + (l_fCh + l_fGap) * (float)l_iCellRow;
+                    l_oCell.m_fSkew = -std::atan2(l_fFromMid * l_fPitch * l_fStep, l_fCh + l_fGap) * 57.29578f;
                     l_oCell.m_bHere = l_iC == m_oCs.m_iHeroCell;
                     for (const CombatState::Foe& l_oF : m_oCs.m_vFoes)
                         if (!l_oF.f_Down() && (l_oF.m_uDanger & (1u << l_iC))) {
@@ -810,7 +826,7 @@ void Game::f_UiEvent(const std::string& l_strName, int l_iArg) {
     if (l_strName.rfind("pm_", 0) == 0) { f_PlayerMenuEvent(l_strName, l_iArg); return; }
     // ---- store ----
     if (l_strName == "store_tab") {
-        if (m_bStoreOpen && l_iArg >= 0 && l_iArg < 4 && l_iArg != m_iStoreTab) { m_iStoreTab = l_iArg; m_iStoreSel = 0; m_oAudio.f_Play("confirm_click"); }
+        if (m_bStoreOpen && l_iArg >= 0 && l_iArg < 4 && l_iArg != m_iStoreTab) { m_iStoreTab = l_iArg; m_iStoreSel = 0; m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick); }
         return;
     }
     if (l_strName == "store_hover") { if (m_bStoreOpen && l_iArg >= 0 && l_iArg < (int)f_StoreTabIndices().size()) m_iStoreSel = l_iArg; return; }

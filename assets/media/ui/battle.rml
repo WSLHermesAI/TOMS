@@ -73,11 +73,11 @@
         <div id="tutorial" data-if="battle.tutorial != ''" data-style-transform="'scale(' + battle.tutorial_scale + ')'">{{battle.tutorial}}</div>
         <div id="cells" data-if="battle.cells_on" data-class-tutmark="battle.tutorial_mark == 'cells'" data-style-transform="'scale(' + battle.cells_scale + ')'">
             <div data-for="c, i : battle.cells"><div class="cellbox btn" data-class-here="c.here" data-class-danger="c.danger"
-                 data-style-left="c.x + 'px'" data-style-top="c.y + 'px'" data-event-click="act('battle_cell', i)">
+                 data-style-left="c.x + 'px'" data-style-top="c.y + 'px'" data-style-width="c.w + 'px'" data-style-height="c.h + 'px'" data-style-transform="'skewX(' + c.skew + 'deg)'" data-event-click="act('battle_cell', i)">
                 <div class="cfill" data-if="c.danger" data-style-width="c.fill + '%'"></div>
                 <div class="cme" data-if="c.here"></div>
             </div></div>
-            <div id="cell-hint">{{battle.cell_hint}}</div>
+            <div id="cell-hint" data-style-top="battle.cell_hint_y + 'px'">{{battle.cell_hint}}</div>
         </div>
 
         <div id="super">
@@ -93,6 +93,7 @@
         <!-- the thumbs: GUARD (one button, just before a hit) and the attack's state (not a button) -->
         <div id="guard" class="panel btn" data-class-lit="battle.guard_lit" data-class-cooling="battle.guard_cooling" data-class-tutmark="battle.tutorial_mark == 'guard'"
              data-if="battle.guard_timing" data-event-click="act('battle_defend')">
+            <div class="picon"></div>
             <div class="plabel">{{battle.guard_label}}</div>
             <div class="phint">{{battle.guard_hint}}</div>
         </div>
@@ -115,6 +116,7 @@
              data-class-running="battle.attack_state == 'running'" data-class-recovering="battle.attack_state == 'recovering'"
              data-class-short="battle.attack_state == 'short'">
             <div class="pfill" data-if="battle.attack_state == 'recovering'" data-style-width="battle.attack_pct + '%'"></div>
+            <div class="picon"></div>
             <div class="plabel">{{battle.attack_label}}</div>
             <div class="phint">{{battle.attack_hint}}</div>
         </div>

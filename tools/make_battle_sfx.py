@@ -8,13 +8,15 @@ one per result and moment, named in data/battle.json "feel" "sounds":
   battle_phase     a low rumble (a monster's phase change)
   battle_win       a four-note arpeggio
 
-Synthesised (sines, a little noise, envelopes), 16-bit mono 44.1 kHz like the other sounds; made again by running it.
+Synthesised (sines, a little noise, envelopes), mono 44.1 kHz OGG like the other sounds; made again by running it.
 
   python tools/make_battle_sfx.py
 """
-import math, os, random, struct, wave
+import math, os, random, struct, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, 'tools', 'audio'))
+import ogg  # noqa: E402
 OUT = os.path.join(ROOT, 'assets', 'media', 'sfx')
 RATE = 44100
 
@@ -66,17 +68,13 @@ def write(name, length, fn):
     peak = max(abs(fn(i / RATE)) for i in range(n)) or 1.0
     scale = min(1.0, 0.85 / peak)
     frames = b''.join(struct.pack('<h', int(max(-1.0, min(1.0, fn(i / RATE) * scale)) * 32767)) for i in range(n))
-    with wave.open(os.path.join(OUT, name + '.wav'), 'wb') as w:
-        w.setnchannels(1)
-        w.setsampwidth(2)
-        w.setframerate(RATE)
-        w.writeframes(frames)
+    ogg.pcm_to_ogg(os.path.join(OUT, name + '.ogg'), frames, RATE)
 
 
 def main():
     for name, (length, fn) in SOUNDS.items():
         write(name, length, fn)
-        print('wrote', os.path.join('assets', 'media', 'sfx', name + '.wav'))
+        print('wrote', os.path.join('assets', 'media', 'sfx', name + '.ogg'))
 
 
 if __name__ == '__main__':

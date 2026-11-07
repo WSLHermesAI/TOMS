@@ -130,6 +130,10 @@ So the owner's note "without defending you fall after a few hits" is not shown y
 
 **The first danger's moment (built 2026-11-06):** the first time a monster lights the cells in a fight, everything stops for 2.2 s: the screen dims, the camera moves in, and only the monster, its `special` clip, the particles `danger_intro` and a banner are shown. After 1.2 s the hero and the other UI return, the cells and the tutorial's box pop up with a scale effect, and the player has the last second to read them before time runs again. The cells stay hidden until then, in every fight. Set in `battle.json` `cells.intro`.
 
+**The grid (built 2026-11-07):** the cells are any size up to 32 cells. `battle.json` `cells` has `cols` and `rows` (3 and 2 now); a monster's `"cellGrid": [cols, rows]` in `enemies.json` replaces them for its fight. The hero starts on the far row's middle. Shapes fit any grid: `{"row": 0}` (negative: from the end), `{"col": 1}`, `{"rows": "each"}`, `{"cols": "each"}`, `{"allBut": "start"}`, or a list of cell numbers. On screen: `areaW`, `rowH`, `gap`, `maxH`, `perspective`. The rows grow upward and shrink past `maxH`, so 3 x 5 has rows about 25 px high on a 768 px screen.
+
+**The look (the owner's picture, 2026-11-07):** a red-lined banner for the tutorial, glowing cyan and red cells drawn in perspective, a gold marker on the hero's cell, framed buttons with icons. Drawn by `tools/art/make_battle_ui.py` into `assets/media/ui/battle/`. Not done from the picture: the arrow and "2/3" bar, the framed HP bar, the sparks on the super dots.
+
 ## 3. Part 2: tower events and story
 
 **The goal:** going up the tower is more than beating monsters. Events give reasons to collect things, finish missions and follow the story.

@@ -192,6 +192,22 @@ int main() {
         for (int l_iHero = 0; l_iHero < 6; l_iHero++) CHECK(f_PickDanger(l_oR, "line", l_iHero, 0.9f) & (1u << l_iHero), "a line is aimed at the hero's column");
         CHECK(f_PickDanger(l_oR, "fan", 4, 0.0f) == 0b101111u, "a half circle: only the middle of the far row is clear");
         CHECK(f_PickDanger(l_oR, "nothing", 0, 0.0f) == 0u, "an unknown shape: none");
+        {   // any grid: the shapes as forms, not cell numbers
+            const CellRules l_oG = f_CellRulesFromJson(nlohmann::json::parse(R"({ "cells": { "cols": 3, "rows": 5,
+              "shapes": { "top": [{ "row": 0 }], "bottom": [{ "row": -1 }], "line": [{ "cols": "each" }], "band": [{ "rows": "each" }],
+                          "edge": [{ "col": -1 }], "fan": [{ "allBut": "start" }], "off": [[0, 99]] } } })"));
+            CHECK(l_oG.m_iCols == 3 && l_oG.m_iRows == 5 && f_CellStart(l_oG, 3, 5) == 13 && f_CellStart(l_oG, 2, 2) == 3, "the start: the far row's middle");
+            CHECK(f_PickDanger(l_oG, "top", 13, 0.0f) == 0b111u && f_PickDanger(l_oG, "bottom", 0, 0.0f) == (0b111u << 12), "rows, counted from either end");
+            CHECK(f_PickDanger(l_oG, "line", 13, 0.0f) == ((1u << 1) | (1u << 4) | (1u << 7) | (1u << 10) | (1u << 13)), "a column aimed at the hero");
+            CHECK(f_PickDanger(l_oG, "band", 7, 0.0f) == (0b111u << 6), "a row aimed at the hero");
+            CHECK(f_PickDanger(l_oG, "edge", 0, 0.0f) == ((1u << 2) | (1u << 5) | (1u << 8) | (1u << 11) | (1u << 14)), "the last column");
+            CHECK(f_PickDanger(l_oG, "fan", 0, 0.0f) == (0x7fffu & ~(1u << 13)), "everything but the start");
+            CHECK(f_PickDanger(l_oG, "line", 3, 0.0f, 2, 2) == ((1u << 1) | (1u << 3)), "another grid: 2 x 2");
+            CHECK(f_PickDanger(l_oG, "off", 0, 0.0f) == 1u, "a cell off the grid is dropped");
+            CHECK(f_CellStep(13, 0, -1, 3, 5) == 10 && f_CellStep(14, 1, 0, 3, 5) == 14 && f_CellStep(1, 0, -1, 3, 5) == 1 && f_CellStep(3, 0, 1, 2, 2) == 3, "steps on any grid");
+            const CellRules l_oBig = f_CellRulesFromJson(nlohmann::json::parse(R"({ "cells": { "cols": 8, "rows": 8 } })"));
+            CHECK(l_oBig.m_iCols * l_oBig.m_iRows <= g_iCellMaxCount, "the grid fits the 32-bit mask");
+        }
         CHECK(f_CellStep(4, 0, -1) == 1 && f_CellStep(0, -1, 0) == 0 && f_CellStep(2, 1, 0) == 2 && f_CellStep(3, 0, 1) == 3 && f_CellStep(4, 1, 0) == 5, "steps, stopped at the edges");
     }
     CHECK(f_PlayTypeFromString("swipeGesture") == PlayType::eSWIPE_GESTURE && f_PlayTypeFromString("freeShot") == PlayType::eFREE_SHOT &&

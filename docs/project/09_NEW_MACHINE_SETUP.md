@@ -194,6 +194,8 @@ Disk: about **5 GB** free.
 
 ---
 
+**Only for making sound effects or music:** double-click `tools\get_ffmpeg.cmd` once. It downloads ffmpeg into `tools\ffmpeg\` (not in git). Building and running the game does not need it ([22_AUDIO_GENERATION.md](../engine/22_AUDIO_GENERATION.md)).
+
 ## 4. Build and run (Windows)
 
 | Command | Output |

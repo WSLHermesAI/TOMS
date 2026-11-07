@@ -227,7 +227,7 @@ R1 到 R5 已做進遊戲。在擁有者另有決定之前，Q34 到 Q38 都採�
 | R4 破防與爆發 | BREAK! 橫幅與變暗；怪物的台詞成為橫幅；完美連鎖（每段 +10 % 傷害，最多 10）；絕招：切入畫面，然後更難的玩法（多 2 個點、滿蓄力），傷害 ×2，破防時 ×4，大動作片段 | `stunFoe`、`resolveCombo`、`battleTapSuper` |
 | R5 每把武器的玩法 | 弓：往後拉再放開，準心往反方向（每支箭一個靶，各 3 秒）；劍：照每個箭頭的方向劃過（每刀 1.6 秒；絕招先顯示箭頭再隱藏，方向錯就結束）；法杖：光圈收合時點圓圈（80 ms 內完美、200 ms 內命中）。每種都像量條一樣計點，所以結果列、招式名、特效、片段、破防與評等都不變。每個結果列有招式名 | `touch_play.h`（單元測試 `touch_play_test`）；`weapon_play.json` 的 `"play"` 與每列的 `"move"`；`Game::battlePointer`、`armTouchPlay` |
 
-**音效：** `tools/make_battle_sfx.py` 產生十個時刻音效（`assets/media/sfx/battle_*.wav`）；之後可用同名的更好音效取代。
+**音效：** `tools/make_battle_sfx.py` 產生十個時刻音效（`assets/media/sfx/battle_*.ogg`）；之後可用同名的更好音效取代。
 
 **測試：** 情境除非在 battle 設定 `"play"`，否則仍用舊的量條（[08](08_TEST_SCENARIOS.md)），所以既有的戰鬥測試保留
 它們的按鍵。新增：`battle_guard_early`、`battle_guard_bar`、`battle_result`（評等 S）、`battle_play_bow`、

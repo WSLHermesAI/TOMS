@@ -90,7 +90,7 @@ void Game::f_RequestStageTransition(const std::string& l_strTarget, bool l_bIsUp
     m_bStairsConfirmOpen = true;
     m_bStairsConfirmIsUp = l_bIsUp;
     m_strStairsConfirmTarget = l_strTarget;
-    m_oAudio.f_Play("confirm_click");
+    m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
 }
 
 void Game::f_ConfirmStageTransition() {
@@ -115,7 +115,7 @@ void Game::f_ConfirmStageTransition() {
 void Game::f_CancelStageTransition() {
     m_bStairsConfirmOpen = false;
     m_strStairsConfirmTarget.clear();
-    m_oAudio.f_Play("close_ui");
+    m_oAudio.f_Play(toms::key::g_pszSfxCloseUi);
 }
 
 

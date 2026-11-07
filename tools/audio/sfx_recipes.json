@@ -1,0 +1,47 @@
+{
+  "_comment": "Sound effects as data, for tools/audio/make_sfx.py (docs/engine/22_AUDIO_GENERATION.md). A sound is a list of layers mixed together. A layer: wave (noise, sine, square, saw), ms (how long), at (ms before it starts), gain, attack (ms to full), curve (fade: 1 even, higher dies faster), pitch [from, to] in Hz (not for noise), low [from, to] lets through what is below this Hz, high keeps what is above this Hz.",
+  "sword_slash": [
+    { "wave": "noise", "ms": 240, "attack": 35, "curve": 2.2, "gain": 0.9, "low": [1400, 8500], "high": 700 },
+    { "wave": "sine", "ms": 110, "at": 40, "curve": 3, "gain": 0.25, "pitch": [1900, 3400] }
+  ],
+  "bow_release": [
+    { "wave": "sine", "ms": 190, "curve": 2.5, "gain": 0.6, "pitch": [320, 170] },
+    { "wave": "noise", "ms": 170, "at": 25, "attack": 20, "curve": 2.5, "gain": 0.45, "low": [5200, 1400], "high": 500 }
+  ],
+  "hit_heavy": [
+    { "wave": "sine", "ms": 300, "curve": 3, "gain": 1.0, "pitch": [170, 42] },
+    { "wave": "noise", "ms": 110, "curve": 3.5, "gain": 0.8, "low": [4500, 500] },
+    { "wave": "square", "ms": 50, "curve": 3, "gain": 0.2, "pitch": [240, 90], "low": [2200, 600] }
+  ],
+  "dodge": [
+    { "wave": "noise", "ms": 280, "attack": 110, "curve": 1.8, "gain": 0.9, "low": [700, 4200], "high": 450 }
+  ],
+  "danger_warning": [
+    { "wave": "saw", "ms": 170, "curve": 1.2, "gain": 0.5, "pitch": [440, 440], "low": [2600, 1400] },
+    { "wave": "saw", "ms": 170, "at": 210, "curve": 1.2, "gain": 0.55, "pitch": [587, 587], "low": [2800, 1400] },
+    { "wave": "saw", "ms": 320, "at": 420, "curve": 1.5, "gain": 0.6, "pitch": [880, 860], "low": [3200, 1000] }
+  ],
+  "coin": [
+    { "wave": "square", "ms": 70, "curve": 1.3, "gain": 0.32, "pitch": [988, 988], "low": [6000, 5000] },
+    { "wave": "square", "ms": 300, "at": 65, "curve": 2.2, "gain": 0.36, "pitch": [1319, 1319], "low": [6000, 3200] }
+  ],
+  "ui_click": [
+    { "wave": "sine", "ms": 45, "curve": 3, "gain": 0.75, "pitch": [1250, 760] },
+    { "wave": "noise", "ms": 12, "curve": 2, "gain": 0.22, "high": 2500 }
+  ],
+  "deny": [
+    { "wave": "square", "ms": 90, "curve": 1.2, "gain": 0.5, "pitch": [196, 185], "low": [1800, 900] },
+    { "wave": "square", "ms": 130, "at": 105, "curve": 1.6, "gain": 0.55, "pitch": [165, 147], "low": [1600, 700] }
+  ],
+  "close_ui": [
+    { "wave": "sine", "ms": 80, "curve": 2.5, "gain": 0.8, "pitch": [760, 420] },
+    { "wave": "noise", "ms": 25, "curve": 3, "gain": 0.12, "low": [3000, 1200] }
+  ],
+  "level_up": [
+    { "wave": "square", "ms": 170, "curve": 1.4, "gain": 0.3, "pitch": [523, 523], "low": [4200, 2500] },
+    { "wave": "square", "ms": 170, "at": 140, "curve": 1.4, "gain": 0.3, "pitch": [659, 659], "low": [4200, 2500] },
+    { "wave": "square", "ms": 170, "at": 280, "curve": 1.4, "gain": 0.3, "pitch": [784, 784], "low": [4200, 2500] },
+    { "wave": "square", "ms": 620, "at": 420, "curve": 2.2, "gain": 0.36, "pitch": [1047, 1047], "low": [5000, 1600] },
+    { "wave": "sine", "ms": 620, "at": 420, "curve": 2.2, "gain": 0.3, "pitch": [2094, 2094] }
+  ]
+}

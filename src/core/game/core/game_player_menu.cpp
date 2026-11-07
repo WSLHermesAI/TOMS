@@ -23,7 +23,7 @@ void Game::f_OpenPlayerMenu(int l_iTab) {
         m_iInGameMenuSel = 0;
         m_bInGameLangConfirmOpen = false;
         m_bDropConfirmOpen = false;
-        m_oAudio.f_Play("confirm_click");
+        m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
     }
     if (l_iTab >= 0 && l_iTab < m_iMenuTabs) { m_eMenuTab = (MenuTab)l_iTab; m_bSaveLoadOpen = m_bSaveLoadConfirm = false; }
     f_PlayerMenuTab(0);   // marks the tab's news as seen
@@ -37,7 +37,7 @@ void Game::f_ClosePlayerMenu() {
     m_bInGameLangConfirmOpen = false;
     m_bDropConfirmOpen = false;
     m_mapAttrDraft.clear();   // points not confirmed are not kept
-    m_oAudio.f_Play("close_ui");
+    m_oAudio.f_Play(toms::key::g_pszSfxCloseUi);
 }
 
 void Game::f_ToggleInventory() {
@@ -51,14 +51,14 @@ void Game::f_ToggleInventory() {
 void Game::f_PlayerMenuTab(int l_iDelta) {
     if (!m_bInGameMenuOpen) return;
     if (m_bSaveLoadOpen) {   // Q / E / Tab: Save <-> Load
-        if (l_iDelta != 0 && !m_bSaveLoadConfirm) { m_iSaveLoadMode = 1 - m_iSaveLoadMode; m_oAudio.f_Play("confirm_click"); }
+        if (l_iDelta != 0 && !m_bSaveLoadConfirm) { m_iSaveLoadMode = 1 - m_iSaveLoadMode; m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick); }
         return;
     }
     if (l_iDelta != 0) {
         m_eMenuTab = (MenuTab)((((int)m_eMenuTab + l_iDelta) % m_iMenuTabs + m_iMenuTabs) % m_iMenuTabs);
         m_bDropConfirmOpen = false;
         m_bInGameLangConfirmOpen = false;
-        m_oAudio.f_Play("confirm_click");
+        m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
     }
     if (m_eMenuTab == MenuTab::Gear) m_bNewsGear = false;
     if (m_eMenuTab == MenuTab::Events) m_bNewsEvents = false;
@@ -131,13 +131,13 @@ void Game::f_RunItemAction(const ItemCell& l_oC, ItemAction l_eA) {
         }
         case ItemAction::Equip:
             f_EquipGear(l_oC.m_strId);
-            m_oAudio.f_Play("confirm_click");
+            m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
             break;
         case ItemAction::Unequip: {
             if (m_oEquipped.m_strArmorId == l_oC.m_strId) m_oEquipped.m_strArmorId.clear();
             if (m_oEquipped.m_strTalentId == l_oC.m_strId) m_oEquipped.m_strTalentId.clear();
             f_MarkProgressDirty();
-            m_oAudio.f_Play("close_ui");
+            m_oAudio.f_Play(toms::key::g_pszSfxCloseUi);
             break;
         }
         case ItemAction::Drop: {
@@ -148,7 +148,7 @@ void Game::f_RunItemAction(const ItemCell& l_oC, ItemAction l_eA) {
                 m_vGearOwned.erase(std::remove(m_vGearOwned.begin(), m_vGearOwned.end(), l_oC.m_strId), m_vGearOwned.end());
             }
             f_MarkProgressDirty();
-            m_oAudio.f_Play("close_ui");
+            m_oAudio.f_Play(toms::key::g_pszSfxCloseUi);
             break;
         }
     }
@@ -464,10 +464,10 @@ void Game::f_PlayerMenuBack() {
     if (m_bSaveLoadOpen) {
         if (m_bSaveLoadConfirm) m_bSaveLoadConfirm = false;
         else m_bSaveLoadOpen = false;
-        m_oAudio.f_Play("close_ui");
+        m_oAudio.f_Play(toms::key::g_pszSfxCloseUi);
         return;
     }
-    if (m_bDropConfirmOpen) { m_bDropConfirmOpen = false; m_oAudio.f_Play("close_ui"); return; }
+    if (m_bDropConfirmOpen) { m_bDropConfirmOpen = false; m_oAudio.f_Play(toms::key::g_pszSfxCloseUi); return; }
     if (m_eMenuTab == MenuTab::System) { f_InGameMenuBack(); return; }   // confirm -> page -> close
     f_ClosePlayerMenu();
 }
@@ -478,11 +478,11 @@ void Game::f_PlayerMenuEvent(const std::string& l_strName, int l_iArg) {
     if (!m_bInGameMenuOpen) return;
     if (l_strName == "pm_close") { f_ClosePlayerMenu(); return; }
     // ---- Save / Load ----
-    if (l_strName == "pm_sl_close") { if (m_bSaveLoadOpen) { m_bSaveLoadOpen = m_bSaveLoadConfirm = false; m_oAudio.f_Play("close_ui"); } return; }
+    if (l_strName == "pm_sl_close") { if (m_bSaveLoadOpen) { m_bSaveLoadOpen = m_bSaveLoadConfirm = false; m_oAudio.f_Play(toms::key::g_pszSfxCloseUi); } return; }
     if (l_strName == "pm_sl_confirm") { f_SaveLoadAnswer(l_iArg != 0); return; }
     if (m_bSaveLoadOpen) {   // the screen is modal over the menu
         if (m_bSaveLoadConfirm) return;
-        if (l_strName == "pm_sl_mode" && (l_iArg == 0 || l_iArg == 1) && l_iArg != m_iSaveLoadMode) { m_iSaveLoadMode = l_iArg; m_oAudio.f_Play("confirm_click"); }
+        if (l_strName == "pm_sl_mode" && (l_iArg == 0 || l_iArg == 1) && l_iArg != m_iSaveLoadMode) { m_iSaveLoadMode = l_iArg; m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick); }
         if (l_strName == "pm_sl_slot") f_SaveLoadAsk(l_iArg);
         if (l_strName == "pm_sl_hover" && l_iArg >= 0 && l_iArg < (int)m_vSaveLoadSlots.size()) m_iSaveLoadSel = l_iArg;
         return;
@@ -499,13 +499,13 @@ void Game::f_PlayerMenuEvent(const std::string& l_strName, int l_iArg) {
                 m_iItemSel = f_ClampSel(m_iItemSel, (int)f_ItemCells().size());
             }
         } else {
-            m_oAudio.f_Play("close_ui");
+            m_oAudio.f_Play(toms::key::g_pszSfxCloseUi);
         }
         return;
     }
     if (m_bDropConfirmOpen) return;   // the dialog is modal
     if (l_strName == "pm_tab") {
-        if (l_iArg >= 0 && l_iArg < m_iMenuTabs && l_iArg != (int)m_eMenuTab) { m_eMenuTab = (MenuTab)l_iArg; f_PlayerMenuTab(0); m_oAudio.f_Play("confirm_click"); }
+        if (l_iArg >= 0 && l_iArg < m_iMenuTabs && l_iArg != (int)m_eMenuTab) { m_eMenuTab = (MenuTab)l_iArg; f_PlayerMenuTab(0); m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick); }
         return;
     }
     if (l_strName == "pm_attr") { if (l_iArg >= 0 && l_iArg < (int)m_vAttrDefs.size()) m_iAttrSel = l_iArg; return; }
@@ -544,7 +544,7 @@ void Game::f_PlayerMenuEvent(const std::string& l_strName, int l_iArg) {
             return;
         }
         const auto l_vButtons = f_ItemButtons(l_oC);
-        if (l_iArg < 0 || l_iArg >= (int)l_vButtons.size() || !l_vButtons[l_iArg].m_bEnabled) { m_oAudio.f_Play("deny"); return; }
+        if (l_iArg < 0 || l_iArg >= (int)l_vButtons.size() || !l_vButtons[l_iArg].m_bEnabled) { m_oAudio.f_Play(toms::key::g_pszSfxDeny); return; }
         if (l_vButtons[l_iArg].m_eAction == ItemAction::Drop) { m_bDropConfirmOpen = true; m_bDropConfirmYes = false; return; }
         f_RunItemAction(l_oC, l_vButtons[l_iArg].m_eAction);
         if (m_eMenuTab == MenuTab::Items) m_iItemSel = f_ClampSel(m_iItemSel, (int)f_ItemCells().size());
@@ -893,25 +893,25 @@ void Game::f_OpenSaveLoad(int l_iMode) {
     const std::string l_strDir = toms::f_DefaultSaveDir();
     for (int l_iI = 1; l_iI <= m_oTitle.f_SlotCount(); l_iI++) m_vSaveLoadSlots.push_back(toms::f_SummarizeSlot(l_strDir, l_iI));
     m_iSaveLoadSel = std::max(0, std::min(m_iActiveSlot - 1, (int)m_vSaveLoadSlots.size() - 1));
-    m_oAudio.f_Play("confirm_click");
+    m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
 }
 
 void Game::f_SaveLoadAsk(int l_iIndex) {
     if (l_iIndex < 0 || l_iIndex >= (int)m_vSaveLoadSlots.size()) return;
     m_iSaveLoadSel = l_iIndex;
     const bool l_bExists = m_vSaveLoadSlots[l_iIndex].m_bExists;
-    if (m_iSaveLoadMode == 1 && !l_bExists) { m_oAudio.f_Play("deny"); return; }   // nothing to load
-    if (m_iSaveLoadMode == 0 && m_vSaveLoadSlots[l_iIndex].m_bNewer) { m_oAudio.f_Play("deny"); return; }   // a newer game's save stays
+    if (m_iSaveLoadMode == 1 && !l_bExists) { m_oAudio.f_Play(toms::key::g_pszSfxDeny); return; }   // nothing to load
+    if (m_iSaveLoadMode == 0 && m_vSaveLoadSlots[l_iIndex].m_bNewer) { m_oAudio.f_Play(toms::key::g_pszSfxDeny); return; }   // a newer game's save stays
     m_bSaveLoadConfirm = true;
     // The safe answer is preselected wherever something is lost: overwriting a save, leaving the run.
     m_bSaveLoadConfirmYes = m_iSaveLoadMode == 0 && !l_bExists;
-    m_oAudio.f_Play("confirm_click");
+    m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
 }
 
 void Game::f_SaveLoadAnswer(bool l_bYes) {
     if (!m_bSaveLoadConfirm) return;
     m_bSaveLoadConfirm = false;
-    if (!l_bYes) { m_oAudio.f_Play("close_ui"); return; }
+    if (!l_bYes) { m_oAudio.f_Play(toms::key::g_pszSfxCloseUi); return; }
     const int l_iSlot = m_iSaveLoadSel + 1;
     if (m_iSaveLoadMode == 0) {
         m_iActiveSlot = l_iSlot;
@@ -920,9 +920,9 @@ void Game::f_SaveLoadAnswer(bool l_bYes) {
         m_vSaveLoadSlots[m_iSaveLoadSel] = toms::f_SummarizeSlot(toms::f_DefaultSaveDir(), l_iSlot);
         m_strToastMsg = f_TrParam(m_oLocale.f_Tr("saveload.saved"), "slot", std::to_string(l_iSlot));
         m_iToastTimer = 1600;
-        m_oAudio.f_Play("confirm_click");
+        m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
     } else if (!f_ContinueFromSlot(l_iSlot)) {   // loading closes the menu (applyLoadedRun)
-        m_oAudio.f_Play("deny");
+        m_oAudio.f_Play(toms::key::g_pszSfxDeny);
     }
 }
 

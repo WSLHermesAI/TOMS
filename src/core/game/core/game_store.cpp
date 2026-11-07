@@ -29,12 +29,12 @@ void Game::f_OpenStore() {
     m_bStoreOpen = true;
     m_bNewsStore = false;
     m_iStoreSel = 0;
-    m_oAudio.f_Play("confirm_click");
+    m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
 }
 
 void Game::f_CloseStore() {
     m_bStoreOpen = false;
-    m_oAudio.f_Play("close_ui");
+    m_oAudio.f_Play(toms::key::g_pszSfxCloseUi);
     if (m_bStoreFromMenu) { m_bStoreFromMenu = false; f_OpenPlayerMenu((int)MenuTab::System); }   // back where it was opened
 }
 
@@ -91,12 +91,12 @@ void Game::f_EnsureStageListLoaded() {
 void Game::f_OpenStageSelect() {
     f_EnsureStageListLoaded();
     m_bStageSelectOpen = true;
-    m_oAudio.f_Play("confirm_click");
+    m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
 }
 
 void Game::f_CloseStageSelect() {
     m_bStageSelectOpen = false;
-    m_oAudio.f_Play("close_ui");
+    m_oAudio.f_Play(toms::key::g_pszSfxCloseUi);
 }
 
 // ---------- in-game menu (walking-phase HUD gear icon) ----------
@@ -141,7 +141,7 @@ void Game::f_InGameMenuActivate() {
         m_bInGameLangConfirmOpen = false;
         if (l_bYes && m_bInGameConfirmIsStyle) f_ApplyArtStyle(l_iIdx);
         else if (l_bYes) { m_oTitle.f_SetLanguageIndex(l_iIdx); f_ApplyLanguage(); }
-        m_oAudio.f_Play("confirm_click");
+        m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
         return;
     }
     if (m_eInGameMenuPage == InGameMenuPage::Main) {
@@ -152,14 +152,14 @@ void Game::f_InGameMenuActivate() {
         if (m_iInGameMenuSel < 0 || m_iInGameMenuSel >= (int)l_vOrder.size()) return;
         switch (l_vOrder[m_iInGameMenuSel]) {
             case MainMenuRow::Store:
-                if (!m_bStoreUnlocked) { m_oAudio.f_Play("deny"); break; }
+                if (!m_bStoreUnlocked) { m_oAudio.f_Play(toms::key::g_pszSfxDeny); break; }
                 f_ClosePlayerMenu();
                 m_bStoreFromMenu = true;
                 f_OpenStore();
                 break;
             case MainMenuRow::Fullscreen:
                 m_bFullscreenRequest = true;   // the host switches (takeFullscreenRequest)
-                m_oAudio.f_Play("confirm_click");
+                m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
                 break;
             case MainMenuRow::Save:
                 f_OpenSaveLoad(0);   // Save / Load: the player picks the slot, and confirms
@@ -167,22 +167,22 @@ void Game::f_InGameMenuActivate() {
             case MainMenuRow::Settings:
                 m_eInGameMenuPage = InGameMenuPage::Settings;
                 m_iInGameMenuSel = m_oLocale.f_LanguageIndex();
-                m_oAudio.f_Play("confirm_click");
+                m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
                 break;
             case MainMenuRow::Skills:
                 m_eInGameMenuPage = InGameMenuPage::Skills;
                 m_iInGameMenuSel = 0;
-                m_oAudio.f_Play("confirm_click");
+                m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
                 break;
             case MainMenuRow::Village:   // S6
                 m_eInGameMenuPage = InGameMenuPage::Hub;
                 m_iInGameMenuSel = 0;
-                m_oAudio.f_Play("confirm_click");
+                m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
                 break;
             case MainMenuRow::Forge:     // S5
                 m_eInGameMenuPage = InGameMenuPage::Forge;
                 m_iInGameMenuSel = 0;
-                m_oAudio.f_Play("confirm_click");
+                m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
                 break;
             case MainMenuRow::BackToTitle:
                 f_ReturnToTitle();
@@ -215,7 +215,7 @@ void Game::f_InGameMenuActivate() {
         m_bInGameConfirmIsStyle = false;
         m_iInGameLangConfirmIdx = m_iInGameMenuSel;
         m_bInGameLangConfirmYes = true;
-        m_oAudio.f_Play("confirm_click");
+        m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
     } else if (m_iInGameMenuSel < m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount()) {
         // An art style row: same confirm dialog, which also says the new style applies on the way
         // back to the title (a run never changes look under the player; see refreshArtStyle).
@@ -223,25 +223,25 @@ void Game::f_InGameMenuActivate() {
         m_bInGameConfirmIsStyle = true;
         m_iInGameLangConfirmIdx = m_iInGameMenuSel - m_oLocale.f_LanguageCount();
         m_bInGameLangConfirmYes = true;
-        m_oAudio.f_Play("confirm_click");
+        m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
     } else if (m_iInGameMenuSel == m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount()) {
         // The camera row (after the art styles): cycles instantly, no confirm dialog needed -- unlike
         // language, this is a low-stakes preference whose effect the player already sees behind
         // this very menu (the maze keeps scrolling/paging under the scrim).
         f_SetCameraModeIndex(1 - f_CameraModeIndex());
-        m_oAudio.f_Play("confirm_click");
+        m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
     } else if (m_iInGameMenuSel == m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount() + 1) {
         f_SetReduceEffects(!m_oSettings.m_bReduceEffects);   // "Reduce shaking and flashes" (docs/gameplay/15 §3.8)
-        m_oAudio.f_Play("confirm_click");
+        m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
     } else if (m_iInGameMenuSel == m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount() + 2) {
         f_CycleBattleSpeed();   // docs/gameplay/17 I10
-        m_oAudio.f_Play("confirm_click");
+        m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
     }
 }
 
 void Game::f_InGameMenuBack() {
     if (!m_bInGameMenuOpen) return;
-    if (m_bInGameLangConfirmOpen) { m_bInGameLangConfirmOpen = false; m_oAudio.f_Play("close_ui"); return; }
+    if (m_bInGameLangConfirmOpen) { m_bInGameLangConfirmOpen = false; m_oAudio.f_Play(toms::key::g_pszSfxCloseUi); return; }
     if (m_eInGameMenuPage != InGameMenuPage::Main) {
         // Back to the list, on the row that opened the page (found by name: Forge and Village are
         // only there once unlocked, so the rows move).
@@ -251,7 +251,7 @@ void Game::f_InGameMenuBack() {
         if (m_eInGameMenuPage == InGameMenuPage::Hub)    l_eFrom = MainMenuRow::Village;
         m_iInGameMenuSel = f_MainMenuRowIndex(l_eFrom);
         m_eInGameMenuPage = InGameMenuPage::Main;
-        m_oAudio.f_Play("close_ui");
+        m_oAudio.f_Play(toms::key::g_pszSfxCloseUi);
         return;
     }
     f_ClosePlayerMenu();
@@ -279,7 +279,7 @@ void Game::f_ReturnToTitle() {
 void Game::f_StoreKey(int l_iKey) {
     // unlock dialog: Enter/Esc/Space confirms
     if (m_bStoreUnlockDlg) {
-        if (l_iKey == 13 || l_iKey == 27 || l_iKey == 32) { m_bStoreUnlockDlg = false; m_oAudio.f_Play("confirm_click"); }
+        if (l_iKey == 13 || l_iKey == 27 || l_iKey == 32) { m_bStoreUnlockDlg = false; m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick); }
         return;
     }
     if (!m_bStoreOpen) return;
@@ -311,7 +311,7 @@ void Game::f_BuyStoreItem(int l_iIdx) {
         f_EquipGear(l_oD.m_strId);
         m_strToastMsg = f_TrParam(m_oLocale.f_Tr("store.toast_purchase_success"), "name", f_ItemName(l_oD.m_strId));
         m_iToastTimer = 1200;
-        m_oAudio.f_Play("confirm_click");
+        m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
         f_MarkProgressDirty();
         return;
     }
@@ -321,7 +321,7 @@ void Game::f_BuyStoreItem(int l_iIdx) {
         m_strToastMsg = f_TrParam(m_oLocale.f_Tr("store.toast_insufficient_gold"), "cost", std::to_string(l_iCost));
         m_iToastTimer = 1600;
         m_iShakeTimer = 350;
-        m_oAudio.f_Play("deny");
+        m_oAudio.f_Play(toms::key::g_pszSfxDeny);
         return;
     }
     m_oPl.m_iGold -= l_iCost;
@@ -334,6 +334,6 @@ void Game::f_BuyStoreItem(int l_iIdx) {
     // gear is worn at once: say so, and where to change it (docs/gameplay/17 I7)
     m_strToastMsg = f_TrParam(m_oLocale.f_Tr(l_bGear ? "store.toast_gear_worn" : "store.toast_purchase_success"), "name", f_ItemName(l_oD.m_strId));
     m_iToastTimer = l_bGear ? 2600 : 1400;
-    m_oAudio.f_Play("get_item");
+    m_oAudio.f_Play(toms::key::g_pszSfxGetItem);
     f_MarkProgressDirty();   // a purchase changes gold/stats/equipment: autosave will flush it
 }

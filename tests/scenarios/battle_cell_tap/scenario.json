@@ -1,0 +1,29 @@
+{
+  "_comment": "Tapping a cell, drawn slanted (the bottom-left one): the hero moves there, out of the line. A click in design pixels on the tests' 1024x768 screen, after the first danger's moment.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "thicketoad",
+    "hp": 9999,
+    "moves": [
+      "toad_lesson_line"
+    ]
+  },
+  "test": {
+    "frames": 390,
+    "clicks": "357:647@300"
+  },
+  "expect": {
+    "heroCell": 3,
+    "battleEvents": {
+      "move": 1,
+      "danger": 1,
+      "dodge": 1,
+      "hit": 0
+    }
+  }
+}

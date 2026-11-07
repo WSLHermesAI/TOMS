@@ -1,0 +1,36 @@
+{
+  "_comment": "A monster's own grid, 2 x 2 (\"cellGrid\"): the hero starts on cell 3, the line covers its column, left leaves it. The lit cells come at frame 150, the moment ends near 290.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "thicketoad",
+    "hp": 9999,
+    "moves": [
+      "toad_lesson_line"
+    ],
+    "cellGrid": [
+      2,
+      2
+    ]
+  },
+  "test": {
+    "frames": 390,
+    "keys": "left@300"
+  },
+  "expect": {
+    "cellGrid": [
+      2,
+      2
+    ],
+    "heroCell": 2,
+    "battleEvents": {
+      "danger": 1,
+      "dodge": 1,
+      "hit": 0
+    }
+  }
+}

@@ -81,7 +81,7 @@ void Game::f_ApplyStats(const std::string& l_strId, const nlohmann::json& l_jEff
 void Game::f_ApplyItem(const std::string& l_strId) {
     if (!f_ItemDef(l_strId)) return;
     f_ApplyStats(l_strId, f_ItemStats(l_strId));
-    m_oAudio.f_Play("get_item");
+    m_oAudio.f_Play(toms::key::g_pszSfxGetItem);
 }
 
 void Game::f_ReceiveItem(const std::string& l_strId) {
@@ -89,7 +89,7 @@ void Game::f_ReceiveItem(const std::string& l_strId) {
     if (!l_pD) { m_oPl.m_vInv.push_back(l_strId); return; }
     const std::string l_strType = f_ItemType(l_strId);
     if (l_strType == "key" || l_pD->value("autoUse", false)) f_ApplyItem(l_strId);
-    else if (f_IsGearType(l_strType)) { f_OwnGear(l_strId, false); m_oAudio.f_Play("get_item"); }
+    else if (f_IsGearType(l_strType)) { f_OwnGear(l_strId, false); m_oAudio.f_Play(toms::key::g_pszSfxGetItem); }
     else m_oPl.m_vInv.push_back(l_strId);
 }
 
@@ -143,35 +143,35 @@ int Game::f_BarCooldownMs() const {
 // The Status tab's points (the owner 2026-10-24): + and - only move points in a draft, which the screen shows; Confirm
 // makes them the attributes and saves the run at once, Reset (or closing the menu) drops them.
 void Game::f_SpendAttrPoint(int l_iIndex) {
-    if (m_oPl.m_iAttrPoints - f_AttrDraftTotal() <= 0 || l_iIndex < 0 || l_iIndex >= (int)m_vAttrDefs.size()) { m_oAudio.f_Play("deny"); return; }
+    if (m_oPl.m_iAttrPoints - f_AttrDraftTotal() <= 0 || l_iIndex < 0 || l_iIndex >= (int)m_vAttrDefs.size()) { m_oAudio.f_Play(toms::key::g_pszSfxDeny); return; }
     m_mapAttrDraft[m_vAttrDefs[l_iIndex].m_strId] += 1;
-    m_oAudio.f_Play("confirm_click");
+    m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
 }
 
 void Game::f_UnspendAttrPoint(int l_iIndex) {
     if (l_iIndex < 0 || l_iIndex >= (int)m_vAttrDefs.size()) return;
     auto l_itIt = m_mapAttrDraft.find(m_vAttrDefs[l_iIndex].m_strId);
-    if (l_itIt == m_mapAttrDraft.end()) { m_oAudio.f_Play("deny"); return; }   // only a point placed in this draft comes back
+    if (l_itIt == m_mapAttrDraft.end()) { m_oAudio.f_Play(toms::key::g_pszSfxDeny); return; }   // only a point placed in this draft comes back
     if (--l_itIt->second <= 0) m_mapAttrDraft.erase(l_itIt);
-    m_oAudio.f_Play("confirm_click");
+    m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
 }
 
 void Game::f_ConfirmAttrPoints() {
     const int l_iN = std::min(f_AttrDraftTotal(), m_oPl.m_iAttrPoints);
-    if (l_iN <= 0) { m_oAudio.f_Play("deny"); return; }
+    if (l_iN <= 0) { m_oAudio.f_Play(toms::key::g_pszSfxDeny); return; }
     for (const auto& [l_strId, l_iK] : m_mapAttrDraft) m_oPl.m_mapAttrs[l_strId] += l_iK;
     m_oPl.m_iAttrPoints -= l_iN;
     m_mapAttrDraft.clear();
     f_MarkProgressDirty();
     f_SaveCurrentRun();   // kept now, not at the next autosave
     f_PushNotification(m_oLocale.f_Tr("status.points_saved"));
-    m_oAudio.f_Play("get_item");
+    m_oAudio.f_Play(toms::key::g_pszSfxGetItem);
 }
 
 void Game::f_ResetAttrDraft() {
     if (m_mapAttrDraft.empty()) return;
     m_mapAttrDraft.clear();
-    m_oAudio.f_Play("close_ui");
+    m_oAudio.f_Play(toms::key::g_pszSfxCloseUi);
 }
 
 int Game::f_AttrValue(const std::string& l_strId) const {

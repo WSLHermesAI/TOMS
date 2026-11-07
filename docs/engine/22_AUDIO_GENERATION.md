@@ -1,0 +1,114 @@
+# 22. Making Music and Sound Effects
+
+中文：[zh_TW/22_AUDIO_GENERATION.md](zh_TW/22_AUDIO_GENERATION.md).
+
+**All the game's sound and music is OGG Vorbis** (the owner, 2026-11-07). Two local tools make audio for the game. Neither uploads anything, and neither changes the game: the files go to `Build/art_out/audio/` until someone copies them in.
+
+| | Music | Sound effects |
+|---|---|---|
+| Tool | `tools/audio/make_music.py` | `tools/audio/make_sfx.py` |
+| How | ACE-Step 1.5, an AI model, in the local ComfyUI | Plain maths from short recipes, no AI |
+| Time | About 40 s for 30 to 60 s, including starting ComfyUI | Under a second |
+| Output | 48 kHz stereo OGG, 160 kbps (about 0.5 MB for 26 s) | 44.1 kHz mono OGG, quality 5, the same as `assets/media/sfx/` |
+
+## 1. Make music
+
+```
+python tools/audio/make_music.py --name forest_battle --seconds 30 --bpm 140 --seed 2 --tags "fantasy RPG battle music, instrumental, full orchestra from the first second, taiko drums, fast strings, wooden flute, bright, energetic, constant intensity, no intro, no ending, game loop"
+```
+
+This writes `Build/art_out/audio/music/forest_battle_2.ogg`. The script starts ComfyUI hidden and stops it afterwards, if it is not running already.
+
+| Option | Meaning |
+|---|---|
+| `--tags` | What it should sound like: style, instruments, mood |
+| `--seconds` | The length you want; the model may stop a little sooner |
+| `--bpm`, `--key`, `--beats` | Tempo, key such as `"F# minor"`, beats in a bar |
+| `--seed` | Another take of the same words. Try several and keep the best |
+| `--name` | The file's name |
+| `--no-loop` | Keep the piece as made, with no crossfade from the end into the start |
+| `--lyrics` | Words to sing; the default is `[Instrumental]` |
+
+**Getting a good loop.** Without help the model writes a song, with a quiet intro and an ending. Say `constant intensity, no intro, no ending, game loop` in the tags. The script cuts silence from both ends and crossfades the end into the start over 1.5 s. Listen to the loop point: the crossfade removes a click, but it cannot make two different musical moments match.
+
+## 2. Make sound effects
+
+```
+python tools/audio/make_sfx.py --list
+python tools/audio/make_sfx.py hit_heavy coin
+python tools/audio/make_sfx.py --all
+```
+
+This writes `Build/art_out/audio/sfx/<name>.ogg`. The recipes are `sword_slash`, `bow_release`, `hit_heavy`, `dodge`, `danger_warning`, `coin`, `ui_click` and `level_up`.
+
+A new sound is a new entry in `tools/audio/sfx_recipes.json`, a list of layers played together:
+
+```json
+"my_zap": [
+  { "wave": "saw", "ms": 200, "curve": 2, "gain": 0.6, "pitch": [1800, 200], "low": [6000, 1200] },
+  { "wave": "noise", "ms": 80, "curve": 3, "gain": 0.3, "high": 2000 }
+]
+```
+
+| Field | Meaning |
+|---|---|
+| `wave` | `noise` (hiss, impacts, whooshes), `sine` (soft), `square` (retro), `saw` (buzzy) |
+| `ms`, `at` | How long it lasts; when it starts |
+| `gain` | How loud this layer is against the others |
+| `attack`, `curve` | Milliseconds to full volume; how fast it fades (1 even, higher faster) |
+| `pitch` | `[from, to]` in Hz: falling sounds heavy, rising sounds bright |
+| `low`, `high` | Keep what is below or above this Hz; `low` may be `[from, to]`, which makes a whoosh |
+
+`--seed` gives another variation of a sound with noise in it.
+
+## 3. Put one in the game
+
+1. Listen to it.
+2. Copy the OGG to `assets/media/sfx/` (`make_sfx.py <name> --to-game` writes it there at the game's level) or `assets/media/music/`.
+3. For a new file, add its key to `assets/media/resources.json`, such as `"sfx.coin": { "type": "file", "path": "sfx/coin.ogg" }`, and run `python tools/make_res_keys.py`.
+4. Name it by its key: in data, `"sound": "sfx.coin"`; in code, `m_oAudio.f_Play(toms::key::g_pszSfxCoin)`. No file name goes in code ([12_RESOURCE_MANAGER.md](12_RESOURCE_MANAGER.md) §4.3b).
+
+Everything plays through the `Audio` engine, so it stays muted in the background.
+
+**Music in a battle:** `battle.json` `backdrops` names the track for a range of floors (`"music": "music.forest_battle"`), and `battle.json` `music` sets `volume`, `fadeInMs` and `fadeOutMs`. `Audio::f_PlayMusic(key, volume, fadeInMs)` loops it, and it fades out when the fight is over. Only battles have music so far: the title, the map and menus have none.
+
+The `unit.audio_ogg_test` test checks every `sfx.*` and `music.*` key decodes the way the game plays it, every file in those folders has a key, every sound the data names is a key, and music keeps playing past its end. The game itself only prints `[audio] cannot play` for a bad sound.
+
+**ffmpeg** writes the OGG files (`tools/audio/ogg.py`). **On a new PC, double-click `tools\get_ffmpeg.cmd` once:** it downloads [BtbN's ffmpeg 9.0 LGPL build](https://github.com/BtbN/FFmpeg-Builds/releases) (about 170 MB) into `tools\ffmpeg\`, which is not in git, and checks it against the SHA-256 list in the same release. The build is refreshed daily, so two PCs can get slightly different builds of 9.0. The tools look at `TOMS_FFMPEG`, then `tools\ffmpeg\`, then PATH. It is for making sounds only and does not ship with the game. The game does not need it: it decodes OGG with `stb_vorbis` (`src/third_party/stb/stb_vorbis.c`, v1.22, public domain).
+
+## 4. Licences
+
+- **ACE-Step 1.5:** the [official licence file](https://raw.githubusercontent.com/ace-step/ACE-Step-1.5/main/LICENSE) is MIT (checked 2026-11-07), which allows commercial use. Check it again before a release.
+- **Stable Audio Open and TangoFlux** are non-commercial without a licence from Stability AI, so they are not used here.
+- **The recipes** use no model and no outside samples.
+- **stb_vorbis** is public domain or MIT, as its user chooses.
+
+## 5. First setup, once
+
+For sound effects and music, run `tools\get_ffmpeg.cmd`. For music, also:
+
+Download `ace_step_1.5_turbo_aio.safetensors` (10 GB) from [Comfy-Org/ace_step_1.5_ComfyUI_files](https://huggingface.co/Comfy-Org/ace_step_1.5_ComfyUI_files/tree/main) into `AIGamestyle/_comfyui/ComfyUI/models/checkpoints/`. That folder is not in git.
+
+## 6. What went wrong here, and how it was fixed
+
+On ComfyUI 0.21.1 with PyTorch 2.6 (RTX 4070), ACE-Step made bad numbers (NaN) in its default 16-bit format for anything longer than a short clip: 10 s worked, 31 s and 60 s did not. With the planning step on, ComfyUI **crashed**. With it off, ComfyUI **reported success and saved a flat signal with no sound**. Forcing 32-bit (`--force-fp32`) worked, but took about 3 minutes.
+
+**Updating fixed it** (2026-11-07):
+
+| | Before | Now |
+|---|---|---|
+| ComfyUI | 0.21.1 | **0.44.2** |
+| PyTorch | 2.6.0 (CUDA 12.4) | **2.14.1 (CUDA 13.0)**, torchvision 0.29.1, torchaudio 2.11.0 |
+| 30 s of music, default settings | Crash | **13 s** |
+| 60 s of music, default settings | Crash | **16 s** |
+
+ComfyUI 0.44 needs PyTorch 2.7 or newer: with 2.6 it does not start. `--force-fp32` is no longer used.
+
+**What the script still does:**
+
+- It starts ComfyUI with `--disable-all-custom-nodes`, because music needs none of the art add-ons and they start slowly. A ComfyUI that is already running also works, with its add-ons.
+- It refuses to write a silent result, in case this ever comes back.
+
+**Checked on the art side:** every add-on loads, and an SDXL image with `comfyui-inspyrenet-rembg` background removal generates correctly. **Not run yet:** the full art workflows of [20_CHARACTER_ART.md](20_CHARACTER_ART.md), with ControlNet and IPAdapter; Hunyuan3D and Florence2 generation. `comfyui-rmbg` prints `No module named 'triton'` for its SAM3 node, as it did before the update.
+
+**To go back:** in `AIGamestyle/_comfyui/ComfyUI`, run `git checkout v0.21.1`, then `.venv\Scripts\python -m pip install -r requirements.txt` and `.venv\Scripts\python -m pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124`. Music then needs `--force-fp32` again.

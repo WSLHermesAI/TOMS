@@ -1,0 +1,19 @@
+{
+  "_comment": "A battle plays its floor's music (battle.json backdrops \"music\", by key). It is muted, as every scripted run is.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999
+  },
+  "test": {
+    "frames": 60
+  },
+  "expect": {
+    "music": "music.forest_battle"
+  }
+}

@@ -56,9 +56,9 @@
     "stopMs": { "hit": 25, "great": 50, "perfect": 80, "parry": 90, "break": 120, "hurt": 30, "heavyHurt": 60, "ultimate": 120 },
     "shakePx": { "hit": 2, "great": 4, "perfect": 7, "parry": 4, "break": 9, "hurt": 4, "heavyHurt": 8, "ultimate": 10, "phase": 6 },
     "shakeMs": 250,
-    "sounds": { "hit": "battle_hit", "great": "battle_great", "perfect": "battle_perfect", "miss": "battle_miss",
-                "parry": "battle_parry", "block": "battle_block", "break": "battle_break", "ultimate": "battle_ultimate",
-                "phase": "battle_phase", "win": "battle_win" },
+    "sounds": { "hit": "sfx.battle_hit", "great": "sfx.battle_great", "perfect": "sfx.battle_perfect", "miss": "sfx.battle_miss",
+                "parry": "sfx.battle_parry", "block": "sfx.battle_block", "break": "sfx.battle_break", "ultimate": "sfx.battle_ultimate",
+                "phase": "sfx.battle_phase", "win": "sfx.battle_win" },
     "slowMoMs": 450, "slowMoScale": 0.3,
     "winClip": "win", "winBigClip": "win_big", "winParClip": "win_par", "loseClip": "lose", "winParHp": 0.25, "endMaxMs": 2500, "reducedScale": 0.25, "chainStep": 0.1, "chainMax": 10
   },
@@ -66,12 +66,13 @@
              "s": 95, "a": 75, "b": 55, "sGold": 0.2, "sCard": 0.25 },
   "guard": { "mode": "warn", "warnMs": 500, "parryShare": 0.4, "missLockMs": 400,
              "parryMs": 160, "blockMs": 550, "earlyMs": 1200, "blockPower": 70, "cooldownMs": 700 },
+  "music": { "volume": 0.45, "fadeInMs": 400, "fadeOutMs": 800 },
   "backdrops": [
-    { "from": 1, "to": 9999, "anim": "anim/battle_forest.anim", "clip": "idle", "size": [1792, 1024], "fx": ["forest_motes", "forest_fireflies"] }
+    { "from": 1, "to": 9999, "music": "music.forest_battle", "anim": "anim/battle_forest.anim", "clip": "idle", "size": [1792, 1024], "fx": ["forest_motes", "forest_fireflies"] }
   ],
-  "cells": { "warnMs": 1400, "start": 4, "shiftX": 55, "shiftNear": 40, "shiftY": 18,
+  "cells": { "cols": 3, "rows": 2, "areaW": 450, "rowH": 58, "gap": 6, "maxH": 150, "perspective": 0.14, "warnMs": 1400, "shiftX": 55, "shiftNear": 40, "shiftY": 18,
              "intro": { "ms": 2200, "uiAtMs": 1200, "popMs": 350, "zoom": 1.25, "clip": "special", "fx": "danger_intro", "text": "battle.cell_intro" },
-             "shapes": { "near": [[0, 1, 2]], "line": [[0, 3], [1, 4], [2, 5]], "fan": [[0, 1, 2, 3, 5]] } },
+             "shapes": { "near": [{ "row": 0 }], "line": [{ "cols": "each" }], "fan": [{ "allBut": "start" }] } },
   "tutorial": {
     "_comment": "The new game's trial fight (docs/gameplay/19 B6). Each step shows its text until doneOn happens count times; once: not again for the next weapon tried.",
     "enemy": "thicketoad",

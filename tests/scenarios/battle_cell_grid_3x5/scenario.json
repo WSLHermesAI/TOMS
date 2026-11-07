@@ -1,0 +1,39 @@
+{
+  "_comment": "The grid from battle.json, here 3 x 5 (cols, rows): the hero starts on cell 13, the far row's middle, the line covers its column; up keeps it in the column, left leaves it.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "thicketoad",
+    "hp": 9999,
+    "moves": [
+      "toad_lesson_line"
+    ],
+    "rules": {
+      "cells": {
+        "cols": 3,
+        "rows": 5
+      }
+    }
+  },
+  "test": {
+    "frames": 390,
+    "keys": "up@295,left@300"
+  },
+  "expect": {
+    "cellGrid": [
+      3,
+      5
+    ],
+    "heroCell": 9,
+    "battleEvents": {
+      "move": 2,
+      "danger": 1,
+      "dodge": 1,
+      "hit": 0
+    }
+  }
+}

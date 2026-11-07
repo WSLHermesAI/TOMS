@@ -281,7 +281,7 @@ something else reads:
 |---|---|---|
 | `texture` `atlas` `anim` `particle` `font` `json` | loaded by the cache | `res->get<T>(key)` |
 | `file` | a file with its own reader: the RmlUi screens (`ui.hud` …), data files with their own loaders | `pathOf(key)` |
-| `folder` | a folder read file by file: `folder.events`, `folder.npcs`, `folder.floors`, `folder.stages`, `folder.sfx` | `pathOf(key)` |
+| `folder` | a folder read file by file: `folder.events`, `folder.npcs`, `folder.floors`, `folder.stages` | `pathOf(key)` |
 
 The game data in `assets/data/` is named from `assets/media` as `../data/...` (`data.items`, `data.battle`,
 `data.weapon_play`, …). `"optional": true` marks a file that may not be there yet (`data.event_kinds`: the event editor

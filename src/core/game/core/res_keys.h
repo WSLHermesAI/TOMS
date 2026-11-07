@@ -46,9 +46,28 @@ inline constexpr const char g_pszFolderChapters[]    = "folder.chapters";       
 inline constexpr const char g_pszFolderEvents[]      = "folder.events";           // folder ../data/events
 inline constexpr const char g_pszFolderFloors[]      = "folder.floors";           // folder ../data/story/floors
 inline constexpr const char g_pszFolderNpcs[]        = "folder.npcs";             // folder ../data/npcs
-inline constexpr const char g_pszFolderSfx[]         = "folder.sfx";              // folder sfx
 inline constexpr const char g_pszFolderStages[]      = "folder.stages";           // folder ../data/stages
 inline constexpr const char g_pszFxBattle[]          = "fx.battle";               // particle fx/battle.particle
+inline constexpr const char g_pszMusicForestBattle[] = "music.forest_battle";     // file music/forest_battle.ogg
+inline constexpr const char g_pszSfxBattleBlock[]    = "sfx.battle_block";        // file sfx/battle_block.ogg
+inline constexpr const char g_pszSfxBattleBreak[]    = "sfx.battle_break";        // file sfx/battle_break.ogg
+inline constexpr const char g_pszSfxBattleGreat[]    = "sfx.battle_great";        // file sfx/battle_great.ogg
+inline constexpr const char g_pszSfxBattleHit[]      = "sfx.battle_hit";          // file sfx/battle_hit.ogg
+inline constexpr const char g_pszSfxBattleMiss[]     = "sfx.battle_miss";         // file sfx/battle_miss.ogg
+inline constexpr const char g_pszSfxBattleParry[]    = "sfx.battle_parry";        // file sfx/battle_parry.ogg
+inline constexpr const char g_pszSfxBattlePerfect[]  = "sfx.battle_perfect";      // file sfx/battle_perfect.ogg
+inline constexpr const char g_pszSfxBattlePhase[]    = "sfx.battle_phase";        // file sfx/battle_phase.ogg
+inline constexpr const char g_pszSfxBattleUltimate[] = "sfx.battle_ultimate";     // file sfx/battle_ultimate.ogg
+inline constexpr const char g_pszSfxBattleWin[]      = "sfx.battle_win";          // file sfx/battle_win.ogg
+inline constexpr const char g_pszSfxCloseUi[]        = "sfx.close_ui";            // file sfx/close_ui.ogg
+inline constexpr const char g_pszSfxComboReady[]     = "sfx.combo_ready";         // file sfx/combo_ready.ogg
+inline constexpr const char g_pszSfxConfirmClick[]   = "sfx.confirm_click";       // file sfx/confirm_click.ogg
+inline constexpr const char g_pszSfxDeny[]           = "sfx.deny";                // file sfx/deny.ogg
+inline constexpr const char g_pszSfxDialoguePopup[]  = "sfx.dialogue_popup";      // file sfx/dialogue_popup.ogg
+inline constexpr const char g_pszSfxEnemyAttack[]    = "sfx.enemy_attack";        // file sfx/enemy_attack.ogg
+inline constexpr const char g_pszSfxGetItem[]        = "sfx.get_item";            // file sfx/get_item.ogg
+inline constexpr const char g_pszSfxPlayerAttack[]   = "sfx.player_attack";       // file sfx/player_attack.ogg
+inline constexpr const char g_pszSfxWalk[]           = "sfx.walk";                // file sfx/walk.ogg
 inline constexpr const char g_pszStylesIndex[]       = "styles.index";            // json styles/styles.json
 inline constexpr const char g_pszUiBattle[]          = "ui.battle";               // file ui/battle.rml
 inline constexpr const char g_pszUiDialogs[]         = "ui.dialogs";              // file ui/dialogs.rml
@@ -101,9 +120,28 @@ inline constexpr const char* g_arrAll[] = {
     g_pszFolderEvents,
     g_pszFolderFloors,
     g_pszFolderNpcs,
-    g_pszFolderSfx,
     g_pszFolderStages,
     g_pszFxBattle,
+    g_pszMusicForestBattle,
+    g_pszSfxBattleBlock,
+    g_pszSfxBattleBreak,
+    g_pszSfxBattleGreat,
+    g_pszSfxBattleHit,
+    g_pszSfxBattleMiss,
+    g_pszSfxBattleParry,
+    g_pszSfxBattlePerfect,
+    g_pszSfxBattlePhase,
+    g_pszSfxBattleUltimate,
+    g_pszSfxBattleWin,
+    g_pszSfxCloseUi,
+    g_pszSfxComboReady,
+    g_pszSfxConfirmClick,
+    g_pszSfxDeny,
+    g_pszSfxDialoguePopup,
+    g_pszSfxEnemyAttack,
+    g_pszSfxGetItem,
+    g_pszSfxPlayerAttack,
+    g_pszSfxWalk,
     g_pszStylesIndex,
     g_pszUiBattle,
     g_pszUiDialogs,

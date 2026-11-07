@@ -31,7 +31,10 @@ void Game::f_StartCombat(const EnemyInst& l_oE, const std::vector<EnemyInst>& l_
     for (const CombatState::Foe& l_oF : m_oCs.m_vFoes)
         for (const auto& l_oChoice : l_oF.m_oEnemy.m_vMoves)
             if (!m_oMoves.f_Get(l_oChoice.m_strId).m_strShape.empty()) m_oCs.m_bCellsOn = true;
-    m_oCs.m_iHeroCell = m_oCellRules.m_iStart;
+    m_oCs.m_iCellCols = m_oCellRules.m_iCols; m_oCs.m_iCellRows = m_oCellRules.m_iRows;
+    for (const CombatState::Foe& l_oF : m_oCs.m_vFoes)   // a monster may bring its own grid
+        if (l_oF.m_oEnemy.m_iCellCols > 0) { m_oCs.m_iCellCols = l_oF.m_oEnemy.m_iCellCols; m_oCs.m_iCellRows = l_oF.m_oEnemy.m_iCellRows; break; }
+    m_oCs.m_iHeroCell = toms::f_CellStart(m_oCellRules, m_oCs.m_iCellCols, m_oCs.m_iCellRows);
     m_v2HeroShift = glm::vec2(0.0f);
     m_oCs.m_iClockMs = 0;
     // the revamp (docs/gameplay/15): no moment running, a fresh chain and grade, the guard unpressed
@@ -334,7 +337,7 @@ void Game::f_StepFoes(int l_iDtMs) {
         {   // the cells its hit covers light up, aimed at where the hero is now (docs/gameplay/19 §2.1)
             const toms::MoveDef& l_oMv = m_oMoves.f_Get(l_oF.m_strMove);
             if (!l_oMv.m_strShape.empty() && !l_oF.m_uDanger && l_oF.m_iMoveMs - l_oF.m_iClockMs <= m_oCellRules.m_iWarnMs) {
-                l_oF.m_uDanger = toms::f_PickDanger(m_oCellRules, l_oMv.m_strShape, m_oCs.m_iHeroCell, std::uniform_real_distribution<float>(0.0f, 1.0f)(m_oMoveRng));
+                l_oF.m_uDanger = toms::f_PickDanger(m_oCellRules, l_oMv.m_strShape, m_oCs.m_iHeroCell, std::uniform_real_distribution<float>(0.0f, 1.0f)(m_oMoveRng), m_oCs.m_iCellCols, m_oCs.m_iCellRows);
                 f_BattleEvent("danger", l_iFoe, -1, (int)l_oF.m_uDanger, l_oMv.m_strShape);
                 if (!m_oCs.m_bCellIntroStarted) f_StartCellIntro(l_iFoe);   // the fight's first: a moment of its own
             }
@@ -571,7 +574,7 @@ void Game::f_BattleSetTarget(int l_iFoe) {
     if (!m_oCs.m_bActive || l_iFoe < 0 || l_iFoe >= (int)m_oCs.m_vFoes.size() || m_oCs.m_vFoes[(size_t)l_iFoe].f_Down() || l_iFoe == m_oCs.m_iTarget) return;
     m_oCs.m_iTarget = l_iFoe;
     f_BattleEvent("target", -1, l_iFoe);
-    m_oAudio.f_Play("confirm_click");
+    m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
 }
 
 void Game::f_BattleCycleTarget(int l_iDir) {
@@ -730,6 +733,8 @@ void Game::f_DrawBattleRig() {
 
 void Game::f_UpdateBattleBackdrop(int l_iDtMs) {
     if (!(m_oCs.m_bActive || m_oCs.m_bWon || m_oCs.m_iResultPauseMs > 0)) {
+        if (!m_oAudio.f_MusicKey().empty())   // the battle is over: its music fades out
+            m_oAudio.f_StopMusic(m_jBattleJson.value("music", nlohmann::json::object()).value("fadeOutMs", 800));
         m_strBackdropAnim.clear();
         m_oBackdrop.f_Stop();
         m_vBackdropFx.clear();
@@ -744,6 +749,11 @@ void Game::f_UpdateBattleBackdrop(int l_iDtMs) {
         nlohmann::json l_jRow = l_jRows.empty() ? nlohmann::json::object() : l_jRows[0];
         for (const auto& l_jR : l_jRows)
             if (l_iFloor >= l_jR.value("from", 1) && l_iFloor <= l_jR.value("to", 9999)) { l_jRow = l_jR; break; }
+        const std::string l_strMusic = l_jRow.value("music", std::string());   // this floor's battle music, by key
+        if (!l_strMusic.empty()) {
+            const nlohmann::json l_jMusic = m_jBattleJson.value("music", nlohmann::json::object());
+            m_oAudio.f_PlayMusic(l_strMusic, l_jMusic.value("volume", 0.5f), l_jMusic.value("fadeInMs", 400));
+        }
         const std::string l_strAnim = l_jRow.value("anim", std::string());
         if (l_strAnim.empty()) return;
         m_strBackdropAnim = l_strAnim;
@@ -765,8 +775,9 @@ void Game::f_UpdateBattleBackdrop(int l_iDtMs) {
                 }
     }
     if (m_oCs.m_bCellsOn) {   // the hero's picture eases toward its cell
-        const int l_iCol = m_oCs.m_iHeroCell % toms::g_iCellCols, l_iRow = m_oCs.m_iHeroCell / toms::g_iCellCols;
-        const glm::vec2 l_v2Want((float)(l_iCol - 1) * m_oCellRules.m_fShiftX + (l_iRow == 0 ? m_oCellRules.m_fShiftNear : 0.0f), l_iRow == 0 ? -m_oCellRules.m_fShiftY : 0.0f);
+        const int l_iCol = m_oCs.m_iHeroCell % m_oCs.m_iCellCols, l_iRow = m_oCs.m_iHeroCell / m_oCs.m_iCellCols;
+        const float l_fNear = m_oCs.m_iCellRows > 1 ? 1.0f - (float)l_iRow / (float)(m_oCs.m_iCellRows - 1) : 0.0f;   // 1 in the row near the monster, 0 in the far one
+        const glm::vec2 l_v2Want(((float)l_iCol - (float)(m_oCs.m_iCellCols - 1) * 0.5f) * m_oCellRules.m_fShiftX + l_fNear * m_oCellRules.m_fShiftNear, -l_fNear * m_oCellRules.m_fShiftY);
         m_v2HeroShift += (l_v2Want - m_v2HeroShift) * std::min(1.0f, (float)l_iDtMs * 0.015f);
     }
     m_oBackdrop.f_Update(l_iDtMs);
@@ -837,7 +848,7 @@ void Game::f_UpdateBattleFx(int l_iDtMs) {
 // The marker came into a point's window (hit = false): a sound and a flash on the point, "tap now". A point hit: a
 // burst on it. On the track's points as the UI laid them out (setComboPointsOnScreen).
 void Game::f_ComboHint(int l_iPoint, bool l_bHit) {
-    if (!l_bHit) m_oAudio.f_Play("combo_ready");
+    if (!l_bHit) m_oAudio.f_Play(toms::key::g_pszSfxComboReady);
     if (l_iPoint < 0 || l_iPoint >= (int)m_vComboPointsOnScreen.size()) return;
     const glm::vec2 l_v2P = m_vComboPointsOnScreen[(size_t)l_iPoint];
     f_PlayBattleFxAt(l_bHit ? "combo_point_hit" : "combo_ready", l_v2P.x, l_v2P.y, /*overUi=*/true);
@@ -1129,7 +1140,7 @@ void Game::f_ResolveEnemyClockFire(int l_iFoe) {
     bool l_bClear = false;
     if (!l_oM.m_strShape.empty() && l_oF.m_iVolleyHit == 0) {
         const uint32_t l_uDanger = l_oF.m_uDanger ? l_oF.m_uDanger
-                                                 : toms::f_PickDanger(m_oCellRules, l_oM.m_strShape, m_oCs.m_iHeroCell, 0.0f);
+                                                 : toms::f_PickDanger(m_oCellRules, l_oM.m_strShape, m_oCs.m_iHeroCell, 0.0f, m_oCs.m_iCellCols, m_oCs.m_iCellRows);
         l_bClear = l_uDanger != 0u && !(l_uDanger & (1u << m_oCs.m_iHeroCell));
     }
     // a special guard play (docs/gameplay/16 §4.3): the hit waits for it; endSkill comes back here with its result
@@ -1259,7 +1270,7 @@ void Game::f_BattleTapAttack() {
         if (m_oCs.m_ePace == toms::Pace::Stamina) {   // the stamina pace: starting an attack costs it (docs/gameplay/13 §6.3)
             if (m_oCs.m_fStamina < (float)m_oPaceSettings.m_iAttackCost) {
                 m_oCs.m_strLog = m_oLocale.f_Tr("battle.no_stamina");
-                m_oAudio.f_Play("deny");
+                m_oAudio.f_Play(toms::key::g_pszSfxDeny);
                 return;
             }
             m_oCs.m_fStamina -= (float)m_oPaceSettings.m_iAttackCost;
@@ -1267,17 +1278,17 @@ void Game::f_BattleTapAttack() {
         const std::string l_strKey = f_WeaponKey();
         m_oCs.m_oCombo.f_Start(toms::f_ComboSettings(f_WeaponPlayOf(l_strKey), f_WeaponLevel(l_strKey)), f_ComboCharge());
         m_oCs.m_strLog = m_oLocale.f_Tr("battle.combo_go");
-        m_oAudio.f_Play("confirm_click");
+        m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
         return;
     }
     const std::vector<bool> l_vBefore = m_oCs.m_oCombo.f_PointsHit();
     switch (m_oCs.m_oCombo.f_Tap()) {
     case toms::ComboPlay::Tap::Hit:
-        m_oAudio.f_Play("confirm_click");
+        m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
         for (size_t l_nI = 0; l_nI < l_vBefore.size() && l_nI < m_oCs.m_oCombo.f_PointsHit().size(); l_nI++)
             if (!l_vBefore[l_nI] && m_oCs.m_oCombo.f_PointsHit()[l_nI]) f_ComboHint((int)l_nI, /*hit=*/true);
         break;
-    case toms::ComboPlay::Tap::Miss: m_oAudio.f_Play("deny"); break;
+    case toms::ComboPlay::Tap::Miss: m_oAudio.f_Play(toms::key::g_pszSfxDeny); break;
     case toms::ComboPlay::Tap::Ignored: break;
     }
     if (m_oCs.m_oCombo.f_Done()) f_ResolveCombo();
@@ -1419,13 +1430,13 @@ void Game::f_ResolveCombo(const toms::ComboResult* l_pPlayed) {
 void Game::f_BattleMoveToCell(int l_iCell) {
     if (f_CellIntroOn()) return;
     if (!f_BattleCellsOn() || m_oCs.m_bWinPending || m_oCs.m_oSkill.m_bOn) return;
-    if (l_iCell < 0 || l_iCell >= toms::g_iCellCols * toms::g_iCellRows || l_iCell == m_oCs.m_iHeroCell) return;
+    if (l_iCell < 0 || l_iCell >= m_oCs.m_iCellCols * m_oCs.m_iCellRows || l_iCell == m_oCs.m_iHeroCell) return;
     m_oCs.m_iHeroCell = l_iCell;
     f_BattleEvent("move", -1, -1, l_iCell);
-    m_oAudio.f_Play("confirm_click");
+    m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
 }
 
-void Game::f_BattleStepCell(int l_iDx, int l_iDy) { f_BattleMoveToCell(toms::f_CellStep(m_oCs.m_iHeroCell, l_iDx, l_iDy)); }
+void Game::f_BattleStepCell(int l_iDx, int l_iDy) { f_BattleMoveToCell(toms::f_CellStep(m_oCs.m_iHeroCell, l_iDx, l_iDy, m_oCs.m_iCellCols, m_oCs.m_iCellRows)); }
 
 void Game::f_BattleTapDefense() {
     if (f_CellIntroOn()) return;
@@ -1438,32 +1449,32 @@ void Game::f_BattleTapDefense() {
         if (!l_bWarned) {   // no "!": too early; the guard locks a moment
             f_PopWord(m_oLocale.f_Tr("battle.word_early"), -1, "early");
             m_oCs.m_iGuardLockMs = m_oGuard.m_iMissLockMs;
-            m_oAudio.f_Play("deny");
+            m_oAudio.f_Play(toms::key::g_pszSfxDeny);
             return;
         }
         if (m_oCs.m_ePace == toms::Pace::Stamina) {
-            if (m_oCs.m_fStamina < (float)m_oPaceSettings.m_iGuardCost) { m_oCs.m_strLog = m_oLocale.f_Tr("battle.no_stamina"); m_oAudio.f_Play("deny"); return; }
+            if (m_oCs.m_fStamina < (float)m_oPaceSettings.m_iGuardCost) { m_oCs.m_strLog = m_oLocale.f_Tr("battle.no_stamina"); m_oAudio.f_Play(toms::key::g_pszSfxDeny); return; }
             m_oCs.m_fStamina -= (float)m_oPaceSettings.m_iGuardCost;
         }
         m_oCs.m_iGuardAtMs = m_oCs.m_iClockMs;
-        m_oAudio.f_Play("confirm_click");
+        m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
         return;
     }
     if (m_oGuard.m_strMode == "timing") {   // one button (docs/gameplay/15 §3.2): it answers the next hit, judged when it lands
         if (m_oCs.m_iGuardCdMs > 0) return;
         if (m_oCs.m_ePace == toms::Pace::Stamina) {
-            if (m_oCs.m_fStamina < (float)m_oPaceSettings.m_iGuardCost) { m_oCs.m_strLog = m_oLocale.f_Tr("battle.no_stamina"); m_oAudio.f_Play("deny"); return; }
+            if (m_oCs.m_fStamina < (float)m_oPaceSettings.m_iGuardCost) { m_oCs.m_strLog = m_oLocale.f_Tr("battle.no_stamina"); m_oAudio.f_Play(toms::key::g_pszSfxDeny); return; }
             m_oCs.m_fStamina -= (float)m_oPaceSettings.m_iGuardCost;
         }
         m_oCs.m_iGuardAtMs = m_oCs.m_iClockMs;
         m_oCs.m_iGuardCdMs = m_oGuard.m_iCooldownMs;
-        m_oAudio.f_Play("confirm_click");
+        m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
         return;
     }
     if (m_oCs.m_ePace == toms::Pace::Stamina) {   // each guard tap costs stamina, no wait (docs/gameplay/13 §6.3)
         if (m_oCs.m_fStamina < (float)m_oPaceSettings.m_iGuardCost) {
             m_oCs.m_strLog = m_oLocale.f_Tr("battle.no_stamina");
-            m_oAudio.f_Play("deny");
+            m_oAudio.f_Play(toms::key::g_pszSfxDeny);
             return;
         }
         m_oCs.m_fStamina -= (float)m_oPaceSettings.m_iGuardCost;
@@ -1547,5 +1558,5 @@ void Game::f_BattleTapActive() {
     if (l_oEff.m_bSurviveLethal) m_oCs.m_bSurvivalArmed = true;
     m_oCs.m_strLog = f_TrParam(m_oLocale.f_Tr("battle.active_armed"), "name", l_strId);
     f_BattleEvent("active", -1, -1, 0, l_strId);
-    m_oAudio.f_Play("confirm_click");
+    m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
 }

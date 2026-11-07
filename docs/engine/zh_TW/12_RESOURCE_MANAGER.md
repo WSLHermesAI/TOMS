@@ -270,7 +270,7 @@ public:
 |---|---|---|
 | `texture` `atlas` `anim` `particle` `font` `json` | 由快取載入 | `res->get<T>(key)` |
 | `file` | 有自己讀取方式的檔案：RmlUi 畫面（`ui.hud` …）、有自己載入函式的資料檔 | `pathOf(key)` |
-| `folder` | 逐檔讀取的資料夾：`folder.events`、`folder.npcs`、`folder.floors`、`folder.stages`、`folder.sfx` | `pathOf(key)` |
+| `folder` | 逐檔讀取的資料夾：`folder.events`、`folder.npcs`、`folder.floors`、`folder.stages` | `pathOf(key)` |
 
 `assets/data/` 裡的遊戲資料從 `assets/media` 以 `../data/...` 命名（`data.items`、`data.battle`、
 `data.weapon_play` …）。`"optional": true` 表示檔案可能還不存在（`data.event_kinds`：事件編輯器第一次使用「種類」分頁時才寫出
