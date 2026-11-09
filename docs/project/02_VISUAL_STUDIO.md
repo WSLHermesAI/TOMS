@@ -125,3 +125,29 @@ ui_editor.exe --smoke=editor.png
   F8 shows the element tree and computed styles. No rebuild needed.
 - **Hot keys in the editor do nothing?** Click the game view first; it needs keyboard focus.
 - Problems: [04_TROUBLESHOOTING.md](04_TROUBLESHOOTING.md).
+
+## 7. Every C++ program: Visual Studio, and no missing-DLL popup
+
+The owner's rule (2026-11-09). It applies to every C++ program in TOMS and in `AIGamestyle`: the game, the editors,
+the tools, the tests and the stand-alone apps.
+
+1. **It builds, runs and debugs in Visual Studio with F5.**
+   - **TOMS:** the program is a target of the root `CMakeLists.txt`, so Open Folder lists it. If it needs arguments
+     or a working folder, it gets a named item in `launch.vs.json`.
+   - **A stand-alone app** (its own CMake project, like `AIGamestyle/ComfyLive`): a `make_vs_solution.bat` writes a
+     solution that has the program as its startup project, a debugger working folder, and Qt's `bin` on the
+     debugger's PATH.
+2. **A `.bat` or `.cmd` builds it, and the built program starts from a double-click with no "missing DLL" popup.**
+   - **TOMS:** `tools\build.cmd`. A stand-alone app has its own `build.cmd`.
+   - **Qt programs:** run windeployqt after the build, and copy the `offscreen` platform plugin if it has
+     `--selftest` or `--screenshot` modes.
+   - **Other libraries:** link them statically (as SDL3 is), or copy their DLLs next to the exe after the build.
+   - **Never rely on PATH:** a double-click and F5 do not use your terminal's PATH.
+3. **Check it:** `python tools/check_exe_dlls.py` reads every built exe's import table and follows each DLL the way
+   Windows does (the exe's folder, System32, the Windows folder), recursively, plus Qt's platform plugin. It covers
+   every `Build\windows-*\bin` and the AIGamestyle apps' build folders, or the folders and exes you give it. Exit 0
+   means no program would stop with a missing-DLL popup. Run it after adding a program or a DLL dependency.
+   Measured 2026-11-09: 46 of 46.
+
+The Visual C++ runtime (`vcruntime140.dll`, `msvcp140.dll`) is installed in System32 with Visual Studio. A PC
+without it needs `vc_redist.x64.exe`, which windeployqt copies next to the Qt programs.

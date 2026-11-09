@@ -226,6 +226,7 @@ RULES = [
     (['tools/audio/*'], None, 'makes music and sound effects into Build/, not into the game (docs/engine/22): no test, run it by hand'),
     (['tools/setup_ai_art.*'], None, 'the AI art installer (ComfyUI, models; docs/engine/20): no test, run it by hand'),
     (['tools/frames_to_gif.py'], None, 'merges a --record run\'s frames into a GIF (docs/gameplay/18 §4): no test'),
+    (['tools/check_exe_dlls.py'], None, 'checks every built exe for missing DLLs (docs/project/02 §7): no test, it is the check'),
     (['tools/naming/*'], None, 'the C++ naming renamer (docs/project/12 §6): no test; the build checks what it renamed'),
     (['art_raw/*'], ATLAS, 'raw art (sprite PNGs): the atlas checks'),
     (['assets/media/atlas/*'], any_of(ATLAS, is_game_smoke_d3d11), 'atlas files: atlas checks + game screenshots'),

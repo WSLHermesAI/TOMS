@@ -26,6 +26,18 @@
   Android and other versions are tested and updated only when the owner asks for that version. `tools\test.cmd` picks
   desktop tests only, so don't add web tests to a run. The exception is "test all", which the owner asks for directly.
 
+### C++ programs: Visual Studio F5, and a script that runs with no missing-DLL popup
+
+- **Every C++ program (TOMS and AIGamestyle) builds, runs and debugs in Visual Studio with F5** (the owner,
+  2026-11-09; docs/project/02_VISUAL_STUDIO.md §7). In TOMS it is a target of the root CMake project, with a
+  `launch.vs.json` item if it needs arguments. A stand-alone app has a `make_vs_solution.bat` that sets it as the
+  startup project.
+- **A `.bat`/`.cmd` builds it, and the built exe starts from a double-click with no "missing DLL" popup.** Use
+  windeployqt for Qt (plus the offscreen plugin for self-tests), and static linking or a post-build copy for other
+  DLLs. Never rely on PATH.
+- **After adding a program or a DLL dependency, run `python tools/check_exe_dlls.py`.** Exit 0 means nothing is
+  missing.
+
 ### Sound: nothing is heard from a run in the background
 
 - **Anything running offscreen or in the background has every sound and BGM at volume 0** (the owner, 2026-11-05): a

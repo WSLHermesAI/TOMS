@@ -127,3 +127,26 @@ ui_editor.exe --smoke=editor.png
   F8 顯示元素樹和計算後的樣式。不需要重新建置。
 - **編輯器中的快速鍵沒反應？** 先點一下遊戲畫面；它需要鍵盤焦點。
 - 問題排除：[04_TROUBLESHOOTING.md](04_TROUBLESHOOTING.md)。
+
+## 7. 每個 C++ 程式：Visual Studio，且不跳「缺少 DLL」
+
+擁有者的規則（2026-11-09）。適用於 TOMS 和 `AIGamestyle` 裡的每個 C++ 程式：遊戲、編輯器、工具、測試和獨立 app。
+
+1. **用 Visual Studio 建置、執行和除錯（F5）。**
+   - **TOMS：** 程式是根目錄 `CMakeLists.txt` 的目標，所以「開啟資料夾」會列出它。需要參數或工作資料夾的程式，在
+     `launch.vs.json` 裡要有一個具名項目。
+   - **獨立 app**（有自己的 CMake 專案，例如 `AIGamestyle/ComfyLive`）：用 `make_vs_solution.bat` 產生方案。方案
+     以該程式為啟動專案，並設好偵錯工作資料夾，且偵錯時 PATH 含 Qt 的 `bin`。
+2. **有 `.bat` 或 `.cmd` 可以建置，建好的程式雙擊就能啟動，不跳「缺少 DLL」。**
+   - **TOMS：** 用 `tools\build.cmd`。獨立 app 有自己的 `build.cmd`。
+   - **Qt 程式：** 建置後執行 windeployqt。有 `--selftest` 或 `--screenshot` 模式的程式，還要複製 `offscreen`
+     平台外掛。
+   - **其他函式庫：** 靜態連結（例如 SDL3），或建置後把它們的 DLL 複製到 exe 旁邊。
+   - **不要依賴 PATH：** 雙擊和 F5 都不會用到終端機的 PATH。
+3. **檢查：** `python tools/check_exe_dlls.py` 讀取每個建好的 exe 的匯入表，用 Windows 的順序找每個 DLL（exe 的
+   資料夾、System32、Windows 資料夾）並遞迴往下找，也檢查 Qt 的平台外掛。預設涵蓋每個 `Build\windows-*\bin` 和
+   AIGamestyle 各 app 的建置資料夾，也可以指定資料夾或 exe。結束碼 0 代表沒有程式會因為缺少 DLL 而跳出視窗。
+   新增程式或新的 DLL 相依之後要執行它。2026-11-09 實測：46 個全部通過。
+
+Visual C++ 執行階段（`vcruntime140.dll`、`msvcp140.dll`）會隨 Visual Studio 裝進 System32。沒有它的電腦需要
+`vc_redist.x64.exe`，windeployqt 會把它複製到 Qt 程式旁邊。
