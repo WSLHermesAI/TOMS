@@ -22,6 +22,7 @@
     "moves": ["strike", "jabs"]
   },
   "golem": {
+    "big": true,
     "name": { "zh_TW": "石巨人", "en": "Stone Golem", "zh_CN": "石巨人", "ja": "石の巨人", "ko": "돌 거인", "es": "Gólem de Piedra" },
     "sprite": "golem.png",
     "hp": 140,

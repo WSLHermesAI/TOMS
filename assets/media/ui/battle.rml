@@ -25,7 +25,7 @@
     <div data-for="f, i : battle.foes"><div class="foe" data-class-f1="i == 1" data-class-f2="i == 2"
          data-class-n1="battle.foes.size == 1" data-class-n2="battle.foes.size == 2" data-class-n3="battle.foes.size == 3"
          data-class-down="f.down" data-event-click="act('battle_target', i)">
-        <div class="fbox"><img data-if="!f.anim" data-attr-sprite="f.sprite"/><div class="mark" data-if="f.target"></div>
+        <div class="fbox"><img data-if="!f.anim" data-attr-sprite="f.sprite"/>
             <div class="warn" data-if="f.warn">!</div></div>
         <!-- its next move and the time left (docs/gameplay/13 §6.1) -->
         <div class="intent" data-if="f.intent != ''" data-class-heavy="f.intent_kind == 'heavy'"
@@ -38,7 +38,7 @@
         <div class="fhp"><div class="fill-bar bad" data-style-width="f.hp_pct + '%'"></div>
             <div class="fbreak" data-style-width="f.break_pct + '%'"></div></div>
         <div class="ftext one">{{f.hp_text}}</div>
-        <div class="ftext two">{{f.name}}<br/>{{f.hp_line}}</div>
+        <div class="ftext two">{{f.name}}<br/>{{f.hp_line}}<div class="ftarget" data-if="f.target">{{battle.target_label}}</div></div>
     </div></div>
     <!-- (the message line is gone: short words rise where things happen; cs.log stays for the editor's log) -->
 

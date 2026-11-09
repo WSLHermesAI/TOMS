@@ -244,6 +244,7 @@ bool Game::f_StartScenarioJson(const nlohmann::json& l_jSc, const std::string& l
             m_oFeel = toms::f_FeelFromJson(l_jRules);
             m_oCellRules = toms::f_CellRulesFromJson(l_jRules);
             m_oTouchSettings = toms::f_TouchPlayFromJson(l_jRules);
+            m_jFeelFx = l_jRules.value("feelFx", nlohmann::json::object());   // the attack feel (docs/gameplay/20)
             m_oGrade = toms::f_GradeFromJson(l_jRules);
             m_oGuard = toms::f_GuardFromJson(l_jRules);
             m_bComboHoldsMonsters = l_jRules.value("combo_holds_monsters", false);

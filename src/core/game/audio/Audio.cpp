@@ -76,7 +76,24 @@ void f_ReapFinished() {
 }  // namespace
 #endif
 
-void Audio::f_Play(const std::string& l_strKey) {
+#if !defined(__ANDROID__)
+namespace {
+// A sound at another pitch or volume is its own ma_sound (the engine's fire-and-forget sound has neither): kept until it ends.
+// The decoded data is cached by miniaudio's resource manager, so the same sound again is not read again.
+std::vector<ma_sound*>& f_PitchedSfx() { static std::vector<ma_sound*> l_vV; return l_vV; }
+void f_ReapPitched() {
+    auto& l_vV = f_PitchedSfx();
+    for (size_t l_nI = 0; l_nI < l_vV.size();) {
+        if (ma_sound_at_end(l_vV[l_nI])) { ma_sound_uninit(l_vV[l_nI]); delete l_vV[l_nI]; l_vV.erase(l_vV.begin() + (long)l_nI); }
+        else ++l_nI;
+    }
+}
+}  // namespace
+#endif
+
+void Audio::f_Play(const std::string& l_strKey) { f_Play(l_strKey, 1.0f, 1.0f); }
+
+void Audio::f_Play(const std::string& l_strKey, float l_fPitch, float l_fVolume) {
     if (!m_bOk || !m_pEngine) return;
     ma_engine* l_pE = &((ma_engine_wrapper*)m_pEngine)->m_oE;
     const std::string l_strPath = m_fnPathOf(l_strKey);
@@ -91,11 +108,27 @@ void Audio::f_Play(const std::string& l_strKey) {
     if (ma_sound_init_from_data_source(l_pE, l_pDec, 0, NULL, l_pSnd) != MA_SUCCESS) {
         ma_decoder_uninit(l_pDec); delete l_pDec; delete l_pSnd; return;
     }
+    ma_sound_set_pitch(l_pSnd, l_fPitch);
+    ma_sound_set_volume(l_pSnd, l_fVolume);
     ma_sound_start(l_pSnd);
     f_LiveSfx().push_back({l_pSnd, l_pDec});
 #else
-    ma_result l_eR = ma_engine_play_sound(l_pE, l_strPath.c_str(), NULL);
-    if (l_eR != MA_SUCCESS) fprintf(stderr, "[audio] cannot play %s (%d)\n", l_strPath.c_str(), (int)l_eR);   // missing or bad: silence, not a crash
+    if (l_fPitch == 1.0f && l_fVolume == 1.0f) {   // the engine's own fire-and-forget sound
+        ma_result l_eR = ma_engine_play_sound(l_pE, l_strPath.c_str(), NULL);
+        if (l_eR != MA_SUCCESS) fprintf(stderr, "[audio] cannot play %s (%d)\n", l_strPath.c_str(), (int)l_eR);   // missing or bad: silence, not a crash
+        return;
+    }
+    f_ReapPitched();
+    ma_sound* l_pSnd = new ma_sound();
+    if (ma_sound_init_from_file(l_pE, l_strPath.c_str(), MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_NO_SPATIALIZATION, NULL, NULL, l_pSnd) != MA_SUCCESS) {
+        fprintf(stderr, "[audio] cannot play %s\n", l_strPath.c_str());
+        delete l_pSnd;
+        return;
+    }
+    ma_sound_set_pitch(l_pSnd, l_fPitch);
+    ma_sound_set_volume(l_pSnd, l_fVolume);
+    ma_sound_start(l_pSnd);
+    f_PitchedSfx().push_back(l_pSnd);
 #endif
 }
 
@@ -167,5 +200,9 @@ Audio::~Audio() {
     if (g_pLiveAudio == this) g_pLiveAudio = nullptr;
     f_StopMusic(0);
     if (m_pEngine) f_ReapMusic(true);
+#if !defined(__ANDROID__)
+    for (ma_sound* l_pSnd : f_PitchedSfx()) { ma_sound_uninit(l_pSnd); delete l_pSnd; }   // before their engine
+    f_PitchedSfx().clear();
+#endif
     if (m_pEngine) { ma_engine_uninit(&((ma_engine_wrapper*)m_pEngine)->m_oE); delete (ma_engine_wrapper*)m_pEngine; }
 }

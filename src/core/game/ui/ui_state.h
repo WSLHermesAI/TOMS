@@ -141,6 +141,7 @@ struct UiBattle {
     float m_fPlayerHpPct = 0, m_fEnemyHpPct = 0;
     std::string m_strPlayerHpText, m_strEnemyHpText, m_strLog, m_strContinueHint;
     std::string m_strClockLabel;
+    std::string m_strTargetLabel;           // under the target monster's name, with two or three (docs/gameplay/20 §6)
     float m_fClockPct = 0;
     UiPowerBar m_oAttack, m_oDefense;            // (attack: Battle v2's bar, no longer shown; combo replaced it)
     UiCombo m_oCombo;

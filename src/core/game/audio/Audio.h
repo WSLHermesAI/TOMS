@@ -15,6 +15,8 @@ struct Audio : public Trackable {
     using PathOfKey = std::function<std::string(const std::string&)>;
     bool f_Init(PathOfKey l_fnPathOf);
     void f_Play(const std::string& l_strKey);    // a key: toms::key::g_pszSfxWalk, or "sfx.walk" from data
+    // The same, at a pitch (1 = as recorded, 2 = an octave up; the length changes with it) and a volume (0..1).
+    void f_Play(const std::string& l_strKey, float l_fPitch, float l_fVolume = 1.0f);
     // The looping music. The same key again changes nothing; another fades over it. It plays through the same engine, so
     // the background mute covers it. Without a sound device the key is still kept, and nothing plays.
     void f_PlayMusic(const std::string& l_strKey, float l_fVolume, int l_iFadeInMs);

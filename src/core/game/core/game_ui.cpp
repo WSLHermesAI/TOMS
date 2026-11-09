@@ -362,6 +362,7 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
             l_oQ.m_fOpacity = l_fR < 0.6f ? 1.0f : std::max(0.0f, 1.0f - (l_fR - 0.6f) / 0.4f);
             l_oB.m_vPopups.push_back(l_oQ);
         }
+        l_oB.m_strTargetLabel = l_oL.f_Tr("battle.target_now");   // under the target's name (20 §6)
         if (m_oCs.m_bActive) {
             l_oB.m_strClockLabel = l_oL.f_Tr("battle.enemy_clock");
             // the clock of the monster that attacks next (the nearest to its move); the stamina pace shows the stamina
@@ -970,7 +971,9 @@ void Game::f_TouchPlayUi(toms::UiBattle& l_oB) const {
                 l_fnAdd(l_bLit ? "circle" : "circle idle", l_oC.m_fX, l_oC.m_fY, 2 * l_fR, 2 * l_fR, 0.0f, l_fR, l_bLit ? 1.0f : 0.35f, l_bLit ? std::to_string(l_nK + 1) : std::string());
                 continue;
             }
-            l_fnAdd("circle", l_oC.m_fX, l_oC.m_fY, 2 * l_fR, 2 * l_fR, 0.0f, l_fR);   // back together, without the numbers
+            if (l_ePhase == toms::TouchPlay::CirclePhase::Tap && (int)l_nK >= l_oP.f_CirclesShown()) continue;   // not back yet (20 §2)
+            // back one by one with their numbers, which go once all are back (20 §2)
+            l_fnAdd("circle", l_oC.m_fX, l_oC.m_fY, 2 * l_fR, 2 * l_fR, 0.0f, l_fR, 1.0f, l_oP.f_CircleNumbersShown() ? std::to_string(l_nK + 1) : std::string());
             if (l_ePhase == toms::TouchPlay::CirclePhase::Warn) l_fnAdd("warn", l_oC.m_fX, l_oC.m_fY - l_fR - 18.0f, 30, 34, 0.0f, 0.0f, 1.0f, "!");
         }
         if (l_ePhase == toms::TouchPlay::CirclePhase::Tap) {

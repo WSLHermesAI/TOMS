@@ -5,8 +5,9 @@
 //            A normal attack is one arrow; a move asks for several.
 //   Swipe    the sword's prompts, one at a time on a cue track: each pops in, and only its input window takes the
 //            answer: a swipe the arrow's way, a gesture (V, M, square; 17 §4.2) or a shape drawn. Each answer is a hit at once.
-//   Circles  the staff's circles: they count in order with their numbers, hide, come back together with an "!", and
-//            are tapped in the order remembered. Each tap casts a spell at once.
+//   Circles  the staff's circles: they count in order with their numbers, all hide at once, then come back one by one
+//            (0.1 s apart) with their numbers, already to be tapped; once all are back the numbers go, and the rest are
+//            tapped in the order remembered. Each tap casts a spell at once (docs/gameplay/20 §2).
 //   Shape    a shape shown on the screen, traced corner by corner in a time (the staff's pentagram, a special guard).
 //   Mash     tap quickly, `points` times in a time (a special guard).
 //   Free     the ultimates (17 §5): for a time, any swipe or any tap anywhere counts, as many as the player makes.
@@ -53,7 +54,8 @@ struct TouchPlaySettings {
     // circles
     int m_iCircleCountMs = 450;       // each circle lit in turn with its number
     int m_iCircleHideMs = 500;        // then all hidden (the owner: 0.5 s)
-    int m_iCircleWarnMs = 500;        // then back together with an "!", not yet to be tapped (0.5 s)
+    int m_iCircleWarnMs = 0;          // then, if more than 0, back together with an "!", not yet to be tapped (16 §3.3; 0 since 20 §2)
+    int m_iCircleReturnMs = 100;      // then back one by one this far apart, numbered and already to be tapped (20 §2)
     int m_iCircleTapMs = 900;         // then the time to tap them all: this much per circle
     int m_iCirclePerfectMs = 500;     // a tap this soon after the last answer is perfect
     float m_fCircleRadius = 34.0f;
@@ -88,7 +90,8 @@ public:
     struct Target { float m_fX = 0, m_fY = 0, m_fR = 0; };
     struct Circle { float m_fX = 0, m_fY = 0; int m_iState = 0; };   // 0 wait 1 hit 2 perfect 3 missed
     struct Mark { float m_fX = 0, m_fY = 0; bool m_bOk = false; int m_iAgeMs = 0; };
-    struct Hit { bool m_bOk = false, m_bPerfect = false; float m_fX = 0, m_fY = 0; };   // one answer, as it happens
+    // One answer, as it happens: which one (0 = the first) and, for a swipe, the way it went (degrees, 0 = right, clockwise).
+    struct Hit { bool m_bOk = false, m_bPerfect = false; float m_fX = 0, m_fY = 0; int m_iOrder = 0; float m_fAngle = 0; };
     enum class CirclePhase { Count, Hide, Warn, Tap };
 
     // A new play of `points` over `area` (x, y, w, h: where its targets and circles may go). A move (`ultimate`) and
@@ -133,6 +136,8 @@ public:
     const std::vector<Circle>& f_Circles() const { return m_vCircles; }
     CirclePhase f_CirclePhase() const { return m_eCirclePhase; }
     int f_CirclesLit() const;                       // the count: how many have shown their number so far
+    int f_CirclesShown() const;                     // on the screen now: lit while counting, none hidden, then back one by one
+    bool f_CircleNumbersShown() const;              // counting, or coming back (until the last is back)
     // shape
     const ShapeTrace& f_Trace() const { return m_oTrace; }
 
@@ -163,6 +168,7 @@ private:
     std::vector<std::string> m_vCueKinds;
     std::vector<int> m_vCueDirs;
     std::vector<glm::vec2> m_vStroke;
+    float m_fStrokeAngle = 0.0f;   // the last judged swipe's way (Hit::m_fAngle)
     // circles
     std::vector<Circle> m_vCircles;
     CirclePhase m_eCirclePhase = CirclePhase::Count;

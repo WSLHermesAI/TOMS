@@ -59,15 +59,24 @@ inline constexpr const char g_pszSfxBattlePerfect[]  = "sfx.battle_perfect";    
 inline constexpr const char g_pszSfxBattlePhase[]    = "sfx.battle_phase";        // file sfx/battle_phase.ogg
 inline constexpr const char g_pszSfxBattleUltimate[] = "sfx.battle_ultimate";     // file sfx/battle_ultimate.ogg
 inline constexpr const char g_pszSfxBattleWin[]      = "sfx.battle_win";          // file sfx/battle_win.ogg
+inline constexpr const char g_pszSfxBowCharge[]      = "sfx.bow_charge";          // file sfx/bow_charge.ogg
 inline constexpr const char g_pszSfxCloseUi[]        = "sfx.close_ui";            // file sfx/close_ui.ogg
 inline constexpr const char g_pszSfxComboReady[]     = "sfx.combo_ready";         // file sfx/combo_ready.ogg
 inline constexpr const char g_pszSfxConfirmClick[]   = "sfx.confirm_click";       // file sfx/confirm_click.ogg
 inline constexpr const char g_pszSfxDeny[]           = "sfx.deny";                // file sfx/deny.ogg
 inline constexpr const char g_pszSfxDialoguePopup[]  = "sfx.dialogue_popup";      // file sfx/dialogue_popup.ogg
 inline constexpr const char g_pszSfxEnemyAttack[]    = "sfx.enemy_attack";        // file sfx/enemy_attack.ogg
+inline constexpr const char g_pszSfxExplosion[]      = "sfx.explosion";           // file sfx/explosion.ogg
 inline constexpr const char g_pszSfxGetItem[]        = "sfx.get_item";            // file sfx/get_item.ogg
+inline constexpr const char g_pszSfxMagicCast[]      = "sfx.magic_cast";          // file sfx/magic_cast.ogg
+inline constexpr const char g_pszSfxMonsterImpact[]  = "sfx.monster_impact";      // file sfx/monster_impact.ogg
+inline constexpr const char g_pszSfxMonsterLaunch[]  = "sfx.monster_launch";      // file sfx/monster_launch.ogg
 inline constexpr const char g_pszSfxPlayerAttack[]   = "sfx.player_attack";       // file sfx/player_attack.ogg
+inline constexpr const char g_pszSfxSwordSlash[]     = "sfx.sword_slash";         // file sfx/sword_slash.ogg
 inline constexpr const char g_pszSfxWalk[]           = "sfx.walk";                // file sfx/walk.ogg
+inline constexpr const char g_pszSfxWandCast[]       = "sfx.wand_cast";           // file sfx/wand_cast.ogg
+inline constexpr const char g_pszSfxWandHint[]       = "sfx.wand_hint";           // file sfx/wand_hint.ogg
+inline constexpr const char g_pszSfxWandVanish[]     = "sfx.wand_vanish";         // file sfx/wand_vanish.ogg
 inline constexpr const char g_pszStylesIndex[]       = "styles.index";            // json styles/styles.json
 inline constexpr const char g_pszUiBattle[]          = "ui.battle";               // file ui/battle.rml
 inline constexpr const char g_pszUiDialogs[]         = "ui.dialogs";              // file ui/dialogs.rml
@@ -133,15 +142,24 @@ inline constexpr const char* g_arrAll[] = {
     g_pszSfxBattlePhase,
     g_pszSfxBattleUltimate,
     g_pszSfxBattleWin,
+    g_pszSfxBowCharge,
     g_pszSfxCloseUi,
     g_pszSfxComboReady,
     g_pszSfxConfirmClick,
     g_pszSfxDeny,
     g_pszSfxDialoguePopup,
     g_pszSfxEnemyAttack,
+    g_pszSfxExplosion,
     g_pszSfxGetItem,
+    g_pszSfxMagicCast,
+    g_pszSfxMonsterImpact,
+    g_pszSfxMonsterLaunch,
     g_pszSfxPlayerAttack,
+    g_pszSfxSwordSlash,
     g_pszSfxWalk,
+    g_pszSfxWandCast,
+    g_pszSfxWandHint,
+    g_pszSfxWandVanish,
     g_pszStylesIndex,
     g_pszUiBattle,
     g_pszUiDialogs,

@@ -820,16 +820,16 @@ void Game::f_PlayBattleFx(const std::string& l_strEffect, int l_iWho, int l_iDel
     else f_PlayBattleFxAt(l_strEffect, l_v4B.x + l_v4B.z * 0.731f, l_v4B.y + l_v4B.w * 0.493f, false, l_iDelayMs);
 }
 
-void Game::f_PlayBattleFxAt(const std::string& l_strEffect, float l_fX, float l_fY, bool l_bOverUi, int l_iDelayMs) {
+void Game::f_PlayBattleFxAt(const std::string& l_strEffect, float l_fX, float l_fY, bool l_bOverUi, int l_iDelayMs, float l_fScale, float l_fRotationDeg) {
     if (l_strEffect.empty()) return;
     f_LoadBattleFxFile();
     if (!m_spBattleFxFile) return;
     const toms::fx::Effect* l_pE = m_spBattleFxFile->f_Find(l_strEffect);
     if (!l_pE) { std::fprintf(stderr, "[battle] %s has no effect '%s'\n", m_pszBattleFxFile, l_strEffect.c_str()); return; }
-    auto l_fnStart = [this, l_pE, l_fX, l_fY, l_bOverUi] {
+    auto l_fnStart = [this, l_pE, l_fX, l_fY, l_bOverUi, l_fScale, l_fRotationDeg] {
         BattleFx l_oB;
         l_oB.m_bOverUi = l_bOverUi;
-        l_oB.m_oFx.f_SetTransform(toms::anim::f_Placement(l_fX, l_fY));
+        l_oB.m_oFx.f_SetTransform(toms::anim::f_Placement(l_fX, l_fY, l_fScale, l_fRotationDeg));
         if (!l_bOverUi) l_oB.m_oFx.f_SetGpuSimulation(m_pRen, f_ParticleGpuThreshold());   // the top layer draws quads only
         l_oB.m_oFx.f_Play(l_pE, ++m_uBattleFxSeed);
         m_vBattleFx.push_back(std::move(l_oB));
@@ -838,8 +838,86 @@ void Game::f_PlayBattleFxAt(const std::string& l_strEffect, float l_fX, float l_
     else l_fnStart();
 }
 
+void Game::f_LaunchBattleFx(const std::string& l_strEffect, glm::vec2 l_v2From, glm::vec2 l_v2To, int l_iFlightMs, const std::string& l_strImpact,
+                            const std::string& l_strImpactSound) {
+    f_LoadBattleFxFile();
+    if (!m_spBattleFxFile) return;
+    const toms::fx::Effect* l_pE = m_spBattleFxFile->f_Find(l_strEffect);
+    if (!l_pE) { std::fprintf(stderr, "[battle] %s has no effect '%s'\n", m_pszBattleFxFile, l_strEffect.c_str()); return; }
+    BattleFx l_oB;
+    l_oB.m_bFlying = true;
+    l_oB.m_v2From = l_v2From;
+    l_oB.m_v2To = l_v2To;
+    l_oB.m_iFlightMs = std::max(1, l_iFlightMs);
+    l_oB.m_strImpact = l_strImpact;
+    l_oB.m_strImpactSound = l_strImpactSound;
+    const float l_fAngle = std::atan2(l_v2To.y - l_v2From.y, l_v2To.x - l_v2From.x) * 57.29578f;   // its trail points back along the flight
+    l_oB.m_oFx.f_SetTransform(toms::anim::f_Placement(l_v2From.x, l_v2From.y, 1.0f, l_fAngle));
+    l_oB.m_oFx.f_SetGpuSimulation(m_pRen, f_ParticleGpuThreshold());
+    l_oB.m_oFx.f_Play(l_pE, ++m_uBattleFxSeed);
+    m_vBattleFx.push_back(std::move(l_oB));
+}
+
+bool Game::f_FoeIsBig(int l_iFoe) const {
+    if (l_iFoe < 0 || l_iFoe >= (int)m_oCs.m_vFoes.size()) return false;
+    const EnemyInst& l_oE = m_oCs.m_vFoes[(size_t)l_iFoe].m_oEnemy;
+    if (l_oE.m_bBoss) return true;
+    const auto l_itT = m_mapEnemyTpl.find(l_oE.m_strId);
+    return l_itT != m_mapEnemyTpl.end() && l_itT->second.value("big", false);
+}
+
+// A monster's attack (docs/gameplay/20 §5): data/battle.json "feelFx" "foeAttack", by kind. A spell, and any attack of a big
+// monster, flies at the hero; a heavy blow or a special guard's attack is "special"; the rest strike where the hero stands.
+// reaches: false when the hero stood clear (the projectile flies on and fades; no impact).
+void Game::f_FoeAttackFx(int l_iFoe, const toms::MoveDef& l_oMove, bool l_bReaches) {
+    const nlohmann::json l_jAll = f_FeelFx().value("foeAttack", nlohmann::json::object());
+    std::string l_strKind = "strike";
+    if (l_oMove.m_eKind == toms::MoveKind::Spell) l_strKind = "spell";
+    else if (l_oMove.m_eKind == toms::MoveKind::Heavy || !l_oMove.m_strGuardPlay.empty()) l_strKind = f_FoeIsBig(l_iFoe) ? "bigSpecial" : "special";
+    else if (f_FoeIsBig(l_iFoe)) l_strKind = "big";
+    const nlohmann::json l_jK = l_jAll.value(l_strKind, nlohmann::json::object());
+    // the hero's chest: a third down the box (the box reaches below the drawn feet, so its middle is at the hips)
+    const glm::vec4 l_v4Hero = f_FighterBox(-1);
+    const glm::vec2 l_v2Foe = f_FighterCentre(l_iFoe), l_v2Hero(l_v4Hero.x + l_v4Hero.z * 0.55f, l_v4Hero.y + l_v4Hero.w * 0.3f);
+    std::uniform_real_distribution<float> l_oPitch(0.92f, 1.08f);
+    if (!l_jK.value("cast", std::string()).empty()) f_PlayBattleFx(l_jK.value("cast", std::string()), l_iFoe);
+    if (!l_jK.value("sound", std::string()).empty()) m_oAudio.f_Play(l_jK.value("sound", std::string()), l_oPitch(m_oShakeRng));
+    const std::string l_strImpact = l_bReaches ? l_jK.value("impact", std::string()) : std::string();
+    const std::string l_strImpactSound = l_bReaches ? l_jK.value("impactSound", std::string()) : std::string();
+    const std::string l_strProjectile = l_jK.value("projectile", std::string());
+    if (!l_strProjectile.empty()) {
+        f_LaunchBattleFx(l_strProjectile, l_v2Foe, l_v2Hero, l_jAll.value("flightMs", 180), l_strImpact, l_strImpactSound);
+        return;
+    }
+    const int l_iDelay = l_jAll.value("impactDelayMs", 150);   // as the lunge lands (the number shows at hit_number_delay_ms)
+    if (!l_strImpact.empty()) f_PlayBattleFxAt(l_strImpact, l_v2Hero.x, l_v2Hero.y, false, l_iDelay, 1.0f, l_oPitch(m_oShakeRng) * 40.0f - 40.0f);
+    if (!l_strImpactSound.empty()) {
+        const float l_fPitch = l_oPitch(m_oShakeRng);
+        m_oTimers.f_After(m_oBattleTimers, l_iDelay, [this, l_strImpactSound, l_fPitch] { m_oAudio.f_Play(l_strImpactSound, l_fPitch); });
+    }
+}
+
 void Game::f_UpdateBattleFx(int l_iDtMs) {
     if (!(m_oCs.m_bActive || m_oCs.m_bWon || m_oCs.m_iResultPauseMs > 0)) { m_vBattleFx.clear(); return; }
+    std::vector<std::pair<glm::vec2, std::pair<std::string, std::string>>> l_vLanded;   // (played after: a push_back moves the list)
+    for (BattleFx& l_oB : m_vBattleFx) {
+        if (!l_oB.m_bFlying) continue;
+        l_oB.m_iAgeMs += l_iDtMs;
+        const float l_fT = std::min(1.0f, (float)l_oB.m_iAgeMs / (float)l_oB.m_iFlightMs);
+        glm::vec2 l_v2P = l_oB.m_v2From + (l_oB.m_v2To - l_oB.m_v2From) * l_fT;
+        l_v2P.y -= std::sin(l_fT * 3.14159f) * 40.0f;   // a low arc
+        const float l_fAngle = std::atan2(l_oB.m_v2To.y - l_oB.m_v2From.y, l_oB.m_v2To.x - l_oB.m_v2From.x) * 57.29578f;
+        l_oB.m_oFx.f_SetTransform(toms::anim::f_Placement(l_v2P.x, l_v2P.y, 1.0f, l_fAngle));
+        if (l_fT >= 1.0f) {
+            l_oB.m_bFlying = false;
+            l_oB.m_oFx.f_Stop(false);   // its trail fades where it is
+            l_vLanded.push_back({l_oB.m_v2To, {l_oB.m_strImpact, l_oB.m_strImpactSound}});
+        }
+    }
+    for (const auto& l_pairLanded : l_vLanded) {
+        f_PlayBattleFxAt(l_pairLanded.second.first, l_pairLanded.first.x, l_pairLanded.first.y, false);
+        if (!l_pairLanded.second.second.empty()) m_oAudio.f_Play(l_pairLanded.second.second);
+    }
     for (BattleFx& l_oB : m_vBattleFx) l_oB.m_oFx.f_Update(l_iDtMs / 1000.0f);
     m_vBattleFx.erase(std::remove_if(m_vBattleFx.begin(), m_vBattleFx.end(), [](const BattleFx& l_oB) { return l_oB.m_oFx.f_Finished(); }),
                     m_vBattleFx.end());
@@ -1159,6 +1237,7 @@ void Game::f_ResolveEnemyClockFire(int l_iFoe) {
     if (l_bClear) {   // it strikes where the hero is not
         f_BattleEvent("dodge", -1, l_iFoe, 0, l_oF.m_strMove);
         f_FoeLook(l_iFoe, "attack");
+        f_FoeAttackFx(l_iFoe, l_oM, false);
         f_PopWord(m_oLocale.f_Tr("battle.word_dodge"), -1, "parry");
         m_oCs.m_iGuardAtMs = -1;
         f_StartAttackPause();
@@ -1193,6 +1272,7 @@ void Game::f_ResolveEnemyClockFire(int l_iFoe) {
     if (l_oM.m_eKind == toms::MoveKind::Heavy && l_bGuarded && l_bParried) {
         // a perfect guard parries a heavy blow: no damage, it staggers and takes more (13 §6.2)
         f_BattleEvent("parry", -1, l_iFoe, (int)std::lround(l_fPower));
+        f_FoeAttackFx(l_iFoe, l_oM, true);   // the blow lands on the guard
         f_PlayerLook("parry");
         if (m_oGuard.m_strMode == "bar") f_FeelMoment("parry");
         l_oF.m_iVolleyHit = 0;
@@ -1227,6 +1307,7 @@ void Game::f_ResolveEnemyClockFire(int l_iFoe) {
     if (l_iDmg > 0) f_FeelMoment(l_oM.m_eKind == toms::MoveKind::Heavy || l_oM.m_eKind == toms::MoveKind::Spell ? "heavyHurt" : "hurt");
     f_BattleEvent("hit", l_iFoe, -1, l_iDmg, l_oF.m_strMove + (l_bGuarded ? " guarded " + std::to_string((int)std::lround(l_fPower)) : std::string()));
     f_FoeLook(l_iFoe, "attack");   // its sound; the lunge lands as the number appears
+    f_FoeAttackFx(l_iFoe, l_oM, true);   // its strike, or what it throws (docs/gameplay/20 §5)
     f_StartAttackPause();
     f_PopDamage(l_iDmg, -1, "hurt");
 

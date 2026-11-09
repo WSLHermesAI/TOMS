@@ -1072,13 +1072,37 @@ private:
     void f_LoadBattleFxFile();
     std::shared_ptr<toms::res::ParticleRes> m_spBattleFxFile;
     bool m_bBattleFxTried = false;
-    struct BattleFx { toms::fx::EffectInstance m_oFx; bool m_bOverUi = false; };   // overUi: drawn over the UI (a track hint)
+    struct BattleFx {
+        toms::fx::EffectInstance m_oFx;
+        bool m_bOverUi = false;   // drawn over the UI (a track hint)
+        // A projectile (docs/gameplay/20 §5): it flies from `from` to `to` on a low arc; there it stops making particles (its
+        // trail fades) and its impact plays, with a sound.
+        bool m_bFlying = false;
+        glm::vec2 m_v2From{0.0f}, m_v2To{0.0f};
+        int m_iFlightMs = 0, m_iAgeMs = 0;
+        std::string m_strImpact, m_strImpactSound;
+    };
     std::vector<BattleFx> m_vBattleFx;
     uint32_t m_uBattleFxSeed = 0;   // each effect of a battle its own seed, from 1 again each battle (the same fight looks the same)
     const toms::WeaponFx* f_BattleWeaponFx(bool l_bTop = false) const;   // the worn weapon's at its level (top: its best)
     void f_PlayBattleFx(const std::string& l_strEffect, int l_iWho, int l_iDelayMs = 0);   // who: -1 the player's weapon, 0.. a foe
     // At a point of the screen (design pixels); overUi: over the battle screen's UI (the attack track).
-    void f_PlayBattleFxAt(const std::string& l_strEffect, float l_fX, float l_fY, bool l_bOverUi, int l_iDelayMs = 0);
+    void f_PlayBattleFxAt(const std::string& l_strEffect, float l_fX, float l_fY, bool l_bOverUi, int l_iDelayMs = 0, float l_fScale = 1.0f,
+                          float l_fRotationDeg = 0.0f);
+    // The attack feel (docs/gameplay/20; data/battle.json "feelFx").
+    void f_LaunchBattleFx(const std::string& l_strEffect, glm::vec2 l_v2From, glm::vec2 l_v2To, int l_iFlightMs, const std::string& l_strImpact,
+                          const std::string& l_strImpactSound);
+    void f_FoeAttackFx(int l_iFoe, const toms::MoveDef& l_oMove, bool l_bReaches);   // its cast, a projectile or a strike, its sound (§5)
+    bool f_FoeIsBig(int l_iFoe) const;              // a boss, or enemies.json "big": its attacks fly at the hero (§5)
+    void f_HitSpray(int l_iFoe, const toms::TouchPlay::Hit& l_oH);   // a hit's particles, more with the combo; the sword's slash (§3, §4)
+    void f_WandCues();                              // the staff's hints: louder and higher one after another, gone at once, back (§2)
+    void f_BowGather(int l_iDtMs);                  // the bow's pull: particles drawn in, more as it charges (§4)
+    glm::vec2 f_FighterCentre(int l_iWho) const { const glm::vec4 l_v4B = f_FighterBox(l_iWho); return {l_v4B.x + l_v4B.z * 0.5f, l_v4B.y + l_v4B.w * 0.5f}; }
+    glm::vec2 f_WeaponPoint() const { const glm::vec4 l_v4B = f_FighterBox(-1); return {l_v4B.x + l_v4B.z * 0.731f, l_v4B.y + l_v4B.w * 0.493f}; }
+    const nlohmann::json& f_FeelFx() const { return m_jFeelFx; }
+    nlohmann::json m_jFeelFx = nlohmann::json::object();   // data/battle.json "feelFx", as the battle's rules have it (a scenario patches them)
+    struct WandSeen { int m_iClockMs = -1, m_iLit = 0, m_iShown = 0, m_iPhase = -1; } m_oWandSeen;   // what f_WandCues has played
+    int m_iBowGatherMs = 0, m_iBowGatherBeats = 0;
     // The attack track's hint (the owner 2026-10-24: the timing was hard): a point's window entered, or a point hit.
     void f_ComboHint(int l_iPoint, bool l_bHit);
     std::vector<glm::vec2> m_vComboPointsOnScreen;   // where the UI drew the track's points (GameUi, a frame late)

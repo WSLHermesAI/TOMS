@@ -192,6 +192,7 @@ void f_RegisterTypes(Rml::DataModelConstructor& l_oC) {
         l_oS.RegisterMember("log", &UiBattle::m_strLog);
         l_oS.RegisterMember("continue_hint", &UiBattle::m_strContinueHint);
         l_oS.RegisterMember("clock_label", &UiBattle::m_strClockLabel);
+        l_oS.RegisterMember("target_label", &UiBattle::m_strTargetLabel);
         l_oS.RegisterMember("clock_pct", &UiBattle::m_fClockPct);
         l_oS.RegisterMember("attack", &UiBattle::m_oAttack);
         l_oS.RegisterMember("defense", &UiBattle::m_oDefense);

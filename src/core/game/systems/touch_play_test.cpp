@@ -90,7 +90,8 @@ int main() {
         l_oP.f_Pointer(2, l_vTri[3].x, l_vTri[3].y);
         CHECK(l_oP.f_Done() && l_oP.f_Result().m_iHits == 2 && l_oP.f_Result().m_iPoints == 3, "a triangle drawn: the third prompt cut");
     }
-    // 3. Circles: count, hide, "!", then tapped in the remembered order; each tap a spell.
+    // 3. Circles: count, hide, back one by one (numbered, already to be tapped), then tapped in the remembered order; each tap
+    // a spell (docs/gameplay/20 §2).
     {
         TouchPlay l_oP;
         l_oP.f_Start(PlayType::eSEQUENCE_CLICK, 3, false, l_v4Area, 9);
@@ -104,17 +105,21 @@ int main() {
         CHECK(l_oP.f_Index() == 0, "no tap while counting");
         l_oP.f_Update(900);    // 1400: hiding
         CHECK(l_oP.f_CirclePhase() == TouchPlay::CirclePhase::Hide, "then hidden");
-        l_oP.f_Update(500);    // 1900: back, with the "!"
-        CHECK(l_oP.f_CirclePhase() == TouchPlay::CirclePhase::Warn, "back, with the !");
-        l_oP.f_Update(500);    // 2400: tap
-        CHECK(l_oP.f_CirclePhase() == TouchPlay::CirclePhase::Tap, "now to be tapped");
+        l_oP.f_Update(500);    // 1900: the first back, with its number, already to be tapped (no "!" by default)
+        CHECK(l_oP.f_CirclePhase() == TouchPlay::CirclePhase::Tap && l_oP.f_CirclesShown() == 1 && l_oP.f_CircleNumbersShown(), "back one by one, numbered");
+        l_oP.f_Pointer(0, l_vC[1].m_fX, l_vC[1].m_fY);
+        CHECK(l_oP.f_Index() == 0, "a circle not back yet is not tapped");
         l_oP.f_Pointer(0, l_vC[0].m_fX, l_vC[0].m_fY);
-        l_oP.f_Update(700);
+        CHECK(l_oP.f_Index() == 1, "the first is tapped while the others come back");
+        l_oP.f_Update(200);    // 2100: all back
+        CHECK(l_oP.f_CirclesShown() == 3 && !l_oP.f_CircleNumbersShown(), "all back: the numbers go");
+        l_oP.f_Update(500);
         l_oP.f_Pointer(0, l_vC[2].m_fX, l_vC[2].m_fY);   // the wrong one: the second is missed
         l_oP.f_Pointer(0, l_vC[2].m_fX, l_vC[2].m_fY);   // now the third is due
         const auto l_vHits = l_oP.f_TakeHits();
         CHECK(l_oP.f_Done() && l_oP.f_Result().m_iHits == 2 && l_oP.f_Circles()[1].m_iState == 3 && l_vHits.size() == 3, "in order; a wrong one misses the due one");
         CHECK(l_oP.f_Circles()[0].m_iState == 2 && l_oP.f_Circles()[2].m_iState == 2, "quick taps are perfect");
+        CHECK(l_vHits[0].m_iOrder == 0 && l_vHits[2].m_iOrder == 2, "each answer knows which it is (the staff's damage grows along the chain)");
     }
     // 4. Shape: the pentagram traced corner by corner (5 steps); time up keeps what is done.
     {

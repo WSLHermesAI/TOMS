@@ -193,6 +193,7 @@ bool Game::f_LoadAssets(const std::string& l_strAssetDir) {
             m_oCellRules = toms::f_CellRulesFromJson(l_jBj);
             m_oTutorial = toms::f_TutorialFromJson(l_jBj);     // the new game's trial fight (docs/gameplay/19 B6)
             m_oTouchSettings = toms::f_TouchPlayFromJson(l_jBj);   // the plays' numbers (docs/gameplay/16 §3)
+            m_jFeelFx = l_jBj.value("feelFx", nlohmann::json::object());   // the attack feel (docs/gameplay/20)
             m_oGrade = toms::f_GradeFromJson(l_jBj);           // §3.6
             m_oGuard = toms::f_GuardFromJson(l_jBj);           // §3.2
             m_bComboHoldsMonsters = l_jBj.value("combo_holds_monsters", false);

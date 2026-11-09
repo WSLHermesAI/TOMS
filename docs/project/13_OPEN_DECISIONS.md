@@ -77,6 +77,12 @@ These were not answered, so the proposal was built. Nothing waits on them.
 | **Q45** A move not finished in time? | part of the damage: done / total | Keep it |  | [16](../gameplay/16_SKILLS_AND_PLAYS.md) §9 |
 | **Q46** Camera close-up? | per move in data; the setting shortens it | Keep it |  | [16](../gameplay/16_SKILLS_AND_PLAYS.md) §9 |
 | **Q68** A special guard: your note binds it to the monster; is it fine on the move? | on the move (`moves.json` `guardPlay`), used by the lich and the ore golem | Keep it |  | [16](../gameplay/16_SKILLS_AND_PLAYS.md) §4.3, §9 |
+| **Q82** Which monsters are **big** (their attacks fly at the hero)? | bosses, and `"big": true` in enemies.json: only the stone golem | Mark the large ones you want (golem, demon?) |  | [20](../gameplay/20_BATTLE_EFFECTS.md) §5 |
+| **Q83** The **target line** "目前攻擊目標": only with two or three monsters, or also with one? | only with two or three | Keep it |  | [20](../gameplay/20_BATTLE_EFFECTS.md) §6 |
+| **Q84** The **staff's spells grow** along the chain: how fast? | k^1.6: of five, the first about 3 %, the last about 41 % of the play | Keep it; lower it (1.2) if the first spells feel useless |  | [20](../gameplay/20_BATTLE_EFFECTS.md) §3 |
+| **Q85** The **"!" before tapping** the staff's circles is off. Keep it off? | off (`circleWarnMs` 0) | Keep it |  | [20](../gameplay/20_BATTLE_EFFECTS.md) §2 |
+| **Q86** The 9 new **sounds** are synthesised placeholders. Replace them with recorded ones? | placeholders | Replace when you have recorded sounds; same names, OGG |  | [20](../gameplay/20_BATTLE_EFFECTS.md) §8 |
+| **Q87** The staff's damage grows **within one attack**. Should it also grow with the **combo across attacks**? | within one attack only | Keep it; the sprays already grow with the combo |  | [20](../gameplay/20_BATTLE_EFFECTS.md) §3 |
 
 ## 3. Not questions, but waiting for you
 

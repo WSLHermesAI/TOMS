@@ -5172,6 +5172,649 @@
    ]
   },
   {
+   "name": "forest_fireflies",
+   "duration": 6,
+   "loop": true,
+   "emitters": [
+    {
+     "name": "fireflies",
+     "maxParticles": 60,
+     "emission": {
+      "rate": 7
+     },
+     "shape": {
+      "type": "box",
+      "size": [
+       1800,
+       1500
+      ]
+     },
+     "life": [
+      3.5,
+      6.5
+     ],
+     "speed": [
+      6,
+      22
+     ],
+     "size": [
+      7,
+      15
+     ],
+     "color": [
+      [
+       0.75,
+       1,
+       0.55,
+       1
+      ],
+      [
+       1,
+       0.9,
+       0.45,
+       1
+      ]
+     ],
+     "sprite": "fx:glow",
+     "direction": -90,
+     "spread": 180,
+     "forces": {
+      "gravity": [
+       0,
+       -3
+      ]
+     },
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       },
+       {
+        "t": 0.2,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         0.35
+        ]
+       },
+       {
+        "t": 0.75,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    }
+   ]
+  },
+  {
+   "name": "forest_motes",
+   "duration": 6,
+   "loop": true,
+   "emitters": [
+    {
+     "name": "motes",
+     "maxParticles": 90,
+     "emission": {
+      "rate": 13
+     },
+     "shape": {
+      "type": "box",
+      "size": [
+       1900,
+       1500
+      ]
+     },
+     "life": [
+      4,
+      7
+     ],
+     "speed": [
+      8,
+      26
+     ],
+     "size": [
+      2,
+      5
+     ],
+     "color": [
+      [
+       0.75,
+       0.9,
+       1,
+       0.7
+      ],
+      [
+       0.8,
+       0.7,
+       1,
+       0.6
+      ]
+     ],
+     "sprite": "fx:glow",
+     "direction": 75,
+     "spread": 35,
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       },
+       {
+        "t": 0.25,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    }
+   ]
+  },
+  {
+   "name": "danger_intro",
+   "duration": 2.2,
+   "emitters": [
+    {
+     "name": "aura",
+     "maxParticles": 3,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1,
+        "repeat": 2,
+        "interval": 0.45
+       }
+      ]
+     },
+     "life": 0.9,
+     "speed": 0,
+     "size": 420,
+     "color": [
+      1,
+      0.25,
+      0.1,
+      0.6
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       },
+       {
+        "t": 0.4,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.7
+       },
+       {
+        "t": 1,
+        "v": 1.2
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": -2
+     }
+    },
+    {
+     "name": "gather",
+     "maxParticles": 5,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1,
+        "repeat": 3,
+        "interval": 0.26
+       }
+      ]
+     },
+     "life": 0.42,
+     "speed": 0,
+     "size": 150,
+     "color": [
+      1,
+      0.8,
+      0.3,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       },
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0.2
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 3.2,
+        "ease": "cubicIn"
+       },
+       {
+        "t": 1,
+        "v": 0.25
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 1
+     }
+    },
+    {
+     "name": "embers",
+     "maxParticles": 60,
+     "emission": {
+      "rate": 45,
+      "bursts": []
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.6,
+      1.1
+     ],
+     "speed": [
+      90,
+      240
+     ],
+     "size": [
+      9,
+      20
+     ],
+     "color": [
+      [
+       1,
+       0.3,
+       0.15,
+       1
+      ],
+      [
+       1,
+       0.8,
+       0.3,
+       1
+      ]
+     ],
+     "sprite": "fx:star",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.6,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.3
+       }
+      ]
+     },
+     "forces": {
+      "drag": 1.2,
+      "gravity": [
+       0,
+       -170
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 2
+     }
+    },
+    {
+     "name": "burst",
+     "maxParticles": 70,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 1.15,
+        "count": [
+         55,
+         65
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.45,
+      0.85
+     ],
+     "speed": [
+      320,
+      720
+     ],
+     "size": [
+      14,
+      30
+     ],
+     "color": [
+      [
+       1,
+       0.95,
+       0.7,
+       1
+      ],
+      [
+       1,
+       0.3,
+       0.15,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         0.5,
+         0.2,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.3
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0,
+       220
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 3
+     }
+    },
+    {
+     "name": "flash",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 1.15,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.32,
+     "speed": 0,
+     "size": 430,
+     "rotation": [
+      0,
+      45
+     ],
+     "color": [
+      1,
+      0.95,
+      0.75,
+      1
+     ],
+     "sprite": "fx:star",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.3,
+        "ease": "backOut"
+       },
+       {
+        "t": 1,
+        "v": 1.3
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 4
+     }
+    },
+    {
+     "name": "shock",
+     "maxParticles": 2,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 1.15,
+        "count": 1,
+        "repeat": 1,
+        "interval": 0.12
+       }
+      ]
+     },
+     "life": 0.55,
+     "speed": 0,
+     "size": 170,
+     "color": [
+      1,
+      0.55,
+      0.25,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.5,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 5
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 2
+     }
+    }
+   ]
+  },
+  {
    "name": "bow_perfect",
    "duration": 1.2,
    "emitters": [
@@ -11167,240 +11810,39 @@
    ]
   },
   {
-   "name": "forest_fireflies",
-   "duration": 6,
-   "loop": true,
+   "name": "wand_hint_1",
+   "duration": 1.0,
    "emitters": [
     {
-     "name": "fireflies",
-     "maxParticles": 60,
-     "emission": {
-      "rate": 7
-     },
-     "shape": {
-      "type": "box",
-      "size": [
-       1800,
-       1500
-      ]
-     },
-     "life": [
-      3.5,
-      6.5
-     ],
-     "speed": [
-      6,
-      22
-     ],
-     "size": [
-      7,
-      15
-     ],
-     "color": [
-      [
-       0.75,
-       1,
-       0.55,
-       1
-      ],
-      [
-       1,
-       0.9,
-       0.45,
-       1
-      ]
-     ],
-     "sprite": "fx:glow",
-     "direction": -90,
-     "spread": 180,
-     "forces": {
-      "gravity": [
-       0,
-       -3
-      ]
-     },
-     "overLife": {
-      "color": [
-       {
-        "t": 0,
-        "v": [
-         1,
-         1,
-         1,
-         0
-        ]
-       },
-       {
-        "t": 0.2,
-        "v": [
-         1,
-         1,
-         1,
-         1
-        ]
-       },
-       {
-        "t": 0.5,
-        "v": [
-         1,
-         1,
-         1,
-         0.35
-        ]
-       },
-       {
-        "t": 0.75,
-        "v": [
-         1,
-         1,
-         1,
-         1
-        ]
-       },
-       {
-        "t": 1,
-        "v": [
-         1,
-         1,
-         1,
-         0
-        ]
-       }
-      ]
-     },
-     "render": {
-      "blend": "add",
-      "order": 0
-     }
-    }
-   ]
-  },
-  {
-   "name": "forest_motes",
-   "duration": 6,
-   "loop": true,
-   "emitters": [
-    {
-     "name": "motes",
-     "maxParticles": 90,
-     "emission": {
-      "rate": 13
-     },
-     "shape": {
-      "type": "box",
-      "size": [
-       1900,
-       1500
-      ]
-     },
-     "life": [
-      4,
-      7
-     ],
-     "speed": [
-      8,
-      26
-     ],
-     "size": [
-      2,
-      5
-     ],
-     "color": [
-      [
-       0.75,
-       0.9,
-       1,
-       0.7
-      ],
-      [
-       0.8,
-       0.7,
-       1,
-       0.6
-      ]
-     ],
-     "sprite": "fx:glow",
-     "direction": 75,
-     "spread": 35,
-     "overLife": {
-      "color": [
-       {
-        "t": 0,
-        "v": [
-         1,
-         1,
-         1,
-         0
-        ]
-       },
-       {
-        "t": 0.25,
-        "v": [
-         1,
-         1,
-         1,
-         1
-        ]
-       },
-       {
-        "t": 1,
-        "v": [
-         1,
-         1,
-         1,
-         0
-        ]
-       }
-      ]
-     },
-     "render": {
-      "blend": "add",
-      "order": 0
-     }
-    }
-   ]
-  },
-  {
-   "name": "danger_intro",
-   "duration": 2.2,
-   "emitters": [
-    {
-     "name": "aura",
-     "maxParticles": 3,
+     "name": "flash",
+     "maxParticles": 1,
      "emission": {
       "rate": 0,
       "bursts": [
        {
         "t": 0,
-        "count": 1,
-        "repeat": 2,
-        "interval": 0.45
+        "count": 1
        }
       ]
      },
-     "life": 0.9,
-     "speed": 0,
-     "size": 420,
+     "life": 0.35,
+     "speed": 0.0,
+     "size": 106.6,
+     "rotation": [
+      0,
+      45
+     ],
      "color": [
-      1,
-      0.25,
-      0.1,
-      0.6
+      0.825,
+      0.685,
+      1.0,
+      1
      ],
      "sprite": "fx:glow",
      "overLife": {
       "color": [
        {
         "t": 0,
-        "v": [
-         1,
-         1,
-         1,
-         0
-        ]
-       },
-       {
-        "t": 0.4,
         "v": [
          1,
          1,
@@ -11422,40 +11864,39 @@
       "size": [
        {
         "t": 0,
-        "v": 0.7
+        "v": 0.6,
+        "ease": "backOut"
        },
        {
         "t": 1,
-        "v": 1.2
+        "v": 1.6
        }
       ]
      },
      "render": {
       "blend": "add",
-      "order": -2
+      "order": 2
      }
     },
     {
-     "name": "gather",
-     "maxParticles": 5,
+     "name": "ring",
+     "maxParticles": 1,
      "emission": {
       "rate": 0,
       "bursts": [
        {
         "t": 0,
-        "count": 1,
-        "repeat": 3,
-        "interval": 0.26
+        "count": 1
        }
       ]
      },
-     "life": 0.42,
-     "speed": 0,
-     "size": 150,
+     "life": 0.45,
+     "speed": 0.0,
+     "size": 41.6,
      "color": [
-      1,
-      0.8,
-      0.3,
+      0.75,
+      0.55,
+      1.0,
       1
      ],
      "sprite": "fx:ring",
@@ -11467,91 +11908,6 @@
          1,
          1,
          1,
-         0
-        ]
-       },
-       {
-        "t": 0.5,
-        "v": [
-         1,
-         1,
-         1,
-         1
-        ]
-       },
-       {
-        "t": 1,
-        "v": [
-         1,
-         1,
-         1,
-         0.2
-        ]
-       }
-      ],
-      "size": [
-       {
-        "t": 0,
-        "v": 3.2,
-        "ease": "cubicIn"
-       },
-       {
-        "t": 1,
-        "v": 0.25
-       }
-      ]
-     },
-     "render": {
-      "blend": "add",
-      "order": 1
-     }
-    },
-    {
-     "name": "embers",
-     "maxParticles": 60,
-     "emission": {
-      "rate": 45,
-      "bursts": []
-     },
-     "shape": {
-      "type": "point",
-      "outward": true
-     },
-     "life": [
-      0.6,
-      1.1
-     ],
-     "speed": [
-      90,
-      240
-     ],
-     "size": [
-      9,
-      20
-     ],
-     "color": [
-      [
-       1,
-       0.3,
-       0.15,
-       1
-      ],
-      [
-       1,
-       0.8,
-       0.3,
-       1
-      ]
-     ],
-     "sprite": "fx:star",
-     "overLife": {
-      "color": [
-       {
-        "t": 0.6,
-        "v": [
-         1,
-         1,
-         1,
          1
         ]
        },
@@ -11562,43 +11918,38 @@
          1,
          1,
          0
-        ]
+        ],
+        "ease": "quadraticIn"
        }
       ],
       "size": [
        {
         "t": 0,
-        "v": 1
+        "v": 1,
+        "ease": "cubicOut"
        },
        {
         "t": 1,
-        "v": 0.3
+        "v": 2.7
        }
-      ]
-     },
-     "forces": {
-      "drag": 1.2,
-      "gravity": [
-       0,
-       -170
       ]
      },
      "render": {
       "blend": "add",
-      "order": 2
+      "order": 0
      }
     },
     {
-     "name": "burst",
-     "maxParticles": 70,
+     "name": "sparks",
+     "maxParticles": 12,
      "emission": {
       "rate": 0,
       "bursts": [
        {
-        "t": 1.15,
+        "t": 0,
         "count": [
-         55,
-         65
+         9,
+         12
         ]
        }
       ]
@@ -11608,28 +11959,28 @@
       "outward": true
      },
      "life": [
-      0.45,
-      0.85
+      0.3,
+      0.6
      ],
      "speed": [
-      320,
-      720
+      169.0,
+      312.0
      ],
      "size": [
-      14,
-      30
+      9.1,
+      15.6
      ],
      "color": [
       [
-       1,
-       0.95,
-       0.7,
+       0.75,
+       0.55,
+       1.0,
        1
       ],
       [
        1,
-       0.3,
-       0.15,
+       1,
+       1,
        1
       ]
      ],
@@ -11649,8 +12000,8 @@
         "t": 1,
         "v": [
          1,
-         0.5,
-         0.2,
+         1,
+         1,
          0
         ]
        }
@@ -11662,23 +12013,29 @@
        },
        {
         "t": 1,
-        "v": 0.3
+        "v": 0.4
        }
       ]
      },
      "forces": {
       "drag": 3,
       "gravity": [
-       0,
-       220
+       0.0,
+       78.0
       ]
      },
      "render": {
       "blend": "add",
       "alignToVelocity": true,
-      "order": 3
+      "order": 1
      }
-    },
+    }
+   ]
+  },
+  {
+   "name": "wand_hint_2",
+   "duration": 1.1,
+   "emitters": [
     {
      "name": "flash",
      "maxParticles": 1,
@@ -11686,25 +12043,25 @@
       "rate": 0,
       "bursts": [
        {
-        "t": 1.15,
+        "t": 0,
         "count": 1
        }
       ]
      },
-     "life": 0.32,
-     "speed": 0,
-     "size": 430,
+     "life": 0.4,
+     "speed": 0.0,
+     "size": 135.2,
      "rotation": [
       0,
       45
      ],
      "color": [
-      1,
-      0.95,
-      0.75,
+      0.883,
+      0.755,
+      0.86,
       1
      ],
-     "sprite": "fx:star",
+     "sprite": "fx:glow",
      "overLife": {
       "color": [
        {
@@ -11730,41 +12087,39 @@
       "size": [
        {
         "t": 0,
-        "v": 0.3,
+        "v": 0.6,
         "ease": "backOut"
        },
        {
         "t": 1,
-        "v": 1.3
+        "v": 1.6
        }
       ]
      },
      "render": {
       "blend": "add",
-      "order": 4
+      "order": 2
      }
     },
     {
-     "name": "shock",
-     "maxParticles": 2,
+     "name": "ring",
+     "maxParticles": 1,
      "emission": {
       "rate": 0,
       "bursts": [
        {
-        "t": 1.15,
-        "count": 1,
-        "repeat": 1,
-        "interval": 0.12
+        "t": 0,
+        "count": 1
        }
       ]
      },
-     "life": 0.55,
-     "speed": 0,
-     "size": 170,
+     "life": 0.5,
+     "speed": 0.0,
+     "size": 49.4,
      "color": [
-      1,
-      0.55,
-      0.25,
+      0.833,
+      0.65,
+      0.8,
       1
      ],
      "sprite": "fx:ring",
@@ -11793,12 +12148,235 @@
       "size": [
        {
         "t": 0,
-        "v": 0.5,
+        "v": 1,
         "ease": "cubicOut"
        },
        {
         "t": 1,
-        "v": 5
+        "v": 3.2
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    },
+    {
+     "name": "sparks",
+     "maxParticles": 18,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         14,
+         18
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.3,
+      0.6
+     ],
+     "speed": [
+      221.0,
+      390.0
+     ],
+     "size": [
+      9.1,
+      15.6
+     ],
+     "color": [
+      [
+       0.833,
+       0.65,
+       0.8,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0.0,
+       78.0
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    },
+    {
+     "name": "ring_2",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0.08,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.45,
+     "speed": 0.0,
+     "size": 36.4,
+     "color": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 3.2
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    }
+   ]
+  },
+  {
+   "name": "wand_hint_3",
+   "duration": 1.2000000000000002,
+   "emitters": [
+    {
+     "name": "flash",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.45,
+     "speed": 0.0,
+     "size": 163.8,
+     "rotation": [
+      0,
+      45
+     ],
+     "color": [
+      0.942,
+      0.825,
+      0.72,
+      1
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.6,
+        "ease": "backOut"
+       },
+       {
+        "t": 1,
+        "v": 1.6
        }
       ]
      },
@@ -11806,6 +12384,5823 @@
       "blend": "add",
       "order": 2
      }
+    },
+    {
+     "name": "ring",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.55,
+     "speed": 0.0,
+     "size": 57.2,
+     "color": [
+      0.917,
+      0.75,
+      0.6,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 3.7
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    },
+    {
+     "name": "sparks",
+     "maxParticles": 24,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         19,
+         24
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.3,
+      0.6
+     ],
+     "speed": [
+      273.0,
+      468.0
+     ],
+     "size": [
+      9.1,
+      15.6
+     ],
+     "color": [
+      [
+       0.917,
+       0.75,
+       0.6,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0.0,
+       78.0
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    },
+    {
+     "name": "ring_2",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0.08,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.45,
+     "speed": 0.0,
+     "size": 41.6,
+     "color": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 3.8
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    },
+    {
+     "name": "stars",
+     "maxParticles": 12,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         9,
+         12
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.5,
+      0.9
+     ],
+     "speed": [
+      156.0,
+      338.0
+     ],
+     "size": [
+      13.0,
+      23.4
+     ],
+     "color": [
+      [
+       1,
+       0.85,
+       0.4,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:star",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0.0,
+       260.0
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": false,
+      "order": 1
+     },
+     "rotation": [
+      0,
+      360
+     ],
+     "spin": [
+      -360,
+      360
+     ]
+    }
+   ]
+  },
+  {
+   "name": "wand_hint_4",
+   "duration": 1.3,
+   "emitters": [
+    {
+     "name": "flash",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.5,
+     "speed": 0.0,
+     "size": 192.4,
+     "rotation": [
+      0,
+      45
+     ],
+     "color": [
+      1.0,
+      0.895,
+      0.58,
+      1
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.6,
+        "ease": "backOut"
+       },
+       {
+        "t": 1,
+        "v": 1.6
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 2
+     }
+    },
+    {
+     "name": "ring",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.6000000000000001,
+     "speed": 0.0,
+     "size": 65.0,
+     "color": [
+      1.0,
+      0.85,
+      0.4,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 4.2
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    },
+    {
+     "name": "sparks",
+     "maxParticles": 30,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         24,
+         30
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.3,
+      0.6
+     ],
+     "speed": [
+      325.0,
+      546.0
+     ],
+     "size": [
+      9.1,
+      15.6
+     ],
+     "color": [
+      [
+       1.0,
+       0.85,
+       0.4,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0.0,
+       78.0
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    },
+    {
+     "name": "ring_2",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0.08,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.45,
+     "speed": 0.0,
+     "size": 46.8,
+     "color": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 4.4
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    },
+    {
+     "name": "stars",
+     "maxParticles": 16,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         12,
+         16
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.5,
+      0.9
+     ],
+     "speed": [
+      156.0,
+      338.0
+     ],
+     "size": [
+      13.0,
+      23.4
+     ],
+     "color": [
+      [
+       1,
+       0.85,
+       0.4,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:star",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0.0,
+       260.0
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": false,
+      "order": 1
+     },
+     "rotation": [
+      0,
+      360
+     ],
+     "spin": [
+      -360,
+      360
+     ]
+    },
+    {
+     "name": "shock",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0.12,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.55,
+     "speed": 0.0,
+     "size": 52.0,
+     "color": [
+      1,
+      0.85,
+      0.4,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 5.0
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": -1
+     }
+    }
+   ]
+  },
+  {
+   "name": "wand_vanish",
+   "duration": 0.6,
+   "emitters": [
+    {
+     "name": "ring",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.25,
+     "speed": 0.0,
+     "size": 52.0,
+     "color": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 0.2
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    },
+    {
+     "name": "dust",
+     "maxParticles": 10,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         8,
+         10
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.2,
+      0.4
+     ],
+     "speed": [
+      156.0,
+      260.0
+     ],
+     "size": [
+      7.8,
+      13.0
+     ],
+     "color": [
+      [
+       0.75,
+       0.55,
+       1,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0.0,
+       0.0
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    }
+   ]
+  },
+  {
+   "name": "wand_return",
+   "duration": 0.5,
+   "emitters": [
+    {
+     "name": "ring",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.3,
+     "speed": 0.0,
+     "size": 23.4,
+     "color": [
+      0.75,
+      0.55,
+      1,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 2.2
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    },
+    {
+     "name": "flash",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.18,
+     "speed": 0.0,
+     "size": 65.0,
+     "rotation": [
+      0,
+      45
+     ],
+     "color": [
+      0.875,
+      0.775,
+      1.0,
+      1
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.6,
+        "ease": "backOut"
+       },
+       {
+        "t": 1,
+        "v": 1.6
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 2
+     }
+    }
+   ]
+  },
+  {
+   "name": "combo_spray_1",
+   "duration": 1.0,
+   "emitters": [
+    {
+     "name": "sparks",
+     "maxParticles": 20,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         14,
+         20
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.3,
+      0.7
+     ],
+     "speed": [
+      306.0,
+      561.0
+     ],
+     "size": [
+      11.9,
+      22.1
+     ],
+     "color": [
+      [
+       1,
+       0.85,
+       0.4,
+       1
+      ],
+      [
+       1.0,
+       0.72,
+       0.44,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0.0,
+       408.0
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    }
+   ]
+  },
+  {
+   "name": "combo_spray_2",
+   "duration": 1.0,
+   "emitters": [
+    {
+     "name": "sparks",
+     "maxParticles": 30,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         22,
+         30
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.3,
+      0.7
+     ],
+     "speed": [
+      374.0,
+      680.0
+     ],
+     "size": [
+      11.9,
+      23.8
+     ],
+     "color": [
+      [
+       1,
+       0.85,
+       0.4,
+       1
+      ],
+      [
+       1.0,
+       0.72,
+       0.44,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0.0,
+       408.0
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    },
+    {
+     "name": "stars",
+     "maxParticles": 6,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         4,
+         6
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.4,
+      0.8
+     ],
+     "speed": [
+      170.0,
+      476.0
+     ],
+     "size": [
+      15.3,
+      27.2
+     ],
+     "color": [
+      [
+       1,
+       0.85,
+       0.4,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:star",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0.0,
+       442.0
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": false,
+      "order": 1
+     },
+     "rotation": [
+      0,
+      360
+     ],
+     "spin": [
+      -360,
+      360
+     ]
+    }
+   ]
+  },
+  {
+   "name": "combo_spray_3",
+   "duration": 1.0,
+   "emitters": [
+    {
+     "name": "sparks",
+     "maxParticles": 40,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         30,
+         40
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.3,
+      0.7
+     ],
+     "speed": [
+      442.0,
+      799.0
+     ],
+     "size": [
+      11.9,
+      25.5
+     ],
+     "color": [
+      [
+       1,
+       0.85,
+       0.4,
+       1
+      ],
+      [
+       1.0,
+       0.72,
+       0.44,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0.0,
+       408.0
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    },
+    {
+     "name": "stars",
+     "maxParticles": 9,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         6,
+         9
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.4,
+      0.8
+     ],
+     "speed": [
+      170.0,
+      527.0
+     ],
+     "size": [
+      15.3,
+      27.2
+     ],
+     "color": [
+      [
+       1,
+       0.85,
+       0.4,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:star",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0.0,
+       442.0
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": false,
+      "order": 1
+     },
+     "rotation": [
+      0,
+      360
+     ],
+     "spin": [
+      -360,
+      360
+     ]
+    },
+    {
+     "name": "ring",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.35,
+     "speed": 0.0,
+     "size": 61.2,
+     "color": [
+      1,
+      0.85,
+      0.4,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 3.7
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    }
+   ]
+  },
+  {
+   "name": "combo_spray_4",
+   "duration": 1.0,
+   "emitters": [
+    {
+     "name": "sparks",
+     "maxParticles": 50,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         38,
+         50
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.3,
+      0.7
+     ],
+     "speed": [
+      510.0,
+      918.0
+     ],
+     "size": [
+      11.9,
+      27.2
+     ],
+     "color": [
+      [
+       1,
+       0.85,
+       0.4,
+       1
+      ],
+      [
+       1.0,
+       0.72,
+       0.44,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0.0,
+       408.0
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    },
+    {
+     "name": "stars",
+     "maxParticles": 12,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         8,
+         12
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.4,
+      0.8
+     ],
+     "speed": [
+      170.0,
+      578.0
+     ],
+     "size": [
+      15.3,
+      27.2
+     ],
+     "color": [
+      [
+       1,
+       0.85,
+       0.4,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:star",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0.0,
+       442.0
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": false,
+      "order": 1
+     },
+     "rotation": [
+      0,
+      360
+     ],
+     "spin": [
+      -360,
+      360
+     ]
+    },
+    {
+     "name": "ring",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.35,
+     "speed": 0.0,
+     "size": 68.0,
+     "color": [
+      1,
+      0.85,
+      0.4,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 4.1
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    },
+    {
+     "name": "flash",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.22,
+     "speed": 0.0,
+     "size": 255.0,
+     "rotation": [
+      0,
+      45
+     ],
+     "color": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.6,
+        "ease": "backOut"
+       },
+       {
+        "t": 1,
+        "v": 1.6
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 2
+     }
+    }
+   ]
+  },
+  {
+   "name": "combo_spray_5",
+   "duration": 1.0,
+   "emitters": [
+    {
+     "name": "sparks",
+     "maxParticles": 60,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         46,
+         60
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.3,
+      0.7
+     ],
+     "speed": [
+      578.0,
+      1037.0
+     ],
+     "size": [
+      11.9,
+      28.9
+     ],
+     "color": [
+      [
+       1,
+       0.85,
+       0.4,
+       1
+      ],
+      [
+       1.0,
+       0.72,
+       0.44,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0.0,
+       408.0
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    },
+    {
+     "name": "stars",
+     "maxParticles": 15,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         10,
+         15
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.4,
+      0.8
+     ],
+     "speed": [
+      170.0,
+      629.0
+     ],
+     "size": [
+      15.3,
+      27.2
+     ],
+     "color": [
+      [
+       1,
+       0.85,
+       0.4,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:star",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0.0,
+       442.0
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": false,
+      "order": 1
+     },
+     "rotation": [
+      0,
+      360
+     ],
+     "spin": [
+      -360,
+      360
+     ]
+    },
+    {
+     "name": "ring",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.35,
+     "speed": 0.0,
+     "size": 74.8,
+     "color": [
+      1,
+      0.85,
+      0.4,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 4.5
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    },
+    {
+     "name": "flash",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.22,
+     "speed": 0.0,
+     "size": 289.0,
+     "rotation": [
+      0,
+      45
+     ],
+     "color": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.6,
+        "ease": "backOut"
+       },
+       {
+        "t": 1,
+        "v": 1.6
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 2
+     }
+    }
+   ]
+  },
+  {
+   "name": "sword_slash",
+   "duration": 0.8,
+   "emitters": [
+    {
+     "name": "slash",
+     "maxParticles": 16,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 16
+       }
+      ]
+     },
+     "shape": {
+      "type": "line",
+      "length": 368.0,
+      "angle": 0
+     },
+     "life": [
+      0.2,
+      0.26
+     ],
+     "speed": [
+      4.8,
+      9.6
+     ],
+     "direction": 0,
+     "spread": 2,
+     "size": [
+      63.4,
+      86.4
+     ],
+     "color": [
+      [
+       0.6,
+       0.85,
+       1,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.4,
+        "ease": "backOut"
+       },
+       {
+        "t": 0.3,
+        "v": 1.4,
+        "ease": "quadraticIn"
+       },
+       {
+        "t": 1,
+        "v": 0.3
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 3
+     }
+    },
+    {
+     "name": "after_1",
+     "maxParticles": 14,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0.05,
+        "count": 14
+       }
+      ]
+     },
+     "shape": {
+      "type": "line",
+      "length": 336.0,
+      "angle": 0
+     },
+     "life": [
+      0.22,
+      0.28
+     ],
+     "speed": [
+      4.8,
+      9.6
+     ],
+     "direction": 0,
+     "spread": 2,
+     "size": [
+      63.4,
+      86.4
+     ],
+     "color": [
+      [
+       0.68,
+       0.88,
+       1.0,
+       0.7
+      ],
+      [
+       0.6,
+       0.85,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.4,
+        "ease": "backOut"
+       },
+       {
+        "t": 0.3,
+        "v": 1.4,
+        "ease": "quadraticIn"
+       },
+       {
+        "t": 1,
+        "v": 0.3
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 2
+     }
+    },
+    {
+     "name": "after_2",
+     "maxParticles": 12,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0.1,
+        "count": 12
+       }
+      ]
+     },
+     "shape": {
+      "type": "line",
+      "length": 304.0,
+      "angle": 0
+     },
+     "life": [
+      0.24,
+      0.3
+     ],
+     "speed": [
+      4.8,
+      9.6
+     ],
+     "direction": 0,
+     "spread": 2,
+     "size": [
+      63.4,
+      86.4
+     ],
+     "color": [
+      [
+       0.6,
+       0.85,
+       1,
+       0.45
+      ],
+      [
+       0.6,
+       0.85,
+       1,
+       0.35
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.4,
+        "ease": "backOut"
+       },
+       {
+        "t": 0.3,
+        "v": 1.4,
+        "ease": "quadraticIn"
+       },
+       {
+        "t": 1,
+        "v": 0.3
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    },
+    {
+     "name": "sparks",
+     "maxParticles": 16,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         12,
+         16
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.2,
+      0.45
+     ],
+     "speed": [
+      288.0,
+      512.0
+     ],
+     "size": [
+      11.2,
+      19.2
+     ],
+     "color": [
+      [
+       0.6,
+       0.85,
+       1,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0.0,
+       320.0
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     },
+     "direction": 90,
+     "spread": 60
+    }
+   ]
+  },
+  {
+   "name": "bow_gather_1",
+   "duration": 0.5,
+   "emitters": [
+    {
+     "name": "in",
+     "maxParticles": 7,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 7
+       }
+      ]
+     },
+     "shape": {
+      "type": "ring",
+      "radius": 120.0,
+      "thickness": 28.8
+     },
+     "life": [
+      0.28,
+      0.4
+     ],
+     "speed": 0.0,
+     "size": [
+      16.0,
+      25.6
+     ],
+     "color": [
+      [
+       1,
+       0.85,
+       0.4,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         0.3
+        ]
+       },
+       {
+        "t": 0.25,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0.4
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.8
+       },
+       {
+        "t": 1,
+        "v": 1.4
+       }
+      ]
+     },
+     "forces": {
+      "radial": [
+       -1600.0,
+       -1280.0
+      ],
+      "drag": 1
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    }
+   ]
+  },
+  {
+   "name": "bow_gather_2",
+   "duration": 0.5,
+   "emitters": [
+    {
+     "name": "in",
+     "maxParticles": 11,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 11
+       }
+      ]
+     },
+     "shape": {
+      "type": "ring",
+      "radius": 144.0,
+      "thickness": 28.8
+     },
+     "life": [
+      0.28,
+      0.4
+     ],
+     "speed": 0.0,
+     "size": [
+      16.0,
+      25.6
+     ],
+     "color": [
+      [
+       1,
+       0.85,
+       0.4,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         0.3
+        ]
+       },
+       {
+        "t": 0.25,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0.4
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.8
+       },
+       {
+        "t": 1,
+        "v": 1.4
+       }
+      ]
+     },
+     "forces": {
+      "radial": [
+       -2080.0,
+       -1664.0
+      ],
+      "drag": 1
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    },
+    {
+     "name": "core",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.12,
+     "speed": 0.0,
+     "size": 70.4,
+     "rotation": [
+      0,
+      45
+     ],
+     "color": [
+      1.0,
+      0.91,
+      0.64,
+      1
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.6,
+        "ease": "backOut"
+       },
+       {
+        "t": 1,
+        "v": 1.6
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 2
+     }
+    }
+   ]
+  },
+  {
+   "name": "bow_gather_3",
+   "duration": 0.5,
+   "emitters": [
+    {
+     "name": "in",
+     "maxParticles": 15,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 15
+       }
+      ]
+     },
+     "shape": {
+      "type": "ring",
+      "radius": 168.0,
+      "thickness": 28.8
+     },
+     "life": [
+      0.28,
+      0.4
+     ],
+     "speed": 0.0,
+     "size": [
+      16.0,
+      25.6
+     ],
+     "color": [
+      [
+       1.0,
+       0.895,
+       0.58,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         0.3
+        ]
+       },
+       {
+        "t": 0.25,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0.4
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.8
+       },
+       {
+        "t": 1,
+        "v": 1.4
+       }
+      ]
+     },
+     "forces": {
+      "radial": [
+       -2560.0,
+       -2048.0
+      ],
+      "drag": 1
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    },
+    {
+     "name": "core",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.12,
+     "speed": 0.0,
+     "size": 86.4,
+     "rotation": [
+      0,
+      45
+     ],
+     "color": [
+      1.0,
+      0.91,
+      0.64,
+      1
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.6,
+        "ease": "backOut"
+       },
+       {
+        "t": 1,
+        "v": 1.6
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 2
+     }
+    }
+   ]
+  },
+  {
+   "name": "bow_explode",
+   "duration": 1.2,
+   "emitters": [
+    {
+     "name": "flash",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.25,
+     "speed": 0.0,
+     "size": 240.0,
+     "rotation": [
+      0,
+      45
+     ],
+     "color": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.6,
+        "ease": "backOut"
+       },
+       {
+        "t": 1,
+        "v": 1.6
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 3
+     }
+    },
+    {
+     "name": "ring",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.45,
+     "speed": 0.0,
+     "size": 64.0,
+     "color": [
+      1,
+      0.6,
+      0.2,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 4.5
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    },
+    {
+     "name": "ring_2",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0.06,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.4,
+     "speed": 0.0,
+     "size": 48.0,
+     "color": [
+      1,
+      0.85,
+      0.4,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 3.5
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    },
+    {
+     "name": "sparks",
+     "maxParticles": 34,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         26,
+         34
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.3,
+      0.7
+     ],
+     "speed": [
+      384.0,
+      736.0
+     ],
+     "size": [
+      12.8,
+      22.4
+     ],
+     "color": [
+      [
+       1,
+       0.6,
+       0.2,
+       1
+      ],
+      [
+       1.0,
+       0.925,
+       0.7,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0.0,
+       416.0
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    },
+    {
+     "name": "smoke",
+     "maxParticles": 8,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0.05,
+        "count": [
+         5,
+         8
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.6,
+      1.0
+     ],
+     "speed": [
+      48.0,
+      128.0
+     ],
+     "size": [
+      48.0,
+      73.6
+     ],
+     "rotation": [
+      0,
+      360
+     ],
+     "color": [
+      [
+       0.5,
+       0.45,
+       0.4,
+       0.6
+      ],
+      [
+       0.35,
+       0.32,
+       0.3,
+       0.5
+      ]
+     ],
+     "sprite": "fx:smoke",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.6,
+        "ease": "quadraticOut"
+       },
+       {
+        "t": 1,
+        "v": 1.8
+       }
+      ]
+     },
+     "forces": {
+      "drag": 2,
+      "gravity": [
+       0.0,
+       -64.0
+      ]
+     },
+     "render": {
+      "blend": "normal",
+      "order": 0
+     }
+    }
+   ]
+  },
+  {
+   "name": "monster_claw",
+   "duration": 0.8,
+   "emitters": [
+    {
+     "name": "claw_1",
+     "maxParticles": 10,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 10
+       }
+      ]
+     },
+     "shape": {
+      "type": "line",
+      "length": 330.0,
+      "angle": -55
+     },
+     "life": [
+      0.18,
+      0.24
+     ],
+     "speed": [
+      6.6,
+      13.2
+     ],
+     "direction": -55,
+     "spread": 2,
+     "size": [
+      63.4,
+      87.1
+     ],
+     "color": [
+      [
+       1,
+       0.35,
+       0.3,
+       1
+      ],
+      [
+       1.0,
+       0.675,
+       0.65,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.4,
+        "ease": "backOut"
+       },
+       {
+        "t": 0.3,
+        "v": 1.4,
+        "ease": "quadraticIn"
+       },
+       {
+        "t": 1,
+        "v": 0.3
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 2
+     }
+    },
+    {
+     "name": "claw_2",
+     "maxParticles": 10,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0.04,
+        "count": 10
+       }
+      ]
+     },
+     "shape": {
+      "type": "line",
+      "length": 352.0,
+      "angle": -55
+     },
+     "life": [
+      0.18,
+      0.24
+     ],
+     "speed": [
+      6.6,
+      13.2
+     ],
+     "direction": -55,
+     "spread": 2,
+     "size": [
+      63.4,
+      87.1
+     ],
+     "color": [
+      [
+       1,
+       0.35,
+       0.3,
+       1
+      ],
+      [
+       1.0,
+       0.675,
+       0.65,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.4,
+        "ease": "backOut"
+       },
+       {
+        "t": 0.3,
+        "v": 1.4,
+        "ease": "quadraticIn"
+       },
+       {
+        "t": 1,
+        "v": 0.3
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 2
+     },
+     "offset": [
+      57.2,
+      0.0
+     ]
+    },
+    {
+     "name": "claw_3",
+     "maxParticles": 10,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0.08,
+        "count": 10
+       }
+      ]
+     },
+     "shape": {
+      "type": "line",
+      "length": 330.0,
+      "angle": -55
+     },
+     "life": [
+      0.18,
+      0.24
+     ],
+     "speed": [
+      6.6,
+      13.2
+     ],
+     "direction": -55,
+     "spread": 2,
+     "size": [
+      63.4,
+      87.1
+     ],
+     "color": [
+      [
+       1,
+       0.35,
+       0.3,
+       1
+      ],
+      [
+       1.0,
+       0.675,
+       0.65,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.4,
+        "ease": "backOut"
+       },
+       {
+        "t": 0.3,
+        "v": 1.4,
+        "ease": "quadraticIn"
+       },
+       {
+        "t": 1,
+        "v": 0.3
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 2
+     },
+     "offset": [
+      114.4,
+      0.0
+     ]
+    },
+    {
+     "name": "sparks",
+     "maxParticles": 14,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         10,
+         14
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.2,
+      0.45
+     ],
+     "speed": [
+      308.0,
+      572.0
+     ],
+     "size": [
+      15.4,
+      26.4
+     ],
+     "color": [
+      [
+       1,
+       0.35,
+       0.3,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0.0,
+       528.0
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    }
+   ]
+  },
+  {
+   "name": "monster_cast",
+   "duration": 0.7,
+   "emitters": [
+    {
+     "name": "glow",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.45,
+     "speed": 0.0,
+     "size": 286.0,
+     "rotation": [
+      0,
+      45
+     ],
+     "color": [
+      1.0,
+      0.48,
+      0.44,
+      1
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.6,
+        "ease": "backOut"
+       },
+       {
+        "t": 1,
+        "v": 1.6
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": -1
+     }
+    },
+    {
+     "name": "in",
+     "maxParticles": 12,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 12
+       }
+      ]
+     },
+     "shape": {
+      "type": "ring",
+      "radius": 198.0,
+      "thickness": 39.6
+     },
+     "life": [
+      0.28,
+      0.4
+     ],
+     "speed": 0.0,
+     "size": [
+      22.0,
+      35.2
+     ],
+     "color": [
+      [
+       1,
+       0.6,
+       0.2,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         0.3
+        ]
+       },
+       {
+        "t": 0.25,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0.4
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.8
+       },
+       {
+        "t": 1,
+        "v": 1.4
+       }
+      ]
+     },
+     "forces": {
+      "radial": [
+       -1980.0,
+       -1584.0
+      ],
+      "drag": 1
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    }
+   ]
+  },
+  {
+   "name": "monster_cast_magic",
+   "duration": 0.7,
+   "emitters": [
+    {
+     "name": "glow",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.45,
+     "speed": 0.0,
+     "size": 286.0,
+     "rotation": [
+      0,
+      45
+     ],
+     "color": [
+      0.84,
+      0.56,
+      1.0,
+      1
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.6,
+        "ease": "backOut"
+       },
+       {
+        "t": 1,
+        "v": 1.6
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": -1
+     }
+    },
+    {
+     "name": "in",
+     "maxParticles": 14,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 14
+       }
+      ]
+     },
+     "shape": {
+      "type": "ring",
+      "radius": 198.0,
+      "thickness": 39.6
+     },
+     "life": [
+      0.28,
+      0.4
+     ],
+     "speed": 0.0,
+     "size": [
+      22.0,
+      35.2
+     ],
+     "color": [
+      [
+       0.8,
+       0.45,
+       1,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         0.3
+        ]
+       },
+       {
+        "t": 0.25,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0.4
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.8
+       },
+       {
+        "t": 1,
+        "v": 1.4
+       }
+      ]
+     },
+     "forces": {
+      "radial": [
+       -1980.0,
+       -1584.0
+      ],
+      "drag": 1
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    },
+    {
+     "name": "ring",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.4,
+     "speed": 0.0,
+     "size": 66.0,
+     "color": [
+      0.8,
+      0.45,
+      1,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 2.6
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    }
+   ]
+  },
+  {
+   "name": "monster_bolt",
+   "duration": 0,
+   "emitters": [
+    {
+     "name": "head",
+     "maxParticles": 30,
+     "emission": {
+      "rate": 90
+     },
+     "life": 0.1,
+     "speed": 0.0,
+     "size": [
+      92.4,
+      106.3
+     ],
+     "color": [
+      [
+       1.0,
+       0.8,
+       0.6,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 2
+     }
+    },
+    {
+     "name": "core",
+     "maxParticles": 30,
+     "emission": {
+      "rate": 90
+     },
+     "life": 0.08,
+     "speed": 0.0,
+     "size": [
+      41.6,
+      46.2
+     ],
+     "color": [
+      [
+       1,
+       1,
+       1,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 3
+     }
+    },
+    {
+     "name": "trail",
+     "maxParticles": 80,
+     "emission": {
+      "rate": 110
+     },
+     "life": [
+      0.25,
+      0.45
+     ],
+     "speed": [
+      22.0,
+      88.0
+     ],
+     "direction": 180,
+     "spread": 25,
+     "size": [
+      17.6,
+      30.8
+     ],
+     "color": [
+      [
+       1,
+       0.6,
+       0.2,
+       1
+      ],
+      [
+       1.0,
+       0.76,
+       0.52,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.3
+       }
+      ]
+     },
+     "forces": {
+      "drag": 2
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    }
+   ]
+  },
+  {
+   "name": "monster_bolt_big",
+   "duration": 0,
+   "emitters": [
+    {
+     "name": "head",
+     "maxParticles": 30,
+     "emission": {
+      "rate": 90
+     },
+     "life": 0.1,
+     "speed": 0.0,
+     "size": [
+      145.2,
+      167.0
+     ],
+     "color": [
+      [
+       1.0,
+       0.675,
+       0.65,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 2
+     }
+    },
+    {
+     "name": "core",
+     "maxParticles": 30,
+     "emission": {
+      "rate": 90
+     },
+     "life": 0.08,
+     "speed": 0.0,
+     "size": [
+      65.3,
+      72.6
+     ],
+     "color": [
+      [
+       1,
+       1,
+       1,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 3
+     }
+    },
+    {
+     "name": "trail",
+     "maxParticles": 80,
+     "emission": {
+      "rate": 170
+     },
+     "life": [
+      0.25,
+      0.45
+     ],
+     "speed": [
+      22.0,
+      88.0
+     ],
+     "direction": 180,
+     "spread": 25,
+     "size": [
+      24.2,
+      39.6
+     ],
+     "color": [
+      [
+       1,
+       0.35,
+       0.3,
+       1
+      ],
+      [
+       1.0,
+       0.61,
+       0.58,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.3
+       }
+      ]
+     },
+     "forces": {
+      "drag": 2
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    }
+   ]
+  },
+  {
+   "name": "monster_orb",
+   "duration": 0,
+   "emitters": [
+    {
+     "name": "head",
+     "maxParticles": 30,
+     "emission": {
+      "rate": 90
+     },
+     "life": 0.1,
+     "speed": 0.0,
+     "size": [
+      114.4,
+      131.6
+     ],
+     "color": [
+      [
+       0.9,
+       0.725,
+       1.0,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 2
+     }
+    },
+    {
+     "name": "core",
+     "maxParticles": 30,
+     "emission": {
+      "rate": 90
+     },
+     "life": 0.08,
+     "speed": 0.0,
+     "size": [
+      51.5,
+      57.2
+     ],
+     "color": [
+      [
+       1,
+       1,
+       1,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 3
+     }
+    },
+    {
+     "name": "trail",
+     "maxParticles": 80,
+     "emission": {
+      "rate": 130
+     },
+     "life": [
+      0.25,
+      0.45
+     ],
+     "speed": [
+      22.0,
+      88.0
+     ],
+     "direction": 180,
+     "spread": 25,
+     "size": [
+      19.8,
+      33.0
+     ],
+     "color": [
+      [
+       0.8,
+       0.45,
+       1,
+       1
+      ],
+      [
+       0.88,
+       0.67,
+       1.0,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.3
+       }
+      ]
+     },
+     "forces": {
+      "drag": 2
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    }
+   ]
+  },
+  {
+   "name": "monster_blast",
+   "duration": 1.1,
+   "emitters": [
+    {
+     "name": "flash",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.25,
+     "speed": 0.0,
+     "size": 374.0,
+     "rotation": [
+      0,
+      45
+     ],
+     "color": [
+      1.0,
+      0.76,
+      0.52,
+      1
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.6,
+        "ease": "backOut"
+       },
+       {
+        "t": 1,
+        "v": 1.6
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 3
+     }
+    },
+    {
+     "name": "ring",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.45,
+     "speed": 0.0,
+     "size": 88.0,
+     "color": [
+      1,
+      0.6,
+      0.2,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 4.5
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    },
+    {
+     "name": "ring_2",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0.07,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.4,
+     "speed": 0.0,
+     "size": 61.6,
+     "color": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 3.2
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    },
+    {
+     "name": "sparks",
+     "maxParticles": 30,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         22,
+         30
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.3,
+      0.65
+     ],
+     "speed": [
+      484.0,
+      924.0
+     ],
+     "size": [
+      17.6,
+      30.8
+     ],
+     "color": [
+      [
+       1,
+       0.6,
+       0.2,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0.0,
+       572.0
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    }
+   ]
+  },
+  {
+   "name": "monster_blast_magic",
+   "duration": 1.1,
+   "emitters": [
+    {
+     "name": "flash",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.25,
+     "speed": 0.0,
+     "size": 374.0,
+     "rotation": [
+      0,
+      45
+     ],
+     "color": [
+      0.88,
+      0.67,
+      1.0,
+      1
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.6,
+        "ease": "backOut"
+       },
+       {
+        "t": 1,
+        "v": 1.6
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 3
+     }
+    },
+    {
+     "name": "ring",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.45,
+     "speed": 0.0,
+     "size": 88.0,
+     "color": [
+      0.8,
+      0.45,
+      1,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 4.5
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    },
+    {
+     "name": "ring_2",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0.07,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.4,
+     "speed": 0.0,
+     "size": 61.6,
+     "color": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 3.2
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    },
+    {
+     "name": "sparks",
+     "maxParticles": 30,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         22,
+         30
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.3,
+      0.65
+     ],
+     "speed": [
+      484.0,
+      924.0
+     ],
+     "size": [
+      17.6,
+      30.8
+     ],
+     "color": [
+      [
+       0.8,
+       0.45,
+       1,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0.0,
+       572.0
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    }
+   ]
+  },
+  {
+   "name": "monster_smash",
+   "duration": 1.2,
+   "emitters": [
+    {
+     "name": "flash",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.28,
+     "speed": 0.0,
+     "size": 418.0,
+     "rotation": [
+      0,
+      45
+     ],
+     "color": [
+      1.0,
+      0.577,
+      0.545,
+      1
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.6,
+        "ease": "backOut"
+       },
+       {
+        "t": 1,
+        "v": 1.6
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 3
+     }
+    },
+    {
+     "name": "ring",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.5,
+     "speed": 0.0,
+     "size": 101.2,
+     "color": [
+      1,
+      0.35,
+      0.3,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 5.0
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    },
+    {
+     "name": "ring_2",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0.08,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.45,
+     "speed": 0.0,
+     "size": 74.8,
+     "color": [
+      1,
+      0.6,
+      0.2,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 3.8
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    },
+    {
+     "name": "slash",
+     "maxParticles": 18,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 18
+       }
+      ]
+     },
+     "shape": {
+      "type": "line",
+      "length": 572.0,
+      "angle": -35
+     },
+     "life": [
+      0.2,
+      0.28
+     ],
+     "speed": [
+      6.6,
+      13.2
+     ],
+     "direction": -35,
+     "spread": 2,
+     "size": [
+      103.0,
+      134.6
+     ],
+     "color": [
+      [
+       1,
+       0.35,
+       0.3,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.4,
+        "ease": "backOut"
+       },
+       {
+        "t": 0.3,
+        "v": 1.4,
+        "ease": "quadraticIn"
+       },
+       {
+        "t": 1,
+        "v": 0.3
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 2
+     }
+    },
+    {
+     "name": "sparks",
+     "maxParticles": 34,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         26,
+         34
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.3,
+      0.7
+     ],
+     "speed": [
+      528.0,
+      1012.0
+     ],
+     "size": [
+      19.8,
+      33.0
+     ],
+     "color": [
+      [
+       1,
+       0.35,
+       0.3,
+       1
+      ],
+      [
+       1.0,
+       0.76,
+       0.52,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0.0,
+       660.0
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    },
+    {
+     "name": "stars",
+     "maxParticles": 9,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         6,
+         9
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.5,
+      0.9
+     ],
+     "speed": [
+      264.0,
+      528.0
+     ],
+     "size": [
+      26.4,
+      44.0
+     ],
+     "color": [
+      [
+       1,
+       0.6,
+       0.2,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:star",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0.0,
+       572.0
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": false,
+      "order": 1
+     },
+     "rotation": [
+      0,
+      360
+     ],
+     "spin": [
+      -360,
+      360
+     ]
     }
    ]
   }

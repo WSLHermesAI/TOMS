@@ -106,12 +106,86 @@ void Game::f_BattlePointer(int l_iPhase, float l_fX, float l_fY) {
 void Game::f_StepTouchPlay(int l_iDtMs) {
     const int l_iIndex = m_oCs.m_oTouch.f_Index(), l_iHits = m_oCs.m_oTouch.f_Result().m_iHits;
     m_oCs.m_oTouch.f_Update(l_iDtMs);
+    f_BowGather(l_iDtMs);
     f_TouchPlayed(l_iIndex, l_iHits);
+}
+
+// The staff's hints (docs/gameplay/20 §2): each one counted is bigger and higher than the one before; all go at once with a
+// pop; then they come back one by one, each with a soft note.
+void Game::f_WandCues() {
+    const toms::TouchPlay& l_oP = m_oCs.m_oTouch;
+    if (l_oP.f_Type() != toms::PlayType::eSEQUENCE_CLICK || !l_oP.f_Running() || m_oCs.m_oSkill.m_bOn) { m_oWandSeen = WandSeen{}; return; }
+    if (l_oP.f_ClockMs() < m_oWandSeen.m_iClockMs) m_oWandSeen = WandSeen{};   // a new play
+    m_oWandSeen.m_iClockMs = l_oP.f_ClockMs();
+    const auto& l_vC = l_oP.f_Circles();
+    const int l_iN = (int)l_vC.size();
+    const nlohmann::json l_jW = f_FeelFx().value("wand", nlohmann::json::object());
+    const float l_fStep = l_jW.value("pitchStep", 2.0f);   // semitones up per hint
+    const int l_iTiers = std::max(1, l_jW.value("tiers", 4));
+    auto l_fnPitch = [l_fStep](int l_iK) { return std::pow(2.0f, (float)l_iK * l_fStep / 12.0f); };
+    const int l_iPhase = (int)l_oP.f_CirclePhase();
+    if (l_oP.f_CirclePhase() == toms::TouchPlay::CirclePhase::Count) {
+        const int l_iLit = l_oP.f_CirclesLit();
+        for (int l_iK = m_oWandSeen.m_iLit; l_iK < l_iLit && l_iK < l_iN; l_iK++) {
+            const int l_iTier = 1 + (l_iN > 1 ? l_iK * (l_iTiers - 1) / (l_iN - 1) : 0);
+            f_PlayBattleFxAt("wand_hint_" + std::to_string(l_iTier), l_vC[(size_t)l_iK].m_fX, l_vC[(size_t)l_iK].m_fY, true, 0, 1.0f + 0.08f * (float)l_iK);
+            m_oAudio.f_Play(l_jW.value("hintSound", std::string("sfx.wand_hint")), l_fnPitch(l_iK), 0.8f);
+        }
+        m_oWandSeen.m_iLit = std::max(m_oWandSeen.m_iLit, l_iLit);
+    } else if (m_oWandSeen.m_iPhase == (int)toms::TouchPlay::CirclePhase::Count) {   // the count is over: all go at once
+        for (const toms::TouchPlay::Circle& l_oC : l_vC) f_PlayBattleFxAt("wand_vanish", l_oC.m_fX, l_oC.m_fY, true);
+        m_oAudio.f_Play(l_jW.value("vanishSound", std::string("sfx.wand_vanish")));
+    }
+    if (l_oP.f_CirclePhase() == toms::TouchPlay::CirclePhase::Tap) {
+        const int l_iShown = l_oP.f_CirclesShown();
+        for (int l_iK = m_oWandSeen.m_iShown; l_iK < l_iShown && l_iK < l_iN; l_iK++) {
+            f_PlayBattleFxAt("wand_return", l_vC[(size_t)l_iK].m_fX, l_vC[(size_t)l_iK].m_fY, true);
+            m_oAudio.f_Play(l_jW.value("hintSound", std::string("sfx.wand_hint")), l_fnPitch(l_iK) * 2.0f, 0.35f);
+        }
+        m_oWandSeen.m_iShown = std::max(m_oWandSeen.m_iShown, l_iShown);
+    }
+    m_oWandSeen.m_iPhase = l_iPhase;
+}
+
+// The bow's pull (docs/gameplay/20 §4): particles drawn into the arrow, more and faster as the charge grows, with a rising hum.
+void Game::f_BowGather(int l_iDtMs) {
+    const toms::TouchPlay& l_oP = m_oCs.m_oTouch;
+    if (l_oP.f_Type() != toms::PlayType::ePULL_RELEASE || !l_oP.f_Aiming() || m_oCs.m_oSkill.m_bOn) { m_iBowGatherMs = 0; m_iBowGatherBeats = 0; return; }
+    const nlohmann::json l_jB = f_FeelFx().value("bow", nlohmann::json::object());
+    const int l_iEvery = std::max(30, l_jB.value("gatherEveryMs", 90));
+    m_iBowGatherMs += l_iDtMs;
+    while (m_iBowGatherMs >= l_iEvery) {
+        m_iBowGatherMs -= l_iEvery;
+        const float l_fCh = l_oP.f_Charge();
+        const int l_iTier = l_fCh < 0.34f ? 1 : l_fCh < 0.67f ? 2 : 3;
+        const glm::vec2 l_v2W = f_WeaponPoint();
+        f_PlayBattleFxAt("bow_gather_" + std::to_string(l_iTier), l_v2W.x, l_v2W.y, false, 0, 0.8f + 0.6f * l_fCh);
+        if (m_iBowGatherBeats++ % 3 == 0) m_oAudio.f_Play(l_jB.value("chargeSound", std::string("sfx.bow_charge")), 0.8f + 0.9f * l_fCh, 0.5f);
+    }
+}
+
+// A hit's particles (docs/gameplay/20 §3): a spray on the monster, a bigger one the longer the combo; the staff's more. The
+// sword leaves its slash: streaks along the cut, growing and shrinking, one after another (afterimages).
+void Game::f_HitSpray(int l_iFoe, const toms::TouchPlay::Hit& l_oH) {
+    const nlohmann::json l_jF = f_FeelFx();
+    const int l_iCombo = std::max(1, m_oCs.m_iComboCount);
+    const bool l_bStaff = m_oCs.m_oTouch.f_Type() == toms::PlayType::eSEQUENCE_CLICK;
+    const int l_iTiers = std::max(1, l_jF.value("sprayTiers", 5));
+    const int l_iTier = std::clamp(1 + (l_iCombo - 1) / std::max(1, l_jF.value("sprayComboStep", 2)) + (l_bStaff ? 1 : 0), 1, l_iTiers);
+    const glm::vec2 l_v2C = f_FighterCentre(l_iFoe);
+    f_PlayBattleFxAt("combo_spray_" + std::to_string(l_iTier), l_v2C.x, l_v2C.y, false, 0, 1.0f + 0.04f * (float)std::min(l_iCombo, 12));
+    if (toms::f_IsSwipePlay(m_oCs.m_oTouch.f_Type())) {
+        f_PlayBattleFxAt("sword_slash", l_v2C.x, l_v2C.y, false, 0, 1.0f + 0.03f * (float)std::min(l_iCombo, 10), l_oH.m_fAngle);
+        m_oAudio.f_Play(l_jF.value("swordSound", std::string("sfx.sword_slash")), 0.95f + 0.04f * (float)std::min(l_iCombo, 8));
+    }
+    if (l_bStaff) m_oAudio.f_Play(l_jF.value("wand", nlohmann::json::object()).value("castSound", std::string("sfx.wand_cast")),
+                                std::pow(2.0f, (float)l_oH.m_iOrder * 2.0f / 12.0f), 0.8f);
 }
 
 void Game::f_TouchPlayed(int l_iIndexBefore, int l_iHitsBefore) {
     const toms::PlayType l_eType = m_oCs.m_oTouch.f_Type();
     const bool l_bSkillPlay = m_oCs.m_oSkill.m_bOn && m_oCs.m_oSkill.m_ePhase == CombatState::SkillRun::Phase::Play;
+    f_WandCues();
     for (const toms::TouchPlay::Hit& l_oH : m_oCs.m_oTouch.f_TakeHits()) {
         if (l_bSkillPlay) {   // a move's step: its burst, "2/5", the next part of its name (the skill's "step" show)
             if (!l_oH.m_bOk) { m_oAudio.f_Play(toms::key::g_pszSfxDeny); continue; }
@@ -126,6 +200,10 @@ void Game::f_TouchPlayed(int l_iIndexBefore, int l_iHitsBefore) {
             if (toms::f_IsFreePlay(l_eType) && f_FreeHit(l_oH)) return;   // the last monster fell: the move is over
         } else if (toms::f_IsSwipePlay(l_eType) || l_eType == toms::PlayType::eSEQUENCE_CLICK) {
             f_PlayHit(l_oH);   // each cut, each spell hits at once (16 §3.1, §3.3)
+        } else if (l_eType == toms::PlayType::ePULL_RELEASE && l_oH.m_bOk) {   // the arrow bursts where it hits (20 §4)
+            const float l_fCh = m_oCs.m_oTouch.f_ShotCharge();
+            f_PlayBattleFxAt("bow_explode", l_oH.m_fX, l_oH.m_fY, false, 0, 0.8f + 0.8f * l_fCh);
+            m_oAudio.f_Play(f_FeelFx().value("bow", nlohmann::json::object()).value("explodeSound", std::string("sfx.explosion")), 1.15f - 0.3f * l_fCh, 0.85f);
         }
     }
     if (!l_bSkillPlay && !toms::f_IsSwipePlay(l_eType) && l_eType != toms::PlayType::eSEQUENCE_CLICK && m_oCs.m_oTouch.f_Index() > l_iIndexBefore)
@@ -195,10 +273,19 @@ void Game::f_PlayHit(const toms::TouchPlay::Hit& l_oH) {
     if (!l_oH.m_bOk) { m_oCs.m_iComboCount = 0; m_oAudio.f_Play(toms::key::g_pszSfxDeny); return; }   // a miss ends the combo
     const int l_iT = m_oCs.m_iTarget;
     if (l_iT < 0 || l_iT >= (int)m_oCs.m_vFoes.size() || m_oCs.m_vFoes[(size_t)l_iT].f_Down()) return;
-    // half a normal hit shared over the answers; the play's end deals the rest of the attack (resolveCombo)
+    // half a normal hit shared over the answers; the play's end deals the rest of the attack (resolveCombo). The staff's
+    // share grows along the chain (docs/gameplay/20 §3): the k-th spell's is k^ramp of the whole, so the first are weak and
+    // the last strong, and the play's total stays the same.
     const CombatState::Foe& l_oF = m_oCs.m_vFoes[(size_t)l_iT];
-    int l_iDmg = (int)std::lround((float)f_NormalHitDamage(l_iT) * 0.5f / (float)std::max(1, m_oCs.m_oTouch.f_Points()) *
-                               (l_oH.m_bPerfect ? 1.3f : 1.0f) * l_oF.m_fStaggerDamage);
+    const int l_iPoints = std::max(1, m_oCs.m_oTouch.f_Points());
+    float l_fShare = 1.0f / (float)l_iPoints;
+    if (m_oCs.m_oTouch.f_Type() == toms::PlayType::eSEQUENCE_CLICK) {
+        const float l_fRamp = std::max(0.0f, f_FeelFx().value("wand", nlohmann::json::object()).value("damageRamp", 1.6f));
+        float l_fSum = 0.0f;
+        for (int l_iK = 1; l_iK <= l_iPoints; l_iK++) l_fSum += std::pow((float)l_iK, l_fRamp);
+        l_fShare = std::pow((float)std::clamp(l_oH.m_iOrder + 1, 1, l_iPoints), l_fRamp) / std::max(l_fSum, 1e-6f);
+    }
+    int l_iDmg = (int)std::lround((float)f_NormalHitDamage(l_iT) * 0.5f * l_fShare * (l_oH.m_bPerfect ? 1.3f : 1.0f) * l_oF.m_fStaggerDamage);
     l_iDmg = std::max(1, l_iDmg);
     m_oCs.m_iPlayDealt += l_iDmg;
     f_BattleEvent("hit", -1, l_iT, l_iDmg, "answer");
@@ -215,6 +302,7 @@ void Game::f_PlayHit(const toms::TouchPlay::Hit& l_oH) {
         f_FeelMoment(l_oH.m_bPerfect && l_strFeel == "hit" ? std::string("great") : l_strFeel);
     }
     f_PlayAnswerClip();
+    f_HitSpray(l_iT, l_oH);
     f_ComboWord();
     f_PopDamage(l_iDmg, l_iT, l_oH.m_bPerfect ? "great" : "hit");
     f_DamageFoe(l_iT, l_iDmg);

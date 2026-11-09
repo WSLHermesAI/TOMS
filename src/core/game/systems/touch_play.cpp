@@ -112,6 +112,7 @@ void TouchPlay::f_JudgeStroke() {
     const int l_iK = m_oCueTrack.f_Index();
     const glm::vec2 l_v2D = m_vStroke.back() - m_vStroke.front();
     const float l_fLen = std::sqrt(l_v2D.x * l_v2D.x + l_v2D.y * l_v2D.y);
+    m_fStrokeAngle = std::atan2(l_v2D.y, l_v2D.x) * 180.0f / g_fPi;
     bool l_bOk = false, l_bPerfect = false;
     if (m_vCueKinds[(size_t)l_iK] == "way") {
         if (l_fLen < m_oS.m_fSliceMinLength) return;   // not a cut
@@ -144,6 +145,21 @@ int TouchPlay::f_CirclesLit() const {
     return std::min((int)m_vCircles.size(), m_iPhaseMs / std::max(1, m_oS.m_iCircleCountMs) + 1);
 }
 
+int TouchPlay::f_CirclesShown() const {
+    const int l_iN = (int)m_vCircles.size();
+    switch (m_eCirclePhase) {
+    case CirclePhase::Count: return f_CirclesLit();
+    case CirclePhase::Hide: return 0;
+    case CirclePhase::Warn: return l_iN;
+    case CirclePhase::Tap: return m_oS.m_iCircleReturnMs <= 0 || m_oS.m_iCircleWarnMs > 0 ? l_iN : std::min(l_iN, m_iPhaseMs / m_oS.m_iCircleReturnMs + 1);
+    }
+    return l_iN;
+}
+
+bool TouchPlay::f_CircleNumbersShown() const {
+    return m_eCirclePhase == CirclePhase::Count || (m_eCirclePhase == CirclePhase::Tap && f_CirclesShown() < (int)m_vCircles.size());
+}
+
 float TouchPlay::f_TimeLeft() const {
     if (!m_bStarted) return 1.0f;
     auto l_fnLeft = [](int l_iUsed, int l_iAll) { return std::clamp(1.0f - (float)l_iUsed / (float)std::max(1, l_iAll), 0.0f, 1.0f); };
@@ -163,7 +179,7 @@ float TouchPlay::f_TimeLeft() const {
 
 void TouchPlay::f_FinishOne(bool l_bOk, bool l_bPerfect, float l_fX, float l_fY) {
     m_vMarks.push_back({l_fX, l_fY, l_bOk, 0});
-    m_vHits.push_back({l_bOk, l_bOk && l_bPerfect, l_fX, l_fY});
+    m_vHits.push_back({l_bOk, l_bOk && l_bPerfect, l_fX, l_fY, m_iIndex, m_fStrokeAngle});
     if (l_bOk) { m_iHitCount++; if (l_bPerfect) m_iPerfects++; }
     m_iLastAnswerMs = m_iClockMs;
     m_iIndex++;
@@ -208,9 +224,10 @@ void TouchPlay::f_Pointer(int l_iPhase, float l_fX, float l_fY) {
         if (l_iPhase == 2) { m_bAiming = false; f_JudgeStroke(); m_vStroke.clear(); }
         return;
     case PlayType::eSEQUENCE_CLICK: {
-        if (l_iPhase != 0 || m_eCirclePhase != CirclePhase::Tap) return;   // only once they are back and the "!" has gone
+        if (l_iPhase != 0 || m_eCirclePhase != CirclePhase::Tap) return;   // only once they come back (and any "!" has gone)
         for (size_t l_nK = 0; l_nK < m_vCircles.size(); l_nK++) {
             Circle& l_oC = m_vCircles[l_nK];
+            if ((int)l_nK >= f_CirclesShown()) break;   // not back yet: they come back in order
             if (l_oC.m_iState != 0 || std::hypot(l_fX - l_oC.m_fX, l_fY - l_oC.m_fY) > m_oS.m_fCircleRadius * 1.2f) continue;
             if ((int)l_nK == m_iIndex) {   // the next in the remembered order: a spell
                 const bool l_bPerfect = m_iClockMs - m_iLastAnswerMs <= m_oS.m_iCirclePerfectMs;
@@ -287,6 +304,7 @@ void TouchPlay::f_Update(int l_iDtMs) {
         const int l_iN = (int)m_vCircles.size();
         if (m_eCirclePhase == CirclePhase::Count && m_iPhaseMs >= l_iN * m_oS.m_iCircleCountMs) { m_eCirclePhase = CirclePhase::Hide; m_iPhaseMs = 0; }
         if (m_eCirclePhase == CirclePhase::Hide && m_iPhaseMs >= m_oS.m_iCircleHideMs) { m_eCirclePhase = CirclePhase::Warn; m_iPhaseMs = 0; }
+        // (no "!" now by default: they come back one by one, already to be tapped; 20 §2)
         if (m_eCirclePhase == CirclePhase::Warn && m_iPhaseMs >= m_oS.m_iCircleWarnMs) {
             m_eCirclePhase = CirclePhase::Tap; m_iPhaseMs = 0; m_iLastAnswerMs = m_iClockMs;
         }
@@ -327,6 +345,7 @@ TouchPlaySettings f_TouchPlayFromJson(const nlohmann::json& l_jB) {
     l_oS.m_iCircleCountMs = std::max(100, l_jJ.value("circleCountMs", l_oS.m_iCircleCountMs));
     l_oS.m_iCircleHideMs = std::max(0, l_jJ.value("circleHideMs", l_oS.m_iCircleHideMs));
     l_oS.m_iCircleWarnMs = std::max(0, l_jJ.value("circleWarnMs", l_oS.m_iCircleWarnMs));
+    l_oS.m_iCircleReturnMs = std::max(0, l_jJ.value("circleReturnMs", l_oS.m_iCircleReturnMs));
     l_oS.m_iCircleTapMs = std::max(200, l_jJ.value("circleTapMs", l_oS.m_iCircleTapMs));
     l_oS.m_iCirclePerfectMs = std::max(0, l_jJ.value("circlePerfectMs", l_oS.m_iCirclePerfectMs));
     if (l_jJ.contains("cueExtraMs") && l_jJ["cueExtraMs"].is_object())

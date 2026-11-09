@@ -915,6 +915,14 @@
       "ko": "불발",
       "es": "Chispazo"
     },
+    "battle.target_now": {
+      "zh_TW": "目前攻擊目標",
+      "en": "Current target",
+      "zh_CN": "当前攻击目标",
+      "ja": "攻撃中の相手",
+      "ko": "현재 공격 대상",
+      "es": "Objetivo actual"
+    },
     "battle.word_parry": {
       "zh_TW": "招架！",
       "en": "Parry!",
