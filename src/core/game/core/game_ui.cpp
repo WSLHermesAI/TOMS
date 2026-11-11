@@ -311,12 +311,18 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
         l_oB.m_strTitle = l_oL.f_Tr("battle.title") + " " + (m_oCs.m_vFoes.empty() ? std::string() : m_oCs.m_vFoes[0].m_oEnemy.m_strName) +
                   (m_oCs.m_vFoes.size() > 1 ? " +" + std::to_string(m_oCs.m_vFoes.size() - 1) : std::string());
         l_oB.m_strPlayerSprite = f_UiSprite(f_PlayerSprite());
-        l_oB.m_bPlayerAnim = f_BattleRigReady() && !m_strBattleRigState.empty();   // drawBattleRig draws the player instead
+        // drawBattleRig draws the player instead of battle.rml's pixel picture. The picture is only a fallback for a weapon
+        // whose clips could not load: while they are still to load (a battle's first frame) nothing shows, never the
+        // old picture for a moment (it flashed before the animated hero and the 3D stage, the owner 2026-11-11).
+        const bool l_bRigTried = m_strBattleRigWeapon == m_oEquipped.m_strWeaponId;
+        l_oB.m_bPlayerAnim = !(l_bRigTried && !f_BattleRigReady());
         for (size_t l_nI = 0; l_nI < m_oCs.m_vFoes.size(); l_nI++) {   // the monsters (battle.rml .foe)
             const CombatState::Foe& l_oF = m_oCs.m_vFoes[l_nI];
             toms::UiFoe l_oUf;
             l_oUf.m_strSprite = f_UiSprite(f_MonsterSprite((int)l_nI));
-            l_oUf.m_bAnim = l_nI < m_vFoeRigs.size() && m_vFoeRigs[l_nI].m_upView && !m_vFoeRigs[l_nI].m_strState.empty();   // drawBattleRig draws it
+            // drawBattleRig draws it; the pixel picture only when its clips were tried (a state) and could not load
+            const bool l_bFoeTried = l_nI < m_vFoeRigs.size() && !m_vFoeRigs[l_nI].m_strState.empty();
+            l_oUf.m_bAnim = !(l_bFoeTried && !m_vFoeRigs[l_nI].m_upView);
             l_oUf.m_fHpPct = f_Pct((float)std::max(0, l_oF.m_iHp), (float)l_oF.m_oEnemy.m_iHp);
             l_oUf.m_strName = l_oF.m_oEnemy.m_strName;
             l_oUf.m_strHpLine = "HP " + std::to_string(std::max(0, l_oF.m_iHp));

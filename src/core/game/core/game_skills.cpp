@@ -397,6 +397,8 @@ void Game::f_SkillBeat(const toms::ShowBeat& l_oB, glm::vec2 l_v2At) {
         m_oCs.m_fCamZoom = m_oSettings.m_bReduceEffects ? 1.0f + (l_oB.m_fZoom - 1.0f) * 0.4f : l_oB.m_fZoom;
         m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = std::max(300, l_oB.m_iMs);
         m_oCs.m_iCamOn = l_oB.m_strOn == "monster" ? l_iT : -1;
+        m_oCs.m_strCamMove = m_oSettings.m_bReduceEffects ? std::string() : l_oB.m_strMove;   // (an orbit is a lot of motion)
+        m_oCs.m_fCamDeg = l_oB.m_fDeg;
     } else if (l_oB.m_strWhat == "clip") {
         if (f_BattleRigReady() && m_oCs.m_oSkill.m_iOwner < 0) {
             const bool l_bHas = m_upPlayerView && !l_oB.m_strClip.empty() && m_upPlayerView->f_Has(l_oB.m_strClip);

@@ -73,7 +73,8 @@ set_target_properties(toms_physics PROPERTIES FOLDER "toms")
 
 # ---- toms_game_host: GameSession, shared by the SDL game and the Qt editor ----
 add_library(toms_game_host STATIC src/game_session.h src/game_session.cpp src/game_ui.h src/game_ui.cpp
-            src/title_scene.h src/title_scene.cpp)
+            src/title_scene.h src/title_scene.cpp
+            src/battle_stage.h src/battle_stage.cpp)
 toms_target_defaults(toms_game_host)
 target_include_directories(toms_game_host PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(toms_game_host PUBLIC toms_core toms_bgfx)

@@ -800,3 +800,17 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   - battle_cells.h intro fields; game_combat.cpp f_StartCellIntro, f_BattleFrame; game.cpp the monster's rig in the moment; game_ui.cpp the pop; battle.rml, battle.rcss body.focus; game_scenario.cpp battle.hp for the tutorial.
   - tests/scenarios/battle_cell_intro, battle_tutorial_no_lock; timings in battle_cell_dodge, hit, escape, battle_tutorial_steps. docs/gameplay/19 (+ zh_TW).
   - Tests: changed-only 27 of 263 pass. Not committed. All tests, the switched-off tests, web, Android not run; sword and staff not run; not played by hand; sound not heard.
+- 2026-11-07 to 11-11: the battle on a 3D stage, doc 21 B1-B2; living light; the danger close-up; fixes from the owner's play; ComfyLive (DAILY_2026-11-11.md).
+  - Committed by the owner: f559ecb, fbb5cad, 3dfc13d (doc 20 effects, OGG sound), 6b4b04f (CLAUDE.md C++ program rule, tools/check_exe_dlls.py, docs/project/02 §7).
+  - tools/battle3d/make_moonlit_ruins.py, simplify_gltf.py, make_stage_fx.py; assets/media/battle3d/moonlit_ruins (16.9 MB, Poly Haven CC0); battle.particle stage_fire.
+  - battle.json stages3d (sky, light, ground, shadow, props with node, fires, clouds, flash, camera with danger, marks, heights); special_moves.json camera move orbit, deg.
+  - src/game/src/battle_stage.* (worker-thread load, sky cache in <save>/cache, fade in, point lights); game_session.cpp (preload by floor, --battle-3d, --battle-3d-wait, win continue on any key / button, band clicks).
+  - game_combat.cpp f_Battle3D* (stage row, camera: breathe, push-in, orbit, low danger shot, slow drift, shake, dim, canvas fit; marks to boxes; lights, flashes, stage fx); game_ui.cpp fallback pictures only after a failed load.
+  - gltf_environment.* f_PackHalf; gltf_renderer.cpp half faces upload, no draws for zero-scaled nodes; text.json battle.continue_hint (6 languages).
+  - tests: scenario battle_3d (expect stage3d, key battle3d), smoke.battle_3d + tests/golden/battle_3d.png; test_select.py tools/battle3d. docs/gameplay/21 (+ zh_TW); doc 13 Q88-Q93 answered and moved.
+  - AIGamestyle/ComfyLive (not committed): Qt app, headless, language toggle, ACE-Step songs, song helpers, settings json, parameter help.
+  - Tests: changed-only 10 of 271 pass; 223 selected switched off. Not committed. All tests, web, Android not run; sound not heard.
+- 2026-11-11, later: the 3D stage as one .glb per model, and under 3 MB (DAILY_2026-11-11.md rows 13, 14).
+  - tools/battle3d/pack_glb.py (new); make_moonlit_ruins.py pack_all, --loose, sky_jpg (SKY_WIDTH 1536), shrink_textures (TEXTURES by kind, JPG_QUALITY 80), SIMPLIFY about 3,000, FORT_TRIANGLES 5,000.
+  - battle.json stages3d: .glb paths, sky.jpg. assets/media/battle3d/moonlit_ruins 16.9 -> 1.2 MB, 10 files.
+  - tests/golden/battle_3d.png refreshed (1.2 % of pixels differed). Tests: changed-only 10 of 271 pass. Not committed.

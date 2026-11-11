@@ -37,6 +37,7 @@
     "cueExtraMs: more time for a prompt that takes longer to draw (17 §4.2). dexWayDeg / dexWayMaxDeg: a swipe's tolerance per DEX point and its limit; dexGestureMaxDeg: a gesture's limit; dexCornerPct: a shape's corners per point; dexWindowMs: the answer window per point (17 §4.4). freeMinSwipe: a shorter drag is no swipe in a free mode (17 §5).",
     "backdrops: the battle's background by floor (17 §19): the first row whose from..to holds the floor, else the first. anim, clip: covers the screen (size: the picture's size); fx: looping effects of battle.particle over it. tools/art/make_battle_backdrop.py writes the forest.",
     "cells: moving in battle (docs/gameplay/19 §2.1): six cells, 0 1 2 the near row and 3 4 5 the far row; start: where the hero begins; warnMs: the danger lights this long before the hit; shapes: each a list of variants, each the cells it covers (a move names one in moves.json \"shape\"; the variant reaching the hero is chosen); shiftX, shiftNear, shiftY: how far the hero's picture moves.",
+    "stages3d: the battle on a 3D stage (docs/gameplay/21_BATTLE_3D.md), by floor like backdrops (from..to); a floor without one keeps its backdrop. sky (an HDR: hdr, intensity, yaw, blur), ground, shadow, props (model, node: only that root node of it, at, turn, scale), light (dir, color, intensity, ambient), exposure; fires (at, fx, color, intensity, range, flicker, lightHeight, size: a flickering point light + its particles), clouds (min, speed: the moonlight drifting), flash (onMonster, onHero, intensity, range, ms, off: a hit lights the stage); camera (eye, look, fov, aspect it was made for, breathe; danger: a special attack's low close-up on its monster: zoom, height, lookAt, fovAdd, deg, ms, rumble, off), marks (hero, monster, spacing, monsters2 / monsters3), heights (hero, monster, big) in metres. tools/battle3d/make_moonlit_ruins.py writes moonlit_ruins (one .glb per model).",
     "battleSpeeds: the steps of Settings > Battle speed (17 I10).",
     "training: the training ground (16 §5): cards spent per run, runs per day, fights per run, EXP and weapon EXP x."
   ],
@@ -67,6 +68,44 @@
   "guard": { "mode": "warn", "warnMs": 500, "parryShare": 0.4, "missLockMs": 400,
              "parryMs": 160, "blockMs": 550, "earlyMs": 1200, "blockPower": 70, "cooldownMs": 700 },
   "music": { "volume": 0.45, "fadeInMs": 400, "fadeOutMs": 800 },
+  "stages3d": [
+    {
+      "from": 1, "to": 10,
+      "sky": { "hdr": "battle3d/moonlit_ruins/sky.jpg", "intensity": 0.5, "yaw": 0, "blur": 0 },
+      "exposure": 0.25,
+      "light": { "dir": [-0.35, -0.75, -0.55], "color": [0.72, 0.8, 1.0], "intensity": 4.0, "ambient": 0.35 },
+      "ground": "battle3d/moonlit_ruins/ground.glb",
+      "shadow": "battle3d/moonlit_ruins/blob.glb",
+      "shadowBounds": [[-9, 0, -9], [9, 6, 6]],
+      "props": [
+        { "model": "battle3d/moonlit_ruins/fort_pieces.glb", "node": "wall_thin_gate_01", "at": [-7.5, 0, -8.0], "turn": 90, "scale": 0.55 },
+        { "model": "battle3d/moonlit_ruins/fort_pieces.glb", "node": "wall_thin_straight_03", "at": [-11.6, 0, -8.0], "turn": 90, "scale": 0.55 },
+        { "model": "battle3d/moonlit_ruins/fort_pieces.glb", "node": "wall_thick_corner_01", "at": [-16.0, 0, -13.0], "turn": 45, "scale": 0.6 },
+        { "model": "battle3d/moonlit_ruins/fort_pieces.glb", "node": "wall_thick_end_01", "at": [4.0, 0, -10.0], "turn": 90, "scale": 0.55 },
+        { "model": "battle3d/moonlit_ruins/fort_pieces.glb", "node": "wall_thick_end_02", "at": [8.5, 0, -7.0], "turn": 60, "scale": 0.55 },
+        { "model": "battle3d/moonlit_ruins/fort_pieces.glb", "node": "tower_round", "at": [14.0, 0, -22.0], "turn": 0, "scale": 0.7 },
+        { "model": "battle3d/moonlit_ruins/rock_moss_set_01.glb", "at": [-6.0, 0, -2.0], "turn": 30, "scale": 0.6 },
+        { "model": "battle3d/moonlit_ruins/rock_moss_set_02.glb", "at": [6.5, 0, -1.0], "turn": -20, "scale": 0.6 },
+        { "model": "battle3d/moonlit_ruins/dead_tree_trunk.glb", "at": [-4.0, 0, 1.0], "turn": 20, "scale": 1.0 },
+        { "model": "battle3d/moonlit_ruins/tree_stump_01.glb", "at": [4.5, 0, 2.5], "turn": 0, "scale": 0.8 },
+        { "model": "battle3d/moonlit_ruins/stone_fire_pit.glb", "at": [-2.8, 0.15, -6.8], "turn": 0, "scale": 0.8 },
+        { "model": "battle3d/moonlit_ruins/stone_fire_pit.glb", "at": [3.4, 0.15, -8.0], "turn": 40, "scale": 0.8 },
+        { "model": "battle3d/moonlit_ruins/fern_02.glb", "at": [-3.2, 0, 3.2], "turn": 0, "scale": 1.0 },
+        { "model": "battle3d/moonlit_ruins/fern_02.glb", "at": [3.8, 0, -3.5], "turn": 120, "scale": 1.2 },
+        { "model": "battle3d/moonlit_ruins/fern_02.glb", "at": [-5.0, 0, -5.0], "turn": 240, "scale": 1.1 }
+      ],
+      "fires": [
+        { "at": [-2.8, 0.3, -6.8], "fx": "stage_fire", "size": 1.6, "color": [1.0, 0.55, 0.22], "intensity": 16, "range": 11, "flicker": 0.35 },
+        { "at": [3.4, 0.3, -8.0], "fx": "stage_fire", "size": 1.6, "color": [1.0, 0.5, 0.2], "intensity": 16, "range": 11, "flicker": 0.4 }
+      ],
+      "clouds": { "min": 0.6, "speed": 0.06 },
+      "flash": { "onMonster": [1.0, 0.85, 0.6], "onHero": [1.0, 0.4, 0.3], "intensity": 22, "range": 8, "ms": 320 },
+      "camera": { "eye": [-0.3, 1.6, 7.5], "look": [0.2, 1.0, -1.5], "fov": 40, "aspect": 1.3333, "breathe": 0.04,
+                  "danger": { "zoom": 3.5, "height": 0.25, "lookAt": 0.62, "fovAdd": 10, "deg": 16, "ms": 1000, "rumble": 6 } },
+      "marks": { "hero": [-1.9, 0, 2.2], "monster": [0.5, 0, -1.5], "spacing": 1.8 },
+      "heights": { "hero": 1.8, "monster": 1.6, "big": 3.0 }
+    }
+  ],
   "backdrops": [
     { "from": 1, "to": 9999, "music": "music.forest_battle", "anim": "anim/battle_forest.anim", "clip": "idle", "size": [1792, 1024], "fx": ["forest_motes", "forest_fireflies"] }
   ],

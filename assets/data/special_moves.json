@@ -10,6 +10,7 @@
     "A beat: at (ms), do: pathFx (particles along the shape, `corner` at each corner) fx (on player / monster, else at the",
     "  step) dim countdown banner (text) name namePart (the name a step's share at a time) count (3/5) camera (zoom, on",
     "  player / monster, ms) clip (the player's clip) hits (count x gapMs: the move's damage over them) shake sound.",
+    "  On a 3D stage (docs/gameplay/21 §4.2) camera pushes the camera in; move \"orbit\" also swings it deg degrees round and back.",
     "damage: times a normal attack (the owner: N = 10 to start), times the share of the play done (Q45)."
   ],
   "free_swipe": {
@@ -95,7 +96,9 @@
         "do": "camera",
         "zoom": 1.5,
         "on": "player",
-        "ms": 1700
+        "ms": 1700,
+        "move": "orbit",
+        "deg": 35
       },
       {
         "at": 200,
@@ -167,7 +170,9 @@
         "do": "camera",
         "zoom": 1.4,
         "on": "monster",
-        "ms": 1400
+        "ms": 1400,
+        "move": "orbit",
+        "deg": 35
       },
       {
         "at": 100,

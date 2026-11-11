@@ -508,12 +508,12 @@
       "es": "Toca para defender"
     },
     "battle.continue_hint": {
-      "zh_TW": "（按任意鍵繼續）",
-      "en": "(Press any key to continue)",
-      "zh_CN": "（按任意键继续）",
-      "ja": "（何かキーを押して続行）",
-      "ko": "(아무 키나 눌러 계속)",
-      "es": "(Pulsa cualquier tecla para continuar)"
+      "zh_TW": "（按任意鍵或點擊任意處繼續）",
+      "en": "(Press any key or click anywhere to continue)",
+      "zh_CN": "（按任意键或点击任意处继续）",
+      "ja": "（何かキーを押すか、どこかをクリックして続行）",
+      "ko": "(아무 키나 누르거나 아무 곳이나 클릭해 계속)",
+      "es": "(Pulsa cualquier tecla o haz clic en cualquier lugar para continuar)"
     },
     "battle.start": {
       "zh_TW": "戰鬥開始！攻擊、防禦皆可隨時點擊，敵人則會依自己的節奏出手。",

@@ -15,6 +15,17 @@
 
 ## ▶ Next Step
 
+**The battle on a 3D stage: B1 and B2 of doc 21; living light; the danger close-up; ComfyLive** (2026-11-11; [DAILY_2026-11-11.md](DAILY_2026-11-11.md)):
+- Floors 1–10 fight in moonlit ruins (Poly Haven CC0, `battle.json` `"stages3d"`, `battle_stage.*`): the 2D fighters on their marks, a moving camera,
+  braziers, clouds and hit flashes, a low close-up on a monster's special attack. Loaded in the background on entering the floor.
+- Fixed from the owner's play: the old pixel fighters' flash, the hero cut at the canvas's edge, the slow opening and the slowdown in Debug,
+  going on after a win (any key or click, anywhere).
+- Committed by the owner since 11-06: doc 20's effects, the sound in OGG, the C++ program rule. ComfyLive is in `AIGamestyle`, not committed.
+- The stage is one `.glb` per model and 1.2 MB in all (was 16.9 MB; the owner's budget is 3 MB); the 3D reference picture was refreshed.
+- **Not committed:** the 3D battle (31 paths, plus the report files). Last changed-only run: 10 of 271, all pass; 223 selected tests are switched off. All tests, web and
+  Android not run.
+  **Owner:** judge the 3D look (all in `battle.json` `"stages3d"`); then doc 21's B3, 3D particles.
+
 **The first danger's moment; the tutorial's HP** (2026-11-06; [DAILY_2026-11-06.md](DAILY_2026-11-06.md), rows 9 and 10):
 - The first lit cells of a fight: 2.2 s frozen, focus on the monster, `danger_intro` particles, then the cells and the tutorial box pop up (`battle.json` `cells.intro`).
 - `thicketoad` HP: tutorial 300, normal 150. No HP lock in the tutorial.

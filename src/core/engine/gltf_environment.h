@@ -25,6 +25,9 @@ struct Environment {
     std::vector<std::vector<float>> m_vFaces;
     int f_Mips() const { return (int)m_vFaces.size() / 6; }
     glm::vec3 m_arrSh[9];                         // the diffuse light (see evalSH)
+    // Optional: the faces already as the GPU takes them (RGBA16F, alpha 1), made by f_PackHalf -- on a worker thread,
+    // so the upload on the main thread is a copy (GltfRenderer::f_SetEnvironment uses them when present).
+    std::vector<std::vector<uint16_t>> m_vHalfFaces;
     bool f_Valid() const { return m_iFaceSize > 0 && !m_vFaces.empty(); }
 };
 
@@ -40,6 +43,10 @@ bool f_LoadEquirectFromMemory(const void* l_pData, size_t l_nSize, Equirect& l_o
 
 // The prefiltered cubemap and the diffuse terms. samples: GGX samples per texel of the blurred levels.
 Environment f_PrefilterEnvironment(const Equirect& l_oPicture, int l_iFaceSize = 256, int l_iSamples = 48);
+
+// Fills env.m_vHalfFaces from m_vFaces (values clamped to 0 .. 60000, NaN -> 0).
+void f_PackHalf(Environment& l_oEnv);
+uint16_t f_HalfFromFloat(float l_fV);
 
 // The direction of a point of a cube face; s, t in -1..1 (t = -1: the face's top row).
 glm::vec3 f_DirectionOf(int l_iFace, float l_fS, float l_fT);

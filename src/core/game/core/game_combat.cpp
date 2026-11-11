@@ -1,3 +1,4 @@
+#include <algorithm>
 // game_combat.cpp — battle logic: start/finish, and Battle v2's action resolution
 // (tap-to-freeze attack/defense bars, the enemy clock, super attack). Split out of game.cpp 2026-09-13.
 #include "game_internal.h"
@@ -44,7 +45,7 @@ void Game::f_StartCombat(const EnemyInst& l_oE, const std::vector<EnemyInst>& l_
     m_oCs.m_iChain = m_oCs.m_iBestChain = m_oCs.m_iPerfects = m_oCs.m_iAttacksDone = m_oCs.m_iDamageTaken = 0;
     m_oCs.m_iGuardAtMs = -1; m_oCs.m_iGuardCdMs = 0; m_oCs.m_bUltimate = false;
     m_oCs.m_iGuardLockMs = 0; m_oCs.m_iPlayDealt = 0; m_oCs.m_oSkill = CombatState::SkillRun{};
-    m_oCs.m_fCamZoom = 1.0f; m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = 0; m_oCs.m_iCamOn = -1;
+    m_oCs.m_fCamZoom = 1.0f; m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = 0; m_oCs.m_iCamOn = -1; m_oCs.m_strCamMove.clear();
     m_oCs.m_oResult = CombatState::Result{};
     m_oCs.m_ePace = f_EffectivePace();
     m_oCs.m_fStamina = (float)m_oPaceSettings.m_iStaminaMax;
@@ -288,6 +289,7 @@ void Game::f_StartCellIntro(int l_iFoe) {
     m_oCs.m_fCamZoom = l_bReduced ? 1.0f + (m_oCellRules.m_fIntroZoom - 1.0f) * 0.4f : m_oCellRules.m_fIntroZoom;
     m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = m_oCellRules.m_iIntroMs;
     m_oCs.m_iCamOn = l_iFoe;
+    m_oCs.m_strCamMove.clear();
     if (!m_oCellRules.m_strIntroText.empty())
         f_ShowBanner(f_TrParam(m_oLocale.f_Tr(m_oCellRules.m_strIntroText), "name", m_oCs.m_vFoes[(size_t)l_iFoe].m_oEnemy.m_strName), "line", m_oCellRules.m_iIntroUiMs);
     f_FeelMoment("phase");
@@ -339,7 +341,9 @@ void Game::f_StepFoes(int l_iDtMs) {
             if (!l_oMv.m_strShape.empty() && !l_oF.m_uDanger && l_oF.m_iMoveMs - l_oF.m_iClockMs <= m_oCellRules.m_iWarnMs) {
                 l_oF.m_uDanger = toms::f_PickDanger(m_oCellRules, l_oMv.m_strShape, m_oCs.m_iHeroCell, std::uniform_real_distribution<float>(0.0f, 1.0f)(m_oMoveRng), m_oCs.m_iCellCols, m_oCs.m_iCellRows);
                 f_BattleEvent("danger", l_iFoe, -1, (int)l_oF.m_uDanger, l_oMv.m_strShape);
-                if (!m_oCs.m_bCellIntroStarted) f_StartCellIntro(l_iFoe);   // the fight's first: a moment of its own
+                const bool l_bIntro = !m_oCs.m_bCellIntroStarted;
+                if (l_bIntro) f_StartCellIntro(l_iFoe);   // the fight's first: a moment of its own
+                f_Battle3DDangerShot(l_iFoe, l_bIntro);
             }
         }
         if (l_oF.m_iClockMs >= l_oF.m_iMoveMs) {
@@ -680,17 +684,19 @@ void Game::f_DrawBattleRig() {
     // The battle screen's backdrop (common.rcss .focus: black at 80%). The UI draws over the game, so with the backdrop
     // in battle.rml the player and the monster would sit under it, drawn at a fifth of their brightness; it is drawn
     // here instead, under them (battle.rml has none).
-    const bool l_bBackdrop = f_DrawBattleBackdrop();
+    // a 3D stage is the backdrop (the host drew it); while it is still loading, darkness, not the painted one
+    const bool l_bBackdrop = m_bBattle3DOn || (!m_bBattle3DComing && f_DrawBattleBackdrop());
     Quad l_oBackdrop;
     l_oBackdrop.m_arrRect[0] = -4096.0f; l_oBackdrop.m_arrRect[1] = -4096.0f; l_oBackdrop.m_arrRect[2] = 16384.0f; l_oBackdrop.m_arrRect[3] = 16384.0f;
     l_oBackdrop.m_arrUv[0] = 0; l_oBackdrop.m_arrUv[1] = 0; l_oBackdrop.m_arrUv[2] = 1; l_oBackdrop.m_arrUv[3] = 1;
     l_oBackdrop.m_bSolid = true;
     l_oBackdrop.m_arrTint[0] = l_oBackdrop.m_arrTint[1] = l_oBackdrop.m_arrTint[2] = 0.0f;
     l_oBackdrop.m_arrTint[3] = std::min(1.0f, (l_bBackdrop ? 0.0f : 0xcc / 255.0f) + (l_bBackdrop ? 0.45f : 0.15f) * (float)m_oCs.m_iDimMs / 700.0f);   // a break dims it a moment
+    if (m_bBattle3DOn) l_oBackdrop.m_arrTint[3] = 0.0f;   // a 3D stage dims as light (Battle3DCamera::m_fDim), edge to edge
     if (m_pRen && l_oBackdrop.m_arrTint[3] > 0.0f) m_pRen->f_DrawSprite(l_oBackdrop);
     // the screen shake (docs/gameplay/15 §3.8): the fighters and their effects move together, fading out
     float l_fOx = 0.0f, l_fOy = 0.0f;
-    if (m_oCs.m_iShakeMs > 0 && m_oCs.m_fShakePx > 0.0f) {
+    if (m_oCs.m_iShakeMs > 0 && m_oCs.m_fShakePx > 0.0f && !m_bBattle3DOn) {   // (on a 3D stage the camera shakes: f_Battle3DCamera)
         const float l_fAmp = m_oCs.m_fShakePx * (float)m_oCs.m_iShakeMs / (float)m_oCs.m_iShakeMsMax;
         std::uniform_real_distribution<float> l_oU(-l_fAmp, l_fAmp);
         l_fOx = l_oU(m_oShakeRng); l_fOy = l_oU(m_oShakeRng);
@@ -698,7 +704,7 @@ void Game::f_DrawBattleRig() {
     // the camera's close-up (docs/gameplay/16 §6.1): the fighters and their effects scaled about the one it is on
     float l_fZoom = 1.0f;
     glm::vec2 l_v2Focus(0.0f);
-    if (m_oCs.m_iCamMs > 0 && m_oCs.m_fCamZoom > 1.0f) {
+    if (m_oCs.m_iCamMs > 0 && m_oCs.m_fCamZoom > 1.0f && !m_bBattle3DOn) {   // (on a 3D stage the camera moves in)
         const float l_fIn = std::min(1.0f, (float)(m_oCs.m_iCamMsMax - m_oCs.m_iCamMs) / 200.0f), l_fOut = std::min(1.0f, (float)m_oCs.m_iCamMs / 300.0f);
         const float l_fK = std::min(l_fIn, l_fOut);
         l_fZoom = 1.0f + (m_oCs.m_fCamZoom - 1.0f) * l_fK * (2.0f - l_fK);
@@ -708,6 +714,7 @@ void Game::f_DrawBattleRig() {
     auto l_fnZoomed = [&](glm::vec4 l_v4B) {
         return glm::vec4(l_v2Focus.x + (l_v4B.x - l_v2Focus.x) * l_fZoom + l_fOx, l_v2Focus.y + (l_v4B.y - l_v2Focus.y) * l_fZoom + l_fOy, l_v4B.z * l_fZoom, l_v4B.w * l_fZoom);
     };
+    if (m_bBattle3DOn) f_DrawBattle3DStageFx();
     // The player's place on the battle screen (battle.rcss #player, wherever the layout put it: playerBox_) and each
     // monster's (battle.rcss .foe .fbox: foeBox_): the view fills its box, the feet at the bottom centre.
     const bool l_bFocus = f_CellIntroOn() && !m_oCs.m_bCellsShown;   // the first danger's moment: only the monster
@@ -738,14 +745,36 @@ void Game::f_UpdateBattleBackdrop(int l_iDtMs) {
         m_strBackdropAnim.clear();
         m_oBackdrop.f_Stop();
         m_vBackdropFx.clear();
+        m_jBattle3DStage = nullptr;
+        m_iBattle3DTimeMs = 0;
         return;
     }
+    m_iBattle3DTimeMs += l_iDtMs;
+    for (toms::fx::EffectInstance& l_oFx : m_vStageFireFx) l_oFx.f_Update(l_iDtMs / 1000.0f);
+    for (Battle3DFlash& l_oF : m_vBattle3DFlashes) {
+        if (l_oF.m_iDelayMs > 0) l_oF.m_iDelayMs -= l_iDtMs;
+        else l_oF.m_iMs -= l_iDtMs;
+    }
+    m_vBattle3DFlashes.erase(std::remove_if(m_vBattle3DFlashes.begin(), m_vBattle3DFlashes.end(),
+                                            [](const Battle3DFlash& l_oF) { return l_oF.m_iDelayMs <= 0 && l_oF.m_iMs <= 0; }),
+                             m_vBattle3DFlashes.end());
     if (m_strBackdropAnim.empty() && m_upRes) {   // this floor's row: the first whose floors hold it, else the first
         const nlohmann::json l_jRows = m_jBattleJson.value("backdrops", nlohmann::json::array());
-        const std::string& l_strHere = m_strCurFloorId.empty() ? m_strCurStage : m_strCurFloorId;
-        std::string l_strDigits;
-        for (char l_cC : l_strHere) if (l_cC >= '0' && l_cC <= '9') l_strDigits += l_cC;
-        const int l_iFloor = l_strDigits.empty() || l_strDigits.size() > 6 ? 1 : std::stoi(l_strDigits);
+        const int l_iFloor = f_BattleFloorNumber();
+        m_jBattle3DStage = nullptr;   // the 3D stage of this floor (docs/gameplay/21): the first row whose floors hold it
+        for (const auto& l_jR : m_jBattleJson.value("stages3d", nlohmann::json::array()))
+            if (l_iFloor >= l_jR.value("from", 1) && l_iFloor <= l_jR.value("to", 9999)) { m_jBattle3DStage = l_jR; break; }
+        m_vStageFireFx.clear();
+        m_vBattle3DFlashes.clear();
+        if (m_jBattle3DStage.is_object()) {   // the braziers' fire: already burning when the battle opens
+            f_LoadBattleFxFile();
+            for (const auto& l_jF : m_jBattle3DStage.value("fires", nlohmann::json::array()))
+                if (const toms::fx::Effect* l_pE = m_spBattleFxFile ? m_spBattleFxFile->f_Find(l_jF.value("fx", std::string("stage_fire"))) : nullptr) {
+                    m_vStageFireFx.emplace_back();
+                    m_vStageFireFx.back().f_Play(l_pE, (uint32_t)(m_vStageFireFx.size() * 7919));
+                    for (int l_iK = 0; l_iK < 30; l_iK++) m_vStageFireFx.back().f_Update(0.1f);
+                }
+        }
         nlohmann::json l_jRow = l_jRows.empty() ? nlohmann::json::object() : l_jRows[0];
         for (const auto& l_jR : l_jRows)
             if (l_iFloor >= l_jR.value("from", 1) && l_iFloor <= l_jR.value("to", 9999)) { l_jRow = l_jR; break; }
@@ -826,6 +855,16 @@ void Game::f_PlayBattleFxAt(const std::string& l_strEffect, float l_fX, float l_
     if (!m_spBattleFxFile) return;
     const toms::fx::Effect* l_pE = m_spBattleFxFile->f_Find(l_strEffect);
     if (!l_pE) { std::fprintf(stderr, "[battle] %s has no effect '%s'\n", m_pszBattleFxFile, l_strEffect.c_str()); return; }
+    if (m_bBattle3DOn && !l_bOverUi) {   // on a 3D stage an effect in the scene also lights it, at the fighter nearest to it
+        int l_iNear = -1;
+        float l_fBest = 1e30f;
+        for (int l_iW = -1; l_iW < (int)m_oCs.m_vFoes.size(); l_iW++) {
+            const glm::vec4 l_v4B = f_FighterBox(l_iW);
+            const float l_fDx = l_fX - (l_v4B.x + l_v4B.z * 0.5f), l_fDy = l_fY - (l_v4B.y + l_v4B.w * 0.5f);
+            if (l_fDx * l_fDx + l_fDy * l_fDy < l_fBest) { l_fBest = l_fDx * l_fDx + l_fDy * l_fDy; l_iNear = l_iW; }
+        }
+        f_AddBattle3DFlash(l_iNear, l_iDelayMs);
+    }
     auto l_fnStart = [this, l_pE, l_fX, l_fY, l_bOverUi, l_fScale, l_fRotationDeg] {
         BattleFx l_oB;
         l_oB.m_bOverUi = l_bOverUi;
@@ -1640,4 +1679,299 @@ void Game::f_BattleTapActive() {
     m_oCs.m_strLog = f_TrParam(m_oLocale.f_Tr("battle.active_armed"), "name", l_strId);
     f_BattleEvent("active", -1, -1, 0, l_strId);
     m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
+}
+
+// ---- the battle in 3D (docs/gameplay/21_BATTLE_3D.md) ----
+
+int Game::f_BattleFloorNumber() const {
+    const std::string& l_strHere = m_strCurFloorId.empty() ? m_strCurStage : m_strCurFloorId;
+    std::string l_strDigits;
+    for (char l_cC : l_strHere) if (l_cC >= '0' && l_cC <= '9') l_strDigits += l_cC;
+    return l_strDigits.empty() || l_strDigits.size() > 6 ? 1 : std::stoi(l_strDigits);
+}
+
+const nlohmann::json* Game::f_Battle3DStage() const {
+    const bool l_bShown = m_oCs.m_bActive || m_oCs.m_bWon || m_oCs.m_iResultPauseMs > 0;
+    return m_bBattle3DAllowed && l_bShown && m_jBattle3DStage.is_object() ? &m_jBattle3DStage : nullptr;
+}
+
+nlohmann::json Game::f_Battle3DStageForFloor() const {
+    if (!m_bBattle3DAllowed) return nullptr;
+    const int l_iFloor = f_BattleFloorNumber();
+    for (const auto& l_jR : m_jBattleJson.value("stages3d", nlohmann::json::array()))
+        if (l_iFloor >= l_jR.value("from", 1) && l_iFloor <= l_jR.value("to", 9999)) return l_jR;
+    return nullptr;
+}
+
+namespace {
+glm::vec3 f_Vec3Of(const nlohmann::json& l_jA, const glm::vec3& l_v3Default) {
+    if (!l_jA.is_array() || l_jA.size() < 3) return l_v3Default;
+    return {l_jA[0].get<float>(), l_jA[1].get<float>(), l_jA[2].get<float>()};
+}
+}  // namespace
+
+Game::Battle3DCamera Game::f_Battle3DCamera(const glm::vec2& l_v2Device, const glm::vec4& l_v4Canvas) const {
+    Battle3DCamera l_oC;
+    const nlohmann::json l_jCam = m_jBattle3DStage.is_object() ? m_jBattle3DStage.value("camera", nlohmann::json::object()) : nlohmann::json::object();
+    l_oC.m_v3Eye = f_Vec3Of(l_jCam.value("eye", nlohmann::json()), l_oC.m_v3Eye);
+    l_oC.m_v3Look = f_Vec3Of(l_jCam.value("look", nlohmann::json()), l_oC.m_v3Look);
+    l_oC.m_fFovYDeg = l_jCam.value("fov", 45.0f);
+    // The shot (made for a 4:3 screen) must fit the design canvas, where the fighters are drawn, across and up and
+    // down: the canvas may be narrower than the screen (a tall window) or only part of it (letterboxed).
+    const float l_fMade = l_jCam.value("aspect", 4.0f / 3.0f);
+    if (l_v2Device.y > 0.0f && l_v4Canvas.z > 0.0f && l_v4Canvas.w > 0.0f) {
+        const float l_fTanMade = std::tan(glm::radians(l_oC.m_fFovYDeg) * 0.5f);
+        const float l_fTan = std::max({l_fTanMade, l_fTanMade * l_fMade * l_v2Device.y / l_v4Canvas.z, l_fTanMade * l_v2Device.y / l_v4Canvas.w});
+        l_oC.m_fFovYDeg = std::min(110.0f, glm::degrees(2.0f * std::atan(l_fTan)));
+    }
+    // breathing: a slow sway of a few centimetres, so the picture lives (21 §4.2)
+    const float l_fT = (float)m_iBattle3DTimeMs / 1000.0f, l_fAmp = l_jCam.value("breathe", 0.04f);
+    l_oC.m_v3Eye += glm::vec3(std::sin(l_fT * 0.37f) * l_fAmp, std::sin(l_fT * 0.53f + 1.0f) * l_fAmp * 0.6f, std::sin(l_fT * 0.29f + 2.0f) * l_fAmp * 0.5f);
+    auto l_fnMiddle = [&](int l_iWho) { return f_Battle3DMark(l_iWho) + glm::vec3(0.0f, f_Battle3DHeight(l_iWho) * 0.55f, 0.0f); };
+    // a close-up (a special move's "camera" block, the first danger's intro): a push in on its fighter, eased in and out;
+    // "orbit": also part of a circle round it and back
+    if (m_oCs.m_iCamMs > 0 && m_oCs.m_fCamZoom > 1.0f) {
+        const float l_fIn = std::min(1.0f, (float)(m_oCs.m_iCamMsMax - m_oCs.m_iCamMs) / 250.0f), l_fOut = std::min(1.0f, (float)m_oCs.m_iCamMs / 350.0f);
+        const float l_fK0 = std::min(l_fIn, l_fOut), l_fK = l_fK0 * l_fK0 * (3.0f - 2.0f * l_fK0);
+        const glm::vec3 l_v3Target = l_fnMiddle(m_oCs.m_iCamOn);
+        glm::vec3 l_v3Arm = l_oC.m_v3Eye - l_v3Target;
+        if (m_oCs.m_strCamMove == "low") {   // a monster's special attack coming (21 §4.2): low and close, looking up at it
+            const nlohmann::json l_jD = l_jCam.value("danger", nlohmann::json::object());
+            const glm::vec3 l_v3Feet = f_Battle3DMark(m_oCs.m_iCamOn);
+            const float l_fH = f_Battle3DHeight(m_oCs.m_iCamOn);
+            const float l_fP = 1.0f - (float)m_oCs.m_iCamMs / (float)std::max(1, m_oCs.m_iCamMsMax);
+            glm::vec3 l_v3Dir(l_oC.m_v3Eye.x - l_v3Feet.x, 0.0f, l_oC.m_v3Eye.z - l_v3Feet.z);
+            const float l_fFar = std::max(0.5f, glm::length(l_v3Dir));
+            l_v3Dir /= l_fFar;
+            const float l_fA = glm::radians(m_oCs.m_fCamDeg) * l_fP;   // a slow swing to the side while it holds: the depth shows
+            l_v3Dir = glm::vec3(l_v3Dir.x * std::cos(l_fA) + l_v3Dir.z * std::sin(l_fA), 0.0f, -l_v3Dir.x * std::sin(l_fA) + l_v3Dir.z * std::cos(l_fA));
+            const glm::vec3 l_v3LowEye = l_v3Feet + l_v3Dir * (l_fFar / std::max(1.0f, m_oCs.m_fCamZoom)) + glm::vec3(0.0f, l_jD.value("height", 0.35f), 0.0f);
+            const glm::vec3 l_v3LowLook = l_v3Feet + glm::vec3(0.0f, l_fH * l_jD.value("lookAt", 0.75f), 0.0f);
+            l_oC.m_v3Eye = glm::mix(l_oC.m_v3Eye, l_v3LowEye, l_fK);
+            l_oC.m_v3Look = glm::mix(l_oC.m_v3Look, l_v3LowLook, l_fK);
+            l_oC.m_fFovYDeg += l_fK * l_jD.value("fovAdd", 6.0f);   // a little wider: what is near grows more
+            l_v3Arm = glm::vec3(0.0f);
+        }
+        if (m_oCs.m_strCamMove == "orbit") {
+            const float l_fP = 1.0f - (float)m_oCs.m_iCamMs / (float)std::max(1, m_oCs.m_iCamMsMax);
+            const float l_fA = glm::radians(m_oCs.m_fCamDeg) * std::sin(l_fP * 3.14159265f);
+            l_v3Arm = glm::vec3(l_v3Arm.x * std::cos(l_fA) + l_v3Arm.z * std::sin(l_fA), l_v3Arm.y, -l_v3Arm.x * std::sin(l_fA) + l_v3Arm.z * std::cos(l_fA));
+        }
+        if (m_oCs.m_strCamMove != "low") {
+            const float l_fNear = 1.0f / (1.0f + (m_oCs.m_fCamZoom - 1.0f) * l_fK);
+            l_oC.m_v3Eye = glm::mix(l_oC.m_v3Eye, l_v3Target + l_v3Arm * l_fNear, l_fK);
+            l_oC.m_v3Look = glm::mix(l_oC.m_v3Look, l_v3Target, l_fK);
+        }
+    }
+    // slow motion (the last blow): a slow drift in toward the target
+    if (m_oCs.m_iSlowMs > 0 && !m_oCs.m_vFoes.empty()) {
+        const glm::vec3 l_v3Target = l_fnMiddle(std::clamp(m_oCs.m_iTarget, 0, (int)m_oCs.m_vFoes.size() - 1));
+        const float l_fK = std::min(1.0f, (float)m_oCs.m_iSlowMs / 400.0f) * l_jCam.value("slowPush", 0.18f);
+        l_oC.m_v3Eye = glm::mix(l_oC.m_v3Eye, l_v3Target, l_fK);
+        l_oC.m_v3Look = glm::mix(l_oC.m_v3Look, l_v3Target, l_fK);
+    }
+    l_oC.m_fDim = std::min(1.0f, 0.45f * (float)m_oCs.m_iDimMs / 700.0f);   // as the 2D veil, but as the stage's light
+    // clouds passing the moon: its light drifts between "min" and full (two slow waves, so it never repeats plainly)
+    const nlohmann::json l_jClouds = m_jBattle3DStage.is_object() ? m_jBattle3DStage.value("clouds", nlohmann::json::object()) : nlohmann::json::object();
+    if (!l_jClouds.empty()) {
+        const float l_fSpeed = l_jClouds.value("speed", 0.08f), l_fMin = l_jClouds.value("min", 0.65f);
+        const float l_fW = 0.5f + 0.32f * std::sin(l_fT * l_fSpeed * 6.2832f) + 0.18f * std::sin(l_fT * l_fSpeed * 15.1f + 1.3f);
+        l_oC.m_fMoon = l_fMin + (1.0f - l_fMin) * glm::clamp(l_fW, 0.0f, 1.0f);
+    }
+    // a shake: the camera itself, fading out (the 2D one's pixels as centimetres: 8 px ~ 5 cm)
+    if (m_oCs.m_iShakeMs > 0 && m_oCs.m_fShakePx > 0.0f) {
+        const float l_fS = m_oCs.m_fShakePx * l_jCam.value("shakeScale", 0.006f) * (float)m_oCs.m_iShakeMs / (float)std::max(1, m_oCs.m_iShakeMsMax);
+        const float l_fMs = (float)m_iBattle3DTimeMs;
+        const glm::vec3 l_v3D(std::sin(l_fMs * 0.091f) * l_fS, std::sin(l_fMs * 0.077f + 1.3f) * l_fS, std::sin(l_fMs * 0.063f + 2.1f) * l_fS * 0.5f);
+        l_oC.m_v3Eye += l_v3D;
+        l_oC.m_v3Look += l_v3D * 0.6f;
+    }
+    return l_oC;
+}
+
+glm::vec3 Game::f_Battle3DMark(int l_iWho) const {
+    const nlohmann::json l_jMarks = m_jBattle3DStage.is_object() ? m_jBattle3DStage.value("marks", nlohmann::json::object()) : nlohmann::json::object();
+    if (l_iWho < 0) return f_Vec3Of(l_jMarks.value("hero", nlohmann::json()), glm::vec3(-1.2f, 0.0f, 2.0f));
+    // the monsters: their own marks for this many (monsters2, monsters3), else spread across from the one mark
+    const int l_iCount = std::max(1, (int)m_oCs.m_vFoes.size());
+    const nlohmann::json l_jMany = l_jMarks.value("monsters" + std::to_string(l_iCount), nlohmann::json::array());
+    if (l_iCount > 1 && l_jMany.is_array() && l_iWho < (int)l_jMany.size()) return f_Vec3Of(l_jMany[(size_t)l_iWho], glm::vec3(0.0f));
+    const glm::vec3 l_v3One = f_Vec3Of(l_jMarks.value("monster", nlohmann::json()), glm::vec3(0.6f, 0.0f, -1.0f));
+    const float l_fGap = l_jMarks.value("spacing", 1.8f);
+    return l_v3One + glm::vec3(((float)l_iWho - (float)(l_iCount - 1) * 0.5f) * l_fGap, 0.0f, 0.0f);
+}
+
+float Game::f_Battle3DHeight(int l_iWho) const {
+    const nlohmann::json l_jH = m_jBattle3DStage.is_object() ? m_jBattle3DStage.value("heights", nlohmann::json::object()) : nlohmann::json::object();
+    if (l_iWho < 0) return l_jH.value("hero", 1.8f);
+    return f_FoeIsBig(l_iWho) ? l_jH.value("big", 3.0f) : l_jH.value("monster", 1.6f);
+}
+
+void Game::f_SetBattle3DView(bool l_bOn, const glm::mat4& l_mat4ViewProj, const glm::vec2& l_v2Device, const glm::vec4& l_v4DesignInDevice) {
+    const bool l_bWas = m_bBattle3DOn;
+    m_bBattle3DOn = l_bOn;
+    if (!l_bOn) {
+        if (l_bWas) {   // back to the layout's boxes
+            m_v4PlayerBox = m_v4UiPlayerBox;
+            for (int l_iI = 0; l_iI < toms::g_iMaxFoes; l_iI++) m_arrFoeBox[l_iI] = m_arrUiFoeBox[l_iI];
+        }
+        return;
+    }
+    m_mat4Battle3DViewProj = l_mat4ViewProj;
+    m_v4Battle3DDesign = l_v4DesignInDevice;
+    m_v2Battle3DDevice = l_v2Device;
+    f_PlaceBattle3DBoxes();
+}
+
+// Each fighter's box from its mark: the feet and the head projected (device -> design pixels); the layout's box gives
+// only the shape (width / height). FighterView draws the feet at the box's bottom centre.
+void Game::f_PlaceBattle3DBoxes() {
+    if (!m_pRen || m_v4Battle3DDesign.z <= 0.0f || m_v4Battle3DDesign.w <= 0.0f || m_v2Battle3DDevice.x <= 0.0f) return;
+    const float l_fDw = (float)m_pRen->f_Width(), l_fDh = (float)m_pRen->f_Height();
+    (void)l_fDw; (void)l_fDh;
+    auto l_fnToDesign = [&](const glm::vec3& l_v3P, bool& l_bOk) { return f_Battle3DToDesign(l_v3P, l_bOk); };
+    auto l_fnBox = [&](int l_iWho, const glm::vec4& l_v4Shape) {
+        const glm::vec3 l_v3Feet = f_Battle3DMark(l_iWho);
+        // behind the camera or right at it (a low shot near the monster passes the hero): off the screen, not at the
+        // layout's place
+        if ((m_mat4Battle3DViewProj * glm::vec4(l_v3Feet + glm::vec3(0.0f, f_Battle3DHeight(l_iWho) * 0.5f, 0.0f), 1.0f)).w < 0.6f)
+            return glm::vec4(-100000.0f, -100000.0f, 1.0f, 1.0f);
+        bool l_bA = false, l_bB = false;
+        const glm::vec2 l_v2Feet = l_fnToDesign(l_v3Feet, l_bA), l_v2Head = l_fnToDesign(l_v3Feet + glm::vec3(0.0f, f_Battle3DHeight(l_iWho), 0.0f), l_bB);
+        if (!l_bA || !l_bB) return l_v4Shape;
+        const float l_fH = std::max(4.0f, l_v2Feet.y - l_v2Head.y);
+        const float l_fW = l_fH * (l_v4Shape.w > 0.0f ? l_v4Shape.z / l_v4Shape.w : 1.0f);
+        return glm::vec4(l_v2Feet.x - l_fW * 0.5f, l_v2Feet.y - l_fH, l_fW, l_fH);
+    };
+    m_v4PlayerBox = l_fnBox(-1, m_v4UiPlayerBox);
+    for (int l_iI = 0; l_iI < toms::g_iMaxFoes; l_iI++) m_arrFoeBox[l_iI] = l_fnBox(l_iI, m_arrUiFoeBox[l_iI]);
+}
+
+std::vector<glm::vec4> Game::f_Battle3DShadows() const {
+    std::vector<glm::vec4> l_vOut;
+    if (!m_jBattle3DStage.is_object()) return l_vOut;
+    const bool l_bFocus = f_CellIntroOn() && !m_oCs.m_bCellsShown;   // the first danger's moment: only the monster (as drawn)
+    if (!l_bFocus && f_BattleRigReady() && !m_strBattleRigState.empty())
+        l_vOut.push_back(glm::vec4(f_Battle3DMark(-1), f_Battle3DHeight(-1) * 0.32f));
+    for (size_t l_nI = 0; l_nI < m_vFoeRigs.size() && l_nI < m_oCs.m_vFoes.size(); l_nI++)
+        if (m_vFoeRigs[l_nI].m_upView && !m_vFoeRigs[l_nI].m_strState.empty())
+            l_vOut.push_back(glm::vec4(f_Battle3DMark((int)l_nI), f_Battle3DHeight((int)l_nI) * 0.42f));
+    return l_vOut;
+}
+
+glm::vec2 Game::f_Battle3DToDesign(const glm::vec3& l_v3P, bool& l_bOk, float* l_pPxPerMetre) const {
+    l_bOk = false;
+    if (!m_pRen || m_v4Battle3DDesign.z <= 0.0f || m_v4Battle3DDesign.w <= 0.0f || m_v2Battle3DDevice.x <= 0.0f) return glm::vec2(0.0f);
+    const float l_fDw = (float)m_pRen->f_Width(), l_fDh = (float)m_pRen->f_Height();
+    auto l_fnOne = [&](const glm::vec3& l_v3Q, bool& l_bIn) {
+        const glm::vec4 l_v4C = m_mat4Battle3DViewProj * glm::vec4(l_v3Q, 1.0f);
+        l_bIn = l_v4C.w > 1e-4f;
+        const glm::vec2 l_v2Ndc = l_bIn ? glm::vec2(l_v4C.x, l_v4C.y) / l_v4C.w : glm::vec2(0.0f);
+        // NDC -> device pixels (y down; the projection covers the whole backbuffer) -> the canvas's design pixels
+        const glm::vec2 l_v2Dev((l_v2Ndc.x * 0.5f + 0.5f) * m_v2Battle3DDevice.x, (0.5f - l_v2Ndc.y * 0.5f) * m_v2Battle3DDevice.y);
+        return glm::vec2((l_v2Dev.x - m_v4Battle3DDesign.x) / m_v4Battle3DDesign.z * l_fDw, (l_v2Dev.y - m_v4Battle3DDesign.y) / m_v4Battle3DDesign.w * l_fDh);
+    };
+    const glm::vec2 l_v2P = l_fnOne(l_v3P, l_bOk);
+    if (l_pPxPerMetre) {
+        bool l_bUp = false;
+        const glm::vec2 l_v2Up = l_fnOne(l_v3P + glm::vec3(0.0f, 1.0f, 0.0f), l_bUp);
+        *l_pPxPerMetre = l_bUp ? std::fabs(l_v2P.y - l_v2Up.y) : 0.0f;
+    }
+    return l_v2P;
+}
+
+// A hit, a spell, a monster's blow: the stage lit a moment where it lands (battle.json stage "flash": the colours for the
+// player's blows on a monster and a monster's on the player, the intensity, range and time).
+void Game::f_AddBattle3DFlash(int l_iWho, int l_iDelayMs) {
+    if (!m_jBattle3DStage.is_object() || m_oSettings.m_bReduceEffects) return;
+    const nlohmann::json l_jF = m_jBattle3DStage.value("flash", nlohmann::json::object());
+    if (l_jF.value("off", false)) return;
+    Battle3DFlash l_oF;
+    const int l_iAt = l_iWho < 0 ? -1 : std::min(l_iWho, std::max(0, (int)m_oCs.m_vFoes.size() - 1));
+    // a little in front of the fighter, at its middle: the light falls on the ground around it and on the stage near it
+    l_oF.m_v3Pos = f_Battle3DMark(l_iAt) + glm::vec3(0.0f, f_Battle3DHeight(l_iAt) * 0.55f, 0.5f);
+    const nlohmann::json l_jC = l_jF.value(l_iAt < 0 ? "onHero" : "onMonster", nlohmann::json());
+    l_oF.m_v3Color = l_jC.is_array() && l_jC.size() >= 3 ? glm::vec3(l_jC[0].get<float>(), l_jC[1].get<float>(), l_jC[2].get<float>())
+                                                       : (l_iAt < 0 ? glm::vec3(1.0f, 0.45f, 0.35f) : glm::vec3(1.0f, 0.85f, 0.6f));
+    l_oF.m_fIntensity = l_jF.value("intensity", 9.0f);
+    l_oF.m_fRange = l_jF.value("range", 6.0f);
+    l_oF.m_iDelayMs = std::max(0, l_iDelayMs);
+    l_oF.m_iMs = l_oF.m_iMsMax = std::max(60, l_jF.value("ms", 260));
+    if (m_vBattle3DFlashes.size() >= 6) m_vBattle3DFlashes.erase(m_vBattle3DFlashes.begin());
+    m_vBattle3DFlashes.push_back(l_oF);
+}
+
+std::vector<Game::Battle3DLight> Game::f_Battle3DLights() const {
+    std::vector<Battle3DLight> l_vOut;
+    if (!m_jBattle3DStage.is_object()) return l_vOut;
+    const float l_fT = (float)m_iBattle3DTimeMs / 1000.0f;
+    int l_iN = 0;
+    for (const auto& l_jF : m_jBattle3DStage.value("fires", nlohmann::json::array())) {
+        Battle3DLight l_oL;
+        const nlohmann::json l_jAt = l_jF.value("at", nlohmann::json::array());
+        if (l_jAt.is_array() && l_jAt.size() >= 3) l_oL.m_v3Pos = glm::vec3(l_jAt[0].get<float>(), l_jAt[1].get<float>(), l_jAt[2].get<float>());
+        l_oL.m_v3Pos.y += l_jF.value("lightHeight", 0.6f);
+        const nlohmann::json l_jC = l_jF.value("color", nlohmann::json::array({1.0f, 0.55f, 0.22f}));
+        l_oL.m_v3Color = glm::vec3(l_jC[0].get<float>(), l_jC[1].get<float>(), l_jC[2].get<float>());
+        // a flame's flicker: a few unrelated waves (each fire its own) and a quick shiver on top
+        const float l_fK = l_jF.value("flicker", 0.35f), l_fP = 1.7f * (float)l_iN++;
+        const float l_fWave = 0.5f * std::sin(l_fT * 7.3f + l_fP) + 0.3f * std::sin(l_fT * 13.1f + 2.0f * l_fP) + 0.2f * std::sin(l_fT * 23.7f + 3.0f * l_fP);
+        l_oL.m_fIntensity = l_jF.value("intensity", 7.0f) * (1.0f + l_fK * l_fWave);
+        l_oL.m_fRange = l_jF.value("range", 7.0f);
+        l_oL.m_v3Pos += glm::vec3(0.04f * std::sin(l_fT * 9.0f + l_fP), 0.05f * std::sin(l_fT * 11.0f + l_fP), 0.0f);   // the flame sways: so do its shadows
+        l_vOut.push_back(l_oL);
+    }
+    for (const Battle3DFlash& l_oF : m_vBattle3DFlashes) {
+        if (l_oF.m_iDelayMs > 0 || l_oF.m_iMs <= 0) continue;
+        const float l_fK = (float)l_oF.m_iMs / (float)l_oF.m_iMsMax;   // bright at once, fading
+        Battle3DLight l_oL;
+        l_oL.m_v3Pos = l_oF.m_v3Pos;
+        l_oL.m_v3Color = l_oF.m_v3Color;
+        l_oL.m_fIntensity = l_oF.m_fIntensity * l_fK * l_fK;
+        l_oL.m_fRange = l_oF.m_fRange;
+        l_vOut.push_back(l_oL);
+    }
+    std::sort(l_vOut.begin(), l_vOut.end(), [](const Battle3DLight& l_oA, const Battle3DLight& l_oB) { return l_oA.m_fIntensity > l_oB.m_fIntensity; });
+    return l_vOut;
+}
+
+// The fires' particles at their places (scaled by the distance: the effect is made at 100 px a metre), and the floor's
+// ambient motes and fireflies (battle.json backdrops "fx") over the whole stage, as they were over the painted one.
+void Game::f_DrawBattle3DStageFx() {
+    if (!m_pRen || !m_spBattleFxFile) return;
+    const nlohmann::json l_jFires = m_jBattle3DStage.is_object() ? m_jBattle3DStage.value("fires", nlohmann::json::array()) : nlohmann::json::array();
+    for (size_t l_nI = 0; l_nI < m_vStageFireFx.size() && l_nI < l_jFires.size(); l_nI++) {
+        const nlohmann::json l_jAt = l_jFires[l_nI].value("at", nlohmann::json::array());
+        if (!l_jAt.is_array() || l_jAt.size() < 3) continue;
+        bool l_bOk = false;
+        float l_fPx = 0.0f;
+        const glm::vec2 l_v2At = f_Battle3DToDesign(glm::vec3(l_jAt[0].get<float>(), l_jAt[1].get<float>(), l_jAt[2].get<float>()), l_bOk, &l_fPx);
+        if (!l_bOk || l_fPx <= 0.0f) continue;
+        m_vStageFireFx[l_nI].f_Draw(m_pRen, m_spBattleFxFile->f_Atlases(), toms::anim::f_Placement(l_v2At.x, l_v2At.y, l_fPx / 100.0f * l_jFires[l_nI].value("size", 1.0f)), nullptr);
+    }
+    if (!m_vBackdropFx.empty()) {
+        const float l_fW = (float)m_pRen->f_Width(), l_fH = (float)m_pRen->f_Height();
+        const glm::mat3 l_mat3At = toms::anim::f_Placement(l_fW * 0.5f, l_fH * 0.5f, std::max(l_fW / m_fBackdropW, l_fH / m_fBackdropH));
+        for (toms::fx::EffectInstance& l_oFx : m_vBackdropFx) l_oFx.f_Draw(m_pRen, m_spBattleFxFile->f_Atlases(), l_mat3At, nullptr);
+    }
+}
+
+// A monster's special attack coming (its danger cells light, docs/gameplay/19 §2.1): on a 3D stage the camera goes low
+// and close, looking up at it, swinging a little to the side (the depth shows), with a rumble; it is back before the
+// hit, so the cells can be read. The fight's first danger (the cells' intro) holds it for the intro; the later ones for
+// battle.json stage camera "danger" "ms". Never with Reduce effects.
+void Game::f_Battle3DDangerShot(int l_iFoe, bool l_bIntro) {
+    if (!m_bBattle3DOn || m_oSettings.m_bReduceEffects || !m_jBattle3DStage.is_object()) return;
+    const nlohmann::json l_jD = m_jBattle3DStage.value("camera", nlohmann::json::object()).value("danger", nlohmann::json::object());
+    if (l_jD.value("off", false)) return;
+    m_oCs.m_fCamZoom = std::max(1.01f, l_jD.value("zoom", 2.2f));
+    if (!l_bIntro) m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = std::max(300, l_jD.value("ms", 1000));   // (the intro keeps its own time)
+    m_oCs.m_iCamOn = l_iFoe;
+    m_oCs.m_strCamMove = "low";
+    m_oCs.m_fCamDeg = l_jD.value("deg", 14.0f);
+    const float l_fRumble = l_jD.value("rumble", 6.0f);
+    if (l_fRumble > 0.0f) {
+        m_oCs.m_fShakePx = std::max(m_oCs.m_fShakePx, l_fRumble);
+        m_oCs.m_iShakeMs = m_oCs.m_iShakeMsMax = std::max(m_oCs.m_iShakeMs, 380);
+    }
 }

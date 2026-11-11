@@ -2,6 +2,7 @@
 // (src/game/core/main.cpp, removed 2026-09-27; GLFW keys -> toms::next::Key).
 #include "game_session.h"
 #include "title_scene.h"
+#include "battle_stage.h"
 
 #include "bgfx_host.h"       // the F3 HUD: debug text, backend name, compute caps
 #include "bgfx_renderer.h"
@@ -147,6 +148,8 @@ bool GameSession::f_Start(const SessionOptions& l_oOpts, std::string& l_strError
     if (l_oOpts.m_bDefaultBattleTuning) m_upGame->f_UseDefaultBattleTuning();
     if (l_oOpts.m_bBattleLog) m_upGame->f_SetBattleLogToStderr(true);
     m_upGame->f_SetShowVersion(l_oOpts.m_bShowVersion);
+    m_upGame->f_SetBattle3DAllowed(l_oOpts.m_bBattle3D);
+    m_bBattle3DWait = l_oOpts.m_bBattle3DWait;
     // The 3D scene behind the title: the sea, or a model; without either the title is plain.
     bool l_bOcean = l_oOpts.m_strTitleScene == "ocean";
     if (l_oOpts.m_bTitleSceneInTurns && l_oOpts.m_strTitleScene.empty()) l_bOcean = f_NextTitleBackground() % 2 == 0;
@@ -251,6 +254,8 @@ void GameSession::f_Stop() {
     // renderer's GPU handles.
     if (m_upTitleScene) m_upTitleScene->f_Shutdown();   // its GPU buffers, while bgfx is up
     m_upTitleScene.reset();
+    if (m_upBattleStage) m_upBattleStage->f_Shutdown();
+    m_upBattleStage.reset();
     if (m_upUi) m_upUi->f_Shutdown();
     if (m_upRml) m_upRml->f_Shutdown();
     m_upUi.reset();
@@ -291,6 +296,11 @@ bool GameSession::f_Frame(int l_iDtMs, const InputState& l_oIn, uint32_t l_uDevi
     if (l_iDtMs > 0) l_oG.f_Update(l_iDtMs);
 
     bool l_bKeepRunning = true;
+    // "(Press any key to continue)" after a win means any key: one that just went down, read before the edge
+    // triggers below take their state (it changes none of it).
+    bool l_bAnyKeyPressed = false;
+    for (size_t l_nK = 0; l_nK < (size_t)Key::Count; l_nK++)
+        if (l_oIn.f_IsDown((Key)l_nK) && !m_arrKeyWas[l_nK] && (Key)l_nK != Key::F3) l_bAnyKeyPressed = true;
     // Query each key exactly once per frame (keyPressed is an edge trigger with state).
     const bool l_bUpPressed    = f_KeyPressed(l_oIn, Key::Up)    || f_KeyPressed(l_oIn, Key::W);
     const bool l_bDownPressed  = f_KeyPressed(l_oIn, Key::Down)  || f_KeyPressed(l_oIn, Key::S);
@@ -360,6 +370,7 @@ bool GameSession::f_Frame(int l_iDtMs, const InputState& l_oIn, uint32_t l_uDevi
             if (l_bUpPressed)   l_oG.f_DlgMoveSel(-1);
             if (l_bDownPressed) l_oG.f_DlgMoveSel(1);
         }
+        if (l_oG.f_CombatWon() && l_bAnyKeyPressed && !(l_bEnterPressed || l_bSpacePressed)) l_oG.f_DismissVictory();   // any key, as it says
         if (l_bEnterPressed || l_bSpacePressed) {
             if (l_oG.f_EndingActive()) { if (!l_oG.f_Rebirth()) l_oG.f_DismissEndingScreen(); }
             else if (l_oG.f_NoticeOpen()) l_oG.f_DismissNotice();
@@ -429,7 +440,19 @@ bool GameSession::f_Frame(int l_iDtMs, const InputState& l_oIn, uint32_t l_uDevi
         } else if (!l_oIn.m_bMouseLeft && m_bMouseWasDown && g_oListDrag.m_bMoved) {
             l_pCtx->ProcessMouseMove(-10000, -10000, 0);   // off everything, so letting go clicks nothing
         }
-        if (l_oIn.m_bMouseLeft && !m_bMouseWasDown) {
+        // A won battle waiting for "(press any key or click anywhere)": any mouse button, anywhere in the window (the
+        // canvas, the bands beside it where the 3D stage is), goes on at once, before the UI sees the press; the UI
+        // gets neither that press nor its release, so letting go clicks nothing on the screen that comes next (the
+        // owner 2026-11-11: a click on the screen left it waiting).
+        const bool l_bAnyButton = l_oIn.m_bMouseLeft || l_oIn.m_bMouseRight || l_oIn.m_bMouseMiddle;
+        if (l_bAnyButton && !m_bAnyButtonWasDown && l_oG.f_CombatWon()) {
+            l_oG.f_DismissVictory();
+            m_bSwallowPress = true;
+        }
+        m_bAnyButtonWasDown = l_bAnyButton;
+        if (m_bSwallowPress) {
+            if (!l_bAnyButton) m_bSwallowPress = false;
+        } else if (l_oIn.m_bMouseLeft && !m_bMouseWasDown) {
             const bool l_bFree = l_pCtx->ProcessMouseButtonDown(0, 0);
             m_bMousePressFree = l_bFree && l_bOnGame;
             if (m_bMousePressFree) l_oG.f_HandleTouch(l_fBx, l_fBy, 0);
@@ -457,7 +480,47 @@ bool GameSession::f_Frame(int l_iDtMs, const InputState& l_oIn, uint32_t l_uDevi
     // The title's 3D scene: its own views, run between the screen clear and the sprites.
     const bool l_bScene = m_upTitleScene && l_oG.f_TitleOpen();
     if (l_bScene) m_upTitleScene->f_Draw(l_iDtMs / 1000.0, l_uDeviceW, l_uDeviceH);
-    m_pRenderer->f_SetSceneViews(TitleScene::m_u16FirstView, l_bScene ? m_upTitleScene->f_ViewCount() : 0);
+    // The battle's 3D stage (battle_stage.h, docs/gameplay/21): in the same views; the game stands its 2D fighters on it.
+    // It is loaded in the background as soon as the floor is entered (BattleStage::f_Request), so a battle opens at once;
+    // a battle before it is ready keeps the painted backdrop until it is.
+    bool l_bStage = false;
+    const nlohmann::json* l_pStage = l_bScene ? nullptr : l_oG.f_Battle3DStage();
+    const nlohmann::json l_jFloorStage = l_oG.f_Battle3DStageForFloor();
+    if (l_pStage || !l_jFloorStage.is_null()) {
+        if (!m_upBattleStage) m_upBattleStage = std::make_unique<BattleStage>();
+        m_upBattleStage->f_Request(l_pStage ? *l_pStage : l_jFloorStage, m_strAssetDir, m_bBattle3DWait);
+    }
+    if (m_upBattleStage) {
+        std::string l_strWhy;
+        if (!m_upBattleStage->f_Poll(l_strWhy)) std::fprintf(stderr, "[battle3d] no 3D stage (the painted backdrop): %s\n", l_strWhy.c_str());
+    }
+    if (l_pStage && l_uDeviceW > 0 && l_uDeviceH > 0) {
+        if (m_upBattleStage->f_ReadyFor(l_pStage->dump())) {
+            const auto l_oCanvas = BgfxRenderer::f_ComputeAspectFitViewport(l_uDeviceW, l_uDeviceH, BgfxRenderer::m_uDesignW, BgfxRenderer::m_uDesignH);
+            const Game::Battle3DCamera l_oGc = l_oG.f_Battle3DCamera(glm::vec2((float)l_uDeviceW, (float)l_uDeviceH),
+                                                                     glm::vec4(l_oCanvas.m_fX, l_oCanvas.m_fY, l_oCanvas.m_fWidth, l_oCanvas.m_fHeight));
+            BattleStage::Camera l_oCam;
+            l_oCam.m_v3Eye = l_oGc.m_v3Eye;
+            l_oCam.m_v3Look = l_oGc.m_v3Look;
+            l_oCam.m_fFovYDeg = l_oGc.m_fFovYDeg;
+            l_oCam.m_fDim = l_oGc.m_fDim;
+            l_oCam.m_fMoon = l_oGc.m_fMoon;
+            for (const Game::Battle3DLight& l_oL : l_oG.f_Battle3DLights())
+                l_oCam.m_vPoints.push_back({l_oL.m_v3Pos, l_oL.m_v3Color, l_oL.m_fIntensity, l_oL.m_fRange});
+            const glm::mat4 l_mat4Vp = m_upBattleStage->f_Draw(l_iDtMs / 1000.0f, l_uDeviceW, l_uDeviceH, l_oCam, l_oG.f_Battle3DShadows());
+            const auto l_oFit = BgfxRenderer::f_ComputeAspectFitViewport(l_uDeviceW, l_uDeviceH, BgfxRenderer::m_uDesignW, BgfxRenderer::m_uDesignH);
+            l_oG.f_SetBattle3DView(true, l_mat4Vp, glm::vec2((float)l_uDeviceW, (float)l_uDeviceH),
+                                   glm::vec4(l_oFit.m_fX, l_oFit.m_fY, l_oFit.m_fWidth, l_oFit.m_fHeight));
+            l_bStage = true;
+        }
+    }
+    if (!l_bStage) {
+        l_oG.f_SetBattle3DView(false, glm::mat4(1.0f), glm::vec2(0.0f), glm::vec4(0.0f));
+        if (m_upBattleStage) m_upBattleStage->f_HiddenFrame();
+    }
+    // A stage still on its way (loading): the battle shows no painted backdrop meanwhile (it would pop, then the stage).
+    l_oG.f_SetBattle3DComing(l_pStage && !l_bStage && !(m_upBattleStage && m_upBattleStage->f_Failed(l_pStage->dump())));
+    m_pRenderer->f_SetSceneViews(TitleScene::m_u16FirstView, l_bScene ? m_upTitleScene->f_ViewCount() : l_bStage ? m_upBattleStage->f_ViewCount() : 0);
     if (m_upUi) m_upUi->f_SetTitleScene(l_bScene);
     l_oG.f_Draw();   // the world -> BgfxRenderer::end(): views kViewClear + kViewGame
     {           // the UI over it, under ImGui

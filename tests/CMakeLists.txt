@@ -151,6 +151,8 @@ add_test(NAME smoke.title_ocean COMMAND toms_game --title-scene=ocean --renderer
          "--screenshot=${CMAKE_BINARY_DIR}/test-run/title_ocean.png")
 set_tests_properties(smoke.title_ocean PROPERTIES LABELS smoke TIMEOUT 60 PASS_REGULAR_EXPRESSION "\\[title\\] the ocean")
 toms_smoke_test(stage        stage       d3d11   0.1  --frames=120 --keys=enter@30)
+# The battle on its 3D stage (docs/gameplay/21_BATTLE_3D.md): the moonlit ruins, the sky, the 2D fighters on their marks.
+toms_smoke_test(battle_3d    battle_3d   d3d11   0.1  --frames=40 --battle-3d=on --scenario=${CMAKE_CURRENT_SOURCE_DIR}/scenarios/battle_3d)
 # The player menu (docs/gameplay/03_PLAYER_MENU.md): one test per tab. --give hands the player items and gear
 # when the title closes, so the grids, the gear comparison and the scrolling have something to show.
 set(_pm_give "--give=potion_red,potion_red,gem_atk,gem_atk,scroll,exp_up,potion_blue,gem_def,key_yellow,key_blue,wand,twin_daggers,war_hammer,cloth_robe,guardian_plate,focus_talisman,gold:100")

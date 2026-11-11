@@ -67,11 +67,16 @@ struct SessionOptions {
     // test must draw the same picture every time.
     bool m_bTitleSceneInTurns = false;
     bool m_bShowVersion = true;   // the published version in the title's corner (off in tests: their reference pictures)
+    // The battle on a 3D stage (battle.json "stages3d", docs/gameplay/21_BATTLE_3D.md), where the floor has one: on in
+    // normal play on the desktop; off in scripted runs (their reference pictures) unless --battle-3d=on.
+    bool m_bBattle3D = false;
+    bool m_bBattle3DWait = false;   // load the stage before going on (scripted runs: their pictures never wait on the disk)
     // Read changed art, clips and effects again while running (Game::setHotReload, docs/engine/12_RESOURCE_MANAGER.md §4.6).
     bool m_bHotReload = false;
 };
 
 class TitleScene;
+class BattleStage;
 
 class GameSession {
 public:
@@ -122,10 +127,14 @@ private:
     int m_iUiWatchMs = 0;
     std::array<bool, (size_t)Key::Count> m_arrKeyWas{};
     bool m_bMouseWasDown = false;
+    bool m_bAnyButtonWasDown = false;              // any mouse button, last frame (a won battle goes on with any)
+    bool m_bSwallowPress = false;                  // that press went on from a won battle: the UI never sees it
     bool m_bMousePressFree = false;                // the current press hit no UI element (map click)
     std::unique_ptr<RmlUi> m_upRml;                 // RmlUi on bgfx (rml_ui.h)
     std::unique_ptr<GameUi> m_upUi;                 // the game's documents + data model (game_ui.h)
     std::unique_ptr<TitleScene> m_upTitleScene;     // the 3D scene behind the title (title_scene.h)
+    std::unique_ptr<BattleStage> m_upBattleStage;   // the battle's 3D stage (battle_stage.h), kept between battles
+    bool m_bBattle3DWait = false;                   // SessionOptions::m_bBattle3DWait
     double m_dUiTime = 0;
     std::string m_strUiLanguage;                     // language the UI font was last chosen for
     uint32_t m_uPinW = 0, m_uPinH = 0;               // SessionOptions::designW / H

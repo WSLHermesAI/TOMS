@@ -1,0 +1,21 @@
+{
+  "_comment": "The battle on its 3D stage (docs/gameplay/21_BATTLE_3D.md B1): battle.json stages3d for floor 1 loads (the moonlit ruins), the stage is drawn, and the 2D fighters stand on its marks (the hero nearer: taller, his feet lower). battle3d turns the stage on as in normal play.",
+  "scene": "battle",
+  "battle3d": true,
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000
+  },
+  "test": {
+    "frames": 20
+  },
+  "expect": {
+    "stage3d": true
+  }
+}

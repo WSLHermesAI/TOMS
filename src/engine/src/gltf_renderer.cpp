@@ -568,7 +568,13 @@ bool GltfRenderer::f_SetEnvironment(const gltf::Environment& l_oEnv, std::string
     for (int l_iMip = 0; l_iMip < l_oEnv.f_Mips(); l_iMip++)
         for (int l_iFace = 0; l_iFace < 6; l_iFace++) {
             const uint16_t l_u16S = uint16_t(std::max(l_u16Size >> l_iMip, 1));
-            const std::vector<float>& l_vPx = l_oEnv.m_vFaces[(size_t)(l_iMip * 6 + l_iFace)];
+            const size_t l_nFace = (size_t)(l_iMip * 6 + l_iFace);
+            if (l_nFace < l_oEnv.m_vHalfFaces.size() && l_oEnv.m_vHalfFaces[l_nFace].size() == (size_t)l_u16S * l_u16S * 4) {   // packed already (f_PackHalf)
+                bgfx::updateTextureCube(l_oR.m_oEnvTex, 0, (uint8_t)l_iFace, (uint8_t)l_iMip, 0, 0, l_u16S, l_u16S,
+                                        bgfx::copy(l_oEnv.m_vHalfFaces[l_nFace].data(), uint32_t(l_u16S) * l_u16S * 8));
+                continue;
+            }
+            const std::vector<float>& l_vPx = l_oEnv.m_vFaces[l_nFace];
             const bgfx::Memory* l_pMem = bgfx::alloc(uint32_t(l_u16S) * l_u16S * 8);
             uint16_t* l_pO = (uint16_t*)l_pMem->data;
             for (size_t l_nI = 0; l_nI < (size_t)l_u16S * l_u16S; l_nI++) {
@@ -615,8 +621,12 @@ void GltfRenderer::f_Draw(GpuModel& l_oGpu, const gltf::Pose& l_oPose, const glm
         if (l_oNode.m_iMesh < 0 || l_oNode.m_iMesh >= (int)l_oGpu.m_vMeshes.size()) continue;
         const gltf::Mesh& l_oMesh = l_oModel.m_vMeshes[(size_t)l_oNode.m_iMesh];
         const glm::mat4 l_mat4World = l_mat4Placement * l_oPose.f_World(l_iNi);
-        const bool l_bMirrored = glm::determinant(glm::mat3(l_mat4World)) < 0.0f;
+        const float l_fDet = glm::determinant(glm::mat3(l_mat4World));
+        const bool l_bMirrored = l_fDet < 0.0f;
         const bool l_bSkinNode = l_oNode.m_iSkin >= 0;
+        // A node scaled to nothing (a kit piece hidden by its pose, docs/gameplay/21) draws nothing: no draw calls, no
+        // shadow casts (a skinned mesh is placed by its joints, not by its node: it is always drawn).
+        if (!l_bSkinNode && std::fabs(l_fDet) < 1e-12f) continue;
         if (l_bSkinNode) {
             l_oPose.f_JointMatrices(l_oNode.m_iSkin, l_oR.m_vJoints);
             if (l_oR.m_vJoints.empty()) l_oR.m_vJoints.assign(1, glm::mat4(1.0f));

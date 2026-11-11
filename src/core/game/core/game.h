@@ -264,6 +264,8 @@ struct CombatState : public Trackable {
     // the battle camera's close-up (16 §6.1): zoom on a fighter, eased in and out
     float m_fCamZoom = 1.0f;
     int m_iCamMs = 0, m_iCamMsMax = 0, m_iCamOn = -1;
+    std::string m_strCamMove;   // on a 3D stage: "" push in, "orbit" (special_moves.json camera "move")
+    float m_fCamDeg = 30.0f;
     // The result screen of a win (15 §3.6): filled by finishCombatWin.
     struct Result {
         bool m_bValid = false;
@@ -642,9 +644,47 @@ public:
     // design pixels; GameUi reads them each frame): the fighters, their particles and damage numbers are placed in them.
     void f_SetBattleBoxes(const glm::vec4& l_v4Player, const std::vector<glm::vec4>& l_vFoes) {
         m_bBattleBoxesKnown = m_oCs.m_bActive && l_vFoes.size() >= m_oCs.m_vFoes.size();   // this battle's layout (all its monsters) is in
-        m_v4PlayerBox = l_v4Player;
-        for (size_t l_nI = 0; l_nI < l_vFoes.size() && l_nI < (size_t)toms::g_iMaxFoes; l_nI++) m_arrFoeBox[l_nI] = l_vFoes[l_nI];
+        m_v4PlayerBox = m_v4UiPlayerBox = l_v4Player;
+        for (size_t l_nI = 0; l_nI < l_vFoes.size() && l_nI < (size_t)toms::g_iMaxFoes; l_nI++) m_arrFoeBox[l_nI] = m_arrUiFoeBox[l_nI] = l_vFoes[l_nI];
+        if (m_bBattle3DOn) f_PlaceBattle3DBoxes();   // in 3D the boxes stand on the stage's marks (only their shape is the layout's)
     }
+
+    // ---- the battle in 3D (docs/gameplay/21_BATTLE_3D.md): a 3D stage drawn by the host, the 2D fighters standing in it ----
+    // The host can draw a 3D stage (mesh shaders, not --battle-3d=off): set once when it starts.
+    void f_SetBattle3DAllowed(bool l_bAllowed) { m_bBattle3DAllowed = l_bAllowed; }
+    // This battle's stage (battle.json "stages3d", chosen by floor like "backdrops") while a battle is shown and 3D is
+    // allowed; null: none (the painted backdrop).
+    const nlohmann::json* f_Battle3DStage() const;
+    // The stage of the floor the player is on (null: none, or 3D not allowed), battle or not: the host loads it in the
+    // background as soon as the floor is entered, so a battle opens at once.
+    nlohmann::json f_Battle3DStageForFloor() const;
+    struct Battle3DCamera {
+        glm::vec3 m_v3Eye{0.0f, 1.5f, 4.0f}, m_v3Look{0.0f, 0.9f, 0.0f};
+        float m_fFovYDeg = 45.0f;
+        float m_fDim = 0.0f;   // 0..1: a special move darkens the stage (the 2D backdrop's black veil, as light)
+        float m_fMoon = 1.0f;  // the moonlight now (clouds passing: battle.json "clouds")
+    };
+    // A point light on the stage this frame: a brazier's fire (flickering), a hit's flash (docs/gameplay/21 §4.4).
+    struct Battle3DLight {
+        glm::vec3 m_v3Pos{0.0f}, m_v3Color{1.0f};
+        float m_fIntensity = 1.0f, m_fRange = 6.0f;
+    };
+    // The fires' and the flashes' lights, strongest first (the renderer takes a few).
+    std::vector<Battle3DLight> f_Battle3DLights() const;
+    // The camera for a screen of this shape (width / height): the stage's shot (a narrow screen widens the view so
+    // both fighters stay in it) and its slow breathing.
+    // device: the backbuffer's size; canvas: where the design canvas sits in it (x, y, w, h device pixels). The stage
+    // fills the whole backbuffer, but the fighters are drawn only on the canvas: the view widens until the canvas
+    // holds the whole shot (else a hero near its edge is cut there, the owner 2026-11-11).
+    Battle3DCamera f_Battle3DCamera(const glm::vec2& l_v2Device, const glm::vec4& l_v4Canvas) const;
+    // The host drew the stage this frame through viewProj into the whole device (its size in pixels); the design canvas
+    // sits at designInDevice (x, y, w, h in device pixels). on = false: no stage this frame.
+    void f_SetBattle3DView(bool l_bOn, const glm::mat4& l_mat4ViewProj, const glm::vec2& l_v2Device, const glm::vec4& l_v4DesignInDevice);
+    bool f_Battle3DOn() const { return m_bBattle3DOn; }
+    // The host is still loading this battle's stage: no painted backdrop meanwhile, only darkness (then the stage fades in).
+    void f_SetBattle3DComing(bool l_bComing) { m_bBattle3DComing = l_bComing; }
+    // Where the shown fighters stand: x, y, z their feet, w the shadow's radius (metres).
+    std::vector<glm::vec4> f_Battle3DShadows() const;
     // The design canvas changed (the screen turned, canvas.h): the camera fits the new one at once, without easing.
     void f_CanvasChanged();
     // Files by key, never by path (assets/media/resources.json; the keys: res_keys.h, made by tools/make_res_keys.py).
@@ -722,6 +762,27 @@ private:
     int f_NormalHitDamage(int l_iFoe) const;             // a normal attack's full hit on the monster (the moves' unit)
     toms::CellRules m_oCellRules;                        // battle.json "cells"
     glm::vec2 m_v2HeroShift{0.0f};                       // the hero's picture, easing toward its cell
+    // the battle in 3D (f_SetBattle3DView)
+    bool m_bBattle3DAllowed = false, m_bBattle3DOn = false, m_bBattle3DComing = false;
+    glm::mat4 m_mat4Battle3DViewProj{1.0f};
+    glm::vec4 m_v4Battle3DDesign{0.0f, 0.0f, 1.0f, 1.0f};
+    glm::vec2 m_v2Battle3DDevice{0.0f};
+    nlohmann::json m_jBattle3DStage;                     // this battle's "stages3d" row (null: none); chosen when it opens
+    int m_iBattle3DTimeMs = 0;                           // the camera's breathing
+    glm::vec4 m_v4UiPlayerBox{262, 84, 134, 134};        // the layout's boxes (their shape is kept in 3D)
+    glm::vec4 m_arrUiFoeBox[toms::g_iMaxFoes] = {{652, 84, 134, 134}, {652, 84, 134, 134}, {652, 84, 134, 134}};
+    void f_PlaceBattle3DBoxes();
+    // A stage point in design pixels (ok = in front of the camera); pxPerMetre: how big a metre is there.
+    glm::vec2 f_Battle3DToDesign(const glm::vec3& l_v3P, bool& l_bOk, float* l_pPxPerMetre = nullptr) const;
+    struct Battle3DFlash { glm::vec3 m_v3Pos{0.0f}, m_v3Color{1.0f}; float m_fIntensity = 8.0f, m_fRange = 5.0f; int m_iDelayMs = 0, m_iMs = 0, m_iMsMax = 1; };
+    std::vector<Battle3DFlash> m_vBattle3DFlashes;       // hits lighting the stage a moment
+    void f_AddBattle3DFlash(int l_iWho, int l_iDelayMs);
+    void f_Battle3DDangerShot(int l_iFoe, bool l_bIntro);   // a special attack coming: the low close-up on its monster
+    std::vector<toms::fx::EffectInstance> m_vStageFireFx; // the braziers' fire (battle.json stage "fires"), one each
+    void f_DrawBattle3DStageFx();                         // the fires' particles and the floor's ambient motes, on the stage
+    glm::vec3 f_Battle3DMark(int l_iWho) const;          // a fighter's feet on the stage (-1: the hero)
+    float f_Battle3DHeight(int l_iWho) const;            // its height (metres)
+    int f_BattleFloorNumber() const;                     // the floor's number, for battle.json's from..to rows
     void f_StartLoseMoment();                            // HP gone: the fall, then finishCombatLose (17 §19)
     std::string f_EndClip() const;                       // the clip for this end: big win, win, par win or lose
     void f_PlayAnswerClip();                             // an attack clip for one answer, by the combo so far (17 I1, §19)

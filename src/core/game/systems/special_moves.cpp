@@ -25,6 +25,8 @@ ShowBeat f_BeatFromJson(const nlohmann::json& l_jJ) {
     l_oB.m_iGapMs = std::max(0, l_jJ.value("gapMs", 100));
     l_oB.m_fValue = l_jJ.value("value", 0.0f);
     l_oB.m_fZoom = std::max(1.0f, l_jJ.value("zoom", 1.0f));
+    l_oB.m_strMove = l_jJ.value("move", std::string());
+    l_oB.m_fDeg = l_jJ.value("deg", 30.0f);
     return l_oB;
 }
 

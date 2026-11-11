@@ -147,6 +147,7 @@ bool Game::f_StartScenarioJson(const nlohmann::json& l_jSc, const std::string& l
     m_strPlayOverride = l_jSc.value("battle", nlohmann::json::object()).value("play", std::string("track"));
     m_strUltimateOverride = l_jSc.value("battle", nlohmann::json::object()).value("ultimate", std::string());
     m_fScenarioBattleSpeed = std::max(0.1f, l_jSc.value("battle", nlohmann::json::object()).value("speed", 1.0f));
+    if (l_jSc.value("battle3d", false)) m_bBattle3DAllowed = true;   // the battle on its 3D stage (docs/gameplay/21), as in normal play
     const nlohmann::json l_jTest = l_jSc.value("test", nlohmann::json::object());
     m_iScenarioTestFrames = l_jTest.value("frames", 0);
     m_strScenarioTestKeys = l_jTest.value("keys", std::string());
@@ -409,6 +410,14 @@ bool Game::f_ScenarioCheck(std::string& l_strReport) const {
                      std::to_string(l_oIt.value().get<int>()));
     if (m_jScenarioExpect.contains("backdrop") && !(m_spBackdrop && m_strBackdropAnim == m_jScenarioExpect["backdrop"].get<std::string>()))
         l_fnFail("the battle's background is \"" + m_strBackdropAnim + "\", expected " + m_jScenarioExpect["backdrop"].get<std::string>());
+    if (m_jScenarioExpect.value("stage3d", false)) {   // the 3D stage is drawn and the fighters stand on it (docs/gameplay/21 §4.3)
+        const glm::vec4 l_v4H = f_FighterBox(-1), l_v4M = f_FighterBox(0);
+        if (!m_bBattle3DOn) l_fnFail("no 3D stage (battle.json stages3d for this floor, mesh shaders, the files)");
+        else if (!(l_v4H.w > l_v4M.w && l_v4H.y + l_v4H.w > l_v4M.y + l_v4M.w))
+            l_fnFail("the hero should stand nearer than the monster: hero box " + std::to_string((int)l_v4H.w) + " px tall, feet at " +
+                     std::to_string((int)(l_v4H.y + l_v4H.w)) + "; monster " + std::to_string((int)l_v4M.w) + " px, feet at " +
+                     std::to_string((int)(l_v4M.y + l_v4M.w)));
+    }
     if (m_jScenarioExpect.contains("foeClips") && m_jScenarioExpect["foeClips"].is_array())   // each monster's clip now
         for (size_t l_nI = 0; l_nI < m_jScenarioExpect["foeClips"].size(); l_nI++) {
             const std::string l_strHas = l_nI < m_vFoeRigs.size() ? m_vFoeRigs[l_nI].m_strClip : std::string();

@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 
 namespace toms::gltf {
 
@@ -141,6 +142,43 @@ bool f_LoadEquirect(const std::string& l_strPath, Equirect& l_oOut, std::string*
         return false;
     }
     return f_LoadEquirectFromMemory(l_strBytes.data(), l_strBytes.size(), l_oOut, l_pError);
+}
+
+uint16_t f_HalfFromFloat(float l_fV) {
+    if (!(l_fV > 0.0f)) return 0;   // (negative, zero, NaN)
+    l_fV = std::min(l_fV, 60000.0f);
+    uint32_t l_uBits;
+    std::memcpy(&l_uBits, &l_fV, 4);
+    const int l_iExp = int((l_uBits >> 23) & 0xff) - 127 + 15;
+    uint32_t l_uMant = l_uBits & 0x7fffff;
+    if (l_iExp <= 0) {   // a subnormal half (or zero)
+        if (l_iExp < -10) return 0;
+        l_uMant |= 0x800000;
+        const int l_iShift = 14 - l_iExp;
+        uint32_t l_uH = l_uMant >> l_iShift;
+        if ((l_uMant >> (l_iShift - 1)) & 1) l_uH++;   // round
+        return (uint16_t)l_uH;
+    }
+    uint32_t l_uH = (uint32_t(l_iExp) << 10) | (l_uMant >> 13);
+    if (l_uMant & 0x1000) l_uH++;   // round to nearest (a carry into the exponent is still right)
+    return (uint16_t)std::min<uint32_t>(l_uH, 0x7bff);
+}
+
+void f_PackHalf(Environment& l_oEnv) {
+    const uint16_t l_u16One = 0x3c00;
+    l_oEnv.m_vHalfFaces.assign(l_oEnv.m_vFaces.size(), {});
+    for (size_t l_nF = 0; l_nF < l_oEnv.m_vFaces.size(); l_nF++) {
+        const std::vector<float>& l_vPx = l_oEnv.m_vFaces[l_nF];
+        std::vector<uint16_t>& l_vOut = l_oEnv.m_vHalfFaces[l_nF];
+        const size_t l_nCount = l_vPx.size() / 3;
+        l_vOut.resize(l_nCount * 4);
+        for (size_t l_nI = 0; l_nI < l_nCount; l_nI++) {
+            l_vOut[l_nI * 4 + 0] = f_HalfFromFloat(l_vPx[l_nI * 3 + 0]);
+            l_vOut[l_nI * 4 + 1] = f_HalfFromFloat(l_vPx[l_nI * 3 + 1]);
+            l_vOut[l_nI * 4 + 2] = f_HalfFromFloat(l_vPx[l_nI * 3 + 2]);
+            l_vOut[l_nI * 4 + 3] = l_u16One;
+        }
+    }
 }
 
 Environment f_PrefilterEnvironment(const Equirect& l_oPicture, int l_iFaceSize, int l_iSamples) {

@@ -18,6 +18,10 @@
 //   --title-scene=<f|none|ocean> the 3D scene behind the title: a .glb / .gltf, none, or the sea (default on the desktop and the
 //                         web: in turns at each start, the sea first, then assets/media/models/VirtualCity.glb; with --frames
 //                         or --fixed-dt, and on Android, always that model; docs/engine/08_GLTF.md §3)
+//   --battle-3d=<on|off>  the battle on its 3D stage (battle.json "stages3d", docs/gameplay/21): on in normal play on the
+//                         desktop, off in scripted runs (--frames / --fixed-dt) and on the web and Android unless on
+//   --battle-3d-wait=<on|off>  wait for the 3D stage to load before going on (default: on in scripted runs; off = as in
+//                         normal play, loaded in the background)
 //   --frames=<n>          quit after n frames (automated tests; desktop)
 //   --screenshot=<png>    save the last frame to a PNG (with --frames; desktop). The window stays hidden.
 //   --record=<folder>     save frames as <folder>/frame_00000.png, ... (desktop; the window stays hidden): every frame
@@ -118,6 +122,8 @@ struct Args {
     bool m_bDefaultBattleTuning = false;  // --battle-tuning=default
     bool m_bBattleLog = false;            // --battle-log
     std::string m_strTitleScene;            // --title-scene=<file|none|ocean>
+    std::string m_strBattle3D;              // --battle-3d=on|off (empty: on in normal play, off in scripted runs)
+    std::string m_strBattle3DWait;          // --battle-3d-wait=on|off (empty: on in scripted runs)
     float m_fUiScale = 0.0f;              // --ui-scale=<x>: the phone UI scale on desktop (testing the web build's small-screen layout)
     int m_iWindowW = 1280, m_iWindowH = 720;   // --window=WxH
     int m_iResizeFrame = -1, m_iResizeW = 0, m_iResizeH = 0;   // --resize=frame:WxH
@@ -239,6 +245,8 @@ Args f_ParseArgs(const std::vector<std::string>& l_vArgv) {
         else if (l_strS == "--skip-start-story") l_oA.m_bSkipStartStory = true;
         else if (const char* l_pszV = l_fnValue(l_strS, "--fx-gpu-threshold=")) l_oA.m_iFxGpuThreshold = std::max(0, std::atoi(l_pszV));
         else if (const char* l_pszV = l_fnValue(l_strS, "--title-scene=")) l_oA.m_strTitleScene = l_pszV;
+        else if (const char* l_pszV = l_fnValue(l_strS, "--battle-3d=")) l_oA.m_strBattle3D = l_pszV;
+        else if (const char* l_pszV = l_fnValue(l_strS, "--battle-3d-wait=")) l_oA.m_strBattle3DWait = l_pszV;
         else if (const char* l_pszV = l_fnValue(l_strS, "--ui-scale=")) l_oA.m_fUiScale = (float)std::atof(l_pszV);
         else if (const char* l_pszV = l_fnValue(l_strS, "--resize=")) { int l_iF = 0, l_iW = 0, l_iH = 0; if (std::sscanf(l_pszV, "%d:%dx%d", &l_iF, &l_iW, &l_iH) == 3 && l_iW >= 200 && l_iH >= 200) { l_oA.m_iResizeFrame = l_iF; l_oA.m_iResizeW = l_iW; l_oA.m_iResizeH = l_iH; } }
         else if (const char* l_pszV = l_fnValue(l_strS, "--window=")) { int l_iW = 0, l_iH = 0; if (std::sscanf(l_pszV, "%dx%d", &l_iW, &l_iH) == 2 && l_iW >= 200 && l_iH >= 200) { l_oA.m_iWindowW = l_iW; l_oA.m_iWindowH = l_iH; } }
@@ -464,6 +472,15 @@ bool f_AppInit(App& l_oApp) {
     l_oOpts.m_bBattleLog = l_oArgs.m_bBattleLog;
     l_oOpts.m_strTitleScene = l_oArgs.m_strTitleScene;
     l_oOpts.m_bShowVersion = l_oArgs.m_iFixedDtMs == 0;   // a scripted test's picture must not change with each publish
+    // The battle on a 3D stage (docs/gameplay/21): the desktop's normal play; a scripted run keeps the painted backdrop
+    // (its reference pictures) unless it asks; the web and Android keep it until the owner asks for them (Q92).
+#if defined(__EMSCRIPTEN__) || defined(__ANDROID__)
+    l_oOpts.m_bBattle3D = l_oArgs.m_strBattle3D == "on";
+#else
+    l_oOpts.m_bBattle3D = l_oArgs.m_strBattle3D == "on" || (l_oArgs.m_strBattle3D.empty() && l_oArgs.m_iFrames == 0 && l_oArgs.m_iFixedDtMs == 0);
+#endif
+    l_oOpts.m_bBattle3DWait = l_oArgs.m_strBattle3DWait == "on" ||
+                              (l_oArgs.m_strBattle3DWait.empty() && (l_oArgs.m_iFrames > 0 || l_oArgs.m_iFixedDtMs > 0));   // a scripted run: the same picture every time
 #ifndef __ANDROID__
     l_oOpts.m_bTitleSceneInTurns = l_oArgs.m_iFrames == 0 && l_oArgs.m_iFixedDtMs == 0;   // a test draws the same picture every time
 #endif

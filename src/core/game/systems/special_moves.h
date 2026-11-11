@@ -43,6 +43,8 @@ struct ShowBeat {
     int m_iCount = 0, m_iGapMs = 0;       // hits
     float m_fValue = 0.0f;             // dim strength, shake strength
     float m_fZoom = 1.0f;              // camera
+    std::string m_strMove;             // camera, on a 3D stage (docs/gameplay/21 §4.2): "" a push in, "orbit" part of a circle and back
+    float m_fDeg = 30.0f;              // camera "orbit": how far round (degrees)
 };
 
 struct SkillPlaySpec {

@@ -1,0 +1,183 @@
+# 21 — The battle in 3D: a 3D stage, 2D fighters
+
+> Status (2026-11-11): **B1 and B2 built** (the stage, the 2D fighters on it, the camera moves); B3–B5 next. The owner
+> answered Q88–Q93 with the proposals ("do it", 2026-11-11): §7.
+
+## 1. What the owner asked
+
+> "Now I would like to make battle scene use a 3D camera, the scene is 3D model with a skybox and keep monster and
+> player character as 2D, but the particles and some special move should use 3D way to make it."
+
+Today's battle (the screenshot of 2026-11-11): a painted moonlit ruin fills the screen, the archer stands front left,
+the moss frog in the middle, and the HUD sits on top (the instruction bar, the HP bars, the Ready / Defend buttons,
+the super-move dots).
+
+The battle after this work:
+
+| Part | Today | In 3D |
+|---|---|---|
+| The place | one painted picture (an `.anim` backdrop, battle.json `"backdrops"`) | a 3D model (ground, ruins, trees) and a sky around it |
+| The camera | none: the screen is the picture | a perspective camera that breathes, shakes on hits and moves for special moves |
+| The hero and the monsters | 2D clips drawn in a screen box | **still 2D**, the same clips, standing on the 3D ground: nearer is bigger, and they get a shadow |
+| Particles | 2D, in screen pixels | **3D**: sparks, dust and magic in the scene, behind and in front of the fighters, hidden by ruins |
+| Special moves | 2D effects | 3D: arrows flying into depth, magic circles on the ground, pillars of light, sword arcs, shockwave rings |
+| The HUD, hints, numbers | RmlUi on top | unchanged |
+
+## 2. What the engine already has
+
+| Part | Where | Used for |
+|---|---|---|
+| glTF models: PBR, skinning, animation, cameras | `GltfRenderer` (src/engine/src/gltf_renderer.*), [08_GLTF](../engine/08_GLTF.md) | the arena model |
+| An HDR sky behind the models, and the light it gives them | `gltf_environment.*`, `Frame::background` | the skybox and its lighting |
+| A 3D scene behind the sprites and the UI | `TitleScene` + `BgfxRenderer::setSceneViews` (the title's city and sea) | the same slot for the battle |
+| A procedural sky (Preetham) and the ocean | `OceanRenderer`, [21_OCEAN_VIEWER](../engine/21_OCEAN_VIEWER.md) | a sea battle later, a sky without an HDR file |
+| Fighters that draw themselves into a box | `FighterView` (fighter_view.h) | unchanged: the box comes from the 3D position |
+| Particles: curves, colours, bursts, GPU or CPU | `particle_fx.*` (2D: `vec2` positions in pixels) | extended with 3D emitters (§4.4) |
+
+## 3. The idea in one picture
+
+```
+ sky (HDR, all around)
+   ruins, trees (glTF)              <- 3D, depth-tested
+        monster mark  o  <- the frog's feet; projected to the screen -> its 2D box
+   ground (glTF)
+            hero mark  o            <- the archer's feet -> his 2D box (bigger: nearer)
+ camera: behind and above the hero's shoulder, looking at the monster
+ HUD (RmlUi) on top, as today
+```
+
+## 4. Design
+
+### 4.1 The battle stage (data)
+
+battle.json gets `"stages3d"`, chosen by floor the same way `"backdrops"` are:
+
+```json
+"stages3d": [
+  { "floors": [1, 10], "model": "models/arena_moon_ruins.glb", "sky": "skies/moonlit_night.hdr",
+    "camera": { "eye": [-1.6, 1.5, 4.2], "look": [0.4, 0.9, 0.0], "fov": 45 },
+    "marks": { "hero": [-1.2, 0, 2.0], "monster": [0.6, 0, -1.0], "monsters3": [[-0.6,0,-1.2],[0.6,0,-1.0],[1.8,0,-1.3]] },
+    "light": { "sky": 1.0, "sun": [0.3, -1.0, -0.4], "sunColor": [0.6, 0.7, 1.0] } }
+]
+```
+
+The files go in resources.json like every other file (a `pattern` for the family). A floor without a 3D stage, a
+backend without mesh shaders, or the "2D battle" setting keeps today's painted backdrop.
+
+### 4.2 The camera
+
+`BattleCamera`: one base shot per stage (above), and moves on top of it, each one data:
+
+| Move | When | What |
+|---|---|---|
+| breathe | always | a slow sway of a few centimetres, so the picture lives |
+| shake | a hit, a stomp | a short 3D shake (strength by damage), replaces today's screen shake |
+| push in | charging the bow, the staff's last spell | a slow dolly towards the target |
+| orbit | a special move, a boss's entrance | part of a circle around the target, then back |
+| slow motion | the last blow | time slowed for the camera and the effects |
+
+special_moves.json and the monsters' attacks name a move (`"camera": "orbit"`), the same reusable-blocks way the
+effects are named today ([16](16_SKILLS_AND_PLAYS.md)).
+
+### 4.3 2D fighters standing in 3D
+
+Each fighter has a mark on the ground (its feet). Every frame the mark is projected through the camera. Its screen
+position and its distance give the box that `FighterView::f_Draw` already fills, so the clips, the weapons and the
+2D/3D fighter switch ([18](18_FIGHTER_VIEWS.md)) are untouched. A soft round shadow is drawn on the 3D ground under
+each one. When the camera moves, the fighters move and scale with the world.
+
+Step two (if needed, Q90): the fighters drawn as billboards **inside** the 3D pass, so a 3D effect can pass behind a
+monster and the ruins can hide part of it. Phase B1 does not need it.
+
+### 4.4 3D particles
+
+The `.particle` format gets `"space": "3d"` emitters. The same curves, colours, ranges, bursts and blending, with
+positions in metres (`vec3`), gravity in m/s², and 3D shapes:
+
+| Shape | For |
+|---|---|
+| point / sphere / cone | sparks, impacts, dust, debris |
+| ring on the ground | shockwaves, landing dust |
+| trail (ribbon) | an arrow's streak, a sword's arc, a fireball's tail |
+| ground decal | magic circles, scorch marks, frost |
+| flash light | a short point light that lights the arena (a hit, a spell) |
+
+They are drawn camera-facing in the 3D pass, depth-tested against the arena, after it and before the HUD. Effects
+start from a fighter's mark, a bone of its clip (projected back into the world) or a stage point. The battle editor
+([13](13_BATTLE_EDITOR.md)) previews them later (B5).
+
+### 4.5 Special moves in 3D
+
+| Move | 3D version |
+|---|---|
+| Bow: the charged shot | the arrow flies into depth with a trail, the camera pushes in on the release, a burst and a ring of dust at the monster |
+| Bow: the gathering and explosion ([20](20_BATTLE_EFFECTS.md) §4) | lights gather in a sphere around the monster, then a shockwave ring on the ground |
+| Staff: the spells | a magic circle on the ground under the target, a pillar of light, orbs circling at different depths |
+| Sword: the slash | a 3D arc ribbon across the monster, sparks thrown into the scene |
+| Monster attacks ([20](20_BATTLE_EFFECTS.md) §5) | a big monster's projectile comes **at the camera**, the shake by its power, the dust under its stomp |
+
+### 4.6 What stays 2D
+
+The HUD and every RmlUi screen, the hints over the fighters (the staff's circles, the "!" before a hit, the target
+line), the damage numbers, and the tutorial. They are screen information and stay sharp and readable. They follow
+the fighters' projected positions.
+
+### 4.7 Platforms and speed
+
+Windows first ([CLAUDE.md](../../CLAUDE.md)). The arena is a small scene: one model, one sky, a few lights. Particles
+are budgeted like today's. Web and Android keep the 2D backdrop until the owner asks for them (Q92). The quality tiers
+of the ocean ([21_OCEAN_VIEWER](../engine/21_OCEAN_VIEWER.md)) are the model for them later.
+
+## 5. Phases
+
+| Phase | What | Checked by |
+|---|---|---|
+| **B1** ✅ built | the stage: arena model + sky + base camera; 2D fighters on their marks with shadows; the HUD as today; fallback to the painted backdrop | a battle scenario's reference picture in 3D, and the old one with 3D off |
+| **B2** ✅ built | the camera moves: breathe, 3D shake, push in, orbit, slow motion; named by moves and attacks | scenario pictures at fixed times |
+| **B3** | 3D particles (§4.4) and today's battle effects moved to 3D: hits, sparks, projectiles | particle unit tests, scenario pictures |
+| **B4** | the special moves of §4.5 | scenario pictures per weapon |
+| **B5** | the battle editor: the 3D stage, the camera moves and the 3D effects in its preview | the editor's self-test |
+
+## 6. Art
+
+The reference picture is a painted, moonlit, slightly realistic ruin. For a 3D stage of the same mood:
+
+| Source | Fits | Cost |
+|---|---|---|
+| Poly Haven (CC0): night HDRI skies, stone ground textures, scanned ruin and rock models | close to the picture's mood | free; the files are large, so they are cut down for the game |
+| Low-poly packs (Quaternius, Kenney; CC0) | a toy look, not the painted one | free, small |
+| A simple stage made here: a ground plane and a few ruin walls with AI-painted textures, cards for distant trees | the painted look, made to measure | time; flat up close |
+| A 3D artist | exactly the game's look | money |
+
+Proposal (Q88): one stage from Poly Haven for floors 1–10, to judge the look before more.
+
+## 7. Decisions (the owner, 2026-11-11: "do it", the proposals)
+
+| Question | Answer |
+|---|---|
+| Q88 The stage's art | Poly Haven (CC0): the moonlit ruins for floors 1–10 first, to judge the look |
+| Q89 How many stages | one per floor range (`"from"`, `"to"`), like the painted backdrops; a boss floor may have its own |
+| Q90 2D fighters in 3D | projected boxes (B1); billboards in the 3D pass in B3 if the 3D effects need them |
+| Q91 How much the camera moves | subtle all the time; push-ins and orbits only for special moves, a boss's entrance and the last blow |
+| Q92 Web and Android | the painted backdrop until the owner asks (the 3D stage is off there) |
+| Q93 3D particles | the same `.particle` files, `"space": "3d"` emitters |
+
+## 8. What is built (B1, B2)
+
+| Part | Where |
+|---|---|
+| The stage builder: downloads the Poly Haven files into `Build/art_cache/polyhaven`, writes `assets/media/battle3d/moonlit_ruins/` (**1.2 MB**, the owner's budget 3 MB, 2026-11-11; was 16.9 MB): the night sky (Qwantani Moonrise) as `sky.jpg` (1536 px, gamma 2.2, values over 1 clipped: 51 KB, was a 4.7 MB `.hdr`), the scanned props simplified (`simplify_gltf.py`, numpy vertex clustering: the trunk 101,802 → 2,881 triangles, about 3,000 each), the fort's pieces 5,123 triangles, textures by kind (colour / normal / the rest: the fort and the ground 512 / 256 / 256 px, the props 256 / 256 / 128) as JPG 80, the fort's 6 pieces in one trimmed `fort_pieces.gltf` (each prop names its `"node"`), a 40 m ground of grassy cobblestone, the soft shadow disc | Each model is packed into one `.glb` (`pack_glb.py`: the JSON, buffer and textures in one file, nothing re-encoded): the stage is 10 files, 9 `.glb` and `sky.hdr`; `--loose` keeps the `.gltf` folders | `tools/battle3d/pack_glb.py` |
+| `tools/battle3d/make_moonlit_ruins.py`, `simplify_gltf.py`. The stage: about 56,000 triangles, 71 MB of textures + 17 MB of sky on the GPU (was 290,000 and 150 MB) |
+| The stage row (floors 1–10): sky, exposure 0.25, the moonlight, ground, shadow, 13 props, camera, marks, heights | `assets/data/battle.json` `"stages3d"` |
+| The host draws the stage behind the sprites (GltfRenderer, the title's views). It is loaded **in the background as soon as the floor is entered** (reading, decoding, the sky's prefiltering and its half-float packing on a worker thread; only the GPU upload on the main thread) and kept between battles, so a battle opens at once. Measured 2026-11-11: Release 1.0 s in the background + 0.09 s upload; Debug 8 s + 1 s (it was 2 s / 17 s, all at the battle's start). The prefiltered sky is cached in `<save folder>/cache/sky_<hash>.env` (17 MB, made once per sky file): a later start in Debug has the stage 4 s after launch instead of 10. A battle that opens before the stage is ready shows darkness, never the painted backdrop, and every battle's stage fades in from black (0.45 s). A scripted run waits for it (the same picture every time; `--battle-3d-wait=off` tries the normal way) | `src/game/src/battle_stage.*`, `game_session.cpp` |
+| The game picks the row by floor, places each fighter's box from its mark (feet and head projected; the layout's box gives only the shape), draws no painted backdrop under it | `game_combat.cpp` `f_Battle3D*`, `f_PlaceBattle3DBoxes` |
+| The camera: the stage's shot (wider on a narrow screen), breathing, the special moves' `"camera"` block as a push in (`"move": "orbit"` + `"deg"`: also round and back; star_seal and tiger_wind have it), the first danger's close-up, a slow drift in during the last blow's slow motion, the shake as the camera's | `Game::f_Battle3DCamera`, `special_moves.json` |
+| A special move's darkening: the stage's light, not a black veil | `Battle3DCamera::m_fDim` |
+| Living light (2026-11-11, the owner: "it looks like a static 3D picture"): two braziers (Poly Haven stone fire pits) with a flickering warm point light each and their own fire (`stage_fire`: flame, embers, smoke; `tools/battle3d/make_stage_fx.py`), drawn at their place and scaled by the distance; clouds passing the moon (its light drifts 60–100 %); every battle effect in the scene lights the stage a moment at the nearest fighter (warm on a monster, red on the hero); the floor's motes and fireflies over the stage. battle.json `"fires"`, `"clouds"`, `"flash"`. The renderer takes the moon + 3 point lights (no shadows for them) | `Game::f_Battle3DLights`, `f_AddBattle3DFlash`, `f_DrawBattle3DStageFx`, `battle_stage.cpp` |
+| A monster's special attack coming (its danger cells light): the camera goes low and close and looks up at it (it fills the screen), swings a little to the side so the depth shows, with a rumble, and is back before the hit so the cells can be read; the fight's first holds for the cells' intro. battle.json stage camera `"danger"` (zoom, height, lookAt, fovAdd, deg, ms, rumble, off); never with Reduce effects. A fighter behind the camera is not drawn | `Game::f_Battle3DDangerShot`, `f_Battle3DCamera` ("low") |
+| A node scaled to nothing draws nothing (the fort's hidden pieces): a stage frame is 45 draws + 41 shadow draws (was about 200); Debug GPU 16.6 → about 3 ms | `gltf_renderer.cpp` |
+| On / off: `--battle-3d=on|off`; on in normal play on the desktop, off in scripted runs (the reference pictures) and on the web and Android; a scenario turns it on with `"battle3d": true` | `main_sdl.cpp`, `game_scenario.cpp` |
+| Tests: `scenario.battle_3d` (the stage is drawn; the hero nearer: taller, feet lower), `smoke.battle_3d` (reference picture `tests/golden/battle_3d.png`) | `tests/` |
+
+Not yet: the 2D particles and hit effects still play in screen space at the fighters' projected places (B3 moves them
+into 3D); the battle editor previews the painted backdrop (B5).
