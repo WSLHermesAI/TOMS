@@ -19,7 +19,7 @@
 //                         web: in turns at each start, the sea first, then assets/media/models/VirtualCity.glb; with --frames
 //                         or --fixed-dt, and on Android, always that model; docs/engine/08_GLTF.md §3)
 //   --battle-3d=<on|off>  the battle on its 3D stage (battle.json "stages3d", docs/gameplay/21): on in normal play on the
-//                         desktop, off in scripted runs (--frames / --fixed-dt) and on the web and Android unless on
+//                         desktop and the web, off in scripted runs (--frames / --fixed-dt) and on Android unless on
 //   --battle-3d-wait=<on|off>  wait for the 3D stage to load before going on (default: on in scripted runs; off = as in
 //                         normal play, loaded in the background)
 //   --frames=<n>          quit after n frames (automated tests; desktop)
@@ -473,10 +473,10 @@ bool f_AppInit(App& l_oApp) {
     l_oOpts.m_strTitleScene = l_oArgs.m_strTitleScene;
     l_oOpts.m_bShowVersion = l_oArgs.m_iFixedDtMs == 0;   // a scripted test's picture must not change with each publish
     // The battle on a 3D stage (docs/gameplay/21): the desktop's normal play; a scripted run keeps the painted backdrop
-    // (its reference pictures) unless it asks; the web and Android keep it until the owner asks for them (Q92).
-#if defined(__EMSCRIPTEN__) || defined(__ANDROID__)
-    l_oOpts.m_bBattle3D = l_oArgs.m_strBattle3D == "on";
-#else
+    // (its reference pictures) unless it asks; Android keeps it until the owner asks for it (Q92; the web: on since 2026-11-11).
+#if defined(__ANDROID__)
+    l_oOpts.m_bBattle3D = l_oArgs.m_strBattle3D == "on";   // Android: the painted backdrop until the owner asks (Q92)
+#else   // the desktop and, since 2026-11-11, the browser (the owner: "turn it on")
     l_oOpts.m_bBattle3D = l_oArgs.m_strBattle3D == "on" || (l_oArgs.m_strBattle3D.empty() && l_oArgs.m_iFrames == 0 && l_oArgs.m_iFixedDtMs == 0);
 #endif
     l_oOpts.m_bBattle3DWait = l_oArgs.m_strBattle3DWait == "on" ||

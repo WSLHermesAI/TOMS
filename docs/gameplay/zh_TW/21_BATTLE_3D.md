@@ -154,7 +154,7 @@ HUD 和所有 RmlUi 畫面、角色上方的提示（魔杖的圓圈、攻擊前
 | Q89 幾個舞台 | 每個樓層區段一個（`"from"`、`"to"`），和畫好的背景一樣；魔王樓層可以有自己的 |
 | Q90 3D 裡的 2D 角色 | 投影框（B1）；B3 的 3D 效果需要時再改成 3D 繪製中的看板 |
 | Q91 攝影機動多少 | 一直輕微；推近和環繞只用在特殊招式、魔王登場和最後一擊 |
-| Q92 Web 和 Android | 畫好的背景，直到擁有者要求（那裡 3D 舞台是關的） |
+| Q92 Web 和 Android | 畫好的背景，直到擁有者要求。**Web：2026-11-11 起開啟**（擁有者：「turn it on」）；Android 仍關閉 |
 | Q93 3D 粒子 | 同樣的 `.particle` 檔，`"space": "3d"` 發射器 |
 
 ## 8. 已製作的（B1、B2）
@@ -170,6 +170,7 @@ HUD 和所有 RmlUi 畫面、角色上方的提示（魔杖的圓圈、攻擊前
 | 特殊招式的變暗：舞台的光變暗，不是黑色遮罩 | `Battle3DCamera::m_fDim` |
 | 會動的光（2026-11-11，擁有者：「看起來像一張靜態的 3D 圖」）：兩個火盆（Poly Haven 石造火坑），各有一盞閃爍的暖色點光源和自己的火焰（`stage_fire`：火焰、火星、煙；`tools/battle3d/make_stage_fx.py`），畫在所在位置並依距離縮放；雲飄過月亮（月光在 60–100 % 之間變化）；場景中的每個戰鬥效果都會在最近的角色處短暫照亮舞台（打怪物時暖色、主角受擊時紅色）；樓層的光塵和螢火蟲飄在舞台上。battle.json `"fires"`、`"clouds"`、`"flash"`。渲染器可用月光 + 3 盞點光源（這些不投影） | `Game::f_Battle3DLights`、`f_AddBattle3DFlash`、`f_DrawBattle3DStageFx`、`battle_stage.cpp` |
 | 怪物即將使出特殊攻擊（危險格子亮起時）：攝影機壓低、靠近並仰望牠（牠佔滿畫面），稍微往旁邊轉一點讓景深顯現，並伴隨震動；在攻擊落下前回到原位，讓格子看得清楚；戰鬥的第一次會配合格子的介紹停留。battle.json 舞台 camera `"danger"`（zoom、height、lookAt、fovAdd、deg、ms、rumble、off）；開啟「減少效果」時不會發生。在攝影機後面的角色不畫 | `Game::f_Battle3DDangerShot`、`f_Battle3DCamera`（"low"） |
+| **Web**（2026-11-11）：瀏覽器中開啟舞台。單執行緒版本在進入樓層時於主執行緒製作（那裡會短暫停頓，實測 0.33 秒）；多執行緒版本在工作執行緒。瀏覽器的天空較小（256 px 的面、16 個取樣）且不快取（不在瀏覽器存放 17 MB）；沒有陰影。在這台電腦的 GPU 以 headless Chrome 實測：兩個版本都能載入並畫出舞台（45 次繪製），所有著色器都能編譯。任何裝置：若 3 秒內大部分戰鬥畫面超過 45 ms，本次遊玩改回畫好的背景（`[battle3d] too slow here`）。用 `node tools/web_smoke_test.mjs <build> <out> --battle --gpu` 檢查 | `battle_stage.cpp`、`game_session.cpp`、`main_sdl.cpp`、`tools/web_smoke_test.mjs` |
 | 縮放為零的節點不畫（城堡隱藏的零件）：舞台一幀 45 次繪製 + 41 次陰影繪製（原本約 200）；Debug GPU 16.6 → 約 3 ms | `gltf_renderer.cpp` |
 | 開關：`--battle-3d=on|off`；桌面版一般遊玩開啟，腳本執行（參考圖）、Web 和 Android 關閉；情境用 `"battle3d": true` 開啟 | `main_sdl.cpp`、`game_scenario.cpp` |
 | 測試：`scenario.battle_3d`（舞台有畫出；主角較近：較高、腳較低）、`smoke.battle_3d`（參考圖 `tests/golden/battle_3d.png`） | `tests/` |

@@ -814,3 +814,8 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   - tools/battle3d/pack_glb.py (new); make_moonlit_ruins.py pack_all, --loose, sky_jpg (SKY_WIDTH 1536), shrink_textures (TEXTURES by kind, JPG_QUALITY 80), SIMPLIFY about 3,000, FORT_TRIANGLES 5,000.
   - battle.json stages3d: .glb paths, sky.jpg. assets/media/battle3d/moonlit_ruins 16.9 -> 1.2 MB, 10 files.
   - tests/golden/battle_3d.png refreshed (1.2 % of pixels differed). Tests: changed-only 10 of 271 pass. Not committed.
+- 2026-11-11, last: the 3D stage on the web (DAILY_2026-11-11.md row 15). The owner committed e1bc06f "add 3D scene" (rows 5-14).
+  - main_sdl.cpp: the stage on by default in the browser (Android still off). battle_stage.cpp: std::launch::deferred without pthreads (made at the poll), the browser's sky 256 px / 16 samples, no sky cache.
+  - game_session.cpp/.h: the slow-device fall-back (frames over 45 ms for most of 3 s -> the painted backdrop for the session). tools/web_smoke_test.mjs --battle.
+  - Tests: web_smoke_test --battle --gpu passes on web-release-windows and web-release-mt-windows (--isolate --expect-threads=yes); the plain run passes; desktop changed-only 9 of 271 pass.
+  - Committed with this report (asked by the owner); pushed.

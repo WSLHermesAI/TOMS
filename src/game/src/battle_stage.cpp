@@ -125,8 +125,15 @@ std::shared_ptr<BattleStage::Loaded> BattleStage::f_LoadCpu(nlohmann::json l_jRo
     const nlohmann::json l_jSky = l_jRow.value("sky", nlohmann::json::object());
     const std::string l_strHdr = l_jSky.value("hdr", std::string());
     if (!l_strHdr.empty()) {
+#if defined(__EMSCRIPTEN__)
+        // the browser: a smaller sky (4 times quicker to prefilter, on the main thread without threads) and no cache
+        // (it would be 17 MB in the browser's storage)
+        const int l_iFace = std::min(256, l_jSky.value("faceSize", 512)), l_iSamples = std::min(16, l_jSky.value("samples", 32));
+        const std::string l_strCache;
+#else
         const int l_iFace = l_jSky.value("faceSize", 512), l_iSamples = l_jSky.value("samples", 32);
         const std::string l_strCache = f_SkyCachePath(l_fnPath(l_strHdr), l_iFace, l_iSamples);
+#endif
         if (!l_strCache.empty() && f_ReadSkyCache(l_strCache, l_oL.m_oEnv)) {
             l_oL.m_bSkyCached = true;
         } else {
@@ -212,7 +219,13 @@ void BattleStage::f_Request(const nlohmann::json& l_jRow, const std::string& l_s
         m_strNextDir = l_strAssetDir;
     } else if (!l_bLoading && !(l_strKey == m_strRowKey && m_bReady)) {
         m_strLoadingKey = l_strKey;
+#if defined(__EMSCRIPTEN__) && !defined(__EMSCRIPTEN_PTHREADS__)
+        // no threads (the single-threaded web build): made on the next poll, on the main thread, a short pause on
+        // entering the floor rather than at the battle
+        m_oPending = std::async(std::launch::deferred, &BattleStage::f_LoadCpu, l_jRow, l_strAssetDir);
+#else
         m_oPending = std::async(std::launch::async, &BattleStage::f_LoadCpu, l_jRow, l_strAssetDir);
+#endif
         std::fprintf(stderr, "[battle3d] loading the stage (in the background), %.1f s after the start\n",
                      std::chrono::duration<double>(std::chrono::steady_clock::now() - g_oProcessStart).count());
     }
@@ -228,7 +241,9 @@ void BattleStage::f_Request(const nlohmann::json& l_jRow, const std::string& l_s
 }
 
 bool BattleStage::f_Poll(std::string& l_strError) {
-    if (!m_oPending.valid() || m_oPending.wait_for(std::chrono::seconds(0)) != std::future_status::ready) return true;
+    if (!m_oPending.valid()) return true;
+    const std::future_status l_eS = m_oPending.wait_for(std::chrono::seconds(0));
+    if (l_eS != std::future_status::ready && l_eS != std::future_status::deferred) return true;   // (deferred: made now, by get())
     std::shared_ptr<Loaded> l_spL = m_oPending.get();
     m_strLoadingKey.clear();
     bool l_bOk = l_spL && l_spL->m_strError.empty();

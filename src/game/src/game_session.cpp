@@ -512,8 +512,26 @@ bool GameSession::f_Frame(int l_iDtMs, const InputState& l_oIn, uint32_t l_uDevi
             l_oG.f_SetBattle3DView(true, l_mat4Vp, glm::vec2((float)l_uDeviceW, (float)l_uDeviceH),
                                    glm::vec4(l_oFit.m_fX, l_oFit.m_fY, l_oFit.m_fWidth, l_oFit.m_fHeight));
             l_bStage = true;
+            // A device too slow for the stage (the web on a weak GPU): frames over 45 ms for most of 3 s of battle on it,
+            // and the painted backdrop comes back for the rest of this session. Real time (a test's fixed step never trips it).
+            const auto l_oNow = std::chrono::steady_clock::now();
+            const double l_dMs = m_oStageFrameAt.time_since_epoch().count() ? std::chrono::duration<double, std::milli>(l_oNow - m_oStageFrameAt).count() : 0.0;
+            m_oStageFrameAt = l_oNow;
+            if (l_dMs > 0.0 && l_dMs < 1000.0 && !m_bBattle3DWait) {   // (a long gap is a pause, not a slow frame)
+                m_dStageTimedMs += l_dMs;
+                if (l_dMs > 45.0) m_dStageSlowMs += l_dMs;
+                if (m_dStageTimedMs >= 3000.0) {
+                    if (m_dStageSlowMs > m_dStageTimedMs * 0.6) {
+                        std::fprintf(stderr, "[battle3d] too slow here (%.0f%% of 3 s in frames over 45 ms): the painted backdrop from now on\n",
+                                     100.0 * m_dStageSlowMs / m_dStageTimedMs);
+                        l_oG.f_SetBattle3DAllowed(false);
+                    }
+                    m_dStageSlowMs = m_dStageTimedMs = 0.0;
+                }
+            }
         }
     }
+    if (!l_bStage) m_oStageFrameAt = {};
     if (!l_bStage) {
         l_oG.f_SetBattle3DView(false, glm::mat4(1.0f), glm::vec2(0.0f), glm::vec4(0.0f));
         if (m_upBattleStage) m_upBattleStage->f_HiddenFrame();

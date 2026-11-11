@@ -8,6 +8,8 @@
 //                        multithreaded build needs (docs/engine/02_THREADS.md)
 //   --expect-threads=    yes: the page must run with job-system workers; no: without
 //   --query=             appended to the page URL (e.g. nothreads, the page's opt-out)
+//   --battle             after New Game, try a weapon (Down, Enter): the tutorial's fight on floor 1's 3D stage (docs/gameplay/21);
+//                        checks the stage loads (the console's [battle3d] stage line) and stops there (no save, no reload)
 //   --gpu                the real GPU (Windows: ANGLE on Direct3D 11, what Chrome uses there) instead of
 //                        the SwiftShader software GPU. The real path is stricter: a shader that links on
 //                        SwiftShader can fail there (2026-10-05: fs_mesh with shadow lookups).
@@ -29,7 +31,7 @@ const SKIP = 77;
 const flags = process.argv.slice(2).filter(a => a.startsWith('--'));
 const [target, outDir, windowSize] = process.argv.slice(2).filter(a => !a.startsWith('--'));
 const flag = name => { const f = flags.find(a => a === '--' + name || a.startsWith('--' + name + '=')); return f === undefined ? undefined : (f.split('=').slice(1).join('=') || true); };
-const isolate = !!flag('isolate'), expectThreads = flag('expect-threads'), query = flag('query'), gpu = !!flag('gpu');
+const isolate = !!flag('isolate'), expectThreads = flag('expect-threads'), query = flag('query'), gpu = !!flag('gpu'), battle = !!flag('battle');
 if (!target || !outDir) { console.log('usage: node web_smoke_test.mjs <web build folder | URL> <screenshot folder> [w,h]'); process.exit(2); }
 if (typeof WebSocket === 'undefined') { console.log(`SKIP: Node ${process.version} has no built-in WebSocket (needs Node 22+)`); process.exit(SKIP); }
 const chrome = ['C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
@@ -144,6 +146,15 @@ try {
   await key('Enter', 'Enter', 13); await sleep(1500);
   s = await state('after Enter:'); await shot('02_stage');
   check(s.title === 0, 'Enter starts a new game (the title closes)');
+  if (battle) {   // the weapon master's question: try the bow -> the tutorial's fight, on the 3D stage
+    await key('ArrowDown', 'ArrowDown', 40); await key('Enter', 'Enter', 13);
+    let stage = '';
+    for (let i = 0; i < 60 && !stage; i++) { await sleep(500); stage = logs.find(l => /\[battle3d\].*stage:/.test(l)) || ''; }
+    await sleep(2500); await shot('02b_battle');
+    check(!!stage, 'the 3D battle stage loads in the browser' + (stage ? ': ' + stage : ''));
+    check(!logs.some(l => /\[battle3d\] (no 3D stage|too slow)/.test(l)), 'the stage is drawn (not the painted backdrop)');
+    throw { battleDone: true };
+  }
   // Move right a few tiles, then open the in-game menu and pick the first entry (Save).
   for (let i = 0; i < 3; i++) await key('ArrowRight', 'ArrowRight', 39);
   await key('Escape', 'Escape', 27); await sleep(500); await shot('03_menu');
@@ -157,7 +168,7 @@ try {
   check(s.title === 1, 'after a reload the title screen is up again');
   check(saved.every(f => s.saves.includes(f)), 'the save survives the reload (IndexedDB)');
   check(s.frames > 10, 'the game keeps drawing frames after the reload');
-} catch (e) { check(false, 'the run finished: ' + e.message); }
+} catch (e) { if (!e.battleDone) check(false, 'the run finished: ' + e.message); }
 check(errors.length === 0, 'no uncaught page errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
 check(!logs.some(l => l.startsWith('[webgl]')), 'every WebGL shader compiles and links');
 console.log('--- page console (filtered) ---');

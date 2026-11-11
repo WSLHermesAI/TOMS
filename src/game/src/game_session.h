@@ -8,6 +8,7 @@
 #include "canvas.h"   // toms::Canvas -- the design canvas for the screen
 #include "imgui_bgfx.h"
 
+#include <chrono>
 #include <array>
 #include <cstdint>
 #include <memory>
@@ -135,6 +136,8 @@ private:
     std::unique_ptr<TitleScene> m_upTitleScene;     // the 3D scene behind the title (title_scene.h)
     std::unique_ptr<BattleStage> m_upBattleStage;   // the battle's 3D stage (battle_stage.h), kept between battles
     bool m_bBattle3DWait = false;                   // SessionOptions::m_bBattle3DWait
+    double m_dStageSlowMs = 0.0, m_dStageTimedMs = 0.0;   // real time while the 3D stage is drawn: frames over 45 ms, all
+    std::chrono::steady_clock::time_point m_oStageFrameAt{};
     double m_dUiTime = 0;
     std::string m_strUiLanguage;                     // language the UI font was last chosen for
     uint32_t m_uPinW = 0, m_uPinH = 0;               // SessionOptions::designW / H
