@@ -819,3 +819,11 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   - game_session.cpp/.h: the slow-device fall-back (frames over 45 ms for most of 3 s -> the painted backdrop for the session). tools/web_smoke_test.mjs --battle.
   - Tests: web_smoke_test --battle --gpu passes on web-release-windows and web-release-mt-windows (--isolate --expect-threads=yes); the plain run passes; desktop changed-only 9 of 271 pass.
   - Committed with this report (asked by the owner); pushed.
+- 2026-11-12: the 2D fighters as objects of the 3D scene; the battle screen's head blocks and top band (DAILY_2026-11-12.md).
+  - render_iface.h f_SupportsWorld, f_BeginWorld, f_EndWorld (the card API of the first try removed). bgfx_renderer.* WorldGroup, f_WorldGroups, f_WorldTriangles; layers straight through and no GPU particles inside a group.
+  - gltf_renderer.* f_DrawSprites (Sprites, the sprite sampler), additive SRC_ALPHA + ONE, a sort distance; f_BorrowTexture removed. gltf_model.h Material::m_bAdditive.
+  - battle_stage.* f_DrawSprites (glow / exposure, runs sorted by distance); game_session.cpp calls it after the game's draw. battle.json stage "sprites" { glow }.
+  - game.h / game_combat.cpp f_Battle3DSpritesOn, f_Battle3DSpriteMatrix, f_DrawBattle3DFighter, the fires in world groups; f_Battle3DHeroFeet's step away from the camera.
+  - battle.rml / battle.rcss: .fhead (warn, intent, name with HP, short bar) by head_x / head_y; the target's name glows; .ftarget gone. ui_state.h UiFoe m_fHeadX/Y; game_ui.cpp (both) head positions, the bow hint under the band; text.json battle.target_now removed.
+  - game_skills.cpp f_TouchArea: one band at the top. docs/gameplay/21 §4.3, Q90, §8 (+ zh_TW); docs/gameplay/battle3d/how_2d_meets_3d.html.
+  - tests/golden/battle_3d.png refreshed. Tests: changed-only 10 of 271 pass; Debug built and run (after the sprites). Not committed. All tests, switched-off tests, the 2D battle, web, Android not run.

@@ -36,8 +36,6 @@ body { z-index: 30; }
 .foe.down { opacity: 0.45; }
 .fbox     { position: absolute; left: 0; top: 0; width: 134px; height: 134px; }
 .fbox img { width: 100%; height: 100%; }
-/* the target, with two or three monsters: a line under its name (docs/gameplay/20 §6; the yellow bar under its box is gone) */
-.ftarget  { font-size: 16px; line-height: 20px; color: #ffe27a; }
 .fhp      { position: absolute; left: 0; top: 154px; width: 280px; height: 22px; background-color: #7b7b88; }
 .ftext    { position: absolute; left: 0; top: 178px; width: 280px; font-size: 22px; color: #ffffff; white-space: nowrap; overflow: hidden; }
 /* its break gauge, along the bottom of its HP bar (docs/gameplay/13 §6.4) */
@@ -375,3 +373,24 @@ body.focus #super, body.focus #super-btn, body.focus #active-btn, body.focus #tu
     #cells { top: 850px; }
     #banner { top: 640px; }
 }
+
+/* ---- last, over every layout above (the owner, 2026-11-12: the target line, the long HP bars, and everything mixed on
+   the monster were ugly) ---- */
+/* each monster's head (battle.rml .fhead): placed by the game at the top middle of where it stands; from the top: the
+   "!" before its hit, its next move, its name and HP, a short HP bar just over its head */
+.fhead { position: absolute; width: 220px; height: 66px; margin-left: -110px; margin-top: -70px; text-align: center; }
+.fhead.down { opacity: 0.45; }
+.fhead .warn { position: absolute; left: 50%; margin-left: -24px; top: -58px; width: 48px; text-align: center; font-size: 56px;
+               color: #ffd54a; font-effect: outline(4px #402800); }
+.fhead .intent { position: absolute; left: 35px; top: 0; width: 150px; height: 20px; }
+.fhead .itext { font-size: 15px; line-height: 16px; }
+.fhead .fname { position: absolute; left: 0; width: 220px; top: 24px; font-size: 19px; line-height: 22px; color: #ffffff;
+                white-space: nowrap; font-effect: outline(2px #000000); }
+.fhead .fhpnum { font-size: 15px; color: #dcdcdc; }
+.fhead .fhp { position: absolute; left: 50%; margin-left: -55px; top: 52px; width: 110px; height: 6px; border-radius: 3px;
+              background-color: #000000b0; }
+.fhead .fhp .fill-bar { border-radius: 3px; }
+.fhead .fbreak { height: 2px; }
+/* the target, with two or three monsters: its name glows (no line of words under it) */
+.fhead.target .fname { color: #fff3c4; font-effect: glow(1px 6px 0px 0px #ffb21e); }
+.fhead.target .fhpnum { color: #fff3c4; }

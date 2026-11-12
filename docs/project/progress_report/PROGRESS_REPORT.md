@@ -15,6 +15,16 @@
 
 ## ▶ Next Step
 
+**The 2D fighters as objects of the 3D scene; a clearer battle screen** (2026-11-12; [DAILY_2026-11-12.md](DAILY_2026-11-12.md)):
+- The fighters' and the fires' own sprites are placed in metres and drawn in the 3D scene (`IRenderer::f_BeginWorld`,
+  `GltfRenderer::f_DrawSprites`): lit by the moon, the fires and the hit flashes, hidden by what stands in front, nothing cut. A first
+  try through card pictures cut the raised hand and bow, and was replaced.
+- Each monster's next move, name, HP and "!" sit on its head; the attack prompts are in a band at the top (`Game::f_TouchArea`); the
+  target's name glows; the HP bars are short.
+- **Nothing committed.** Last changed-only run: 10 of 271, all pass (the 3D reference picture refreshed). All tests, the switched-off
+  tests, the 2D battle, web and Android not run.
+  **Owner:** play a battle and judge the light, the head blocks and the top band; say whether to tidy the bottom of a cells battle next.
+
 **The battle on a 3D stage: B1 and B2 of doc 21; living light; the danger close-up; ComfyLive** (2026-11-11; [DAILY_2026-11-11.md](DAILY_2026-11-11.md)):
 - Floors 1–10 fight in moonlit ruins (Poly Haven CC0, `battle.json` `"stages3d"`, `battle_stage.*`): the 2D fighters on their marks, a moving camera,
   braziers, clouds and hit flashes, a low close-up on a monster's special attack. Loaded in the background on entering the floor.

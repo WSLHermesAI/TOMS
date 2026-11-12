@@ -1,7 +1,8 @@
 # 21 — The battle in 3D: a 3D stage, 2D fighters
 
-> Status (2026-11-11): **B1 and B2 built** (the stage, the 2D fighters on it, the camera moves); B3–B5 next. The owner
-> answered Q88–Q93 with the proposals ("do it", 2026-11-11): §7.
+> Status (2026-11-12): **B1 and B2 built** (the stage, the 2D fighters on it, the camera moves), and the fighters'
+> sprites are **drawn in the 3D scene** (§4.3: lit by its lights, depth tested); B3–B5 next. The owner answered Q88–Q93 with the
+> proposals ("do it", 2026-11-11): §7.
 
 ## 1. What the owner asked
 
@@ -81,13 +82,35 @@ effects are named today ([16](16_SKILLS_AND_PLAYS.md)).
 
 ### 4.3 2D fighters standing in 3D
 
-Each fighter has a mark on the ground (its feet). Every frame the mark is projected through the camera. Its screen
-position and its distance give the box that `FighterView::f_Draw` already fills, so the clips, the weapons and the
-2D/3D fighter switch ([18](18_FIGHTER_VIEWS.md)) are untouched. A soft round shadow is drawn on the 3D ground under
-each one. When the camera moves, the fighters move and scale with the world.
+Each fighter has a mark on the ground (its feet). The fighter is an object **of the 3D scene** (the owner,
+2026-11-12: "it should treat 2D object as a 3D object ... dynamic light should also affect 2D objects"):
 
-Step two (if needed, Q90): the fighters drawn as billboards **inside** the 3D pass, so a 3D effect can pass behind a
-monster and the ruins can hide part of it. Phase B1 does not need it.
+Its 2D sprites are drawn **directly in the 3D scene**, with no picture in between (the owner, 2026-11-12: "it should
+all render like a 2D things before but adjust scale to fix 3D looking"):
+
+1. The game draws the fighter as on the 2D screen (`FighterView::f_Draw` into its layout box: the clips, the weapons,
+   the 2D/3D fighter switch of [18](18_FIGHTER_VIEWS.md), all untouched), but inside a **world group**
+   (`IRenderer::f_BeginWorld` / `f_EndWorld`). The group's matrix (`Game::f_Battle3DSpriteMatrix`) turns each design
+   pixel into a point in metres: the box's bottom middle on the fighter's feet, the box's height the fighter's height,
+   the plane upright and parallel to the screen.
+2. The 2D renderer (`BgfxRenderer`) keeps the group's triangles in metres (`f_WorldGroups`): every quad and mesh, in
+   the order drawn, in runs of one texture and blending. Nothing is drawn on the screen and nothing is cut: a raised
+   arm, the bow over the head, a lunge outside the box are placed the same way.
+3. After the game has drawn, the host gives the groups to the stage (`BattleStage::f_DrawSprites`), which draws each run
+   with the models' own shader (`GltfRenderer::f_DrawSprites`): **lit** by the moon, the brazier fires and the hit
+   flashes (PBR, the plane's normal toward the camera), **depth tested** (a ruin in front hides the fighter), alpha
+   blended and sorted with the scene's other blended draws by distance (smooth edges; the nearer fighter over the
+   farther one). A little of its own light (`"glow"`, ÷ exposure) keeps it readable in the dark; an additive part (a
+   glow) adds its light, unlit.
+4. The stage's fires are world groups too, not lit: their particles at the brazier (100 px a metre), behind a fighter
+   standing in front of them.
+
+Inside a world group a layer's effect (glow, motion blur, outline: [18 node effects](../engine/18_NODE_EFFECTS.md)) is
+drawn straight through without its effect, and GPU-simulated particles are not drawn (a screen-space feature each; B3).
+A soft round shadow is drawn on the ground under each fighter. The fighters' screen boxes are still projected from the
+marks, so the hints, the damage numbers and today's 2D hit effects stay at their places. When the renderer cannot
+place sprites (`f_SupportsWorld` false) or the row says `"sprites": {"off": true}`, the fighters are drawn 2D on the
+screen over the stage, as in B1.
 
 ### 4.4 3D particles
 
@@ -157,7 +180,7 @@ Proposal (Q88): one stage from Poly Haven for floors 1–10, to judge the look b
 |---|---|
 | Q88 The stage's art | Poly Haven (CC0): the moonlit ruins for floors 1–10 first, to judge the look |
 | Q89 How many stages | one per floor range (`"from"`, `"to"`), like the painted backdrops; a boss floor may have its own |
-| Q90 2D fighters in 3D | projected boxes (B1); billboards in the 3D pass in B3 if the 3D effects need them |
+| Q90 2D fighters in 3D | projected boxes (B1); **since 2026-11-12 their sprites are drawn in the 3D pass** (the owner: dynamic light must light the 2D fighters; then: no card picture, the sprites themselves placed in 3D, §4.3) |
 | Q91 How much the camera moves | subtle all the time; push-ins and orbits only for special moves, a boss's entrance and the last blow |
 | Q92 Web and Android | the painted backdrop until the owner asks. **The web: on since 2026-11-11** (the owner: "turn it on"); Android still off |
 | Q93 3D particles | the same `.particle` files, `"space": "3d"` emitters |
@@ -178,7 +201,8 @@ Proposal (Q88): one stage from Poly Haven for floors 1–10, to judge the look b
 | **The web** (2026-11-11): the stage is on in browsers. The single-threaded build makes it on the main thread when the floor is entered (a short pause there, 0.33 s measured); the multithreaded one in a worker. The browser's sky is smaller (256 px faces, 16 samples) and not cached (no 17 MB in its storage); no shadows. Measured in headless Chrome on this PC's GPU: both builds load the stage and draw it (45 draws), every shader compiles. Any device: battle frames over 45 ms for most of 3 s and the painted backdrop comes back for the session (`[battle3d] too slow here`). `node tools/web_smoke_test.mjs <build> <out> --battle --gpu` checks it | `battle_stage.cpp`, `game_session.cpp`, `main_sdl.cpp`, `tools/web_smoke_test.mjs` |
 | A node scaled to nothing draws nothing (the fort's hidden pieces): a stage frame is 45 draws + 41 shadow draws (was about 200); Debug GPU 16.6 → about 3 ms | `gltf_renderer.cpp` |
 | On / off: `--battle-3d=on|off`; on in normal play on the desktop, off in scripted runs (the reference pictures) and on the web and Android; a scenario turns it on with `"battle3d": true` | `main_sdl.cpp`, `game_scenario.cpp` |
-| Tests: `scenario.battle_3d` (the stage is drawn; the hero nearer: taller, feet lower), `smoke.battle_3d` (reference picture `tests/golden/battle_3d.png`) | `tests/` |
+| The fighters' sprites in the scene (2026-11-12, §4.3): drawn in world groups (each pixel placed in metres at the fighter's feet, facing the camera), then by the stage with the models' shader: lit by the moon, the fires and the flashes, depth tested, alpha blended, sorted by distance; the braziers' fires the same way, unlit (the left flame is behind the archer's bow). Nothing is cut (a first try drew each fighter into a card picture: its edge cut the raised hand and the bow). Measured: at a monster's hit the archer's brightness goes 76 → 117 and turns red. battle.json stage `"sprites"` (`glow`, `off`); the stage is 10 files, 1.2 MB | `IRenderer::f_BeginWorld`, `BgfxRenderer::f_WorldGroups`, `Game::f_DrawBattle3DFighter` / `f_Battle3DSpriteMatrix`, `BattleStage::f_DrawSprites`, `GltfRenderer::f_DrawSprites` |
+| Tests: `scenario.battle_3d` (the stage is drawn; the hero nearer: taller, feet lower), `smoke.battle_3d` (reference picture `tests/golden/battle_3d.png`, refreshed 2026-11-12 for the sprites in the scene) | `tests/` |
 
-Not yet: the 2D particles and hit effects still play in screen space at the fighters' projected places (B3 moves them
-into 3D); the battle editor previews the painted backdrop (B5).
+Not yet: the 2D particles and hit effects still play in screen space at the fighters' projected places, over the scene
+(B3 moves them into 3D); the battle editor previews the painted backdrop (B5).

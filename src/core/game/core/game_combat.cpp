@@ -718,10 +718,16 @@ void Game::f_DrawBattleRig() {
     // The player's place on the battle screen (battle.rcss #player, wherever the layout put it: playerBox_) and each
     // monster's (battle.rcss .foe .fbox: foeBox_): the view fills its box, the feet at the bottom centre.
     const bool l_bFocus = f_CellIntroOn() && !m_oCs.m_bCellsShown;   // the first danger's moment: only the monster
-    if (!l_bFocus && f_BattleRigReady() && !m_strBattleRigState.empty()) m_upPlayerView->f_Draw(m_pRen, l_fnZoomed(m_v4PlayerBox + glm::vec4(m_v2HeroShift.x, m_v2HeroShift.y, 0.0f, 0.0f)));
-    for (size_t l_nI = 0; l_nI < m_vFoeRigs.size() && l_nI < m_oCs.m_vFoes.size(); l_nI++) {
-        const FoeRig& l_oFr = m_vFoeRigs[l_nI];
-        if (l_oFr.m_upView && !l_oFr.m_strState.empty()) l_oFr.m_upView->f_Draw(m_pRen, l_fnZoomed(f_FighterBox((int)l_nI)));
+    if (f_Battle3DSpritesOn()) {   // on the 3D stage: their sprites placed in the scene (the host draws them there, lit)
+        if (!l_bFocus && f_BattleRigReady() && !m_strBattleRigState.empty()) f_DrawBattle3DFighter(-1);
+        for (size_t l_nI = 0; l_nI < m_vFoeRigs.size() && l_nI < m_oCs.m_vFoes.size(); l_nI++)
+            if (m_vFoeRigs[l_nI].m_upView && !m_vFoeRigs[l_nI].m_strState.empty()) f_DrawBattle3DFighter((int)l_nI);
+    } else {
+        if (!l_bFocus && f_BattleRigReady() && !m_strBattleRigState.empty()) m_upPlayerView->f_Draw(m_pRen, l_fnZoomed(m_v4PlayerBox + glm::vec4(m_v2HeroShift.x, m_v2HeroShift.y, 0.0f, 0.0f)));
+        for (size_t l_nI = 0; l_nI < m_vFoeRigs.size() && l_nI < m_oCs.m_vFoes.size(); l_nI++) {
+            const FoeRig& l_oFr = m_vFoeRigs[l_nI];
+            if (l_oFr.m_upView && !l_oFr.m_strState.empty()) l_oFr.m_upView->f_Draw(m_pRen, l_fnZoomed(f_FighterBox((int)l_nI)));
+        }
     }
     if (m_spBattleFxFile) {
         glm::mat3 l_mat3Shake(1.0f);   // (and the close-up's scale)
@@ -1852,7 +1858,7 @@ std::vector<glm::vec4> Game::f_Battle3DShadows() const {
     if (!m_jBattle3DStage.is_object()) return l_vOut;
     const bool l_bFocus = f_CellIntroOn() && !m_oCs.m_bCellsShown;   // the first danger's moment: only the monster (as drawn)
     if (!l_bFocus && f_BattleRigReady() && !m_strBattleRigState.empty())
-        l_vOut.push_back(glm::vec4(f_Battle3DMark(-1), f_Battle3DHeight(-1) * 0.32f));
+        l_vOut.push_back(glm::vec4(f_Battle3DHeroFeet(), f_Battle3DHeight(-1) * 0.32f));
     for (size_t l_nI = 0; l_nI < m_vFoeRigs.size() && l_nI < m_oCs.m_vFoes.size(); l_nI++)
         if (m_vFoeRigs[l_nI].m_upView && !m_vFoeRigs[l_nI].m_strState.empty())
             l_vOut.push_back(glm::vec4(f_Battle3DMark((int)l_nI), f_Battle3DHeight((int)l_nI) * 0.42f));
@@ -1945,6 +1951,14 @@ void Game::f_DrawBattle3DStageFx() {
         if (!l_jAt.is_array() || l_jAt.size() < 3) continue;
         bool l_bOk = false;
         float l_fPx = 0.0f;
+        if (f_Battle3DSpritesOn()) {   // in the scene at the fire (the effect is made at 100 px a metre), as it is (not lit)
+            const glm::vec3 l_v3At(l_jAt[0].get<float>(), l_jAt[1].get<float>(), l_jAt[2].get<float>());
+            const glm::mat4 l_mat4M = f_Battle3DSpriteMatrix(glm::vec2(0.0f), l_v3At, 0.01f);
+            m_pRen->f_BeginWorld(&l_mat4M[0][0], false);
+            m_vStageFireFx[l_nI].f_Draw(m_pRen, m_spBattleFxFile->f_Atlases(), toms::anim::f_Placement(0.0f, 0.0f, l_jFires[l_nI].value("size", 1.0f)), nullptr);
+            m_pRen->f_EndWorld();
+            continue;
+        }
         const glm::vec2 l_v2At = f_Battle3DToDesign(glm::vec3(l_jAt[0].get<float>(), l_jAt[1].get<float>(), l_jAt[2].get<float>()), l_bOk, &l_fPx);
         if (!l_bOk || l_fPx <= 0.0f) continue;
         m_vStageFireFx[l_nI].f_Draw(m_pRen, m_spBattleFxFile->f_Atlases(), toms::anim::f_Placement(l_v2At.x, l_v2At.y, l_fPx / 100.0f * l_jFires[l_nI].value("size", 1.0f)), nullptr);
@@ -1974,4 +1988,54 @@ void Game::f_Battle3DDangerShot(int l_iFoe, bool l_bIntro) {
         m_oCs.m_fShakePx = std::max(m_oCs.m_fShakePx, l_fRumble);
         m_oCs.m_iShakeMs = m_oCs.m_iShakeMsMax = std::max(m_oCs.m_iShakeMs, 380);
     }
+}
+
+// ---- the fighters as objects of the 3D stage (docs/gameplay/21 §4.3) ----
+
+bool Game::f_Battle3DSpritesOn() const {
+    if (!m_bBattle3DOn || !m_pRen || !m_pRen->f_SupportsWorld() || !m_jBattle3DStage.is_object()) return false;
+    return !m_jBattle3DStage.value("sprites", nlohmann::json::object()).value("off", false);
+}
+
+glm::mat4 Game::f_Battle3DSpriteMatrix(const glm::vec2& l_v2Anchor, const glm::vec3& l_v3At, float l_fMetresPerPx) const {
+    // the camera's right on the ground (the view-projection's first row: where the screen's x grows), the plane's normal
+    // toward the camera, up is up: a pixel down the screen is a metre down the world
+    glm::vec3 l_v3Right(m_mat4Battle3DViewProj[0][0], 0.0f, m_mat4Battle3DViewProj[2][0]);
+    l_v3Right = glm::length(l_v3Right) > 1e-6f ? glm::normalize(l_v3Right) : glm::vec3(1.0f, 0.0f, 0.0f);
+    const glm::vec3 l_v3Up(0.0f, 1.0f, 0.0f), l_v3Normal(-l_v3Right.z, 0.0f, l_v3Right.x);
+    glm::mat4 l_mat4M(1.0f);
+    l_mat4M[0] = glm::vec4(l_v3Right * l_fMetresPerPx, 0.0f);
+    l_mat4M[1] = glm::vec4(-l_v3Up * l_fMetresPerPx, 0.0f);
+    l_mat4M[2] = glm::vec4(l_v3Normal, 0.0f);
+    l_mat4M[3] = glm::vec4(l_v3At - l_v3Right * (l_v2Anchor.x * l_fMetresPerPx) + l_v3Up * (l_v2Anchor.y * l_fMetresPerPx), 1.0f);
+    return l_mat4M;
+}
+
+// The fighter's view draws into its layout box as on the 2D screen (the same pixels, clips and weapons); the world group
+// stands that box on the fighter's feet, its height the fighter's height in metres. Whatever the clip draws outside the
+// box (a raised arm, the bow, a lunge) is placed the same way: nothing is cut.
+void Game::f_DrawBattle3DFighter(int l_iWho) {
+    glm::vec4 l_v4Box = l_iWho < 0 ? m_v4UiPlayerBox : m_arrUiFoeBox[std::min(std::max(l_iWho, 0), toms::g_iMaxFoes - 1)];
+    if (l_v4Box.z <= 1.0f || l_v4Box.w <= 1.0f) l_v4Box = glm::vec4(0.0f, 0.0f, 240.0f, 320.0f);   // (no layout yet: any shape)
+    const glm::vec2 l_v2Feet(l_v4Box.x + l_v4Box.z * 0.5f, l_v4Box.y + l_v4Box.w);
+    const glm::vec3 l_v3Feet = l_iWho < 0 ? f_Battle3DHeroFeet() : f_Battle3DMark(l_iWho);
+    const glm::mat4 l_mat4M = f_Battle3DSpriteMatrix(l_v2Feet, l_v3Feet, f_Battle3DHeight(l_iWho) / l_v4Box.w);
+    m_pRen->f_BeginWorld(&l_mat4M[0][0], true);
+    if (l_iWho < 0) m_upPlayerView->f_Draw(m_pRen, l_v4Box);
+    else m_vFoeRigs[(size_t)l_iWho].m_upView->f_Draw(m_pRen, l_v4Box);
+    m_pRen->f_EndWorld();
+}
+
+// The hero's feet: the mark, moved by its step between the cells (m_v2HeroShift, design pixels: made metres where it stands).
+glm::vec3 Game::f_Battle3DHeroFeet() const {
+    glm::vec3 l_v3Feet = f_Battle3DMark(-1);
+    if (m_v2HeroShift.x == 0.0f && m_v2HeroShift.y == 0.0f) return l_v3Feet;
+    bool l_bOk = false;
+    float l_fPx = 0.0f;
+    f_Battle3DToDesign(l_v3Feet, l_bOk, &l_fPx);
+    if (!l_bOk || l_fPx <= 1.0f) return l_v3Feet;
+    // across the screen: the camera's right on the ground; up the screen (y < 0): away from the camera
+    const glm::vec3 l_v3Right = glm::normalize(glm::vec3(m_mat4Battle3DViewProj[0][0], 0.0f, m_mat4Battle3DViewProj[2][0]) + glm::vec3(1e-6f, 0.0f, 0.0f));
+    const glm::vec3 l_v3Away(l_v3Right.z, 0.0f, -l_v3Right.x);   // (the camera looks along it: right x up, turned)
+    return l_v3Feet + l_v3Right * (m_v2HeroShift.x / l_fPx) + l_v3Away * (-m_v2HeroShift.y / l_fPx * 2.0f);
 }

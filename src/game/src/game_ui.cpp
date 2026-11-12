@@ -175,6 +175,8 @@ void f_RegisterTypes(Rml::DataModelConstructor& l_oC) {
         l_oS.RegisterMember("intent_pct", &UiFoe::m_fIntentPct);
         l_oS.RegisterMember("break_pct", &UiFoe::m_fBreakPct);
         l_oS.RegisterMember("warn", &UiFoe::m_bWarn);
+        l_oS.RegisterMember("head_x", &UiFoe::m_fHeadX);
+        l_oS.RegisterMember("head_y", &UiFoe::m_fHeadY);
     }
     l_oC.RegisterArray<std::vector<UiFoe>>();
     if (auto l_oS = l_oC.RegisterStruct<UiBattle>()) {
@@ -192,7 +194,6 @@ void f_RegisterTypes(Rml::DataModelConstructor& l_oC) {
         l_oS.RegisterMember("log", &UiBattle::m_strLog);
         l_oS.RegisterMember("continue_hint", &UiBattle::m_strContinueHint);
         l_oS.RegisterMember("clock_label", &UiBattle::m_strClockLabel);
-        l_oS.RegisterMember("target_label", &UiBattle::m_strTargetLabel);
         l_oS.RegisterMember("clock_pct", &UiBattle::m_fClockPct);
         l_oS.RegisterMember("attack", &UiBattle::m_oAttack);
         l_oS.RegisterMember("defense", &UiBattle::m_oDefense);

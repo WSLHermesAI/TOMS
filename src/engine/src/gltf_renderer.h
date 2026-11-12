@@ -113,6 +113,8 @@ public:
     void f_ClearEnvironment();
     bool f_HasEnvironment() const;
 
+    // A render target's row 0 is its bottom on this backend (OpenGL, WebGL): a picture drawn into one is read upside down.
+    static bool f_OriginBottomLeft();
     // Perspective matrix for this backend (depth 0..1 on D3D/Vulkan, -1..1 on OpenGL).
     static glm::mat4 f_Projection(float l_fFovYDegrees, float l_fAspect, float l_fZNear, float l_fZFar);
 
@@ -126,12 +128,31 @@ public:
     void f_DrawCrowd(GpuModel& l_oGpu, const AnimTextureGpu& l_oAnim, const std::vector<gltf::CrowdGpuInstance>& l_vInstances,
                    bool l_bCastShadows = true);
     void f_Lines(const std::vector<LinePoint>& l_vPoints, bool l_bDepthTest = true);   // pairs of points
+
+    // 2D sprites in the scene (docs/gameplay/21 §4.3: a fighter's sprites, placed in the world by BgfxRenderer's world
+    // groups): triangles already in world metres, drawn with the models' shader -- double sided, alpha blended, depth
+    // tested, sorted with the other blended draws by `sortDistance` -- lit by this frame's lights (lit), or as they are
+    // (unlit; additive: light added). They cast no shadow.
+    struct SpriteVertex { glm::vec3 m_v3Pos; glm::vec2 m_v2Uv; glm::vec4 m_v4Color; };
+    struct Sprites {
+        const SpriteVertex* m_pVerts = nullptr;
+        uint32_t m_uVertexCount = 0;
+        const uint16_t* m_pIdx = nullptr;
+        uint32_t m_uIndexCount = 0;
+        uint16_t m_u16Texture = UINT16_MAX;            // a bgfx texture handle index; UINT16_MAX: none (the colour alone)
+        bool m_bLinear = false;                        // sampled linear, else point (pixel art)
+        bool m_bLit = true, m_bAdditive = false;
+        glm::vec3 m_v3Normal{0.0f, 0.0f, 1.0f};        // the sprites' plane, facing the camera
+        glm::vec3 m_v3Emissive{0.0f};                  // lit: its own light (x its texture), so it reads in the dark
+        float m_fSortDistance = 0.0f;                  // metres from the eye: farther drawn first
+    };
+    void f_DrawSprites(const Sprites& l_oS);
     const Stats& f_Stats() const { return m_oStats; }
 
 private:
     void f_SubmitPrimitive(GpuModel& l_oGpu, const gltf::Primitive& l_oP, const gltf::Material& l_oMat, const std::function<void()>& l_fnGeometry,
                          bgfx::ProgramHandle l_oColourProg, bgfx::ProgramHandle l_oShadowProg, const glm::mat4& l_mat4SortBase, bool l_bMirrored,
-                         bool l_bCastShadows, bool l_bSkinned);
+                         bool l_bCastShadows, bool l_bSkinned, float l_fSortDistance = -1.0f);
     struct Impl;
     std::unique_ptr<Impl> m_upImpl;
     Stats m_oStats;

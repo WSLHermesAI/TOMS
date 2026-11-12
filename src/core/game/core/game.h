@@ -671,6 +671,10 @@ public:
     };
     // The fires' and the flashes' lights, strongest first (the renderer takes a few).
     std::vector<Battle3DLight> f_Battle3DLights() const;
+    // The fighters as objects of the 3D stage (docs/gameplay/21 §4.3): each fighter's 2D sprites are drawn in a world
+    // group (IRenderer::f_BeginWorld) -- every pixel placed in metres on its feet, upright, facing the camera -- and the
+    // host draws them in its scene: lit by the stage's lights, depth tested, nothing cut. Off: drawn on the screen.
+    bool f_Battle3DSpritesOn() const;          // on a 3D stage, the renderer can place sprites in it, and the stage wants that
     // The camera for a screen of this shape (width / height): the stage's shot (a narrow screen widens the view so
     // both fighters stay in it) and its slow breathing.
     // device: the backbuffer's size; canvas: where the design canvas sits in it (x, y, w, h device pixels). The stage
@@ -753,7 +757,7 @@ private:
     void f_ResolveCombo(const toms::ComboResult* l_pPlayed = nullptr);
     toms::PlayType f_BattlePlayType() const;          // the worn weapon's play; a scenario's "play" (scenarios: the track)
     bool f_AttackRunning() const { return m_oCs.m_oCombo.f_Running() || (m_oCs.m_oTouch.f_Running() && m_oCs.m_oTouch.f_Started()); }
-    glm::vec4 f_TouchArea() const;                    // where a touch play's targets go: around the target monster
+    glm::vec4 f_TouchArea() const;                    // where a touch play's targets go: a band across the top (never over a monster)
     void f_ArmTouchPlay(bool l_bUltimate, int l_iPoints);   // a new touch play over the target (waits for its first touch)
     toms::TouchPlaySettings f_TouchSettingsFor(toms::PlayType l_eType) const;   // battle.json "plays", the weapon's, STR / DEX
     toms::TouchPlaySettings m_oTouchSettings;         // battle.json "plays"
@@ -772,6 +776,11 @@ private:
     glm::vec4 m_v4UiPlayerBox{262, 84, 134, 134};        // the layout's boxes (their shape is kept in 3D)
     glm::vec4 m_arrUiFoeBox[toms::g_iMaxFoes] = {{652, 84, 134, 134}, {652, 84, 134, 134}, {652, 84, 134, 134}};
     void f_PlaceBattle3DBoxes();
+    // Design pixels -> world metres for a 2D drawing standing in the scene: pixel `anchor` at `at`, `metresPerPx` a pixel,
+    // upright, parallel to the screen (facing the camera). Column 2 is the plane's normal.
+    glm::mat4 f_Battle3DSpriteMatrix(const glm::vec2& l_v2Anchor, const glm::vec3& l_v3At, float l_fMetresPerPx) const;
+    void f_DrawBattle3DFighter(int l_iWho);             // -1 the hero, else monster `who`: its view in a world group at its feet
+    glm::vec3 f_Battle3DHeroFeet() const;               // the hero's mark and its move between the cells, in metres
     // A stage point in design pixels (ok = in front of the camera); pxPerMetre: how big a metre is there.
     glm::vec2 f_Battle3DToDesign(const glm::vec3& l_v3P, bool& l_bOk, float* l_pPxPerMetre = nullptr) const;
     struct Battle3DFlash { glm::vec3 m_v3Pos{0.0f}, m_v3Color{1.0f}; float m_fIntensity = 8.0f, m_fRange = 5.0f; int m_iDelayMs = 0, m_iMs = 0, m_iMsMax = 1; };

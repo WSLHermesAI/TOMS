@@ -24,9 +24,14 @@
          extra rows before it reads them -- see player.rml) -->
     <div data-for="f, i : battle.foes"><div class="foe" data-class-f1="i == 1" data-class-f2="i == 2"
          data-class-n1="battle.foes.size == 1" data-class-n2="battle.foes.size == 2" data-class-n3="battle.foes.size == 3"
-         data-class-down="f.down" data-event-click="act('battle_target', i)">
-        <div class="fbox"><img data-if="!f.anim" data-attr-sprite="f.sprite"/>
-            <div class="warn" data-if="f.warn">!</div></div>
+         data-class-down="f.down" data-class-target="f.target" data-event-click="act('battle_target', i)">
+        <div class="fbox"><img data-if="!f.anim" data-attr-sprite="f.sprite"/></div>
+    </div></div>
+    <!-- each monster's head (the owner, 2026-11-12): its name, HP and next move on top of where it stands (head_x, head_y:
+         its box's top middle; on the 3D stage, projected), not in the layout's slot -->
+    <div data-for="f, i : battle.foes"><div class="fhead" data-class-target="f.target" data-class-down="f.down"
+         data-style-left="f.head_x + 'px'" data-style-top="f.head_y + 'px'" data-event-click="act('battle_target', i)">
+        <div class="warn" data-if="f.warn">!</div>
         <!-- its next move and the time left (docs/gameplay/13 §6.1) -->
         <div class="intent" data-if="f.intent != ''" data-class-heavy="f.intent_kind == 'heavy'"
              data-class-jabs="f.intent_kind == 'jabs'" data-class-spell="f.intent_kind == 'spell'"
@@ -35,10 +40,9 @@
             <div class="itext">{{f.intent}}</div>
             <div class="ibar"><div class="ifill" data-style-width="f.intent_pct + '%'"></div></div>
         </div>
+        <div class="fname">{{f.name}} <span class="fhpnum">{{f.hp_line}}</span></div>
         <div class="fhp"><div class="fill-bar bad" data-style-width="f.hp_pct + '%'"></div>
             <div class="fbreak" data-style-width="f.break_pct + '%'"></div></div>
-        <div class="ftext one">{{f.hp_text}}</div>
-        <div class="ftext two">{{f.name}}<br/>{{f.hp_line}}<div class="ftarget" data-if="f.target">{{battle.target_label}}</div></div>
     </div></div>
     <!-- (the message line is gone: short words rise where things happen; cs.log stays for the editor's log) -->
 

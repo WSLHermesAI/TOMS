@@ -78,6 +78,27 @@ public:
     void f_DrawMesh(const Mesh& l_oM) override;     // the CPU path's program, from one vertex / index buffer per frame
     void f_SetNode(uint8_t l_u8N) override;
     void f_SetLayer(int l_iLayer) override { m_iLayer = l_iLayer; }
+    // World groups (render_iface.h f_BeginWorld): their triangles, already in world metres, kept for the host, which
+    // draws them in its 3D scene after the game has drawn (f_WorldGroups, valid until the next begin()). A run is a
+    // part with one texture and blending, in drawing order.
+    bool f_SupportsWorld() const override { return m_u16Program != m_u16Invalid; }
+    void f_BeginWorld(const float* l_pMat4, bool l_bLit) override;
+    void f_EndWorld() override;
+    struct WorldVertex { float m_fX, m_fY, m_fZ, m_fU, m_fV, m_fR, m_fG, m_fB, m_fA; };
+    struct WorldRun {
+        uint16_t m_u16Texture = m_u16Invalid;          // a bgfx texture handle index; m_u16Invalid: none (a solid colour)
+        bool m_bLinear = false;                         // sampled linear (f_SetTextureFilter), else point
+        bool m_bAdditive = false;
+        uint32_t m_uFirstIndex = 0, m_uIndexCount = 0;
+    };
+    struct WorldGroup {
+        float m_arrMat[16];                             // design pixels -> world (f_BeginWorld)
+        bool m_bLit = true;
+        std::vector<WorldVertex> m_vVerts;
+        std::vector<uint16_t> m_vIdx;
+        std::vector<WorldRun> m_vRuns;
+    };
+    const std::vector<WorldGroup>& f_WorldGroups() const { return m_vWorld; }
     void f_SetNodeFilter(uint8_t l_u8N) override;
     void end() override;                          // submits to kViewClear/kViewGame; host calls bgfx::frame()
     uint32_t f_Width()  const override { return m_uDesignW; }
@@ -160,6 +181,12 @@ private:
         bool m_bAny = false;
         float m_fX0 = 0, m_fY0 = 0, m_fX1 = 0, m_fY1 = 0, m_fReach = 0;
     };
+    std::vector<WorldGroup> m_vWorld;                    // this frame's world groups
+    int m_iWorldOpen = -1;                               // the group being drawn into (f_BeginWorld); -1: none
+    int m_iWorldDepth = 0;                               // f_BeginWorld nesting (an inner one joins the outer group)
+    int m_iLayersInWorld = 0;                            // layers begun inside a group (drawn straight through)
+    void f_WorldTriangles(const float* l_pXy, const float* l_pUv, const float* l_pRgba, uint32_t l_uVerts, const uint16_t* l_pIdx,
+                          uint32_t l_uIdx, uint16_t l_u16Texture, bool l_bAdditive, bool l_bSolid);
     std::vector<LayerDraw> m_vLayers;
     std::vector<int> m_vLayerStack;     // the open layers (innermost last); -1 = one drawn straight through
     std::vector<int> m_vLayerClosed;    // in the order they closed: inner layers first (their views run in this order)

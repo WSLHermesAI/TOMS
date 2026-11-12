@@ -329,6 +329,16 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
             l_oUf.m_strHpText = l_oUf.m_strName + " " + l_oUf.m_strHpLine;
             l_oUf.m_bTarget = m_oCs.m_bActive && m_oCs.m_vFoes.size() > 1 && (int)l_nI == m_oCs.m_iTarget && !l_oF.f_Down();
             l_oUf.m_bDown = l_oF.f_Down();
+            {   // its head: where its name and HP go (kept on the screen, under the attack's band at the top)
+                const glm::vec4 l_v4Box = f_FighterBox((int)l_nI);
+                const float l_fW = m_pRen ? (float)m_pRen->f_Width() : 1024.0f, l_fH = m_pRen ? (float)m_pRen->f_Height() : 768.0f;
+                l_oUf.m_fHeadX = std::clamp(l_v4Box.x + l_v4Box.z * 0.5f, 90.0f, std::max(90.0f, l_fW - 90.0f));
+                // its block (about 66 px high) stays under the title; while a play shows in the attack's band, under the
+                // band and its hint line too (a tall monster's block then sits on it, not under the prompts)
+                const glm::vec4 l_v4Band = f_TouchArea();
+                const float l_fMinY = m_oCs.m_oTouch.f_Running() ? l_v4Band.y + l_v4Band.w + 96.0f : 130.0f;
+                l_oUf.m_fHeadY = std::clamp(l_v4Box.y, l_fMinY, std::max(l_fMinY, l_fH - 120.0f));
+            }
             if (m_oCs.m_bActive && !l_oF.f_Down()) {   // its intent (docs/gameplay/13 §6.1)
                 const toms::MoveDef& l_oM = m_oMoves.f_Get(l_oF.m_strMove);
                 if (l_oF.m_iStaggerMs > 0) {
@@ -368,7 +378,6 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
             l_oQ.m_fOpacity = l_fR < 0.6f ? 1.0f : std::max(0.0f, 1.0f - (l_fR - 0.6f) / 0.4f);
             l_oB.m_vPopups.push_back(l_oQ);
         }
-        l_oB.m_strTargetLabel = l_oL.f_Tr("battle.target_now");   // under the target's name (20 §6)
         if (m_oCs.m_bActive) {
             l_oB.m_strClockLabel = l_oL.f_Tr("battle.enemy_clock");
             // the clock of the monster that attacks next (the nearest to its move); the stamina pace shows the stamina
@@ -916,7 +925,10 @@ void Game::f_TouchPlayUi(toms::UiBattle& l_oB) const {
                 if (l_fDrag > 0.0f) l_fnLine("pull", l_v2From, l_v2F, 4, 0.6f);
                 l_fnAdd("ghost", l_v2F.x, l_v2F.y, 34, 34, 0.0f, 17, l_fK < 0.15f ? l_fK / 0.15f : 1.0f);
             }
-            if (l_oB.m_strTutorial.empty()) l_fnAdd("tutorial", l_oT.m_fX, l_oT.m_fY + 190.0f, 360, 28, 0.0f, 0.0f, 1.0f, m_oLocale.f_Tr("battle.play_hint_pullRelease"));
+            if (l_oB.m_strTutorial.empty()) {   // its words just under the attack's band (not on a monster's name)
+                const glm::vec4 l_v4Band = f_TouchArea();
+                l_fnAdd("tutorial", l_v4Band.x + l_v4Band.z * 0.5f, l_v4Band.y + l_v4Band.w + 14.0f, 360, 28, 0.0f, 0.0f, 1.0f, m_oLocale.f_Tr("battle.play_hint_pullRelease"));
+            }
         }
         break;
     }

@@ -53,6 +53,7 @@ struct Material {
     float m_fAlphaCutoff = 0.5f;
     bool m_bDoubleSided = false;
     bool m_bUnlit = false;                  // KHR_materials_unlit
+    bool m_bAdditive = false;               // not from a file: set by code (light added: a 2D glow in the scene); blended SRC_ALPHA + ONE
     // KHR_materials_transmission (+ KHR_materials_volume's attenuation colour): glass. Drawn as an
     // approximation -- see through it (blended), keep its reflections; no refraction of the scene.
     float m_fTransmission = 0.0f;

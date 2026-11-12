@@ -188,6 +188,15 @@ public:
     // there were no layer. Only in the game layer (setLayer(0)).
     virtual void f_BeginLayer(const LayerEffect& l_oFx) { (void)l_oFx; }
     virtual void f_EndLayer() {}
+    // A world group (docs/gameplay/21 §4.3: a 2D fighter as an object of the 3D stage): the quads and meshes drawn until
+    // f_EndWorld are not drawn on the screen but placed in the host's 3D scene -- each design pixel (x, y) goes to the
+    // world point mat4 x (x, y, 0, 1) (16 floats, column major, metres) -- and the host draws them there, lit by the
+    // scene's lights (lit) or as they are (not lit), depth tested against it. Nothing is cut: there is no picture in
+    // between. Inside a group, layers are drawn straight through (no effect) and GPU particles are not drawn.
+    // f_SupportsWorld false: the group is drawn on the screen as before.
+    virtual bool f_SupportsWorld() const { return false; }
+    virtual void f_BeginWorld(const float* l_pMat4, bool l_bLit) { (void)l_pMat4; (void)l_bLit; }
+    virtual void f_EndWorld() {}
     // Diagnostic: if n!=0, only emit quads whose node==n (isolate one subsystem).
     virtual void f_SetNodeFilter(uint8_t l_u8N) { (void)l_u8N; }
     virtual void end() = 0;                       // present to target (offscreen/canvas)

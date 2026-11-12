@@ -19,23 +19,14 @@ toms::PlayType Game::f_BattlePlayType() const {
 }
 
 glm::vec4 Game::f_TouchArea() const {
-    const glm::vec4 l_v4B = f_FighterBox(std::clamp(m_oCs.m_iTarget, 0, std::max(0, (int)m_oCs.m_vFoes.size() - 1)));
-    // the bow's targets on the monster; the circles from it down into the free space under the fighters; the
-    // sword's prompts in that space (TouchPlay::promptAt), clear of the monster
-    glm::vec4 l_v4A = f_BattlePlayType() == toms::PlayType::ePULL_RELEASE && !m_oCs.m_oSkill.m_bOn ? glm::vec4(l_v4B.x - 30.0f, l_v4B.y - 20.0f, l_v4B.z + 60.0f, l_v4B.w + 40.0f)
-                                                                            : glm::vec4(l_v4B.x - 120.0f, l_v4B.y - 10.0f, l_v4B.z + 240.0f, l_v4B.w + 210.0f);
-    // On the screen, where a finger can reach it: a monster at the edge (the third of three) would push it past the
-    // side; the bottom keeps clear of the HP bar and the ultimate's row. Moved in, not shrunk, so the
-    // circles keep their room.
+    // Never over the monster (the owner, 2026-11-12: "the command to attack ... should not focus on the monster, it should
+    // be bottom or top of the game"): one band across the top of the screen, under the title, for every play -- the
+    // bow's target, the sword's prompts (TouchPlay::promptAt: the band's bottom middle), the staff's circles, a mash.
+    // The bottom keeps the cells, the hero's HP and the thumbs; the monsters' names and HP sit on their heads.
     const float l_fW = m_pRen ? (float)m_pRen->f_Width() : 1024.0f, l_fH = m_pRen ? (float)m_pRen->f_Height() : 768.0f;
-    const float l_fMargin = 12.0f, l_fTop = 60.0f;
-    float l_fBottom = l_fH - 170.0f;
-    l_v4A.z = std::min(l_v4A.z, l_fW - 2.0f * l_fMargin);
-    if (m_oCs.m_bCellsOn) l_fBottom = std::min(l_fBottom, l_fH >= 1300.0f ? 800.0f : l_fH > l_fW ? 590.0f : 540.0f);   // above the cells: a press on one moves the hero
-    l_v4A.w = std::min(l_v4A.w, std::max(40.0f, l_fBottom - l_fTop));
-    l_v4A.x = std::clamp(l_v4A.x, l_fMargin, std::max(l_fMargin, l_fW - l_fMargin - l_v4A.z));
-    l_v4A.y = std::clamp(l_v4A.y, l_fTop, std::max(l_fTop, l_fBottom - l_v4A.w));
-    return l_v4A;
+    const float l_fMargin = 12.0f, l_fTop = 64.0f;
+    const float l_fBandW = std::min(640.0f, l_fW - 2.0f * l_fMargin), l_fBandH = l_fH > l_fW ? 220.0f : 170.0f;   // portrait: a little taller
+    return glm::vec4(l_fW * 0.5f - l_fBandW * 0.5f, l_fTop, l_fBandW, l_fBandH);
 }
 
 toms::TouchPlaySettings Game::f_TouchSettingsFor(toms::PlayType l_eType) const {

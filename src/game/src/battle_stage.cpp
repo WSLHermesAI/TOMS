@@ -198,6 +198,8 @@ std::shared_ptr<BattleStage::Loaded> BattleStage::f_LoadCpu(nlohmann::json l_jRo
         l_oP.m_mat4Place = l_mat4M;
         l_oL.m_vProps.push_back(std::move(l_oP));
     }
+    // the fighters' sprites (docs/gameplay/21 §4.3): their own light, x 1 / exposure ("glow")
+    l_oL.m_fSpriteGlow = l_jRow.value("sprites", nlohmann::json::object()).value("glow", 0.6f);
     // what the moon's shadow must cover: the stage's middle (the fighters, the props near them)
     const nlohmann::json l_jB = l_jRow.value("shadowBounds", nlohmann::json::array());
     if (l_jB.is_array() && l_jB.size() == 2) {
@@ -281,6 +283,7 @@ bool BattleStage::f_Upload(Loaded& l_oL, std::string& l_strError) {
     m_spGround = l_oL.m_spGround;
     m_spShadow = l_oL.m_spShadow;
     m_vProps = std::move(l_oL.m_vProps);
+    m_fSpriteGlow = l_oL.m_fSpriteGlow;
     m_oLook = l_oL.m_oLook;
     m_v3BoundsMin = l_oL.m_v3BoundsMin;
     m_v3BoundsMax = l_oL.m_v3BoundsMax;
@@ -344,6 +347,8 @@ glm::mat4 BattleStage::f_Draw(float l_fDtSeconds, uint32_t l_uWidth, uint32_t l_
         const GltfRenderer::Stats& l_oS = m_oRenderer.f_Stats();
         std::fprintf(stderr, "[battle3d] a frame: %d draw calls, %d shadow draws\n", l_oS.m_iDrawCalls, l_oS.m_iShadowDraws);
     }
+    m_v3Eye = l_oCam.m_v3Eye;
+    m_fExposure = l_oF.m_fExposure;
     m_oRenderer.begin(m_u16FirstView, l_oF, l_uWidth, l_uHeight, 0x05060cff);
     if (m_spGround) m_oRenderer.f_Draw(*m_spGround->m_spGpu, m_spGround->m_oPose, glm::mat4(1.0f), false);
     for (const Prop& l_oP : m_vProps)
@@ -355,6 +360,47 @@ glm::mat4 BattleStage::f_Draw(float l_fDtSeconds, uint32_t l_uWidth, uint32_t l_
             m_oRenderer.f_Draw(*m_spShadow->m_spGpu, m_spShadow->m_oPose, l_mat4M, false);
         }
     return l_oF.m_mat4Proj * l_oF.m_mat4View;
+}
+
+// The game's world groups (BgfxRenderer::f_WorldGroups: the fighters' and the fires' sprites, already in metres) into
+// this frame's scene: each run a draw, lit by the stage's lights (a lit group) with a little of its own light, sorted
+// among the blended draws by its distance -- a bit nearer than its middle, so the shadow disc under it goes first, and
+// each run after the one before (the order it was drawn in 2D).
+void BattleStage::f_DrawSprites(const std::vector<BgfxRenderer::WorldGroup>& l_vGroups) {
+    if (!m_bReady) return;
+    std::vector<GltfRenderer::SpriteVertex> l_vV;
+    for (const BgfxRenderer::WorldGroup& l_oG : l_vGroups) {
+        if (l_oG.m_vVerts.empty() || l_oG.m_vRuns.empty()) continue;
+        l_vV.resize(l_oG.m_vVerts.size());
+        glm::vec3 l_v3Min(1e30f), l_v3Max(-1e30f);
+        for (size_t l_nI = 0; l_nI < l_oG.m_vVerts.size(); l_nI++) {
+            const BgfxRenderer::WorldVertex& l_oW = l_oG.m_vVerts[l_nI];
+            l_vV[l_nI].m_v3Pos = glm::vec3(l_oW.m_fX, l_oW.m_fY, l_oW.m_fZ);
+            l_vV[l_nI].m_v2Uv = glm::vec2(l_oW.m_fU, l_oW.m_fV);
+            l_vV[l_nI].m_v4Color = glm::vec4(l_oW.m_fR, l_oW.m_fG, l_oW.m_fB, l_oW.m_fA);
+            l_v3Min = glm::min(l_v3Min, l_vV[l_nI].m_v3Pos);
+            l_v3Max = glm::max(l_v3Max, l_vV[l_nI].m_v3Pos);
+        }
+        const glm::vec3 l_v3N(l_oG.m_arrMat[8], l_oG.m_arrMat[9], l_oG.m_arrMat[10]);   // the matrix's third column: the plane's normal
+        const float l_fDist = std::max(0.0f, glm::length((l_v3Min + l_v3Max) * 0.5f - m_v3Eye) - 0.3f);
+        for (size_t l_nR = 0; l_nR < l_oG.m_vRuns.size(); l_nR++) {
+            const BgfxRenderer::WorldRun& l_oR = l_oG.m_vRuns[l_nR];
+            if (l_oR.m_uIndexCount < 3) continue;
+            GltfRenderer::Sprites l_oS;
+            l_oS.m_pVerts = l_vV.data();
+            l_oS.m_uVertexCount = (uint32_t)l_vV.size();
+            l_oS.m_pIdx = l_oG.m_vIdx.data() + l_oR.m_uFirstIndex;
+            l_oS.m_uIndexCount = l_oR.m_uIndexCount;
+            l_oS.m_u16Texture = l_oR.m_u16Texture;
+            l_oS.m_bLinear = l_oR.m_bLinear;
+            l_oS.m_bLit = l_oG.m_bLit;
+            l_oS.m_bAdditive = l_oR.m_bAdditive;
+            l_oS.m_v3Normal = glm::length(l_v3N) > 1e-6f ? glm::normalize(l_v3N) : glm::vec3(0.0f, 0.0f, 1.0f);
+            l_oS.m_v3Emissive = glm::vec3(m_fSpriteGlow / std::max(0.05f, m_fExposure));   // as bright on any stage
+            l_oS.m_fSortDistance = std::max(0.0f, l_fDist - 0.001f * (float)l_nR);
+            m_oRenderer.f_DrawSprites(l_oS);
+        }
+    }
 }
 
 }  // namespace toms::next

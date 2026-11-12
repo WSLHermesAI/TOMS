@@ -541,6 +541,7 @@ bool GameSession::f_Frame(int l_iDtMs, const InputState& l_oIn, uint32_t l_uDevi
     m_pRenderer->f_SetSceneViews(TitleScene::m_u16FirstView, l_bScene ? m_upTitleScene->f_ViewCount() : l_bStage ? m_upBattleStage->f_ViewCount() : 0);
     if (m_upUi) m_upUi->f_SetTitleScene(l_bScene);
     l_oG.f_Draw();   // the world -> BgfxRenderer::end(): views kViewClear + kViewGame
+    if (l_bStage) m_upBattleStage->f_DrawSprites(m_pRenderer->f_WorldGroups());   // the fighters' sprites, in the 3D scene
     {           // the UI over it, under ImGui
         const auto l_oVp = BgfxRenderer::f_ComputeAspectFitViewport(l_uDeviceW, l_uDeviceH, BgfxRenderer::m_uDesignW, BgfxRenderer::m_uDesignH);
         m_upRml->f_SetViewport(l_oVp.m_fX, l_oVp.m_fY, l_oVp.m_fWidth, l_oVp.m_fHeight);

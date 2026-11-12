@@ -134,6 +134,7 @@ struct GltfRenderer::GpuModel {
     const gltf::Model* m_pModel = nullptr;
     std::vector<std::vector<Prim>> m_vMeshes;
     std::vector<bgfx::TextureHandle> m_vTextures;
+    std::vector<bool> m_vBorrowed;                    // a texture it does not own (f_DrawSprites'): not destroyed here
 
     ~GpuModel() {
         for (auto& l_vM : m_vMeshes)
@@ -142,10 +143,12 @@ struct GltfRenderer::GpuModel {
                 if (bgfx::isValid(l_oP.m_oDvb)) bgfx::destroy(l_oP.m_oDvb);
                 if (bgfx::isValid(l_oP.m_oIb)) bgfx::destroy(l_oP.m_oIb);
             }
-        for (bgfx::TextureHandle l_oT : m_vTextures)
-            if (bgfx::isValid(l_oT)) bgfx::destroy(l_oT);
+        for (size_t l_nI = 0; l_nI < m_vTextures.size(); l_nI++)
+            if (bgfx::isValid(m_vTextures[l_nI]) && !(l_nI < m_vBorrowed.size() && m_vBorrowed[l_nI])) bgfx::destroy(m_vTextures[l_nI]);
     }
 };
+
+bool GltfRenderer::f_OriginBottomLeft() { return bgfx::getCaps()->originBottomLeft; }
 
 struct GltfRenderer::AnimTextureGpu {
     std::shared_ptr<const gltf::AnimTexture> m_spData;
@@ -181,6 +184,9 @@ struct GltfRenderer::Impl {
     uint16_t m_u16Base = 0, m_u16View = 0;             // first view id; the opaque view (base + kMaxShadowTiles)
     Frame m_oFrame;
     std::vector<glm::mat4> m_vJoints;
+    // f_DrawSprites: its texture (borrowed: a 2D atlas), and the sampling of the base colour / emissive stages meanwhile
+    GpuModel m_oSpriteGpu;
+    uint32_t m_uSpriteSampler = UINT32_MAX;   // UINT32_MAX: the texture's own
 
     // Shadows.
     bool m_bShadowCaps = false;
@@ -685,11 +691,11 @@ void GltfRenderer::f_Draw(GpuModel& l_oGpu, const gltf::Pose& l_oPose, const glm
 // `geometry` binds what the draws share (vertex / index buffers, the transform or the instance data, joints).
 void GltfRenderer::f_SubmitPrimitive(GpuModel& l_oGpu, const gltf::Primitive& l_oP, const gltf::Material& l_oMat, const std::function<void()>& l_fnGeometry,
                                    bgfx::ProgramHandle l_oColourProg, bgfx::ProgramHandle l_oShadowProg, const glm::mat4& l_mat4SortBase,
-                                   bool l_bMirrored, bool l_bCastShadows, bool l_bSkinned) {
+                                   bool l_bMirrored, bool l_bCastShadows, bool l_bSkinned, float l_fSortDistance) {
     Impl& l_oR = *m_upImpl;
     const Frame& l_oF = l_oR.m_oFrame;
     const bool l_bGlass = l_oMat.m_fTransmission > 0.0f;
-    const bool l_bBlend = l_bGlass || l_oMat.m_eAlphaMode == gltf::AlphaMode::Blend;
+    const bool l_bBlend = l_bGlass || l_oMat.m_bAdditive || l_oMat.m_eAlphaMode == gltf::AlphaMode::Blend;
 
     // Shadow casters: opaque and masked triangles, into every tile.
     if (l_bCastShadows && l_oR.m_iTiles > 0 && !l_bBlend && l_oP.m_eTopology == gltf::Topology::Triangles) {
@@ -710,7 +716,7 @@ void GltfRenderer::f_SubmitPrimitive(GpuModel& l_oGpu, const gltf::Primitive& l_
         bgfx::TextureHandle l_oT = l_oRef.f_Valid() && l_oRef.m_iTexture < (int)l_oGpu.m_vTextures.size() ? l_oGpu.m_vTextures[(size_t)l_oRef.m_iTexture]
                                                                                      : bgfx::TextureHandle BGFX_INVALID_HANDLE;
         const bool l_bUse = bgfx::isValid(l_oT);
-        bgfx::setTexture(l_u8Stage, l_oSampler, l_bUse ? l_oT : l_oFallback);
+        bgfx::setTexture(l_u8Stage, l_oSampler, l_bUse ? l_oT : l_oFallback, (l_u8Stage == 0 || l_u8Stage == 4) ? l_oR.m_uSpriteSampler : UINT32_MAX);
         return l_bUse ? float(l_oRef.m_iUvSet + 1) : 0.0f;
     };
     const glm::vec4 l_v4TexSet(l_fnSlot(l_oMat.m_oBaseColorTex, 0, l_oR.m_oSBase, l_oR.m_oWhite), l_fnSlot(l_oMat.m_oMetalRoughTex, 1, l_oR.m_oSMR, l_oR.m_oWhite),
@@ -761,6 +767,7 @@ void GltfRenderer::f_SubmitPrimitive(GpuModel& l_oGpu, const gltf::Primitive& l_
     else if (l_oP.m_eTopology == gltf::Topology::Points) l_u64State |= BGFX_STATE_PT_POINTS;
     // Glass (transmission): premultiplied, so its reflections stay bright over what is behind.
     if (l_bGlass) l_u64State |= BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_INV_SRC_ALPHA);
+    else if (l_oMat.m_bAdditive) l_u64State |= BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_ONE);   // light added (depth tested, not written)
     else if (l_bBlend) l_u64State |= BGFX_STATE_BLEND_ALPHA;
     else l_u64State |= BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z;
     bgfx::setState(l_u64State);
@@ -768,7 +775,7 @@ void GltfRenderer::f_SubmitPrimitive(GpuModel& l_oGpu, const gltf::Primitive& l_
     const bgfx::ProgramHandle l_oProg = l_oColourProg;
     if (l_bBlend) {   // the second view sorts these far to near
         const glm::vec3 l_v3Cc = glm::vec3(l_mat4SortBase * glm::vec4((l_oP.m_v3BoundsMin + l_oP.m_v3BoundsMax) * 0.5f, 1.0f));
-        const float l_fDist = glm::length(l_v3Cc - l_oF.m_v3Eye);
+        const float l_fDist = l_fSortDistance >= 0.0f ? l_fSortDistance : glm::length(l_v3Cc - l_oF.m_v3Eye);
         bgfx::submit(uint16_t(l_oR.m_u16View + 1), l_oProg, (uint32_t)std::min(l_fDist * 1000.0f, 4.0e9f));
     } else {
         bgfx::submit(l_oR.m_u16View, l_oProg);
@@ -845,6 +852,61 @@ void GltfRenderer::f_Lines(const std::vector<LinePoint>& l_vPoints, bool l_bDept
     bgfx::setState(l_u64State);
     bgfx::submit(uint16_t(l_oR.m_u16View + 1), l_oR.m_oLine, 0xffffffffu);   // with the blended draws, after the opaque ones
     m_oStats.m_iDrawCalls++;
+}
+
+void GltfRenderer::f_DrawSprites(const Sprites& l_oS) {
+    Impl& l_oR = *m_upImpl;
+    if (!l_oR.m_bReady || !l_oS.m_pVerts || !l_oS.m_pIdx || l_oS.m_uVertexCount == 0 || l_oS.m_uIndexCount < 3) return;
+    const uint32_t l_uV = l_oS.m_uVertexCount, l_uI = l_oS.m_uIndexCount - l_oS.m_uIndexCount % 3;
+    if (bgfx::getAvailTransientVertexBuffer(l_uV, l_oR.m_oLayout) < l_uV || bgfx::getAvailTransientIndexBuffer(l_uI) < l_uI) return;
+    bgfx::TransientVertexBuffer l_oTvb;
+    bgfx::allocTransientVertexBuffer(&l_oTvb, l_uV, l_oR.m_oLayout);
+    Vertex* l_pOut = reinterpret_cast<Vertex*>(l_oTvb.data);
+    for (uint32_t l_uK = 0; l_uK < l_uV; l_uK++) {
+        const SpriteVertex& l_oIn = l_oS.m_pVerts[l_uK];
+        Vertex& l_oV = l_pOut[l_uK];
+        std::memset(&l_oV, 0, sizeof(Vertex));
+        l_oV.m_arrPos[0] = l_oIn.m_v3Pos.x; l_oV.m_arrPos[1] = l_oIn.m_v3Pos.y; l_oV.m_arrPos[2] = l_oIn.m_v3Pos.z;
+        l_oV.m_arrNrm[0] = l_oS.m_v3Normal.x; l_oV.m_arrNrm[1] = l_oS.m_v3Normal.y; l_oV.m_arrNrm[2] = l_oS.m_v3Normal.z;
+        l_oV.m_arrTan[0] = 1.0f; l_oV.m_arrTan[3] = 1.0f;
+        l_oV.m_arrUv0[0] = l_oV.m_arrUv1[0] = l_oIn.m_v2Uv.x;
+        l_oV.m_arrUv0[1] = l_oV.m_arrUv1[1] = l_oIn.m_v2Uv.y;
+        for (int l_iC = 0; l_iC < 4; l_iC++) l_oV.m_arrColor[l_iC] = l_oIn.m_v4Color[l_iC];
+        l_oV.m_arrWeights[0] = 1.0f;
+    }
+    bgfx::TransientIndexBuffer l_oTib;
+    bgfx::allocTransientIndexBuffer(&l_oTib, l_uI);
+    std::memcpy(l_oTib.data, l_oS.m_pIdx, l_uI * sizeof(uint16_t));
+
+    // A material like a glTF one: matte, double sided, blended; its texture the 2D atlas (borrowed, not freed here).
+    const bool l_bTex = l_oS.m_u16Texture != UINT16_MAX;
+    GpuModel& l_oGpu = l_oR.m_oSpriteGpu;
+    l_oGpu.m_vTextures.assign(1, bgfx::TextureHandle{l_bTex ? l_oS.m_u16Texture : bgfx::kInvalidHandle});
+    l_oGpu.m_vBorrowed.assign(1, true);
+    gltf::Material l_oMat;
+    l_oMat.m_fMetallic = 0.0f;
+    l_oMat.m_fRoughness = 1.0f;
+    l_oMat.m_bDoubleSided = true;
+    l_oMat.m_eAlphaMode = gltf::AlphaMode::Blend;
+    l_oMat.m_bAdditive = l_oS.m_bAdditive;
+    l_oMat.m_bUnlit = !l_oS.m_bLit || l_oS.m_bAdditive;
+    if (l_bTex) l_oMat.m_oBaseColorTex.m_iTexture = 0;
+    if (l_oS.m_bLit && !l_oS.m_bAdditive) {
+        l_oMat.m_v3Emissive = l_oS.m_v3Emissive;
+        if (l_bTex) l_oMat.m_oEmissiveTex.m_iTexture = 0;
+    }
+    gltf::Primitive l_oP;   // triangles, no tangents (no normal map: the plane's normal)
+    const glm::mat4 l_mat4I(1.0f);
+    const glm::vec4 l_v4MeshFlags(0.0f);
+    auto l_fnGeometry = [&] {
+        bgfx::setTransform(glm::value_ptr(l_mat4I));
+        bgfx::setUniform(l_oR.m_oUMeshFlags, &l_v4MeshFlags);
+        bgfx::setVertexBuffer(0, &l_oTvb);
+        bgfx::setIndexBuffer(&l_oTib);
+    };
+    l_oR.m_uSpriteSampler = l_oS.m_bLinear ? BGFX_SAMPLER_UVW_CLAMP : (BGFX_SAMPLER_POINT | BGFX_SAMPLER_UVW_CLAMP);
+    f_SubmitPrimitive(l_oGpu, l_oP, l_oMat, l_fnGeometry, l_oR.m_oMesh, l_oR.m_oShadow, l_mat4I, false, false, false, std::max(0.0f, l_oS.m_fSortDistance));
+    l_oR.m_uSpriteSampler = UINT32_MAX;
 }
 
 }  // namespace toms::next

@@ -17,6 +17,7 @@
 // (f_Request's wait), so its pictures never depend on the disk's speed. Drawn with GltfRenderer in views
 // m_u16FirstView.. (the title's: the two are never on together).
 #pragma once
+#include "bgfx_renderer.h"   // (the world groups: plain structs, no bgfx)
 #include "gltf_environment.h"
 #include "gltf_model.h"
 #include "gltf_renderer.h"
@@ -57,6 +58,9 @@ public:
     // fighters on it. shadows: x, y, z the feet, w the radius (metres).
     // dt: the fade in from black when the stage comes on (f_HiddenFrame starts it again).
     glm::mat4 f_Draw(float l_fDtSeconds, uint32_t l_uWidth, uint32_t l_uHeight, const Camera& l_oCam, const std::vector<glm::vec4>& l_vShadows);
+    // After the game has drawn (the same frame, after f_Draw): its world groups -- the fighters' and the fires' 2D sprites
+    // placed in metres (docs/gameplay/21 §4.3) -- in this frame's scene, lit by its lights, depth tested.
+    void f_DrawSprites(const std::vector<BgfxRenderer::WorldGroup>& l_vGroups);
     void f_HiddenFrame() { m_fShown = 0.0f; }   // a frame without the stage: the next battle fades in again
     // This row cannot load (it failed): the battle keeps its painted backdrop.
     bool f_Failed(const std::string& l_strRowKey) const { return m_strFailedKey == l_strRowKey; }
@@ -78,6 +82,7 @@ private:
         std::map<std::string, std::shared_ptr<Model>> m_mapModels;
         std::shared_ptr<Model> m_spGround, m_spShadow;
         std::vector<Prop> m_vProps;
+        float m_fSpriteGlow = 0.6f;
         bool m_bSky = false, m_bSkyCached = false;
         gltf::Environment m_oEnv;
         GltfRenderer::Frame m_oLook;
@@ -98,6 +103,9 @@ private:
     std::map<std::string, std::shared_ptr<Model>> m_mapModels;
     std::shared_ptr<Model> m_spGround, m_spShadow;
     std::vector<Prop> m_vProps;
+    float m_fSpriteGlow = 0.6f;                 // battle.json stage "sprites" "glow": the fighters' own light (x 1 / exposure)
+    glm::vec3 m_v3Eye{0.0f};                    // this frame's (f_Draw), for f_DrawSprites
+    float m_fExposure = 1.0f;
     GltfRenderer::Frame m_oLook;                // the light, the sky's settings, exposure
     glm::vec3 m_v3BoundsMin{-10.0f, 0.0f, -10.0f}, m_v3BoundsMax{10.0f, 8.0f, 10.0f};
     float m_fShown = 0.0f;                      // the fade in: 0 dark .. 1 as lit

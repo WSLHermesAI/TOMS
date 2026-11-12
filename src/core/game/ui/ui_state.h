@@ -123,6 +123,9 @@ struct UiFoe {                         // one monster of the battle (docs/gamepl
     float m_fIntentPct = 0;
     float m_fBreakPct = 0;               // its break gauge (§6.4)
     bool m_bWarn = false;                 // the "!" over it: its hit comes, guard now (docs/gameplay/16 §4)
+    // the top middle of where it stands on the screen (design pixels; on the 3D stage, projected): its name, HP and next
+    // move sit there, on its head (battle.rml .fhead)
+    float m_fHeadX = 0, m_fHeadY = 0;
 };
 
 struct UiBattleCell {                  // one of the battle's cells (battle_cells.h)
@@ -141,7 +144,6 @@ struct UiBattle {
     float m_fPlayerHpPct = 0, m_fEnemyHpPct = 0;
     std::string m_strPlayerHpText, m_strEnemyHpText, m_strLog, m_strContinueHint;
     std::string m_strClockLabel;
-    std::string m_strTargetLabel;           // under the target monster's name, with two or three (docs/gameplay/20 §6)
     float m_fClockPct = 0;
     UiPowerBar m_oAttack, m_oDefense;            // (attack: Battle v2's bar, no longer shown; combo replaced it)
     UiCombo m_oCombo;

@@ -401,12 +401,28 @@ void BgfxRenderer::begin() {
     m_vLayers.clear();
     m_vLayerStack.clear();
     m_vLayerClosed.clear();
+    m_vWorld.clear();
+    m_iWorldOpen = -1;
+    m_iWorldDepth = 0;
+    m_iLayersInWorld = 0;
 }
 void BgfxRenderer::f_SetNode(uint8_t l_u8N) { m_u8Node = l_u8N; }
 void BgfxRenderer::f_SetNodeFilter(uint8_t l_u8N) { m_u8NodeFilter = l_u8N; }
 
 void BgfxRenderer::f_DrawSprite(const Quad& l_oQ) {
     if (m_u8NodeFilter && m_u8Node != m_u8NodeFilter) return;
+    if (m_iWorldOpen >= 0 && m_iLayer != 1) {   // a world group: two triangles in the 3D scene
+        const float l_fX0 = l_oQ.m_arrRect[0], l_fY0 = l_oQ.m_arrRect[1], l_fX1 = l_fX0 + l_oQ.m_arrRect[2], l_fY1 = l_fY0 + l_oQ.m_arrRect[3];
+        const float l_arrRectCorners[8] = {l_fX0, l_fY0, l_fX1, l_fY0, l_fX1, l_fY1, l_fX0, l_fY1};
+        const float* l_pC = l_oQ.m_bHasCorners ? l_oQ.m_arrCorners : l_arrRectCorners;
+        const float* l_pUv = l_oQ.m_arrUv;
+        const float l_arrUv[8] = {l_pUv[0], l_pUv[1], l_pUv[2], l_pUv[1], l_pUv[2], l_pUv[3], l_pUv[0], l_pUv[3]};
+        float l_arrRgba[16];
+        for (int l_iK = 0; l_iK < 4; l_iK++) std::memcpy(l_arrRgba + 4 * l_iK, l_oQ.m_arrTint, sizeof(float) * 4);
+        static const uint16_t l_arrIdx[6] = {0, 1, 2, 0, 2, 3};
+        f_WorldTriangles(l_pC, l_arrUv, l_arrRgba, 4, l_arrIdx, 6, l_oQ.m_u16Texture, l_oQ.m_bAdditive, l_oQ.m_bSolid);
+        return;
+    }
     std::vector<Quad>& l_vList = m_iLayer == 1 ? m_vTopSprites : f_CurrentQuads();
     l_vList.push_back(l_oQ);
     l_vList.back().m_u8Node = m_u8Node;
@@ -415,6 +431,17 @@ void BgfxRenderer::f_DrawSprite(const Quad& l_oQ) {
 void BgfxRenderer::f_DrawMesh(const Mesh& l_oM) {
     if (m_u8NodeFilter && m_u8Node != m_u8NodeFilter) return;
     if (!f_ValidMesh(l_oM)) return;
+    if (m_iWorldOpen >= 0) {   // a world group: its triangles in the 3D scene
+        std::vector<float> l_vXy(size_t(l_oM.m_uVertexCount) * 2), l_vUv(size_t(l_oM.m_uVertexCount) * 2), l_vRgba(size_t(l_oM.m_uVertexCount) * 4);
+        for (uint32_t l_uI = 0; l_uI < l_oM.m_uVertexCount; l_uI++) {
+            const MeshVertex& l_oV = l_oM.m_pVertices[l_uI];
+            l_vXy[l_uI * 2] = l_oV.m_fX; l_vXy[l_uI * 2 + 1] = l_oV.m_fY;
+            l_vUv[l_uI * 2] = l_oV.m_fU; l_vUv[l_uI * 2 + 1] = l_oV.m_fV;
+            for (int l_iK = 0; l_iK < 4; l_iK++) l_vRgba[l_uI * 4 + l_iK] = l_oM.m_arrTint[l_iK] * (l_oM.m_pColors ? l_oM.m_pColors[4 * l_uI + l_iK] : 1.0f);
+        }
+        f_WorldTriangles(l_vXy.data(), l_vUv.data(), l_vRgba.data(), l_oM.m_uVertexCount, l_oM.m_pIndices, l_oM.m_uIndexCount, l_oM.m_u16Texture, l_oM.m_bAdditive, false);
+        return;
+    }
     const uint32_t l_uFirst = (uint32_t)(m_vMeshVerts.size() / 9);
     // The CPU path's vertex (SpriteVertex): position, uv, the mesh's tint (times the vertex's colour), not solid.
     for (uint32_t l_uI = 0; l_uI < l_oM.m_uVertexCount; l_uI++) {
@@ -759,6 +786,7 @@ void BgfxRenderer::f_ReleaseGpuParticles(uint32_t l_uId) {
 }
 
 void BgfxRenderer::f_DrawGpuParticles(const GpuParticleFrame& l_oF) {
+    if (m_iWorldOpen >= 0) return;   // (a world group has no place for them: their quads are made on the GPU, on the screen)
     if (!f_SupportsGpuParticles() || l_oF.m_uEmitter == 0 || l_oF.m_uEmitter > m_vGpuEmitters.size()) return;
     GpuEmitterBuffers& l_oB = m_vGpuEmitters[l_oF.m_uEmitter - 1];
     if (l_oB.m_u16State == m_u16Invalid) return;
@@ -846,6 +874,10 @@ bool BgfxRenderer::f_SupportsLayers() const {
 }
 
 void BgfxRenderer::f_BeginLayer(const LayerEffect& l_oFx) {
+    if (m_iWorldOpen >= 0) {   // in a world group: drawn straight through (its effect needs a screen picture)
+        m_iLayersInWorld++;
+        return;
+    }
     // Drawn straight through: the top layer, no support, too many this frame, or inside a layer drawn straight through.
     if (m_iLayer == 1 || !f_SupportsLayers() || m_vLayers.size() >= m_uMaxLayers || (!m_vLayerStack.empty() && m_vLayerStack.back() < 0)) {
         m_vLayerStack.push_back(-1);
@@ -858,6 +890,10 @@ void BgfxRenderer::f_BeginLayer(const LayerEffect& l_oFx) {
 }
 
 void BgfxRenderer::f_EndLayer() {
+    if (m_iLayersInWorld > 0) {
+        m_iLayersInWorld--;
+        return;
+    }
     if (m_vLayerStack.empty()) return;
     const int l_iIdx = m_vLayerStack.back();
     m_vLayerStack.pop_back();
@@ -867,6 +903,64 @@ void BgfxRenderer::f_EndLayer() {
     GpuDraw l_oD{f_CurrentQuads().size(), 0, g_u16SpriteAtlasTexture, false};
     l_oD.m_iLayer = l_iIdx;
     f_CurrentDraws().push_back(l_oD);
+}
+
+void BgfxRenderer::f_BeginWorld(const float* l_pMat4, bool l_bLit) {
+    if (m_iWorldDepth++ > 0 || !l_pMat4 || !f_SupportsWorld()) return;   // (an inner one: its pixels join the outer group)
+    WorldGroup l_oG;
+    std::memcpy(l_oG.m_arrMat, l_pMat4, sizeof(l_oG.m_arrMat));
+    l_oG.m_bLit = l_bLit;
+    m_vWorld.push_back(std::move(l_oG));
+    m_iWorldOpen = int(m_vWorld.size() - 1);
+}
+
+void BgfxRenderer::f_EndWorld() {
+    if (m_iWorldDepth == 0) return;
+    if (--m_iWorldDepth == 0) {
+        m_iWorldOpen = -1;
+        m_iLayersInWorld = 0;
+    }
+}
+
+// Triangles into the open world group: each corner from design pixels to world metres (the group's matrix), a new run
+// when the texture or the blending changes (past 16-bit indices: a new group with the same matrix).
+void BgfxRenderer::f_WorldTriangles(const float* l_pXy, const float* l_pUv, const float* l_pRgba, uint32_t l_uVerts, const uint16_t* l_pIdx,
+                                    uint32_t l_uIdx, uint16_t l_u16Texture, bool l_bAdditive, bool l_bSolid) {
+    if (m_iWorldOpen < 0 || l_uVerts == 0 || l_uIdx == 0 || l_uVerts > 65535u) return;
+    if (m_vWorld[(size_t)m_iWorldOpen].m_vVerts.size() + l_uVerts > 65535u) {
+        WorldGroup l_oNext;
+        std::memcpy(l_oNext.m_arrMat, m_vWorld[(size_t)m_iWorldOpen].m_arrMat, sizeof(l_oNext.m_arrMat));
+        l_oNext.m_bLit = m_vWorld[(size_t)m_iWorldOpen].m_bLit;
+        m_vWorld.push_back(std::move(l_oNext));
+        m_iWorldOpen = int(m_vWorld.size() - 1);
+    }
+    WorldGroup& l_oG = m_vWorld[(size_t)m_iWorldOpen];
+    const uint16_t l_u16Tex = l_bSolid ? m_u16Invalid : l_u16Texture == g_u16SpriteAtlasTexture ? m_u16SpriteTex : l_u16Texture;
+    const bool l_bLinear = l_u16Tex != m_u16Invalid && std::find(m_vLinearTex.begin(), m_vLinearTex.end(), l_u16Tex) != m_vLinearTex.end();
+    if (l_oG.m_vRuns.empty() || l_oG.m_vRuns.back().m_u16Texture != l_u16Tex || l_oG.m_vRuns.back().m_bAdditive != l_bAdditive ||
+        l_oG.m_vRuns.back().m_bLinear != l_bLinear) {
+        WorldRun l_oR;
+        l_oR.m_u16Texture = l_u16Tex;
+        l_oR.m_bLinear = l_bLinear;
+        l_oR.m_bAdditive = l_bAdditive;
+        l_oR.m_uFirstIndex = (uint32_t)l_oG.m_vIdx.size();
+        l_oG.m_vRuns.push_back(l_oR);
+    }
+    const float* l_pM = l_oG.m_arrMat;   // column major: world = col0 x + col1 y + col3
+    const uint16_t l_u16Base = (uint16_t)l_oG.m_vVerts.size();
+    for (uint32_t l_uI = 0; l_uI < l_uVerts; l_uI++) {
+        const float l_fX = l_pXy[l_uI * 2], l_fY = l_pXy[l_uI * 2 + 1];
+        WorldVertex l_oV;
+        l_oV.m_fX = l_pM[0] * l_fX + l_pM[4] * l_fY + l_pM[12];
+        l_oV.m_fY = l_pM[1] * l_fX + l_pM[5] * l_fY + l_pM[13];
+        l_oV.m_fZ = l_pM[2] * l_fX + l_pM[6] * l_fY + l_pM[14];
+        l_oV.m_fU = l_pUv[l_uI * 2];
+        l_oV.m_fV = l_pUv[l_uI * 2 + 1];
+        l_oV.m_fR = l_pRgba[l_uI * 4]; l_oV.m_fG = l_pRgba[l_uI * 4 + 1]; l_oV.m_fB = l_pRgba[l_uI * 4 + 2]; l_oV.m_fA = l_pRgba[l_uI * 4 + 3];
+        l_oG.m_vVerts.push_back(l_oV);
+    }
+    for (uint32_t l_uI = 0; l_uI < l_uIdx; l_uI++) l_oG.m_vIdx.push_back(uint16_t(l_pIdx[l_uI] + l_u16Base));
+    l_oG.m_vRuns.back().m_uIndexCount += l_uIdx;
 }
 
 void BgfxRenderer::f_PrepareLayers() {
@@ -1035,10 +1129,11 @@ void BgfxRenderer::f_ApplyViewOrder() {
     auto l_fnPut = [&](uint16_t l_u16V) {
         if (l_u16V < l_u16MaxViews && !l_vPlaced[l_u16V]) { l_vPlaced[l_u16V] = 1; l_vOrder.push_back(l_u16V); }
     };
+    // the layers' pictures, then the 3D scene
     l_fnPut(m_u16ViewClear);
+    for (size_t l_nK = 0; l_nK < std::min(m_vLayerClosed.size(), m_vLayerFb.size()); l_nK++) l_fnPut(uint16_t(m_u16ViewLayerFirst + l_nK));   // an empty one: untouched, a no-op
     if (l_bScene)
         for (uint16_t l_u16V = m_u16SceneFirst; l_u16V < uint16_t(m_u16SceneFirst + m_u16SceneCount); l_u16V++) l_fnPut(l_u16V);
-    for (size_t l_nK = 0; l_nK < std::min(m_vLayerClosed.size(), m_vLayerFb.size()); l_nK++) l_fnPut(uint16_t(m_u16ViewLayerFirst + l_nK));   // an empty one: untouched, a no-op
     for (uint16_t l_u16V = 0; l_u16V < l_u16MaxViews; l_u16V++) l_fnPut(l_u16V);
     bgfx::setViewOrder(0, (uint16_t)l_vOrder.size(), l_vOrder.data());
     m_bOrderApplied = true;
