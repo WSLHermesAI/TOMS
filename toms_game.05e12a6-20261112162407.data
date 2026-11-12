@@ -242737,8 +242737,6 @@ body { z-index: 30; }
 .foe.down { opacity: 0.45; }
 .fbox     { position: absolute; left: 0; top: 0; width: 134px; height: 134px; }
 .fbox img { width: 100%; height: 100%; }
-/* the target, with two or three monsters: a line under its name (docs/gameplay/20 §6; the yellow bar under its box is gone) */
-.ftarget  { font-size: 16px; line-height: 20px; color: #ffe27a; }
 .fhp      { position: absolute; left: 0; top: 154px; width: 280px; height: 22px; background-color: #7b7b88; }
 .ftext    { position: absolute; left: 0; top: 178px; width: 280px; font-size: 22px; color: #ffffff; white-space: nowrap; overflow: hidden; }
 /* its break gauge, along the bottom of its HP bar (docs/gameplay/13 §6.4) */
@@ -243076,6 +243074,27 @@ body.focus #super, body.focus #super-btn, body.focus #active-btn, body.focus #tu
     #cells { top: 850px; }
     #banner { top: 640px; }
 }
+
+/* ---- last, over every layout above (the owner, 2026-11-12: the target line, the long HP bars, and everything mixed on
+   the monster were ugly) ---- */
+/* each monster's head (battle.rml .fhead): placed by the game at the top middle of where it stands; from the top: the
+   "!" before its hit, its next move, its name and HP, a short HP bar just over its head */
+.fhead { position: absolute; width: 220px; height: 66px; margin-left: -110px; margin-top: -70px; text-align: center; }
+.fhead.down { opacity: 0.45; }
+.fhead .warn { position: absolute; left: 50%; margin-left: -24px; top: -58px; width: 48px; text-align: center; font-size: 56px;
+               color: #ffd54a; font-effect: outline(4px #402800); }
+.fhead .intent { position: absolute; left: 35px; top: 0; width: 150px; height: 20px; }
+.fhead .itext { font-size: 15px; line-height: 16px; }
+.fhead .fname { position: absolute; left: 0; width: 220px; top: 24px; font-size: 19px; line-height: 22px; color: #ffffff;
+                white-space: nowrap; font-effect: outline(2px #000000); }
+.fhead .fhpnum { font-size: 15px; color: #dcdcdc; }
+.fhead .fhp { position: absolute; left: 50%; margin-left: -55px; top: 52px; width: 110px; height: 6px; border-radius: 3px;
+              background-color: #000000b0; }
+.fhead .fhp .fill-bar { border-radius: 3px; }
+.fhead .fbreak { height: 2px; }
+/* the target, with two or three monsters: its name glows (no line of words under it) */
+.fhead.target .fname { color: #fff3c4; font-effect: glow(1px 6px 0px 0px #ffb21e); }
+.fhead.target .fhpnum { color: #fff3c4; }
 <rml>
 <head>
     <title>Battle</title>
@@ -243102,9 +243121,14 @@ body.focus #super, body.focus #super-btn, body.focus #active-btn, body.focus #tu
          extra rows before it reads them -- see player.rml) -->
     <div data-for="f, i : battle.foes"><div class="foe" data-class-f1="i == 1" data-class-f2="i == 2"
          data-class-n1="battle.foes.size == 1" data-class-n2="battle.foes.size == 2" data-class-n3="battle.foes.size == 3"
-         data-class-down="f.down" data-event-click="act('battle_target', i)">
-        <div class="fbox"><img data-if="!f.anim" data-attr-sprite="f.sprite"/>
-            <div class="warn" data-if="f.warn">!</div></div>
+         data-class-down="f.down" data-class-target="f.target" data-event-click="act('battle_target', i)">
+        <div class="fbox"><img data-if="!f.anim" data-attr-sprite="f.sprite"/></div>
+    </div></div>
+    <!-- each monster's head (the owner, 2026-11-12): its name, HP and next move on top of where it stands (head_x, head_y:
+         its box's top middle; on the 3D stage, projected), not in the layout's slot -->
+    <div data-for="f, i : battle.foes"><div class="fhead" data-class-target="f.target" data-class-down="f.down"
+         data-style-left="f.head_x + 'px'" data-style-top="f.head_y + 'px'" data-event-click="act('battle_target', i)">
+        <div class="warn" data-if="f.warn">!</div>
         <!-- its next move and the time left (docs/gameplay/13 §6.1) -->
         <div class="intent" data-if="f.intent != ''" data-class-heavy="f.intent_kind == 'heavy'"
              data-class-jabs="f.intent_kind == 'jabs'" data-class-spell="f.intent_kind == 'spell'"
@@ -243113,10 +243137,9 @@ body.focus #super, body.focus #super-btn, body.focus #active-btn, body.focus #tu
             <div class="itext">{{f.intent}}</div>
             <div class="ibar"><div class="ifill" data-style-width="f.intent_pct + '%'"></div></div>
         </div>
+        <div class="fname">{{f.name}} <span class="fhpnum">{{f.hp_line}}</span></div>
         <div class="fhp"><div class="fill-bar bad" data-style-width="f.hp_pct + '%'"></div>
             <div class="fbreak" data-style-width="f.break_pct + '%'"></div></div>
-        <div class="ftext one">{{f.hp_text}}</div>
-        <div class="ftext two">{{f.name}}<br/>{{f.hp_line}}<div class="ftarget" data-if="f.target">{{battle.target_label}}</div></div>
     </div></div>
     <!-- (the message line is gone: short words rise where things happen; cs.log stays for the editor's log) -->
 
@@ -244923,7 +244946,7 @@ body.scene { background-color: transparent; }
     "cueExtraMs: more time for a prompt that takes longer to draw (17 §4.2). dexWayDeg / dexWayMaxDeg: a swipe's tolerance per DEX point and its limit; dexGestureMaxDeg: a gesture's limit; dexCornerPct: a shape's corners per point; dexWindowMs: the answer window per point (17 §4.4). freeMinSwipe: a shorter drag is no swipe in a free mode (17 §5).",
     "backdrops: the battle's background by floor (17 §19): the first row whose from..to holds the floor, else the first. anim, clip: covers the screen (size: the picture's size); fx: looping effects of battle.particle over it. tools/art/make_battle_backdrop.py writes the forest.",
     "cells: moving in battle (docs/gameplay/19 §2.1): six cells, 0 1 2 the near row and 3 4 5 the far row; start: where the hero begins; warnMs: the danger lights this long before the hit; shapes: each a list of variants, each the cells it covers (a move names one in moves.json \"shape\"; the variant reaching the hero is chosen); shiftX, shiftNear, shiftY: how far the hero's picture moves.",
-    "stages3d: the battle on a 3D stage (docs/gameplay/21_BATTLE_3D.md), by floor like backdrops (from..to); a floor without one keeps its backdrop. sky (an HDR: hdr, intensity, yaw, blur), ground, shadow, props (model, node: only that root node of it, at, turn, scale), light (dir, color, intensity, ambient), exposure; fires (at, fx, color, intensity, range, flicker, lightHeight, size: a flickering point light + its particles), clouds (min, speed: the moonlight drifting), flash (onMonster, onHero, intensity, range, ms, off: a hit lights the stage); camera (eye, look, fov, aspect it was made for, breathe; danger: a special attack's low close-up on its monster: zoom, height, lookAt, fovAdd, deg, ms, rumble, off), marks (hero, monster, spacing, monsters2 / monsters3), heights (hero, monster, big) in metres. tools/battle3d/make_moonlit_ruins.py writes moonlit_ruins (one .glb per model).",
+    "stages3d: the battle on a 3D stage (docs/gameplay/21_BATTLE_3D.md), by floor like backdrops (from..to); a floor without one keeps its backdrop. sky (an HDR: hdr, intensity, yaw, blur), ground, shadow, sprites (the fighters' and the fires' 2D sprites placed in the scene, lit by it: glow = their own light, off = drawn 2D over the stage), props (model, node: only that root node of it, at, turn, scale), light (dir, color, intensity, ambient), exposure; fires (at, fx, color, intensity, range, flicker, lightHeight, size: a flickering point light + its particles), clouds (min, speed: the moonlight drifting), flash (onMonster, onHero, intensity, range, ms, off: a hit lights the stage); camera (eye, look, fov, aspect it was made for, breathe; danger: a special attack's low close-up on its monster: zoom, height, lookAt, fovAdd, deg, ms, rumble, off), marks (hero, monster, spacing, monsters2 / monsters3), heights (hero, monster, big) in metres. tools/battle3d/make_moonlit_ruins.py writes moonlit_ruins (one .glb per model).",
     "battleSpeeds: the steps of Settings > Battle speed (17 I10).",
     "training: the training ground (16 §5): cards spent per run, runs per day, fights per run, EXP and weapon EXP x."
   ],
@@ -244962,6 +244985,7 @@ body.scene { background-color: transparent; }
       "light": { "dir": [-0.35, -0.75, -0.55], "color": [0.72, 0.8, 1.0], "intensity": 4.0, "ambient": 0.35 },
       "ground": "battle3d/moonlit_ruins/ground.glb",
       "shadow": "battle3d/moonlit_ruins/blob.glb",
+      "sprites": { "glow": 0.6 },
       "shadowBounds": [[-9, 0, -9], [9, 6, 6]],
       "props": [
         { "model": "battle3d/moonlit_ruins/fort_pieces.glb", "node": "wall_thin_gate_01", "at": [-7.5, 0, -8.0], "turn": 90, "scale": 0.55 },
@@ -283479,14 +283503,6 @@ body.scene { background-color: transparent; }
       "ko": "불발",
       "es": "Chispazo"
     },
-    "battle.target_now": {
-      "zh_TW": "目前攻擊目標",
-      "en": "Current target",
-      "zh_CN": "当前攻击目标",
-      "ja": "攻撃中の相手",
-      "ko": "현재 공격 대상",
-      "es": "Objetivo actual"
-    },
     "battle.word_parry": {
       "zh_TW": "招架！",
       "en": "Parry!",
@@ -292405,8 +292421,8 @@ body.scene { background-color: transparent; }
   }
 }
 {
-  "number": 7,
-  "sha": "e1bc06f"
+  "number": 9,
+  "sha": "05e12a6"
 }
 {
   "_comment": [
