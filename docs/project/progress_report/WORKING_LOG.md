@@ -827,3 +827,12 @@ Track what was done, by date. Details: the numbered `*_PROGRESS_REPORT.md` parts
   - battle.rml / battle.rcss: .fhead (warn, intent, name with HP, short bar) by head_x / head_y; the target's name glows; .ftarget gone. ui_state.h UiFoe m_fHeadX/Y; game_ui.cpp (both) head positions, the bow hint under the band; text.json battle.target_now removed.
   - game_skills.cpp f_TouchArea: one band at the top. docs/gameplay/21 §4.3, Q90, §8 (+ zh_TW); docs/gameplay/battle3d/how_2d_meets_3d.html.
   - tests/golden/battle_3d.png refreshed. Tests: changed-only 10 of 271 pass; Debug built and run (after the sprites). Not committed. All tests, switched-off tests, the 2D battle, web, Android not run.
+- 2026-11-13: MP3 to OGG; the 3D body scale; prompts over the hero; a special attack's power-up, charge and release; the hero knocked down (DAILY_2026-11-13.md). The owner committed 05e12a6 (the 11-12 work).
+  - tools/convert_mp3_to_ogg.cmd, tools/audio/mp3_to_ogg.py (folder walk, frequency, sfx, force, no-gui, a window of choices, a list of files not smaller); ogg.py convert(), sample_rate(), MUSIC_QUALITY; test_select.py maps the .cmd (no test). docs/engine/22 §3 (+ zh_TW).
+  - enemies.json thicketoad scale3d 2; game_combat.cpp f_Battle3DHeight x scale3d.
+  - game_skills.cpp f_TouchArea over the hero (420 x 120, a quarter of his height over his box); game_ui.cpp the bow hint along its top, the monsters' head blocks under the title.
+  - game.h Foe m_iPowerMs, m_bPowered, m_iChargeFxMs; CombatState m_iHeroDownMs; game_combat.cpp f_StartFoePower, f_UnleashFoePower, f_FoeCharging, f_KnockDownHero, the power wait in f_StepFoes, the rig's charge and fallbacks, hurt_big; inputs blocked while down (game.cpp, game_combat.cpp, game_skills.cpp); game_ui.cpp the panel "battle.attack_down".
+  - battle.json feelFx specialAttack; text.json battle.attack_down (6 languages); resources.json sfx.monster_power, sfx.monster_roar; res_keys.h.
+  - tools: make_monster_battle_anims.py and art/make_monster_rig.py power, charge; art/make_hero_rig2d.py hurt_big; make_battle_fx.py monster_power, monster_charge, monster_unleash; audio/sfx_recipes.json monster_power, monster_roar. Regenerated files compared: only the new clips and effects added.
+  - tests/scenarios/battle_special_down (new). docs/gameplay/21 §8 (+ zh_TW).
+  - Tests: changed-only 10 of 272 pass. Not committed. All tests, switched-off tests, Debug, the 2D battle, web, Android not run; sounds not heard.

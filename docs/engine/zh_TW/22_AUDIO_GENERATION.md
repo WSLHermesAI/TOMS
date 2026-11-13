@@ -74,6 +74,8 @@ python tools/audio/make_sfx.py --all
 
 `unit.audio_ogg_test` 測試會檢查每個 `sfx.*` 與 `music.*` key 都能以遊戲播放的方式解碼、這些資料夾中的每個檔案都有 key、資料指名的每個音效都是 key，以及音樂播到結尾後仍繼續播放。遊戲本身遇到有問題的音效時只會印出 `[audio] cannot play`。
 
+**別處來的 MP3：** `tools\convert_mp3_to_ogg.cmd` 會把一個資料夾及其所有子資料夾中的每個 MP3 轉成旁邊的 OGG（`song.mp3` → `song.ogg`；MP3 會保留，比 MP3 新的 OGG 會跳過）。雙擊它會先選資料夾，再選**目標頻率**（保留、44100、32000、22050、16000 或 11025 Hz：越低檔案越小）、音樂或音效，以及是否重新轉換；最後一個視窗顯示轉了幾個、哪些失敗，以及轉換前後的 MB。從命令列：`tools\convert_mp3_to_ogg.cmd <資料夾>`（音樂品質，160 kbps）、`--rate 22050`（頻率）、`--sfx`（音效品質）、`--force`（重新轉換）、`--no-gui`（不開視窗；有失敗時結束碼為 1）。頻率只會往下降（已經低於它的檔案保留原本的頻率）；指定頻率時，音樂改用品質編碼（Vorbis q 4）而不是 160 kbps：固定位元率下降低頻率不會讓檔案變小（實測：160 kbps 的 22050 Hz 比 44100 Hz 還大），而且 11025 Hz 會失敗。一段 20 秒的音：44100 Hz 57 KB、22050 Hz 37 KB、16000 Hz 28 KB。OGG 沒有比 MP3 小的檔案會列出兩者的大小與大了多少（很短或本來就很小的 MP3 可能變大：8.4 → 10.5 KB）；OGG 仍會保留。無法用 160 kbps 的低取樣率 MP3 會改用品質編碼。它是 `tools/audio/mp3_to_ogg.py`，使用 `ogg.py` 的 `convert`。
+
 **ffmpeg** 用來寫出 OGG 檔案（`tools/audio/ogg.py`）。**在新電腦上，請雙擊一次 `tools\get_ffmpeg.cmd`：** 它會把 [BtbN 的 ffmpeg 9.0 LGPL 版](https://github.com/BtbN/FFmpeg-Builds/releases)（約 170 MB）下載到不在 git 中的 `tools\ffmpeg\`，並用同一個發行版中的 SHA-256 清單檢查。這個版本每天更新，所以兩台電腦可能拿到 9.0 略有不同的建置。工具會依序尋找 `TOMS_FFMPEG`、`tools\ffmpeg\`、PATH。它只用來製作音效，不會隨遊戲發行。遊戲本身不需要它：遊戲用 `stb_vorbis`（`src/third_party/stb/stb_vorbis.c`，v1.22，公有領域）解碼 OGG。
 
 ## 4. 授權

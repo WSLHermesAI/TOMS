@@ -1,0 +1,28 @@
+{
+  "_comment": "A monster's special attack (battle.json feelFx \"specialAttack\", docs/gameplay/21 §8): the toad's danger cells light, it powers up (its clock waits 3.5 s, the cells' intro counted in) and charges, the hero steps up into the near row (the hit's cells), and the hit goes off (unleash) and knocks him down (heroDown: hurt_big, no attack until it ends).",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "thicketoad",
+    "hp": 9999,
+    "moves": [
+      "toad_near"
+    ]
+  },
+  "test": {
+    "frames": 480,
+    "keys": "up@10"
+  },
+  "expect": {
+    "battleEvents": {
+      "power": 1,
+      "unleash": 1,
+      "hit": 1,
+      "heroDown": 1
+    }
+  }
+}

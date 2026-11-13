@@ -262,6 +262,7 @@ void Game::f_Update(int l_iDtMs) {
     }
   {   // the battle runs on its own time this frame (Game::battleFrame: hit stop, slow motion)
     const int l_iDtMs = m_oCs.m_iFrameDt;
+    if (m_oCs.m_iHeroDownMs > 0) m_oCs.m_iHeroDownMs = std::max(0, m_oCs.m_iHeroDownMs - l_iDtMs);   // knocked down (f_KnockDownHero)
     // An attack is playing (docs/gameplay/07_GAMEPLAY_PLAN.md §4): both sides' clocks wait for it.
     const bool l_bAttackPlaying = m_oCs.m_bActive && m_oCs.m_iAttackPauseMs > 0;
     if (l_bAttackPlaying) m_oCs.m_iAttackPauseMs = std::max(0, m_oCs.m_iAttackPauseMs - l_iDtMs);
@@ -325,7 +326,7 @@ void Game::f_Update(int l_iDtMs) {
             const bool l_bCanPay = m_oCs.m_ePace != toms::Pace::Stamina || m_oCs.m_fStamina >= (float)m_oPaceSettings.m_iAttackCost;
             const glm::vec4 l_v4Area = f_TouchArea();
             const bool l_bMoved = std::fabs(l_v4Area.x - m_v4TouchArmedArea.x) + std::fabs(l_v4Area.y - m_v4TouchArmedArea.y) > 4.0f;
-            if (m_oCs.m_bActive && !m_oCs.m_bWinPending && l_bCanPay && m_bBattleBoxesKnown && f_BattlePlayType() != toms::PlayType::eTRACK &&
+            if (m_oCs.m_bActive && !m_oCs.m_bWinPending && l_bCanPay && m_bBattleBoxesKnown && !f_HeroDown() && f_BattlePlayType() != toms::PlayType::eTRACK &&
                 (!m_oCs.m_oTouch.f_Running() || (!m_oCs.m_oTouch.f_Started() && l_bMoved)))
                 f_ArmTouchPlay(false, toms::f_ComboSettings(f_WeaponPlayOf(l_strKey), f_WeaponLevel(l_strKey)).m_iPoints);
         }

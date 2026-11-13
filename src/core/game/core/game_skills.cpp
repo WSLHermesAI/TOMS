@@ -19,14 +19,17 @@ toms::PlayType Game::f_BattlePlayType() const {
 }
 
 glm::vec4 Game::f_TouchArea() const {
-    // Never over the monster (the owner, 2026-11-12: "the command to attack ... should not focus on the monster, it should
-    // be bottom or top of the game"): one band across the top of the screen, under the title, for every play -- the
-    // bow's target, the sword's prompts (TouchPlay::promptAt: the band's bottom middle), the staff's circles, a mash.
-    // The bottom keeps the cells, the hero's HP and the thumbs; the monsters' names and HP sit on their heads.
+    // Never over a monster (the owner, 2026-11-12), and on the player's head (2026-11-13: "the command to attack monster
+    // please show on player's head"): one area for every play -- the bow's target, the sword's prompts
+    // (TouchPlay::promptAt: the area's bottom middle), the staff's circles, a mash -- centred over the hero, its bottom a
+    // quarter of his height over his box (his painted head reaches about a fifth above it: his face stays clear); kept on the screen. The monsters' names and HP sit on their own heads.
     const float l_fW = m_pRen ? (float)m_pRen->f_Width() : 1024.0f, l_fH = m_pRen ? (float)m_pRen->f_Height() : 768.0f;
-    const float l_fMargin = 12.0f, l_fTop = 64.0f;
-    const float l_fBandW = std::min(640.0f, l_fW - 2.0f * l_fMargin), l_fBandH = l_fH > l_fW ? 220.0f : 170.0f;   // portrait: a little taller
-    return glm::vec4(l_fW * 0.5f - l_fBandW * 0.5f, l_fTop, l_fBandW, l_fBandH);
+    const float l_fMargin = 12.0f, l_fTop = 8.0f;
+    const float l_fAreaW = std::min(420.0f, l_fW - 2.0f * l_fMargin), l_fAreaH = l_fH > l_fW ? 160.0f : 120.0f;   // portrait: a little taller
+    const glm::vec4 l_v4Hero = f_FighterBox(-1);
+    const float l_fX = std::clamp(l_v4Hero.x + l_v4Hero.z * 0.5f - l_fAreaW * 0.5f, l_fMargin, std::max(l_fMargin, l_fW - l_fMargin - l_fAreaW));
+    const float l_fY = std::clamp(l_v4Hero.y - l_v4Hero.w * 0.25f - l_fAreaH, l_fTop, std::max(l_fTop, l_fH - 170.0f - l_fAreaH));
+    return glm::vec4(l_fX, l_fY, l_fAreaW, l_fAreaH);
 }
 
 toms::TouchPlaySettings Game::f_TouchSettingsFor(toms::PlayType l_eType) const {
@@ -73,6 +76,7 @@ void Game::f_ArmTouchPlay(bool l_bUltimate, int l_iPoints) {
 
 void Game::f_BattlePointer(int l_iPhase, float l_fX, float l_fY) {
     if (l_iPhase == 0 && f_CellIntroOn()) return;   // no new press while everything waits; a pull already held can still let go
+    if (f_HeroDown()) { m_bTouchHeld = false; return; }   // knocked down (f_KnockDownHero): his play was stopped, nothing new
     if (!m_oCs.m_bActive || m_oCs.m_bWinPending || !m_oCs.m_oTouch.f_Running()) { m_bTouchHeld = false; return; }
     if (m_oCs.m_oSkill.m_bOn && m_oCs.m_oSkill.m_ePhase != CombatState::SkillRun::Phase::Play) return;   // a move's show: watch it
     if (l_iPhase == 0 && !m_oCs.m_oTouch.f_Started() && m_oCs.m_ePace == toms::Pace::Stamina && m_oCs.m_fStamina < (float)m_oPaceSettings.m_iAttackCost) {

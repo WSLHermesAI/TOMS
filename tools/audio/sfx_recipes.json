@@ -43,5 +43,16 @@
     { "wave": "square", "ms": 170, "at": 280, "curve": 1.4, "gain": 0.3, "pitch": [784, 784], "low": [4200, 2500] },
     { "wave": "square", "ms": 620, "at": 420, "curve": 2.2, "gain": 0.36, "pitch": [1047, 1047], "low": [5000, 1600] },
     { "wave": "sine", "ms": 620, "at": 420, "curve": 2.2, "gain": 0.3, "pitch": [2094, 2094] }
+  ],
+  "monster_power": [
+    { "wave": "sine", "ms": 3400, "attack": 3000, "curve": 0.3, "gain": 0.9, "pitch": [40, 110] },
+    { "wave": "saw", "ms": 3400, "attack": 3000, "curve": 0.3, "gain": 0.3, "pitch": [55, 140], "low": [400, 1500] },
+    { "wave": "noise", "ms": 3400, "attack": 3000, "curve": 0.4, "gain": 0.5, "low": [300, 1400] }
+  ],
+  "monster_roar": [
+    { "wave": "saw", "ms": 1000, "attack": 40, "curve": 1.6, "gain": 0.8, "pitch": [170, 70], "low": [1800, 600] },
+    { "wave": "square", "ms": 900, "attack": 40, "curve": 1.8, "gain": 0.4, "pitch": [120, 55], "low": [900, 300] },
+    { "wave": "noise", "ms": 900, "attack": 30, "curve": 1.8, "gain": 0.6, "low": [3000, 700] },
+    { "wave": "sine", "ms": 1100, "attack": 20, "curve": 1.5, "gain": 0.7, "pitch": [90, 40] }
   ]
 }

@@ -333,10 +333,7 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
                 const glm::vec4 l_v4Box = f_FighterBox((int)l_nI);
                 const float l_fW = m_pRen ? (float)m_pRen->f_Width() : 1024.0f, l_fH = m_pRen ? (float)m_pRen->f_Height() : 768.0f;
                 l_oUf.m_fHeadX = std::clamp(l_v4Box.x + l_v4Box.z * 0.5f, 90.0f, std::max(90.0f, l_fW - 90.0f));
-                // its block (about 66 px high) stays under the title; while a play shows in the attack's band, under the
-                // band and its hint line too (a tall monster's block then sits on it, not under the prompts)
-                const glm::vec4 l_v4Band = f_TouchArea();
-                const float l_fMinY = m_oCs.m_oTouch.f_Running() ? l_v4Band.y + l_v4Band.w + 96.0f : 130.0f;
+                const float l_fMinY = 130.0f;   // its block (about 66 px high) stays under the title
                 l_oUf.m_fHeadY = std::clamp(l_v4Box.y, l_fMinY, std::max(l_fMinY, l_fH - 120.0f));
             }
             if (m_oCs.m_bActive && !l_oF.f_Down()) {   // its intent (docs/gameplay/13 §6.1)
@@ -495,7 +492,12 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
                 }
             }
             const toms::PlayType l_ePlayType = f_BattlePlayType();
-            if (f_AttackRunning()) { l_oB.m_strAttackState = "running"; l_oB.m_strAttackLabel = l_oL.f_Tr("battle.attack_running"); }
+            if (f_HeroDown()) {   // knocked down by a special attack: no attack until he is up
+                l_oB.m_strAttackState = "recovering";
+                l_oB.m_strAttackLabel = l_oL.f_Tr("battle.attack_down");
+                const int l_iDownMs = std::max(1, f_FeelFx().value("specialAttack", nlohmann::json::object()).value("downMs", 1600));
+                l_oB.m_fAttackPct = 100.0f * (1.0f - (float)m_oCs.m_iHeroDownMs / (float)l_iDownMs);
+            } else if (f_AttackRunning()) { l_oB.m_strAttackState = "running"; l_oB.m_strAttackLabel = l_oL.f_Tr("battle.attack_running"); }
             else if (m_oCs.m_ePace == toms::Pace::Cooldown && m_oCs.m_oAtkBar.m_bCooling) {
                 l_oB.m_strAttackState = "recovering";
                 l_oB.m_strAttackLabel = l_oL.f_Tr("battle.attack_recovering");
@@ -925,9 +927,9 @@ void Game::f_TouchPlayUi(toms::UiBattle& l_oB) const {
                 if (l_fDrag > 0.0f) l_fnLine("pull", l_v2From, l_v2F, 4, 0.6f);
                 l_fnAdd("ghost", l_v2F.x, l_v2F.y, 34, 34, 0.0f, 17, l_fK < 0.15f ? l_fK / 0.15f : 1.0f);
             }
-            if (l_oB.m_strTutorial.empty()) {   // its words just under the attack's band (not on a monster's name)
+            if (l_oB.m_strTutorial.empty()) {   // its words along the top of the attack's area, over the hero (not on his face)
                 const glm::vec4 l_v4Band = f_TouchArea();
-                l_fnAdd("tutorial", l_v4Band.x + l_v4Band.z * 0.5f, l_v4Band.y + l_v4Band.w + 14.0f, 360, 28, 0.0f, 0.0f, 1.0f, m_oLocale.f_Tr("battle.play_hint_pullRelease"));
+                l_fnAdd("tutorial", l_v4Band.x + l_v4Band.z * 0.5f, l_v4Band.y + 6.0f, 360, 28, 0.0f, 0.0f, 1.0f, m_oLocale.f_Tr("battle.play_hint_pullRelease"));
             }
         }
         break;

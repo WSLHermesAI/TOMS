@@ -145,6 +145,12 @@ struct CombatState : public Trackable {
         std::string m_strMove = "strike";
         int m_iMoveMs = 4000;
         uint32_t m_uDanger = 0u;         // the cells its coming hit covers, lit (battle_cells.h); 0: not yet
+        // A special attack's wind-up (battle.json feelFx "specialAttack", when its danger cells light): first its power-up
+        // (the "power" clip, the camera on it; its clock waits powerMs), then it charges (the "charge" clip, energy drawn
+        // in) until the hit, which goes off with a burst and its shout (f_UnleashFoePower).
+        int m_iPowerMs = 0;              // the power-up's time left
+        bool m_bPowered = false;         // powering up or charging: its next hit is the special one
+        int m_iChargeFxMs = 0;           // the next charge particles
         int m_iStaggerMs = 0;            // stunned (a parry, a break, a result's stun): its clock stops...
         float m_fStaggerDamage = 1.0f;   // ...and hits on it do this much more
         bool m_bBroken = false;          // the stun came from its break gauge (the intent shows "Broken!")
@@ -264,6 +270,9 @@ struct CombatState : public Trackable {
     // the battle camera's close-up (16 §6.1): zoom on a fighter, eased in and out
     float m_fCamZoom = 1.0f;
     int m_iCamMs = 0, m_iCamMsMax = 0, m_iCamOn = -1;
+    // The hero knocked down by a monster's special attack (battle.json feelFx "specialAttack" "downMs"): his "hurt_big"
+    // clip plays and no attack can start (the track, the weapon's play, the ultimate, the active) until this is 0.
+    int m_iHeroDownMs = 0;
     std::string m_strCamMove;   // on a 3D stage: "" push in, "orbit" (special_moves.json camera "move")
     float m_fCamDeg = 30.0f;
     // The result screen of a win (15 §3.6): filled by finishCombatWin.
@@ -757,7 +766,7 @@ private:
     void f_ResolveCombo(const toms::ComboResult* l_pPlayed = nullptr);
     toms::PlayType f_BattlePlayType() const;          // the worn weapon's play; a scenario's "play" (scenarios: the track)
     bool f_AttackRunning() const { return m_oCs.m_oCombo.f_Running() || (m_oCs.m_oTouch.f_Running() && m_oCs.m_oTouch.f_Started()); }
-    glm::vec4 f_TouchArea() const;                    // where a touch play's targets go: a band across the top (never over a monster)
+    glm::vec4 f_TouchArea() const;                    // where a touch play's targets go: over the hero's head (never over a monster)
     void f_ArmTouchPlay(bool l_bUltimate, int l_iPoints);   // a new touch play over the target (waits for its first touch)
     toms::TouchPlaySettings f_TouchSettingsFor(toms::PlayType l_eType) const;   // battle.json "plays", the weapon's, STR / DEX
     toms::TouchPlaySettings m_oTouchSettings;         // battle.json "plays"
@@ -787,6 +796,11 @@ private:
     std::vector<Battle3DFlash> m_vBattle3DFlashes;       // hits lighting the stage a moment
     void f_AddBattle3DFlash(int l_iWho, int l_iDelayMs);
     void f_Battle3DDangerShot(int l_iFoe, bool l_bIntro);   // a special attack coming: the low close-up on its monster
+    void f_StartFoePower(int l_iFoe, bool l_bIntro);    // ...its power-up: the clip, the particles, the rumble, the clock waits
+    void f_UnleashFoePower(int l_iFoe);                 // ...its hit goes off: the burst, the shout, the shake
+    bool f_FoeCharging(int l_iFoe) const;               // powering up or charging (its rig holds "charge" between clips)
+    void f_KnockDownHero();                             // ...its hit hurt the hero: hurt_big, and no attack until it ends
+    bool f_HeroDown() const { return m_oCs.m_iHeroDownMs > 0; }
     std::vector<toms::fx::EffectInstance> m_vStageFireFx; // the braziers' fire (battle.json stage "fires"), one each
     void f_DrawBattle3DStageFx();                         // the fires' particles and the floor's ambient motes, on the stage
     glm::vec3 f_Battle3DMark(int l_iWho) const;          // a fighter's feet on the stage (-1: the hero)

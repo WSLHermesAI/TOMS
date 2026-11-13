@@ -46,6 +46,7 @@ void Game::f_StartCombat(const EnemyInst& l_oE, const std::vector<EnemyInst>& l_
     m_oCs.m_iGuardAtMs = -1; m_oCs.m_iGuardCdMs = 0; m_oCs.m_bUltimate = false;
     m_oCs.m_iGuardLockMs = 0; m_oCs.m_iPlayDealt = 0; m_oCs.m_oSkill = CombatState::SkillRun{};
     m_oCs.m_fCamZoom = 1.0f; m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = 0; m_oCs.m_iCamOn = -1; m_oCs.m_strCamMove.clear();
+    m_oCs.m_iHeroDownMs = 0;
     m_oCs.m_oResult = CombatState::Result{};
     m_oCs.m_ePace = f_EffectivePace();
     m_oCs.m_fStamina = (float)m_oPaceSettings.m_iStaminaMax;
@@ -301,6 +302,8 @@ void Game::f_ChooseFoeMove(int l_iFoe) {
     l_oF.m_strMove = toms::f_PickMove(l_oF.m_oEnemy.m_vMoves, l_fRoll);
     if (const toms::TutorialStep* l_pStep = f_TutorialStepNow(); l_pStep && !l_pStep->m_strMove.empty()) l_oF.m_strMove = l_pStep->m_strMove;
     l_oF.m_uDanger = 0u;
+    l_oF.m_iPowerMs = 0;
+    l_oF.m_bPowered = false;
     const toms::MoveDef& l_oM = m_oMoves.f_Get(l_oF.m_strMove);
     l_oF.m_iMoveMs = l_oM.m_iChargeMs > 0 ? std::max(300, (int)std::lround(l_oM.m_iChargeMs * l_oF.m_fIntervalMul))   // its wind-up in ms (16 §4.1)
                               : std::max(300, (int)std::lround(std::max(500, l_oF.m_oEnemy.m_iAtkIntervalMs) * l_oM.m_fTime * l_oF.m_fIntervalMul));
@@ -335,6 +338,10 @@ void Game::f_StepFoes(int l_iDtMs) {
             continue;
         }
         if (m_bComboHoldsMonsters && f_AttackRunning() && m_oMoves.f_Get(l_oF.m_strMove).m_eKind != toms::MoveKind::Jabs) continue;
+        if (l_oF.m_iPowerMs > 0) {   // its power-up: the clock waits (the cells stay lit)
+            l_oF.m_iPowerMs = std::max(0, l_oF.m_iPowerMs - l_iDtMs);
+            continue;
+        }
         l_oF.m_iClockMs += l_iDtMs;
         {   // the cells its hit covers light up, aimed at where the hero is now (docs/gameplay/19 §2.1)
             const toms::MoveDef& l_oMv = m_oMoves.f_Get(l_oF.m_strMove);
@@ -344,6 +351,15 @@ void Game::f_StepFoes(int l_iDtMs) {
                 const bool l_bIntro = !m_oCs.m_bCellIntroStarted;
                 if (l_bIntro) f_StartCellIntro(l_iFoe);   // the fight's first: a moment of its own
                 f_Battle3DDangerShot(l_iFoe, l_bIntro);
+                f_StartFoePower(l_iFoe, l_bIntro);
+            }
+        }
+        if (l_oF.m_bPowered && l_oF.m_uDanger) {   // charging: energy drawn in, again and again
+            l_oF.m_iChargeFxMs -= l_iDtMs;
+            if (l_oF.m_iChargeFxMs <= 0) {
+                const nlohmann::json l_jS = f_FeelFx().value("specialAttack", nlohmann::json::object());
+                l_oF.m_iChargeFxMs = std::max(100, l_jS.value("chargeFxEveryMs", 450));
+                f_PlayBattleFx(l_jS.value("chargeFx", std::string("monster_charge")), l_iFoe);
             }
         }
         if (l_oF.m_iClockMs >= l_oF.m_iMoveMs) {
@@ -359,6 +375,8 @@ void Game::f_StunFoe(int l_iFoe, int l_iMs, float l_fDamage, bool l_bBroken) {
     l_oF.m_iStaggerMs = std::max(l_oF.m_iStaggerMs, l_iMs);
     l_oF.m_fStaggerDamage = std::max(l_oF.m_fStaggerDamage, l_fDamage);
     l_oF.m_bBroken = l_oF.m_bBroken || l_bBroken;
+    l_oF.m_iPowerMs = 0;          // stunned: its power-up is lost (it powers up again when its danger lights again)
+    l_oF.m_bPowered = false;
     f_BattleEvent(l_bBroken ? "break" : "stagger", l_iFoe, -1, l_iMs);
     f_FoeLook(l_iFoe, l_bBroken ? "broken" : "parry");
     if (l_bBroken) {   // the break is a moment (15 §3.4): the banner, the screen dims, a stop and a shake
@@ -667,7 +685,7 @@ void Game::f_UpdateBattleRig(int l_iDtMs) {
         return;
     }
     // An attack or a miss plays to its end; then the bar decides: waiting for the tap = charge, recovering = idle.
-    const bool l_bShooting = (m_strBattleRigState == "attack" || m_strBattleRigState == "miss") && !m_upPlayerView->f_Finished();
+    const bool l_bShooting = (m_strBattleRigState == "attack" || m_strBattleRigState == "miss" || m_strBattleRigState == "hurt_big") && !m_upPlayerView->f_Finished();
     // the end: a win lets the last attack finish first; a fall starts at once
     if (m_oCs.m_bWinPending && m_oCs.m_iSlowMs <= 0 && (!l_bShooting || m_oCs.m_bLosePending)) {
         const std::string l_strClip = f_EndClip();
@@ -1024,7 +1042,10 @@ void Game::f_SetFoeRigState(int l_iFoe, const std::string& l_strState) {
     const std::string& l_strId = m_oCs.m_vFoes[(size_t)l_iFoe].m_oEnemy.m_strId;
     const toms::LookState* l_pLs = m_oLooks.f_Find(m_oCs.m_vFoes[(size_t)l_iFoe].m_oEnemy.m_strLook, l_strState);
     const std::string l_strClip = l_pLs && !l_pLs->m_strClip.empty() ? l_pLs->m_strClip : l_strState;
-    if (l_oFr.m_upView->f_Play(l_strClip + "_" + l_strId, true) || l_oFr.m_upView->f_Play(l_strClip, true) || l_oFr.m_upView->f_Play(l_strState, true))
+    // a look without the special attack's clips: "power" plays its "special", "charge" its idle
+    const std::string l_strFallback = l_strState == "power" ? "special" : l_strState == "charge" ? "idle" : std::string();
+    if (l_oFr.m_upView->f_Play(l_strClip + "_" + l_strId, true) || l_oFr.m_upView->f_Play(l_strClip, true) || l_oFr.m_upView->f_Play(l_strState, true) ||
+        (!l_strFallback.empty() && (l_oFr.m_upView->f_Play(l_strFallback + "_" + l_strId, true) || l_oFr.m_upView->f_Play(l_strFallback, true))))
         l_oFr.m_strClip = l_oFr.m_upView->f_Clip();
     else
         l_oFr.m_upView->f_Stop();
@@ -1050,9 +1071,10 @@ void Game::f_UpdateMonsterRig(int l_iDtMs) {
         } else {
             l_oFr.m_strRequest.clear();
             // every status but idle plays to its end; then the fight decides: down or won = die (it stays gone), else idle
-            const bool l_bOneShot = !l_oFr.m_strState.empty() && l_oFr.m_strState != "idle";
+            const bool l_bOneShot = !l_oFr.m_strState.empty() && l_oFr.m_strState != "idle" && l_oFr.m_strState != "charge";
             if (l_oFr.m_strState != "die" && !(l_bOneShot && l_oFr.m_upView && !l_oFr.m_upView->f_Finished())) {
-                const std::string l_strNext = m_oCs.m_bWon || m_oCs.m_vFoes[l_nI].f_Down() ? "die" : "idle";
+                // a special attack powering up or charging holds "charge" (a hurt plays and comes back to it)
+                const std::string l_strNext = m_oCs.m_bWon || m_oCs.m_vFoes[l_nI].f_Down() ? "die" : f_FoeCharging(l_iFoe) ? "charge" : "idle";
                 if (l_strNext != l_oFr.m_strState) f_SetFoeRigState(l_iFoe, l_strNext);
             }
         }
@@ -1258,6 +1280,8 @@ void Game::f_ResolveDefenseTap() {
 // power=0, i.e. full damage, identical to whiffing the old press-and-hold Defense Bar entirely.
 void Game::f_ResolveEnemyClockFire(int l_iFoe) {
     CombatState::Foe& l_oF = m_oCs.m_vFoes[(size_t)l_iFoe];
+    const bool l_bPoweredHit = l_oF.m_bPowered && l_oF.m_iVolleyHit == 0;
+    if (l_bPoweredHit) f_UnleashFoePower(l_iFoe);   // a powered-up hit: it goes off with its shout
     const toms::MoveDef& l_oM = m_oMoves.f_Get(l_oF.m_strMove);   // its move, shown as its intent (docs/gameplay/13 §6.1, 6.2)
     // a hit with a danger shape reaches only its cells: a hero standing clear takes nothing (docs/gameplay/19 §2.1)
     bool l_bClear = false;
@@ -1355,6 +1379,7 @@ void Game::f_ResolveEnemyClockFire(int l_iFoe) {
     f_FoeAttackFx(l_iFoe, l_oM, true);   // its strike, or what it throws (docs/gameplay/20 §5)
     f_StartAttackPause();
     f_PopDamage(l_iDmg, -1, "hurt");
+    if (l_bPoweredHit && l_iDmg > 0 && m_oCs.m_iPlayerHP > 0) f_KnockDownHero();   // the special attack's big hurt
 
     if (m_oCs.m_iPlayerHP <= 0 && m_oCs.m_bSurvivalArmed) {
         // a_sanctuary_echo: once per battle, a lethal hit leaves 1 HP instead of ending the fight.
@@ -1389,7 +1414,7 @@ void Game::f_ResolveEnemyClockFire(int l_iFoe) {
 // Battle v3 (docs/gameplay/07 phase 1): the first tap starts the combo with the charge built so far; the next taps hit the
 // points. The combo's end (all hit, the sweeps run out, or two misses) resolves the attack.
 void Game::f_BattleTapAttack() {
-    if (f_CellIntroOn()) return;
+    if (f_CellIntroOn() || f_HeroDown()) return;   // (knocked down: nothing until he is up)
     if (!m_oCs.m_bActive || m_oCs.m_bWinPending || (m_oCs.m_ePace == toms::Pace::Cooldown && m_oCs.m_oAtkBar.m_bCooling)) return;
     if (f_BattlePlayType() != toms::PlayType::eTRACK) return;   // the weapon's own play: by touch (battlePointer)
     if (!m_oCs.m_oCombo.f_Running()) {
@@ -1621,7 +1646,7 @@ void Game::f_BattleTapDefense() {
 // fight a moment, then a harder play starts at once with a full charge (two more points); its hit does ×2, ×4 in a
 // break, with the weapon's best effects and its big clip (resolveCombo).
 void Game::f_BattleTapSuper() {
-    if (f_CellIntroOn()) return;
+    if (f_CellIntroOn() || f_HeroDown()) return;
     if (!m_oCs.m_bActive || m_oCs.m_bWinPending || m_oCs.m_iSuperCharge < m_oRun.f_SuperMax() || m_oCs.m_oCombo.f_Running() || m_oCs.m_oSkill.m_bOn) return;
     m_oCs.m_iSuperCharge = 0;
     m_oCs.m_bUltimate = true;
@@ -1669,7 +1694,7 @@ void Game::f_BattleTapSuper() {
 // ActiveDefinition carries no display name yet (a real, still-open content gap) -- the log falls
 // back to the raw id rather than inventing a name lookup this rewire doesn't own.
 void Game::f_BattleTapActive() {
-    if (f_CellIntroOn()) return;
+    if (f_CellIntroOn() || f_HeroDown()) return;
     if (!m_oCs.m_bActive) return;
     auto l_vIds = toms::f_EquippedActives(m_oEquipped, m_mapEquipmentDefs);
     if (l_vIds.empty()) return;
@@ -1810,7 +1835,15 @@ glm::vec3 Game::f_Battle3DMark(int l_iWho) const {
 float Game::f_Battle3DHeight(int l_iWho) const {
     const nlohmann::json l_jH = m_jBattle3DStage.is_object() ? m_jBattle3DStage.value("heights", nlohmann::json::object()) : nlohmann::json::object();
     if (l_iWho < 0) return l_jH.value("hero", 1.8f);
-    return f_FoeIsBig(l_iWho) ? l_jH.value("big", 3.0f) : l_jH.value("monster", 1.6f);
+    const float l_fHeight = f_FoeIsBig(l_iWho) ? l_jH.value("big", 3.0f) : l_jH.value("monster", 1.6f);
+    // the monster's own body scale on the 3D stage (enemies.json "scale3d", 1 = the stage's height): its picture's size
+    // there, its shadow, its head's name and HP all follow
+    float l_fScale = 1.0f;
+    if (l_iWho < (int)m_oCs.m_vFoes.size()) {
+        const auto l_itT = m_mapEnemyTpl.find(m_oCs.m_vFoes[(size_t)l_iWho].m_oEnemy.m_strId);
+        if (l_itT != m_mapEnemyTpl.end()) l_fScale = std::clamp(l_itT->second.value("scale3d", 1.0f), 0.1f, 10.0f);
+    }
+    return l_fHeight * l_fScale;
 }
 
 void Game::f_SetBattle3DView(bool l_bOn, const glm::mat4& l_mat4ViewProj, const glm::vec2& l_v2Device, const glm::vec4& l_v4DesignInDevice) {
@@ -1988,6 +2021,67 @@ void Game::f_Battle3DDangerShot(int l_iFoe, bool l_bIntro) {
         m_oCs.m_fShakePx = std::max(m_oCs.m_fShakePx, l_fRumble);
         m_oCs.m_iShakeMs = m_oCs.m_iShakeMsMax = std::max(m_oCs.m_iShakeMs, 380);
     }
+}
+
+// A special attack's wind-up (the owner, 2026-11-13: "the camera roll in to close monster, in that time monster should
+// play a special animation to show next attack is going to be very hurt ... then a charge power stage and when the time
+// is come make some particles with monster's attack shout"). battle.json feelFx "specialAttack": powerMs (its clock
+// waits this long: the "power" clip is made 3.5 s), powerFx, powerSound; chargeFx every chargeFxEveryMs while it
+// charges; at the hit unleashFx, shout, shakePx / shakeMs; off. The cells' warning time (cells warnMs) is the charge.
+void Game::f_StartFoePower(int l_iFoe, bool l_bIntro) {
+    const nlohmann::json l_jS = f_FeelFx().value("specialAttack", nlohmann::json::object());
+    if (l_jS.value("off", false) || l_iFoe < 0 || l_iFoe >= (int)m_oCs.m_vFoes.size()) return;
+    CombatState::Foe& l_oF = m_oCs.m_vFoes[(size_t)l_iFoe];
+    const int l_iPower = std::max(0, l_jS.value("powerMs", 3500));
+    // the fight's first: the cells' intro (everything waits) is the start of it
+    l_oF.m_iPowerMs = l_bIntro ? std::max(0, l_iPower - m_oCellRules.m_iIntroMs) : l_iPower;
+    l_oF.m_bPowered = true;
+    l_oF.m_iChargeFxMs = 0;
+    f_BattleEvent("power", l_iFoe, -1, l_iPower);
+    f_FoeLook(l_iFoe, "power");   // its clip (a look's "power" state may add a sound or particles of its own)
+    f_PlayBattleFx(l_jS.value("powerFx", std::string("monster_power")), l_iFoe);
+    const std::string l_strSound = l_jS.value("powerSound", std::string("sfx.monster_power"));
+    if (!l_strSound.empty()) m_oAudio.f_Play(l_strSound);
+    if (m_oCs.m_iCamOn == l_iFoe && m_oCs.m_iCamMs > 0)   // the close-up stays on it for the whole power-up
+        m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = std::max(m_oCs.m_iCamMsMax, l_iPower);
+}
+
+void Game::f_UnleashFoePower(int l_iFoe) {
+    CombatState::Foe& l_oF = m_oCs.m_vFoes[(size_t)l_iFoe];
+    l_oF.m_bPowered = false;
+    l_oF.m_iPowerMs = 0;
+    const nlohmann::json l_jS = f_FeelFx().value("specialAttack", nlohmann::json::object());
+    f_BattleEvent("unleash", l_iFoe, -1);
+    f_PlayBattleFx(l_jS.value("unleashFx", std::string("monster_unleash")), l_iFoe);
+    const std::string l_strShout = l_jS.value("shout", std::string("sfx.monster_roar"));
+    if (!l_strShout.empty()) m_oAudio.f_Play(l_strShout);
+    if (!m_oSettings.m_bReduceEffects) {
+        m_oCs.m_fShakePx = std::max(m_oCs.m_fShakePx, l_jS.value("shakePx", 16.0f));
+        m_oCs.m_iShakeMs = m_oCs.m_iShakeMsMax = std::max(m_oCs.m_iShakeMs, l_jS.value("shakeMs", 520));
+    }
+}
+
+// A special attack's hit hurt the hero (the owner, 2026-11-13: "the big damage player should play a big hurt animation
+// and can't do any attack until big hurt animation was finished"): what he was doing stops, his "hurt_big" clip plays
+// (knocked back, down on a knee, up again: 1.6 s), and no attack starts for "downMs" (the clip's length). Moving between
+// the cells and guarding still work.
+void Game::f_KnockDownHero() {
+    const nlohmann::json l_jS = f_FeelFx().value("specialAttack", nlohmann::json::object());
+    const int l_iMs = std::max(0, l_jS.value("downMs", 1600));
+    if (l_iMs <= 0) return;
+    m_oCs.m_iHeroDownMs = l_iMs;
+    m_oCs.m_oCombo = toms::ComboPlay{};   // the attack he was in is lost
+    m_oCs.m_oTouch.f_Stop();
+    m_oCs.m_iChargeMs = 0;
+    m_bTouchHeld = false;
+    f_BattleEvent("heroDown", -1, -1, l_iMs);
+    if (f_BattleRigReady() && m_upPlayerView && m_upPlayerView->f_Has("hurt_big")) f_SetBattleRigState("hurt_big", true, "hurt_big");
+}
+
+bool Game::f_FoeCharging(int l_iFoe) const {
+    if (l_iFoe < 0 || l_iFoe >= (int)m_oCs.m_vFoes.size()) return false;
+    const CombatState::Foe& l_oF = m_oCs.m_vFoes[(size_t)l_iFoe];
+    return m_oCs.m_bActive && l_oF.m_bPowered && !l_oF.f_Down() && l_oF.m_iStaggerMs <= 0;
 }
 
 // ---- the fighters as objects of the 3D stage (docs/gameplay/21 §4.3) ----

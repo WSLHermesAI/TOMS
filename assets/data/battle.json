@@ -138,6 +138,9 @@
     "wand": { "pitchStep": 2.0, "tiers": 4, "damageRamp": 1.6, "hintSound": "sfx.wand_hint", "vanishSound": "sfx.wand_vanish",
               "castSound": "sfx.wand_cast" },
     "bow": { "gatherEveryMs": 90, "chargeSound": "sfx.bow_charge", "explodeSound": "sfx.explosion" },
+    "specialAttack": { "powerMs": 3500, "powerFx": "monster_power", "powerSound": "sfx.monster_power",
+                       "chargeFx": "monster_charge", "chargeFxEveryMs": 450,
+                       "unleashFx": "monster_unleash", "shout": "sfx.monster_roar", "shakePx": 16, "shakeMs": 520, "downMs": 1600 },
     "foeAttack": {
       "flightMs": 180, "impactDelayMs": 150,
       "strike":     { "impact": "monster_claw" },

@@ -1003,6 +1003,14 @@
       "ko": "공격 중",
       "es": "Atacando"
     },
+    "battle.attack_down": {
+      "zh_TW": "受到重創",
+      "en": "Knocked down",
+      "zh_CN": "受到重创",
+      "ja": "大ダメージ",
+      "ko": "큰 피해",
+      "es": "Derribado"
+    },
     "battle.attack_recovering": {
       "zh_TW": "恢復中",
       "en": "Recovering",

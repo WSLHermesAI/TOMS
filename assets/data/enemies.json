@@ -784,6 +784,7 @@
     "gold": 12,
     "break": 10,
     "moves": [ "toad_near", "toad_line", "toad_fan" ],
+    "scale3d": 2,
     "draft": true
   }
 }

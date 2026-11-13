@@ -15,6 +15,16 @@
 
 ## ▶ Next Step
 
+**A monster's special attack as a moment; the hero knocked down; prompts over the hero; MP3 to OGG** (2026-11-13; [DAILY_2026-11-13.md](DAILY_2026-11-13.md)):
+- When its danger cells light, a monster powers up for 3.5 s (the `power` clip, the camera close, `monster_power`, a rumble). It then charges
+  until the hit (`charge`, `monster_charge`), and the hit goes off with `monster_unleash`, its roar and a shake. A hit on the hero knocks him
+  down: `hurt_big`, and no attack for 1.6 s. All in `battle.json` `feelFx` `"specialAttack"`.
+- The attack's prompts sit over the hero's head. `enemies.json` `"scale3d"` (the toad: 2). `tools\convert_mp3_to_ogg.cmd`, with a frequency
+  choice and a list of files that did not get smaller.
+- The owner committed the 11-12 work as `05e12a6`. **11-13 not committed.** Last changed-only run: 10 of 272, all pass (new:
+  `scenario.battle_special_down`). All tests, the switched-off tests, Debug, the 2D battle, web and Android not run; the sounds not heard.
+  **Owner:** play the tutorial fight with sound and judge the power-up, the roar and the knock-down (numbers in `"specialAttack"`).
+
 **The 2D fighters as objects of the 3D scene; a clearer battle screen** (2026-11-12; [DAILY_2026-11-12.md](DAILY_2026-11-12.md)):
 - The fighters' and the fires' own sprites are placed in metres and drawn in the 3D scene (`IRenderer::f_BeginWorld`,
   `GltfRenderer::f_DrawSprites`): lit by the moon, the fires and the hit flashes, hidden by what stands in front, nothing cut. A first

@@ -9,6 +9,9 @@ status (Game::updateMonsterRig):
     hurt     the player's hit lands on it: knocked back, a red flash, a shake
     die      the fight is won: a last flash, it slumps and fades out, and stays gone
     special  a monster event's "anim": "special" (docs/gameplay/13 §4.6): it crouches, rears up glowing and shakes
+    power    a special attack coming (its danger cells lit; battle.json "specialAttack", 3.5 s): it crouches, trembles harder
+             and harder as it swells, pulsing red, then rears up in a roar and settles swollen
+    charge   looping, after power until the hit: held swollen, quivering, glowing
     transform its HP-below change of form: it shakes, flashes white, swells and settles back
 
     python tools/make_monster_battle_anims.py
@@ -102,7 +105,53 @@ transform = monster('transform', 1.0, motion={
 }, colour=[key(0, WHITE), key(0.4, [1, 0.6, 0.6, 1], 'quadraticIn'), key(0.48, [1, 1, 1, 1], 'quadraticOut'),
            key(0.7, WHITE, EASE), key(1.0, WHITE)])
 
-doc = {'version': 2, 'atlases': ['../atlas/game.atlas'], 'clips': [idle, attack, hurt, die, special, transform]}
+HOT = [1.55, 0.8, 0.6, 1]       # the power's red-orange pulse
+FLARE = [2.0, 1.45, 1.1, 1]      # the roar's flash
+
+
+def tremble(t0, t1, step, amp0, amp1, axis):
+    """Shaking from t0 to t1, `step` s apart, growing from amp0 to amp1: [(t, value)] (axis: the value of one key)."""
+    out, i, t = [], 0, t0
+    while t < t1 - 1e-6:
+        a = amp0 + (amp1 - amp0) * (t - t0) / max(1e-6, t1 - t0)
+        out.append((t, axis((-1) ** i * a)))
+        i += 1
+        t += step
+    return out
+
+
+def power_keys(length=3.5):
+    """The power's tracks (pos, rot, scale in the clip's units; colour), shared by both monster files."""
+    pos = [(0, [0, 0, 0]), (0.35, [0, 1.5, 0])] + tremble(0.6, 2.9, 0.08, 0.5, 1.6, lambda a: [a, 0.6, 0]) +           [(3.05, [0, -5, 0]), (3.25, [0, -2, 0]), (length, [0, 0, 0])]
+    rot = [(0, [0, 0, 0]), (0.35, [0, 0, 0])] + tremble(0.6, 2.9, 0.08, 1.0, 3.0, lambda a: [0, 0, a]) + [(3.05, [0, 0, 0])]
+    scale = [(0, [1, 1, 1]), (0.35, [1.14, 0.84, 1]), (0.6, [1.04, 1.02, 1]), (2.9, [1.16, 1.14, 1]), (3.05, [0.94, 1.26, 1]),
+             (3.25, [1.2, 1.18, 1]), (length, [1.12, 1.1, 1])]
+    colour = [(0, WHITE)]
+    t, k = 0.35, 0
+    while t < 2.9:   # pulses, stronger each time
+        s = (t - 0.35) / 2.55
+        colour.append((t, [1 + (HOT[0] - 1) * (0.4 + 0.6 * s), 1 + (HOT[1] - 1) * (0.4 + 0.6 * s), 1 + (HOT[2] - 1) * (0.4 + 0.6 * s), 1] if k % 2 == 0 else WHITE))
+        t += 0.35
+        k += 1
+    colour += [(3.05, FLARE), (3.25, HOT), (length, [1.35, 0.85, 0.7, 1])]
+    return {'pos': pos, 'rot': rot, 'scale': scale}, colour
+
+
+def charge_keys(length=0.5):
+    pos = [(0, [0, 0, 0])] + tremble(0.06, length - 0.05, 0.06, 0.8, 0.8, lambda a: [a, 0, 0]) + [(length, [0, 0, 0])]
+    scale = [(0, [1.12, 1.1, 1]), (length / 2, [1.15, 1.07, 1]), (length, [1.12, 1.1, 1])]
+    colour = [(0, [1.35, 0.85, 0.7, 1]), (length / 2, [1.6, 0.95, 0.75, 1]), (length, [1.35, 0.85, 0.7, 1])]
+    return {'pos': pos, 'scale': scale}, colour
+
+
+_pm, _pc = power_keys()
+power = monster('power', 3.5, motion={k: [key(t, v, EASE) for t, v in ks] for k, ks in _pm.items()},
+                colour=[key(t, c, EASE) for t, c in _pc])
+_cm, _cc = charge_keys()
+charge = monster('charge', 0.5, play_count=-1, motion={k: [key(t, v, EASE) for t, v in ks] for k, ks in _cm.items()},
+                 colour=[key(t, c, EASE) for t, c in _cc])
+
+doc = {'version': 2, 'atlases': ['../atlas/game.atlas'], 'clips': [idle, attack, hurt, die, special, transform, power, charge]}
 with open(OUT, 'w', encoding='utf-8', newline='\n') as f:
     f.write(json.dumps(doc, indent=2) + '\n')
 print('wrote', os.path.relpath(OUT, ROOT), '-', ', '.join(c['name'] for c in doc['clips']))

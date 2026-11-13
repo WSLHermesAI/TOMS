@@ -71,6 +71,8 @@ inline constexpr const char g_pszSfxGetItem[]        = "sfx.get_item";          
 inline constexpr const char g_pszSfxMagicCast[]      = "sfx.magic_cast";          // file sfx/magic_cast.ogg
 inline constexpr const char g_pszSfxMonsterImpact[]  = "sfx.monster_impact";      // file sfx/monster_impact.ogg
 inline constexpr const char g_pszSfxMonsterLaunch[]  = "sfx.monster_launch";      // file sfx/monster_launch.ogg
+inline constexpr const char g_pszSfxMonsterPower[]   = "sfx.monster_power";       // file sfx/monster_power.ogg
+inline constexpr const char g_pszSfxMonsterRoar[]    = "sfx.monster_roar";        // file sfx/monster_roar.ogg
 inline constexpr const char g_pszSfxPlayerAttack[]   = "sfx.player_attack";       // file sfx/player_attack.ogg
 inline constexpr const char g_pszSfxSwordSlash[]     = "sfx.sword_slash";         // file sfx/sword_slash.ogg
 inline constexpr const char g_pszSfxWalk[]           = "sfx.walk";                // file sfx/walk.ogg
@@ -154,6 +156,8 @@ inline constexpr const char* g_arrAll[] = {
     g_pszSfxMagicCast,
     g_pszSfxMonsterImpact,
     g_pszSfxMonsterLaunch,
+    g_pszSfxMonsterPower,
+    g_pszSfxMonsterRoar,
     g_pszSfxPlayerAttack,
     g_pszSfxSwordSlash,
     g_pszSfxWalk,

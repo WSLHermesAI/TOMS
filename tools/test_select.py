@@ -223,7 +223,7 @@ RULES = [
      named('unit.audio_ogg_test'), 'the game sound: every file an OGG that decodes (docs/engine/22)'),
     (['tools/make_battle_sfx.py', 'tools/make_combo_sfx.py'], named('unit.audio_ogg_test'), 'they write the game sounds'),
     (['tools/get_ffmpeg.*'], None, 'downloads ffmpeg into tools/ffmpeg (docs/engine/22): no test, run it by hand'),
-    (['tools/audio/*'], None, 'makes music and sound effects into Build/, not into the game (docs/engine/22): no test, run it by hand'),
+    (['tools/audio/*', 'tools/convert_mp3_to_ogg.cmd'], None, 'makes or converts music and sound effects outside the game (docs/engine/22): no test, run it by hand'),
     (['tools/setup_ai_art.*'], None, 'the AI art installer (ComfyUI, models; docs/engine/20): no test, run it by hand'),
     (['tools/frames_to_gif.py'], None, 'merges a --record run\'s frames into a GIF (docs/gameplay/18 §4): no test'),
     (['tools/battle3d/*'], named('smoke.battle_3d', 'scenario.battle_3d'), 'the 3D battle stage builder (docs/gameplay/21 §6): the 3D battle tests'),

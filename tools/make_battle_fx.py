@@ -36,6 +36,10 @@ The attack feel (docs/gameplay/20, data/battle.json "feelFx"):
     monster_cast(_magic)  a big monster's wind-up / a spell's casting, at the monster
     monster_bolt(_big), monster_orb   what it throws: a head and a trail (the game flies it, then stops it)
     monster_blast(_magic), monster_smash   where it lands
+    monster_power      a special attack coming (battle.json "specialAttack", 3.5 s, with the monster's "power" clip): sparks
+                       rising round it, pulsing rings on the ground, energy drawn in, a flash and a ring at its roar (3.05 s)
+    monster_charge     while it charges after that (played again and again): energy drawn in, a glow
+    monster_unleash    the hit going off, with its shout: a huge flash, three rings, sparks and stars thrown out, smoke
 
 <weapon> is bow, sword, staff and default (a weapon without its own fx, unarmed). Open the file in particle_editor to
 look at them or tune them.
@@ -335,6 +339,34 @@ def feel_effects():
         streaks('slash', [red, white], 260, 18, [0.2, 0.28], angle=-35, size=(26, 34), order=2),
         sparks('sparks', 'fx:spark', [red, mix(orange, 0.4)], [26, 34], (240, 460), (9, 15), life=(0.3, 0.7), gravity=300),
         sparks('stars', 'fx:star', [orange, white], [6, 9], (120, 240), (12, 20), life=(0.5, 0.9), gravity=260, spin=True)]})
+    # a special attack's power, charge and release (battle.json "specialAttack")
+    gold = [1, 0.85, 0.4, 1]
+    out.append({'name': 'monster_power', 'duration': 3.5, 'emitters': [
+        flash('glow', 'fx:glow', [1, 0.35, 0.2, 0.55], 150, life=3.2, order=-1),
+        {'name': 'rise', 'maxParticles': 120, 'emission': {'rate': 34}, 'shape': {'type': 'ring', 'radius': 46, 'thickness': 16},
+         'life': [0.6, 1.1], 'speed': [50, 120], 'direction': -90, 'spread': 18, 'size': [6, 11], 'color': [red, gold],
+         'sprite': 'fx:spark', 'overLife': {'color': FADE, 'size': [{'t': 0, 'v': 1}, {'t': 1, 'v': 0.4}]},
+         'forces': {'drag': 1, 'gravity': [0, -90]}, 'render': {'blend': 'add', 'alignToVelocity': True, 'order': 1}},
+        ring('pulse', [1, 0.4, 0.25, 1], 34, 2.6, life=0.5, delay=0.35, repeat=5, interval=0.5),
+        gather('in', orange, 10, 100, 700) | {'emission': burst(10, 0.5, 6, 0.4), 'maxParticles': 80},
+        {'name': 'roar_flash', 'maxParticles': 1, 'emission': burst(1, 3.05), 'life': 0.35, 'speed': 0, 'size': 190, 'color': mix(red, 0.5),
+         'sprite': 'fx:glow', 'overLife': {'color': FADE, 'size': [{'t': 0, 'v': 0.6, 'ease': 'backOut'}, {'t': 1, 'v': 1.5}]},
+         'render': {'blend': 'add', 'order': 2}},
+        ring('roar_ring', [1, 0.55, 0.3, 1], 40, 4.2, life=0.5, delay=3.05)]})
+    out.append({'name': 'monster_charge', 'duration': 0.6, 'emitters': [
+        flash('glow', 'fx:glow', [1, 0.4, 0.25, 0.45], 120, life=0.5, order=-1),
+        gather('in', red, 10, 110, 760)]})
+    out.append({'name': 'monster_unleash', 'duration': 1.5, 'emitters': [
+        flash('flash', 'fx:glow', [1, 0.9, 0.8, 1], 300, life=0.32, order=3),
+        ring('ring', red, 52, 6.0, life=0.55),
+        ring('ring_2', orange, 40, 4.8, life=0.5, delay=0.07),
+        ring('ring_3', white, 30, 3.6, life=0.45, delay=0.14),
+        sparks('sparks', 'fx:spark', [red, mix(gold, 0.4)], [44, 56], (320, 640), (9, 16), life=(0.35, 0.8), gravity=220),
+        sparks('stars', 'fx:star', [orange, white], [10, 14], (160, 320), (14, 24), life=(0.6, 1.0), gravity=240, spin=True),
+        {'name': 'smoke', 'maxParticles': 12, 'emission': burst([8, 12], 0.05), 'shape': {'type': 'point', 'outward': True},
+         'life': [0.7, 1.2], 'speed': [40, 110], 'size': [34, 52], 'rotation': [0, 360], 'color': [[0.45, 0.32, 0.28, 0.6], [0.3, 0.25, 0.24, 0.5]],
+         'sprite': 'fx:smoke', 'overLife': {'color': FADE, 'size': [{'t': 0, 'v': 0.6, 'ease': 'quadraticOut'}, {'t': 1, 'v': 2.0}]},
+         'forces': {'drag': 2, 'gravity': [0, -40]}, 'render': {'blend': 'normal', 'order': 0}}]})
     for e in out:
         k = next((v for p, v in FEEL_SCALE.items() if e['name'].startswith(p)), 1.0)
         bigger(e, k)

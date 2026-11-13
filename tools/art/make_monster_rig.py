@@ -5,7 +5,8 @@
 
 Reads Build/art_out/monster_concepts/cut/<concept>.png (the owner's pick, 2026-11-06: the three of the reference pictures) and writes
     assets/media/atlas/monster_moss.atlas + .png
-    assets/media/anim/monster_moss.anim    for each monster: idle_<id>, attack_<id>, hurt_<id>, die_<id>, special_<id>, transform_<id>
+    assets/media/anim/monster_moss.anim    for each monster: idle_<id>, attack_<id>, hurt_<id>, die_<id>, special_<id>, transform_<id>,
+                                           power_<id> (3.5 s: a special attack coming), charge_<id> (looping until its hit)
                                            (opens in the anim editor)
 Each monster is two parts on one picture: its top (leaves, ears, head) turns on its own over the body; the two overlap
 in a soft band, so no seam shows at these small angles. A clip is authored 32 units on the picture's longer side: the
@@ -123,7 +124,43 @@ def clips_of(p, turn):
              head=[(0, 0), (0.2, t), (0.4, -t), (0.6, t), (0.9, 0)], color=[(0, white), (0.35, glow), (0.9, white)]),
         clip('transform', 1.0, p, {'scale': [(0, 1, 1), (0.4, 0.75, 1.2), (0.65, 1.2, 0.85), (1.0, 1, 1)], 'rot': [(0, 0), (1.0, 0)]},
              head=[(0, 0), (0.4, t * 1.5), (0.7, -t * 1.5), (1.0, 0)], color=[(0, white), (0.45, [2, 2, 2, 1]), (1.0, white)]),
+        # a special attack coming (battle.json "specialAttack"): crouch, tremble harder and harder while swelling and pulsing
+        # red, rear up and roar (the top thrown back), settle swollen; then the charge loops until the hit
+        clip('power', 3.5, p, power_motion(), head=power_head(t), color=power_colour()),
+        clip('charge', 0.5, p, {'pos': [(0, 0, 0)] + [(0.06 * (i + 1), 0.35 * (-1) ** i, 0) for i in range(7)] + [(0.5, 0, 0)],
+                                'scale': [(0, 1.12, 1.1), (0.25, 1.15, 1.07), (0.5, 1.12, 1.1)]},
+             head=[(0, -t * 1.2), (0.25, -t * 1.6), (0.5, -t * 1.2)],
+             color=[(0, [1.35, 0.85, 0.7, 1]), (0.25, [1.6, 0.95, 0.75, 1]), (0.5, [1.35, 0.85, 0.7, 1])], loop=True),
     ]
+
+
+def tremble(t0, t1, step, amp0, amp1):
+    out, i, t = [], 0, t0
+    while t < t1 - 1e-6:
+        out.append((t, (-1) ** i * (amp0 + (amp1 - amp0) * (t - t0) / (t1 - t0))))
+        i += 1
+        t += step
+    return out
+
+
+def power_motion():
+    return {'pos': [(0, 0, 0), (0.35, 0, 0.6)] + [(t, a, 0.25) for t, a in tremble(0.6, 2.9, 0.08, 0.2, 0.6)] + [(3.05, 0, -2.2), (3.25, 0, -0.8), (3.5, 0, 0)],
+            'rot': [(0, 0), (0.35, 0)] + tremble(0.6, 2.9, 0.08, 0.8, 2.6) + [(3.05, 0), (3.5, 0)],
+            'scale': [(0, 1, 1), (0.35, 1.12, 0.86), (0.6, 1.03, 1.02), (2.9, 1.14, 1.12), (3.05, 0.95, 1.22), (3.25, 1.18, 1.16), (3.5, 1.12, 1.1)]}
+
+
+def power_head(t):
+    return [(0, 0), (0.35, t)] + [(tt, -t * 0.5 + a) for tt, a in tremble(0.6, 2.9, 0.08, t * 0.4, t * 1.2)] +            [(3.05, -t * 3.5), (3.25, -t * 3.0), (3.5, -t * 1.2)]
+
+
+def power_colour():
+    white, hot, flare = [1, 1, 1, 1], [1.55, 0.8, 0.6, 1], [2.0, 1.45, 1.1, 1]
+    out, t, k = [(0, white)], 0.35, 0
+    while t < 2.9:
+        s = 0.4 + 0.6 * (t - 0.35) / 2.55
+        out.append((t, [round(1 + (hot[i] - 1) * s, 3) for i in range(3)] + [1] if k % 2 == 0 else white))
+        t, k = t + 0.35, k + 1
+    return out + [(3.05, flare), (3.25, hot), (3.5, [1.35, 0.85, 0.7, 1])]
 
 
 def main():
