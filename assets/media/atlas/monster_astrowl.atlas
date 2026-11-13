@@ -1,0 +1,9 @@
+monster_astrowl.png
+size: 2048, 353
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+astrowl_top
+  bounds: 2, 2, 488, 329
+astrowl_body
+  bounds: 492, 2, 488, 349

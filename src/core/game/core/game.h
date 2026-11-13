@@ -148,6 +148,14 @@ struct CombatState : public Trackable {
         // A special attack's wind-up (battle.json feelFx "specialAttack", when its danger cells light): first its power-up
         // (the "power" clip, the camera on it; its clock waits powerMs), then it charges (the "charge" clip, energy drawn
         // in) until the hit, which goes off with a burst and its shout (f_UnleashFoePower).
+        // What it started is bound to it (CLAUDE.md "Battle effects belong to their monster"): its particle emitters
+        // (f_PlayBattleFx with it: its power-up, charge and release, its cast, its look's) and its sounds (f_PlayFoeSound).
+        // When it falls each is checked (f_FoeEffectsOnDeath, battle.json "onFoeDeath"): stopped at once, faded, or kept
+        // playing to its end. (Its animation is its rig's: it plays "die".)
+        struct OwnedFx { std::string m_strName; toms::fx::EffectInstance m_oFx; };
+        struct OwnedSound { uint32_t m_uId = 0; std::string m_strKey; };
+        std::vector<OwnedFx> m_vFx;
+        std::vector<OwnedSound> m_vSounds;
         int m_iPowerMs = 0;              // the power-up's time left
         bool m_bPowered = false;         // powering up or charging: its next hit is the special one
         int m_iChargeFxMs = 0;           // the next charge particles
@@ -1169,7 +1177,10 @@ private:
     std::vector<BattleFx> m_vBattleFx;
     uint32_t m_uBattleFxSeed = 0;   // each effect of a battle its own seed, from 1 again each battle (the same fight looks the same)
     const toms::WeaponFx* f_BattleWeaponFx(bool l_bTop = false) const;   // the worn weapon's at its level (top: its best)
-    void f_PlayBattleFx(const std::string& l_strEffect, int l_iWho, int l_iDelayMs = 0);   // who: -1 the player's weapon, 0.. a foe
+    void f_PlayBattleFx(const std::string& l_strEffect, int l_iWho, int l_iDelayMs = 0);   // who: -1 the player's weapon, 0.. a foe (its own)
+    void f_FoeEffectsOnDeath(int l_iFoe);            // a foe fell: each of its effects and sounds stopped, faded or kept ("onFoeDeath")
+    void f_PlayFoeSound(int l_iFoe, const std::string& l_strKey, float l_fPitch = 1.0f);   // a sound of the foe's, bound to it
+    nlohmann::json m_jOnFoeDeath = nlohmann::json::object();   // battle.json "onFoeDeath": "fxRules" / "soundRules": name -> stop, fade, keep
     // At a point of the screen (design pixels); overUi: over the battle screen's UI (the attack track).
     void f_PlayBattleFxAt(const std::string& l_strEffect, float l_fX, float l_fY, bool l_bOverUi, int l_iDelayMs = 0, float l_fScale = 1.0f,
                           float l_fRotationDeg = 0.0f);
@@ -1184,6 +1195,8 @@ private:
     glm::vec2 f_FighterCentre(int l_iWho) const { const glm::vec4 l_v4B = f_FighterBox(l_iWho); return {l_v4B.x + l_v4B.z * 0.5f, l_v4B.y + l_v4B.w * 0.5f}; }
     glm::vec2 f_WeaponPoint() const { const glm::vec4 l_v4B = f_FighterBox(-1); return {l_v4B.x + l_v4B.z * 0.731f, l_v4B.y + l_v4B.w * 0.493f}; }
     const nlohmann::json& f_FeelFx() const { return m_jFeelFx; }
+    // battle.json "bodyScale": a monster's body type (enemies.json "body", 1..5) -> how many times the stage's monster height
+    nlohmann::json m_jBodyScale = nlohmann::json::object();
     nlohmann::json m_jFeelFx = nlohmann::json::object();   // data/battle.json "feelFx", as the battle's rules have it (a scenario patches them)
     struct WandSeen { int m_iClockMs = -1, m_iLit = 0, m_iShown = 0, m_iPhase = -1; } m_oWandSeen;   // what f_WandCues has played
     int m_iBowGatherMs = 0, m_iBowGatherBeats = 0;
@@ -1325,11 +1338,15 @@ private:
     std::map<std::string, std::vector<StairUnlock>> m_mapStairUnlocks;
     void f_LoadStairLocks();
     void f_FinishEvent(const std::string& l_strEvId, int l_iDepth = 0);
-    // W38: a stair waits for all of its events.
+    // W38: a stair waits for all of its events. A boss guards this floor's up stair too (the owner, 2026-11-13): while a
+    // monster with enemies.json "guardsStairs" stands here unbeaten, the stair up stays locked (f_StairGuard).
     bool f_StairLocked(const toms::StairLink& l_oS) const {
         for (const std::string& l_strE : l_oS.m_vUnlockEvents) if (!m_oRun.f_EventFinished(l_strE)) return true;
-        return false;
+        const bool l_bHere = !m_oSt.m_vStairs.empty() && &l_oS >= &m_oSt.m_vStairs.front() && &l_oS <= &m_oSt.m_vStairs.back();
+        return l_bHere && l_oS.m_bUp && !f_StairGuard().empty();
     }
+    std::string f_StairGuard() const;                  // the unbeaten stair guard's monster id on this floor; "" none
+    std::string f_EnemyDisplayName(const std::string& l_strId) const;   // enemies.json "name", in the language
     // The floor's stairs that are open but not taken yet since they opened (their "go to the stairs" event is
     // started, not finished): the map points at them with an arrow (W38).
     bool f_StairJustOpened(const std::string& l_strFloor, const toms::StairLink& l_oS) const;

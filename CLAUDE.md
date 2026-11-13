@@ -48,6 +48,19 @@
   `src/editor/src/bgfx_viewport.cpp`). **A new host of the game calls it too, and new sound or BGM plays through the
   `Audio` engine** so the mute covers it.
 
+### Battle effects belong to their monster
+
+- **Every particle effect, animation and sound a monster starts is bound to that monster** (the owner, 2026-11-13): its
+  emitters and sounds live in its own record (`CombatState::Foe::m_vFx`, `m_vSounds`), its animation in its rig
+  (`FoeRig`, which plays "die").
+- **When the monster dies, each one is checked, not left running:** `battle.json` `"onFoeDeath"` (`fxRules`,
+  `soundRules`, by effect name or sound key, with a `default`) says `stop` (destroyed at once), `fade` (no more
+  particles, those already out finish; the sound fades out) or `keep` (plays to its end, no longer the monster's).
+  `Game::f_FoeEffectsOnDeath` does it.
+- **A new monster effect or sound goes through `f_PlayBattleFx(name, foe)` or `f_PlayFoeSound(foe, key)`**, never the
+  battle's shared list or a bare `Audio::f_Play`. When the default rule is wrong for it, give it its own line in
+  `"onFoeDeath"`.
+
 ### Git: no commit and no new branch until the owner asks
 
 - **Don't commit and don't create a branch until the owner asks for that** (the owner, 2026-11-05). Finished work stays

@@ -23,6 +23,50 @@
     "base": "monster",
     "character": "anim/monster_moss.anim"
   },
+  "hivebear": {
+    "base": "monster",
+    "character": "anim/monster_hivebear.anim"
+  },
+  "fungolem": {
+    "base": "monster",
+    "character": "anim/monster_fungolem.anim"
+  },
+  "cragtortle": {
+    "base": "monster",
+    "character": "anim/monster_cragtortle.anim"
+  },
+  "grimoox": {
+    "base": "monster",
+    "character": "anim/monster_grimoox.anim"
+  },
+  "gravewarden": {
+    "base": "monster",
+    "character": "anim/monster_gravewarden.anim"
+  },
+  "hearthound": {
+    "base": "monster",
+    "character": "anim/monster_hearthound.anim"
+  },
+  "sphinxie": {
+    "base": "monster",
+    "character": "anim/monster_sphinxie.anim"
+  },
+  "glacibear": {
+    "base": "monster",
+    "character": "anim/monster_glacibear.anim"
+  },
+  "astrowl": {
+    "base": "monster",
+    "character": "anim/monster_astrowl.anim"
+  },
+  "chronoknight": {
+    "base": "monster",
+    "character": "anim/monster_chronoknight.anim"
+  },
+  "vorkath": {
+    "base": "monster",
+    "character": "anim/monster_vorkath.anim"
+  },
   "player": {
     "states": {
       "attack": { "sound": "sfx.player_attack" },

@@ -1,0 +1,9 @@
+monster_glacibear.png
+size: 2048, 378
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+glacibear_top
+  bounds: 2, 2, 427, 304
+glacibear_body
+  bounds: 431, 2, 427, 374

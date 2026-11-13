@@ -213,6 +213,7 @@ void f_RegisterTypes(Rml::DataModelConstructor& l_oC) {
         l_oS.RegisterMember("cell_hint", &UiBattle::m_strCellHint);
         l_oS.RegisterMember("tutorial", &UiBattle::m_strTutorial);
         l_oS.RegisterMember("tutorial_mark", &UiBattle::m_strTutorialMark);
+        l_oS.RegisterMember("tutorial_hidden", &UiBattle::m_bTutorialHidden);
         l_oS.RegisterMember("tutorial_scale", &UiBattle::m_fTutorialScale);
         l_oS.RegisterMember("cells_scale", &UiBattle::m_fCellsScale);
         l_oS.RegisterMember("cell_hint_y", &UiBattle::m_fCellHintY);

@@ -114,16 +114,21 @@
              "intro": { "ms": 2200, "uiAtMs": 1200, "popMs": 350, "zoom": 1.25, "clip": "special", "fx": "danger_intro", "text": "battle.cell_intro" },
              "shapes": { "near": [{ "row": 0 }], "line": [{ "cols": "each" }], "fan": [{ "allBut": "start" }] } },
   "tutorial": {
-    "_comment": "The new game's trial fight (docs/gameplay/19 B6). Each step shows its text until doneOn happens count times; once: not again for the next weapon tried.",
+    "_comment": "The new game's trial fight (docs/gameplay/19 B6). Each step shows its text until doneOn happens count times; once: not again for the next weapon tried; hideMs: its box goes away that long after it popped up (the step goes on).",
     "enemy": "thicketoad",
     "overrides": { "hp": 300, "atk": 8, "def": 0 },
     "steps": [
       { "text": "tutorial.attack", "mark": "attack", "doneOn": "heroHit", "count": 2, "hold": true },
-      { "text": "tutorial.move", "mark": "cells", "doneOn": "dodge", "move": "toad_lesson_line", "once": true },
-      { "text": "tutorial.guard", "mark": "guard", "doneOn": "guarded", "move": "toad_lesson_crush", "once": true },
+      { "text": "tutorial.move", "mark": "cells", "doneOn": "dodge", "move": "toad_lesson_line", "hideMs": 3000 },
+      { "text": "tutorial.guard", "mark": "guard", "doneOn": "guarded", "move": "toad_lesson_crush", "hideMs": 3000 },
       { "text": "tutorial.finish" }
     ]
   },
+  "onFoeDeath": { "_comment": "what a monster's own effects and sounds do when it falls (CLAUDE.md \"Battle effects belong to their monster\"): stop (at once), fade (no more particles, those out finish; the sound fades out over fadeMs), keep (plays to its end); default for the rest",
+                  "fadeMs": 400,
+                  "fxRules": { "default": "stop", "monster_unleash": "keep", "monster_parried": "keep", "monster_broken": "fade", "monster_special": "fade", "monster_transform": "fade" },
+                  "soundRules": { "default": "fade", "sfx.monster_power": "stop", "sfx.monster_roar": "keep", "sfx.enemy_attack": "keep", "sfx.monster_launch": "keep" } },
+  "bodyScale": { "_comment": "a monster's body type (enemies.json \"body\", 1 small .. 5 huge): times the stage's monster height (stages3d heights monster)", "1": 0.75, "2": 1.0, "3": 2.0, "4": 2.4, "5": 2.8 },
   "battleSpeeds": [0.75, 1, 1.25, 1.5],
   "plays": { "bowTimeMs": 4000, "bowMoveMs": 500, "bowMoveDist": 90, "bowHoldMs": 1500, "bowHoldPerStr": 40,
              "bowShakePx": 10, "bowShakePerDex": 0.05,

@@ -1,0 +1,2778 @@
+{
+ "version": 2,
+ "atlases": [
+  "../atlas/monster_hivebear.atlas"
+ ],
+ "clips": [
+  {
+   "name": "idle_hivebear",
+   "length": 1.6,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_hivebear:hivebear_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -348,
+         0
+        ],
+        "sprite": "monster_hivebear:hivebear_top",
+        "pivot": [
+         0.5,
+         0.8608
+        ],
+        "order": 1,
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            -1.5
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.8,
+           "v": [
+            0,
+            0,
+            1.5
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.6,
+           "v": [
+            0,
+            0,
+            -1.5
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.6,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.8,
+         "v": [
+          1.025,
+          0.97,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.6,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "playCount": -1
+  },
+  {
+   "name": "attack_hivebear",
+   "length": 0.55,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_hivebear:hivebear_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -348,
+         0
+        ],
+        "sprite": "monster_hivebear:hivebear_top",
+        "pivot": [
+         0.5,
+         0.8608
+        ],
+        "order": 1,
+        "tracks": {
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.12,
+           "v": [
+            0,
+            0,
+            3.0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.22,
+           "v": [
+            0,
+            0,
+            -4.800000000000001
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.55,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.12,
+         "v": [
+          58.125,
+          7.75,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.22,
+         "v": [
+          -251.875,
+          -77.5,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.32,
+         "v": [
+          -174.375,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.55,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "rot": [
+        {
+         "t": 0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.12,
+         "v": [
+          0,
+          0,
+          5
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.22,
+         "v": [
+          0,
+          0,
+          -9
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.55,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.12,
+         "v": [
+          1.08,
+          0.9,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.22,
+         "v": [
+          0.95,
+          1.08,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.34,
+         "v": [
+          1.05,
+          0.95,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.55,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "hurt_hivebear",
+   "length": 0.4,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_hivebear:hivebear_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            0.45,
+            0.45,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.25,
+           "v": [
+            1,
+            0.45,
+            0.45,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.4,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -348,
+         0
+        ],
+        "sprite": "monster_hivebear:hivebear_top",
+        "pivot": [
+         0.5,
+         0.8608
+        ],
+        "order": 1,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            0.45,
+            0.45,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.25,
+           "v": [
+            1,
+            0.45,
+            0.45,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.4,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ],
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.08,
+           "v": [
+            0,
+            0,
+            5.4
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.4,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.06,
+         "v": [
+          77.5,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.4,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "rot": [
+        {
+         "t": 0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.06,
+         "v": [
+          0,
+          0,
+          7
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.4,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.06,
+         "v": [
+          0.94,
+          1.04,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.4,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "die_hivebear",
+   "length": 0.7,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_hivebear:hivebear_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.35,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            1,
+            1,
+            1,
+            0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -348,
+         0
+        ],
+        "sprite": "monster_hivebear:hivebear_top",
+        "pivot": [
+         0.5,
+         0.8608
+        ],
+        "order": 1,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.35,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            1,
+            1,
+            1,
+            0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ],
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            0,
+            0,
+            6.0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.15,
+         "v": [
+          38.75,
+          -38.75,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.7,
+         "v": [
+          58.125,
+          19.375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "rot": [
+        {
+         "t": 0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.7,
+         "v": [
+          0,
+          0,
+          14
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.15,
+         "v": [
+          1.05,
+          0.95,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.7,
+         "v": [
+          1.15,
+          0.3,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "special_hivebear",
+   "length": 0.9,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_hivebear:hivebear_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.35,
+           "v": [
+            1.5,
+            1.5,
+            1.2,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.9,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -348,
+         0
+        ],
+        "sprite": "monster_hivebear:hivebear_top",
+        "pivot": [
+         0.5,
+         0.8608
+        ],
+        "order": 1,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.35,
+           "v": [
+            1.5,
+            1.5,
+            1.2,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.9,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ],
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.2,
+           "v": [
+            0,
+            0,
+            3.0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.4,
+           "v": [
+            0,
+            0,
+            -3.0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.6,
+           "v": [
+            0,
+            0,
+            3.0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.9,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.35,
+         "v": [
+          0.0,
+          -58.125,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.9,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.35,
+         "v": [
+          1.1,
+          1.1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.9,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "transform_hivebear",
+   "length": 1.0,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_hivebear:hivebear_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.45,
+           "v": [
+            2,
+            2,
+            2,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -348,
+         0
+        ],
+        "sprite": "monster_hivebear:hivebear_top",
+        "pivot": [
+         0.5,
+         0.8608
+        ],
+        "order": 1,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.45,
+           "v": [
+            2,
+            2,
+            2,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ],
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.4,
+           "v": [
+            0,
+            0,
+            4.5
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            0,
+            0,
+            -4.5
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.0,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "rot": [
+        {
+         "t": 0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.4,
+         "v": [
+          0.75,
+          1.2,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.65,
+         "v": [
+          1.2,
+          0.85,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "power_hivebear",
+   "length": 3.5,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_hivebear:hivebear_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.35,
+           "v": [
+            1.22,
+            0.92,
+            0.84,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.05,
+           "v": [
+            1.311,
+            0.887,
+            0.774,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.4,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.75,
+           "v": [
+            1.401,
+            0.854,
+            0.708,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 2.1,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 2.45,
+           "v": [
+            1.492,
+            0.821,
+            0.642,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 2.8,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 3.05,
+           "v": [
+            2.0,
+            1.45,
+            1.1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 3.25,
+           "v": [
+            1.55,
+            0.8,
+            0.6,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 3.5,
+           "v": [
+            1.35,
+            0.85,
+            0.7,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -348,
+         0
+        ],
+        "sprite": "monster_hivebear:hivebear_top",
+        "pivot": [
+         0.5,
+         0.8608
+        ],
+        "order": 1,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.35,
+           "v": [
+            1.22,
+            0.92,
+            0.84,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.7,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.05,
+           "v": [
+            1.311,
+            0.887,
+            0.774,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.4,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.75,
+           "v": [
+            1.401,
+            0.854,
+            0.708,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 2.1,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 2.45,
+           "v": [
+            1.492,
+            0.821,
+            0.642,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 2.8,
+           "v": [
+            1,
+            1,
+            1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 3.05,
+           "v": [
+            2.0,
+            1.45,
+            1.1,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 3.25,
+           "v": [
+            1.55,
+            0.8,
+            0.6,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 3.5,
+           "v": [
+            1.35,
+            0.85,
+            0.7,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ],
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.35,
+           "v": [
+            0,
+            0,
+            3.0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.6,
+           "v": [
+            0,
+            0,
+            -0.2999999999999998
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.68,
+           "v": [
+            0,
+            0,
+            -2.7834782608695656
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.76,
+           "v": [
+            0,
+            0,
+            -0.13304347826086937
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.84,
+           "v": [
+            0,
+            0,
+            -2.9504347826086956
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.92,
+           "v": [
+            0,
+            0,
+            0.03391304347826085
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.0,
+           "v": [
+            0,
+            0,
+            -3.117391304347826
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.08,
+           "v": [
+            0,
+            0,
+            0.2008695652173913
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.16,
+           "v": [
+            0,
+            0,
+            -3.2843478260869565
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.24,
+           "v": [
+            0,
+            0,
+            0.36782608695652175
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.32,
+           "v": [
+            0,
+            0,
+            -3.451304347826087
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.4,
+           "v": [
+            0,
+            0,
+            0.5347826086956524
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.48,
+           "v": [
+            0,
+            0,
+            -3.6182608695652174
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.56,
+           "v": [
+            0,
+            0,
+            0.7017391304347829
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.64,
+           "v": [
+            0,
+            0,
+            -3.7852173913043483
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.72,
+           "v": [
+            0,
+            0,
+            0.8686956521739138
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.8,
+           "v": [
+            0,
+            0,
+            -3.952173913043479
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.88,
+           "v": [
+            0,
+            0,
+            1.0356521739130442
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 1.96,
+           "v": [
+            0,
+            0,
+            -4.119130434782609
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 2.04,
+           "v": [
+            0,
+            0,
+            1.2026086956521742
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 2.12,
+           "v": [
+            0,
+            0,
+            -4.286086956521739
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 2.2,
+           "v": [
+            0,
+            0,
+            1.3695652173913047
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 2.28,
+           "v": [
+            0,
+            0,
+            -4.45304347826087
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 2.36,
+           "v": [
+            0,
+            0,
+            1.5365217391304355
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 2.44,
+           "v": [
+            0,
+            0,
+            -4.620000000000001
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 2.52,
+           "v": [
+            0,
+            0,
+            1.703478260869566
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 2.6,
+           "v": [
+            0,
+            0,
+            -4.786956521739131
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 2.68,
+           "v": [
+            0,
+            0,
+            1.8704347826086964
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 2.76,
+           "v": [
+            0,
+            0,
+            -4.953913043478262
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 2.84,
+           "v": [
+            0,
+            0,
+            2.037391304347827
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 3.05,
+           "v": [
+            0,
+            0,
+            -10.5
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 3.25,
+           "v": [
+            0,
+            0,
+            -9.0
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 3.5,
+           "v": [
+            0,
+            0,
+            -3.5999999999999996
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.35,
+         "v": [
+          0.0,
+          11.625,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.6,
+         "v": [
+          3.875,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.68,
+         "v": [
+          -4.144565217391304,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.76,
+         "v": [
+          4.414130434782608,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.84,
+         "v": [
+          -4.683695652173912,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.92,
+         "v": [
+          4.953260869565217,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.0,
+         "v": [
+          -5.2228260869565215,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.08,
+         "v": [
+          5.492391304347826,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.16,
+         "v": [
+          -5.76195652173913,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.24,
+         "v": [
+          6.031521739130435,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.32,
+         "v": [
+          -6.301086956521741,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.4,
+         "v": [
+          6.570652173913044,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.48,
+         "v": [
+          -6.840217391304348,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.56,
+         "v": [
+          7.109782608695654,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.64,
+         "v": [
+          -7.379347826086958,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.72,
+         "v": [
+          7.648913043478263,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.8,
+         "v": [
+          -7.918478260869567,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.88,
+         "v": [
+          8.188043478260873,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.96,
+         "v": [
+          -8.457608695652176,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 2.04,
+         "v": [
+          8.72717391304348,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 2.12,
+         "v": [
+          -8.996739130434783,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 2.2,
+         "v": [
+          9.266304347826088,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 2.28,
+         "v": [
+          -9.535869565217393,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 2.36,
+         "v": [
+          9.805434782608696,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 2.44,
+         "v": [
+          -10.075000000000003,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 2.52,
+         "v": [
+          10.344565217391308,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 2.6,
+         "v": [
+          -10.614130434782611,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 2.68,
+         "v": [
+          10.883695652173916,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 2.76,
+         "v": [
+          -11.153260869565221,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 2.84,
+         "v": [
+          11.422826086956524,
+          4.84375,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 3.05,
+         "v": [
+          0.0,
+          -42.625,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 3.25,
+         "v": [
+          0.0,
+          -15.5,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 3.5,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "rot": [
+        {
+         "t": 0,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.35,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.6,
+         "v": [
+          0,
+          0,
+          0.8
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.68,
+         "v": [
+          0,
+          0,
+          -0.8626086956521739
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.76,
+         "v": [
+          0,
+          0,
+          0.9252173913043478
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.84,
+         "v": [
+          0,
+          0,
+          -0.9878260869565216
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.92,
+         "v": [
+          0,
+          0,
+          1.0504347826086957
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.0,
+         "v": [
+          0,
+          0,
+          -1.1130434782608694
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.08,
+         "v": [
+          0,
+          0,
+          1.1756521739130434
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.16,
+         "v": [
+          0,
+          0,
+          -1.2382608695652175
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.24,
+         "v": [
+          0,
+          0,
+          1.3008695652173916
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.32,
+         "v": [
+          0,
+          0,
+          -1.3634782608695655
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.4,
+         "v": [
+          0,
+          0,
+          1.4260869565217393
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.48,
+         "v": [
+          0,
+          0,
+          -1.4886956521739134
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.56,
+         "v": [
+          0,
+          0,
+          1.5513043478260875
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.64,
+         "v": [
+          0,
+          0,
+          -1.6139130434782614
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.72,
+         "v": [
+          0,
+          0,
+          1.6765217391304352
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.8,
+         "v": [
+          0,
+          0,
+          -1.7391304347826093
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.88,
+         "v": [
+          0,
+          0,
+          1.8017391304347832
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 1.96,
+         "v": [
+          0,
+          0,
+          -1.8643478260869573
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 2.04,
+         "v": [
+          0,
+          0,
+          1.926956521739131
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 2.12,
+         "v": [
+          0,
+          0,
+          -1.989565217391305
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 2.2,
+         "v": [
+          0,
+          0,
+          2.052173913043479
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 2.28,
+         "v": [
+          0,
+          0,
+          -2.114782608695653
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 2.36,
+         "v": [
+          0,
+          0,
+          2.177391304347827
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 2.44,
+         "v": [
+          0,
+          0,
+          -2.240000000000001
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 2.52,
+         "v": [
+          0,
+          0,
+          2.3026086956521747
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 2.6,
+         "v": [
+          0,
+          0,
+          -2.365217391304349
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 2.68,
+         "v": [
+          0,
+          0,
+          2.4278260869565225
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 2.76,
+         "v": [
+          0,
+          0,
+          -2.4904347826086966
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 2.84,
+         "v": [
+          0,
+          0,
+          2.5530434782608706
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 3.05,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 3.5,
+         "v": [
+          0,
+          0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1,
+          1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.35,
+         "v": [
+          1.12,
+          0.86,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.6,
+         "v": [
+          1.03,
+          1.02,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 2.9,
+         "v": [
+          1.14,
+          1.12,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 3.05,
+         "v": [
+          0.95,
+          1.22,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 3.25,
+         "v": [
+          1.18,
+          1.16,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 3.5,
+         "v": [
+          1.12,
+          1.1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "charge_hivebear",
+   "length": 0.5,
+   "root": {
+    "name": "monster",
+    "scale": [
+     0.05161,
+     0.05161,
+     1
+    ],
+    "children": [
+     {
+      "name": "motion",
+      "children": [
+       {
+        "name": "torso",
+        "pos": [
+         0,
+         0,
+         0
+        ],
+        "sprite": "monster_hivebear:hivebear_body",
+        "pivot": [
+         0.5,
+         1.0
+        ],
+        "order": 0,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1.35,
+            0.85,
+            0.7,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.25,
+           "v": [
+            1.6,
+            0.95,
+            0.75,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.5,
+           "v": [
+            1.35,
+            0.85,
+            0.7,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       },
+       {
+        "name": "top",
+        "pos": [
+         0,
+         -348,
+         0
+        ],
+        "sprite": "monster_hivebear:hivebear_top",
+        "pivot": [
+         0.5,
+         0.8608
+        ],
+        "order": 1,
+        "tracks": {
+         "color": [
+          {
+           "t": 0,
+           "v": [
+            1.35,
+            0.85,
+            0.7,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.25,
+           "v": [
+            1.6,
+            0.95,
+            0.75,
+            1
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.5,
+           "v": [
+            1.35,
+            0.85,
+            0.7,
+            1
+           ],
+           "ease": "quadraticInOut"
+          }
+         ],
+         "rot": [
+          {
+           "t": 0,
+           "v": [
+            0,
+            0,
+            -3.5999999999999996
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.25,
+           "v": [
+            0,
+            0,
+            -4.800000000000001
+           ],
+           "ease": "quadraticInOut"
+          },
+          {
+           "t": 0.5,
+           "v": [
+            0,
+            0,
+            -3.5999999999999996
+           ],
+           "ease": "quadraticInOut"
+          }
+         ]
+        }
+       }
+      ],
+      "tracks": {
+       "pos": [
+        {
+         "t": 0,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.06,
+         "v": [
+          6.78125,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.12,
+         "v": [
+          -6.78125,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.18,
+         "v": [
+          6.78125,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.24,
+         "v": [
+          -6.78125,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.3,
+         "v": [
+          6.78125,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.36,
+         "v": [
+          -6.78125,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.42,
+         "v": [
+          6.78125,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.5,
+         "v": [
+          0.0,
+          0.0,
+          0
+         ],
+         "ease": "quadraticInOut"
+        }
+       ],
+       "scale": [
+        {
+         "t": 0,
+         "v": [
+          1.12,
+          1.1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.25,
+         "v": [
+          1.15,
+          1.07,
+          1
+         ],
+         "ease": "quadraticInOut"
+        },
+        {
+         "t": 0.5,
+         "v": [
+          1.12,
+          1.1,
+          1
+         ],
+         "ease": "quadraticInOut"
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "playCount": -1
+  }
+ ]
+}

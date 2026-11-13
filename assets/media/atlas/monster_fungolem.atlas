@@ -1,0 +1,9 @@
+monster_fungolem.png
+size: 2048, 390
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+fungolem_top
+  bounds: 2, 2, 429, 292
+fungolem_body
+  bounds: 433, 2, 429, 386

@@ -1,0 +1,11 @@
+{
+  "_comment": "A floor boss guards the stairs up (enemies.json \"guardsStairs\"; the owner, 2026-11-13): on F01 the Hivebear stands unbeaten beside the up stair, so the stair is locked (bumping it says to beat the boss first).",
+  "scene": "stage",
+  "stage": "F01",
+  "test": {
+    "frames": 20
+  },
+  "expect": {
+    "stairUpLocked": true
+  }
+}

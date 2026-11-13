@@ -125,7 +125,7 @@ set in `battle.json` `tutorial`, with its words in `text.json` `tutorial.*`. Eac
 | Guard | Press Guard on the "!" | `toad_lesson_crush`, which has no cells, so it cannot be dodged; again until guarded |
 | Finish | Beat the toad | Its usual moves, then the win clip |
 
-The toad can fall at any step, which ends the lesson early (the owner, 2026-11-06), and the hero cannot fall: the hero stops at 1 HP. Trying another weapon repeats only Attack and Finish (`once`).
+The toad can fall at any step, which ends the lesson early (the owner, 2026-11-06), and the hero cannot fall: the hero stops at 1 HP. Trying another weapon runs the whole lesson again, its red-cells attack and its guard included (the owner, 2026-11-13: "the monster should restore its status"; it was only Attack and Finish, `once`, which a step can still have). The Move step's box, about the red cells, and the Guard step's ("you can't dodge this one") go away 3 s after they pop up, while each step goes on until its dodge or guard (the owner, 2026-11-13; each step's `"hideMs": 3000`).
 So the owner's note "without defending you fall after a few hits" is not shown yet.
 
 **The first danger's moment (built 2026-11-06):** the first time a monster lights the cells in a fight, everything stops for 2.2 s: the screen dims, the camera moves in, and only the monster, its `special` clip, the particles `danger_intro` and a banner are shown. After 1.2 s the hero and the other UI return, the cells and the tutorial's box pop up with a scale effect, and the player has the last second to read them before time runs again. The cells stay hidden until then, in every fight. Set in `battle.json` `cells.intro`.

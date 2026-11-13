@@ -1,0 +1,9 @@
+monster_vorkath.png
+size: 2048, 390
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+demonlord_vorkath_top
+  bounds: 2, 2, 432, 292
+demonlord_vorkath_body
+  bounds: 436, 2, 432, 386

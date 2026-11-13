@@ -1,0 +1,9 @@
+monster_cragtortle.png
+size: 2048, 378
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+cragtortle_top
+  bounds: 2, 2, 591, 304
+cragtortle_body
+  bounds: 595, 2, 591, 374

@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""make_monster_rig.py -- painted monsters in battle: the moss team of make_monster_concepts.py, with their clips.
+"""make_monster_rig.py -- painted monsters in battle, from make_monster_concepts.py's pictures, with their clips.
 
-    python tools/art/make_monster_rig.py
+    python tools/art/make_monster_rig.py [--only moss,hivebear]
 
-Reads Build/art_out/monster_concepts/cut/<concept>.png (the owner's pick, 2026-11-06: the three of the reference pictures) and writes
-    assets/media/atlas/monster_moss.atlas + .png
-    assets/media/anim/monster_moss.anim    for each monster: idle_<id>, attack_<id>, hurt_<id>, die_<id>, special_<id>, transform_<id>,
+Reads Build/art_out/monster_concepts/cut/<concept>.png and writes, for each group (GROUPS):
+    assets/media/atlas/<group>.atlas + .png
+    assets/media/anim/<group>.anim         for each monster: idle_<id>, attack_<id>, hurt_<id>, die_<id>, special_<id>, transform_<id>,
                                            power_<id> (3.5 s: a special attack coming), charge_<id> (looping until its hit)
+The groups: monster_moss, the moss team (the owner's pick, 2026-11-06: the three of the reference pictures); one group per
+floor boss (the owner, 2026-11-13: a boss beside the up stairs of floors F01-F10), each a team's third, biggest monster.
                                            (opens in the anim editor)
 Each monster is two parts on one picture: its top (leaves, ears, head) turns on its own over the body; the two overlap
 in a soft band, so no seam shows at these small angles. A clip is authored 32 units on the picture's longer side: the
@@ -21,8 +23,8 @@ from scipy import ndimage
 
 ROOT = Path(__file__).resolve().parents[2]
 CUT = ROOT / 'Build' / 'art_out' / 'monster_concepts' / 'cut'
-ATLAS = ROOT / 'assets' / 'media' / 'atlas' / 'monster_moss'
-ANIM = ROOT / 'assets' / 'media' / 'anim' / 'monster_moss.anim'
+ATLAS_DIR = ROOT / 'assets' / 'media' / 'atlas'
+ANIM_DIR = ROOT / 'assets' / 'media' / 'anim'
 LONGER = 620       # the picture's longer side in the atlas
 BAND = 44          # the overlap of the two parts (atlas pixels)
 UNIT = LONGER / 32.0
@@ -31,7 +33,25 @@ MONSTERS = {
     'sproutle': {'concept': 'moss_1', 'cut': 0.30, 'turn': 7.0, 'sticker': True},
     'mossbun': {'concept': 'moss_2', 'cut': 0.31, 'turn': 6.0, 'sticker': False},
     'thicketoad': {'concept': 'moss_3', 'cut': 0.46, 'turn': 2.2, 'sticker': False},
+    # the floor bosses (enemies.json; floors 1-9)
+    'hivebear': {'concept': 'honey_3', 'cut': 0.44, 'turn': 3.0, 'sticker': False},
+    'fungolem': {'concept': 'shroom_3', 'cut': 0.40, 'turn': 3.0, 'sticker': False},
+    'cragtortle': {'concept': 'stone_3', 'cut': 0.42, 'turn': 2.5, 'sticker': False},
+    'grimoox': {'concept': 'book_3', 'cut': 0.42, 'turn': 3.0, 'sticker': False},
+    'gravewarden': {'concept': 'ghost_3', 'cut': 0.44, 'turn': 3.5, 'sticker': False},
+    'hearthound': {'concept': 'ember_3', 'cut': 0.42, 'turn': 3.0, 'sticker': False},
+    'sphinxie': {'concept': 'sand_3', 'cut': 0.46, 'turn': 3.0, 'sticker': False},
+    'glacibear': {'concept': 'frost_3', 'cut': 0.42, 'turn': 2.5, 'sticker': False},
+    'astrowl': {'concept': 'star_3', 'cut': 0.46, 'turn': 3.0, 'sticker': False},
+    'chronoknight': {'concept': 'clock_3', 'cut': 0.44, 'turn': 3.0, 'sticker': False},
+    # floor 10's demon lord, painted by tools/art/make_boss_concept.py (it was a 32 px pixel picture)
+    'demonlord_vorkath': {'concept': 'vorkath', 'cut': 0.40, 'turn': 3.0, 'sticker': False},
 }
+# an atlas and an .anim per group (one 2048 page holds the moss team; a boss alone)
+GROUPS = {'monster_moss': ['sproutle', 'mossbun', 'thicketoad']}
+GROUPS.update({f'monster_{b}': [b] for b in ('hivebear', 'fungolem', 'cragtortle', 'grimoox', 'gravewarden', 'hearthound',
+                                              'sphinxie', 'glacibear', 'astrowl', 'chronoknight')})
+GROUPS['monster_vorkath'] = ['demonlord_vorkath']
 
 
 def strip_sticker(img):
@@ -85,10 +105,10 @@ def clip(name, length, p, motion, head=None, color=None, loop=False):
     if 'scale' in motion:
         tr['scale'] = [key(t, [x, y, 1]) for t, x, y in motion['scale']]
     color_tr = {'color': [key(t, c) for t, c in color]} if color else {}
-    body = {'name': 'torso', 'pos': [0, 0, 0], 'sprite': f"monster_moss:{p['id']}_body", 'pivot': [0.5, 1.0], 'order': 0, 'tracks': dict(color_tr)}
+    body = {'name': 'torso', 'pos': [0, 0, 0], 'sprite': f"{p['atlas']}:{p['id']}_body", 'pivot': [0.5, 1.0], 'order': 0, 'tracks': dict(color_tr)}
     top_h = p['top'].height
     pivot_y = p['cut'] / top_h
-    head_node = {'name': 'top', 'pos': [0, -(p['h'] - p['cut']), 0], 'sprite': f"monster_moss:{p['id']}_top", 'pivot': [0.5, round(pivot_y, 4)], 'order': 1,
+    head_node = {'name': 'top', 'pos': [0, -(p['h'] - p['cut']), 0], 'sprite': f"{p['atlas']}:{p['id']}_top", 'pivot': [0.5, round(pivot_y, 4)], 'order': 1,
                  'tracks': dict(color_tr)}
     if head:
         head_node['tracks']['rot'] = [key(t, [0, 0, d]) for t, d in head]
@@ -163,14 +183,15 @@ def power_colour():
     return out + [(3.05, flare), (3.25, hot), (3.5, [1.35, 0.85, 0.7, 1])]
 
 
-def main():
+def make_group(atlas, ids):
     all_parts = {}
-    for mid, m in MONSTERS.items():
-        p = parts(m)
+    for mid in ids:
+        p = parts(MONSTERS[mid])
         p['id'] = mid
+        p['atlas'] = atlas
         all_parts[mid] = p
     sheet = Image.new('RGBA', (2048, 2048), (0, 0, 0, 0))
-    lines = [ATLAS.name + '.png', 'size: 2048, 2048', 'format: RGBA8888', 'filter: Linear, Linear', 'repeat: none']
+    lines = [atlas + '.png', 'size: 2048, 2048', 'format: RGBA8888', 'filter: Linear, Linear', 'repeat: none']
     x, y, row = 2, 2, 0
     for mid, p in all_parts.items():
         for part in ('top', 'body'):
@@ -182,14 +203,29 @@ def main():
             x += im.width + 2
             row = max(row, im.height)
     if y + row > sheet.height:
-        raise SystemExit('the atlas is too small')
-    sheet.save(str(ATLAS) + '.png')
-    Path(str(ATLAS) + '.atlas').write_text('\n'.join(lines) + '\n', encoding='utf-8', newline='\n')
+        raise SystemExit(f'{atlas}: the atlas is too small')
+    if len(ids) == 1:   # a boss alone: the page cut to what it uses (the moss team keeps its 2048 page as it was)
+        sheet = sheet.crop((0, 0, 2048, y + row + 2))
+        lines[1] = f'size: 2048, {sheet.height}'
+    sheet.save(ATLAS_DIR / f'{atlas}.png')
+    (ATLAS_DIR / f'{atlas}.atlas').write_text('\n'.join(lines) + '\n', encoding='utf-8', newline='\n')
     clips = []
     for mid, p in all_parts.items():
         clips += clips_of(p, MONSTERS[mid]['turn'])
-    ANIM.write_text(json.dumps({'version': 2, 'atlases': ['../atlas/monster_moss.atlas'], 'clips': clips}, indent=1) + '\n', encoding='utf-8', newline='\n')
-    print(f'{ATLAS}.atlas; {ANIM}: {len(clips)} clips')
+    anim = ANIM_DIR / f'{atlas}.anim'
+    anim.write_text(json.dumps({'version': 2, 'atlases': [f'../atlas/{atlas}.atlas'], 'clips': clips}, indent=1) + '\n', encoding='utf-8', newline='\n')
+    print(f'{ATLAS_DIR / atlas}.atlas; {anim}: {len(clips)} clips')
+
+
+def main():
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--only', default='', help='groups by name without "monster_" (moss, hivebear, ...), comma separated')
+    a = ap.parse_args()
+    only = {f'monster_{g}' for g in a.only.split(',') if g}
+    for atlas, ids in GROUPS.items():
+        if not only or atlas in only:
+            make_group(atlas, ids)
 
 
 if __name__ == '__main__':

@@ -335,6 +335,7 @@ BattleTutorial f_TutorialFromJson(const nlohmann::json& l_jBattle) {
         l_oS.m_iCount = std::max(1, l_jS.value("count", 1));
         l_oS.m_bHold = l_jS.value("hold", false);
         l_oS.m_bOnce = l_jS.value("once", false);
+        l_oS.m_iHideMs = std::max(0, l_jS.value("hideMs", 0));
         l_oT.m_vSteps.push_back(l_oS);
     }
     return l_oT;

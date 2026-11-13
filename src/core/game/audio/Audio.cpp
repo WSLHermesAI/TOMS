@@ -2,6 +2,8 @@
 #include "Audio.h"
 #include "miniaudio_vorbis_impl.h"
 #include <cstdio>
+#include <iterator>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -10,6 +12,7 @@
 struct ma_engine_wrapper { ma_engine m_oE; };
 
 namespace {
+void* g_pLastSound = nullptr;    // the ma_sound f_Play made last (f_PlayOwned takes it)
 bool g_bBackgroundMuted = false;
 Audio* g_pLiveAudio = nullptr;   // the engine now in use (a session that restarts makes a new one)
 }
@@ -62,11 +65,17 @@ namespace {
 // so no header or call-site changes are needed for a platform-specific detail.
 struct LiveSfx { ma_sound* m_pSound; ma_decoder* m_pDecoder; };
 std::vector<LiveSfx>& f_LiveSfx() { static std::vector<LiveSfx> l_vV; return l_vV; }
+std::map<uint32_t, ma_sound*>& f_OwnedSfx() { static std::map<uint32_t, ma_sound*> l_mapM; return l_mapM; }   // f_PlayOwned's ids
+
+void f_ForgetOwned(ma_sound* l_pS) {
+    for (auto l_itIt = f_OwnedSfx().begin(); l_itIt != f_OwnedSfx().end();) l_itIt = l_itIt->second == l_pS ? f_OwnedSfx().erase(l_itIt) : std::next(l_itIt);
+}
 
 void f_ReapFinished() {
     auto& l_vV = f_LiveSfx();
     for (size_t l_nI = 0; l_nI < l_vV.size();) {
-        if (ma_sound_at_end(l_vV[l_nI].m_pSound)) {
+        if (ma_sound_at_end(l_vV[l_nI].m_pSound) || !ma_sound_is_playing(l_vV[l_nI].m_pSound)) {   // (ended, or stopped by its owner)
+            f_ForgetOwned(l_vV[l_nI].m_pSound);
             ma_sound_uninit(l_vV[l_nI].m_pSound); ma_decoder_uninit(l_vV[l_nI].m_pDecoder);
             delete l_vV[l_nI].m_pSound; delete l_vV[l_nI].m_pDecoder;
             l_vV.erase(l_vV.begin() + (long)l_nI);
@@ -81,17 +90,56 @@ namespace {
 // A sound at another pitch or volume is its own ma_sound (the engine's fire-and-forget sound has neither): kept until it ends.
 // The decoded data is cached by miniaudio's resource manager, so the same sound again is not read again.
 std::vector<ma_sound*>& f_PitchedSfx() { static std::vector<ma_sound*> l_vV; return l_vV; }
+std::map<uint32_t, ma_sound*>& f_OwnedSfx() { static std::map<uint32_t, ma_sound*> l_mapM; return l_mapM; }   // f_PlayOwned's ids
+
+void f_ForgetOwned(ma_sound* l_pS) {
+    for (auto l_itIt = f_OwnedSfx().begin(); l_itIt != f_OwnedSfx().end();) l_itIt = l_itIt->second == l_pS ? f_OwnedSfx().erase(l_itIt) : std::next(l_itIt);
+}
+
 void f_ReapPitched() {
     auto& l_vV = f_PitchedSfx();
     for (size_t l_nI = 0; l_nI < l_vV.size();) {
-        if (ma_sound_at_end(l_vV[l_nI])) { ma_sound_uninit(l_vV[l_nI]); delete l_vV[l_nI]; l_vV.erase(l_vV.begin() + (long)l_nI); }
-        else ++l_nI;
+        if (ma_sound_at_end(l_vV[l_nI]) || !ma_sound_is_playing(l_vV[l_nI])) {   // (ended, or stopped by its owner)
+            f_ForgetOwned(l_vV[l_nI]);
+            ma_sound_uninit(l_vV[l_nI]); delete l_vV[l_nI]; l_vV.erase(l_vV.begin() + (long)l_nI);
+        } else ++l_nI;
     }
 }
 }  // namespace
 #endif
 
 void Audio::f_Play(const std::string& l_strKey) { f_Play(l_strKey, 1.0f, 1.0f); }
+
+namespace {
+uint32_t g_uNextOwned = 0;
+}
+
+uint32_t Audio::f_PlayOwned(const std::string& l_strKey, float l_fPitch, float l_fVolume) {
+    if (!m_bOk || !m_pEngine) return 0;
+    // its own ma_sound (never the engine's fire-and-forget one, which cannot be stopped): f_Play notes the one it made
+    g_pLastSound = nullptr;
+#if defined(__ANDROID__)
+    f_Play(l_strKey, l_fPitch, l_fVolume);
+#else
+    f_Play(l_strKey, l_fPitch == 1.0f && l_fVolume == 1.0f ? 1.0f + 1e-6f : l_fPitch, l_fVolume);   // (not exactly 1: its own sound)
+#endif
+    if (!g_pLastSound) return 0;
+    if (++g_uNextOwned == 0) ++g_uNextOwned;
+    f_OwnedSfx()[g_uNextOwned] = (ma_sound*)g_pLastSound;
+    return g_uNextOwned;
+}
+
+void Audio::f_StopOwned(uint32_t l_uId, int l_iFadeMs) {
+    auto l_itIt = f_OwnedSfx().find(l_uId);
+    if (l_itIt == f_OwnedSfx().end()) return;   // ended already (reaped)
+    if (l_iFadeMs > 0) ma_sound_stop_with_fade_in_milliseconds(l_itIt->second, (ma_uint64)l_iFadeMs);
+    else ma_sound_stop(l_itIt->second);
+}
+
+bool Audio::f_OwnedPlaying(uint32_t l_uId) const {
+    auto l_itIt = f_OwnedSfx().find(l_uId);
+    return l_itIt != f_OwnedSfx().end() && !ma_sound_at_end(l_itIt->second) && ma_sound_is_playing(l_itIt->second);
+}
 
 void Audio::f_Play(const std::string& l_strKey, float l_fPitch, float l_fVolume) {
     if (!m_bOk || !m_pEngine) return;
@@ -112,6 +160,7 @@ void Audio::f_Play(const std::string& l_strKey, float l_fPitch, float l_fVolume)
     ma_sound_set_volume(l_pSnd, l_fVolume);
     ma_sound_start(l_pSnd);
     f_LiveSfx().push_back({l_pSnd, l_pDec});
+    g_pLastSound = l_pSnd;
 #else
     if (l_fPitch == 1.0f && l_fVolume == 1.0f) {   // the engine's own fire-and-forget sound
         ma_result l_eR = ma_engine_play_sound(l_pE, l_strPath.c_str(), NULL);
@@ -129,6 +178,7 @@ void Audio::f_Play(const std::string& l_strKey, float l_fPitch, float l_fVolume)
     ma_sound_set_volume(l_pSnd, l_fVolume);
     ma_sound_start(l_pSnd);
     f_PitchedSfx().push_back(l_pSnd);
+    g_pLastSound = l_pSnd;
 #endif
 }
 
@@ -204,5 +254,6 @@ Audio::~Audio() {
     for (ma_sound* l_pSnd : f_PitchedSfx()) { ma_sound_uninit(l_pSnd); delete l_pSnd; }   // before their engine
     f_PitchedSfx().clear();
 #endif
+    f_OwnedSfx().clear();   // (their sounds are gone with the lists above)
     if (m_pEngine) { ma_engine_uninit(&((ma_engine_wrapper*)m_pEngine)->m_oE); delete (ma_engine_wrapper*)m_pEngine; }
 }

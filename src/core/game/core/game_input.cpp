@@ -148,6 +148,15 @@ void Game::f_MovePlayer(int l_iDx, int l_iDy) {
         if (l_spO->f_BumpBeforeStep(l_iNx, l_iNy)) return;
     // Q7: a locked stair is not stepped on: it says which event opens it.
     if (const toms::StairLink* l_pS = toms::f_StairAt(m_oSt.m_vStairs, l_iNx, l_iNy); l_pS && f_StairLocked(*l_pS)) {
+        const std::string l_strGuard = l_pS->m_bUp ? f_StairGuard() : std::string();
+        bool l_bEventsDone = true;
+        for (const std::string& l_strE : l_pS->m_vUnlockEvents) l_bEventsDone = l_bEventsDone && m_oRun.f_EventFinished(l_strE);
+        if (!l_strGuard.empty() && l_bEventsDone) {   // its boss first (f_StairGuard)
+            const std::string l_strMsg = f_TrParam(m_oLocale.f_Tr("stairs.guarded"), "name", f_EnemyDisplayName(l_strGuard));
+            if (m_vNotifications.empty() || m_vNotifications.back().first != l_strMsg) m_vNotifications.push_back({l_strMsg, 3200});
+            m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
+            return;
+        }
         f_BumpLockedStairs(*l_pS);
         return;
     }
@@ -181,6 +190,20 @@ bool Game::f_StepOntoStairs(int l_iX, int l_iY) {
     f_RequestStageTransition(l_pS->m_strTo, l_pS->m_bUp);
     m_strStairsConfirmGoEvent = toms::f_GoStairsEventId(m_oSt.m_strId, l_pS->m_strTo);
     return true;
+}
+
+std::string Game::f_StairGuard() const {
+    for (const Entity& l_oE : m_oSt.m_vEntities) {
+        if (l_oE.m_bConsumed || l_oE.m_strKind.rfind("monster:", 0) != 0) continue;
+        const auto l_itT = m_mapEnemyTpl.find(l_oE.m_strId);
+        if (l_itT != m_mapEnemyTpl.end() && l_itT->second.value("guardsStairs", false)) return l_oE.m_strId;
+    }
+    return std::string();
+}
+
+std::string Game::f_EnemyDisplayName(const std::string& l_strId) const {
+    const auto l_itT = m_mapEnemyTpl.find(l_strId);
+    return l_itT != m_mapEnemyTpl.end() && l_itT->second.contains("name") ? m_oLocale.f_Field(l_itT->second["name"]) : l_strId;
 }
 
 void Game::f_BumpLockedStairs(const toms::StairLink& l_oS) {

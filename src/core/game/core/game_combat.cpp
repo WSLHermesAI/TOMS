@@ -554,7 +554,7 @@ void Game::f_DebugFireFoeEvent(int l_iFoe, int l_iEvent) {
 void Game::f_FoeLook(int l_iFoe, const std::string& l_strState) {
     if (l_iFoe < 0 || l_iFoe >= (int)m_oCs.m_vFoes.size()) return;
     if (const toms::LookState* l_pLs = m_oLooks.f_Find(m_oCs.m_vFoes[(size_t)l_iFoe].m_oEnemy.m_strLook, l_strState)) {
-        if (!l_pLs->m_strSound.empty()) m_oAudio.f_Play(l_pLs->m_strSound);
+        f_PlayFoeSound(l_iFoe, l_pLs->m_strSound);   // (bound to it, as its particles)
         if (!l_pLs->m_strFx.empty()) f_PlayBattleFx(l_pLs->m_strFx, l_iFoe);
     }
     if (l_strState != "idle" && l_iFoe < (int)m_vFoeRigs.size()) m_vFoeRigs[(size_t)l_iFoe].m_strRequest = l_strState;
@@ -609,6 +609,7 @@ void Game::f_BattleCycleTarget(int l_iDir) {
 // and the target moves to the next one standing.
 void Game::f_FoeDown(int l_iFoe) {
     f_BattleEvent("down", l_iFoe, -1, 0, m_oCs.m_vFoes[(size_t)l_iFoe].m_oEnemy.m_strId);
+    f_FoeEffectsOnDeath(l_iFoe);   // its effects: stopped, faded or kept
     f_FoeLook(l_iFoe, "die");
     if (l_iFoe == m_oCs.m_iTarget) {
         const int l_iNext = toms::f_NextStanding(m_oCs.f_FoeHp(), l_iFoe, +1);
@@ -753,6 +754,8 @@ void Game::f_DrawBattleRig() {
         l_mat3Shake[2][0] = l_v2Focus.x * (1.0f - l_fZoom) + l_fOx; l_mat3Shake[2][1] = l_v2Focus.y * (1.0f - l_fZoom) + l_fOy;
         for (BattleFx& l_oB : m_vBattleFx)
             if (!l_oB.m_bOverUi) l_oB.m_oFx.f_Draw(m_pRen, m_spBattleFxFile->f_Atlases(), l_mat3Shake, nullptr);
+        for (CombatState::Foe& l_oF : m_oCs.m_vFoes)   // each foe's own (f_PlayBattleFx on it)
+            for (CombatState::Foe::OwnedFx& l_oO : l_oF.m_vFx) l_oO.m_oFx.f_Draw(m_pRen, m_spBattleFxFile->f_Atlases(), l_mat3Shake, nullptr);
         m_pRen->f_SetLayer(1);   // the track's hints: over the battle screen's UI
         for (BattleFx& l_oB : m_vBattleFx)
             if (l_oB.m_bOverUi) l_oB.m_oFx.f_Draw(m_pRen, m_spBattleFxFile->f_Atlases(), glm::mat3(1.0f), nullptr);
@@ -869,8 +872,61 @@ const toms::WeaponFx* Game::f_BattleWeaponFx(bool l_bTop) const {
 // One-shot, at the player's weapon (a little ahead of the character, in its box) or a monster's middle.
 void Game::f_PlayBattleFx(const std::string& l_strEffect, int l_iWho, int l_iDelayMs) {
     const glm::vec4 l_v4B = f_FighterBox(l_iWho);
-    if (l_iWho >= 0) f_PlayBattleFxAt(l_strEffect, l_v4B.x + l_v4B.z * 0.5f, l_v4B.y + l_v4B.w * 0.5f, false, l_iDelayMs);
-    else f_PlayBattleFxAt(l_strEffect, l_v4B.x + l_v4B.z * 0.731f, l_v4B.y + l_v4B.w * 0.493f, false, l_iDelayMs);
+    if (l_iWho < 0) { f_PlayBattleFxAt(l_strEffect, l_v4B.x + l_v4B.z * 0.731f, l_v4B.y + l_v4B.w * 0.493f, false, l_iDelayMs); return; }
+    // a foe's: into its own emitters (CombatState::Foe::m_vFx), which go when it falls
+    if (l_strEffect.empty() || l_iWho >= (int)m_oCs.m_vFoes.size()) return;
+    f_LoadBattleFxFile();
+    if (!m_spBattleFxFile) return;
+    const toms::fx::Effect* l_pE = m_spBattleFxFile->f_Find(l_strEffect);
+    if (!l_pE) { std::fprintf(stderr, "[battle] %s has no effect '%s'\n", m_pszBattleFxFile, l_strEffect.c_str()); return; }
+    if (m_bBattle3DOn) f_AddBattle3DFlash(l_iWho, l_iDelayMs);   // on a 3D stage it lights the stage at the foe
+    const float l_fX = l_v4B.x + l_v4B.z * 0.5f, l_fY = l_v4B.y + l_v4B.w * 0.5f;
+    auto l_fnStart = [this, l_pE, l_iWho, l_fX, l_fY] {
+        if (l_iWho >= (int)m_oCs.m_vFoes.size() || m_oCs.m_vFoes[(size_t)l_iWho].f_Down()) return;   // (fell before it started)
+        toms::fx::EffectInstance l_oFx;
+        l_oFx.f_SetTransform(toms::anim::f_Placement(l_fX, l_fY, 1.0f, 0.0f));
+        l_oFx.f_SetGpuSimulation(m_pRen, f_ParticleGpuThreshold());
+        l_oFx.f_Play(l_pE, ++m_uBattleFxSeed);
+        m_oCs.m_vFoes[(size_t)l_iWho].m_vFx.push_back({l_pE->m_strName, std::move(l_oFx)});
+    };
+    if (l_iDelayMs > 0) m_oTimers.f_After(m_oBattleTimers, l_iDelayMs, l_fnStart);
+    else l_fnStart();
+}
+
+// What a fallen foe started (CLAUDE.md "Battle effects belong to their monster"): each of its effects and sounds by
+// battle.json "onFoeDeath" ("fxRules" / "soundRules": its name -> "stop" at once, "fade": no more particles and those out finish /
+// the sound fades out, "keep": it plays to its end, no longer the foe's; "default" for the rest). Its power-up and
+// charge stop: no more charge particles, no release, no knock-down.
+void Game::f_FoeEffectsOnDeath(int l_iFoe) {
+    if (l_iFoe < 0 || l_iFoe >= (int)m_oCs.m_vFoes.size()) return;
+    CombatState::Foe& l_oF = m_oCs.m_vFoes[(size_t)l_iFoe];
+    auto l_fnRule = [this](const char* l_pszKind, const std::string& l_strName) {
+        const nlohmann::json l_jK = m_jOnFoeDeath.value(l_pszKind, nlohmann::json::object());
+        return l_jK.value(l_strName, l_jK.value("default", std::string("stop")));
+    };
+    for (CombatState::Foe::OwnedFx& l_oO : l_oF.m_vFx) {
+        const std::string l_strRule = l_fnRule("fxRules", l_oO.m_strName);
+        if (l_strRule == "stop") continue;   // goes with the list
+        if (l_strRule == "fade") l_oO.m_oFx.f_Stop(false);
+        BattleFx l_oB;   // no longer the foe's: the battle's, to its end
+        l_oB.m_oFx = std::move(l_oO.m_oFx);
+        m_vBattleFx.push_back(std::move(l_oB));
+    }
+    l_oF.m_vFx.clear();
+    for (const CombatState::Foe::OwnedSound& l_oS : l_oF.m_vSounds) {
+        const std::string l_strRule = l_fnRule("soundRules", l_oS.m_strKey);
+        if (l_strRule == "stop") m_oAudio.f_StopOwned(l_oS.m_uId, 60);
+        else if (l_strRule == "fade") m_oAudio.f_StopOwned(l_oS.m_uId, std::max(60, m_jOnFoeDeath.value("fadeMs", 400)));
+    }
+    l_oF.m_vSounds.clear();
+    l_oF.m_bPowered = false;
+    l_oF.m_iPowerMs = 0;
+}
+
+void Game::f_PlayFoeSound(int l_iFoe, const std::string& l_strKey, float l_fPitch) {
+    if (l_strKey.empty()) return;
+    const uint32_t l_uId = m_oAudio.f_PlayOwned(l_strKey, l_fPitch);
+    if (l_uId && l_iFoe >= 0 && l_iFoe < (int)m_oCs.m_vFoes.size()) m_oCs.m_vFoes[(size_t)l_iFoe].m_vSounds.push_back({l_uId, l_strKey});
 }
 
 void Game::f_PlayBattleFxAt(const std::string& l_strEffect, float l_fX, float l_fY, bool l_bOverUi, int l_iDelayMs, float l_fScale, float l_fRotationDeg) {
@@ -944,7 +1000,7 @@ void Game::f_FoeAttackFx(int l_iFoe, const toms::MoveDef& l_oMove, bool l_bReach
     const glm::vec2 l_v2Foe = f_FighterCentre(l_iFoe), l_v2Hero(l_v4Hero.x + l_v4Hero.z * 0.55f, l_v4Hero.y + l_v4Hero.w * 0.3f);
     std::uniform_real_distribution<float> l_oPitch(0.92f, 1.08f);
     if (!l_jK.value("cast", std::string()).empty()) f_PlayBattleFx(l_jK.value("cast", std::string()), l_iFoe);
-    if (!l_jK.value("sound", std::string()).empty()) m_oAudio.f_Play(l_jK.value("sound", std::string()), l_oPitch(m_oShakeRng));
+    if (!l_jK.value("sound", std::string()).empty()) f_PlayFoeSound(l_iFoe, l_jK.value("sound", std::string()), l_oPitch(m_oShakeRng));
     const std::string l_strImpact = l_bReaches ? l_jK.value("impact", std::string()) : std::string();
     const std::string l_strImpactSound = l_bReaches ? l_jK.value("impactSound", std::string()) : std::string();
     const std::string l_strProjectile = l_jK.value("projectile", std::string());
@@ -982,6 +1038,16 @@ void Game::f_UpdateBattleFx(int l_iDtMs) {
         if (!l_pairLanded.second.second.empty()) m_oAudio.f_Play(l_pairLanded.second.second);
     }
     for (BattleFx& l_oB : m_vBattleFx) l_oB.m_oFx.f_Update(l_iDtMs / 1000.0f);
+    for (size_t l_nI = 0; l_nI < m_oCs.m_vFoes.size(); l_nI++) {
+        CombatState::Foe& l_oF = m_oCs.m_vFoes[l_nI];
+        if (l_oF.f_Down()) { if (!l_oF.m_vFx.empty() || !l_oF.m_vSounds.empty()) f_FoeEffectsOnDeath((int)l_nI); continue; }
+        for (CombatState::Foe::OwnedFx& l_oO : l_oF.m_vFx) l_oO.m_oFx.f_Update(l_iDtMs / 1000.0f);
+        l_oF.m_vFx.erase(std::remove_if(l_oF.m_vFx.begin(), l_oF.m_vFx.end(), [](const CombatState::Foe::OwnedFx& l_oO) { return l_oO.m_oFx.f_Finished(); }),
+                         l_oF.m_vFx.end());
+        l_oF.m_vSounds.erase(std::remove_if(l_oF.m_vSounds.begin(), l_oF.m_vSounds.end(),
+                                            [this](const CombatState::Foe::OwnedSound& l_oS) { return !m_oAudio.f_OwnedPlaying(l_oS.m_uId); }),
+                             l_oF.m_vSounds.end());
+    }
     m_vBattleFx.erase(std::remove_if(m_vBattleFx.begin(), m_vBattleFx.end(), [](const BattleFx& l_oB) { return l_oB.m_oFx.f_Finished(); }),
                     m_vBattleFx.end());
 }
@@ -1151,7 +1217,10 @@ void Game::f_FinishCombatWin() {
     const EnemyInst& l_oLead = m_oCs.f_Lead().m_oEnemy;
     const bool l_bOnMap = l_oLead.m_iY >= 0 && l_oLead.m_iY < (int)m_oSt.m_vTiles.size() && l_oLead.m_iX >= 0 && l_oLead.m_iX < (int)m_oSt.m_vTiles[l_oLead.m_iY].size();
     if (l_bOnMap) {
+        const bool l_bWasGuard = !f_StairGuard().empty();
         for (auto& l_oE : m_oSt.m_vEntities) if (l_oE.m_iX==l_oLead.m_iX && l_oE.m_iY==l_oLead.m_iY && l_oE.m_strId==l_oLead.m_strMapId) { l_oE.m_bConsumed=true; f_FireLinkedEvents(l_oE); }
+        if (l_bWasGuard && f_StairGuard().empty())   // the floor's boss beaten: its stair up opens (f_StairGuard)
+            m_vNotifications.push_back({f_TrParam(m_oLocale.f_Tr("stairs.guard_beaten"), "name", l_oLead.m_strName), 4000});
         m_oSt.m_vTiles[l_oLead.m_iY][l_oLead.m_iX] = '.';
         // Milestone 7: persist the clear so it survives a reload of this floor (stairs or the Stage
         // Select hub) -- see entityStatus_'s declaration in game.h.
@@ -1251,6 +1320,7 @@ bool Game::f_AfterPlayerHit(const std::string& l_strHitLog, const std::string& l
     if (!m_oCs.m_vFoes[(size_t)l_iT].f_Down()) { m_oCs.m_strLog = l_strHitLog; return false; }
     if (toms::f_AllDown(m_oCs.f_FoeHp())) {
         f_BattleEvent("down", l_iT, -1, 0, m_oCs.m_vFoes[(size_t)l_iT].m_oEnemy.m_strId);
+        f_FoeEffectsOnDeath(l_iT);   // its effects: stopped, faded or kept
         m_oCs.m_strLog = l_strWinLog;
         f_FoeLook(l_iT, "die");
         f_StartWinMoment();   // slow motion, then finishCombatWin (15 §3.8)
@@ -1835,13 +1905,19 @@ glm::vec3 Game::f_Battle3DMark(int l_iWho) const {
 float Game::f_Battle3DHeight(int l_iWho) const {
     const nlohmann::json l_jH = m_jBattle3DStage.is_object() ? m_jBattle3DStage.value("heights", nlohmann::json::object()) : nlohmann::json::object();
     if (l_iWho < 0) return l_jH.value("hero", 1.8f);
-    const float l_fHeight = f_FoeIsBig(l_iWho) ? l_jH.value("big", 3.0f) : l_jH.value("monster", 1.6f);
-    // the monster's own body scale on the 3D stage (enemies.json "scale3d", 1 = the stage's height): its picture's size
-    // there, its shadow, its head's name and HP all follow
+    // Its body type (the owner, 2026-11-13: "5 body type values (1-5) ... the stronger monster should look bigger but some
+    // special monster not"): enemies.json "body" picks battle.json "bodyScale" times the stage's monster height (the
+    // thicketoad, body 3: 2 x 1.6 m). Without a body: the stage's monster or big height. "scale3d": a monster's own
+    // factor on top. Its picture's size there, its shadow, its head's name and HP all follow.
+    float l_fHeight = f_FoeIsBig(l_iWho) ? l_jH.value("big", 3.0f) : l_jH.value("monster", 1.6f);
     float l_fScale = 1.0f;
     if (l_iWho < (int)m_oCs.m_vFoes.size()) {
         const auto l_itT = m_mapEnemyTpl.find(m_oCs.m_vFoes[(size_t)l_iWho].m_oEnemy.m_strId);
-        if (l_itT != m_mapEnemyTpl.end()) l_fScale = std::clamp(l_itT->second.value("scale3d", 1.0f), 0.1f, 10.0f);
+        if (l_itT != m_mapEnemyTpl.end()) {
+            const int l_iBody = l_itT->second.value("body", 0);
+            if (l_iBody >= 1 && l_iBody <= 5) l_fHeight = l_jH.value("monster", 1.6f) * std::clamp(m_jBodyScale.value(std::to_string(l_iBody), 1.0f), 0.1f, 10.0f);
+            l_fScale = std::clamp(l_itT->second.value("scale3d", 1.0f), 0.1f, 10.0f);
+        }
     }
     return l_fHeight * l_fScale;
 }
@@ -2040,8 +2116,7 @@ void Game::f_StartFoePower(int l_iFoe, bool l_bIntro) {
     f_BattleEvent("power", l_iFoe, -1, l_iPower);
     f_FoeLook(l_iFoe, "power");   // its clip (a look's "power" state may add a sound or particles of its own)
     f_PlayBattleFx(l_jS.value("powerFx", std::string("monster_power")), l_iFoe);
-    const std::string l_strSound = l_jS.value("powerSound", std::string("sfx.monster_power"));
-    if (!l_strSound.empty()) m_oAudio.f_Play(l_strSound);
+    f_PlayFoeSound(l_iFoe, l_jS.value("powerSound", std::string("sfx.monster_power")));
     if (m_oCs.m_iCamOn == l_iFoe && m_oCs.m_iCamMs > 0)   // the close-up stays on it for the whole power-up
         m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = std::max(m_oCs.m_iCamMsMax, l_iPower);
 }
@@ -2053,8 +2128,7 @@ void Game::f_UnleashFoePower(int l_iFoe) {
     const nlohmann::json l_jS = f_FeelFx().value("specialAttack", nlohmann::json::object());
     f_BattleEvent("unleash", l_iFoe, -1);
     f_PlayBattleFx(l_jS.value("unleashFx", std::string("monster_unleash")), l_iFoe);
-    const std::string l_strShout = l_jS.value("shout", std::string("sfx.monster_roar"));
-    if (!l_strShout.empty()) m_oAudio.f_Play(l_strShout);
+    f_PlayFoeSound(l_iFoe, l_jS.value("shout", std::string("sfx.monster_roar")));
     if (!m_oSettings.m_bReduceEffects) {
         m_oCs.m_fShakePx = std::max(m_oCs.m_fShakePx, l_jS.value("shakePx", 16.0f));
         m_oCs.m_iShakeMs = m_oCs.m_iShakeMsMax = std::max(m_oCs.m_iShakeMs, l_jS.value("shakeMs", 520));

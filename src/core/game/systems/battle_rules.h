@@ -228,6 +228,7 @@ struct TutorialStep {
     int m_iCount = 1;            // how many times, before the next step
     bool m_bHold = false;        // the monster's clock waits
     bool m_bOnce = false;        // not again when the player tries another weapon
+    int m_iHideMs = 0;           // > 0: its box goes away this long after it popped up (the step goes on); 0: it stays
 };
 struct BattleTutorial {
     std::string m_strEnemy;      // enemies.json

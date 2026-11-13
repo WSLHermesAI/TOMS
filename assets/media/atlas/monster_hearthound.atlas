@@ -1,0 +1,9 @@
+monster_hearthound.png
+size: 2048, 378
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+hearthound_top
+  bounds: 2, 2, 423, 304
+hearthound_body
+  bounds: 427, 2, 423, 374

@@ -1,0 +1,9 @@
+monster_grimoox.png
+size: 2048, 378
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+grimoox_top
+  bounds: 2, 2, 466, 304
+grimoox_body
+  bounds: 470, 2, 466, 374

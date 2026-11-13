@@ -515,6 +515,9 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
                                                                     : std::string("battle.play_hint_") + toms::f_PlayTypeName(l_ePlayType)));
                 l_oB.m_strTutorialMark = l_pStep->m_strMark;
                 l_oB.m_fTutorialScale = l_fnPop(m_oArena.m_iTutorialPopMs);
+                // a step with hideMs: its box goes away that long after it popped up (the owner, 2026-11-13: the red cells'
+                // hint "should auto disappear after 3 seconds"); its words stay set, so nothing else takes its place
+                l_oB.m_bTutorialHidden = l_pStep->m_iHideMs > 0 && m_oArena.m_iTutorialPopMs >= l_pStep->m_iHideMs;
                 if (l_pStep->m_strMark == "cells" && !m_oCs.m_bCellsShown) l_oB.m_strTutorial.clear();   // it comes with the cells
             }
             if (l_ePlayType != toms::PlayType::eTRACK || m_oCs.m_oSkill.m_bOn) f_TouchPlayUi(l_oB);

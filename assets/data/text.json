@@ -1295,6 +1295,46 @@
       "zh_TW": "很好！把苔蛙打倒吧",
       "en": "Well done! Now finish the toad"
     },
+    "stairs.guarded": {
+      "zh_TW": "{name}擋住了上樓的樓梯，先打倒牠！",
+      "en": "{name} guards the stairs up: beat it first!",
+      "zh_CN": "{name}挡住了上楼的楼梯，先打倒它！",
+      "ja": "{name}が上り階段を守っている。先に倒せ！",
+      "ko": "{name}이(가) 올라가는 계단을 지키고 있다. 먼저 쓰러뜨려라!",
+      "es": "¡{name} guarda la escalera de subida: derrótalo primero!"
+    },
+    "stairs.guard_beaten": {
+      "zh_TW": "打倒了{name}，上樓的樓梯開了！",
+      "en": "{name} is beaten: the stairs up are open!",
+      "zh_CN": "打倒了{name}，上楼的楼梯开了！",
+      "ja": "{name}を倒した。上り階段が開いた！",
+      "ko": "{name}을(를) 쓰러뜨렸다. 올라가는 계단이 열렸다!",
+      "es": "¡{name} ha caído: la escalera de subida está abierta!"
+    },
+    "battle.intent.boss_near": {
+      "zh_TW": "猛擊（前排）",
+      "en": "Pound (near row)",
+      "zh_CN": "猛击（前排）",
+      "ja": "強打（前列）",
+      "ko": "강타 (앞줄)",
+      "es": "Golpe (fila cercana)"
+    },
+    "battle.intent.boss_line": {
+      "zh_TW": "衝撞（直線）",
+      "en": "Charge (a line)",
+      "zh_CN": "冲撞（直线）",
+      "ja": "突進（一列）",
+      "ko": "돌진 (한 줄)",
+      "es": "Embestida (una línea)"
+    },
+    "battle.intent.boss_fan": {
+      "zh_TW": "橫掃（大範圍）",
+      "en": "Sweep (wide)",
+      "zh_CN": "横扫（大范围）",
+      "ja": "薙ぎ払い（広範囲）",
+      "ko": "휩쓸기 (넓게)",
+      "es": "Barrido (amplio)"
+    },
     "battle.intent.toad_near": {
       "zh_TW": "拍擊（前排）",
       "en": "Slam (near row)"

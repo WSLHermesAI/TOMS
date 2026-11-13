@@ -162,6 +162,7 @@ struct UiBattle {
     bool m_bCellsOn = false;
     std::string m_strCellHint;
     std::string m_strTutorial, m_strTutorialMark;   // the new game's tutorial: its words, and what it points at
+    bool m_bTutorialHidden = false;                  // its box has gone away (its step's hideMs passed); the step goes on
     float m_fCellHintY = -24.0f;           // the words above the grid, whatever its height
     float m_fTutorialScale = 1.0f, m_fCellsScale = 1.0f;   // their pop as they appear
     bool m_bFocus = false;                 // the first danger's moment: only the monster is shown

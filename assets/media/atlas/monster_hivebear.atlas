@@ -1,0 +1,9 @@
+monster_hivebear.png
+size: 2048, 366
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+hivebear_top
+  bounds: 2, 2, 477, 316
+hivebear_body
+  bounds: 481, 2, 477, 362

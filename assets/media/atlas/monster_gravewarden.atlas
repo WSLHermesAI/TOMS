@@ -1,0 +1,9 @@
+monster_gravewarden.png
+size: 2048, 366
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+gravewarden_top
+  bounds: 2, 2, 367, 316
+gravewarden_body
+  bounds: 371, 2, 367, 362

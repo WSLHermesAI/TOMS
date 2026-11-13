@@ -1,0 +1,9 @@
+monster_chronoknight.png
+size: 2048, 366
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+chronoknight_top
+  bounds: 2, 2, 444, 316
+chronoknight_body
+  bounds: 448, 2, 444, 362

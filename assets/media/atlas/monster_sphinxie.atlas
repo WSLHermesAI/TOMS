@@ -1,0 +1,9 @@
+monster_sphinxie.png
+size: 2048, 353
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+sphinxie_top
+  bounds: 2, 2, 499, 329
+sphinxie_body
+  bounds: 503, 2, 499, 349

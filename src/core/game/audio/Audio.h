@@ -5,6 +5,7 @@
 // to no-op when no audio device/context is available (e.g. headless CI /
 // lavapipe), so the game never crashes for lack of sound.
 #pragma once
+#include <cstdint>
 #include <functional>
 #include <string>
 #include <map>
@@ -17,6 +18,11 @@ struct Audio : public Trackable {
     void f_Play(const std::string& l_strKey);    // a key: toms::key::g_pszSfxWalk, or "sfx.walk" from data
     // The same, at a pitch (1 = as recorded, 2 = an octave up; the length changes with it) and a volume (0..1).
     void f_Play(const std::string& l_strKey, float l_fPitch, float l_fVolume = 1.0f);
+    // A sound bound to its owner (a monster: CLAUDE.md "Battle effects belong to their monster"): the same, and its id, so
+    // the owner can stop it early (f_StopOwned: a fade, 0 = at once) or ask if it still plays. 0: nothing plays.
+    uint32_t f_PlayOwned(const std::string& l_strKey, float l_fPitch = 1.0f, float l_fVolume = 1.0f);
+    void f_StopOwned(uint32_t l_uId, int l_iFadeMs = 120);
+    bool f_OwnedPlaying(uint32_t l_uId) const;
     // The looping music. The same key again changes nothing; another fades over it. It plays through the same engine, so
     // the background mute covers it. Without a sound device the key is still kept, and nothing plays.
     void f_PlayMusic(const std::string& l_strKey, float l_fVolume, int l_iFadeInMs);
