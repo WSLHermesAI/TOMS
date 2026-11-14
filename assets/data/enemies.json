@@ -778,6 +778,7 @@
   },
   "thicketoad": {
     "bossTier": "mini",
+    "intro": true,
     "name": { "zh_TW": "苔蛙", "en": "Thicketoad" },
     "sprite": "slime.png",
     "look": "moss",
