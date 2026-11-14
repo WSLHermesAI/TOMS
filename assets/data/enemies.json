@@ -22,6 +22,7 @@
     "moves": ["strike", "jabs"]
   },
   "golem": {
+    "bossTier": "mini",
     "big": true,
     "name": { "zh_TW": "石巨人", "en": "Stone Golem", "zh_CN": "石巨人", "ja": "石の巨人", "ko": "돌 거인", "es": "Gólem de Piedra" },
     "sprite": "golem.png",
@@ -69,8 +70,10 @@
     "moves": ["strike", "heavy", "spell"]
   },
   "demonlord_vorkath": {
+    "bossTier": "final",
     "name": { "zh_TW": "Vorkath 沃卡司", "en": "Vorkath", "zh_CN": "Vorkath 沃卡司", "ja": "Vorkath", "ko": "Vorkath", "es": "Vorkath" },
     "sprite": "m_demonlord_vorkath.png",
+    "intro": true,
     "look": "vorkath",
     "hp": 800, "body": 5,
     "atk": 68,
@@ -774,6 +777,7 @@
     "draft": true
   },
   "thicketoad": {
+    "bossTier": "mini",
     "name": { "zh_TW": "苔蛙", "en": "Thicketoad" },
     "sprite": "slime.png",
     "look": "moss",
@@ -788,7 +792,131 @@
    
     "draft": true
   },
+  "capling": {
+    "name": { "zh_TW": "蘑菇仔", "en": "Capling", "zh_CN": "蘑菇仔", "ja": "キノコっこ", "ko": "버섯돌이", "es": "Setita" },
+    "sprite": "m_capling.png",
+    "look": "critters",
+    "hp": 44, "body": 1,
+    "atk": 17,
+    "def": 1,
+    "exp": 6,
+    "weaponExp": 1,
+    "gold": 4,
+    "_new": "F01's new monster, painted from monster_concepts shroom_2 (the owner, 2026-11-14)"
+  },
+  "buzzlet": {
+    "name": { "zh_TW": "嗡嗡蜂", "en": "Buzzlet", "zh_CN": "嗡嗡蜂", "ja": "ブンブンバチ", "ko": "붕붕벌", "es": "Zumbita" },
+    "sprite": "m_buzzlet.png",
+    "look": "critters",
+    "hp": 42, "body": 1,
+    "atk": 19,
+    "def": 1,
+    "exp": 7,
+    "weaponExp": 1,
+    "gold": 5,
+    "moves": ["strike", "jabs"],
+    "_new": "F02's new monster, painted from monster_concepts honey_2 (the owner, 2026-11-14)"
+  },
+  "tartling": {
+    "name": { "zh_TW": "莓果塔塔", "en": "Tartling", "zh_CN": "莓果塔塔", "ja": "ベリータルト", "ko": "딸기 타르트", "es": "Tartita" },
+    "sprite": "m_tartling.png",
+    "look": "critters",
+    "hp": 50, "body": 1,
+    "atk": 18,
+    "def": 2,
+    "exp": 7,
+    "weaponExp": 1,
+    "gold": 5,
+    "_new": "F03's new monster, painted from monster_concepts sweet_2 (the owner, 2026-11-14)"
+  },
+  "bubbloon": {
+    "name": { "zh_TW": "泡泡水母", "en": "Bubbloon", "zh_CN": "泡泡水母", "ja": "アワクラゲ", "ko": "방울 해파리", "es": "Burbujelly" },
+    "sprite": "m_bubbloon.png",
+    "look": "critters",
+    "hp": 52, "body": 1,
+    "atk": 19,
+    "def": 2,
+    "exp": 8,
+    "weaponExp": 1,
+    "gold": 6,
+    "_new": "F04's new monster, painted from monster_concepts tide_2 (the owner, 2026-11-14)"
+  },
+  "mittenpip": {
+    "name": { "zh_TW": "圍巾企鵝", "en": "Mittenpip", "zh_CN": "围巾企鹅", "ja": "マフラーペンギン", "ko": "목도리 펭귄", "es": "Pingüifanda" },
+    "sprite": "m_mittenpip.png",
+    "look": "critters",
+    "hp": 54, "body": 1,
+    "atk": 20,
+    "def": 2,
+    "exp": 8,
+    "weaponExp": 1,
+    "gold": 6,
+    "_new": "F05's new monster, painted from monster_concepts frost_2 (the owner, 2026-11-14)"
+  },
+  "bonekit": {
+    "name": { "zh_TW": "骷髏貓", "en": "Bonekit", "zh_CN": "骷髅猫", "ja": "ホネネコ", "ko": "해골 고양이", "es": "Gatohueso" },
+    "sprite": "m_bonekit.png",
+    "look": "critters",
+    "hp": 56, "body": 1,
+    "atk": 21,
+    "def": 2,
+    "exp": 9,
+    "weaponExp": 1,
+    "gold": 6,
+    "_new": "F06's new monster, painted from monster_concepts ghost_2 (the owner, 2026-11-14)"
+  },
+  "geodillo": {
+    "name": { "zh_TW": "晶甲犰狳", "en": "Geodillo", "zh_CN": "晶甲犰狳", "ja": "ジオディロ", "ko": "수정 아르마딜로", "es": "Geodillo" },
+    "sprite": "m_geodillo.png",
+    "look": "critters",
+    "hp": 66, "body": 2,
+    "atk": 20,
+    "def": 4,
+    "exp": 10,
+    "weaponExp": 1,
+    "gold": 7,
+    "_new": "F07's new monster, painted from monster_concepts stone_2 (the owner, 2026-11-14)"
+  },
+  "stormlet": {
+    "name": { "zh_TW": "雷雲羊", "en": "Stormlet", "zh_CN": "雷云羊", "ja": "カミナリヒツジ", "ko": "번개구름 양", "es": "Ovejatormenta" },
+    "sprite": "m_stormlet.png",
+    "look": "critters",
+    "hp": 62, "body": 2,
+    "atk": 23,
+    "def": 2,
+    "exp": 10,
+    "weaponExp": 1,
+    "gold": 7,
+    "moves": ["strike", "jabs"],
+    "_new": "F08's new monster, painted from monster_concepts storm_2 (the owner, 2026-11-14)"
+  },
+  "tomebat": {
+    "name": { "zh_TW": "書頁蝙蝠", "en": "Tomebat", "zh_CN": "书页蝙蝠", "ja": "ショモツコウモリ", "ko": "책 박쥐", "es": "Murcilibro" },
+    "sprite": "m_tomebat.png",
+    "look": "critters",
+    "hp": 58, "body": 1,
+    "atk": 24,
+    "def": 2,
+    "exp": 10,
+    "weaponExp": 1,
+    "gold": 7,
+    "moves": ["strike", "jabs"],
+    "_new": "F09's new monster, painted from monster_concepts book_2 (the owner, 2026-11-14)"
+  },
+  "murkitten": {
+    "name": { "zh_TW": "夜影貓", "en": "Murkitten", "zh_CN": "夜影猫", "ja": "ヨカゲネコ", "ko": "밤그림자 고양이", "es": "Gatonoche" },
+    "sprite": "m_murkitten.png",
+    "look": "critters",
+    "hp": 64, "body": 1,
+    "atk": 25,
+    "def": 3,
+    "exp": 11,
+    "weaponExp": 1,
+    "gold": 8,
+    "_new": "F10's new monster, painted from monster_concepts night_2 (the owner, 2026-11-14)"
+  },
   "hivebear": {
+    "bossTier": "stage",
     "name": { "zh_TW": "蜂巢熊", "en": "Hivebear", "zh_CN": "蜂巢熊", "ja": "ハイブベア", "ko": "벌집곰", "es": "Osopanal" },
     "sprite": "m_hivebear.png",
     "look": "hivebear",
@@ -802,9 +930,12 @@
     "atk_interval_ms": 2600,
     "moves": [{ "id": "strike", "weight": 2 }, "boss_near", "boss_line", "boss_fan"],
     "guardsStairs": true,
+    "intro": true,
+    "big": true,
     "_boss": "F01's boss, beside its up stairs (the owner, 2026-11-13)"
   },
   "fungolem": {
+    "bossTier": "stage",
     "name": { "zh_TW": "蕈菇巨像", "en": "Fungolem", "zh_CN": "蕈菇巨像", "ja": "キノコゴーレム", "ko": "버섯 골렘", "es": "Fungólem" },
     "sprite": "m_fungolem.png",
     "look": "fungolem",
@@ -818,9 +949,12 @@
     "atk_interval_ms": 2600,
     "moves": [{ "id": "strike", "weight": 2 }, "boss_near", "boss_line", "boss_fan"],
     "guardsStairs": true,
+    "intro": true,
+    "big": true,
     "_boss": "F02's boss, beside its up stairs (the owner, 2026-11-13)"
   },
   "cragtortle": {
+    "bossTier": "stage",
     "name": { "zh_TW": "晶岩龜", "en": "Cragtortle", "zh_CN": "晶岩龟", "ja": "クリスタルガメ", "ko": "수정바위거북", "es": "Tortucristal" },
     "sprite": "m_cragtortle.png",
     "look": "cragtortle",
@@ -834,9 +968,12 @@
     "atk_interval_ms": 2600,
     "moves": [{ "id": "strike", "weight": 2 }, "boss_near", "boss_line", "boss_fan"],
     "guardsStairs": true,
+    "intro": true,
+    "big": true,
     "_boss": "F03's boss, beside its up stairs (the owner, 2026-11-13)"
   },
   "grimoox": {
+    "bossTier": "stage",
     "name": { "zh_TW": "魔典牛", "en": "Grimoox", "zh_CN": "魔典牛", "ja": "グリモックス", "ko": "마도서 황소", "es": "Grimobuey" },
     "sprite": "m_grimoox.png",
     "look": "grimoox",
@@ -850,9 +987,12 @@
     "atk_interval_ms": 2600,
     "moves": [{ "id": "strike", "weight": 2 }, "boss_near", "boss_line", "boss_fan"],
     "guardsStairs": true,
+    "intro": true,
+    "big": true,
     "_boss": "F04's boss, beside its up stairs (the owner, 2026-11-13)"
   },
   "gravewarden": {
+    "bossTier": "stage",
     "name": { "zh_TW": "守墓骷髏騎士", "en": "Gravewarden", "zh_CN": "守墓骷髅骑士", "ja": "墓守の骸骨騎士", "ko": "묘지기 해골 기사", "es": "Guardatumbas" },
     "sprite": "m_gravewarden.png",
     "look": "gravewarden",
@@ -866,9 +1006,12 @@
     "atk_interval_ms": 2600,
     "moves": [{ "id": "strike", "weight": 2 }, "boss_near", "boss_line", "boss_fan"],
     "guardsStairs": true,
+    "intro": true,
+    "big": true,
     "_boss": "F05's boss, beside its up stairs (the owner, 2026-11-13)"
   },
   "hearthound": {
+    "bossTier": "stage",
     "name": { "zh_TW": "爐火狐", "en": "Hearthound", "zh_CN": "炉火狐", "ja": "かまどギツネ", "ko": "화덕여우", "es": "Zorrohogar" },
     "sprite": "m_hearthound.png",
     "look": "hearthound",
@@ -882,9 +1025,12 @@
     "atk_interval_ms": 2600,
     "moves": [{ "id": "strike", "weight": 2 }, "heavy", "boss_near", "boss_line", "boss_fan"],
     "guardsStairs": true,
+    "intro": true,
+    "big": true,
     "_boss": "F06's boss, beside its up stairs (the owner, 2026-11-13)"
   },
   "sphinxie": {
+    "bossTier": "stage",
     "name": { "zh_TW": "小斯芬克斯", "en": "Sphinxie", "zh_CN": "小斯芬克斯", "ja": "ちびスフィンクス", "ko": "꼬마 스핑크스", "es": "Esfingita" },
     "sprite": "m_sphinxie.png",
     "look": "sphinxie",
@@ -898,9 +1044,12 @@
     "atk_interval_ms": 2600,
     "moves": [{ "id": "strike", "weight": 2 }, "heavy", "boss_near", "boss_line", "boss_fan"],
     "guardsStairs": true,
+    "intro": true,
+    "big": true,
     "_boss": "F07's boss, beside its up stairs (the owner, 2026-11-13)"
   },
   "glacibear": {
+    "bossTier": "stage",
     "name": { "zh_TW": "冰晶熊", "en": "Glacibear", "zh_CN": "冰晶熊", "ja": "氷晶グマ", "ko": "빙정곰", "es": "Osoglacial" },
     "sprite": "m_glacibear.png",
     "look": "glacibear",
@@ -914,9 +1063,12 @@
     "atk_interval_ms": 2600,
     "moves": [{ "id": "strike", "weight": 2 }, "heavy", "boss_near", "boss_line", "boss_fan"],
     "guardsStairs": true,
+    "intro": true,
+    "big": true,
     "_boss": "F08's boss, beside its up stairs (the owner, 2026-11-13)"
   },
   "astrowl": {
+    "bossTier": "stage",
     "name": { "zh_TW": "星辰梟法師", "en": "Astrowl", "zh_CN": "星辰枭法师", "ja": "星読みフクロウ", "ko": "별빛 부엉이 마법사", "es": "Astrobúho" },
     "sprite": "m_astrowl.png",
     "look": "astrowl",
@@ -930,9 +1082,12 @@
     "atk_interval_ms": 2600,
     "moves": [{ "id": "strike", "weight": 2 }, "heavy", "boss_near", "boss_line", "boss_fan"],
     "guardsStairs": true,
+    "intro": true,
+    "big": true,
     "_boss": "F09's boss, beside its up stairs (the owner, 2026-11-13)"
   },
   "chronoknight": {
+    "bossTier": "stage",
     "name": { "zh_TW": "時計騎士", "en": "Chronoknight", "zh_CN": "时钟骑士", "ja": "クロノナイト", "ko": "시계 기사", "es": "Cronocaballero" },
     "sprite": "m_chronoknight.png",
     "look": "chronoknight",
@@ -946,6 +1101,8 @@
     "atk_interval_ms": 2600,
     "moves": [{ "id": "strike", "weight": 2 }, "heavy", "boss_near", "boss_line", "boss_fan"],
     "guardsStairs": true,
+    "intro": true,
+    "big": true,
     "_boss": "F10's boss, beside its up stairs (the owner, 2026-11-13)"
   }
 }

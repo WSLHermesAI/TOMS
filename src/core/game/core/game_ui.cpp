@@ -428,6 +428,22 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
             l_oB.m_bCritArmed = m_oCs.m_bNextAttackGuaranteedCrit;
             l_oB.m_strCritHint = l_oL.f_Tr("battle.active_armed_hint");
             l_oB.m_bFocus = f_CellIntroOn() && !m_oCs.m_bCellsShown;
+            if (m_oCs.m_iBossIntroMs > 0 && !m_oCs.m_vFoes.empty()) {   // a boss's introduction: the banner slides in, the name types in
+                const nlohmann::json l_jC = f_FeelFx().value("bossIntro", nlohmann::json::object());
+                const int l_iT = m_oCs.m_iBossIntroMsMax - m_oCs.m_iBossIntroMs;
+                l_oB.m_bBossIntro = true;
+                l_oB.m_strBossIntroLabel = l_oL.f_Tr("battle.boss_label");
+                const float l_fIn = std::min(1.0f, (float)l_iT / 280.0f);
+                l_oB.m_fBossIntroX = -1100.0f * (1.0f - l_fIn) * (1.0f - l_fIn);
+                const std::string& l_strName = m_oCs.m_vFoes[0].m_oEnemy.m_strName;
+                const int l_iChars = std::max(0, (l_iT - l_jC.value("nameAtMs", 600)) / std::max(1, l_jC.value("typeMsPerChar", 110)) + 1);
+                size_t l_nAt = 0;   // the first l_iChars letters (UTF-8: a letter is one to four bytes)
+                for (int l_iK = 0; l_iK < l_iChars && l_nAt < l_strName.size(); l_iK++) {
+                    const unsigned char l_u8C = (unsigned char)l_strName[l_nAt];
+                    l_nAt += l_u8C < 0x80 ? 1 : l_u8C < 0xE0 ? 2 : l_u8C < 0xF0 ? 3 : 4;
+                }
+                l_oB.m_strBossIntroName = l_iT < l_jC.value("nameAtMs", 600) ? std::string() : l_strName.substr(0, std::min(l_nAt, l_strName.size()));
+            }
             const auto l_fnPop = [this](int l_iAgeMs) {   // grows past its size and settles (back-out)
                 if (m_oSettings.m_bReduceEffects) return 1.0f;
                 const float l_fK = std::clamp((float)l_iAgeMs / (float)m_oCellRules.m_iPopMs, 0.0f, 1.0f) - 1.0f;
@@ -751,6 +767,10 @@ void Game::f_BuildMenuUi(toms::UiMenu& l_oM) const {
                 char l_pszSpeed[16];
                 std::snprintf(l_pszSpeed, sizeof l_pszSpeed, "%g", m_oSettings.m_fBattleSpeed);
                 l_oM.m_vRows.push_back({f_TrParam(l_oL.f_Tr("settings.battle_speed"), "x", l_pszSpeed), "", l_fnSel(l_nCam + 2), true});
+            }
+            {   // the 3D battle (Q95): activating the row takes the next mode
+                static const char* const l_arrKeys[3] = {"settings.battle3d_full", "settings.battle3d_light", "settings.battle3d_off"};
+                l_oM.m_vRows.push_back({l_oL.f_Tr(l_arrKeys[std::clamp(m_oSettings.m_iBattle3D, 0, 2)]), "", l_fnSel(l_nCam + 3), true});
             }
             break;
         }

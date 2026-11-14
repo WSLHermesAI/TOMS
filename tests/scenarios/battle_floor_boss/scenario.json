@@ -1,5 +1,5 @@
 {
-  "_comment": "A floor boss (enemies.json: hivebear, F01's, beside its up stairs; the owner, 2026-11-13): it fights like the tutorial's toad -- its boss_near lights the cells, it powers up and charges, the hero steps into the near row, and its hit goes off and knocks him down.",
+  "_comment": "A floor boss (enemies.json: hivebear, F01's, beside its up stairs; the owner, 2026-11-13): it fights like the tutorial's toad -- its boss_near lights the cells, it powers up and charges, the hero steps into the near row, and its hit goes off and knocks him down. Its introduction comes first (3.4 s, input frozen: after the first frame and 0.3 s; the step is at frame 260).",
   "scene": "battle",
   "player": {
     "equip": [
@@ -14,8 +14,8 @@
     ]
   },
   "test": {
-    "frames": 480,
-    "keys": "up@10"
+    "frames": 720,
+    "keys": "up@260"
   },
   "expect": {
     "battleEvents": {

@@ -54,5 +54,13 @@
     { "wave": "square", "ms": 900, "attack": 40, "curve": 1.8, "gain": 0.4, "pitch": [120, 55], "low": [900, 300] },
     { "wave": "noise", "ms": 900, "attack": 30, "curve": 1.8, "gain": 0.6, "low": [3000, 700] },
     { "wave": "sine", "ms": 1100, "attack": 20, "curve": 1.5, "gain": 0.7, "pitch": [90, 40] }
+  ],
+  "boss_intro": [
+    { "wave": "saw", "ms": 170, "curve": 1.2, "gain": 0.45, "pitch": [294, 294], "low": [3200, 1800] },
+    { "wave": "saw", "ms": 170, "at": 130, "curve": 1.2, "gain": 0.45, "pitch": [349, 349], "low": [3200, 1800] },
+    { "wave": "saw", "ms": 170, "at": 260, "curve": 1.2, "gain": 0.5, "pitch": [440, 440], "low": [3400, 1800] },
+    { "wave": "saw", "ms": 420, "at": 390, "curve": 1.6, "gain": 0.55, "pitch": [587, 580], "low": [3600, 1400] },
+    { "wave": "sine", "ms": 900, "at": 560, "curve": 1.8, "gain": 0.9, "pitch": [110, 40] },
+    { "wave": "noise", "ms": 600, "at": 560, "curve": 2.2, "gain": 0.55, "low": [2400, 300] }
   ]
 }

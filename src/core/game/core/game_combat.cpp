@@ -47,6 +47,8 @@ void Game::f_StartCombat(const EnemyInst& l_oE, const std::vector<EnemyInst>& l_
     m_oCs.m_iGuardLockMs = 0; m_oCs.m_iPlayDealt = 0; m_oCs.m_oSkill = CombatState::SkillRun{};
     m_oCs.m_fCamZoom = 1.0f; m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = 0; m_oCs.m_iCamOn = -1; m_oCs.m_strCamMove.clear();
     m_oCs.m_iHeroDownMs = 0;
+    m_oCs.m_iBossIntroMs = m_oCs.m_iBossIntroMsMax = 0;
+    m_oCs.m_iBossIntroFoe = -1; m_oCs.m_iBossIntroWaitMs = m_oCs.m_iBossIntroFrames = 0;
     m_oCs.m_oResult = CombatState::Result{};
     m_oCs.m_ePace = f_EffectivePace();
     m_oCs.m_fStamina = (float)m_oPaceSettings.m_iStaminaMax;
@@ -95,6 +97,36 @@ void Game::f_StartCombat(const EnemyInst& l_oE, const std::vector<EnemyInst>& l_
         l_oC.m_strOn = "battleStart";
         f_RunFoeEvents((int)l_nI, l_oC);
     }
+    if (const auto l_itT = m_mapEnemyTpl.find(m_oCs.m_vFoes[0].m_oEnemy.m_strId);   // a boss: its introduction first
+        m_oCs.m_bActive && l_itT != m_mapEnemyTpl.end() && l_itT->second.value("intro", false))
+        f_StartBossIntro(0);
+}
+
+void Game::f_StartBossIntro(int l_iFoe) {
+    const nlohmann::json l_jC = f_FeelFx().value("bossIntro", nlohmann::json::object());
+    if (l_jC.value("off", false) || l_iFoe < 0 || l_iFoe >= (int)m_oCs.m_vFoes.size()) return;
+    // armed: the battle waits (f_CellIntroOn) until its first frame is drawn, then startDelayMs (the owner, 2026-11-14:
+    // loading takes time, so the opening starts 0.3 s after the first frame is on screen; f_BattleFrame counts it)
+    m_oCs.m_iBossIntroFoe = l_iFoe;
+    m_oCs.m_iBossIntroWaitMs = std::max(0, l_jC.value("startDelayMs", 300));
+    m_oCs.m_iBossIntroFrames = 0;
+}
+
+void Game::f_BeginBossIntro(int l_iFoe) {
+    const nlohmann::json l_jC = f_FeelFx().value("bossIntro", nlohmann::json::object());
+    if (l_iFoe < 0 || l_iFoe >= (int)m_oCs.m_vFoes.size()) return;
+    const int l_iMs = std::max(800, l_jC.value("ms", 3400));
+    m_oCs.m_iBossIntroMs = m_oCs.m_iBossIntroMsMax = l_iMs;
+    f_BattleEvent("bossIntro", l_iFoe, -1, l_iMs, m_oCs.m_vFoes[(size_t)l_iFoe].m_oEnemy.m_strId);
+    f_FoeLook(l_iFoe, l_jC.value("clip", std::string("special")));   // its pose (its own clip, else the shared one)
+    f_PlayBattleFx(l_jC.value("fx", std::string("boss_intro")), l_iFoe, l_jC.value("fxAtMs", 0));   // (its own: the rule)
+    f_PlayFoeSound(l_iFoe, l_jC.value("sound", std::string("sfx.boss_intro")));
+    const bool l_bReduced = m_oSettings.m_bReduceEffects;   // the camera: low and close on it, for the whole introduction
+    m_oCs.m_fCamZoom = l_bReduced ? 1.0f + (l_jC.value("zoom", 1.7f) - 1.0f) * 0.4f : std::max(1.01f, l_jC.value("zoom", 1.7f));
+    m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = l_iMs;
+    m_oCs.m_iCamOn = l_iFoe;
+    m_oCs.m_strCamMove = "low";
+    m_oCs.m_fCamDeg = l_jC.value("deg", 10.0f);
 }
 
 // ---- the battle's rules (docs/gameplay/13; battle_rules.h) ----
@@ -124,7 +156,20 @@ int Game::f_BattleFrame(int l_iDtMs) {
     m_oCs.m_iCellsPopMs += l_iDtMs;
     m_oArena.m_iTutorialPopMs += l_iDtMs;
     int l_iBdt = l_iDtMs;
-    if (m_oCs.m_iCellIntroMs > 0) {   // the first danger's moment: everything waits (f_StartCellIntro)
+    if (m_oCs.m_iBossIntroFoe >= 0) {   // a boss's introduction, armed: wait for the first drawn frame, then startDelayMs
+        // (the first battle frame runs before anything is drawn; from the second on, a frame is on screen. Each step
+        // counts at most 34 ms, so the hitch of a first draw that loads textures does not eat the delay.)
+        if (++m_oCs.m_iBossIntroFrames > 1) m_oCs.m_iBossIntroWaitMs -= std::min(l_iDtMs, 34);
+        if (m_oCs.m_iBossIntroFrames > 1 && m_oCs.m_iBossIntroWaitMs <= 0) {
+            const int l_iFoe = m_oCs.m_iBossIntroFoe;
+            m_oCs.m_iBossIntroFoe = -1;
+            f_BeginBossIntro(l_iFoe);
+        }
+        l_iBdt = 0;
+    } else if (m_oCs.m_iBossIntroMs > 0) {   // a boss's introduction: everything waits (f_StartBossIntro)
+        m_oCs.m_iBossIntroMs = std::max(0, m_oCs.m_iBossIntroMs - l_iDtMs);
+        l_iBdt = 0;
+    } else if (m_oCs.m_iCellIntroMs > 0) {   // the first danger's moment: everything waits (f_StartCellIntro)
         m_oCs.m_iCellIntroMs = std::max(0, m_oCs.m_iCellIntroMs - l_iDtMs);
         if (!m_oSettings.m_bReduceEffects) m_oCs.m_iDimMs = std::min(700, m_oCs.m_iCellIntroMs);
         if (!m_oCs.m_bCellsShown && m_oCellRules.m_iIntroMs - m_oCs.m_iCellIntroMs >= m_oCellRules.m_iIntroUiMs) {
@@ -209,6 +254,12 @@ std::string Game::f_EndClip() const {
     if (m_oCs.m_bLosePending) return m_oFeel.m_strLoseClip;
     if (m_oCs.m_iDamageTaken <= 0) return m_oFeel.m_strWinBigClip;
     return (float)m_oCs.m_iPlayerHP <= m_oFeel.m_fWinParHp * (float)f_EffectiveMaxHp() ? m_oFeel.m_strWinParClip : m_oFeel.m_strWinClip;
+}
+
+void Game::f_CycleBattle3DMode() {
+    m_oSettings.m_iBattle3D = (m_oSettings.m_iBattle3D + 1) % 3;
+    toms::f_EnsureSaveDir(toms::f_DefaultSaveDir());
+    toms::f_SaveGameSettings(toms::f_SettingsPath(), m_oSettings);
 }
 
 void Game::f_SetReduceEffects(bool l_bOn) {
@@ -767,8 +818,16 @@ void Game::f_DrawBattleRig() {
 
 void Game::f_UpdateBattleBackdrop(int l_iDtMs) {
     if (!(m_oCs.m_bActive || m_oCs.m_bWon || m_oCs.m_iResultPauseMs > 0)) {
-        if (!m_oAudio.f_MusicKey().empty())   // the battle is over: its music fades out
-            m_oAudio.f_StopMusic(m_jBattleJson.value("music", nlohmann::json::object()).value("fadeOutMs", 800));
+        // no battle: walking on a stage plays the stage's music (battle.json "music" "stage", the owner, 2026-11-14);
+        // anywhere else (the title, a preview) the battle's music fades out
+        const nlohmann::json l_jMusic = m_jBattleJson.value("music", nlohmann::json::object());
+        const std::string l_strStageMusic = l_jMusic.value("stage", std::string());
+        if (!m_strCurStage.empty() && !m_oTitle.f_IsOpen() && !l_strStageMusic.empty()) {
+            if (m_oAudio.f_MusicKey() != l_strStageMusic)
+                m_oAudio.f_PlayMusic(l_strStageMusic, l_jMusic.value("stageVolume", 0.35f), l_jMusic.value("stageFadeInMs", 1200));
+        } else if (!m_oAudio.f_MusicKey().empty()) {
+            m_oAudio.f_StopMusic(l_jMusic.value("fadeOutMs", 800));
+        }
         m_strBackdropAnim.clear();
         m_oBackdrop.f_Stop();
         m_vBackdropFx.clear();
@@ -805,11 +864,20 @@ void Game::f_UpdateBattleBackdrop(int l_iDtMs) {
         nlohmann::json l_jRow = l_jRows.empty() ? nlohmann::json::object() : l_jRows[0];
         for (const auto& l_jR : l_jRows)
             if (l_iFloor >= l_jR.value("from", 1) && l_iFloor <= l_jR.value("to", 9999)) { l_jRow = l_jR; break; }
-        const std::string l_strMusic = l_jRow.value("music", std::string());   // this floor's battle music, by key
-        if (!l_strMusic.empty()) {
-            const nlohmann::json l_jMusic = m_jBattleJson.value("music", nlohmann::json::object());
-            m_oAudio.f_PlayMusic(l_strMusic, l_jMusic.value("volume", 0.5f), l_jMusic.value("fadeInMs", 400));
+        // the battle's music, by key: a boss's tier (enemies.json "bossTier": mini / stage / final; the highest among the
+        // monsters), else this floor's row, else battle.json "music" "normal"
+        const nlohmann::json l_jMusic = m_jBattleJson.value("music", nlohmann::json::object());
+        std::string l_strMusic;
+        int l_iTierRank = 0;
+        for (const CombatState::Foe& l_oF : m_oCs.m_vFoes) {
+            const auto l_itT = m_mapEnemyTpl.find(l_oF.m_oEnemy.m_strId);
+            const std::string l_strTier = l_itT != m_mapEnemyTpl.end() ? l_itT->second.value("bossTier", std::string()) : std::string();
+            const int l_iRank = l_strTier == "final" ? 3 : l_strTier == "stage" ? 2 : l_strTier == "mini" ? 1 : 0;
+            const std::string l_strKey = l_jMusic.value("boss", nlohmann::json::object()).value(l_strTier, std::string());
+            if (l_iRank > l_iTierRank && !l_strKey.empty()) { l_iTierRank = l_iRank; l_strMusic = l_strKey; }
         }
+        if (l_strMusic.empty()) l_strMusic = l_jRow.value("music", l_jMusic.value("normal", std::string()));
+        if (!l_strMusic.empty()) m_oAudio.f_PlayMusic(l_strMusic, l_jMusic.value("volume", 0.5f), l_jMusic.value("fadeInMs", 400));
         const std::string l_strAnim = l_jRow.value("anim", std::string());
         if (l_strAnim.empty()) return;
         m_strBackdropAnim = l_strAnim;
@@ -1041,7 +1109,12 @@ void Game::f_UpdateBattleFx(int l_iDtMs) {
     for (size_t l_nI = 0; l_nI < m_oCs.m_vFoes.size(); l_nI++) {
         CombatState::Foe& l_oF = m_oCs.m_vFoes[l_nI];
         if (l_oF.f_Down()) { if (!l_oF.m_vFx.empty() || !l_oF.m_vSounds.empty()) f_FoeEffectsOnDeath((int)l_nI); continue; }
-        for (CombatState::Foe::OwnedFx& l_oO : l_oF.m_vFx) l_oO.m_oFx.f_Update(l_iDtMs / 1000.0f);
+        // its effects follow it (the camera moves, a close-up, a step): new particles come from where it stands now
+        const glm::vec4 l_v4Box = f_FighterBox((int)l_nI);
+        for (CombatState::Foe::OwnedFx& l_oO : l_oF.m_vFx) {
+            l_oO.m_oFx.f_SetTransform(toms::anim::f_Placement(l_v4Box.x + l_v4Box.z * 0.5f, l_v4Box.y + l_v4Box.w * 0.5f, 1.0f, 0.0f));
+            l_oO.m_oFx.f_Update(l_iDtMs / 1000.0f);
+        }
         l_oF.m_vFx.erase(std::remove_if(l_oF.m_vFx.begin(), l_oF.m_vFx.end(), [](const CombatState::Foe::OwnedFx& l_oO) { return l_oO.m_oFx.f_Finished(); }),
                          l_oF.m_vFx.end());
         l_oF.m_vSounds.erase(std::remove_if(l_oF.m_vSounds.begin(), l_oF.m_vSounds.end(),
@@ -1793,11 +1866,11 @@ int Game::f_BattleFloorNumber() const {
 
 const nlohmann::json* Game::f_Battle3DStage() const {
     const bool l_bShown = m_oCs.m_bActive || m_oCs.m_bWon || m_oCs.m_iResultPauseMs > 0;
-    return m_bBattle3DAllowed && l_bShown && m_jBattle3DStage.is_object() ? &m_jBattle3DStage : nullptr;
+    return m_bBattle3DAllowed && m_oSettings.m_iBattle3D != 2 && l_bShown && m_jBattle3DStage.is_object() ? &m_jBattle3DStage : nullptr;
 }
 
 nlohmann::json Game::f_Battle3DStageForFloor() const {
-    if (!m_bBattle3DAllowed) return nullptr;
+    if (!m_bBattle3DAllowed || m_oSettings.m_iBattle3D == 2) return nullptr;   // (Settings > 3D battle: off)
     const int l_iFloor = f_BattleFloorNumber();
     for (const auto& l_jR : m_jBattleJson.value("stages3d", nlohmann::json::array()))
         if (l_iFloor >= l_jR.value("from", 1) && l_iFloor <= l_jR.value("to", 9999)) return l_jR;

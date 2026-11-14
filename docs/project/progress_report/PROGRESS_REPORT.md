@@ -15,6 +15,18 @@
 
 ## ▶ Next Step
 
+**A boss's introduction; five BGM tracks; ten critters; Settings > 3D battle; the landscape layout** (2026-11-14; [DAILY_2026-11-14.md](DAILY_2026-11-14.md)):
+- A boss (`"intro": true`) opens its fight 0.3 s after the first frame is on screen. The camera goes low and close, it poses, and the
+  `boss_intro` effect and sting play. A banner "頭目登場！" slides in with its name typed in, and everything waits 3.4 s
+  (`battle.json` `feelFx` `"bossIntro"`).
+- Music: `stage_walk` when walking, `battle_normal`, and `boss_mini` / `boss_stage` / `boss_final` by `enemies.json` `"bossTier"`
+  (`battle.json` `"music"`). Made with ACE-Step, shrunk to 24 kHz: 1.6 MB in all.
+- Ten critters, one on each of F01–F10. Settings > 3D battle: full / light / off; a slow device keeps 3D. The hero's HP at the
+  bottom left, the cells at the bottom middle. Q81, Q82, Q94–Q97 and the 3D fighter view (postponed) are written in their documents.
+- The owner committed `0d2a6fe` and `ceee669` (the 11-13 work). **11-14 not committed.** Last changed-only run: 16 of 278, all
+  pass (4 new scenarios). All tests, the switched-off tests, Debug, the 2D battle, web and Android not run; the music not heard.
+  **Owner:** listen to the five tracks and a boss introduction; check the boss tiers (the tutorial toad plays `boss_mini`).
+
 **A monster's special attack as a moment; the hero knocked down; prompts over the hero; MP3 to OGG** (2026-11-13; [DAILY_2026-11-13.md](DAILY_2026-11-13.md)):
 - When its danger cells light, a monster powers up for 3.5 s (the `power` clip, the camera close, `monster_power`, a rumble). It then charges
   until the hit (`charge`, `monster_charge`), and the hit goes off with `monster_unleash`, its roar and a shake. A hit on the hero knocks him

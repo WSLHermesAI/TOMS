@@ -321,6 +321,7 @@ glm::mat4 BattleStage::f_Draw(float l_fDtSeconds, uint32_t l_uWidth, uint32_t l_
     if (!l_oF.m_vLights.empty()) l_oF.m_vLights[0].m_fIntensity *= l_oCam.m_fMoon;
     l_oF.m_fEnvironmentIntensity *= 0.55f + 0.45f * l_oCam.m_fMoon;
     for (const Camera::Point& l_oP : l_oCam.m_vPoints) {
+        if (l_oCam.m_bLight) break;   // (light: the moon only; each point light costs every pixel)
         if ((int)l_oF.m_vLights.size() >= GltfRenderer::m_iMaxLights) break;
         GltfRenderer::Light l_oL;
         l_oL.m_eType = GltfRenderer::Light::Type::Point;
@@ -343,6 +344,7 @@ glm::mat4 BattleStage::f_Draw(float l_fDtSeconds, uint32_t l_uWidth, uint32_t l_
 #else
     l_oF.m_iShadowMapSize = 2048;
 #endif
+    if (l_oCam.m_bLight) l_oF.m_bShadows = false;   // (light: no shadow maps: 41 draws and a 2048 map fewer)
     if (++m_iFramesDrawn == 3) {   // (the stats are the frame before's: once, so the log says what the stage costs)
         const GltfRenderer::Stats& l_oS = m_oRenderer.f_Stats();
         std::fprintf(stderr, "[battle3d] a frame: %d draw calls, %d shadow draws\n", l_oS.m_iDrawCalls, l_oS.m_iShadowDraws);

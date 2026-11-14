@@ -7,6 +7,9 @@ several directions, assembled in the anim editor). 3D may be tried later, so the
 switches between 2D and 3D for the player and the monsters, with little code to change. Also: capturing pictures must
 not flash windows on the desktop; the game records its frames to a folder and they are merged into a GIF.
 
+**The 3D fighter view is postponed** (the owner, 2026-11-14): fighters stay 2D (on the 3D stage, lit as 3D objects,
+docs/gameplay/21); a look set to `"3d"` keeps falling back to 2D.
+
 ## 1. The interface: FighterView
 
 `src/core/game/core/fighter_view.h`. The battle asks a fighter's view for a clip by name and draws it in the

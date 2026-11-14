@@ -70,7 +70,17 @@ A new sound is a new entry in `tools/audio/sfx_recipes.json`, a list of layers p
 
 Everything plays through the `Audio` engine, so it stays muted in the background.
 
-**Music in a battle:** `battle.json` `backdrops` names the track for a range of floors (`"music": "music.forest_battle"`), and `battle.json` `music` sets `volume`, `fadeInMs` and `fadeOutMs`. `Audio::f_PlayMusic(key, volume, fadeInMs)` loops it, and it fades out when the fight is over. Only battles have music so far: the title, the map and menus have none.
+**The game's music** (the owner, 2026-11-14): five looping tracks, all set in `battle.json` `music`:
+
+| Track | Key | Loop | Plays |
+|---|---|---|---|
+| Walking on a stage: light, nervous | `music.stage_walk` | 75 s | `"stage"`: on a stage with no battle (`"stageVolume"`, `"stageFadeInMs"`); battles and the title replace it |
+| A normal battle | `music.battle_normal` | 31 s | `"normal"`, or a floor range's own (`backdrops` `"music"`) |
+| A small boss | `music.boss_mini` | 52 s | `"boss"` `"mini"`: `enemies.json` `"bossTier": "mini"` (the stone golem, the tutorial toad) |
+| A stage boss | `music.boss_stage` | 54 s | `"boss"` `"stage"`: the F01-F10 stair guards |
+| The final boss | `music.boss_final` | 56 s | `"boss"` `"final"`: Vorkath |
+
+A battle takes the highest boss tier among its monsters, else the floor's track, else `"normal"`. `Audio::f_PlayMusic(key, volume, fadeInMs)` loops it and fades it over the track before, and the stage track comes back when the fight is over. The tracks were made with `make_music.py` (2-6 takes each; in the game: stage_walk take 1, battle_normal take 4, boss_mini take 3, boss_stage take 1, boss_final take 1; every take is in `Build/art_out/audio/music/`). `music.forest_battle` stays in the manifest, unused. **Size** (the owner, 2026-11-14: about 30 % of the made size): every track in the game is re-encoded at 24 kHz, Vorbis quality 1 (about 0.2-0.4 MB each, 1.6 MB in all), e.g. `tools/audio/mp3_to_ogg.py` with a target rate, or ffmpeg `-ar 24000 -c:a libvorbis -q:a 1`; `make_music.py` still writes 48 kHz, 160 kbps, so a new track is shrunk the same way when it goes in.
 
 The `unit.audio_ogg_test` test checks every `sfx.*` and `music.*` key decodes the way the game plays it, every file in those folders has a key, every sound the data names is a key, and music keeps playing past its end. The game itself only prints `[audio] cannot play` for a bad sound.
 

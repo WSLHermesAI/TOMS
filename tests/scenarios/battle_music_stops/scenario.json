@@ -1,5 +1,5 @@
 {
-  "_comment": "When the fight is over, its music stops: a tutorial fight with a toad of 4 HP, beaten by missed shots, a later shot closing the win screen; back at the weapon master there is no music.",
+  "_comment": "When the fight is over, its music stops: a tutorial fight with a toad of 4 HP, beaten by missed shots, a later shot closing the win screen; back at the weapon master the battle music has given way to the stage music (2026-11-14).",
   "scene": "weaponTrial",
   "battle": {
     "play": "weapon",
@@ -12,6 +12,6 @@
   },
   "expect": {
     "dialogueNode": "after",
-    "music": ""
+    "music": "music.stage_walk"
   }
 }

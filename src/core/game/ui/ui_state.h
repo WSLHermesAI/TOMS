@@ -166,6 +166,10 @@ struct UiBattle {
     float m_fCellHintY = -24.0f;           // the words above the grid, whatever its height
     float m_fTutorialScale = 1.0f, m_fCellsScale = 1.0f;   // their pop as they appear
     bool m_bFocus = false;                 // the first danger's moment: only the monster is shown
+    // a boss's introduction (Game::f_StartBossIntro): the banner, its words, the name typed so far, the banner's slide (px)
+    bool m_bBossIntro = false;
+    std::string m_strBossIntroLabel, m_strBossIntroName;
+    float m_fBossIntroX = 0.0f;
     std::vector<UiBattleCell> m_vCells;
     std::vector<UiTouchItem> m_vTouch;    // what it draws over the monster
     std::string m_strSkillPrompt, m_strSkillTime;   // a move's play: "Draw the pentagram!", its seconds left (16 §6)

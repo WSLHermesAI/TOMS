@@ -236,6 +236,9 @@ void Game::f_InGameMenuActivate() {
     } else if (m_iInGameMenuSel == m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount() + 2) {
         f_CycleBattleSpeed();   // docs/gameplay/17 I10
         m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
+    } else if (m_iInGameMenuSel == m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount() + 3) {
+        f_CycleBattle3DMode();   // Q95: full -> light -> off
+        m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
     }
 }
 

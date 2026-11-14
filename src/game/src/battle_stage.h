@@ -53,6 +53,7 @@ public:
         float m_fMoon = 1.0f;  // the moonlight's share now (clouds passing)
         struct Point { glm::vec3 m_v3Pos{0.0f}, m_v3Color{1.0f}; float m_fIntensity = 1.0f, m_fRange = 6.0f; };
         std::vector<Point> m_vPoints;   // fires, flashes: strongest first; the renderer takes up to 3 beside the moon
+        bool m_bLight = false;          // Settings > 3D battle: light (Q95): no shadows, no point lights (the moon and the sky only)
     };
     // Queues the stage for this frame (the whole backbuffer) and returns its view-projection, for placing the 2D
     // fighters on it. shadows: x, y, z the feet, w the radius (metres).

@@ -70,7 +70,17 @@ python tools/audio/make_sfx.py --all
 
 所有聲音都經由 `Audio` 引擎播放，所以在背景時會保持靜音。
 
-**戰鬥音樂：** `battle.json` 的 `backdrops` 指定某個樓層範圍的曲目（`"music": "music.forest_battle"`），`battle.json` 的 `music` 設定 `volume`、`fadeInMs` 與 `fadeOutMs`。`Audio::f_PlayMusic(key, volume, fadeInMs)` 會循環播放，戰鬥結束時淡出。目前只有戰鬥有音樂：標題、地圖與選單都沒有。
+**遊戲音樂**（擁有者 2026-11-14）：五首循環曲目，都在 `battle.json` 的 `music` 設定：
+
+| 曲目 | Key | 循環 | 何時播放 |
+|---|---|---|---|
+| 在關卡中行走：輕快、緊張 | `music.stage_walk` | 75 秒 | `"stage"`：在關卡上且沒有戰鬥時（`"stageVolume"`、`"stageFadeInMs"`）；戰鬥與標題畫面會取代它 |
+| 一般戰鬥 | `music.battle_normal` | 31 秒 | `"normal"`，或樓層範圍自己的曲目（`backdrops` 的 `"music"`） |
+| 小頭目 | `music.boss_mini` | 52 秒 | `"boss"` `"mini"`：`enemies.json` `"bossTier": "mini"`（石巨人、教學的苔蛙） |
+| 關卡頭目 | `music.boss_stage` | 54 秒 | `"boss"` `"stage"`：F01-F10 守樓梯的頭目 |
+| 最終頭目 | `music.boss_final` | 56 秒 | `"boss"` `"final"`：Vorkath |
+
+戰鬥取怪物中最高的頭目等級，沒有就用樓層的曲目，再沒有就用 `"normal"`。`Audio::f_PlayMusic(key, volume, fadeInMs)` 循環播放並蓋過前一首淡入，戰鬥結束後關卡曲目會回來。曲目由 `make_music.py` 製作（每首 2-6 個版本；遊戲用：stage_walk 版本 1、battle_normal 版本 4、boss_mini 版本 3、boss_stage 版本 1、boss_final 版本 1；所有版本都在 `Build/art_out/audio/music/`）。`music.forest_battle` 留在清單中，未使用。**檔案大小**（擁有者 2026-11-14：約為產生時的 30%）：遊戲中每首曲目都重新編碼為 24 kHz、Vorbis 品質 1（每首約 0.2-0.4 MB，合計 1.6 MB），例如用 `tools/audio/mp3_to_ogg.py` 指定取樣率，或 ffmpeg `-ar 24000 -c:a libvorbis -q:a 1`；`make_music.py` 仍寫出 48 kHz、160 kbps，所以新曲目放進遊戲時要用同樣方式縮小。
 
 `unit.audio_ogg_test` 測試會檢查每個 `sfx.*` 與 `music.*` key 都能以遊戲播放的方式解碼、這些資料夾中的每個檔案都有 key、資料指名的每個音效都是 key，以及音樂播到結尾後仍繼續播放。遊戲本身遇到有問題的音效時只會印出 `[audio] cannot play`。
 

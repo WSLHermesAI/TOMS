@@ -1,0 +1,22 @@
+{
+  "_comment": "A boss's introduction (enemies.json \"intro\"; battle.json feelFx \"bossIntro\"; the owner, 2026-11-14, Q82 \"like Mega Man\"): the Hivebear's fight opens with it -- everything waits, the camera on it, its name typed in -- then the fight starts.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "hivebear",
+    "hp": 9999,
+    "atk_interval_ms": 60000
+  },
+  "test": {
+    "frames": 60
+  },
+  "expect": {
+    "battleEvents": {
+      "bossIntro": 1
+    }
+  }
+}

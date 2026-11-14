@@ -1295,6 +1295,38 @@
       "zh_TW": "很好！把苔蛙打倒吧",
       "en": "Well done! Now finish the toad"
     },
+    "settings.battle3d_full": {
+      "zh_TW": "3D 戰鬥：完整",
+      "en": "3D battle: full",
+      "zh_CN": "3D 战斗：完整",
+      "ja": "3D バトル：フル",
+      "ko": "3D 전투: 전체",
+      "es": "Batalla 3D: completa"
+    },
+    "settings.battle3d_light": {
+      "zh_TW": "3D 戰鬥：輕量（無陰影與點光源，較快）",
+      "en": "3D battle: light (no shadows or point lights, faster)",
+      "zh_CN": "3D 战斗：轻量（无阴影与点光源，较快）",
+      "ja": "3D バトル：軽量（影と点光源なし、高速）",
+      "ko": "3D 전투: 가볍게 (그림자·점광원 없음, 더 빠름)",
+      "es": "Batalla 3D: ligera (sin sombras ni luces puntuales, más rápida)"
+    },
+    "settings.battle3d_off": {
+      "zh_TW": "3D 戰鬥：關閉（2D 背景）",
+      "en": "3D battle: off (2D backdrop)",
+      "zh_CN": "3D 战斗：关闭（2D 背景）",
+      "ja": "3D バトル：オフ（2D 背景）",
+      "ko": "3D 전투: 끔 (2D 배경)",
+      "es": "Batalla 3D: desactivada (fondo 2D)"
+    },
+    "battle.boss_label": {
+      "zh_TW": "頭目登場！",
+      "en": "BOSS!",
+      "zh_CN": "头目登场！",
+      "ja": "ボス登場！",
+      "ko": "보스 등장!",
+      "es": "¡JEFE!"
+    },
     "stairs.guarded": {
       "zh_TW": "{name}擋住了上樓的樓梯，先打倒牠！",
       "en": "{name} guards the stairs up: beat it first!",

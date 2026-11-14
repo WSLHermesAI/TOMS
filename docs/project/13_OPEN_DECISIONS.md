@@ -41,7 +41,6 @@ An empty **Answer** means not decided: nothing happens for that row, and its rec
 | **Q78 Stronger each run:** are abilities bought after a death added to rebirth, or do they replace it? What do they cost? | Not built; waits for you | added, sharing rebirth's reset, paid in a currency kept over runs |  | part 3 | [19](../gameplay/19_THREE_PART_PLAN.md) §4 |
 | **Q79 The big challenge:** "三次通關" means what: three tower clears, chapters or floors? A loss takes how many points, and can they be won back? | Not built; waits for you | every three chapters; a loss takes no points for good, only a timed weakness |  | part 1, B7 | [19](../gameplay/19_THREE_PART_PLAN.md) §2.3 |
 | **Q80 Territory:** are buildings the same thing as monster cards or something new? Where is the land: the village hub? | Not built; waits for you | new items found in the tower, placed in the village hub |  | part 3 | [19](../gameplay/19_THREE_PART_PLAN.md) §4 |
-| **Q81 Companions:** the picture has a toad and a rabbit beside the hero. Are they only art, or do monsters join you and fight? | Not built; waits for you | only art on this screen for now |  | part 3 | [19](../gameplay/19_THREE_PART_PLAN.md) §4 |
 | **Q22 Test scenarios:** where are they shared (cloud bucket, Google Drive, own server)? | Not built; waits for you | a cloud bucket (R2) |  | downloads (W39) | [09](../gameplay/09_DOWNLOADS_AND_DLC.md) §7 |
 | **Q23 Uploads:** each developer's own key, or one shared key? | Not built; waits for you | each their own |  | downloads (W39) | [09](../gameplay/09_DOWNLOADS_AND_DLC.md) §7 |
 | **Q24 DLC:** may a pack change existing content, or only add? | Not built; waits for you | add only |  | DLC (W39) | [09](../gameplay/09_DOWNLOADS_AND_DLC.md) §7 |
@@ -52,7 +51,6 @@ An empty **Answer** means not decided: nothing happens for that row, and its rec
 | **Languages for release:** which are required? That makes an untranslated text a warning or an error. (Q51 settled only "for now": zh_TW and English.) | Not built; waits for you | a warning |  | release | [event editor 02](../gameplay/event_editor/02_EDITOR_DESIGN.md) §6 |
 | **Design-map cleanups:** do them, and in what order? Includes deciding on chapter beats. None blocks today's work. | not done | No preference |  | code structure | [19](../engine/19_DESIGN_MAP.md) |
 | **Delete `combat.json` and `story.json`?** Nothing reads them. | kept | No preference |  | cleanup | [11](../gameplay/11_BATTLE_DATA.md) §5 O4, [19](../engine/19_DESIGN_MAP.md) |
-| **The 3D fighter view:** build it later, or drop it? You said "try 3D later"; a look set to `"3d"` falls back to 2D. | not built | No preference |  | 3D fighters | [18](../gameplay/18_FIGHTER_VIEWS.md) |
 
 ## 2. Already in the game with my proposal: answer only to change it
 
@@ -77,8 +75,6 @@ These were not answered, so the proposal was built. Nothing waits on them.
 | **Q45** A move not finished in time? | part of the damage: done / total | Keep it |  | [16](../gameplay/16_SKILLS_AND_PLAYS.md) §9 |
 | **Q46** Camera close-up? | per move in data; the setting shortens it | Keep it |  | [16](../gameplay/16_SKILLS_AND_PLAYS.md) §9 |
 | **Q68** A special guard: your note binds it to the monster; is it fine on the move? | on the move (`moves.json` `guardPlay`), used by the lich and the ore golem | Keep it |  | [16](../gameplay/16_SKILLS_AND_PLAYS.md) §4.3, §9 |
-| **Q82** Which monsters are **big** (their attacks fly at the hero)? | bosses, and `"big": true` in enemies.json: only the stone golem | Mark the large ones you want (golem, demon?) |  | [20](../gameplay/20_BATTLE_EFFECTS.md) §5 |
-| **Q83** The **target line** "目前攻擊目標": only with two or three monsters, or also with one? | only with two or three | Keep it |  | [20](../gameplay/20_BATTLE_EFFECTS.md) §6 |
 | **Q84** The **staff's spells grow** along the chain: how fast? | k^1.6: of five, the first about 3 %, the last about 41 % of the play | Keep it; lower it (1.2) if the first spells feel useless |  | [20](../gameplay/20_BATTLE_EFFECTS.md) §3 |
 | **Q85** The **"!" before tapping** the staff's circles is off. Keep it off? | off (`circleWarnMs` 0) | Keep it |  | [20](../gameplay/20_BATTLE_EFFECTS.md) §2 |
 | **Q86** The 9 new **sounds** are synthesised placeholders. Replace them with recorded ones? | placeholders | Replace when you have recorded sounds; same names, OGG |  | [20](../gameplay/20_BATTLE_EFFECTS.md) §8 |
@@ -95,6 +91,7 @@ These were not answered, so the proposal was built. Nothing waits on them.
 | **`tools\test.cmd all`:** not run since the C++ rename; most tests are switched off | Waiting for you | — |  | [08](08_TESTS.md) |
 | **The `smoke.battle` reference image:** make it once you like the battle screen's look | Waiting for you | — |  | [08](08_TESTS.md) |
 | **Publish the web build** (needs your GitHub sign-in, W18) | Waiting for you | — |  | [07](07_PUBLISH_GITHUB_PAGES.md) |
+| **Play a special attack with sound** (the toad, the F01-F10 bosses): the 3.5 s power-up, the roar, the 1.6 s knock-down, the boss numbers; all in `battle.json` `feelFx` `"specialAttack"` and `enemies.json` | Waiting for you | — |  | [21](../gameplay/21_BATTLE_3D.md) §8 |
 
 The rest of the board's **Waiting to finish** list (W-numbers) is mostly tests on other devices, not decisions:
 [progress_report/PROGRESS_REPORT.md](progress_report/PROGRESS_REPORT.md).

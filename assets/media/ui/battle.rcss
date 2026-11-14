@@ -289,7 +289,8 @@ body { z-index: 30; }
 .cme { position: absolute; left: 50%; top: 50%; margin-left: -46px; margin-top: -46px; width: 92px; height: 92px; decorator: image(battle/cell_here.png); }
 /* the first danger's moment (battle.json cells.intro): only the monster and its banner are shown */
 body.focus #title, body.focus #player-hp, body.focus #player-hp-text, body.focus #guard, body.focus #guard-bar, body.focus #attack-state,
-body.focus #super, body.focus #super-btn, body.focus #active-btn, body.focus #tutorial, body.focus .fhp, body.focus .ftext, body.focus .intent, body.focus .tp { visibility: hidden; }
+body.focus #super, body.focus #super-btn, body.focus #active-btn, body.focus #tutorial, body.focus .fhp, body.focus .ftext, body.focus .intent, body.focus .tp,
+body.focus #play, body.focus .fhead, body.focus #chain, body.focus #crit, body.focus #clock, body.focus #clock-label { visibility: hidden; }
 /* the new game's tutorial (docs/gameplay/19 B6): its words across the top of the fight, and a gold edge on what they mean */
 #tutorial { position: absolute; left: 50%; margin-left: -400px; width: 800px; top: 10px; padding: 12px 14px; text-align: center;
             font-size: 28px; color: #ffffff; font-effect: outline(2px #000000); background-color: #0a0608e0;
@@ -394,3 +395,28 @@ body.focus #super, body.focus #super-btn, body.focus #active-btn, body.focus #tu
 /* the target, with two or three monsters: its name glows (no line of words under it) */
 .fhead.target .fname { color: #fff3c4; font-effect: glow(1px 6px 0px 0px #ffb21e); }
 .fhead.target .fhpnum { color: #fff3c4; }
+
+/* ---- the bottom of the battle screen, landscape (the owner, 2026-11-14, Q96): the hero's HP at the bottom left, the cells at
+   the bottom middle, the attack track over them; what sat beside the HP bar (the ultimate's dots, the chain, the crit, the
+   stamina pace) stacked over it at the left ---- */
+@media (orientation: landscape) {
+    #player-hp { left: 24px; margin-left: 0; top: 730px; width: 300px; }
+    #player-hp-text { left: 24px; margin-left: 0; top: 700px; }
+    #super { left: 24px; margin-left: 0; top: 670px; }
+    #crit { left: 24px; margin-left: 0; top: 642px; }
+    #chain { left: 24px; margin-left: 0; top: 614px; }
+    #clock-label { left: 24px; margin-left: 0; top: 560px; }
+    #clock { left: 24px; margin-left: 0; top: 586px; width: 300px; }
+    #cells { top: 622px; }
+    #play { top: 488px; }
+    #continue { top: 530px; }
+}
+
+/* a boss's introduction (the owner, 2026-11-14, Q82: "like Mega Man"): a dark banner with gold edges across the lower screen,
+   "BOSS" and the boss's name typed in, while the camera holds on the boss */
+#boss-intro { position: absolute; left: 0; right: 0; top: 548px; height: 160px; z-index: 6; }
+.bi-band { position: absolute; left: 0; right: 0; top: 0; height: 160px; text-align: center; background-color: #06040ce0;
+           border-top: 4px #ffcf4a; border-bottom: 4px #ffcf4a; }
+.bi-label { margin-top: 16px; font-size: 28px; line-height: 32px; color: #ff6a50; font-effect: outline(2px #2a0000); }
+.bi-name { margin-top: 10px; font-size: 68px; line-height: 76px; color: #ffe590; font-effect: glow(2px 10px 0px 0px #ff8a1e); }
+@media (orientation: portrait) { #boss-intro { top: 900px; } }

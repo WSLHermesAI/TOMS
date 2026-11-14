@@ -353,6 +353,20 @@ def feel_effects():
          'sprite': 'fx:glow', 'overLife': {'color': FADE, 'size': [{'t': 0, 'v': 0.6, 'ease': 'backOut'}, {'t': 1, 'v': 1.5}]},
          'render': {'blend': 'add', 'order': 2}},
         ring('roar_ring', [1, 0.55, 0.3, 1], 40, 4.2, life=0.5, delay=3.05)]})
+    # a boss's introduction (battle.json feelFx "bossIntro"): light gathers round it, a flash and rings as its name comes in
+    out.append({'name': 'boss_intro', 'duration': 3.2, 'emitters': [
+        flash('aura', 'fx:glow', [1, 0.75, 0.35, 0.55], 170, life=3.0, order=-1),
+        {'name': 'rise', 'maxParticles': 120, 'emission': {'rate': 30}, 'shape': {'type': 'ring', 'radius': 52, 'thickness': 16},
+         'life': [0.7, 1.2], 'speed': [40, 110], 'direction': -90, 'spread': 22, 'size': [6, 11], 'color': [gold, white],
+         'sprite': 'fx:spark', 'overLife': {'color': FADE, 'size': [{'t': 0, 'v': 1}, {'t': 1, 'v': 0.4}]},
+         'forces': {'drag': 1, 'gravity': [0, -80]}, 'render': {'blend': 'add', 'alignToVelocity': True, 'order': 1}},
+        gather('in', gold, 12, 110, 700) | {'emission': burst(12, 0.1, 2, 0.25), 'maxParticles': 40},
+        {'name': 'name_flash', 'maxParticles': 1, 'emission': burst(1, 0.7), 'life': 0.4, 'speed': 0, 'size': 220, 'color': [1, 0.95, 0.8, 1],
+         'sprite': 'fx:glow', 'overLife': {'color': FADE, 'size': [{'t': 0, 'v': 0.5, 'ease': 'backOut'}, {'t': 1, 'v': 1.6}]},
+         'render': {'blend': 'add', 'order': 2}},
+        ring('ring', gold, 44, 5.0, life=0.6, delay=0.7),
+        ring('ring_2', [1, 0.55, 0.3, 1], 36, 4.0, life=0.55, delay=0.82),
+        sparks('stars', 'fx:star', [gold, white], [10, 14], (120, 260), (14, 22), life=(0.6, 1.0), gravity=160, spin=True) | {'emission': burst([10, 14], 0.7)}]})
     out.append({'name': 'monster_charge', 'duration': 0.6, 'emitters': [
         flash('glow', 'fx:glow', [1, 0.4, 0.25, 0.45], 120, life=0.5, order=-1),
         gather('in', red, 10, 110, 760)]})

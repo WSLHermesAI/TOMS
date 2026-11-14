@@ -1,0 +1,10 @@
+{
+  "_comment": "Walking on a stage plays the stage music (battle.json music stage; the owner, 2026-11-14), until a battle starts. Muted, as every scripted run is.",
+  "scene": "stage",
+  "test": {
+    "frames": 60
+  },
+  "expect": {
+    "music": "music.stage_walk"
+  }
+}

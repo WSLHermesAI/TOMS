@@ -44,6 +44,18 @@ MONSTERS = {
     'glacibear': {'concept': 'frost_3', 'cut': 0.42, 'turn': 2.5, 'sticker': False},
     'astrowl': {'concept': 'star_3', 'cut': 0.46, 'turn': 3.0, 'sticker': False},
     'chronoknight': {'concept': 'clock_3', 'cut': 0.44, 'turn': 3.0, 'sticker': False},
+    # ten small monsters for F01-F10 (the owner, 2026-11-14: "add 10 more new monsters"), each a team's second, painted at
+    # 400 px so the ten share one page
+    'capling': {'concept': 'shroom_2', 'cut': 0.50, 'turn': 4.0, 'sticker': False, 'longer': 400},
+    'buzzlet': {'concept': 'honey_2', 'cut': 0.46, 'turn': 4.0, 'sticker': False, 'longer': 400},
+    'tartling': {'concept': 'sweet_2', 'cut': 0.46, 'turn': 4.0, 'sticker': False, 'longer': 400},
+    'bubbloon': {'concept': 'tide_2', 'cut': 0.50, 'turn': 4.0, 'sticker': False, 'longer': 400},
+    'mittenpip': {'concept': 'frost_2', 'cut': 0.42, 'turn': 4.0, 'sticker': False, 'longer': 400},
+    'bonekit': {'concept': 'ghost_2', 'cut': 0.48, 'turn': 4.0, 'sticker': False, 'longer': 400},
+    'geodillo': {'concept': 'stone_2', 'cut': 0.40, 'turn': 3.0, 'sticker': False, 'longer': 400},
+    'stormlet': {'concept': 'storm_2', 'cut': 0.40, 'turn': 3.5, 'sticker': False, 'longer': 400},
+    'tomebat': {'concept': 'book_2', 'cut': 0.44, 'turn': 4.0, 'sticker': False, 'longer': 400},
+    'murkitten': {'concept': 'night_2', 'cut': 0.46, 'turn': 4.0, 'sticker': False, 'longer': 400},
     # floor 10's demon lord, painted by tools/art/make_boss_concept.py (it was a 32 px pixel picture)
     'demonlord_vorkath': {'concept': 'vorkath', 'cut': 0.40, 'turn': 3.0, 'sticker': False},
 }
@@ -52,6 +64,8 @@ GROUPS = {'monster_moss': ['sproutle', 'mossbun', 'thicketoad']}
 GROUPS.update({f'monster_{b}': [b] for b in ('hivebear', 'fungolem', 'cragtortle', 'grimoox', 'gravewarden', 'hearthound',
                                               'sphinxie', 'glacibear', 'astrowl', 'chronoknight')})
 GROUPS['monster_vorkath'] = ['demonlord_vorkath']
+GROUPS['monster_critters'] = ['capling', 'buzzlet', 'tartling', 'bubbloon', 'mittenpip', 'bonekit', 'geodillo', 'stormlet', 'tomebat',
+                              'murkitten']
 
 
 def strip_sticker(img):
@@ -70,7 +84,8 @@ def parts(m):
     if m['sticker']:
         img = strip_sticker(img)
     img = img.crop(img.getchannel('A').getbbox())
-    k = LONGER / max(img.size)
+    longer = m.get('longer', LONGER)   # (a small monster is painted smaller: its atlas shares a page)
+    k = longer / max(img.size)
     img = img.resize((round(img.width * k), round(img.height * k)), Image.LANCZOS)
     a = np.array(img).astype(np.float32)
     h = img.height
@@ -84,7 +99,7 @@ def parts(m):
     top_img = Image.fromarray(top[:cut + BAND].astype(np.uint8), 'RGBA')
     body_y = max(0, cut - 14)
     body_img = Image.fromarray(body[body_y:].astype(np.uint8), 'RGBA')
-    return {'w': img.width, 'h': h, 'cut': cut, 'top': top_img, 'body': body_img}
+    return {'w': img.width, 'h': h, 'cut': cut, 'top': top_img, 'body': body_img, 'longer': longer}
 
 
 def key(t, v, ease='quadraticInOut'):
@@ -99,7 +114,8 @@ def clip(name, length, p, motion, head=None, color=None, loop=False):
     """motion: tracks of the whole monster (pos in units, rot, scale), about its feet. head: the top's turn, [(t, degrees)]. color: [(t, rgba)]."""
     tr = {}
     if 'pos' in motion:
-        tr['pos'] = track3([(t, x * UNIT, y * UNIT) for t, x, y in motion['pos']])
+        unit = p['longer'] / 32.0
+        tr['pos'] = track3([(t, x * unit, y * unit) for t, x, y in motion['pos']])
     if 'rot' in motion:
         tr['rot'] = [key(t, [0, 0, d]) for t, d in motion['rot']]
     if 'scale' in motion:
@@ -115,7 +131,7 @@ def clip(name, length, p, motion, head=None, color=None, loop=False):
     for n in (body, head_node):
         if not n['tracks']:
             del n['tracks']
-    root = {'name': 'monster', 'scale': [round(32.0 / LONGER, 5)] * 2 + [1], 'children': [
+    root = {'name': 'monster', 'scale': [round(32.0 / p['longer'], 5)] * 2 + [1], 'children': [
         {'name': 'motion', 'children': [body, head_node], 'tracks': tr}]}
     c = {'name': f"{name}_{p['id']}", 'length': length, 'root': root}
     if loop:
@@ -204,7 +220,7 @@ def make_group(atlas, ids):
             row = max(row, im.height)
     if y + row > sheet.height:
         raise SystemExit(f'{atlas}: the atlas is too small')
-    if len(ids) == 1:   # a boss alone: the page cut to what it uses (the moss team keeps its 2048 page as it was)
+    if atlas != 'monster_moss':   # the page cut to what it uses (the moss team keeps its 2048 page as it was)
         sheet = sheet.crop((0, 0, 2048, y + row + 2))
         lines[1] = f'size: 2048, {sheet.height}'
     sheet.save(ATLAS_DIR / f'{atlas}.png')

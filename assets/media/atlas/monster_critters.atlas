@@ -1,0 +1,45 @@
+monster_critters.png
+size: 2048, 984
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+capling_top
+  bounds: 2, 2, 316, 244
+capling_body
+  bounds: 320, 2, 316, 214
+buzzlet_top
+  bounds: 638, 2, 400, 222
+buzzlet_body
+  bounds: 1040, 2, 400, 224
+tartling_top
+  bounds: 1442, 2, 272, 228
+tartling_body
+  bounds: 1716, 2, 272, 230
+bubbloon_top
+  bounds: 2, 248, 387, 244
+bubbloon_body
+  bounds: 391, 248, 387, 214
+mittenpip_top
+  bounds: 780, 248, 348, 212
+mittenpip_body
+  bounds: 1130, 248, 348, 246
+bonekit_top
+  bounds: 1480, 248, 334, 236
+bonekit_body
+  bounds: 2, 496, 334, 222
+geodillo_top
+  bounds: 338, 496, 326, 204
+geodillo_body
+  bounds: 666, 496, 326, 254
+stormlet_top
+  bounds: 994, 496, 328, 204
+stormlet_body
+  bounds: 1324, 496, 328, 254
+tomebat_top
+  bounds: 2, 752, 400, 205
+tomebat_body
+  bounds: 404, 752, 400, 220
+murkitten_top
+  bounds: 806, 752, 313, 228
+murkitten_body
+  bounds: 1121, 752, 313, 230

@@ -67,15 +67,20 @@ Every attack now has an effect, and most a sound, on top of the monster's clip a
 | special | a heavy blow, or an attack with a special guard play (16 §4.3) | a big smash: rings, a slash, sparks, stars |
 | bigSpecial | the same from a big monster | a bigger bolt, then the smash |
 
-- **Big:** a boss, or `"big": true` in `enemies.json`. So far only the stone golem has it.
+- **Big:** a boss, or `"big": true` in `enemies.json`: the stone golem and the ten floor bosses (F01-F10). The owner,
+  2026-11-14, answering Q82: **a boss** fights in the cells, has a special attack with its own long animation (the
+  power-up, the charge, the unleash: 21 §8), and **its battle opens with an introduction**, like an old action game's
+  boss: the camera moves in low, the boss plays its special clip with the `boss_intro` effect and sound, a banner slides
+  in with "BOSS!" and the boss's name typed in, and the battle waits 3.4 s (`enemies.json` `"intro": true`;
+  `battle.json` `feelFx` `"bossIntro"`; `Game::f_StartBossIntro`).
 - A projectile flies in 0.18 s (`flightMs`), so it lands as the damage number appears (`hit_number_delay_ms`). A hero standing clear of
   the danger cells (19 §2.1) is not hit: the bolt flies on and fades.
 - Impacts land on the hero's chest.
 
 ## 6. The target
 
-The yellow bar under the targeted monster is gone. With two or three monsters, the line **目前攻擊目標** ("Current target") shows
-under the target's name (`battle.target_now` in `text.json`, Q83).
+The yellow bar under the targeted monster is gone. With two or three monsters, **the target's name glows** (the owner, 2026-11-12,
+answering Q83: the line "目前攻擊目標" under it was ugly and is gone too; `battle.rcss` `.fhead.target`).
 
 ## 7. The web build's "md5"
 
@@ -92,7 +97,7 @@ cache time. A hash in the file name instead of the commit and time would change 
 | Circles back one by one; each answer's order and swipe angle | `touch_play.*` (`f_CirclesShown`, `f_CircleNumbersShown`, `Hit::m_iOrder`, `m_fAngle`) |
 | Hints, sprays, slash, bow, staff ramp | `game_skills.cpp` (`f_WandCues`, `f_HitSpray`, `f_BowGather`, `f_PlayHit`) |
 | Monster attacks, projectiles | `game_combat.cpp` (`f_FoeAttackFx`, `f_LaunchBattleFx`, `f_UpdateBattleFx`) |
-| The target line | `battle.rml`, `battle.rcss`, `UiBattle::m_strTargetLabel` |
+| The target's glowing name | `battle.rml`, `battle.rcss` `.fhead.target` |
 | 25 effects, 9 sounds | `make_battle_fx.py` (`feel_effects`), `make_battle_sfx.py` (synthesised placeholders, Q86) |
 
 Checked by recording hidden battle runs: the staff's hints and their return, the target line with three monsters, the golem's bolt, and

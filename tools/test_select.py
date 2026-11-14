@@ -220,7 +220,7 @@ RULES = [
     (['art_raw/atlas/*'], any_of(ATLAS, is_game_smoke_d3d11), 'atlas projects: atlas checks + game screenshots'),
     (['tools/art/*'], None, 'the AI art scripts (reskins, the brawler and hero pictures; docs/engine/20): no test'),
     (['src/core/game/audio/*', 'assets/media/sfx/*', 'assets/media/music/*', 'src/third_party/stb/stb_vorbis*', 'src/third_party/miniaudio/*'],
-     named('unit.audio_ogg_test'), 'the game sound: every file an OGG that decodes (docs/engine/22)'),
+     named('unit.audio_ogg_test', 'scenario.battle_music*'), 'the game sound: every file an OGG that decodes (docs/engine/22); which music plays where'),
     (['tools/make_battle_sfx.py', 'tools/make_combo_sfx.py'], named('unit.audio_ogg_test'), 'they write the game sounds'),
     (['tools/get_ffmpeg.*'], None, 'downloads ffmpeg into tools/ffmpeg (docs/engine/22): no test, run it by hand'),
     (['tools/audio/*', 'tools/convert_mp3_to_ogg.cmd'], None, 'makes or converts music and sound effects outside the game (docs/engine/22): no test, run it by hand'),

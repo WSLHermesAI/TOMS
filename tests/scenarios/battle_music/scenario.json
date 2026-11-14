@@ -1,5 +1,5 @@
 {
-  "_comment": "A battle plays its floor's music (battle.json backdrops \"music\", by key). It is muted, as every scripted run is.",
+  "_comment": "A normal battle plays the normal battle music (battle.json backdrops \"music\", else \"music\" \"normal\", by key). It is muted, as every scripted run is.",
   "scene": "battle",
   "player": {
     "equip": [
@@ -14,6 +14,6 @@
     "frames": 60
   },
   "expect": {
-    "music": "music.forest_battle"
+    "music": "music.battle_normal"
   }
 }

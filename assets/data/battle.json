@@ -67,7 +67,10 @@
              "s": 95, "a": 75, "b": 55, "sGold": 0.2, "sCard": 0.25 },
   "guard": { "mode": "warn", "warnMs": 500, "parryShare": 0.4, "missLockMs": 400,
              "parryMs": 160, "blockMs": 550, "earlyMs": 1200, "blockPower": 70, "cooldownMs": 700 },
-  "music": { "volume": 0.45, "fadeInMs": 400, "fadeOutMs": 800 },
+  "music": { "volume": 0.45, "fadeInMs": 400, "fadeOutMs": 800,
+             "_comment": "the owner, 2026-11-14: one stage track (walking), a normal battle, and a boss track per enemies.json bossTier",
+             "stage": "music.stage_walk", "stageVolume": 0.35, "stageFadeInMs": 1200, "normal": "music.battle_normal",
+             "boss": { "mini": "music.boss_mini", "stage": "music.boss_stage", "final": "music.boss_final" } },
   "stages3d": [
     {
       "from": 1, "to": 10,
@@ -108,7 +111,7 @@
     }
   ],
   "backdrops": [
-    { "from": 1, "to": 9999, "music": "music.forest_battle", "anim": "anim/battle_forest.anim", "clip": "idle", "size": [1792, 1024], "fx": ["forest_motes", "forest_fireflies"] }
+    { "from": 1, "to": 9999, "music": "music.battle_normal", "anim": "anim/battle_forest.anim", "clip": "idle", "size": [1792, 1024], "fx": ["forest_motes", "forest_fireflies"] }
   ],
   "cells": { "cols": 3, "rows": 2, "areaW": 450, "rowH": 58, "gap": 6, "maxH": 150, "perspective": 0.14, "warnMs": 1400, "shiftX": 55, "shiftNear": 40, "shiftY": 18,
              "intro": { "ms": 2200, "uiAtMs": 1200, "popMs": 350, "zoom": 1.25, "clip": "special", "fx": "danger_intro", "text": "battle.cell_intro" },
@@ -143,6 +146,8 @@
     "wand": { "pitchStep": 2.0, "tiers": 4, "damageRamp": 1.6, "hintSound": "sfx.wand_hint", "vanishSound": "sfx.wand_vanish",
               "castSound": "sfx.wand_cast" },
     "bow": { "gatherEveryMs": 90, "chargeSound": "sfx.bow_charge", "explodeSound": "sfx.explosion" },
+    "bossIntro": { "startDelayMs": 300, "ms": 3400, "nameAtMs": 700, "typeMsPerChar": 110, "zoom": 1.7, "deg": 10, "clip": "special", "fx": "boss_intro", "fxAtMs": 250,
+                   "sound": "sfx.boss_intro", "off": false },
     "specialAttack": { "powerMs": 3500, "powerFx": "monster_power", "powerSound": "sfx.monster_power",
                        "chargeFx": "monster_charge", "chargeFxEveryMs": 450,
                        "unleashFx": "monster_unleash", "shout": "sfx.monster_roar", "shakePx": 16, "shakeMs": 520, "downMs": 1600 },

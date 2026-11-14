@@ -240,6 +240,9 @@ struct CombatState : public Trackable {
     int m_iFrameDt = 0;               // the battle's time this frame: 0 in a hit stop, slower in the last hit's slow motion
     int m_iHitStopMs = 0;             // both sides freeze (15 §3.8)
     int m_iCellIntroMs = 0;           // the first danger's moment: time left; everything waits, only the monster moves
+    int m_iBossIntroMs = 0, m_iBossIntroMsMax = 0;   // a boss's introduction (f_StartBossIntro): time left; everything waits the same way
+    // (it is armed first: it waits for the battle's first drawn frame, then startDelayMs, so loading never eats it)
+    int m_iBossIntroFoe = -1, m_iBossIntroWaitMs = 0, m_iBossIntroFrames = 0;
     bool m_bCellIntroStarted = false, m_bCellsShown = false;   // (the cells stay hidden until it reveals them)
     int m_iCellsPopMs = 0;            // how long since they popped up
     bool m_bCellsOn = false;          // a monster here has moves with a danger shape: the hero moves between cells (docs/gameplay/19 §2.1)
@@ -437,12 +440,22 @@ public:
     // strong, no slow motion. Saved in the settings file.
     bool f_ReduceEffects() const { return m_oSettings.m_bReduceEffects; }
     bool f_BattleCellsOn() const { return m_oCs.m_bActive && m_oCs.m_bCellsOn; }
-    bool f_CellIntroOn() const { return m_oCs.m_iCellIntroMs > 0; }
+    // a moment when everything waits and only the monster is shown: the first danger's, or a boss's introduction
+    bool f_CellIntroOn() const { return m_oCs.m_iCellIntroMs > 0 || m_oCs.m_iBossIntroMs > 0 || m_oCs.m_iBossIntroFoe >= 0; }
+    // A boss's introduction (the owner, 2026-11-14, Q82: "a special opening to introduce the boss (like Mega Man)"):
+    // enemies.json "intro": true; battle.json feelFx "bossIntro". The fight waits; the camera goes low and close on it,
+    // it poses, its particles and its sting, a banner slides in and its name types in letter by letter.
+    // f_StartBossIntro arms it; f_BeginBossIntro plays it once the first frame is on screen and startDelayMs (0.3 s) passed.
+    void f_StartBossIntro(int l_iFoe);
+    void f_BeginBossIntro(int l_iFoe);
     void f_StartCellIntro(int l_iFoe);
     void f_BattleMoveToCell(int l_iCell);                // the hero steps there (docs/gameplay/19 §2.1)
     void f_BattleStepCell(int l_iDx, int l_iDy);         // by the arrow keys
     bool f_FreePlayRunning() const { return m_oCs.m_oTouch.f_Running() && toms::f_IsFreePlay(m_oCs.m_oTouch.f_Type()); }
     void f_SetReduceEffects(bool l_bOn);
+    // Settings > 3D battle (Q95): full, light (the stage without shadows or point lights: faster), off (the painted backdrop)
+    void f_CycleBattle3DMode();
+    bool f_Battle3DLight() const { return m_oSettings.m_iBattle3D == 1; }
     void f_DebugFireFoeEvent(int l_iFoe, int l_iEvent);
     int f_BattleFoeCount() const { return m_oCs.m_bActive ? (int)m_oCs.m_vFoes.size() : 0; }
     // The battle editor: a monster's enemies.json record, edited while it fights. Every foe of that id in the running

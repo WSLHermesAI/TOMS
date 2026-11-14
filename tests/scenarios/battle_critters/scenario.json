@@ -1,0 +1,27 @@
+{
+  "_comment": "The ten small monsters of F01-F10 (the owner, 2026-11-14; tools/art/make_monster_rig.py group monster_critters): three of them each play their own idle clip from monster_critters.anim.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "capling",
+    "atk_interval_ms": 60000,
+    "party": [
+      "geodillo",
+      "murkitten"
+    ]
+  },
+  "test": {
+    "frames": 30
+  },
+  "expect": {
+    "foeClips": [
+      "idle_capling",
+      "idle_geodillo",
+      "idle_murkitten"
+    ]
+  }
+}

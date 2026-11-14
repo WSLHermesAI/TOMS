@@ -161,6 +161,8 @@ So the owner's note "without defending you fall after a few hits" is not shown y
 
 **The picture shows:** the hero's portrait, level, HP and stats; potions and keys; gems and gold; the tower with a boss at floors 25, 50, 75 and 100; the buttons Ranking, Missions, Bag, Heroes and Shop; a large Challenge button; and two monster companions beside the hero.
 
+**Companions (Q81):** done; the owner, 2026-11-14: "floor 1 already did this".
+
 | Idea | What it adds | What exists | Question |
 |---|---|---|---|
 | **Main screen** | The picture above | A village hub, a stage select, the System menu | Q76: the tower has 70 floors today, the picture 100 |

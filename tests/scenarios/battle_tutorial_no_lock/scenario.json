@@ -1,5 +1,5 @@
 {
-  "_comment": "The new game's tutorial has no HP lock: the player only shoots, never dodges or guards, and the toad still falls, so the fight ends and the weapon master replies. The shots miss on purpose, about 3 damage each; a later one also closes the win screen. Back at the master, the battle's music has stopped.",
+  "_comment": "The new game's tutorial has no HP lock: the player only shoots, never dodges or guards, and the toad still falls, so the fight ends and the weapon master replies. The shots miss on purpose, about 3 damage each; a later one also closes the win screen. Back at the master, the stage music plays again (2026-11-14).",
   "scene": "weaponTrial",
   "battle": {
     "play": "weapon",
@@ -12,6 +12,6 @@
   },
   "expect": {
     "dialogueNode": "after",
-    "music": ""
+    "music": "music.stage_walk"
   }
 }

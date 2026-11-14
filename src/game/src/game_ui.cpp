@@ -214,6 +214,10 @@ void f_RegisterTypes(Rml::DataModelConstructor& l_oC) {
         l_oS.RegisterMember("tutorial", &UiBattle::m_strTutorial);
         l_oS.RegisterMember("tutorial_mark", &UiBattle::m_strTutorialMark);
         l_oS.RegisterMember("tutorial_hidden", &UiBattle::m_bTutorialHidden);
+        l_oS.RegisterMember("boss_intro", &UiBattle::m_bBossIntro);
+        l_oS.RegisterMember("boss_intro_label", &UiBattle::m_strBossIntroLabel);
+        l_oS.RegisterMember("boss_intro_name", &UiBattle::m_strBossIntroName);
+        l_oS.RegisterMember("boss_intro_x", &UiBattle::m_fBossIntroX);
         l_oS.RegisterMember("tutorial_scale", &UiBattle::m_fTutorialScale);
         l_oS.RegisterMember("cells_scale", &UiBattle::m_fCellsScale);
         l_oS.RegisterMember("cell_hint_y", &UiBattle::m_fCellHintY);

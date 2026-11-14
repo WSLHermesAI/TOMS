@@ -40,7 +40,6 @@
 | **Q78 一局比一局強：** 死亡後買的能力是加在轉生之上，還是取代轉生？用什麼支付？ | 未製作，等您決定 | 加在之上，與轉生的重置一起，用跨局保留的貨幣支付 |  | 第 3 部分 | [19](../../gameplay/zh_TW/19_THREE_PART_PLAN.md) §4 |
 | **Q79 大挑戰：** 「三次通關」指什麼：通關整座塔三次、三章還是三層？輸了扣多少點？能贏回來嗎？ | 未製作，等您決定 | 每三章一次；輸了不永久扣點，只有限時的虛弱 |  | 第 1 部分 B7 | [19](../../gameplay/zh_TW/19_THREE_PART_PLAN.md) §2.3 |
 | **Q80 領地：** 建造物就是怪物卡片，還是新東西？領地在哪裡：村莊嗎？ | 未製作，等您決定 | 塔內撿到的新道具，放在村莊 |  | 第 3 部分 | [19](../../gameplay/zh_TW/19_THREE_PART_PLAN.md) §4 |
-| **Q81 夥伴：** 圖中主角身旁有青蛙與兔子。只是美術，還是怪物會加入並一起戰鬥？ | 未製作，等您決定 | 目前只是這個畫面的美術 |  | 第 3 部分 | [19](../../gameplay/zh_TW/19_THREE_PART_PLAN.md) §4 |
 | **Q22 測試情境：** 放在哪裡共用（雲端儲存、Google Drive、自己的伺服器）？ | 未製作，等您決定 | 雲端儲存（R2） |  | 下載（W39） | [09](../../gameplay/zh_TW/09_DOWNLOADS_AND_DLC.md) §7 |
 | **Q23 上傳：** 每位開發者各自的金鑰，還是共用一把？ | 未製作，等您決定 | 各自的金鑰 |  | 下載（W39） | [09](../../gameplay/zh_TW/09_DOWNLOADS_AND_DLC.md) §7 |
 | **Q24 DLC：** 內容包能修改現有內容，還是只能新增？ | 未製作，等您決定 | 只能新增 |  | DLC（W39） | [09](../../gameplay/zh_TW/09_DOWNLOADS_AND_DLC.md) §7 |
@@ -51,7 +50,6 @@
 | **發行語言：** 哪些是必要的？這決定未翻譯文字算警告或錯誤。（Q51 只決定「目前」：zh_TW 與英文。） | 未製作，等您決定 | 警告 |  | 發行 | [事件編輯器 02](../../gameplay/event_editor/02_EDITOR_DESIGN.md) §6 |
 | **設計地圖的整理：** 要不要做、順序為何？包含決定章節節拍。都不影響目前的工作。 | 不做 | 無偏好 |  | 程式結構 | [19](../../engine/zh_TW/19_DESIGN_MAP.md) |
 | **刪除 `combat.json` 與 `story.json`？** 沒有程式讀取它們。 | 保留 | 無偏好 |  | 清理 | [11](../../gameplay/zh_TW/11_BATTLE_DATA.md) §5 O4、[19](../../engine/zh_TW/19_DESIGN_MAP.md) |
-| **3D 戰鬥者 view：** 之後要做，還是放棄？您說過「之後再試 3D」；設為 `"3d"` 的外觀目前退回 2D。 | 不做 | 無偏好 |  | 3D 戰鬥者 | [18](../../gameplay/zh_TW/18_FIGHTER_VIEWS.md) |
 
 ## 2. 已用我的提案做進遊戲：要改才需回答
 
@@ -76,8 +74,6 @@
 | **Q45** 招式來不及完成？ | 給部分傷害：完成數 / 總數 | 維持現狀 |  | [16](../../gameplay/zh_TW/16_SKILLS_AND_PLAYS.md) §9 |
 | **Q46** 攝影機特寫？ | 每招在資料中設定；設定可縮短它 | 維持現狀 |  | [16](../../gameplay/zh_TW/16_SKILLS_AND_PLAYS.md) §9 |
 | **Q68** 特殊防禦：您的筆記是跟怪物綁定；放在招式上可以嗎？ | 放在招式上（`moves.json` `guardPlay`），巫妖與礦石魔像在用 | 維持現狀 |  | [16](../../gameplay/zh_TW/16_SKILLS_AND_PLAYS.md) §4.3、§9 |
-| **Q82** 哪些怪物是**大型**（攻擊會射向主角）？ | boss，以及 enemies.json 中 `"big": true`：目前只有石巨人 | 標記您想要的大型怪物（石巨人、惡魔？） |  | [20](../../gameplay/zh_TW/20_BATTLE_EFFECTS.md) §5 |
-| **Q83** **目標文字**「目前攻擊目標」：只在兩到三隻怪物時顯示，還是一隻也顯示？ | 只在兩到三隻時 | 維持 |  | [20](../../gameplay/zh_TW/20_BATTLE_EFFECTS.md) §6 |
 | **Q84** **魔杖的魔法沿連段變強**：要多快？ | k^1.6：五個時第一個約 3%，最後一個約 41% | 維持；若前幾招感覺沒用就降到 1.2 |  | [20](../../gameplay/zh_TW/20_BATTLE_EFFECTS.md) §3 |
 | **Q85** 魔杖圈圈**點擊前的「!」**已關閉。維持關閉？ | 關閉（`circleWarnMs` 0） | 維持 |  | [20](../../gameplay/zh_TW/20_BATTLE_EFFECTS.md) §2 |
 | **Q86** 9 個新**音效**是合成的暫用音效。要換成錄製的嗎？ | 暫用音效 | 有錄製的音效時再換；同名、OGG |  | [20](../../gameplay/zh_TW/20_BATTLE_EFFECTS.md) §8 |
@@ -94,6 +90,7 @@
 | **`tools\test.cmd all`：** C++ 改名後還沒執行；大部分測試被關閉 | 等您 | — |  | [08](08_TESTS.md) |
 | **`smoke.battle` 參考圖：** 等您滿意戰鬥畫面後再製作 | 等您 | — |  | [08](08_TESTS.md) |
 | **發佈 Web 版**（需要您的 GitHub 登入，W18） | 等您 | — |  | [07](07_PUBLISH_GITHUB_PAGES.md) |
+| **開聲音玩特殊攻擊**（苔蛙、F01-F10 頭目）：3.5 秒蓄力、吼叫、1.6 秒擊倒、頭目數值；都在 `battle.json` `feelFx` `"specialAttack"` 和 `enemies.json` | 等您 | — |  | [21](../../gameplay/zh_TW/21_BATTLE_3D.md) §8 |
 
 狀態板其餘的 **Waiting to finish** 清單（W 編號）大多是其他裝置上的測試，不是決定：
 [progress_report/PROGRESS_REPORT.md](../progress_report/PROGRESS_REPORT.md)。

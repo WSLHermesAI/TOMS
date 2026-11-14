@@ -23,6 +23,10 @@
     "base": "monster",
     "character": "anim/monster_moss.anim"
   },
+  "critters": {
+    "base": "monster",
+    "character": "anim/monster_critters.anim"
+  },
   "hivebear": {
     "base": "monster",
     "character": "anim/monster_hivebear.anim"

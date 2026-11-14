@@ -48,7 +48,12 @@ inline constexpr const char g_pszFolderFloors[]      = "folder.floors";         
 inline constexpr const char g_pszFolderNpcs[]        = "folder.npcs";             // folder ../data/npcs
 inline constexpr const char g_pszFolderStages[]      = "folder.stages";           // folder ../data/stages
 inline constexpr const char g_pszFxBattle[]          = "fx.battle";               // particle fx/battle.particle
+inline constexpr const char g_pszMusicBattleNormal[] = "music.battle_normal";     // file music/battle_normal.ogg
+inline constexpr const char g_pszMusicBossFinal[]    = "music.boss_final";        // file music/boss_final.ogg
+inline constexpr const char g_pszMusicBossMini[]     = "music.boss_mini";         // file music/boss_mini.ogg
+inline constexpr const char g_pszMusicBossStage[]    = "music.boss_stage";        // file music/boss_stage.ogg
 inline constexpr const char g_pszMusicForestBattle[] = "music.forest_battle";     // file music/forest_battle.ogg
+inline constexpr const char g_pszMusicStageWalk[]    = "music.stage_walk";        // file music/stage_walk.ogg
 inline constexpr const char g_pszSfxBattleBlock[]    = "sfx.battle_block";        // file sfx/battle_block.ogg
 inline constexpr const char g_pszSfxBattleBreak[]    = "sfx.battle_break";        // file sfx/battle_break.ogg
 inline constexpr const char g_pszSfxBattleGreat[]    = "sfx.battle_great";        // file sfx/battle_great.ogg
@@ -59,6 +64,7 @@ inline constexpr const char g_pszSfxBattlePerfect[]  = "sfx.battle_perfect";    
 inline constexpr const char g_pszSfxBattlePhase[]    = "sfx.battle_phase";        // file sfx/battle_phase.ogg
 inline constexpr const char g_pszSfxBattleUltimate[] = "sfx.battle_ultimate";     // file sfx/battle_ultimate.ogg
 inline constexpr const char g_pszSfxBattleWin[]      = "sfx.battle_win";          // file sfx/battle_win.ogg
+inline constexpr const char g_pszSfxBossIntro[]      = "sfx.boss_intro";          // file sfx/boss_intro.ogg
 inline constexpr const char g_pszSfxBowCharge[]      = "sfx.bow_charge";          // file sfx/bow_charge.ogg
 inline constexpr const char g_pszSfxCloseUi[]        = "sfx.close_ui";            // file sfx/close_ui.ogg
 inline constexpr const char g_pszSfxComboReady[]     = "sfx.combo_ready";         // file sfx/combo_ready.ogg
@@ -133,7 +139,12 @@ inline constexpr const char* g_arrAll[] = {
     g_pszFolderNpcs,
     g_pszFolderStages,
     g_pszFxBattle,
+    g_pszMusicBattleNormal,
+    g_pszMusicBossFinal,
+    g_pszMusicBossMini,
+    g_pszMusicBossStage,
     g_pszMusicForestBattle,
+    g_pszMusicStageWalk,
     g_pszSfxBattleBlock,
     g_pszSfxBattleBreak,
     g_pszSfxBattleGreat,
@@ -144,6 +155,7 @@ inline constexpr const char* g_arrAll[] = {
     g_pszSfxBattlePhase,
     g_pszSfxBattleUltimate,
     g_pszSfxBattleWin,
+    g_pszSfxBossIntro,
     g_pszSfxBowCharge,
     g_pszSfxCloseUi,
     g_pszSfxComboReady,
