@@ -4,6 +4,9 @@
 
 **遊戲的所有音效與音樂都使用 OGG Vorbis**（擁有者，2026-11-07）。兩個本機工具為遊戲製作音訊。它們不會上傳任何東西，也不會改動遊戲：檔案會放在 `Build/art_out/audio/`，直到有人把它們複製進去。
 
+語音（一個人說出指定的句子）和 AI 生成的音效（動物、背景、金屬）請看
+[23_SPEECH_AND_SOUND_EFFECTS.md](23_SPEECH_AND_SOUND_EFFECTS.md)。
+
 | | 音樂 | 音效 |
 |---|---|---|
 | 工具 | `tools/audio/make_music.py` | `tools/audio/make_sfx.py` |

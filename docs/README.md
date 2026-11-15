@@ -64,6 +64,7 @@ Chinese copies in its own `zh_TW/` (中文版 in each row).
 | [20_CHARACTER_ART.md](engine/20_CHARACTER_ART.md) | character art for the battle: one picture cut into parts (A), painted key poses with IP-Adapter (B, being tried), a 3D glTF model (C, the fallback); what each needs installed (models, ComfyUI nodes, Blender) so a new PC can do the same | [zh_TW](engine/zh_TW/20_CHARACTER_ART.md) |
 | [21_OCEAN_VIEWER.md](engine/21_OCEAN_VIEWER.md) | `ocean_viewer`: a real-time FFT ocean and sky in an app of their own (desktop and web, with quality levels for phones), to try the first 3D battle background outside the game; how it works, its numbers, what is not done | [zh_TW](engine/zh_TW/21_OCEAN_VIEWER.md) |
 | [22_AUDIO_GENERATION.md](engine/22_AUDIO_GENERATION.md) | making music (ACE-Step in the local ComfyUI) and sound effects (recipes, no AI): the commands, loops, licences |
+| [23_SPEECH_AND_SOUND_EFFECTS.md](engine/23_SPEECH_AND_SOUND_EFFECTS.md) | speech (Qwen3-TTS, any of 10 languages, one line or a whole speech) and AI sound effects (Stable Audio Open: animals, backgrounds, metal) with ComfyLive: recipe files, 22 examples, headless use for an AI agent, the two ComfyUIs (main 8188, speech 8189) and stopping them | [zh_TW](engine/zh_TW/23_SPEECH_AND_SOUND_EFFECTS.md) |
 
 ## project
 

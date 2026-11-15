@@ -4,6 +4,9 @@
 
 **All the game's sound and music is OGG Vorbis** (the owner, 2026-11-07). Two local tools make audio for the game. Neither uploads anything, and neither changes the game: the files go to `Build/art_out/audio/` until someone copies them in.
 
+Speech (a person saying given sentences) and AI-made sound effects (animals, backgrounds, metal) are in
+[23_SPEECH_AND_SOUND_EFFECTS.md](23_SPEECH_AND_SOUND_EFFECTS.md).
+
 | | Music | Sound effects |
 |---|---|---|
 | Tool | `tools/audio/make_music.py` | `tools/audio/make_sfx.py` |

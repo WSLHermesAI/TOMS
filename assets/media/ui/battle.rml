@@ -10,7 +10,7 @@
      pressed just before a hit; the ATTACK panel only says ready / recovering. Moments (BREAK!, a monster's line, the
      ultimate) cross the screen; a win ends on the result screen (grade, the weapon's progress, the rewards).
      Data: battle.* (UiBattle). Landscape and portrait (docs/gameplay/12_UI_LAYOUT.md): placed by battle.rcss. -->
-<body data-model="game" data-event-click="act('battle_continue')" data-class-focus="battle.focus">
+<body data-model="game" data-event-click="act('battle_continue')" data-class-moment="battle.focus">
     <!-- no backdrop here: the game draws it (Game::drawBattleRig), under the player and the monster it draws -->
     <div id="title">{{battle.title}}</div>
     <!-- the fighters' boxes: always there, the game places the animated player and monster in them (GameUi reads

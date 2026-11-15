@@ -287,10 +287,12 @@ body { z-index: 30; }
 .cellbox.danger { decorator: image(battle/cell_danger.png); }
 .cfill { position: absolute; left: 9px; top: 9px; bottom: 9px; max-width: 94%; background-color: #ff5a3a70; border-radius: 6px; }
 .cme { position: absolute; left: 50%; top: 50%; margin-left: -46px; margin-top: -46px; width: 92px; height: 92px; decorator: image(battle/cell_here.png); }
-/* the first danger's moment (battle.json cells.intro): only the monster and its banner are shown */
-body.focus #title, body.focus #player-hp, body.focus #player-hp-text, body.focus #guard, body.focus #guard-bar, body.focus #attack-state,
-body.focus #super, body.focus #super-btn, body.focus #active-btn, body.focus #tutorial, body.focus .fhp, body.focus .ftext, body.focus .intent, body.focus .tp,
-body.focus #play, body.focus .fhead, body.focus #chain, body.focus #crit, body.focus #clock, body.focus #clock-label { visibility: hidden; }
+/* the first danger's moment (battle.json cells.intro) and a boss's introduction: only the monster and its banner are shown.
+   (The class is "moment", not "focus": common.rcss .focus is the 80 % black backdrop of the menus, and on the battle's
+   body it laid that black over the whole screen; the owner, 2026-11-15) */
+body.moment #title, body.moment #player-hp, body.moment #player-hp-text, body.moment #guard, body.moment #guard-bar, body.moment #attack-state,
+body.moment #super, body.moment #super-btn, body.moment #active-btn, body.moment #tutorial, body.moment .fhp, body.moment .ftext, body.moment .intent, body.moment .tp,
+body.moment #play, body.moment .fhead, body.moment #chain, body.moment #crit, body.moment #clock, body.moment #clock-label { visibility: hidden; }
 /* the new game's tutorial (docs/gameplay/19 B6): its words across the top of the fight, and a gold edge on what they mean */
 #tutorial { position: absolute; left: 50%; margin-left: -400px; width: 800px; top: 10px; padding: 12px 14px; text-align: center;
             font-size: 28px; color: #ffffff; font-effect: outline(2px #000000); background-color: #0a0608e0;

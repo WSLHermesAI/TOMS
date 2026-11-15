@@ -15,6 +15,17 @@
 
 ## ▶ Next Step
 
+**ComfyLive: speech and sound effects; recipes; headless; ComfyUI kept running** (2026-11-15; [DAILY_2026-11-15.md](DAILY_2026-11-15.md)):
+- Sound effects (Stable Audio Open 1.0): all 14 examples made, 2–5 s each. Speech (Qwen3-TTS, 10 languages, 9 voices or one
+  described in words) runs on a second ComfyUI (`.venv-speech`, transformers 4.57.3, port 8189), because in the main venv it
+  talked nonsense. Whisper heard the right words in English, Chinese and the described voice.
+- Recipes (a JSON file per sound, 22 examples) open in the window or run with `ComfyLive.exe --make=`; headless `make`,
+  `comfyui-stop`, `shutdown`. ComfyUI is never stopped by itself: Stop ComfyUI / `--comfy-stop`.
+- Doc [engine/23](../../engine/23_SPEECH_AND_SOUND_EFFECTS.md) (+ zh_TW), with the Hugging Face licence, download and rename.
+- The owner committed `e8bbe4b` and `2c0e43b` (the 11-14 work). **11-15 not committed** (AIGamestyle by hand). Changed-only
+  12 of 278 pass (picked by the other work's game files). **Owner:** listen to the sounds and speeches (the Japanese line;
+  the quiet forest and birds).
+
 **A boss's introduction; five BGM tracks; ten critters; Settings > 3D battle; the landscape layout** (2026-11-14; [DAILY_2026-11-14.md](DAILY_2026-11-14.md)):
 - A boss (`"intro": true`) opens its fight 0.3 s after the first frame is on screen. The camera goes low and close, it poses, and the
   `boss_intro` effect and sting play. A banner "頭目登場！" slides in with its name typed in, and everything waits 3.4 s

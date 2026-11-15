@@ -159,7 +159,10 @@ int Game::f_BattleFrame(int l_iDtMs) {
     if (m_oCs.m_iBossIntroFoe >= 0) {   // a boss's introduction, armed: wait for the first drawn frame, then startDelayMs
         // (the first battle frame runs before anything is drawn; from the second on, a frame is on screen. Each step
         // counts at most 34 ms, so the hitch of a first draw that loads textures does not eat the delay.)
-        if (++m_oCs.m_iBossIntroFrames > 1) m_oCs.m_iBossIntroWaitMs -= std::min(l_iDtMs, 34);
+        // The 3D stage still loading (in the background, after the battle opened) is darkness at 80 %: the introduction
+        // waits for the stage itself, so it never plays under that black (the owner, 2026-11-15)
+        if (m_bBattle3DComing && !m_bBattle3DOn) m_oCs.m_iBossIntroFrames = 0;
+        else if (++m_oCs.m_iBossIntroFrames > 1) m_oCs.m_iBossIntroWaitMs -= std::min(l_iDtMs, 34);
         if (m_oCs.m_iBossIntroFrames > 1 && m_oCs.m_iBossIntroWaitMs <= 0) {
             const int l_iFoe = m_oCs.m_iBossIntroFoe;
             m_oCs.m_iBossIntroFoe = -1;
@@ -171,7 +174,7 @@ int Game::f_BattleFrame(int l_iDtMs) {
         l_iBdt = 0;
     } else if (m_oCs.m_iCellIntroMs > 0) {   // the first danger's moment: everything waits (f_StartCellIntro)
         m_oCs.m_iCellIntroMs = std::max(0, m_oCs.m_iCellIntroMs - l_iDtMs);
-        if (!m_oSettings.m_bReduceEffects) m_oCs.m_iDimMs = std::min(700, m_oCs.m_iCellIntroMs);
+        // (no dim here: the owner, 2026-11-15: the black mask over a special attack made the whole screen look wrong)
         if (!m_oCs.m_bCellsShown && m_oCellRules.m_iIntroMs - m_oCs.m_iCellIntroMs >= m_oCellRules.m_iIntroUiMs) {
             m_oCs.m_bCellsShown = true;   // they pop up, and the player has a moment to read them
             m_oCs.m_iCellsPopMs = 0;
