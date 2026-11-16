@@ -117,6 +117,15 @@ final atlas and `.anim`, which go to `assets/media/atlas/` and `assets/media/ani
   the anim editor. It matches the video exactly and needs no skeleton, so it also suits monsters; it costs atlas
   space (a 3 s clip is 73 pictures) and a reskin has to repaint every frame. Still to write: a script that turns a
   frame folder into the atlas and the clip.
+- **The reference pose can now be made from the concept** (2026-11-16): ComfyLive's **Edit pictures (Qwen Image 2.1
+  Turbo)** turned concept 606 into the same boy seen from the side, standing ready with a bow, in 16 s
+  (`Build/art_out/qwen/image_qwen_edit_hero_bow.png`). That model's licence is for research and evaluation only (Q99
+  in [../project/13_OPEN_DECISIONS.md](../project/13_OPEN_DECISIONS.md)), so the picture is a trial until the owner
+  decides.
+- **Reference pictures to video** (HyperFlow's ref2va model, 2026-11-16) does in one step what the two steps above
+  do: from concept 606 alone it made the boy, seen from the side, drawing and releasing the bow
+  (`Build/art_out/video/h3_test/ref_bow_frames`, 73 transparent frames in 88 s). The reference is not the first
+  frame, so no side-on picture has to be made first. The same licence limit (Q98).
 - Concept 606 faces the camera with the arms out and has no weapon. For the battle clips the reference should be a
   side-on ready pose holding the weapon, painted first (doc 20's pose script), since every clip starts from it.
 

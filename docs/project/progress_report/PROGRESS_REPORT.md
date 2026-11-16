@@ -24,9 +24,19 @@
 - A reference picture as the first frame keeps the game's character (tried with hero concept 606). Remove background is on by
   default: frames with only the character.
 - On the RTX 4070: Wan 212 s for 3 s at 1280 × 704; HyperFlow 61 s for 3 s at 832 × 480, peak 10.5 GB.
-- The owner committed `106f95d`. **11-16 not committed** (AIGamestyle by hand). Changed-only 0 of 278 selected; ComfyLive's
-  `--video-test` and `--song-test` pass. **Owner:** judge the videos; answer Q98; choose the skeleton route or the
-  picture-sequence route; try the window's Reference picture box and Remove background checkbox (not seen on screen).
+- Afternoon: Qwen Image 2.1 in ComfyLive, a picture from a prompt and a picture edited from 1 to 4 reference pictures
+  (`qwen`, `qwen-edit`), with three model files to choose: Turbo INT8 (18 s a picture), Turbo Q6_K (about 20 s), the full
+  model Q4_K_M at 25 steps (60 s); all peak near 11.5 GB. The edit made the hero's side-on ready pose with a bow from concept
+  606. The GGUF loader was replaced by leejet's fork. Its licence is research and evaluation only (Q99, open).
+- Evening: HyperFlow **Reference pictures to video** (`video-h3-ref`, ref2va Q4_K_S): pictures as references, not the first
+  frame; concept 606 alone gave the boy side-on drawing the bow, 73 frames at 832 × 480 in about 90 s. HyperFlow's other
+  entries load Q4_K_M. In the window: off-grid sizes corrected before a run with the shape kept, full paths in the log, a
+  size note from recorded peak GPU memory, and **Delete result...** (to the Recycle Bin). HyperFlow spoke a given line in one
+  test through ComfyUI (not in ComfyLive).
+- The owner committed `106f95d` and `8cb2902` (the morning's video work). **The afternoon's and evening's work is not
+  committed** (AIGamestyle by hand). Changed-only 0 of 278 selected; ComfyLive's `--video-test` (40 checks) and `--song-test` pass.
+  **Owner:** try the reference mode; say whether a Sound option is wanted; answer Q98 and Q99; judge the videos and the Qwen pictures; choose the skeleton route or the picture-sequence
+  route; try the window's picture boxes and Remove background checkbox (not seen on screen).
 
 **ComfyLive: speech and sound effects; recipes; headless; ComfyUI kept running** (2026-11-15; [DAILY_2026-11-15.md](DAILY_2026-11-15.md)):
 - Sound effects (Stable Audio Open 1.0): all 14 examples made, 2–5 s each. Speech (Qwen3-TTS, 10 languages, 9 voices or one
