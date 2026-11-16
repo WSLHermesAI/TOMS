@@ -15,6 +15,19 @@
 
 ## ▶ Next Step
 
+**Character animation from video: the plan, and videos of a character in ComfyLive** (2026-11-16; [DAILY_2026-11-16.md](DAILY_2026-11-16.md)):
+- The plan ([engine/24](../../engine/24_VIDEO_TO_SKELETON.md), + zh_TW): a video of one character, its skeleton (DWPose), one part
+  set, bone keys in a `.anim`, the anim editor playing the clip beside the video; the hero first. Only step 1 is built.
+- ComfyLive makes the video in its window and headless (`"graph": "video"`): Wan 2.2 TI2V-5B (Apache 2.0), and for tests
+  HyperFlow H3 Flash Q3_K_M (`"video-h3"`), whose licence limits where its outputs may be shown (Q98, open). The frames are
+  numbered PNG files beside an MP4 and a settings file.
+- A reference picture as the first frame keeps the game's character (tried with hero concept 606). Remove background is on by
+  default: frames with only the character.
+- On the RTX 4070: Wan 212 s for 3 s at 1280 × 704; HyperFlow 61 s for 3 s at 832 × 480, peak 10.5 GB.
+- The owner committed `106f95d`. **11-16 not committed** (AIGamestyle by hand). Changed-only 0 of 278 selected; ComfyLive's
+  `--video-test` and `--song-test` pass. **Owner:** judge the videos; answer Q98; choose the skeleton route or the
+  picture-sequence route; try the window's Reference picture box and Remove background checkbox (not seen on screen).
+
 **ComfyLive: speech and sound effects; recipes; headless; ComfyUI kept running** (2026-11-15; [DAILY_2026-11-15.md](DAILY_2026-11-15.md)):
 - Sound effects (Stable Audio Open 1.0): all 14 examples made, 2–5 s each. Speech (Qwen3-TTS, 10 languages, 9 voices or one
   described in words) runs on a second ComfyUI (`.venv-speech`, transformers 4.57.3, port 8189), because in the main venv it

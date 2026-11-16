@@ -65,6 +65,7 @@ Chinese copies in its own `zh_TW/` (中文版 in each row).
 | [21_OCEAN_VIEWER.md](engine/21_OCEAN_VIEWER.md) | `ocean_viewer`: a real-time FFT ocean and sky in an app of their own (desktop and web, with quality levels for phones), to try the first 3D battle background outside the game; how it works, its numbers, what is not done | [zh_TW](engine/zh_TW/21_OCEAN_VIEWER.md) |
 | [22_AUDIO_GENERATION.md](engine/22_AUDIO_GENERATION.md) | making music (ACE-Step in the local ComfyUI) and sound effects (recipes, no AI): the commands, loops, licences |
 | [23_SPEECH_AND_SOUND_EFFECTS.md](engine/23_SPEECH_AND_SOUND_EFFECTS.md) | speech (Qwen3-TTS, any of 10 languages, one line or a whole speech) and AI sound effects (Stable Audio Open: animals, backgrounds, metal) with ComfyLive: recipe files, 22 examples, headless use for an AI agent, the two ComfyUIs (main 8188, speech 8189) and stopping them | [zh_TW](engine/zh_TW/23_SPEECH_AND_SOUND_EFFECTS.md) |
+| [24_VIDEO_TO_SKELETON.md](engine/24_VIDEO_TO_SKELETON.md) | character animation from video (plan, not built): a local video model in ComfyLive makes a clip of one character from text, DWPose takes the skeleton out of it, one rest frame is cut into a part atlas, the joints become bone keys in a `.anim`, and the anim editor plays it beside the video with a compare that stops with an error when the rig cannot match; the hero first; the owner's answers 2026-11-16 | [zh_TW](engine/zh_TW/24_VIDEO_TO_SKELETON.md) |
 
 ## project
 

@@ -51,7 +51,14 @@ $Models = @(
        Url = 'https://huggingface.co/RunDiffusion/Juggernaut-XL-v9/resolve/main/Juggernaut-XL_v9_RunDiffusionPhoto_v2.safetensors' },
     # the 3D character trial (docs/engine/20_CHARACTER_ART.md §4: tools/art/make_hero_3d.py); Tencent Hunyuan community license
     @{ Name = 'Hunyuan3D-2 shape (3D model from a picture)';               Folder = 'checkpoints'; File = 'hunyuan3d-dit-v2-0.fp16.safetensors'; Size = 4928151562
-       Url = 'https://huggingface.co/tencent/Hunyuan3D-2/resolve/main/hunyuan3d-dit-v2-0/model.fp16.safetensors' }
+       Url = 'https://huggingface.co/tencent/Hunyuan3D-2/resolve/main/hunyuan3d-dit-v2-0/model.fp16.safetensors' },
+    # character animation from video (docs/engine/24_VIDEO_TO_SKELETON.md): Wan 2.2 TI2V-5B, text or picture -> video
+    @{ Name = 'Wan 2.2 TI2V-5B (video of a character from text or a picture)'; Folder = 'diffusion_models'; File = 'wan2.2_ti2v_5B_fp16.safetensors'; Size = 9999658848
+       Url = 'https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_ti2v_5B_fp16.safetensors' },
+    @{ Name = 'Wan 2.2 VAE (needed by Wan 2.2 TI2V-5B)';                   Folder = 'vae';         File = 'wan2.2_vae.safetensors';                   Size = 1409400960
+       Url = 'https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/vae/wan2.2_vae.safetensors' },
+    @{ Name = 'UMT5-XXL text encoder fp8 (needed by Wan)';                 Folder = 'text_encoders'; File = 'umt5_xxl_fp8_e4m3fn_scaled.safetensors'; Size = 6735906897
+       Url = 'https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors' }
 )
 $CustomNodes = @(
     @{ Dir = 'comfyui_ipadapter_plus';   Url = 'https://github.com/cubiq/ComfyUI_IPAdapter_plus' },

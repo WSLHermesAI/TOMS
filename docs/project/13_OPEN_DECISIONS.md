@@ -51,6 +51,7 @@ An empty **Answer** means not decided: nothing happens for that row, and its rec
 | **Languages for release:** which are required? That makes an untranslated text a warning or an error. (Q51 settled only "for now": zh_TW and English.) | Not built; waits for you | a warning |  | release | [event editor 02](../gameplay/event_editor/02_EDITOR_DESIGN.md) §6 |
 | **Design-map cleanups:** do them, and in what order? Includes deciding on chapter beats. None blocks today's work. | not done | No preference |  | code structure | [19](../engine/19_DESIGN_MAP.md) |
 | **Delete `combat.json` and `story.json`?** Nothing reads them. | kept | No preference |  | cleanup | [11](../gameplay/11_BATTLE_DATA.md) §5 O4, [19](../engine/19_DESIGN_MAP.md) |
+| **Q98 Video model for the game's animations:** Wan 2.2 (Apache 2.0, no limits; 212 s for 3 s at 1280 × 704) or HyperFlow H3 Flash (61 s for 3 s at 832 × 480, but its licence does not cover the USA, the EU, the UK or South Korea and forbids showing its outputs there; a commercial product must show "MiniMax H3")? | HyperFlow is used for tests on this PC only; nothing made with it goes into the game | Wan 2.2 for everything that ships; HyperFlow only to try ideas quickly | | steps 2–6 of the video pipeline use the frames | [engine 24](../engine/24_VIDEO_TO_SKELETON.md) §2.1 |
 
 ## 2. Already in the game with my proposal: answer only to change it
 
