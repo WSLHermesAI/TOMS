@@ -52,6 +52,8 @@
 | **刪除 `combat.json` 與 `story.json`？** 沒有程式讀取它們。 | 保留 | 無偏好 |  | 清理 | [11](../../gameplay/zh_TW/11_BATTLE_DATA.md) §5 O4、[19](../../engine/zh_TW/19_DESIGN_MAP.md) |
 | **Q98 遊戲動畫用哪個影片模型：** Wan 2.2（Apache 2.0，沒有限制；1280 × 704 的 3 秒要 212 秒）還是 HyperFlow H3 Flash（832 × 480 的 3 秒要 61 秒，但它的授權不涵蓋美國、歐盟、英國和南韓，也禁止在那些地方展示它的輸出；商業產品必須顯示「MiniMax H3」）？ | HyperFlow 只在這台電腦上做測試；用它做的東西不放進遊戲 | 要出貨的都用 Wan 2.2；HyperFlow 只用來快速試想法 | | 影片流程的步驟 2–6 會用到影格 | [engine 24](../../engine/24_VIDEO_TO_SKELETON.md) §2.1 |
 | **Q99 Qwen Image 2.1 Turbo 的圖片能不能放進遊戲：** 它的授權只允許研究和評估；商業使用要另外向它的開發者取得授權。只用來試作、去申請商業授權，還是把它做的圖用已經在用的 SDXL 模型重畫？ | 只試作；用它做的東西不放進遊戲 | 只試作，並把它的圖當成參考、交給 SDXL 流程重畫，直到去申請授權 | | 影片動畫要用的主角側面參考姿勢 | [engine 24](../../engine/24_VIDEO_TO_SKELETON.md) §2.1 |
+| **Q106** 接下來做哪個新武器或技能點子（22 第 5 節）？ | 都不做 | 格擋盾，然後刃風暴 |  | 下一批玩法 | [22](../../gameplay/zh_TW/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §5 |
+| **Q107** 桌機的方向類玩法要支援鍵盤嗎？ | 只用滑鼠 | 方向鍵／WASD，斜向用兩個鍵 |  | 桌機操作 | [22](../../gameplay/zh_TW/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §5 |
 
 ## 2. 已用我的提案做進遊戲：要改才需回答
 
@@ -80,6 +82,11 @@
 | **Q85** 魔杖圈圈**點擊前的「!」**已關閉。維持關閉？ | 關閉（`circleWarnMs` 0） | 維持 |  | [20](../../gameplay/zh_TW/20_BATTLE_EFFECTS.md) §2 |
 | **Q86** 9 個新**音效**是合成的暫用音效。要換成錄製的嗎？ | 暫用音效 | 有錄製的音效時再換；同名、OGG |  | [20](../../gameplay/zh_TW/20_BATTLE_EFFECTS.md) §8 |
 | **Q87** 魔杖傷害在**一次攻擊內**遞增。也要隨**跨攻擊的連段**增加嗎？ | 只在一次攻擊內 | 維持；噴發已經隨連段增加 |  | [20](../../gameplay/zh_TW/20_BATTLE_EFFECTS.md) §3 |
+| **Q100** 記憶玩法：新的劍類型，還是雙手劍的玩法（Q59）？ | 新類型「憶刃」；雙手劍保留 V 形滑動 | 維持現狀 |  | [22](../../gameplay/zh_TW/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §1 |
+| **Q101** 憶刃：劃錯時？ | 該提示失手，換下一個；已命中的照算 | 維持現狀 |  | [22](../../gameplay/zh_TW/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §2 |
+| **Q102** 憶刃依等級的時間？ | 回答 1 秒 → 1.5 秒；Lv 6 起有紅色提示（反方向） | 維持，試玩後再調 |  | [22](../../gameplay/zh_TW/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §2 |
+| **Q103** 哪些武器有**千刃印**絕招？ | 只有憶刃；鐵劍保留自由斬 | 維持現狀 |  | [22](../../gameplay/zh_TW/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §3 |
+| **Q104** 千刃印：指令、時間、門檻？ | 10 個方向、5 秒、6 個起算部分收招、×12 | 維持，較高等級再加 V／圓形 |  | [22](../../gameplay/zh_TW/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §3 |
 
 ## 3. 不是問題，但在等您
 

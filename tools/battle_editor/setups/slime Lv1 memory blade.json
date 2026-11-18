@@ -1,0 +1,23 @@
+{
+  "_comment": "battle_editor's test setup \"slime Lv1 memory blade\" (docs/gameplay/13_BATTLE_EDITOR.md §2): not a test, an editor file. The memory blade's own play (docs/gameplay/22 §2) and its ultimate the Sigil Chain (22 §3): the super charge starts full, press G.",
+  "scene": "battle",
+  "player": {
+    "give": ["memory_blade"],
+    "equip": ["memory_blade"],
+    "weaponLevel": { "memory_blade": 1 },
+    "lv": 1,
+    "maxhp": 120,
+    "hp": 120
+  },
+  "battle": {
+    "enemy": "slime",
+    "play": "weapon",
+    "super": true
+  },
+  "_editor": {
+    "name": "slime Lv1 memory blade",
+    "pace": "",
+    "foes": ["slime"],
+    "player": { "lv": 1, "hp": 120, "maxhp": 120, "weapon": "memory_blade", "weaponLevel": 1, "attrs": {}, "attrPoints": 0 }
+  }
+}

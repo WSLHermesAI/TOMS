@@ -48,13 +48,24 @@
             "weapon": "staff"
           },
           "next": null
+        },
+        {
+          "label": {
+            "zh_TW": "試試憶刃",
+            "en": "Try the memory blade"
+          },
+          "action": {
+            "type": "tryWeapon",
+            "weapon": "memory_blade"
+          },
+          "next": null
         }
       ]
     },
     "weapons": {
       "text": {
-        "zh_TW": "「弓：往後拉再放開，拉得越久越有力。劍：照著指示的方向揮砍。法杖：依序點中出現的圓圈。」",
-        "en": "\"The bow: draw back and let go, and the longer the draw, the harder the shot. The sword: slash the way it shows you. The staff: touch the circles in their order.\""
+        "zh_TW": "「弓：往後拉再放開，拉得越久越有力。劍：照著指示的方向揮砍。法杖：依序點中出現的圓圈。憶刃：先記住依序亮起的方向，看到「Go!」再憑記憶揮出來。」",
+        "en": "\"The bow: draw back and let go, and the longer the draw, the harder the shot. The sword: slash the way it shows you. The staff: touch the circles in their order. The memory blade: remember the ways it shows you one by one, then slash them back from memory when it says Go!\""
       },
       "choices": [
         {
@@ -87,6 +98,17 @@
           "action": {
             "type": "tryWeapon",
             "weapon": "staff"
+          },
+          "next": null
+        },
+        {
+          "label": {
+            "zh_TW": "試試憶刃",
+            "en": "Try the memory blade"
+          },
+          "action": {
+            "type": "tryWeapon",
+            "weapon": "memory_blade"
           },
           "next": null
         }
@@ -138,6 +160,17 @@
           "action": {
             "type": "tryWeapon",
             "weapon": "staff"
+          },
+          "next": null
+        },
+        {
+          "label": {
+            "zh_TW": "換試憶刃",
+            "en": "Try the memory blade"
+          },
+          "action": {
+            "type": "tryWeapon",
+            "weapon": "memory_blade"
           },
           "next": null
         }

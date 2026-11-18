@@ -15,7 +15,7 @@
 //   }
 //
 // play.kind: a play type's data name (play_type.h): drawShape (trace a shown shape), swipeWay (the sword's prompts: "cues"
-// ["way", "way", "v"]), pullRelease (aim the moving targets), sequenceClick (the staff's circles), mash (tap `points` times),
+// ["way", "way", "v"]), swipeChain (the cues all on the top bar, swiped in order in timeMs; minHits: fewer and it fizzles), pullRelease (aim the moving targets), sequenceClick (the staff's circles), mash (tap `points` times),
 // freeSwipe / freeTap / freeShot (any swipe or tap counts for timeMs, each a hit of hitDamage times a normal attack).
 // A show is a list of beats, each at a time
 // ("at", ms from the show's start; "step" beats at each step): pathFx (particles along a shape, and a "corner" effect
@@ -45,6 +45,7 @@ struct ShowBeat {
     float m_fZoom = 1.0f;              // camera
     std::string m_strMove;             // camera, on a 3D stage (docs/gameplay/21 §4.2): "" a push in, "orbit" part of a circle and back
     float m_fDeg = 30.0f;              // camera "orbit": how far round (degrees)
+    std::string m_strWhen;             // a finish beat: "" always, "full" only when every step was done, "partial" only when not (22 §3)
 };
 
 struct SkillPlaySpec {
@@ -56,6 +57,7 @@ struct SkillPlaySpec {
     float m_fSize = 220.0f;            // shape: on the screen
     float m_fCornerRadius = 44.0f;
     std::vector<std::string> m_vCues;  // swipe: each prompt, "way", a gesture or a shape name
+    int m_iMinHits = 0;                // fewer steps done than this: the move fizzles (no damage; 22 §3, a chain's 6 of 10)
 };
 
 struct SpecialMove {
@@ -76,6 +78,10 @@ SpecialMoveTable f_SpecialMovesFromJson(const nlohmann::json& l_jJ);   // keys s
 
 // A show's end: its last beat's time plus its length (a hits beat: count x gapMs).
 int f_ShowLength(const std::vector<ShowBeat>& l_vBeats);
+// A beat's "when" against the play's outcome (full: every step done).
+bool f_BeatOn(const ShowBeat& l_oB, bool l_bFull);
+// The show's end counting only the beats on for this outcome.
+int f_ShowLength(const std::vector<ShowBeat>& l_vBeats, bool l_bFull);
 // The beats whose time is in (fromMs, toMs] (fromMs < 0: from the start, the beats at 0 too).
 std::vector<const ShowBeat*> f_BeatsDue(const std::vector<ShowBeat>& l_vBeats, int l_iFromMs, int l_iToMs);
 // The move's name as far as a step: the first `done` of `total` shares of its letters (UTF-8 kept whole).

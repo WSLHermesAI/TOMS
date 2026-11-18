@@ -1119,6 +1119,70 @@
       "ko": "화살표가 빛날 때 그 방향으로",
       "es": "desliza hacia la flecha mientras brilla"
     },
+    "battle.play_hint_swipeRecall": {
+      "zh_TW": "記住依序亮起的方向，再憑記憶劃出",
+      "en": "remember the ways as they show, then swipe them from memory",
+      "zh_CN": "记住依序亮起的方向，再凭记忆划出",
+      "ja": "順に光る向きを覚え、記憶で振り抜け",
+      "ko": "차례로 빛나는 방향을 외워 기억대로 그어라",
+      "es": "memoriza las direcciones y deslízalas de memoria"
+    },
+    "battle.play_hint_swipeChain": {
+      "zh_TW": "照上方的指令依序劃出",
+      "en": "swipe the commands along the top in order",
+      "zh_CN": "照上方的指令依序划出",
+      "ja": "上の指令を順になぞれ",
+      "ko": "위의 지시를 차례로 그어라",
+      "es": "desliza las órdenes de arriba en orden"
+    },
+    "battle.recall_go": {
+      "zh_TW": "出招！",
+      "en": "Go!",
+      "zh_CN": "出招！",
+      "ja": "今だ！",
+      "ko": "지금!",
+      "es": "¡Ya!"
+    },
+    "skill.sigil_chain": {
+      "zh_TW": "千刃印",
+      "en": "Sigil Chain",
+      "zh_CN": "千刃印",
+      "ja": "千刃印",
+      "ko": "천인의 인",
+      "es": "Cadena de sellos"
+    },
+    "skill.prompt_chain": {
+      "zh_TW": "依序劃出上方的十道指令！",
+      "en": "Swipe all ten commands in order!",
+      "zh_CN": "依序划出上方的十道指令！",
+      "ja": "上の十の指令を順になぞれ！",
+      "ko": "위의 열 가지 지시를 차례로 그어라!",
+      "es": "¡Desliza las diez órdenes en orden!"
+    },
+    "skill.chain_partial": {
+      "zh_TW": "印未全成……",
+      "en": "The sigil is incomplete...",
+      "zh_CN": "印未全成……",
+      "ja": "印は未完成……",
+      "ko": "인이 완성되지 않았다……",
+      "es": "El sello quedó incompleto..."
+    },
+    "item.memory_blade.name": {
+      "zh_TW": "憶刃",
+      "en": "Memory Blade",
+      "zh_CN": "忆刃",
+      "ja": "記憶の刃",
+      "ko": "기억의 검",
+      "es": "Hoja de la memoria"
+    },
+    "item.memory_blade.desc": {
+      "zh_TW": "先看後劈的劍：方向一個接一個亮起又消失，再憑記憶在時限內劃出。",
+      "en": "A blade for a sharp mind: the ways light up one by one and vanish; swipe them back from memory in time.",
+      "zh_CN": "先看后劈的剑：方向一个接一个亮起又消失，再凭记忆在时限内划出。",
+      "ja": "見てから斬る剣：向きが一つずつ光って消える。時間内に記憶で振り抜け。",
+      "ko": "보고 베는 검: 방향이 하나씩 빛났다 사라진다. 시간 안에 기억대로 그어라.",
+      "es": "Una hoja para mentes agudas: las direcciones brillan una a una y desaparecen; deslízalas de memoria a tiempo."
+    },
     "battle.play_hint_sequenceClick": {
       "zh_TW": "記住順序，再依序點擊",
       "en": "watch the order, then tap them in turn",

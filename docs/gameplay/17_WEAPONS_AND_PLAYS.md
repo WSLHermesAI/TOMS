@@ -103,6 +103,8 @@ A weapon type has **no special moves**. It has **abilities** that grow with its 
 |---|---|---|---|
 | `eSWIPE_WAY` | `swipeWay` | swipe one of 8 ways | the sword |
 | `eSWIPE_GESTURE` | `swipeGesture` | a gesture from §4.2 (V, M, square) | the two-handed sword; moves |
+| `eSWIPE_RECALL` | `swipeRecall` | the ways shown one by one, then swiped back from memory ([22](22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §2) | the memory blade |
+| `eSWIPE_CHAIN` | `swipeChain` | a row of commands on the top bar, swiped in order in one time (22 §3) | the Sigil Chain |
 | `eDRAW_SHAPE` | `drawShape` | trace a shown shape, point by point (§4.3) | moves; the orb's charge sign |
 | `eSEQUENCE_CLICK` | `sequenceClick` | tap the shown spots in order | the wand; the tome |
 | `eRHYTHM_TAP` | `rhythmTap` | tap on a beat (a pattern of fast and slow) | the rod; the orb after its sign |

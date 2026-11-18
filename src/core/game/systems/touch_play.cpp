@@ -24,11 +24,15 @@ void TouchPlay::f_Start(PlayType l_eType, int l_iPoints, bool l_bUltimate, const
         std::vector<int> l_vExtra;
         for (int l_iK = 0; l_iK < m_iPoints; l_iK++) {
             m_vCueKinds.push_back(l_iK < (int)m_oS.m_vSliceCues.size() && !m_oS.m_vSliceCues[(size_t)l_iK].empty() ? m_oS.m_vSliceCues[(size_t)l_iK] : l_pszDefault);
-            m_vCueDirs.push_back(std::uniform_int_distribution<int>(0, 7)(m_oRng));
+            int l_iDir = std::uniform_int_distribution<int>(0, 7)(m_oRng);
+            if (m_eType == PlayType::eSWIPE_RECALL && l_iK > 0 && l_iDir == m_vCueDirs.back()) l_iDir = (l_iDir + 1 + std::uniform_int_distribution<int>(0, 6)(m_oRng)) % 8;   // never the same way twice in a row: it would read as one
+            m_vCueDirs.push_back(l_iDir);
+            m_vCueReversed.push_back(m_eType == PlayType::eSWIPE_RECALL && m_vCueKinds.back() == "way" && l_oU(m_oRng) < m_oS.m_fRecallReverse ? 1 : 0);
             const auto l_itExtra = m_oS.m_mapCueExtraMs.find(m_vCueKinds.back());
             l_vExtra.push_back(l_itExtra == m_oS.m_mapCueExtraMs.end() ? 0 : l_itExtra->second);
         }
-        m_oCueTrack.f_Start(m_iPoints, m_oS.m_oSliceCue, l_vExtra);
+        if (f_IsCueTrackSwipe(m_eType)) m_oCueTrack.f_Start(m_iPoints, m_oS.m_oSliceCue, l_vExtra);
+        m_eRecallPhase = m_eType == PlayType::eSWIPE_RECALL ? RecallPhase::Show : RecallPhase::Answer;
     }
     if (m_eType == PlayType::eSEQUENCE_CLICK) {
         const float l_fM = m_oS.m_fCircleRadius;
@@ -108,15 +112,17 @@ void TouchPlay::f_Release() {
 glm::vec2 TouchPlay::f_PromptAt() const { return {m_v4Area.x + m_v4Area.z * 0.5f, m_v4Area.y + m_v4Area.w - 50.0f}; }
 
 void TouchPlay::f_JudgeStroke() {
-    if (m_vStroke.size() < 2 || !m_oCueTrack.f_Open()) return;   // only the window takes the answer (a swipe too soon: nothing)
-    const int l_iK = m_oCueTrack.f_Index();
+    const bool l_bTrack = f_IsCueTrackSwipe(m_eType);
+    if (m_vStroke.size() < 2 || (l_bTrack ? !m_oCueTrack.f_Open() : m_eRecallPhase != RecallPhase::Answer)) return;   // only the window takes the answer (a swipe too soon: nothing)
+    const int l_iK = l_bTrack ? m_oCueTrack.f_Index() : m_iIndex;
+    if (l_iK < 0 || l_iK >= (int)m_vCueKinds.size()) return;
     const glm::vec2 l_v2D = m_vStroke.back() - m_vStroke.front();
     const float l_fLen = std::sqrt(l_v2D.x * l_v2D.x + l_v2D.y * l_v2D.y);
     m_fStrokeAngle = std::atan2(l_v2D.y, l_v2D.x) * 180.0f / g_fPi;
     bool l_bOk = false, l_bPerfect = false;
     if (m_vCueKinds[(size_t)l_iK] == "way") {
         if (l_fLen < m_oS.m_fSliceMinLength) return;   // not a cut
-        const float l_fWant = (float)m_vCueDirs[(size_t)l_iK] * g_fPi / 4.0f, l_fGot = std::atan2(l_v2D.y, l_v2D.x);
+        const float l_fWant = (float)(m_vCueDirs[(size_t)l_iK] + (f_CueReversed(l_iK) ? 4 : 0)) * g_fPi / 4.0f, l_fGot = std::atan2(l_v2D.y, l_v2D.x);
         const float l_fDiff = std::fabs(std::fmod(l_fGot - l_fWant + 3.0f * g_fPi, 2.0f * g_fPi) - g_fPi);
         l_bOk = l_fDiff < m_oS.m_fSliceTolerance;
         l_bPerfect = l_fDiff < m_oS.m_fSliceTolerance * 0.45f && l_fLen > 2.0f * m_oS.m_fSliceMinLength;
@@ -133,7 +139,7 @@ void TouchPlay::f_JudgeStroke() {
             l_bPerfect = l_bOk && f_MatchStroke(m_vStroke, l_strCue, m_oS.m_fShapeTolerance * 0.65f);
         }
     }
-    m_oCueTrack.f_Answer(l_bOk);
+    if (l_bTrack) m_oCueTrack.f_Answer(l_bOk);
     const glm::vec2 l_v2At = f_PromptAt();
     f_FinishOne(l_bOk, l_bPerfect, l_v2At.x, l_v2At.y);
 }
@@ -160,6 +166,21 @@ bool TouchPlay::f_CircleNumbersShown() const {
     return m_eCirclePhase == CirclePhase::Count || (m_eCirclePhase == CirclePhase::Tap && f_CirclesShown() < (int)m_vCircles.size());
 }
 
+int TouchPlay::f_AnswerTimeMs() const {
+    if (m_eType == PlayType::eSWIPE_CHAIN) return std::max(1, m_oS.m_iChainTimeMs);
+    return std::max(1, m_oS.m_iRecallAnswerMs + m_oS.m_iRecallPerCueMs * m_iPoints);
+}
+
+int TouchPlay::f_RecallShowing() const {
+    if (m_eType != PlayType::eSWIPE_RECALL || m_eRecallPhase != RecallPhase::Show) return -1;
+    const int l_iSlot = std::max(1, m_oS.m_iRecallShowMs + m_oS.m_iRecallGapMs), l_iK = m_iRecallMs / l_iSlot;
+    return l_iK < m_iPoints && m_iRecallMs % l_iSlot < m_oS.m_iRecallShowMs ? l_iK : -1;
+}
+
+int TouchPlay::f_RecallShownAgeMs() const {
+    return f_RecallShowing() < 0 ? -1 : m_iRecallMs % std::max(1, m_oS.m_iRecallShowMs + m_oS.m_iRecallGapMs);
+}
+
 float TouchPlay::f_TimeLeft() const {
     if (!m_bStarted) return 1.0f;
     auto l_fnLeft = [](int l_iUsed, int l_iAll) { return std::clamp(1.0f - (float)l_iUsed / (float)std::max(1, l_iAll), 0.0f, 1.0f); };
@@ -167,6 +188,8 @@ float TouchPlay::f_TimeLeft() const {
     case PlayType::ePULL_RELEASE: return l_fnLeft(m_iOneMs, m_oS.m_iBowTimeMs);
     case PlayType::eSWIPE_WAY:
     case PlayType::eSWIPE_GESTURE: return m_oCueTrack.f_TimeLeft();
+    case PlayType::eSWIPE_RECALL: return m_eRecallPhase == RecallPhase::Answer ? l_fnLeft(m_iRecallMs, f_AnswerTimeMs()) : 1.0f;
+    case PlayType::eSWIPE_CHAIN: return l_fnLeft(m_iClockMs, f_AnswerTimeMs());
     case PlayType::eFREE_SWIPE:
     case PlayType::eFREE_TAP:
     case PlayType::eFREE_SHOT: return l_fnLeft(m_iClockMs, m_oS.m_iFreeTimeMs);
@@ -218,6 +241,8 @@ void TouchPlay::f_Pointer(int l_iPhase, float l_fX, float l_fY) {
         return;
     case PlayType::eSWIPE_WAY:
     case PlayType::eSWIPE_GESTURE:
+    case PlayType::eSWIPE_RECALL:
+    case PlayType::eSWIPE_CHAIN:
         if (l_iPhase == 0) { m_bAiming = true; m_vStroke.assign(1, l_v2P); return; }
         if (!m_bAiming) return;
         if (m_vStroke.empty() || glm::length(l_v2P - m_vStroke.back()) >= 3.0f) m_vStroke.push_back(l_v2P);
@@ -299,6 +324,27 @@ void TouchPlay::f_Update(int l_iDtMs) {
         }
         break;
     }
+    case PlayType::eSWIPE_RECALL: {
+        m_iRecallMs += l_iDtMs;
+        const int l_iShowAll = m_iPoints * std::max(1, m_oS.m_iRecallShowMs + m_oS.m_iRecallGapMs);
+        if (m_eRecallPhase == RecallPhase::Show && m_iRecallMs >= l_iShowAll) { m_eRecallPhase = RecallPhase::Ready; m_iRecallMs -= l_iShowAll; m_bAiming = false; m_vStroke.clear(); }
+        if (m_eRecallPhase == RecallPhase::Ready && m_iRecallMs >= m_oS.m_iRecallReadyMs) {
+            m_eRecallPhase = RecallPhase::Answer; m_iRecallMs -= m_oS.m_iRecallReadyMs; m_iLastAnswerMs = m_iClockMs;
+        }
+        if (m_eRecallPhase == RecallPhase::Answer && m_iRecallMs >= f_AnswerTimeMs()) {   // time up: the rest are missed
+            m_bAiming = false;
+            const glm::vec2 l_v2At = f_PromptAt();
+            while (!m_bDone) f_FinishOne(false, false, l_v2At.x, l_v2At.y);
+        }
+        break;
+    }
+    case PlayType::eSWIPE_CHAIN:
+        if (m_iClockMs >= f_AnswerTimeMs()) {
+            m_bAiming = false;
+            const glm::vec2 l_v2At = f_PromptAt();
+            while (!m_bDone) f_FinishOne(false, false, l_v2At.x, l_v2At.y);
+        }
+        break;
     case PlayType::eSEQUENCE_CLICK: {
         m_iPhaseMs += l_iDtMs;
         const int l_iN = (int)m_vCircles.size();
@@ -342,6 +388,13 @@ TouchPlaySettings f_TouchPlayFromJson(const nlohmann::json& l_jB) {
     l_oS.m_oSliceCue.m_iInputMs = std::clamp(l_jJ.value("inputMs", l_oS.m_oSliceCue.m_iInputMs), 50, l_oS.m_oSliceCue.m_iCueMs);
     l_oS.m_oSliceCue.m_bWindowAtEnd = l_jJ.value("inputAtEnd", l_oS.m_oSliceCue.m_bWindowAtEnd);
     l_oS.m_oSliceCue.m_iGapMs = std::max(0, l_jJ.value("cueGapMs", l_oS.m_oSliceCue.m_iGapMs));
+    l_oS.m_iRecallShowMs = std::max(100, l_jJ.value("recallShowMs", l_oS.m_iRecallShowMs));
+    l_oS.m_iRecallGapMs = std::max(0, l_jJ.value("recallGapMs", l_oS.m_iRecallGapMs));
+    l_oS.m_iRecallReadyMs = std::max(0, l_jJ.value("recallReadyMs", l_oS.m_iRecallReadyMs));
+    l_oS.m_iRecallAnswerMs = std::max(200, l_jJ.value("recallAnswerMs", l_oS.m_iRecallAnswerMs));
+    l_oS.m_iRecallPerCueMs = std::max(0, l_jJ.value("recallPerCueMs", l_oS.m_iRecallPerCueMs));
+    l_oS.m_fRecallReverse = std::clamp(l_jJ.value("recallReverse", l_oS.m_fRecallReverse), 0.0f, 1.0f);
+    l_oS.m_iChainTimeMs = std::max(500, l_jJ.value("chainTimeMs", l_oS.m_iChainTimeMs));
     l_oS.m_iCircleCountMs = std::max(100, l_jJ.value("circleCountMs", l_oS.m_iCircleCountMs));
     l_oS.m_iCircleHideMs = std::max(0, l_jJ.value("circleHideMs", l_oS.m_iCircleHideMs));
     l_oS.m_iCircleWarnMs = std::max(0, l_jJ.value("circleWarnMs", l_oS.m_iCircleWarnMs));

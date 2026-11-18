@@ -119,6 +119,34 @@
       }
     ]
   },
+  "sigil_chain": {
+    "_comment": "The memory blade's ultimate (docs/gameplay/22 §3): ten commands on the top bar, swiped in order in 5 s. 10 of 10: the full finish; 6 to 9: the partial one (a share of the damage); under 6 it fizzles.",
+    "name": "skill.sigil_chain",
+    "weapon": "memory_blade",
+    "use": "ultimate",
+    "prompt": "skill.prompt_chain",
+    "damage": 12,
+    "play": { "kind": "swipeChain", "timeMs": 5000, "minHits": 6,
+              "cues": [ "way", "way", "way", "way", "way", "way", "way", "way", "way", "way" ] },
+    "demo": [ { "at": 0, "do": "name", "ms": 1000 }, { "at": 0, "do": "fx", "fx": "sword_great", "on": "player" },
+              { "at": 0, "do": "sound", "fx": "sfx.boss_intro" }, { "at": 900, "do": "dim" } ],
+    "step": [ { "do": "fx", "fx": "seal_burst", "on": "player" }, { "do": "namePart" } ],
+    "finish": [
+      { "at": 0, "do": "camera", "zoom": 1.7, "on": "monster", "ms": 2000, "move": "orbit", "deg": 50, "when": "full" },
+      { "at": 0, "do": "fx", "fx": "seal_trail", "on": "monster", "when": "full" },
+      { "at": 150, "do": "clip", "clip": "attack_big", "when": "full" },
+      { "at": 300, "do": "fx", "fx": "star_burst_big", "on": "monster", "when": "full" },
+      { "at": 400, "do": "hits", "count": 10, "gapMs": 90, "when": "full" },
+      { "at": 400, "do": "shake", "value": 10, "ms": 1300, "when": "full" },
+      { "at": 1300, "do": "fx", "fx": "sword_perfect", "on": "monster", "when": "full" },
+      { "at": 1300, "do": "sound", "fx": "sfx.explosion", "when": "full" },
+      { "at": 0, "do": "banner", "text": "skill.chain_partial", "ms": 900, "when": "partial" },
+      { "at": 0, "do": "camera", "zoom": 1.25, "on": "monster", "ms": 1000, "when": "partial" },
+      { "at": 150, "do": "clip", "clip": "attack_big", "when": "partial" },
+      { "at": 300, "do": "hits", "count": 4, "gapMs": 120, "when": "partial" },
+      { "at": 300, "do": "shake", "value": 5, "ms": 500, "when": "partial" }
+    ]
+  },
   "tiger_wind": {
     "name": "skill.tiger_wind",
     "weapon": "sword",

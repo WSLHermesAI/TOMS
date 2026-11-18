@@ -15,6 +15,16 @@
 
 ## ▶ Next Step
 
+**New weapon and skill play: the memory blade (憶刃) and its ultimate the Sigil Chain (千刃印)** (2026-11-18; [DAILY_2026-11-18.md](DAILY_2026-11-18.md)):
+- The memory blade's play `swipeRecall`: the ways show one by one over the hero (0.5 s each), then "Go!", swiped back from
+  memory in 1 s (1.5 s by Lv 5; red prompts, the other way, from Lv 6). Its ultimate `swipeChain`: ten commands on a top
+  bar in 5 s; a full finish at 10, a partial one from 6, else it fizzles.
+- Chosen in the new game's weapon trial ("Try the memory blade"; the owner, Q105). The battle editor: filters on the test
+  setups and the Scenarios tab; the setups listed in the Scenarios tab to play freely (`slime Lv1 memory blade`, G).
+- Doc [gameplay/22](../../gameplay/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) (+ zh_TW) with more weapon and skill ideas; Q100–Q107.
+- **Not committed.** Changed-only 20 of 282, all passed (after `tools\build.cmd`); naming checker 0 edits.
+  **Owner:** play it and tune the times; answer Q106 (next idea) and Q107 (keyboard); Q100–Q104 only to change them.
+
 **Character animation from video: the plan, and videos of a character in ComfyLive** (2026-11-16; [DAILY_2026-11-16.md](DAILY_2026-11-16.md)):
 - The plan ([engine/24](../../engine/24_VIDEO_TO_SKELETON.md), + zh_TW): a video of one character, its skeleton (DWPose), one part
   set, bone keys in a `.anim`, the anim editor playing the clip beside the video; the hero first. Only step 1 is built.

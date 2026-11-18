@@ -19,6 +19,19 @@ std::vector<std::string> WeaponPlay::f_SwipeCuesAt(int l_iLv) const {
     return l_vOut;
 }
 
+WeaponPlay::Recall WeaponPlay::f_RecallAt(int l_iLv) const {
+    Recall l_oOut;
+    for (const Recall& l_oR : m_vRecall) {
+        if (l_oR.m_iLv > l_iLv) break;
+        l_oOut.m_iLv = l_oR.m_iLv;
+        if (l_oR.m_iShowMs >= 0) l_oOut.m_iShowMs = l_oR.m_iShowMs;
+        if (l_oR.m_iAnswerMs >= 0) l_oOut.m_iAnswerMs = l_oR.m_iAnswerMs;
+        if (l_oR.m_iPerCueMs >= 0) l_oOut.m_iPerCueMs = l_oR.m_iPerCueMs;
+        if (l_oR.m_fReverse >= 0.0f) l_oOut.m_fReverse = l_oR.m_fReverse;
+    }
+    return l_oOut;
+}
+
 WeaponPlay f_WeaponPlayFromJson(const std::string& l_strId, const nlohmann::json& l_jJ) {
     WeaponPlay l_oW;
     l_oW.m_strId = l_strId;
@@ -117,6 +130,19 @@ WeaponPlay f_WeaponPlayFromJson(const std::string& l_strId, const nlohmann::json
             l_oW.m_vSwipeCues.push_back(l_oC);
         }
         std::sort(l_oW.m_vSwipeCues.begin(), l_oW.m_vSwipeCues.end(), [](const auto& l_oA, const auto& l_oB) { return l_oA.m_iLv < l_oB.m_iLv; });
+    }
+    if (l_jJ.contains("recall") && l_jJ["recall"].is_array()) {
+        for (const auto& l_jE : l_jJ["recall"]) {
+            if (!l_jE.is_object()) continue;
+            WeaponPlay::Recall l_oR;
+            l_oR.m_iLv = std::max(1, l_jE.value("lv", 1));
+            if (l_jE.contains("showMs")) l_oR.m_iShowMs = std::max(100, l_jE.value("showMs", 500));
+            if (l_jE.contains("answerMs")) l_oR.m_iAnswerMs = std::max(200, l_jE.value("answerMs", 1000));
+            if (l_jE.contains("perCueMs")) l_oR.m_iPerCueMs = std::max(0, l_jE.value("perCueMs", 0));
+            if (l_jE.contains("reverse")) l_oR.m_fReverse = std::clamp(l_jE.value("reverse", 0.0f), 0.0f, 1.0f);
+            l_oW.m_vRecall.push_back(l_oR);
+        }
+        std::sort(l_oW.m_vRecall.begin(), l_oW.m_vRecall.end(), [](const auto& l_oA, const auto& l_oB) { return l_oA.m_iLv < l_oB.m_iLv; });
     }
     return l_oW;
 }

@@ -1,0 +1,31 @@
+{
+  "_comment": "The memory blade's ultimate done in full (docs/gameplay/22 §3; special_moves.json sigil_chain): g at frame 10, then all ten commands swiped in order (the test's fixed seed always gives ↘ ↓ ← → ← ↖ ↘ ↗ ↖ ↖). 10 of 10: the full finish, its ten hits.",
+  "scene": "battle",
+  "player": {
+    "give": [
+      "memory_blade"
+    ],
+    "equip": [
+      "memory_blade"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000,
+    "super": true,
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 420,
+    "keys": "g@10",
+    "drags": "640:420:725:505:4@100,640:420:640:540:4@108,640:420:520:420:4@116,640:420:760:420:4@124,640:420:520:420:4@132,640:420:555:335:4@140,640:420:725:505:4@148,640:420:725:335:4@156,640:420:555:335:4@164,640:420:555:335:4@172"
+  },
+  "expect": {
+    "battleEvents": {
+      "skill": 1,
+      "combo": 0,
+      "hit": 10
+    }
+  }
+}

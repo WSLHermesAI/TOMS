@@ -365,8 +365,14 @@ Steps 1–3 are built (2026-10-25, §9), except one `Combatant` for every side (
 - **Log** tab: the running battle's events with their times.
 - **Scenarios** tab: every test scenario of `tests/scenarios/` ([08](08_TEST_SCENARIOS.md)); double-click (or **Play**) to
   play one in the game view. Auto restart is switched off while a scenario plays; **▶ Battle** goes back to the test battle.
+  A **filter** box above the list (2026-11-18): every word must be in the folder name, scene, `_comment`, the hero's
+  weapons or the monster, any case (`memory blade` leaves the memory blade's three); "N of M"; Enter plays the first one.
+  Its first group is the **test setups** (`tools/battle_editor/setups/*.json`, free play, no script): double-click
+  `slime Lv1 memory blade` to fight with the memory blade (G: the Sigil Chain). A setup saved with Save current as… joins it.
 - **Test setups** (bottom): Load (and start), **Save current as…** to `tools/battle_editor/setups/<name>.json` (a
   scenario with the editor's own `_editor` part). Two to start with: `slime Lv1 bow`, `3 bats Lv5 sword`.
+  A **filter** box before the list (2026-11-18): every word typed must be in the setup's name, weapon (`memory` finds
+  `memory_blade`), monsters or pace, any case; the count shows "N of M"; Enter loads the first one.
 - Not yet: the difficulty simulation (the readout is from the last battle), the results' Preview button, pickers for
   particles and clips (typed for now), the chapter filter.
 - Tests: `battle_editor.selftest` (the calculator, setups, files written back unchanged, the lists) and

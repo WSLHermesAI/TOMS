@@ -101,6 +101,8 @@
 |---|---|---|---|
 | `eSWIPE_WAY` | `swipeWay` | 往 8 個方向之一滑動 | 劍 |
 | `eSWIPE_GESTURE` | `swipeGesture` | §4.2 的手勢（V、M、方形） | 雙手劍；招式 |
+| `eSWIPE_RECALL` | `swipeRecall` | 方向一個個出現，再憑記憶劃出（[22](22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) 第 2 節） | 憶刃 |
+| `eSWIPE_CHAIN` | `swipeChain` | 上方橫條的一排指令，在一段時間內依序劃出（22 第 3 節） | 千刃印 |
 | `eDRAW_SHAPE` | `drawShape` | 一點一點描出顯示的圖形（§4.3） | 招式；法珠的集氣符號 |
 | `eSEQUENCE_CLICK` | `sequenceClick` | 依序點顯示的位置 | 魔杖；法典 |
 | `eRHYTHM_TAP` | `rhythmTap` | 跟著節拍點（忽快忽慢的模式） | 長杖；法珠畫完符號後 |

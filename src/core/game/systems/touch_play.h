@@ -8,6 +8,11 @@
 //   Circles  the staff's circles: they count in order with their numbers, all hide at once, then come back one by one
 //            (0.1 s apart) with their numbers, already to be tapped; once all are back the numbers go, and the rest are
 //            tapped in the order remembered. Each tap casts a spell at once (docs/gameplay/20 §2).
+//   Recall   the memory blade (docs/gameplay/22 §2): the prompts show one by one (each showMs), all hide, then the
+//            player swipes them back in order from memory, all in one answer time. A red prompt asks for the opposite way.
+//            A wrong swipe misses that prompt and the next is due (as the staff's circles); time up: the rest are missed.
+//   Chain    a skill's row of commands (22 §3): all shown on a bar at the top, the current one big; swiped in order (ways,
+//            gestures or shapes) in one time. A wrong one misses it and the next is due; what was done counts.
 //   Shape    a shape shown on the screen, traced corner by corner in a time (the staff's pentagram, a special guard).
 //   Mash     tap quickly, `points` times in a time (a special guard).
 //   Free     the ultimates (17 §5): for a time, any swipe or any tap anywhere counts, as many as the player makes.
@@ -51,6 +56,15 @@ struct TouchPlaySettings {
     std::map<std::string, int> m_mapCueExtraMs = {{"v", 400}, {"m", 900}, {"square", 1100}, {"triangle", 800}, {"circle", 800}};   // more time to draw it
     float m_fGestureExtraDeg = 0.0f;          // DEX: a gesture's angles are this much wider (Game)
     float m_fShapeTolerance = 0.2f;           // a drawn shape's corners, a share of its box (Game: wider with DEX)
+    // recall (the memory blade; a weapon's "recall" rows override these, Game)
+    int m_iRecallShowMs = 500;        // each prompt shown this long (the owner: 0.5 s)
+    int m_iRecallGapMs = 80;          // a blank between two prompts, so the same way twice reads as two
+    int m_iRecallReadyMs = 250;       // after the last, a "Go!" this long before the answers count
+    int m_iRecallAnswerMs = 1000;     // the whole answer time (the owner: 1 s, adjustable)
+    int m_iRecallPerCueMs = 0;        // ...plus this much per prompt
+    float m_fRecallReverse = 0.0f;    // the share of prompts shown red: swipe the other way
+    // chain (a skill's commands on the top bar)
+    int m_iChainTimeMs = 5000;        // the whole chain's time (a move's timeMs sets it)
     // circles
     int m_iCircleCountMs = 450;       // each circle lit in turn with its number
     int m_iCircleHideMs = 500;        // then all hidden (the owner: 0.5 s)
@@ -93,6 +107,7 @@ public:
     // One answer, as it happens: which one (0 = the first) and, for a swipe, the way it went (degrees, 0 = right, clockwise).
     struct Hit { bool m_bOk = false, m_bPerfect = false; float m_fX = 0, m_fY = 0; int m_iOrder = 0; float m_fAngle = 0; };
     enum class CirclePhase { Count, Hide, Warn, Tap };
+    enum class RecallPhase { Show, Ready, Answer };   // recall: shown one by one, "Go!", the answers (chain: always Answer)
 
     // A new play of `points` over `area` (x, y, w, h: where its targets and circles may go). A move (`ultimate`) and
     // the sword, staff, shape and mash plays start at once; the bow waits for its first touch.
@@ -130,6 +145,12 @@ public:
     const std::string& f_CueKind(int l_iK) const { return m_vCueKinds[(size_t)l_iK]; }   // "way" or a shape
     int f_CueDir(int l_iK) const { return m_vCueDirs[(size_t)l_iK]; }                      // a way: 0..7 (×45°, 0 = right, clockwise)
     glm::vec2 f_PromptAt() const;                   // where the prompt shows
+    bool f_CueReversed(int l_iK) const { return l_iK >= 0 && l_iK < (int)m_vCueReversed.size() && m_vCueReversed[(size_t)l_iK]; }
+    // recall and chain
+    RecallPhase f_RecallPhase() const { return m_eRecallPhase; }
+    int f_RecallShowing() const;                    // recall, Show: the prompt on the screen now (-1: none, between two)
+    int f_RecallShownAgeMs() const;                 // ...since it popped in
+    int f_AnswerTimeMs() const;                     // the whole answer time (recall) or the chain's time
     bool f_Swiping() const { return m_bAiming && (f_IsSwipePlay(m_eType) || m_eType == PlayType::eFREE_SWIPE || m_eType == PlayType::eFREE_SHOT); }
     const std::vector<glm::vec2>& f_Stroke() const { return m_vStroke; }
     // circles
@@ -167,6 +188,9 @@ private:
     CueTrack m_oCueTrack;
     std::vector<std::string> m_vCueKinds;
     std::vector<int> m_vCueDirs;
+    std::vector<char> m_vCueReversed;
+    RecallPhase m_eRecallPhase = RecallPhase::Answer;
+    int m_iRecallMs = 0;           // in the current recall phase
     std::vector<glm::vec2> m_vStroke;
     float m_fStrokeAngle = 0.0f;   // the last judged swipe's way (Hit::m_fAngle)
     // circles

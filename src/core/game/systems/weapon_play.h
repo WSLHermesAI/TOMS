@@ -82,6 +82,11 @@ struct WeaponPlay {
     struct SwipeCues { int m_iLv = 1; std::vector<std::string> m_vCues; };
     std::vector<SwipeCues> m_vSwipeCues;     // sorted by lv
     std::vector<std::string> f_SwipeCuesAt(int l_iLv) const;
+    // the memory blade's timing by level (docs/gameplay/22 §2, play "swipeRecall"): each row from `lv` on sets the keys it
+    // has, the rows below it the rest; a key no row sets keeps data/battle.json "plays" (-1 here)
+    struct Recall { int m_iLv = 1; int m_iShowMs = -1, m_iAnswerMs = -1, m_iPerCueMs = -1; float m_fReverse = -1.0f; };
+    std::vector<Recall> m_vRecall;           // sorted by lv
+    Recall f_RecallAt(int l_iLv) const;
 };
 
 struct WeaponPlayTable {

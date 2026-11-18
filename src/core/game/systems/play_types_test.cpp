@@ -227,6 +227,91 @@ int main() {
     CHECK(f_PlayTypeFromString("pullRelease") == PlayType::ePULL_RELEASE && f_PlayTypeFromString("bow") == PlayType::ePULL_RELEASE, "the new name and the older one");
     CHECK(std::string(f_PlayTypeName(PlayType::eSEQUENCE_CLICK)) == "sequenceClick" && f_PlayTypeFromString("anything") == PlayType::eTRACK, "names back");
     CHECK(f_IsSwipePlay(PlayType::eSWIPE_GESTURE) && f_IsFreePlay(PlayType::eFREE_TAP) && !f_IsFreePlay(PlayType::eMASH), "the groups");
+    // ---- the memory blade and the chain (docs/gameplay/22 §2, §3) ----
+    CHECK(f_PlayTypeFromString("swipeRecall") == PlayType::eSWIPE_RECALL && f_PlayTypeFromString("swipeChain") == PlayType::eSWIPE_CHAIN &&
+              std::string(f_PlayTypeName(PlayType::eSWIPE_RECALL)) == "swipeRecall" && std::string(f_PlayTypeName(PlayType::eSWIPE_CHAIN)) == "swipeChain" &&
+              f_IsSwipePlay(PlayType::eSWIPE_RECALL) && f_IsSwipePlay(PlayType::eSWIPE_CHAIN) && !f_IsCueTrackSwipe(PlayType::eSWIPE_RECALL) &&
+              f_IsCueTrackSwipe(PlayType::eSWIPE_WAY), "recall and chain: names, in the swipe family, off the cue track");
+    {   // recall: shown one by one (500 ms each, 80 ms apart), "Go!" 250 ms, then all answered from memory in 1 s
+        TouchPlay l_oP;
+        l_oP.f_Start(PlayType::eSWIPE_RECALL, 3, false, l_v4Area, 21);
+        CHECK(l_oP.f_Started() && l_oP.f_RecallPhase() == TouchPlay::RecallPhase::Show && l_oP.f_RecallShowing() == 0, "starts showing the first");
+        CHECK(l_oP.f_CueDir(0) != l_oP.f_CueDir(1) && l_oP.f_CueDir(1) != l_oP.f_CueDir(2), "never the same way twice in a row");
+        f_Swipe(l_oP, 650, 200, l_oP.f_CueDir(0) * 45.0f, 160);
+        CHECK(l_oP.f_Index() == 0 && l_oP.f_TakeHits().empty(), "a swipe while showing: nothing");
+        l_oP.f_Update(530);
+        CHECK(l_oP.f_RecallShowing() == -1, "a blank between two");
+        l_oP.f_Update(70);
+        CHECK(l_oP.f_RecallShowing() == 1 && l_oP.f_RecallShownAgeMs() == 20, "then the second");
+        CHECK(l_oP.f_TimeLeft() == 1.0f, "no clock while showing");
+        l_oP.f_Update(1200);   // 1800: all three shown (3 x 580)
+        CHECK(l_oP.f_RecallPhase() == TouchPlay::RecallPhase::Ready && l_oP.f_RecallShowing() == -1, "then Go!");
+        l_oP.f_Update(250);
+        CHECK(l_oP.f_RecallPhase() == TouchPlay::RecallPhase::Answer && l_oP.f_AnswerTimeMs() == 1000, "then the answers, 1 s");
+        f_Swipe(l_oP, 650, 200, l_oP.f_CueDir(0) * 45.0f, 160);
+        auto l_vH = l_oP.f_TakeHits();
+        CHECK(l_oP.f_Index() == 1 && l_vH.size() == 1 && l_vH[0].m_bOk, "the first from memory: a hit at once");
+        f_Swipe(l_oP, 650, 200, l_oP.f_CueDir(1) * 45.0f + 180.0f, 160);
+        l_vH = l_oP.f_TakeHits();
+        CHECK(l_oP.f_Index() == 2 && l_vH.size() == 1 && !l_vH[0].m_bOk, "the wrong way: that one missed, the next is due");
+        l_oP.f_Update(1000);
+        CHECK(l_oP.f_Done() && l_oP.f_Result().m_iHits == 1 && l_oP.f_Result().m_iPoints == 3 && l_oP.f_TakeHits().size() == 1, "time up: the rest missed");
+    }
+    {   // a red prompt: swipe the other way; the answer time grows per prompt
+        TouchPlaySettings l_oS;
+        l_oS.m_fRecallReverse = 1.0f;
+        l_oS.m_iRecallPerCueMs = 200;
+        l_oS.m_iRecallShowMs = 300; l_oS.m_iRecallGapMs = 0; l_oS.m_iRecallReadyMs = 0;
+        TouchPlay l_oP;
+        l_oP.f_Start(PlayType::eSWIPE_RECALL, 2, false, l_v4Area, 5, l_oS);
+        CHECK(l_oP.f_CueReversed(0) && l_oP.f_CueReversed(1) && l_oP.f_AnswerTimeMs() == 1400, "all red; 1 s + 2 x 0.2 s");
+        l_oP.f_Update(600);
+        CHECK(l_oP.f_RecallPhase() == TouchPlay::RecallPhase::Answer, "no Go! when it is 0");
+        f_Swipe(l_oP, 650, 200, l_oP.f_CueDir(0) * 45.0f, 160);
+        f_Swipe(l_oP, 650, 200, l_oP.f_CueDir(1) * 45.0f + 180.0f, 160);
+        CHECK(l_oP.f_Done() && l_oP.f_Result().m_iHits == 1, "the arrow's own way misses a red one; the other way cuts it");
+    }
+    {   // chain: every command due in order at once, one clock for all
+        TouchPlaySettings l_oS;
+        l_oS.m_vSliceCues = {"way", "v", "way"};
+        l_oS.m_iChainTimeMs = 2000;
+        TouchPlay l_oP;
+        l_oP.f_Start(PlayType::eSWIPE_CHAIN, 3, true, l_v4Area, 8, l_oS);
+        CHECK(l_oP.f_Started() && l_oP.f_RecallPhase() == TouchPlay::RecallPhase::Answer && l_oP.f_CueKind(1) == "v", "answers at once; the second a V");
+        f_Swipe(l_oP, 650, 200, l_oP.f_CueDir(0) * 45.0f, 160);
+        l_oP.f_Update(500);
+        CHECK(l_oP.f_Index() == 1 && std::fabs(l_oP.f_TimeLeft() - 0.75f) < 0.01f, "one done; a quarter of the time gone");
+        f_Swipe(l_oP, 650, 200, 0.0f, 160);   // a straight line is not a V
+        CHECK(l_oP.f_Index() == 2 && l_oP.f_Result().m_iHits == 1, "a wrong one: missed, the next is due");
+        CHECK(l_oP.f_CueKind(2) == "way", "the third is a way");
+        f_Swipe(l_oP, 650, 200, l_oP.f_CueDir(2) * 45.0f, 160);
+        CHECK(l_oP.f_Done() && l_oP.f_Result().m_iHits == 2 && !l_oP.f_Result().m_bFailed, "2 of 3");
+        TouchPlay l_oLate;
+        l_oLate.f_Start(PlayType::eSWIPE_CHAIN, 3, true, l_v4Area, 8, l_oS);
+        l_oLate.f_Update(2000);
+        CHECK(l_oLate.f_Done() && l_oLate.f_Result().m_bFailed && l_oLate.f_TakeHits().size() == 3, "time up with none done: all missed");
+    }
+    {   // the weapon's recall rows by level, and the battle.json defaults
+        const WeaponPlay l_oW = f_WeaponPlayFromJson("m", nlohmann::json::parse(R"({ "recall": [
+            { "lv": 1, "showMs": 500, "answerMs": 1000 }, { "lv": 6, "reverse": 0.2 }, { "lv": 3, "answerMs": 1300 } ] })"));
+        const WeaponPlay::Recall l_oR1 = l_oW.f_RecallAt(1), l_oR4 = l_oW.f_RecallAt(4), l_oR9 = l_oW.f_RecallAt(9);
+        CHECK(l_oR1.m_iAnswerMs == 1000 && l_oR1.m_fReverse < 0.0f && l_oR1.m_iPerCueMs < 0, "Lv 1: its own keys; the rest unset");
+        CHECK(l_oR4.m_iAnswerMs == 1300 && l_oR4.m_iShowMs == 500, "Lv 4: Lv 3's answer time, Lv 1's show time");
+        CHECK(l_oR9.m_fReverse == 0.2f && l_oR9.m_iAnswerMs == 1300, "Lv 9: red prompts too");
+        const TouchPlaySettings l_oS = f_TouchPlayFromJson(nlohmann::json::parse(R"({ "plays": { "recallAnswerMs": 1200, "recallReverse": 3, "chainTimeMs": 4000 } })"));
+        CHECK(l_oS.m_iRecallAnswerMs == 1200 && l_oS.m_fRecallReverse == 1.0f && l_oS.m_iChainTimeMs == 4000 && l_oS.m_iRecallShowMs == 500, "battle.json plays: read and kept in range");
+    }
+    {   // a chain move: its points from its cues, minHits, and a finish for the full play or the partial one
+        const SpecialMoveTable l_oT = f_SpecialMovesFromJson(nlohmann::json::parse(R"({
+          "chain": { "play": { "kind": "swipeChain", "timeMs": 5000, "minHits": 6, "cues": ["way","way","way","way","way","way","way","way","way","way"] },
+                     "finish": [ { "at": 0, "do": "camera", "ms": 2000, "when": "full" }, { "at": 0, "do": "banner", "ms": 900, "when": "partial" },
+                                 { "at": 100, "do": "shake", "ms": 300 } ] } })"));
+        const SpecialMove* l_pC = l_oT.f_Find("chain");
+        CHECK(l_pC && l_pC->m_oPlay.m_eType == PlayType::eSWIPE_CHAIN && l_pC->m_oPlay.m_iPoints == 10 && l_pC->m_oPlay.m_iMinHits == 6, "ten commands, at least six");
+        CHECK(l_pC && f_BeatOn(l_pC->m_vFinish[0], true) && !f_BeatOn(l_pC->m_vFinish[0], false) && f_BeatOn(l_pC->m_vFinish[1], false) &&
+                  f_BeatOn(l_pC->m_vFinish[2], true) && f_BeatOn(l_pC->m_vFinish[2], false), "full / partial / always");
+        CHECK(l_pC && f_ShowLength(l_pC->m_vFinish, true) == 2000 && f_ShowLength(l_pC->m_vFinish, false) == 900, "each outcome's show length");
+    }
     if (g_iFail) { std::printf("play_types_test: %d failure(s)\n", g_iFail); return 1; }
     std::printf("play_types_test: all passed\n");
     return 0;

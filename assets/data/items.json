@@ -993,6 +993,29 @@
       "character": "anim/hero_sword.anim"
     }
   },
+  "memory_blade": {
+    "type": "weapon",
+    "sprite": "item_sword.png",
+    "name": "item.memory_blade.name",
+    "desc": "item.memory_blade.desc",
+    "stats": {
+      "atk": 3
+    },
+    "price": 60,
+    "important": false,
+    "bar": {
+      "v0": 12,
+      "vmax": 180,
+      "rampTime": 2.2,
+      "greenHalf": 12,
+      "blueOuter": 32,
+      "redOuter": 60,
+      "maxMult": 2.2
+    },
+    "battleAnim": {
+      "character": "anim/hero_sword.anim"
+    }
+  },
   "staff": {
     "type": "weapon",
     "sprite": "item_staff.png",

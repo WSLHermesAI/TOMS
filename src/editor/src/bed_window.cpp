@@ -23,6 +23,7 @@
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QInputDialog>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLabel>
@@ -1069,22 +1070,35 @@ void BattleEditorWindow::f_FillScenarioList() {
         auto* l_pGroup = new QTreeWidgetItem(m_pScenarioList, {l_oTitle});
         l_pGroup->setToolTip(0, QDir::toNativeSeparators(l_oRoot.absolutePath()));
         l_pGroup->setFirstColumnSpanned(true);
-        for (const QFileInfo& l_oF : l_oRoot.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name)) {
-            const QString l_oFile = QDir(l_oF.absoluteFilePath()).filePath(QStringLiteral("scenario.json"));
+        // a setups folder holds <name>.json files (each one a scenario); a scenarios folder holds <name>/scenario.json
+        const bool l_bFiles = l_oDir == m_oSetupsDir;
+        const QFileInfoList l_oEntries = l_bFiles ? l_oRoot.entryInfoList({QStringLiteral("*.json")}, QDir::Files, QDir::Name)
+                                                  : l_oRoot.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
+        for (const QFileInfo& l_oF : l_oEntries) {
+            const QString l_oFile = l_bFiles ? l_oF.absoluteFilePath() : QDir(l_oF.absoluteFilePath()).filePath(QStringLiteral("scenario.json"));
             if (l_oF.fileName().startsWith(QLatin1Char('_')) || !QFileInfo::exists(l_oFile)) continue;
             QFile l_oIn(l_oFile);
             QJsonObject l_oJ;
             if (l_oIn.open(QIODevice::ReadOnly)) l_oJ = QJsonDocument::fromJson(l_oIn.readAll()).object();
-            auto* l_pIt = new QTreeWidgetItem(l_pGroup, {l_oF.fileName(), l_oJ.value(QStringLiteral("scene")).toString(QStringLiteral("stage"))});
+            const QString l_oName = l_bFiles ? l_oF.completeBaseName() : l_oF.fileName();
+            auto* l_pIt = new QTreeWidgetItem(l_pGroup, {l_oName, l_oJ.value(QStringLiteral("scene")).toString(QStringLiteral("stage"))});
             l_pIt->setData(0, Qt::UserRole, l_oF.absoluteFilePath());
             QString l_oTip = l_oJ.value(QStringLiteral("_comment")).toString();
             if (l_oJ.isEmpty()) l_oTip = tr("scenario.json cannot be read");
             l_pIt->setToolTip(0, l_oTip.isEmpty() ? QDir::toNativeSeparators(l_oF.absoluteFilePath()) : l_oTip);
             l_pIt->setToolTip(1, l_pIt->toolTip(0));
+            // what the filter looks in: the folder, its scene, its _comment, the hero's weapons ("memory_blade" and
+            // "memory blade") and the monster
+            QString l_oFind = l_oName + (l_bFiles ? QStringLiteral(" setup ") : QStringLiteral(" ")) + QLatin1Char(' ') + l_pIt->text(1) + QLatin1Char(' ') + l_oJ.value(QStringLiteral("_comment")).toString();
+            for (const QJsonValue& l_oE : l_oJ.value(QStringLiteral("player")).toObject().value(QStringLiteral("equip")).toArray())
+                l_oFind += QLatin1Char(' ') + l_oE.toString() + QLatin1Char(' ') + QString(l_oE.toString()).replace(QLatin1Char('_'), QLatin1Char(' '));
+            l_oFind += QLatin1Char(' ') + l_oJ.value(QStringLiteral("battle")).toObject().value(QStringLiteral("enemy")).toString();
+            l_pIt->setData(0, Qt::UserRole + 1, l_oFind);
         }
         l_pGroup->setExpanded(true);
         if (l_pGroup->childCount() == 0) delete l_pGroup;
     };
+    l_fnAddRoot(m_oSetupsDir, tr("test setups: play freely (tools/battle_editor/setups)"));
     l_fnAddRoot(f_ScenarioRoot(), tr("tests/scenarios"));
     l_fnAddRoot(QDir(f_ScenarioRoot()).filePath(QStringLiteral("_cloud")), tr("downloaded (_cloud)"));
     if (!m_oExtraScenarioDir.isEmpty()) l_fnAddRoot(m_oExtraScenarioDir, QFileInfo(m_oExtraScenarioDir).fileName());
@@ -1093,6 +1107,44 @@ void BattleEditorWindow::f_FillScenarioList() {
         l_pNone->setFirstColumnSpanned(true);
         l_pNone->setFlags(Qt::NoItemFlags);
     }
+    f_ApplyScenarioFilter();
+}
+
+// Hides the rows the filter box does not match (every word, any case: bed::f_FilterMatches); a group with none left hides too.
+void BattleEditorWindow::f_ApplyScenarioFilter() {
+    if (!m_pScenarioList) return;
+    const std::string l_strFilter = m_pScenarioFilter ? f_Ss(m_pScenarioFilter->text()) : std::string();
+    int l_iShown = 0, l_iAll = 0;
+    for (int l_iG = 0; l_iG < m_pScenarioList->topLevelItemCount(); l_iG++) {
+        QTreeWidgetItem* l_pGroup = m_pScenarioList->topLevelItem(l_iG);
+        int l_iLeft = 0;
+        for (int l_iC = 0; l_iC < l_pGroup->childCount(); l_iC++) {
+            QTreeWidgetItem* l_pIt = l_pGroup->child(l_iC);
+            const bool l_bOn = bed::f_FilterMatches(f_Ss(l_pIt->data(0, Qt::UserRole + 1).toString()), l_strFilter);
+            l_pIt->setHidden(!l_bOn);
+            l_iLeft += l_bOn ? 1 : 0;
+            l_iAll++;
+        }
+        l_pGroup->setHidden(l_pGroup->childCount() > 0 && l_iLeft == 0);
+        l_iShown += l_iLeft;
+    }
+    if (m_pScenarioCount)
+        m_pScenarioCount->setText(l_strFilter.empty() ? tr("%1 scenarios").arg(l_iAll) : tr("%1 of %2").arg(l_iShown).arg(l_iAll));
+}
+
+void BattleEditorWindow::f_SetScenarioFilter(const QString& l_oText) {
+    if (m_pScenarioFilter) m_pScenarioFilter->setText(l_oText);   // textChanged applies it
+    else f_ApplyScenarioFilter();
+}
+
+QStringList BattleEditorWindow::f_ShownScenarios() const {
+    QStringList l_oNames;
+    for (int l_iG = 0; m_pScenarioList && l_iG < m_pScenarioList->topLevelItemCount(); l_iG++)
+        for (int l_iC = 0; l_iC < m_pScenarioList->topLevelItem(l_iG)->childCount(); l_iC++) {
+            const QTreeWidgetItem* l_pIt = m_pScenarioList->topLevelItem(l_iG)->child(l_iC);
+            if (!l_pIt->isHidden()) l_oNames << l_pIt->text(0);
+        }
+    return l_oNames;
 }
 
 bool BattleEditorWindow::f_PlayScenario(const QString& l_oPath) {
@@ -1112,10 +1164,20 @@ bool BattleEditorWindow::f_PlayScenario(const QString& l_oPath) {
 QWidget* BattleEditorWindow::f_BuildScenariosTab() {
     auto* l_pW = new QWidget();
     auto* l_pV = new QVBoxLayout(l_pW);
-    auto* l_pNote = new QLabel(tr("Every test scenario of tests/scenarios (docs/gameplay/08). Double-click one to play it in the "
-                               "game view; ▶ Battle goes back to the test battle."));
+    auto* l_pNote = new QLabel(tr("The test setups (free play: tools/battle_editor/setups) and every test scenario of tests/scenarios "
+                               "(docs/gameplay/08). Double-click one to play it in the game view; ▶ Battle goes back to the test battle."));
     l_pNote->setWordWrap(true);
     l_pV->addWidget(l_pNote);
+    auto* l_pFind = new QHBoxLayout();
+    m_pScenarioFilter = new QLineEdit();
+    m_pScenarioFilter->setPlaceholderText(tr("Filter: name, weapon, monster, comment… (e.g. memory blade)"));
+    m_pScenarioFilter->setClearButtonEnabled(true);
+    m_pScenarioFilter->setToolTip(tr("Every word typed must be in the scenario's folder name, scene, comment, the hero's weapons "
+                                    "or the monster (any case). Enter plays the first one shown."));
+    m_pScenarioCount = new QLabel();
+    l_pFind->addWidget(m_pScenarioFilter, 1);
+    l_pFind->addWidget(m_pScenarioCount);
+    l_pV->addLayout(l_pFind);
     m_pScenarioList = new QTreeWidget();
     m_pScenarioList->setColumnCount(2);
     m_pScenarioList->setHeaderLabels({tr("Scenario (double-click to play)"), tr("Scene")});
@@ -1145,6 +1207,17 @@ QWidget* BattleEditorWindow::f_BuildScenariosTab() {
         if (!l_oPath.isEmpty()) f_PlayScenario(l_oPath);
     });
     connect(l_pReload, &QPushButton::clicked, this, [this] { f_FillScenarioList(); });
+    connect(m_pScenarioFilter, &QLineEdit::textChanged, this, [this] { f_ApplyScenarioFilter(); });
+    connect(m_pScenarioFilter, &QLineEdit::returnPressed, this, [this, l_fnPathOf] {
+        for (int l_iG = 0; l_iG < m_pScenarioList->topLevelItemCount(); l_iG++)
+            for (int l_iC = 0; l_iC < m_pScenarioList->topLevelItem(l_iG)->childCount(); l_iC++) {
+                QTreeWidgetItem* l_pIt = m_pScenarioList->topLevelItem(l_iG)->child(l_iC);
+                if (l_pIt->isHidden()) continue;
+                m_pScenarioList->setCurrentItem(l_pIt);
+                f_PlayScenario(l_fnPathOf(l_pIt));
+                return;
+            }
+    });
     connect(l_pOpen, &QPushButton::clicked, this, [this] {
         const QString l_oDir = QFileDialog::getExistingDirectory(this, tr("A folder of scenario folders, or one scenario"), f_ScenarioRoot());
         if (l_oDir.isEmpty()) return;
@@ -1157,9 +1230,12 @@ QWidget* BattleEditorWindow::f_BuildScenariosTab() {
         QMenu l_oM(this);
         if (!l_oPath.isEmpty()) {
             l_oM.addAction(tr("Play"), this, [this, l_oPath] { f_PlayScenario(l_oPath); });
-            l_oM.addAction(tr("Open its folder"), this, [l_oPath] { QDesktopServices::openUrl(QUrl::fromLocalFile(l_oPath)); });
-            l_oM.addAction(tr("Edit scenario.json"), this, [l_oPath] {
-                QDesktopServices::openUrl(QUrl::fromLocalFile(QDir(l_oPath).filePath(QStringLiteral("scenario.json"))));
+            const bool l_bFile = QFileInfo(l_oPath).isFile();   // a test setup: <name>.json itself
+            l_oM.addAction(tr("Open its folder"), this, [l_oPath, l_bFile] {
+                QDesktopServices::openUrl(QUrl::fromLocalFile(l_bFile ? QFileInfo(l_oPath).absolutePath() : l_oPath));
+            });
+            l_oM.addAction(l_bFile ? tr("Edit %1").arg(QFileInfo(l_oPath).fileName()) : tr("Edit scenario.json"), this, [l_oPath, l_bFile] {
+                QDesktopServices::openUrl(QUrl::fromLocalFile(l_bFile ? l_oPath : QDir(l_oPath).filePath(QStringLiteral("scenario.json"))));
             });
             l_oM.addSeparator();
         }
@@ -1205,13 +1281,23 @@ QWidget* BattleEditorWindow::f_BuildSetupsBar() {
     l_pH->addWidget(new QLabel(tr("<b>TEST SETUPS</b> (tools/battle_editor/setups: editor files, not tests)")));
     m_pSetups = new QComboBox();
     m_pSetups->setMinimumWidth(220);
+    m_pSetupFilter = new QLineEdit();
+    m_pSetupFilter->setPlaceholderText(tr("Filter: name, weapon, monster… (e.g. memory)"));
+    m_pSetupFilter->setClearButtonEnabled(true);
+    m_pSetupFilter->setMinimumWidth(240);
+    m_pSetupFilter->setToolTip(tr("Every word typed must be in the setup's name, weapon, monsters or pace (any case). Enter loads the first one."));
+    m_pSetupCount = new QLabel();
     auto* l_pLoad = new QPushButton(tr("Load"));
     auto* l_pSave = new QPushButton(tr("+ Save current as…"));
+    l_pH->addWidget(m_pSetupFilter);
     l_pH->addWidget(m_pSetups);
+    l_pH->addWidget(m_pSetupCount);
     l_pH->addWidget(l_pLoad);
     l_pH->addWidget(l_pSave);
     l_pH->addStretch(1);
-    connect(l_pLoad, &QPushButton::clicked, this, [this] { if (f_LoadSetup(m_pSetups->currentText())) f_StartBattle(); });
+    connect(l_pLoad, &QPushButton::clicked, this, [this] { if (m_pSetups->count() && f_LoadSetup(m_pSetups->currentText())) f_StartBattle(); });
+    connect(m_pSetupFilter, &QLineEdit::textChanged, this, [this] { f_FillSetups(); });
+    connect(m_pSetupFilter, &QLineEdit::returnPressed, l_pLoad, &QPushButton::click);
     connect(l_pSave, &QPushButton::clicked, this, [this] {
         const QString l_oName = QInputDialog::getText(this, tr("Save the setup"), tr("Its name (e.g. 3 bats Lv5 sword):"),
                                                    QLineEdit::Normal, m_pSetups->currentText()).trimmed();
@@ -1223,10 +1309,33 @@ QWidget* BattleEditorWindow::f_BuildSetupsBar() {
 void BattleEditorWindow::f_FillSetups() {
     const QString l_oKeep = m_pSetups->currentText();
     m_pSetups->clear();
-    for (const QFileInfo& l_oF : QDir(m_oSetupsDir).entryInfoList({QStringLiteral("*.json")}, QDir::Files, QDir::Name))
-        m_pSetups->addItem(l_oF.completeBaseName());
+    const std::string l_strFilter = m_pSetupFilter ? f_Ss(m_pSetupFilter->text()) : std::string();
+    int l_iAll = 0;
+    for (const QFileInfo& l_oF : QDir(m_oSetupsDir).entryInfoList({QStringLiteral("*.json")}, QDir::Files, QDir::Name)) {
+        ++l_iAll;
+        const std::string l_strName = f_Ss(l_oF.completeBaseName());
+        std::string l_strText = l_strName;
+        ojson l_jJ;
+        bed::Setup l_oS;
+        if (!l_strFilter.empty() && f_Parse(f_ReadText(l_oF.filePath()), l_jJ) && bed::f_SetupFromScenario(l_jJ, l_oS))
+            l_strText = bed::f_SetupSearchText(l_strName, l_oS);
+        if (bed::f_FilterMatches(l_strText, l_strFilter)) m_pSetups->addItem(l_oF.completeBaseName());
+    }
     const int l_iI = m_pSetups->findText(l_oKeep);
     if (l_iI >= 0) m_pSetups->setCurrentIndex(l_iI);
+    if (m_pSetupCount)
+        m_pSetupCount->setText(l_strFilter.empty() ? tr("%1 setups").arg(l_iAll) : tr("%1 of %2").arg(m_pSetups->count()).arg(l_iAll));
+}
+
+void BattleEditorWindow::f_SetSetupFilter(const QString& l_oText) {
+    if (m_pSetupFilter) m_pSetupFilter->setText(l_oText);   // textChanged refills the list
+    else f_FillSetups();
+}
+
+QStringList BattleEditorWindow::f_SetupNames() const {
+    QStringList l_oNames;
+    for (int l_iI = 0; l_iI < m_pSetups->count(); ++l_iI) l_oNames << m_pSetups->itemText(l_iI);
+    return l_oNames;
 }
 
 bool BattleEditorWindow::f_SaveSetupAs(const QString& l_oName) {
@@ -1237,6 +1346,7 @@ bool BattleEditorWindow::f_SaveSetupAs(const QString& l_oName) {
     const QString l_oPath = QDir(m_oSetupsDir).filePath(l_oFile + QStringLiteral(".json"));
     if (!f_WriteText(l_oPath, f_Qs(bed::f_SetupToScenario(l_oS).dump(2) + "\n"))) { f_Warn(tr("Setup"), tr("Could not write %1").arg(l_oPath)); return false; }
     f_FillSetups();
+    if (m_pScenarioList) f_FillScenarioList();   // the Scenarios tab lists the setups too
     m_pSetups->setCurrentIndex(m_pSetups->findText(l_oFile));
     f_Say(tr("Saved the setup %1").arg(l_oPath));
     return true;

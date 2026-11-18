@@ -142,6 +142,28 @@ bool f_SetupFromScenario(const ojson& l_jJ, Setup& l_oOut) {
 
 // ---- writing the data files back ----
 
+std::string f_SetupSearchText(const std::string& l_strName, const Setup& l_oS) {
+    std::string l_strOut = l_strName + " " + l_oS.m_oPlayer.m_strWeapon + " Lv" + std::to_string(l_oS.m_oPlayer.m_iLv) + " " + l_oS.m_strPace;
+    std::string l_strWords = l_oS.m_oPlayer.m_strWeapon;
+    std::replace(l_strWords.begin(), l_strWords.end(), '_', ' ');
+    l_strOut += " " + l_strWords;
+    for (const SetupFoe& l_oF : l_oS.m_vFoes) l_strOut += " " + l_oF.m_strId;
+    return l_strOut;
+}
+
+bool f_FilterMatches(const std::string& l_strText, const std::string& l_strFilter) {
+    auto l_fnLower = [](std::string l_strS) {
+        for (char& l_cC : l_strS) if (l_cC >= 'A' && l_cC <= 'Z') l_cC = char(l_cC - 'A' + 'a');
+        return l_strS;
+    };
+    const std::string l_strHay = l_fnLower(l_strText);
+    std::istringstream l_oIn(l_fnLower(l_strFilter));
+    std::string l_strWord;
+    while (l_oIn >> l_strWord)
+        if (l_strHay.find(l_strWord) == std::string::npos) return false;
+    return true;
+}
+
 namespace {
 
 std::string f_OneLine(const ojson& l_jJ) {

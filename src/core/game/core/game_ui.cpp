@@ -501,7 +501,7 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
             if (m_oCs.m_oSkill.m_bOn && m_oCs.m_oSkill.m_ePhase == CombatState::SkillRun::Phase::Play && m_oCs.m_oSkill.m_pDef) {   // a move's play (16 §6)
                 const toms::SpecialMove& l_oD = *m_oCs.m_oSkill.m_pDef;
                 l_oB.m_strSkillPrompt = l_oL.f_Has(l_oD.m_strPrompt) ? l_oL.f_Tr(l_oD.m_strPrompt) : l_oD.m_strPrompt;
-                if (l_oD.m_oPlay.m_eType == toms::PlayType::eDRAW_SHAPE || l_oD.m_oPlay.m_eType == toms::PlayType::eMASH || toms::f_IsFreePlay(l_oD.m_oPlay.m_eType)) {
+                if (l_oD.m_oPlay.m_eType == toms::PlayType::eDRAW_SHAPE || l_oD.m_oPlay.m_eType == toms::PlayType::eMASH || l_oD.m_oPlay.m_eType == toms::PlayType::eSWIPE_CHAIN || toms::f_IsFreePlay(l_oD.m_oPlay.m_eType)) {
                     char l_pszT[16];
                     std::snprintf(l_pszT, sizeof l_pszT, "%.1f", m_oCs.m_oTouch.f_TimeLeft() * (float)l_oD.m_oPlay.m_iTimeMs / 1000.0f);
                     l_oB.m_strSkillTime = l_pszT;
@@ -924,6 +924,30 @@ void Game::f_TouchPlayUi(toms::UiBattle& l_oB) const {
     }
     if (!l_oP.f_Running() || (m_oCs.m_oSkill.m_bOn && m_oCs.m_oSkill.m_ePhase != CombatState::SkillRun::Phase::Play)) return;
     const std::string l_strCount = std::to_string(std::min(l_oP.f_Index() + 1, l_oP.f_Points())) + "/" + std::to_string(l_oP.f_Points());
+    // one prompt, a way's arrow or a shape's outline, at `at`, `pop` times its size (the sword's, the recall's, the chain's)
+    auto l_fnCue = [&](int l_iK, glm::vec2 l_v2At, float l_fPop, const std::string& l_strCls) {
+        if (l_oP.f_CueKind(l_iK) == "way") {
+            const float l_fAng = (float)(l_oP.f_CueDir(l_iK) + (l_oP.f_CueReversed(l_iK) ? 4 : 0)) * 45.0f, l_fRad = l_fAng / 57.29578f;
+            const glm::vec2 l_v2Dir(std::cos(l_fRad), std::sin(l_fRad));
+            l_fnAdd(l_strCls, l_v2At.x - l_v2Dir.x * 8.0f * l_fPop, l_v2At.y - l_v2Dir.y * 8.0f * l_fPop, 56 * l_fPop, 12 * l_fPop, l_fAng, 6 * l_fPop);
+            l_fnAdd(l_strCls + " head", l_v2At.x + l_v2Dir.x * 16.0f * l_fPop, l_v2At.y + l_v2Dir.y * 16.0f * l_fPop, 26 * l_fPop, 26 * l_fPop, l_fAng + 45.0f);
+            return;
+        }
+        const std::string& l_strCue = l_oP.f_CueKind(l_iK);   // a shape to draw: its outline
+        std::vector<glm::vec2> l_vC = toms::f_ShapeCorners(l_strCue);
+        if (l_strCue == "v" || l_strCue == "m") {   // a tick or an M can face any way (17 §4.2): each prompt turned its own way
+            const float l_fTurn = (float)l_oP.f_CueDir(l_iK) * 45.0f / 57.29578f, l_fCos = std::cos(l_fTurn), l_fSin = std::sin(l_fTurn);
+            for (glm::vec2& l_v2C : l_vC) {
+                const glm::vec2 l_v2D = l_v2C - glm::vec2(0.5f);
+                l_v2C = glm::vec2(0.5f) + glm::vec2(l_v2D.x * l_fCos - l_v2D.y * l_fSin, l_v2D.x * l_fSin + l_v2D.y * l_fCos);
+            }
+        }
+        for (size_t l_nI = 1; l_nI < l_vC.size(); l_nI++)
+            l_fnLine(l_strCls, l_v2At + (l_vC[l_nI - 1] - glm::vec2(0.5f)) * 70.0f * l_fPop, l_v2At + (l_vC[l_nI] - glm::vec2(0.5f)) * 70.0f * l_fPop, std::max(3.0f, 7.0f * l_fPop));
+    };
+    auto l_fnPopScale = [](int l_iAge) {   // a prompt pops in with a little bounce (16 §3.1)
+        return l_iAge < 180 ? 0.5f + 0.7f * std::sin((float)l_iAge / 180.0f * 1.5708f) : l_iAge < 260 ? 1.2f - 0.2f * (float)(l_iAge - 180) / 80.0f : 1.0f;
+    };
     switch (l_oP.f_Type()) {
     case toms::PlayType::ePULL_RELEASE: {
         const toms::TouchPlay::Target& l_oT = l_oP.f_Target();
@@ -976,28 +1000,55 @@ void Game::f_TouchPlayUi(toms::UiBattle& l_oB) const {
         const int l_iAge = l_oCues.f_CueAgeMs();
         if (!l_oCues.f_Done() && l_iAge >= 0) {   // the prompt pops in with a little bounce (16 §3.1)
             const int l_iK = l_oCues.f_Index();
-            const float l_fPop = l_iAge < 180 ? 0.5f + 0.7f * std::sin((float)l_iAge / 180.0f * 1.5708f) : l_iAge < 260 ? 1.2f - 0.2f * (float)(l_iAge - 180) / 80.0f : 1.0f;
-            const std::string l_strCls = l_oCues.f_Open() ? "arrow now open" : "arrow now";
-            if (l_oP.f_CueKind(l_iK) == "way") {
-                const float l_fAng = (float)l_oP.f_CueDir(l_iK) * 45.0f, l_fRad = l_fAng / 57.29578f;
-                const glm::vec2 l_v2Dir(std::cos(l_fRad), std::sin(l_fRad));
-                l_fnAdd(l_strCls, l_v2At.x - l_v2Dir.x * 8.0f * l_fPop, l_v2At.y - l_v2Dir.y * 8.0f * l_fPop, 56 * l_fPop, 12 * l_fPop, l_fAng, 6 * l_fPop);
-                l_fnAdd(l_strCls + " head", l_v2At.x + l_v2Dir.x * 16.0f * l_fPop, l_v2At.y + l_v2Dir.y * 16.0f * l_fPop, 26 * l_fPop, 26 * l_fPop, l_fAng + 45.0f);
-            } else {   // a shape to draw: its outline
-                const std::string& l_strCue = l_oP.f_CueKind(l_iK);
-                std::vector<glm::vec2> l_vC = toms::f_ShapeCorners(l_strCue);
-                if (l_strCue == "v" || l_strCue == "m") {   // a tick or an M can face any way (17 §4.2): each prompt turned its own way
-                    const float l_fTurn = (float)l_oP.f_CueDir(l_iK) * 45.0f / 57.29578f, l_fCos = std::cos(l_fTurn), l_fSin = std::sin(l_fTurn);
-                    for (glm::vec2& l_v2C : l_vC) {
-                        const glm::vec2 l_v2D = l_v2C - glm::vec2(0.5f);
-                        l_v2C = glm::vec2(0.5f) + glm::vec2(l_v2D.x * l_fCos - l_v2D.y * l_fSin, l_v2D.x * l_fSin + l_v2D.y * l_fCos);
-                    }
-                }
-                for (size_t l_nI = 1; l_nI < l_vC.size(); l_nI++)
-                    l_fnLine(l_strCls, l_v2At + (l_vC[l_nI - 1] - glm::vec2(0.5f)) * 70.0f * l_fPop, l_v2At + (l_vC[l_nI] - glm::vec2(0.5f)) * 70.0f * l_fPop, 7);
-            }
+            l_fnCue(l_iK, l_v2At, l_fnPopScale(l_iAge), l_oCues.f_Open() ? "arrow now open" : "arrow now");
             l_fnAdd(l_oCues.f_Open() ? "time open" : "time", l_v2At.x, l_v2At.y + 46.0f, 160.0f * l_oCues.f_TimeLeft(), 6, 0.0f, 3.0f);
         }
+        if (l_oP.f_Swiping())
+            for (size_t l_nI = 1; l_nI < l_oP.f_Stroke().size(); l_nI++) l_fnLine("swipe", l_oP.f_Stroke()[l_nI - 1], l_oP.f_Stroke()[l_nI], 8);
+        break;
+    }
+    case toms::PlayType::eSWIPE_RECALL: {   // the memory blade (22 §2): shown one by one, "Go!", then swiped back from memory
+        const glm::vec2 l_v2At = l_oP.f_PromptAt();
+        const int l_iN = l_oP.f_Points();
+        const auto l_ePhase = l_oP.f_RecallPhase();
+        const int l_iShown = l_oP.f_RecallShowing();
+        if (l_iShown >= 0) l_fnCue(l_iShown, l_v2At, l_fnPopScale(l_oP.f_RecallShownAgeMs()), l_oP.f_CueReversed(l_iShown) ? "arrow now rev" : "arrow now");
+        if (l_ePhase == toms::TouchPlay::RecallPhase::Ready) l_fnAdd("go", l_v2At.x, l_v2At.y, 160, 44, 0.0f, 0.0f, 1.0f, m_oLocale.f_Tr("battle.recall_go"));
+        // a dot for each prompt: lit as each is shown; then done, the one due, those to come
+        const float l_fGap = 22.0f, l_fX0 = l_v2At.x - l_fGap * (float)(l_iN - 1) * 0.5f;
+        const int l_iSeen = l_ePhase == toms::TouchPlay::RecallPhase::Show ? std::max(l_iShown + 1, 0) : l_iN;
+        for (int l_iK = 0; l_iK < l_iN; l_iK++) {
+            std::string l_strCls = "slot";
+            if (l_ePhase != toms::TouchPlay::RecallPhase::Answer) { if (l_iK < l_iSeen) l_strCls = "slot seen"; }
+            else if (l_iK < l_oP.f_Index()) l_strCls = "slot done";
+            else if (l_iK == l_oP.f_Index()) l_strCls = "slot now";
+            l_fnAdd(l_strCls, l_fX0 + l_fGap * (float)l_iK, l_v2At.y - 52.0f, 14, 14, 0.0f, 7);
+        }
+        if (l_ePhase == toms::TouchPlay::RecallPhase::Answer) {
+            l_fnAdd("count", l_v2At.x, l_v2At.y, 80, 30, 0.0f, 0.0f, 1.0f, "?");
+            l_fnAdd("time open", l_v2At.x, l_v2At.y + 46.0f, 200.0f * l_oP.f_TimeLeft(), 6, 0.0f, 3.0f);
+        }
+        if (l_oP.f_Swiping())
+            for (size_t l_nI = 1; l_nI < l_oP.f_Stroke().size(); l_nI++) l_fnLine("swipe", l_oP.f_Stroke()[l_nI - 1], l_oP.f_Stroke()[l_nI], 8);
+        break;
+    }
+    case toms::PlayType::eSWIPE_CHAIN: {   // a skill's commands (22 §3): the row on a bar at the top centre, the one due big over the hero
+        const float l_fW = m_pRen ? (float)m_pRen->f_Width() : 1024.0f;
+        const int l_iN = l_oP.f_Points(), l_iNow = l_oP.f_Index();
+        const float l_fCell = std::min(54.0f, (l_fW - 120.0f) / (float)std::max(1, l_iN)), l_fBarY = 150.0f;   // under the fight's title and the monsters' HP
+        const float l_fX0 = l_fW * 0.5f - l_fCell * (float)(l_iN - 1) * 0.5f;
+        l_fnAdd("chainbar", l_fW * 0.5f, l_fBarY, l_fCell * (float)l_iN + 16.0f, l_fCell + 12.0f, 0.0f, 10.0f);
+        const auto& l_vMarks = l_oP.f_Marks();   // one mark per answer, in order: what each came to
+        for (int l_iK = 0; l_iK < l_iN; l_iK++) {
+            std::string l_strCls = "arrow";
+            if (l_iK < l_iNow) l_strCls = l_iK < (int)l_vMarks.size() && l_vMarks[(size_t)l_iK].m_bOk ? "arrow cut" : "arrow missed";
+            else if (l_iK == l_iNow) l_strCls = "arrow now open";
+            l_fnCue(l_iK, {l_fX0 + l_fCell * (float)l_iK, l_fBarY}, l_fCell / 90.0f * (l_iK == l_iNow ? 1.25f : 1.0f), l_strCls);
+        }
+        if (l_iNow < l_iN)   // the one due, big over the hero's head as every attack command is (the owner, 2026-11-13), popping in as it comes due
+            l_fnCue(l_iNow, l_oP.f_PromptAt(), 1.3f * l_fnPopScale(l_vMarks.empty() ? l_oP.f_ClockMs() : l_vMarks.back().m_iAgeMs), "arrow now open");
+        l_fnAdd("count", l_fW * 0.5f + l_fCell * (float)l_iN * 0.5f + 48.0f, l_fBarY, 80, 28, 0.0f, 0.0f, 1.0f, std::to_string(std::min(l_iNow, l_iN)) + "/" + std::to_string(l_iN));
+        l_fnAdd("time open", l_fW * 0.5f, l_fBarY + l_fCell * 0.5f + 16.0f, l_fCell * (float)l_iN * l_oP.f_TimeLeft(), 6, 0.0f, 3.0f);
         if (l_oP.f_Swiping())
             for (size_t l_nI = 1; l_nI < l_oP.f_Stroke().size(); l_nI++) l_fnLine("swipe", l_oP.f_Stroke()[l_nI - 1], l_oP.f_Stroke()[l_nI], 8);
         break;

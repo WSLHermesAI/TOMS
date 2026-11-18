@@ -1,0 +1,12 @@
+{
+  "_comment": "Trying the memory blade (docs/gameplay/22): Down x4 picks 'Try the memory blade' (the fifth choice of the weapon master's 'intro'), Enter: the trial fight starts in the arena with the memory blade worn.",
+  "scene": "weaponTrial",
+  "test": {
+    "frames": 60,
+    "keys": "down@10,down@16,down@22,down@28,enter@34"
+  },
+  "expect": {
+    "scene": "arena",
+    "equipped": "memory_blade"
+  }
+}

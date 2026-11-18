@@ -1,0 +1,26 @@
+{
+  "_comment": "The memory blade's ultimate (docs/gameplay/22 §3; special_moves.json sigil_chain): full super charge, g at frame 10; its name, then ten commands on the top bar and 5 s to swipe them in order. Nothing is swiped: under 6 of 10 the move fizzles (no hits) and the fight goes on.",
+  "scene": "battle",
+  "player": {
+    "give": ["memory_blade"],
+    "equip": ["memory_blade"]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000,
+    "super": true,
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 560,
+    "keys": "g@10"
+  },
+  "expect": {
+    "battleEvents": {
+      "skill": 1,
+      "combo": 0,
+      "hit": 0
+    }
+  }
+}

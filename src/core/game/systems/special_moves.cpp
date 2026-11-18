@@ -27,6 +27,7 @@ ShowBeat f_BeatFromJson(const nlohmann::json& l_jJ) {
     l_oB.m_fZoom = std::max(1.0f, l_jJ.value("zoom", 1.0f));
     l_oB.m_strMove = l_jJ.value("move", std::string());
     l_oB.m_fDeg = l_jJ.value("deg", 30.0f);
+    l_oB.m_strWhen = l_jJ.value("when", std::string());
     return l_oB;
 }
 
@@ -73,6 +74,7 @@ SpecialMoveTable f_SpecialMovesFromJson(const nlohmann::json& l_jJ) {
             l_oS.m_oPlay.m_iTimeMs = std::max(500, l_jP.value("timeMs", l_oS.m_oPlay.m_iTimeMs));
             l_oS.m_oPlay.m_fSize = std::max(40.0f, l_jP.value("size", l_oS.m_oPlay.m_fSize));
             l_oS.m_oPlay.m_fCornerRadius = std::max(8.0f, l_jP.value("cornerRadius", l_oS.m_oPlay.m_fCornerRadius));
+            l_oS.m_oPlay.m_iMinHits = std::max(0, l_jP.value("minHits", 0));
             if (l_jP.contains("cues") && l_jP["cues"].is_array())
                 for (const auto& l_jC : l_jP["cues"]) if (l_jC.is_string()) l_oS.m_oPlay.m_vCues.push_back(l_jC.get<std::string>());
         }
@@ -97,6 +99,16 @@ int f_ShowLength(const std::vector<ShowBeat>& l_vBeats) {
         l_iEnd = std::max(l_iEnd, l_oB.m_iAtMs + l_iLen);
     }
     return l_iEnd;
+}
+
+bool f_BeatOn(const ShowBeat& l_oB, bool l_bFull) {
+    return l_oB.m_strWhen.empty() || (l_oB.m_strWhen == "full") == l_bFull;
+}
+
+int f_ShowLength(const std::vector<ShowBeat>& l_vBeats, bool l_bFull) {
+    std::vector<ShowBeat> l_vOn;
+    for (const ShowBeat& l_oB : l_vBeats) if (f_BeatOn(l_oB, l_bFull)) l_vOn.push_back(l_oB);
+    return f_ShowLength(l_vOn);
 }
 
 std::vector<const ShowBeat*> f_BeatsDue(const std::vector<ShowBeat>& l_vBeats, int l_iFromMs, int l_iToMs) {

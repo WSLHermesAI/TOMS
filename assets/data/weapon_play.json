@@ -27,7 +27,8 @@
     "play: the weapon's own attack, a play type (docs/gameplay/17 §4.1, play_type.h): track (the point track), pullRelease (drag back and let go at the target), swipeWay (swipe the arrows' ways), swipeGesture (draw gestures), sequenceClick (tap the circles in order). Each counts its points like the track, so the results, fx and clips stay the same. Scenarios play the track unless their battle sets \"play\".",
     "comboTiers: how the combo grows (17 §19): from `from` hits in a row on, the player's clip, the hit effect and the feel moment (battle.json feel). A miss starts it again; each attack starts it again unless comboKeep (the bow: one arrow an attack, so the count goes on until a miss).",
     "ultimate: the special_moves.json move this weapon uses when the super charge is full (17 §16 Q49): change the id to bind another.",
-    "swipeCues: the gesture prompts by level (17 §4.2): from lv on, the last prompts ask for these (v, m, square; or a shape: triangle, circle) instead of a way."
+    "swipeCues: the gesture prompts by level (17 §4.2): from lv on, the last prompts ask for these (v, m, square; or a shape: triangle, circle) instead of a way.",
+    "recall: the memory blade's timing by level (play swipeRecall, docs/gameplay/22 §2): showMs each prompt shown, answerMs the whole answer time (+ perCueMs a prompt), reverse the share shown red (swipe the other way). A row sets only its keys; the rest come from the rows below it, then data/battle.json \"plays\" (recallShowMs, recallAnswerMs, ...)."
   ],
   "default": {
     "missBack": [
@@ -1064,6 +1065,215 @@
           "v",
           "v"
         ]
+      }
+    ]
+  },
+  "memory_blade": {
+    "missBack": [
+      {
+        "lv": 1,
+        "back": "start"
+      },
+      {
+        "lv": 3,
+        "back": 2
+      },
+      {
+        "lv": 5,
+        "back": 1
+      }
+    ],
+    "missWaitMs": 600,
+    "levels": [
+      {
+        "lv": 1,
+        "points": 3,
+        "stats": {
+          "str": 10
+        }
+      },
+      {
+        "lv": 2,
+        "points": 3,
+        "stats": {
+          "str": 12,
+          "dex": 5
+        }
+      },
+      {
+        "lv": 3,
+        "points": 4,
+        "stats": {
+          "str": 14,
+          "dex": 10
+        }
+      },
+      {
+        "lv": 4,
+        "points": 4,
+        "stats": {
+          "str": 16,
+          "dex": 12
+        }
+      },
+      {
+        "lv": 5,
+        "points": 5,
+        "stats": {
+          "str": 20,
+          "dex": 15
+        }
+      },
+      {
+        "lv": 6,
+        "points": 5,
+        "stats": {
+          "str": 22,
+          "dex": 17
+        }
+      },
+      {
+        "lv": 7,
+        "points": 5,
+        "stats": {
+          "str": 24,
+          "dex": 19
+        }
+      },
+      {
+        "lv": 8,
+        "points": 5,
+        "stats": {
+          "str": 26,
+          "dex": 21
+        }
+      },
+      {
+        "lv": 9,
+        "points": 5,
+        "stats": {
+          "str": 28,
+          "dex": 23
+        }
+      },
+      {
+        "lv": 10,
+        "points": 5,
+        "stats": {
+          "str": 30,
+          "dex": 25
+        }
+      }
+    ],
+    "levelExp": {
+      "first": 5,
+      "scale": 2
+    },
+    "turnBack": false,
+    "sweepMs": 1500,
+    "chargeMs": 1800,
+    "chargeSpeedUp": 0.8,
+    "chargeDamage": 1.0,
+    "hitWindow": 0.07,
+    "fx": [
+      {
+        "lv": 1,
+        "release": "sword_release_1",
+        "hit": "sword_hit_1"
+      },
+      {
+        "lv": 3,
+        "release": "sword_release_2",
+        "hit": "sword_hit_2"
+      },
+      {
+        "lv": 5,
+        "release": "sword_release_3",
+        "hit": "sword_hit_3"
+      }
+    ],
+    "results": [
+      {
+        "hits": "all",
+        "name": "perfect",
+        "damage": 1.2,
+        "stunMs": 500,
+        "breakAdd": 1,
+        "fx": "sword_perfect",
+        "anim": "attack_big",
+        "move": "battle.move.sword.perfect"
+      },
+      {
+        "hits": 2,
+        "name": "great",
+        "fx": "sword_great",
+        "move": "battle.move.sword.great"
+      },
+      {
+        "hits": 0,
+        "name": "miss",
+        "fx": "miss_puff",
+        "move": "battle.move.sword.miss"
+      }
+    ],
+    "comboTiers": [
+      {
+        "from": 1,
+        "clip": "attack",
+        "fx": "sword_hit_1",
+        "feel": "hit"
+      },
+      {
+        "from": 2,
+        "clip": "attack_2",
+        "fx": "sword_hit_2",
+        "feel": "hit"
+      },
+      {
+        "from": 3,
+        "clip": "attack_3",
+        "fx": "sword_hit_3",
+        "feel": "great"
+      },
+      {
+        "from": 4,
+        "clip": "attack_4",
+        "fx": "sword_great",
+        "feel": "great"
+      },
+      {
+        "from": 5,
+        "clip": "attack_big",
+        "fx": "sword_perfect",
+        "feel": "perfect"
+      }
+    ],
+    "play": "swipeRecall",
+    "ultimate": "sigil_chain",
+    "recall": [
+      {
+        "lv": 1,
+        "showMs": 500,
+        "answerMs": 1000,
+        "perCueMs": 0,
+        "reverse": 0
+      },
+      {
+        "lv": 3,
+        "answerMs": 1300
+      },
+      {
+        "lv": 5,
+        "answerMs": 1500
+      },
+      {
+        "lv": 6,
+        "reverse": 0.2
+      },
+      {
+        "lv": 8,
+        "showMs": 420,
+        "reverse": 0.3
       }
     ]
   },

@@ -50,6 +50,10 @@ struct Setup {
 ojson f_SetupToScenario(const Setup& l_oS);
 // A saved setup (a scenario written by setupToScenario). False when it is not one.
 bool f_SetupFromScenario(const ojson& l_jJ, Setup& l_oOut);
+// The words a setup is found by: its name, its weapon (id and words, "memory_blade" -> "memory blade"), its monsters, its pace.
+std::string f_SetupSearchText(const std::string& l_strName, const Setup& l_oS);
+// The setups filter: every word of `filter` (spaces between) is in `text`, any case. An empty filter matches all.
+bool f_FilterMatches(const std::string& l_strText, const std::string& l_strFilter);
 
 // ---- writing the data files back ----
 

@@ -79,6 +79,7 @@ GAME_SMOKE_BY_NAME = [
      named('smoke.player_*', 'scenario.menu_*', 'scenario.save_load')),
     (re.compile(r'battle|combat|enemies\.json|looks\.json|moves\.json'), named('smoke.battle', 'scenario.battle_*')),
     (re.compile(r'store'), named('smoke.store', 'scenario.store_*')),
+    (re.compile(r'weapon_master|trial'), named('scenario.trial_*')),   # the new game's weapon trial (docs/gameplay/07 phase 3)
     (re.compile(r'dialog'), named('smoke.dialogue', 'smoke.stairs_unlock', 'scenario.dialogue_*', 'scenario.talk_*')),
     (re.compile(r'talk|npc'), named('smoke.talk_*', 'scenario.talk_*')),
     (re.compile(r'title|art_style'), named('smoke.title', 'scenario.title')),

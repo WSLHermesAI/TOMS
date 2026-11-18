@@ -303,8 +303,14 @@
 - **紀錄**分頁：進行中戰鬥的事件與時間。
 - **情境**分頁：`tests/scenarios/` 的每個測試情境（[08](08_TEST_SCENARIOS.md)）；按兩下（或 **Play**）在遊戲畫面中遊玩。情境遊玩時
   會關閉自動重新開始；**▶ Battle** 回到測試戰鬥。
+  清單上方有**篩選**框（2026-11-18）：每個字都要出現在資料夾名稱、場景、`_comment`、主角的武器或怪物裡，不分大小寫
+  （`memory blade` 只留下憶刃的三個）；顯示「N of M」；按 Enter 播放第一個。
+  第一組是**測試設定**（`tools/battle_editor/setups/*.json`，自由遊玩、沒有腳本）：按兩下 `slime Lv1 memory blade`
+  就用憶刃開打（G：千刃印）。用 Save current as… 存的設定也會出現在這裡。
 - **測試設定**（下方）：Load（並開始）、**Save current as…** 存到 `tools/battle_editor/setups/<名稱>.json`（含編輯器自己的 `_editor`
   部分的情境）。先附兩個：`slime Lv1 bow`、`3 bats Lv5 sword`。
+  清單前有**篩選**框（2026-11-18）：輸入的每個字都要出現在設定的名稱、武器（`memory` 找得到 `memory_blade`）、怪物或節奏裡，
+  不分大小寫；旁邊顯示「N of M」；按 Enter 載入第一個。
 - 還沒做：難度模擬（目前的數據來自上一場戰鬥）、結果的預覽按鈕、粒子與動畫的選擇器（目前用輸入）、章節篩選。
 - 測試：`battle_editor.selftest`（計算器、設定、寫回後檔案不變、清單）與 `smoke.battle_editor`（三隻怪物、▶ Battle、紀錄、Win now）。
 

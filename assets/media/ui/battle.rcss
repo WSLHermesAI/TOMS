@@ -170,6 +170,16 @@ body { z-index: 30; }
 .tp.arrow.now.open { background-color: #ffd54a; }
 .tp.arrow.now.open.head { background-color: transparent; border-color: #ffd54a; }
 .tp.time.open { background-color: #ff9a3a; }
+/* the memory blade (docs/gameplay/22 §2): a red prompt asks for the other way; a dot per prompt; "Go!" */
+.tp.arrow.now.rev { background-color: #ff5a5a; }
+.tp.arrow.now.rev.head { background-color: transparent; border-color: #ff5a5a; }
+.tp.slot    { border-width: 2px; border-color: #ffffff90; }
+.tp.slot.seen { background-color: #c8a0ff; border-color: #c8a0ff; }
+.tp.slot.now  { background-color: #ffd54a; border-color: #ffffff; }
+.tp.slot.done { background-color: #6fe08a; border-color: #6fe08a; }
+.tp.go      { font-size: 36px; color: #ffd54a; font-effect: outline(3px #402800); }
+/* a skill's chain of commands (22 §3): the bar along the top centre */
+.tp.chainbar { background-color: #10142ac0; border-width: 2px; border-color: #ffd54a90; }
 .tp.warn    { font-size: 34px; color: #ffd54a; font-effect: outline(3px #402800); }
 .tp.star    { background-color: #c8a0ff60; }
 .tp.star.done { background-color: #ffe066; }

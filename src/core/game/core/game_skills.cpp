@@ -43,6 +43,8 @@ toms::TouchPlaySettings Game::f_TouchSettingsFor(toms::PlayType l_eType) const {
     l_oS.m_fCornerBonus = std::min(0.5f, (float)l_iDex * l_oS.m_fDexCornerPct / 100.0f);
     l_oS.m_oSliceCue.m_iInputMs = std::max(l_oS.m_oSliceCue.m_iInputMs, std::min(l_oS.m_oSliceCue.m_iInputMs + l_iDex * l_oS.m_iDexWindowMs, l_oS.m_oSliceCue.m_iCueMs - 100));
     l_oS.m_iCircleTapMs += l_iDex * l_oS.m_iDexWindowMs;
+    l_oS.m_iRecallAnswerMs += l_iDex * l_oS.m_iDexWindowMs;   // the memory blade's answer time and a chain's (22 §2, §3)
+    l_oS.m_iChainTimeMs += l_iDex * l_oS.m_iDexWindowMs;
     if (l_eType == toms::PlayType::ePULL_RELEASE) {   // STR holds the pull longer, DEX keeps the aim still (16 §3.2)
         l_oS.m_iBowHoldMs += std::max(0, f_AttrValue("str")) * l_oS.m_iBowHoldPerStr;
         l_oS.m_fBowShakePx /= 1.0f + (float)std::max(0, f_AttrValue("dex")) * l_oS.m_fBowShakePerDex;
@@ -59,6 +61,14 @@ void Game::f_ArmTouchPlay(bool l_bUltimate, int l_iPoints) {
         const std::vector<std::string> l_vShapes = f_WeaponPlayOf(l_strKey).f_SwipeCuesAt(f_WeaponLevel(l_strKey));
         l_oS.m_vSliceCues.assign((size_t)l_iPoints, l_eType == toms::PlayType::eSWIPE_GESTURE ? "v" : "way");
         for (size_t l_nK = 0; l_nK < l_vShapes.size() && l_nK < l_oS.m_vSliceCues.size(); l_nK++) l_oS.m_vSliceCues[l_oS.m_vSliceCues.size() - l_vShapes.size() + l_nK] = l_vShapes[l_nK];
+        if (l_eType == toms::PlayType::eSWIPE_RECALL) {   // the memory blade's timing by its level (weapon_play.json "recall", 22 §2)
+            const toms::WeaponPlay::Recall l_oR = f_WeaponPlayOf(l_strKey).f_RecallAt(f_WeaponLevel(l_strKey));
+            const int l_iDexMs = l_oS.m_iRecallAnswerMs - m_oTouchSettings.m_iRecallAnswerMs;   // (what DEX added above)
+            if (l_oR.m_iShowMs >= 0) l_oS.m_iRecallShowMs = l_oR.m_iShowMs;
+            if (l_oR.m_iAnswerMs >= 0) l_oS.m_iRecallAnswerMs = l_oR.m_iAnswerMs + l_iDexMs;
+            if (l_oR.m_iPerCueMs >= 0) l_oS.m_iRecallPerCueMs = l_oR.m_iPerCueMs;
+            if (l_oR.m_fReverse >= 0.0f) l_oS.m_fRecallReverse = l_oR.m_fReverse;
+        }
     }
     m_v4TouchArmedArea = f_TouchArea();
     m_oCs.m_oTouch.f_Start(l_eType, l_iPoints, l_bUltimate, m_v4TouchArmedArea, (uint32_t)m_oPlayRng(), l_oS);   // new places and order each attack
@@ -433,6 +443,7 @@ void Game::f_UpdateSkill(int l_iDtMs) {
         l_oTs.m_fShapeSize = l_oD.m_oPlay.m_fSize;
         l_oTs.m_fShapeCornerRadius = l_oD.m_oPlay.m_fCornerRadius;
         l_oTs.m_iShapeTimeMs = l_oTs.m_iMashTimeMs = l_oTs.m_iFreeTimeMs = l_oD.m_oPlay.m_iTimeMs;
+        l_oTs.m_iChainTimeMs = l_oD.m_oPlay.m_iTimeMs + (l_oTs.m_iChainTimeMs - m_oTouchSettings.m_iChainTimeMs);   // its time, and what DEX adds
         l_oTs.m_vSliceCues = l_oD.m_oPlay.m_vCues;
         const glm::vec2 l_v2C = f_SkillCentre();
         const glm::vec4 l_v4Area = l_eType == toms::PlayType::eDRAW_SHAPE ? glm::vec4(l_v2C.x - 100.0f, l_v2C.y - 100.0f, 200.0f, 200.0f) : f_TouchArea();
@@ -447,6 +458,7 @@ void Game::f_UpdateSkill(int l_iDtMs) {
         if (m_oCs.m_oTouch.f_Running()) return;
         // the play is over: what was done counts (Q45: a share of the hits and the damage)
         l_oS.m_fShare = (float)m_oCs.m_oTouch.f_Result().m_iHits / (float)std::max(1, m_oCs.m_oTouch.f_Points());
+        if (m_oCs.m_oTouch.f_Result().m_iHits < l_oD.m_oPlay.m_iMinHits) l_oS.m_fShare = 0.0f;   // too few: it fizzles (22 §3)
         l_oS.m_ePhase = P::Finish;
         l_oS.m_iPhaseMs = 0;
         m_oCs.m_iDimMs = 0;
@@ -456,10 +468,12 @@ void Game::f_UpdateSkill(int l_iDtMs) {
             l_oS.m_iHitDmg = (int)std::lround((float)f_NormalHitDamage(l_iT) * l_oD.m_fDamage * l_oS.m_fShare * l_fStagger);
             if (l_oS.m_fShare <= 0.0f) f_PopWord(m_oLocale.f_Tr("battle.move.default.miss"), -1, "move-miss");
         }
-        for (const toms::ShowBeat* l_pB : toms::f_BeatsDue(l_oD.m_vFinish, -1, 0)) f_SkillBeat(*l_pB, f_SkillCentre());
+        const bool l_bFull0 = l_oS.m_fShare >= 1.0f;   // a finish beat may be for the full play only, or the partial one (22 §3)
+        for (const toms::ShowBeat* l_pB : toms::f_BeatsDue(l_oD.m_vFinish, -1, 0)) if (toms::f_BeatOn(*l_pB, l_bFull0)) f_SkillBeat(*l_pB, f_SkillCentre());
         return;
     }
-    for (const toms::ShowBeat* l_pB : toms::f_BeatsDue(l_oD.m_vFinish, l_iBefore, l_oS.m_iPhaseMs)) f_SkillBeat(*l_pB, f_SkillCentre());
+    const bool l_bFull = l_oS.m_fShare >= 1.0f;
+    for (const toms::ShowBeat* l_pB : toms::f_BeatsDue(l_oD.m_vFinish, l_iBefore, l_oS.m_iPhaseMs)) if (toms::f_BeatOn(*l_pB, l_bFull)) f_SkillBeat(*l_pB, f_SkillCentre());
     if (l_oS.m_iHitsLeft > 0) {
         l_oS.m_iHitMs -= l_iDtMs;
         while (l_oS.m_iHitMs <= 0 && l_oS.m_iHitsLeft > 0 && m_oCs.m_oSkill.m_bOn) {
@@ -480,7 +494,7 @@ void Game::f_UpdateSkill(int l_iDtMs) {
             }
         }
     }
-    if (m_oCs.m_oSkill.m_bOn && l_oS.m_iPhaseMs >= toms::f_ShowLength(l_oD.m_vFinish) && l_oS.m_iHitsLeft <= 0) f_EndSkill();
+    if (m_oCs.m_oSkill.m_bOn && l_oS.m_iPhaseMs >= toms::f_ShowLength(l_oD.m_vFinish, l_bFull) && l_oS.m_iHitsLeft <= 0) f_EndSkill();
 }
 
 void Game::f_EndSkill() {

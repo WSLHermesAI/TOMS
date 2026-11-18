@@ -56,6 +56,8 @@ public:
     QString f_LogText() const;
     bool f_SaveSetupAs(const QString& l_oName);
     bool f_LoadSetup(const QString& l_oName);
+    void f_SetSetupFilter(const QString& l_oText);    // the filter box beside the setups list
+    QStringList f_SetupNames() const;                 // the setups the list shows now
     bool f_IsDirty() const { return m_bMonstersDirty || m_bWeaponsDirty; }
     static constexpr int m_iAutoRestartMs = 1500;   // the end of a battle stays on screen this long
     void f_SetPace(const QString& l_oPace);              // "", "cooldown", "stamina"
@@ -63,7 +65,9 @@ public:
     std::vector<int> f_Calculate(int l_iTotal, int l_iLevel, double l_dK);
     // the Scenarios tab: start a scenario (a folder with scenario.json, or the file) in the game view; how many are listed
     bool f_PlayScenario(const QString& l_oPath);
-    int f_ScenarioCount() const;
+    int f_ScenarioCount() const;                  // all listed, the filter or not
+    void f_SetScenarioFilter(const QString& l_oText);  // the Scenarios tab's filter box
+    QStringList f_ShownScenarios() const;         // the scenario rows the filter leaves
 
 protected:
     void closeEvent(class QCloseEvent* l_pE) override;
@@ -79,6 +83,7 @@ private:
     QWidget* f_BuildLogTab();
     QWidget* f_BuildScenariosTab();
     void f_FillScenarioList();
+    void f_ApplyScenarioFilter();
     QString f_ScenarioRoot() const;   // the repo's tests/scenarios
     QWidget* f_BuildSetupsBar();
 
@@ -122,6 +127,8 @@ private:
     QLabel* m_pInBattleLabel = nullptr;
     QTabWidget* m_pTabs = nullptr;
     QTreeWidget* m_pScenarioList = nullptr;
+    QLineEdit* m_pScenarioFilter = nullptr;
+    QLabel* m_pScenarioCount = nullptr;
     QString m_oExtraScenarioDir;           // "Open scenario folder...": a folder of scenarios outside tests/
     QComboBox* m_pSpeed = nullptr;
     QComboBox* m_pPace = nullptr;
@@ -171,5 +178,7 @@ private:
     QPlainTextEdit* m_pLog = nullptr;
     // setups
     QComboBox* m_pSetups = nullptr;
+    QLineEdit* m_pSetupFilter = nullptr;
+    QLabel* m_pSetupCount = nullptr;
     QTimer m_oLogTimer;
 };

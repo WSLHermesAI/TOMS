@@ -1,0 +1,22 @@
+{
+  "_comment": "The memory blade's own play (docs/gameplay/22 §2, play swipeRecall): its 3 prompts show one by one (0.5 s each), hide, \"Go!\", then 1 s to swipe them back from memory. None is answered, so time runs out and the play resolves as one combo with no hits.",
+  "scene": "battle",
+  "player": {
+    "give": ["memory_blade"],
+    "equip": ["memory_blade"]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000,
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 300
+  },
+  "expect": {
+    "battleEvents": {
+      "combo": 1
+    }
+  }
+}

@@ -121,10 +121,23 @@ int main(int l_iArgc, char** l_pArgv) {
                       l_oW.f_InBattle() == QStringList({QStringLiteral("bat"), QStringLiteral("bat"), QStringLiteral("bat")}) &&
                       l_oW.f_CurrentSetup().m_oPlayer.m_strWeapon == "sword" && l_oW.f_CurrentSetup().m_oPlayer.m_iLv == 5,
                   "a saved setup loads (three of the same monster, the sword, Lv 5)");
+            l_oW.f_SetSetupFilter(QStringLiteral("MEMORY slime"));
+            f_Check(l_oW.f_SetupNames() == QStringList({QStringLiteral("slime Lv1 memory blade")}), "the setups filter: every word, any case");
+            l_oW.f_SetSetupFilter(QStringLiteral("bat"));
+            f_Check(l_oW.f_SetupNames() == QStringList({QStringLiteral("3 bats Lv5 sword")}), "and by a monster");
+            l_oW.f_SetSetupFilter(QString());
+            f_Check(l_oW.f_SetupNames().size() >= 3, "an empty filter lists them all");
             f_Check(l_oW.f_SetInBattle(QStringLiteral("bat"), false) && l_oW.f_InBattle().isEmpty(), "untick: every copy leaves");
             f_Check(l_oW.f_SelectWeapon(QStringLiteral("staff")) && l_oW.f_SetWeaponLevelCell(9, QStringLiteral("points"), 7) && l_oW.f_SetWeaponLevelCell(9, QStringLiteral("int"), 99) &&
                       l_oW.f_WeaponLevelsJson(QStringLiteral("staff")).contains(QStringLiteral("\"lv\":9,\"points\":7")), "a level's detail edited on the Weapon tab");
             f_Check(l_oW.f_ScenarioCount() >= 20, "the Scenarios tab lists tests/scenarios");
+            l_oW.f_SetScenarioFilter(QStringLiteral("Memory Blade"));
+            const QStringList l_oMem = l_oW.f_ShownScenarios();
+            f_Check(l_oMem.contains(QStringLiteral("battle_play_recall")) && l_oMem.contains(QStringLiteral("battle_ultimate_sigil_full")) &&
+                      !l_oMem.contains(QStringLiteral("battle_sword")) &&
+                      l_oMem.contains(QStringLiteral("slime Lv1 memory blade")), "the Scenarios filter: the memory blade's scenarios, not the sword's");
+            l_oW.f_SetScenarioFilter(QString());
+            f_Check(l_oW.f_ShownScenarios().size() == l_oW.f_ScenarioCount(), "an empty filter shows them all");
             std::printf(g_iFailed ? "battle_editor selftest: %d failed\n" : "battle_editor selftest: all passed\n", g_iFailed);
             l_iRc = g_iFailed ? 1 : 0;
         } else if (!l_oGrabWeapon.isEmpty()) {
