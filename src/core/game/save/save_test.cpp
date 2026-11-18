@@ -168,7 +168,7 @@ int main() {
         nlohmann::json l_jOld = {{"schemaVersion", 1}, {"currentStageId", "stage01"}, {"player", {{"hp", 50}}}};
         bool l_bMismatch = false;
         RunSaveData l_oR2 = f_RunFromJson(l_jOld, &l_bMismatch);
-        CHECK(l_bMismatch && l_oR2.m_oPlayer.m_iHp == 50 && l_oR2.m_strFloor == "F01" && l_oR2.m_iSuperMax == 5, "a version-1 run loads with defaults");
+        CHECK(l_bMismatch && l_oR2.m_oPlayer.m_iHp == 50 && l_oR2.m_strFloor == "F01" && l_oR2.m_iSuperMax == 0, "a version-1 run loads with defaults");
         CHECK(f_EntityStatusKey("F03", 4, 5, "o12") == "F03#o12", "an object with a uid is keyed by it");
         CHECK(f_EntityStatusKey("F03", 4, 5, "") == "F03|4,5", "an object without one is keyed by its position");
         f_DeleteSlot(l_strDir, 1);

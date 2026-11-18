@@ -35,7 +35,7 @@ words the game already has:
 |---|---|---|
 | 等級 (level) | the weapon's level | `weapon_play.json` levels (07 §13) |
 | 技能 (skill) | a skill the player unlocks and uses in battle | the skill system (`skill_system`), e.g. "Qi Drawing" |
-| 絕招 (ultimate) | the super attack, used when the super charge is full | the super charge bar (5 squares) |
+| 絕招 (ultimate) | the super attack, used when the super charge is full | the super charge bar (`battle.json` `"superPoints"`: 3) |
 | 會心 (critical) | the best result, a critical move | the "perfect" result row (13 §4.2, §10) |
 
 ### 2.1 Bow: draw and hit the target

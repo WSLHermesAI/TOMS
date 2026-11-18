@@ -93,7 +93,11 @@ public:
     // value (not the old compile-time CombatState::kSuperThreshold) so Game::rebirth() can carry it
     // forward at half power. A brand-new run gets kDefaultSuperMax via reset(); Game::rebirth()
     // overwrites it with the halved value right after.
-    static constexpr int m_iDefaultSuperMax = 5;
+    // The points the ultimate needs come from battle.json "superPoints" (Game::f_LoadAssets -> setBaseSuperMax);
+    // this is only the fallback when the file has none.
+    static constexpr int m_iDefaultSuperMax = 3;
+    void f_SetBaseSuperMax(int l_iV);                     // the data's value; a run at the old base follows it
+    int f_BaseSuperMax() const { return m_iBaseSuperMax; }
     int f_SuperMax() const { return m_iSuperMax; }
     void f_SetSuperMax(int l_iV) { m_iSuperMax = std::max(1, l_iV); }
     // Unconditional: the caller (Game::applyChapterGrants / the skill-tree UI) is expected to have
@@ -166,6 +170,7 @@ private:
     int                                 m_iSkillPoints = 0;
     std::vector<std::string>           m_vSkillsOwned;
     int                                 m_iSuperMax = m_iDefaultSuperMax;
+    int                                 m_iBaseSuperMax = m_iDefaultSuperMax;   // battle.json "superPoints"; kept by reset()
     std::string                        m_strFloor = "F01";
     std::vector<std::string>           m_vClearedFloors;
     std::vector<std::string>           m_vEventsStarted, m_vEventsFinished;

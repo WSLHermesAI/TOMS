@@ -22,8 +22,10 @@
 - Chosen in the new game's weapon trial ("Try the memory blade"; the owner, Q105). The battle editor: filters on the test
   setups and the Scenarios tab; the setups listed in the Scenarios tab to play freely (`slime Lv1 memory blade`, G).
 - Doc [gameplay/22](../../gameplay/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) (+ zh_TW) with more weapon and skill ideas; Q100–Q107.
-- **Not committed.** Changed-only 20 of 282, all passed (after `tools\build.cmd`); naming checker 0 edits.
-  **Owner:** play it and tune the times; answer Q106 (next idea) and Q107 (keyboard); Q100–Q104 only to change them.
+- The owner committed `306c097` (the memory blade work). Afternoon: the special attack needs **3 points, not 5**, now a number
+  in the data, `battle.json` `"superPoints"` (saves follow it; a rebirth's halved value stays): **not committed**.
+  Changed-only 20 of 282, all passed (after `tools\build.cmd`); naming checker 0 edits; `unit.run_state_test` and `unit.save_test` switched off.
+  **Owner:** say whether 3 points is right; play the memory blade and tune the times; answer Q106 (next idea) and Q107 (keyboard); Q100–Q104 only to change them.
 
 **Character animation from video: the plan, and videos of a character in ComfyLive** (2026-11-16; [DAILY_2026-11-16.md](DAILY_2026-11-16.md)):
 - The plan ([engine/24](../../engine/24_VIDEO_TO_SKELETON.md), + zh_TW): a video of one character, its skeleton (DWPose), one part

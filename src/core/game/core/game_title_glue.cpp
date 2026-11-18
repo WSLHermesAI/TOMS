@@ -91,6 +91,7 @@ void Game::f_ApplyLoadedRun(const toms::MetaSaveData& l_oM, const toms::RunSaveD
     m_oMeta = l_oM;
     m_mapEntityStatus = l_oR.m_mapEntityStatus;
     m_oRun.f_ReadFrom(l_oR);   // S3: restore the run's story state (defaults for a pre-v3 file)
+    if (m_oMeta.m_iCycleIndex <= 1) m_oRun.f_SetSuperMax(m_oRun.f_BaseSuperMax());   // first life: battle.json "superPoints"
     // Anything that belongs to the *previous* run must not leak into the loaded one.
     m_mapMissionTrackers.clear();
     m_vNotifications.clear();

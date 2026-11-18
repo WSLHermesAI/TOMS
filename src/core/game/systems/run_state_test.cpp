@@ -118,7 +118,25 @@ static void f_TestRunState() {
     CHECK(l_oRs.f_SuperMax() == 2, "setSuperMax sets it");
     l_oRs.f_SetSuperMax(0);
     CHECK(l_oRs.f_SuperMax() == 1, "setSuperMax clamps to a minimum of 1");
-    l_oRs.f_SetSuperMax(3);
+    // the points come from battle.json "superPoints" (setBaseSuperMax); a save never goes above them
+    {
+        toms::RunStoryState l_oData;
+        l_oData.f_SetBaseSuperMax(4);
+        CHECK(l_oData.f_SuperMax() == 4 && l_oData.f_BaseSuperMax() == 4, "a fresh run follows the data's points");
+        l_oData.f_Reset();
+        CHECK(l_oData.f_SuperMax() == 4, "and keeps them through reset()");
+        toms::RunSaveData l_oOld;
+        l_oOld.m_iSuperMax = 5;
+        l_oData.f_ReadFrom(l_oOld);
+        CHECK(l_oData.f_SuperMax() == 4, "a saved 5 loads as the data's 4");
+        l_oOld.m_iSuperMax = 2;
+        l_oData.f_ReadFrom(l_oOld);
+        CHECK(l_oData.f_SuperMax() == 2, "a rebirth's halved 2 stays 2");
+        l_oOld.m_iSuperMax = 0;
+        l_oData.f_ReadFrom(l_oOld);
+        CHECK(l_oData.f_SuperMax() == 4, "not in the file: the data's");
+    }
+    l_oRs.f_SetSuperMax(2);
 
     // reset(keepShards=true) itself: shards survive, EVERYTHING else -- including skills/points/
     // superMax -- is wiped, same as a brand-new-game reset(). This is `reset()`'s own, narrow

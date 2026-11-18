@@ -191,6 +191,7 @@ bool Game::f_LoadAssets(const std::string& l_strAssetDir) {
                 std::sort(m_vBattleSpeeds.begin(), m_vBattleSpeeds.end());
             }
             m_oCellRules = toms::f_CellRulesFromJson(l_jBj);
+            m_oRun.f_SetBaseSuperMax(l_jBj.value("superPoints", toms::RunStoryState::m_iDefaultSuperMax));   // the ultimate's points
             m_oTutorial = toms::f_TutorialFromJson(l_jBj);     // the new game's trial fight (docs/gameplay/19 B6)
             m_oTouchSettings = toms::f_TouchPlayFromJson(l_jBj);   // the plays' numbers (docs/gameplay/16 §3)
             m_jFeelFx = l_jBj.value("feelFx", nlohmann::json::object());   // the attack feel (docs/gameplay/20)

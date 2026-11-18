@@ -201,7 +201,7 @@ RunSaveData f_RunFromJson(const nlohmann::json& l_jIn, bool* l_pVersionMismatch)
     if (l_jJ.contains("npcTalk") && l_jJ["npcTalk"].is_object())
         for (auto& [l_strK, l_jV] : l_jJ["npcTalk"].items())
             if (l_jV.is_array()) { std::vector<int>& l_vT = l_oR.m_mapNpcTalk[l_strK]; for (auto& l_jN : l_jV) if (l_jN.is_number_integer()) l_vT.push_back(l_jN.get<int>()); }
-    l_oR.m_iSuperMax = l_jJ.value("superMax", 5);
+    l_oR.m_iSuperMax = l_jJ.value("superMax", 0);   // 0: battle.json "superPoints"
     return l_oR;
 }
 

@@ -96,6 +96,12 @@ void RunStoryState::f_NoteDeath(bool l_bBoss) {
     if (!l_bBoss) ++m_iDeathsNonBoss;
 }
 
+void RunStoryState::f_SetBaseSuperMax(int l_iV) {
+    const bool l_bAtBase = m_iSuperMax == m_iBaseSuperMax;
+    m_iBaseSuperMax = std::max(1, l_iV);
+    m_iSuperMax = l_bAtBase ? m_iBaseSuperMax : std::min(m_iSuperMax, m_iBaseSuperMax);
+}
+
 void RunStoryState::f_Reset(bool l_bKeepShards) {
     m_mapChoices.clear();
     m_mapCounters.clear();
@@ -111,7 +117,7 @@ void RunStoryState::f_Reset(bool l_bKeepShards) {
     m_strFloor = "F01";
     m_iSkillPoints = 0;
     m_vSkillsOwned.clear();
-    m_iSuperMax = m_iDefaultSuperMax;
+    m_iSuperMax = m_iBaseSuperMax;
     // Section 8: on its own, this wipes EVERYTHING run-scoped except the shards `keepShards`
     // preserves (and, on the meta save, not here: cycleIndex/endingsSeen/hintsUnlocked). A brand
     // New Game calls this with keepShards=false and stops here -- a genuinely fresh run.
@@ -169,7 +175,9 @@ void RunStoryState::f_ReadFrom(const RunSaveData& l_oR) {
     m_iDeathsNonBoss = l_oR.m_iDeathsNonBoss;
     m_iSkillPoints = l_oR.m_iSkillPoints;
     m_vSkillsOwned = l_oR.m_vSkillsOwned;
-    m_iSuperMax = l_oR.m_iSuperMax;
+    // 0 (not in the file): the data's value; else never above it (a rebirth's halved value stays). Game::applyLoadedRun
+    // also puts a first-life run back on the data's value, so a change to battle.json reaches old saves.
+    m_iSuperMax = l_oR.m_iSuperMax <= 0 ? m_iBaseSuperMax : std::clamp(l_oR.m_iSuperMax, 1, m_iBaseSuperMax);
     // Re-apply the declared clamps: a hand-edited or older save must not smuggle an out-of-range
     // counter past the rules section 8's rebirth maths depends on.
     std::map<std::string, int> l_mapSnapshot = m_mapCounters;
