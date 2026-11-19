@@ -443,6 +443,21 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
                     l_nAt += l_u8C < 0x80 ? 1 : l_u8C < 0xE0 ? 2 : l_u8C < 0xF0 ? 3 : 4;
                 }
                 l_oB.m_strBossIntroName = l_iT < l_jC.value("nameAtMs", 600) ? std::string() : l_strName.substr(0, std::min(l_nAt, l_strName.size()));
+            } else if (m_oCs.m_iHeroIntroMs > 0) {   // the hero's introduction of his ultimate: the same banner from the right, his name for it
+                const nlohmann::json l_jC = f_FeelFx().value("heroIntro", nlohmann::json::object());
+                const int l_iT = m_oCs.m_iHeroIntroMsMax - m_oCs.m_iHeroIntroMs, l_iNameAt = l_jC.value("nameAtMs", 350);
+                l_oB.m_bBossIntro = l_oB.m_bHeroIntro = true;
+                l_oB.m_strBossIntroLabel = l_oL.f_Tr(m_oCs.m_strHeroIntroLabel);
+                const float l_fIn = std::min(1.0f, (float)l_iT / 240.0f);
+                l_oB.m_fBossIntroX = 1100.0f * (1.0f - l_fIn) * (1.0f - l_fIn);
+                const std::string l_strName = f_SkillName();
+                const int l_iChars = std::max(0, (l_iT - l_iNameAt) / std::max(1, l_jC.value("typeMsPerChar", 90)) + 1);
+                size_t l_nAt = 0;   // the first l_iChars letters (UTF-8)
+                for (int l_iK = 0; l_iK < l_iChars && l_nAt < l_strName.size(); l_iK++) {
+                    const unsigned char l_u8C = (unsigned char)l_strName[l_nAt];
+                    l_nAt += l_u8C < 0x80 ? 1 : l_u8C < 0xE0 ? 2 : l_u8C < 0xF0 ? 3 : 4;
+                }
+                l_oB.m_strBossIntroName = l_iT < l_iNameAt ? std::string() : l_strName.substr(0, std::min(l_nAt, l_strName.size()));
             }
             const auto l_fnPop = [this](int l_iAgeMs) {   // grows past its size and settles (back-out)
                 if (m_oSettings.m_bReduceEffects) return 1.0f;
@@ -501,7 +516,7 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
             if (m_oCs.m_oSkill.m_bOn && m_oCs.m_oSkill.m_ePhase == CombatState::SkillRun::Phase::Play && m_oCs.m_oSkill.m_pDef) {   // a move's play (16 §6)
                 const toms::SpecialMove& l_oD = *m_oCs.m_oSkill.m_pDef;
                 l_oB.m_strSkillPrompt = l_oL.f_Has(l_oD.m_strPrompt) ? l_oL.f_Tr(l_oD.m_strPrompt) : l_oD.m_strPrompt;
-                if (l_oD.m_oPlay.m_eType == toms::PlayType::eDRAW_SHAPE || l_oD.m_oPlay.m_eType == toms::PlayType::eMASH || l_oD.m_oPlay.m_eType == toms::PlayType::eSWIPE_CHAIN || toms::f_IsFreePlay(l_oD.m_oPlay.m_eType)) {
+                if (l_oD.m_oPlay.m_eType == toms::PlayType::eDRAW_SHAPE || l_oD.m_oPlay.m_eType == toms::PlayType::eMASH || l_oD.m_oPlay.m_eType == toms::PlayType::eSWIPE_CHAIN || l_oD.m_oPlay.m_eType == toms::PlayType::eSPIN_CIRCLE || toms::f_IsFreePlay(l_oD.m_oPlay.m_eType)) {
                     char l_pszT[16];
                     std::snprintf(l_pszT, sizeof l_pszT, "%.1f", m_oCs.m_oTouch.f_TimeLeft() * (float)l_oD.m_oPlay.m_iTimeMs / 1000.0f);
                     l_oB.m_strSkillTime = l_pszT;
@@ -513,7 +528,7 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
                 l_oB.m_strAttackLabel = l_oL.f_Tr("battle.attack_down");
                 const int l_iDownMs = std::max(1, f_FeelFx().value("specialAttack", nlohmann::json::object()).value("downMs", 1600));
                 l_oB.m_fAttackPct = 100.0f * (1.0f - (float)m_oCs.m_iHeroDownMs / (float)l_iDownMs);
-            } else if (f_AttackRunning()) { l_oB.m_strAttackState = "running"; l_oB.m_strAttackLabel = l_oL.f_Tr("battle.attack_running"); }
+            } else if (f_AttackRunning() || (m_oCs.m_oSkill.m_bOn && m_oCs.m_oSkill.m_iOwner < 0)) { l_oB.m_strAttackState = "running"; /* (the hero's move: its whole show) */ l_oB.m_strAttackLabel = l_oL.f_Tr("battle.attack_running"); }
             else if (m_oCs.m_ePace == toms::Pace::Cooldown && m_oCs.m_oAtkBar.m_bCooling) {
                 l_oB.m_strAttackState = "recovering";
                 l_oB.m_strAttackLabel = l_oL.f_Tr("battle.attack_recovering");
@@ -1086,6 +1101,40 @@ void Game::f_TouchPlayUi(toms::UiBattle& l_oB) const {
             l_fnAdd(l_bDone ? "corner done" : l_bNext ? "corner next" : "corner", l_vPts[l_nI].x, l_vPts[l_nI].y, 34, 34, 0.0f, 17);
         }
         if (l_oTr.f_Drawing()) l_fnAdd("cross", l_oTr.f_Last().x, l_oTr.f_Last().y, 24, 24, 0.0f, 12);
+        break;
+    }
+    case toms::PlayType::eSPIN_CIRCLE: {   // the bow's volley (22 §4): circles round the ring, the way the label and the sparks go
+        const glm::vec2 l_v2C = l_oP.f_SpinCentre();
+        const float l_fR = l_oP.f_SpinRadius();
+        const int l_iN = l_oP.f_Points(), l_iNow = std::min(l_oP.f_Index(), l_iN - 1);
+        const bool l_bCw = l_oP.f_SpinClockwise(l_iNow);
+        l_fnAdd("spinring", l_v2C.x, l_v2C.y, 2.0f * l_fR, 2.0f * l_fR, 0.0f, l_fR);
+        // the turn so far: ticks lit round the ring from the top, the way it goes
+        const int l_iTicks = 24, l_iLit = (int)std::floor(l_oP.f_SpinProgress() * (float)l_iTicks + 0.001f);
+        for (int l_iK = 0; l_iK < l_iTicks; l_iK++) {
+            const float l_fRad = (-90.0f + (l_bCw ? 1.0f : -1.0f) * 360.0f * (float)l_iK / (float)l_iTicks) / 57.29578f;
+            l_fnAdd(l_iK < l_iLit ? "spintick on" : "spintick", l_v2C.x + std::cos(l_fRad) * l_fR, l_v2C.y + std::sin(l_fRad) * l_fR, 10, 10, 0.0f, 5);
+        }
+        // the way and how many of it: "clockwise 2/3"; the turns of the same way in a row are counted together
+        int l_iRunFrom = l_iNow, l_iRunTo = l_iNow;
+        while (l_iRunFrom > 0 && l_oP.f_SpinClockwise(l_iRunFrom - 1) == l_bCw) l_iRunFrom--;
+        while (l_iRunTo + 1 < l_iN && l_oP.f_SpinClockwise(l_iRunTo + 1) == l_bCw) l_iRunTo++;
+        const std::string l_strWay = m_oLocale.f_Tr(l_bCw ? "battle.spin_cw" : "battle.spin_ccw");
+        l_fnAdd(l_bCw ? "spinlabel" : "spinlabel ccw", l_v2C.x, l_v2C.y - 14.0f, 2.0f * l_fR, 30, 0.0f, 0.0f, 1.0f, l_strWay);
+        l_fnAdd("count", l_v2C.x, l_v2C.y + 18.0f, 90, 30, 0.0f, 0.0f, 1.0f,
+                std::to_string(std::min(l_oP.f_Index(), l_iRunTo + 1) - l_iRunFrom + (l_oP.f_Index() <= l_iRunTo ? 1 : 0)) + "/" + std::to_string(l_iRunTo - l_iRunFrom + 1));
+        // a dot per turn under the ring: done, missed, due, to come (the ones the other way in their own colour)
+        const auto& l_vMarks = l_oP.f_Marks();
+        const float l_fGap = 22.0f, l_fX0 = l_v2C.x - l_fGap * (float)(l_iN - 1) * 0.5f;
+        for (int l_iK = 0; l_iK < l_iN; l_iK++) {
+            std::string l_strCls = l_oP.f_SpinClockwise(l_iK) ? "slot" : "slot seen";
+            if (l_iK < l_oP.f_Index()) l_strCls = l_iK < (int)l_vMarks.size() && l_vMarks[(size_t)l_iK].m_bOk ? "slot done" : "slot missed";
+            else if (l_iK == l_oP.f_Index()) l_strCls = "slot now";
+            l_fnAdd(l_strCls, l_fX0 + l_fGap * (float)l_iK, l_v2C.y + l_fR + 22.0f, 14, 14, 0.0f, 7);
+        }
+        l_fnAdd("time open", l_v2C.x, l_v2C.y + l_fR + 42.0f, 2.0f * l_fR * l_oP.f_TimeLeft(), 6, 0.0f, 3.0f);
+        if (l_oP.f_Swiping())
+            for (size_t l_nI = 1; l_nI < l_oP.f_Stroke().size(); l_nI++) l_fnLine("swipe", l_oP.f_Stroke()[l_nI - 1], l_oP.f_Stroke()[l_nI], 8);
         break;
     }
     case toms::PlayType::eMASH: {

@@ -1,0 +1,27 @@
+{
+  "_comment": "The bow's ultimate done in full (docs/gameplay/22 §4; special_moves.json cyclone_volley): g at frame 10, then round the ring (on the hero's head: its middle at 140,359 here) 3 times clockwise and 3 times anticlockwise. 6 of 6: the hero gathers his power, then 10 shots, each a hit.",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000,
+    "super": true,
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 560,
+    "keys": "g@10",
+    "drags": "o:140:359:90:3:60@100,o:140:359:90:-3:60@170"
+  },
+  "expect": {
+    "battleEvents": {
+      "skill": 1,
+      "hit": 10
+    }
+  }
+}

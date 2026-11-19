@@ -45,7 +45,7 @@
             <div class="fbreak" data-style-width="f.break_pct + '%'"></div></div>
     </div></div>
     <!-- a boss's introduction (Game::f_StartBossIntro): a banner slides in, its name types in -->
-    <div id="boss-intro" data-if="battle.boss_intro">
+    <div id="boss-intro" data-if="battle.boss_intro" data-class-hero="battle.hero_intro">
         <div class="bi-band" data-style-transform="'translateX(' + battle.boss_intro_x + 'px)'">
             <div class="bi-label">{{battle.boss_intro_label}}</div>
             <div class="bi-name">{{battle.boss_intro_name}}</div>

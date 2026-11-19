@@ -240,6 +240,8 @@ struct CombatState : public Trackable {
     int m_iFrameDt = 0;               // the battle's time this frame: 0 in a hit stop, slower in the last hit's slow motion
     int m_iHitStopMs = 0;             // both sides freeze (15 §3.8)
     int m_iCellIntroMs = 0;           // the first danger's moment: time left; everything waits, only the monster moves
+    int m_iHeroIntroMs = 0, m_iHeroIntroMsMax = 0;   // the hero's own introduction of his ultimate (a move's "intro" beat): the boss banner, his side
+    std::string m_strHeroIntroLabel;                 // ...its label's text key (the move's name types in under it)
     int m_iBossIntroMs = 0, m_iBossIntroMsMax = 0;   // a boss's introduction (f_StartBossIntro): time left; everything waits the same way
     // (it is armed first: it waits for the battle's first drawn frame, then startDelayMs, so loading never eats it)
     int m_iBossIntroFoe = -1, m_iBossIntroWaitMs = 0, m_iBossIntroFrames = 0;
@@ -277,6 +279,11 @@ struct CombatState : public Trackable {
         int m_iSteps = 0;                         // steps done in the play
         float m_fShare = 0.0f;                    // steps / all, when the play ended
         int m_iHitsLeft = 0, m_iHitGapMs = 0, m_iHitMs = 0, m_iHitDmg = 0;   // the finish's hits
+        std::string m_strHitClip, m_strHitFx;   // ...each hit's clip (from its start) and effect on the hero (a "hits" beat's clip, fx)
+        float m_fHitClipSpeed = 1.0f;           // ...that clip this many times faster (its "speed")
+        int m_iGuideMs = 0;                     // spin: since the last guide particles
+        const toms::ShowBeat* m_pRain = nullptr;  // the "hits" beat whose projectiles fall (its projectile, impact, flight, extra)
+        int m_iRainLeft = 0, m_iRainMs = 0;     // ...still to launch; until the next launch
     } m_oSkill;
     // the battle camera's close-up (16 §6.1): zoom on a fighter, eased in and out
     float m_fCamZoom = 1.0f;
@@ -286,6 +293,7 @@ struct CombatState : public Trackable {
     int m_iHeroDownMs = 0;
     std::string m_strCamMove;   // on a 3D stage: "" push in, "orbit" (special_moves.json camera "move")
     float m_fCamDeg = 30.0f;
+    float m_fCamPan = 0.0f;     // in 2D: the close-up also moves its fighter this share of the way to the screen's middle (a camera beat's "value")
     // The result screen of a win (15 §3.6): filled by finishCombatWin.
     struct Result {
         bool m_bValid = false;
@@ -1126,6 +1134,7 @@ private:
     toms::SpriteMeshFile m_oSpriteMeshes;   // its meshes (game.mesh.json beside it, written by the anim tools; docs/engine/16)
     nlohmann::json m_jCharacterFit;                          // assets/data/character_fit.json (read at startup)
     std::string m_strBattleRigClip;   // the clip the battle picture plays for battleRigState_ ("" = none found)
+    float m_fBattleRigSpeed = 1.0f;   // ...this many times faster (a move's volley, special_moves.json "speed")
     std::shared_ptr<toms::res::AnimRes> m_spPreviewAnim;   // playPreviewAnim (its atlases come with it)
     std::string m_strPreviewClip;
     std::string m_strPreviewCharacter;                      // setPreviewCharacter
@@ -1137,7 +1146,7 @@ private:
     int m_iLastAttackDamage = 0;                          // the last attack tap's damage (attack or miss)
     void f_LoadBattleRig();                               // (re)loads the clips when the weapon changes
     // clip: plays that clip of the character's .anim for the status (a result's "anim"), else the weapon's for it
-    void f_SetBattleRigState(const std::string& l_strState, bool l_bRestart = false, const std::string& l_strClip = std::string());
+    void f_SetBattleRigState(const std::string& l_strState, bool l_bRestart = false, const std::string& l_strClip = std::string(), float l_fSpeed = 1.0f);
     void f_UpdateBattleRig(int l_iDtMs);                     // picks the status; Game::update
     void f_DrawBattleRig();                               // the backdrop, the player and the monster; Game::draw
     std::string m_strVersionLabel;                        // data/version.json as the title shows it (version_label.h)
@@ -1198,6 +1207,7 @@ private:
     void f_PlayBattleFxAt(const std::string& l_strEffect, float l_fX, float l_fY, bool l_bOverUi, int l_iDelayMs = 0, float l_fScale = 1.0f,
                           float l_fRotationDeg = 0.0f);
     // The attack feel (docs/gameplay/20; data/battle.json "feelFx").
+    void f_LaunchRain(const toms::ShowBeat& l_oB, int l_iFoe);   // one of a move's falling projectiles (and its extras) at a monster
     void f_LaunchBattleFx(const std::string& l_strEffect, glm::vec2 l_v2From, glm::vec2 l_v2To, int l_iFlightMs, const std::string& l_strImpact,
                           const std::string& l_strImpactSound);
     void f_FoeAttackFx(int l_iFoe, const toms::MoveDef& l_oMove, bool l_bReaches);   // its cast, a projectile or a strike, its sound (§5)

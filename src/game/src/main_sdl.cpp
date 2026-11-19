@@ -29,7 +29,8 @@
 //                         --fixed-dt, a clip or a battle as pictures, merged by tools/frames_to_gif.py
 //   --keys=<k@f,...>      press key k at frame f, e.g. enter@30,enter@60 (automated tests)
 //   --clicks=<x:y@f,...>  left-click at design point (x,y) (1024x768 space) at frame f (tests)
-//   --drag=<x0:y0:x1:y1:n@f,...> press at (x0,y0) at frame f, move to (x1,y1) over n frames, let go (tests)
+//   --drag=<x0:y0:x1:y1:n@f,...> press at (x0,y0) at frame f, move to (x1,y1) over n frames, let go (tests);
+//                               "o:cx:cy:r:turns:n@f" goes round a circle instead (turns < 0: anticlockwise)
 //   --wheel=<x:y:d@f,...> turn the mouse wheel by d at design point (x,y) at frame f (tests)
 //   --fixed-dt=<ms>       every frame advances exactly this long, so a scripted run is identical
 //                         every time (screenshot smoke tests, tests/CMakeLists.txt)
@@ -134,7 +135,7 @@ struct Args {
     struct Click { float m_fX, m_fY; int m_iFrame; };
     std::vector<Click> m_vClicks;
     struct Wheel { float m_fX, m_fY, m_fDelta; int m_iFrame; };
-    struct Drag { float m_fX0, m_fY0, m_fX1, m_fY1; int m_iFrames, m_iFrame; };
+    struct Drag { float m_fX0, m_fY0, m_fX1, m_fY1; int m_iFrames, m_iFrame; bool m_bCircle = false; };   // a circle: centre x0,y0, radius x1, turns y1
     std::vector<Drag> m_vDrags;     // --drag=<x0:y0:x1:y1:frames@f,...>: press, move, let go (tests)
     std::vector<Wheel> m_vWheels;   // --wheel=<x:y:delta@f,...>: the mouse wheel at a design point (tests)
     std::vector<std::string> m_vGive;     // --give=<id,...>
@@ -191,7 +192,10 @@ void f_ParseDrags(const std::string& l_strList, Args& l_oA) {
         size_t l_nComma = l_strList.find(',', l_nPos);
         std::string l_strItem = l_strList.substr(l_nPos, l_nComma == std::string::npos ? std::string::npos : l_nComma - l_nPos);
         Args::Drag l_oD{};
-        if (std::sscanf(l_strItem.c_str(), "%f:%f:%f:%f:%d@%d", &l_oD.m_fX0, &l_oD.m_fY0, &l_oD.m_fX1, &l_oD.m_fY1, &l_oD.m_iFrames, &l_oD.m_iFrame) == 6) l_oA.m_vDrags.push_back(l_oD);
+        if (l_strItem.rfind("o:", 0) == 0) {   // "o:cx:cy:r:turns:frames@f": round a circle from its right, turns < 0 anticlockwise
+            l_oD.m_bCircle = true;
+            if (std::sscanf(l_strItem.c_str() + 2, "%f:%f:%f:%f:%d@%d", &l_oD.m_fX0, &l_oD.m_fY0, &l_oD.m_fX1, &l_oD.m_fY1, &l_oD.m_iFrames, &l_oD.m_iFrame) == 6) l_oA.m_vDrags.push_back(l_oD);
+        } else if (std::sscanf(l_strItem.c_str(), "%f:%f:%f:%f:%d@%d", &l_oD.m_fX0, &l_oD.m_fY0, &l_oD.m_fX1, &l_oD.m_fY1, &l_oD.m_iFrames, &l_oD.m_iFrame) == 6) l_oA.m_vDrags.push_back(l_oD);
         if (l_nComma == std::string::npos) break;
         l_nPos = l_nComma + 1;
     }
@@ -617,8 +621,11 @@ bool f_AppFrame(App& l_oApp) {
         const float l_fK = std::clamp((float)l_iF / (float)l_iN, 0.0f, 1.0f);
         const auto l_oVp = BgfxRenderer::f_ComputeAspectFitViewport((uint32_t)l_iPw, (uint32_t)l_iPh,
                                                                BgfxRenderer::m_uDesignW, BgfxRenderer::m_uDesignH);
-        l_oIn.m_fMouseX = l_oVp.m_fX + (l_oD.m_fX0 + (l_oD.m_fX1 - l_oD.m_fX0) * l_fK) * l_oVp.m_fWidth / (float)BgfxRenderer::m_uDesignW;
-        l_oIn.m_fMouseY = l_oVp.m_fY + (l_oD.m_fY0 + (l_oD.m_fY1 - l_oD.m_fY0) * l_fK) * l_oVp.m_fHeight / (float)BgfxRenderer::m_uDesignH;
+        const float l_fAng = l_oD.m_fY1 * 6.2831853f * l_fK;   // a circle: this far round (screen y down: + is clockwise)
+        const float l_fPx = l_oD.m_bCircle ? l_oD.m_fX0 + l_oD.m_fX1 * std::cos(l_fAng) : l_oD.m_fX0 + (l_oD.m_fX1 - l_oD.m_fX0) * l_fK;
+        const float l_fPy = l_oD.m_bCircle ? l_oD.m_fY0 + l_oD.m_fX1 * std::sin(l_fAng) : l_oD.m_fY0 + (l_oD.m_fY1 - l_oD.m_fY0) * l_fK;
+        l_oIn.m_fMouseX = l_oVp.m_fX + l_fPx * l_oVp.m_fWidth / (float)BgfxRenderer::m_uDesignW;
+        l_oIn.m_fMouseY = l_oVp.m_fY + l_fPy * l_oVp.m_fHeight / (float)BgfxRenderer::m_uDesignH;
         l_oIn.m_bMouseLeft = l_iF >= 0 && l_iF <= l_iN;
         l_oIn.m_bHasMouse = true;
     }

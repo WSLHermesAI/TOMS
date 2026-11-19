@@ -53,8 +53,8 @@ An empty **Answer** means not decided: nothing happens for that row, and its rec
 | **Delete `combat.json` and `story.json`?** Nothing reads them. | kept | No preference |  | cleanup | [11](../gameplay/11_BATTLE_DATA.md) §5 O4, [19](../engine/19_DESIGN_MAP.md) |
 | **Q98 Video model for the game's animations:** Wan 2.2 (Apache 2.0, no limits; 212 s for 3 s at 1280 × 704) or HyperFlow H3 Flash (61 s for 3 s at 832 × 480, but its licence does not cover the USA, the EU, the UK or South Korea and forbids showing its outputs there; a commercial product must show "MiniMax H3")? | HyperFlow is used for tests on this PC only; nothing made with it goes into the game | Wan 2.2 for everything that ships; HyperFlow only to try ideas quickly | | steps 2–6 of the video pipeline use the frames | [engine 24](../engine/24_VIDEO_TO_SKELETON.md) §2.1 |
 | **Q99 Qwen Image 2.1 Turbo pictures in the game:** its licence allows research and evaluation only; a commercial use needs a separate licence from its maker. Use it only for trials, ask for a commercial licence, or repaint what it makes with the SDXL models already used? | trials only; nothing made with it goes into the game | trials only, and use its pictures as references that the SDXL workflow repaints, until a licence is asked for | | the hero's side-on reference pose for the video clips | [engine 24](../engine/24_VIDEO_TO_SKELETON.md) §2.1 |
-| **Q106** Which new weapon or skill idea next (22 §5)? | none | the parry shield, then Blade Storm |  | the next plays | [22](../gameplay/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §5 |
-| **Q107** Keyboard for the direction plays on the desktop? | mouse only | arrow keys / WASD, diagonals with two keys |  | desktop input | [22](../gameplay/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §5 |
+| **Q106** Which new weapon or skill idea next (22 §6)? | none | the parry shield, then Blade Storm |  | the next plays | [22](../gameplay/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §6 |
+| **Q107** Keyboard for the direction plays on the desktop? | mouse only | arrow keys / WASD, diagonals with two keys |  | desktop input | [22](../gameplay/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §6 |
 
 ## 2. Already in the game with my proposal: answer only to change it
 
@@ -87,7 +87,9 @@ These were not answered, so the proposal was built. Nothing waits on them.
 | **Q101** Memory blade: a wrong swipe? | misses that prompt; the next is due; the hits so far count | Keep it |  | [22](../gameplay/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §2 |
 | **Q102** Memory blade timing by level? | answer 1 s → 1.5 s; red prompts (the other way) from Lv 6 | Keep it; try it and tune |  | [22](../gameplay/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §2 |
 | **Q103** Which weapons get the **Sigil Chain** ultimate? | the memory blade only; the iron sword keeps its free swipe | Keep it |  | [22](../gameplay/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §3 |
-| **Q104** Sigil Chain: commands, time, threshold? | 10 ways, 5 s, partial finish from 6, ×12 | Keep it; add V / circle from a later level |  | [22](../gameplay/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §3 |
+| **Q104** Sigil Chain: commands, time, threshold? | 10 ways, 5 s, partial finish from 6, ×12 | Keep it; add V / circle from a later level |  | [22](../gameplay/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §3 |
+| **Q108** The bow's ultimate: the **Cyclone Volley** (旋風連矢) in place of the free shot? | the Cyclone Volley; `battle_ultimate_free_bow` (switched off) still expects the free shot and would fail | Keep it; delete that scenario or move it to another weapon |  | [22](../gameplay/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §4 |
+| **Q109** Cyclone Volley numbers? | 3 clockwise + 3 anticlockwise, 6 s, partial from 3, ×12, 10 shots in 1.5 s | Keep it; try it and tune |  | [22](../gameplay/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §4 |
 
 ## 3. Not questions, but waiting for you
 

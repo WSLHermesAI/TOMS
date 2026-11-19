@@ -9,7 +9,7 @@
 - **技能：** 畫面上方中央顯示 10 個指令，要在可調整的時間內（例如 5 秒）依序劃出。全部完成時，以非常華麗的
   收招攻擊怪物。
 
-兩者都**已做好**（第 2、3 節）。第 5 節列出更多尚未製作的點子。問題在第 7 節與
+兩者都**已做好**（第 2、3 節），還有弓的旋風連矢（第 4 節，2026-11-19）。第 6 節列出更多尚未製作的點子。問題在第 8 節與
 [13_OPEN_DECISIONS.md](../../project/zh_TW/13_OPEN_DECISIONS.md)。
 
 ## 1. 放在哪裡
@@ -75,6 +75,12 @@ DEX 每點為回答時間加 `dexWindowMs`（10 毫秒），與所有玩法相�
 
 **收招**依完成數而定：
 
+**先是主角的登場**（完成 6 或 3–5 圈；擁有者，2026-11-19：「像頭目登場」）：1.7 秒內鏡頭低而近地拉到主角，並把他移到畫面中間
+（`camera` `value` 0.85），他在聚集的光點中慢慢拉弓（`charge` ×0.75），配上頭目登場音效與弓的蓄力聲，頭目橫幅以他的顏色從右邊
+滑入：「絕招發動！」（`battle.ultimate_label`），下方逐字打出招式名（`battle.json` `feelFx` `"heroIntro"`：`nameAtMs` 350、
+`typeMsPerChar` 90）。和招式演出的其他部分一樣，**戰鬥會等待**：怪物的計時、攻擊條與防禦的等待都停下，攻擊按鈕到結束前都顯示「攻擊中」。
+然後從 1.8 秒起射擊（如下）。
+
 | 完成 | 收招 | 傷害 |
 |---|---|---|
 | **10 / 10** | **完整：**鏡頭繞向怪物拉近（×1.7，50°），怪物身上印記軌跡與大型星爆，大招動作，**10 次命中**並震動 1.3 秒，最後再一次爆發與爆炸音效 | 普通攻擊 ×12 |
@@ -86,12 +92,45 @@ DEX 每點為回答時間加 `dexWindowMs`（10 毫秒），與所有玩法相�
 
 目前指令是 10 個方向。手勢與圖形（`"v"`、`"m"`、`"circle"`……）已經可以寫在 `cues` 中，橫條也會畫出小圖（Q104）。
 
-## 4. `battle.json` `"plays"` 的數值
+## 4. 旋風連矢：`spinCircle`
+
+擁有者要求弓的新技能（2026-11-19）：一個帶粒子的旋轉圓環；順時針畫圈 3 次，再逆時針畫圈 3 次；然後是特殊射擊：主角蓄力，接著在
+1.5 秒內射 10 次，每一箭都傷到怪物。它現在是**弓的絕招**（`weapon_play.json` 的 `"bow"` `"ultimate": "cyclone_volley"`；被取代的
+自由射擊仍留在 `special_moves.json`，Q108）。
+
+**玩法**（`play.kind` `spinCircle`）：
+
+1. **示範：** 招式名、主角身上的爆發、絕招音效，然後畫面變暗（1 秒）。
+2. **圓環**（`size` 220）在主角頭上（`ringY` -0.12：中心在主角框頂端之上、框高的這個比例，因為他的圖畫得比框高；擁有者，
+   2026-11-19）。三個光點（`guideFx` `spin_spark`）沿著要畫的方向繞圈，每 0.9 秒一圈（`guidePeriodMs`）。
+3. **圓環裡：** 方向（「順時針」／「逆時針」，綠／粉紅）與該方向的計數（「2/3」）；環上 24 個刻度隨著轉動亮起。下方每圈一個點
+   （完成綠、失手紅、輪到黃、逆時針的紫），以及時間條。
+4. **一圈：** 手指繞圓環中心的角度；方向對就增加，反方向就扣回（不低於 0）。330°（`spinTurnDeg`）算一圈：結束處一個爆發
+   （`spin_burst`）、連擊數。一圈可以分幾筆畫；離中心 30 px 內（`spinMinRadius`）不讀取。
+5. **時間：** 6 圈共 `timeMs` 6 秒（＋DEX）。時間到時沒完成的圈算失手。
+
+**收招：**
+
+| 完成 | 收招 | 傷害 |
+|---|---|---|
+| **6／6** | **完整：** 登場之後天色變暗，**向上射 10 箭，每箭間隔 150 ms**（每箭從頭播放他的 `attack` 動作 ×4 速，身上一個放箭爆發），**化作流星雨落下**：每顆 `meteor` 380 ms 後落在怪物身上，帶著火焰爆炸（`meteor_impact`）並算一次命中，另有 2 顆小的落在周圍做效果；落下時強烈震動，最後再一次爆炸、星爆、大震動與爆炸聲 | 普通一擊的 ×12，分 10 次 |
+| 3–5 | **部分：** 登場，然後「力量未聚滿……」、4 顆流星，間隔 200 ms（爆炸較小，沒有周圍的） | ×12 × 完成數／6，分 4 次 |
+| 0–2 | **失敗**（`minHits` 3）：只有失手字樣（沒有登場，也沒有部分收招），沒有傷害 | 0 |
+
+**招式資料的新欄位：** `play.guideFx`、`play.guidePeriodMs`（圓環的光點）與 `play.ringY`（高度）；`clip` 或 `hits` 段落的 `"speed"`
+（主角動作加快幾倍）；`hits` 段落的 `"clip"` 與 `"fx"`（每次射擊時在主角身上），以及 `"projectile"`、`"impact"`、`"flightMs"`、`"extra"`：
+每次命中是一顆提前 `flightMs` 從怪物左上方高處射出的投射物，落地處有 impact 效果，另有 `extra` 顆（效果名加 `_small`）落在怪物周圍；
+`"intro"` 段落（主角的橫幅：`"text"` 標籤的文字鍵、`"ms"`）；`camera` 段落的 `"value"`（2D 時把該角色往畫面中間稍下方移動的比例）；
+`"when": "landed"`（完整或部分，不含失敗），且 `"partial"` 現在要招式有命中才算。`fx/battle.particle` 新增 `meteor`、`meteor_small`、
+`meteor_impact`、`meteor_impact_small`。
+
+## 5. `battle.json` `"plays"` 的數值
 
 `recallShowMs` 500、`recallGapMs` 80、`recallReadyMs` 250、`recallAnswerMs` 1000、`recallPerCueMs` 0、`recallReverse` 0、
-`chainTimeMs` 5000（招式的 `timeMs` 會取代它）。
+`chainTimeMs` 5000（招式的 `timeMs` 會取代它）、`spinTimeMs` 6000（同上）、`spinMinRadius` 30、`spinTurnDeg` 330、
+`spinPerfectMs` 900。
 
-## 5. 更多點子（未製作）
+## 6. 更多點子（未製作）
 
 來自擁有者 2026-11-18 的要求。每個都盡量沿用玩法積木（16 第 2 節）。
 
@@ -127,7 +166,7 @@ DEX 每點為回答時間加 `dexWindowMs`（10 毫秒），與所有玩法相�
 - **異常狀態改變操作：**失明讓提示閃爍，混亂讓箭頭反向，緩慢縮短回答時間。怪物的異常攻擊因此會改變玩家的操作方式。
 - **桌機鍵盤：**方向類玩法也接受方向鍵／WASD（Q107）。
 
-## 6. 程式與測試
+## 7. 程式與測試
 
 - `play_type.h`（兩個類型；`f_IsSwipePlay` 包含它們，`f_IsCueTrackSwipe` 不包含）、`touch_play.h/.cpp`（玩法）、
   `weapon_play.h/.cpp`（`recall` 列）、`special_moves.h/.cpp`（`minHits`、`when`）、`game_skills.cpp`（依等級的時間、
@@ -135,8 +174,14 @@ DEX 每點為回答時間加 `dexWindowMs`（10 毫秒），與所有玩法相�
 - `unit.play_types_test`：記憶玩法的各階段、劃錯、時間到、紅色提示、連續指令、`recall` 列、`minHits` 與 `when`。
 - 情境測試：`battle_play_recall`（都沒回答：一次連擊、沒有命中）、`battle_ultimate_sigil`（都沒劃：失敗）、
   `battle_ultimate_sigil_full`（10 個全劃：10 次命中）。
+- 旋風連矢：`play_type.h`（`eSPIN_CIRCLE`）、`touch_play.h/.cpp`（圈數）、`special_moves.h/.cpp`（`guideFx`、`speed`）、
+  `game_skills.cpp`（圓環的位置與大小、光點、每次命中一箭）、`game_combat.cpp`（主角動作速度）、`game_ui.cpp` 與 `battle.rcss`
+  （圓環、刻度、方向字、圓點）、`fx/battle.particle`（`spin_spark`、`spin_burst`、`volley_charge`）、`main_sdl.cpp`（測試用的
+  繞圓拖曳：`"o:cx:cy:r:turns:frames@frame"`）。測試：`unit.play_types_test`（兩個方向、分兩筆畫一圈、中心不讀取、時間到、招式資料）；
+  情境 `battle_ultimate_cyclone`（沒畫圈：失敗）與 `battle_ultimate_cyclone_full`（6 圈：10 次命中）。戰鬥編輯器設定：
+  `slime Lv1 bow cyclone volley`。
 
-## 7. 給擁有者的問題
+## 8. 給擁有者的問題
 
 也在 [13_OPEN_DECISIONS.md](../../project/zh_TW/13_OPEN_DECISIONS.md)。Q100–Q104 已照提案做好，要改才需回答。
 
@@ -147,5 +192,7 @@ DEX 每點為回答時間加 `dexWindowMs`（10 毫秒），與所有玩法相�
 | **Q102** 憶刃依等級的時間（第 2 節表格） | 1 秒 → 1.5 秒；Lv 6 起有紅色提示 | 維持，試玩後再調 |  |
 | **Q103** 哪些武器有千刃印？ | 只有憶刃；鐵劍保留自由斬 | 維持現狀 |  |
 | **Q104** 千刃印：指令、時間、門檻 | 10 個方向、5 秒、6 個起算部分收招、×12 | 維持，較高等級再加 V／圓形 |  |
-| **Q106** 第 5 節接下來做哪個？ | 都不做 | 格擋盾，然後刃風暴 |  |
+| **Q106** 第 6 節接下來做哪個？ | 都不做 | 格擋盾，然後刃風暴 |  |
 | **Q107** 桌機的方向類玩法要支援鍵盤嗎？ | 只用滑鼠 | 方向鍵／WASD，斜向用兩個鍵 |  |
+| **Q108** 弓的絕招：用旋風連矢取代自由射擊（已做）？ | 旋風連矢；`battle_ultimate_free_bow`（已關閉）仍預期自由射擊，打開會失敗 | 維持；刪除該情境或改給別的武器 |  |
+| **Q109** 旋風連矢的數值 | 順時針 3 圈＋逆時針 3 圈、6 秒、3 圈起算部分收招、×12、1.5 秒射 10 箭 | 維持，試玩後再調 |  |

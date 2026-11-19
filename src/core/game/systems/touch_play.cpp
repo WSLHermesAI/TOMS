@@ -48,6 +48,12 @@ void TouchPlay::f_Start(PlayType l_eType, int l_iPoints, bool l_bUltimate, const
             m_vCircles.push_back(l_oC);
         }
     }
+    if (m_eType == PlayType::eSPIN_CIRCLE) {   // the ring in the area's middle; each turn's way from the cues (none: half one way, half the other)
+        m_v2SpinC = {m_v4Area.x + m_v4Area.z * 0.5f, m_v4Area.y + m_v4Area.w * 0.5f};
+        for (int l_iK = 0; l_iK < m_iPoints; l_iK++)
+            m_vCueKinds.push_back(l_iK < (int)m_oS.m_vSliceCues.size() && !m_oS.m_vSliceCues[(size_t)l_iK].empty() ? m_oS.m_vSliceCues[(size_t)l_iK]
+                                                                                                         : std::string(l_iK < (m_iPoints + 1) / 2 ? "cw" : "ccw"));
+    }
     if (m_eType == PlayType::eDRAW_SHAPE) {
         m_oTrace.f_Start(m_oS.m_strShape, {m_v4Area.x + m_v4Area.z * 0.5f, m_v4Area.y + m_v4Area.w * 0.5f}, m_oS.m_fShapeSize, m_oS.m_fShapeCornerRadius * (1.0f + m_oS.m_fCornerBonus));
         m_iPoints = std::max(1, m_oTrace.f_StepCount());
@@ -144,6 +150,32 @@ void TouchPlay::f_JudgeStroke() {
     f_FinishOne(l_bOk, l_bPerfect, l_v2At.x, l_v2At.y);
 }
 
+// ---- spin ----
+
+bool TouchPlay::f_SpinClockwise(int l_iK) const {
+    return l_iK < 0 || l_iK >= (int)m_vCueKinds.size() || m_vCueKinds[(size_t)l_iK] != "ccw";
+}
+
+// The finger's angle round the ring's middle, turn by turn: the right way adds, the wrong way takes back (never below 0);
+// a whole circle (m_fSpinTurnDeg) is one step, and the next starts from 0. Near the middle the angle is not read.
+void TouchPlay::f_SpinPoint(glm::vec2 l_v2P) {
+    const glm::vec2 l_v2D = l_v2P - m_v2SpinC;
+    if (glm::length(l_v2D) < m_oS.m_fSpinMinRadius) { m_bSpinHasLast = false; return; }
+    const float l_fAng = std::atan2(l_v2D.y, l_v2D.x) * 180.0f / g_fPi;   // screen y down: a growing angle turns clockwise
+    if (m_bSpinHasLast && m_iIndex < m_iPoints) {
+        float l_fDelta = l_fAng - m_fSpinLast;
+        while (l_fDelta > 180.0f) l_fDelta -= 360.0f;
+        while (l_fDelta < -180.0f) l_fDelta += 360.0f;
+        m_fSpinTurn = std::max(0.0f, m_fSpinTurn + (f_SpinClockwise(m_iIndex) ? l_fDelta : -l_fDelta));
+        if (m_fSpinTurn >= m_oS.m_fSpinTurnDeg) {
+            m_fSpinTurn = 0.0f;
+            f_FinishOne(true, m_iClockMs - m_iLastAnswerMs <= m_oS.m_iSpinPerfectMs, l_v2P.x, l_v2P.y);
+        }
+    }
+    m_fSpinLast = l_fAng;
+    m_bSpinHasLast = true;
+}
+
 // ---- the plays ----
 
 int TouchPlay::f_CirclesLit() const {
@@ -196,6 +228,7 @@ float TouchPlay::f_TimeLeft() const {
     case PlayType::eSEQUENCE_CLICK: return m_eCirclePhase == CirclePhase::Tap ? l_fnLeft(m_iPhaseMs, m_oS.m_iCircleTapMs * m_iPoints) : 1.0f;
     case PlayType::eDRAW_SHAPE: return l_fnLeft(m_iClockMs, m_oS.m_iShapeTimeMs);
     case PlayType::eMASH: return l_fnLeft(m_iClockMs, m_oS.m_iMashTimeMs);
+    case PlayType::eSPIN_CIRCLE: return l_fnLeft(m_iClockMs, m_oS.m_iSpinTimeMs);
     default: return 1.0f;
     }
 }
@@ -279,6 +312,16 @@ void TouchPlay::f_Pointer(int l_iPhase, float l_fX, float l_fY) {
     case PlayType::eMASH:
         if (l_iPhase == 0) f_FinishOne(true, true, l_fX, l_fY);
         return;
+    case PlayType::eSPIN_CIRCLE:   // circles round the ring, held or in several strokes (a lift keeps the turn so far)
+        if (l_iPhase == 0) { m_bAiming = true; m_vStroke.assign(1, l_v2P); m_bSpinHasLast = false; }
+        else if (!m_bAiming) return;
+        else if (m_vStroke.empty() || glm::length(l_v2P - m_vStroke.back()) >= 3.0f) {
+            m_vStroke.push_back(l_v2P);
+            if (m_vStroke.size() > 28) m_vStroke.erase(m_vStroke.begin());   // a short trail
+        }
+        f_SpinPoint(l_v2P);
+        if (l_iPhase == 2) { m_bAiming = false; m_bSpinHasLast = false; m_vStroke.clear(); }
+        return;
     default:
         return;
     }
@@ -358,6 +401,12 @@ void TouchPlay::f_Update(int l_iDtMs) {
             while (!m_bDone) { m_vCircles[(size_t)m_iIndex].m_iState = 3; f_FinishOne(false, false, m_vCircles[(size_t)m_iIndex].m_fX, m_vCircles[(size_t)m_iIndex].m_fY); }
         break;
     }
+    case PlayType::eSPIN_CIRCLE:
+        if (m_iClockMs >= m_oS.m_iSpinTimeMs) {   // time up: the turns not done are missed
+            m_bAiming = false;
+            while (!m_bDone) f_FinishOne(false, false, m_v2SpinC.x, m_v2SpinC.y);
+        }
+        break;
     case PlayType::eDRAW_SHAPE:
     case PlayType::eMASH:
         if (m_iClockMs >= (m_eType == PlayType::eDRAW_SHAPE ? m_oS.m_iShapeTimeMs : m_oS.m_iMashTimeMs)) {   // time up: what is done counts
@@ -395,6 +444,11 @@ TouchPlaySettings f_TouchPlayFromJson(const nlohmann::json& l_jB) {
     l_oS.m_iRecallPerCueMs = std::max(0, l_jJ.value("recallPerCueMs", l_oS.m_iRecallPerCueMs));
     l_oS.m_fRecallReverse = std::clamp(l_jJ.value("recallReverse", l_oS.m_fRecallReverse), 0.0f, 1.0f);
     l_oS.m_iChainTimeMs = std::max(500, l_jJ.value("chainTimeMs", l_oS.m_iChainTimeMs));
+    l_oS.m_iSpinTimeMs = std::max(500, l_jJ.value("spinTimeMs", l_oS.m_iSpinTimeMs));
+    l_oS.m_fSpinRadius = std::max(30.0f, l_jJ.value("spinRadius", l_oS.m_fSpinRadius));
+    l_oS.m_fSpinMinRadius = std::max(0.0f, l_jJ.value("spinMinRadius", l_oS.m_fSpinMinRadius));
+    l_oS.m_fSpinTurnDeg = std::clamp(l_jJ.value("spinTurnDeg", l_oS.m_fSpinTurnDeg), 90.0f, 720.0f);
+    l_oS.m_iSpinPerfectMs = std::max(0, l_jJ.value("spinPerfectMs", l_oS.m_iSpinPerfectMs));
     l_oS.m_iCircleCountMs = std::max(100, l_jJ.value("circleCountMs", l_oS.m_iCircleCountMs));
     l_oS.m_iCircleHideMs = std::max(0, l_jJ.value("circleHideMs", l_oS.m_iCircleHideMs));
     l_oS.m_iCircleWarnMs = std::max(0, l_jJ.value("circleWarnMs", l_oS.m_iCircleWarnMs));

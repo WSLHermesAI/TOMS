@@ -21,6 +21,7 @@ enum class PlayType {
     eFREE_SWIPE,       // "freeSwipe"      any swipe anywhere counts, for a time
     eFREE_TAP,         // "freeTap"        any tap anywhere counts, for a time
     eFREE_SHOT,        // "freeShot"       any swipe shoots and always hits, for a time
+    eSPIN_CIRCLE,      // "spinCircle"     circles drawn round a ring, clockwise or anticlockwise, each turn one step (a skill, 22 §4)
 };
 
 // A data name; the older names still work (a saved battle setup may use them). Anything else: the track.
@@ -36,6 +37,7 @@ inline PlayType f_PlayTypeFromString(const std::string& l_strS) {
     if (l_strS == "freeSwipe") return PlayType::eFREE_SWIPE;
     if (l_strS == "freeTap") return PlayType::eFREE_TAP;
     if (l_strS == "freeShot") return PlayType::eFREE_SHOT;
+    if (l_strS == "spinCircle") return PlayType::eSPIN_CIRCLE;
     return PlayType::eTRACK;
 }
 
@@ -52,6 +54,7 @@ inline const char* f_PlayTypeName(PlayType l_eT) {
     case PlayType::eFREE_SWIPE: return "freeSwipe";
     case PlayType::eFREE_TAP: return "freeTap";
     case PlayType::eFREE_SHOT: return "freeShot";
+    case PlayType::eSPIN_CIRCLE: return "spinCircle";
     default: return "track";
     }
 }

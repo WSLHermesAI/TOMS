@@ -28,6 +28,11 @@ ShowBeat f_BeatFromJson(const nlohmann::json& l_jJ) {
     l_oB.m_strMove = l_jJ.value("move", std::string());
     l_oB.m_fDeg = l_jJ.value("deg", 30.0f);
     l_oB.m_strWhen = l_jJ.value("when", std::string());
+    l_oB.m_fSpeed = std::clamp(l_jJ.value("speed", 1.0f), 0.1f, 10.0f);
+    l_oB.m_strProjectile = l_jJ.value("projectile", std::string());
+    l_oB.m_strImpact = l_jJ.value("impact", std::string());
+    l_oB.m_iFlightMs = std::max(1, l_jJ.value("flightMs", l_oB.m_iFlightMs));
+    l_oB.m_iExtra = std::clamp(l_jJ.value("extra", 0), 0, 8);
     return l_oB;
 }
 
@@ -75,6 +80,9 @@ SpecialMoveTable f_SpecialMovesFromJson(const nlohmann::json& l_jJ) {
             l_oS.m_oPlay.m_fSize = std::max(40.0f, l_jP.value("size", l_oS.m_oPlay.m_fSize));
             l_oS.m_oPlay.m_fCornerRadius = std::max(8.0f, l_jP.value("cornerRadius", l_oS.m_oPlay.m_fCornerRadius));
             l_oS.m_oPlay.m_iMinHits = std::max(0, l_jP.value("minHits", 0));
+            l_oS.m_oPlay.m_strGuideFx = l_jP.value("guideFx", std::string());
+            l_oS.m_oPlay.m_iGuidePeriodMs = std::max(200, l_jP.value("guidePeriodMs", l_oS.m_oPlay.m_iGuidePeriodMs));
+            l_oS.m_oPlay.m_fRingY = std::clamp(l_jP.value("ringY", l_oS.m_oPlay.m_fRingY), -1.0f, 1.0f);
             if (l_jP.contains("cues") && l_jP["cues"].is_array())
                 for (const auto& l_jC : l_jP["cues"]) if (l_jC.is_string()) l_oS.m_oPlay.m_vCues.push_back(l_jC.get<std::string>());
         }
@@ -82,7 +90,7 @@ SpecialMoveTable f_SpecialMovesFromJson(const nlohmann::json& l_jJ) {
             const int l_iN = (int)f_ShapeCorners(l_oS.m_oPlay.m_strShape).size();
             if (l_iN > 1) l_oS.m_oPlay.m_iPoints = l_iN - 1;
         }
-        if (f_IsSwipePlay(l_oS.m_oPlay.m_eType) && !l_oS.m_oPlay.m_vCues.empty()) l_oS.m_oPlay.m_iPoints = (int)l_oS.m_oPlay.m_vCues.size();
+        if ((f_IsSwipePlay(l_oS.m_oPlay.m_eType) || l_oS.m_oPlay.m_eType == PlayType::eSPIN_CIRCLE) && !l_oS.m_oPlay.m_vCues.empty()) l_oS.m_oPlay.m_iPoints = (int)l_oS.m_oPlay.m_vCues.size();
         l_oS.m_vDemo = f_BeatsFromJson(l_jE, "demo");
         l_oS.m_vStep = f_BeatsFromJson(l_jE, "step");
         l_oS.m_vFinish = f_BeatsFromJson(l_jE, "finish");
@@ -101,13 +109,16 @@ int f_ShowLength(const std::vector<ShowBeat>& l_vBeats) {
     return l_iEnd;
 }
 
-bool f_BeatOn(const ShowBeat& l_oB, bool l_bFull) {
-    return l_oB.m_strWhen.empty() || (l_oB.m_strWhen == "full") == l_bFull;
+bool f_BeatOn(const ShowBeat& l_oB, bool l_bFull, bool l_bLanded) {
+    if (l_oB.m_strWhen.empty()) return true;
+    if (l_oB.m_strWhen == "full") return l_bFull;
+    if (l_oB.m_strWhen == "landed") return l_bLanded || l_bFull;
+    return !l_bFull && l_bLanded;   // "partial": it landed, not in full (a fizzle shows only its miss word)
 }
 
-int f_ShowLength(const std::vector<ShowBeat>& l_vBeats, bool l_bFull) {
+int f_ShowLength(const std::vector<ShowBeat>& l_vBeats, bool l_bFull, bool l_bLanded) {
     std::vector<ShowBeat> l_vOn;
-    for (const ShowBeat& l_oB : l_vBeats) if (f_BeatOn(l_oB, l_bFull)) l_vOn.push_back(l_oB);
+    for (const ShowBeat& l_oB : l_vBeats) if (f_BeatOn(l_oB, l_bFull, l_bLanded)) l_vOn.push_back(l_oB);
     return f_ShowLength(l_vOn);
 }
 

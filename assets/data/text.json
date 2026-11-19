@@ -1167,6 +1167,62 @@
       "ko": "인이 완성되지 않았다……",
       "es": "El sello quedó incompleto..."
     },
+    "skill.cyclone_volley": {
+      "zh_TW": "旋風連矢",
+      "en": "Cyclone Volley",
+      "zh_CN": "旋风连矢",
+      "ja": "旋風連矢",
+      "ko": "회오리 연사",
+      "es": "Andanada ciclón"
+    },
+    "skill.prompt_spin": {
+      "zh_TW": "依方向畫圈，凝聚力量！",
+      "en": "Circle the ring the way it shows to gather power!",
+      "zh_CN": "按方向画圈，凝聚力量！",
+      "ja": "示す向きに円を描いて力を溜めろ！",
+      "ko": "표시된 방향으로 원을 그려 힘을 모아라!",
+      "es": "¡Traza círculos en la dirección indicada para cargar poder!"
+    },
+    "skill.volley_partial": {
+      "zh_TW": "力量未聚滿……",
+      "en": "Not all the power gathered...",
+      "zh_CN": "力量未聚满……",
+      "ja": "力が溜まりきらない……",
+      "ko": "힘이 다 모이지 않았다……",
+      "es": "No reuniste todo el poder..."
+    },
+    "battle.spin_cw": {
+      "zh_TW": "順時針",
+      "en": "Clockwise",
+      "zh_CN": "顺时针",
+      "ja": "時計回り",
+      "ko": "시계 방향",
+      "es": "Horario"
+    },
+    "battle.spin_ccw": {
+      "zh_TW": "逆時針",
+      "en": "Anticlockwise",
+      "zh_CN": "逆时针",
+      "ja": "反時計回り",
+      "ko": "반시계 방향",
+      "es": "Antihorario"
+    },
+    "battle.ultimate_label": {
+      "zh_TW": "絕招發動！",
+      "en": "ULTIMATE!",
+      "zh_CN": "绝招发动！",
+      "ja": "必殺技発動！",
+      "ko": "필살기 발동!",
+      "es": "¡ATAQUE DEFINITIVO!"
+    },
+    "battle.play_hint_spinCircle": {
+      "zh_TW": "順著光點的方向畫圈",
+      "en": "Circle the ring the way the sparks go",
+      "zh_CN": "顺着光点的方向画圈",
+      "ja": "光の回る向きに円を描け",
+      "ko": "빛이 도는 방향으로 원을 그려라",
+      "es": "Traza círculos en la dirección de las chispas"
+    },
     "item.memory_blade.name": {
       "zh_TW": "憶刃",
       "en": "Memory Blade",

@@ -15,6 +15,16 @@
 
 ## ▶ Next Step
 
+**The bow's new ultimate, the Cyclone Volley (旋風連矢)** (2026-11-19; [DAILY_2026-11-19.md](DAILY_2026-11-19.md)):
+- A ring on the hero's head with sparks going round it: circle it 3 times clockwise, then 3 anticlockwise, in 6 s (a new
+  play type, `spinCircle`). Then the hero's own introduction like a boss's (the camera on him, the banner "絕招發動！" with
+  the move's name typed in; the fight waits), then 10 shots that fall on the monster as a meteor shower, each a hit.
+- New in the move data: an `intro` beat, `hits` with `projectile` / `impact` / `extra` and the hero's clip `speed`, a camera
+  pan (`value`), `"when": "landed"`; 7 new effects. It replaces the bow's free shot (Q108); its numbers are Q109.
+- The owner committed `0c6c8c5` (the 11-18 afternoon). **11-19 not committed.** Changed-only 22 of 284, all passed (after
+  `tools\build.cmd`); naming checker 0 edits; `particle.check_battle` switched off.
+  **Owner:** play it (battle editor, filter `cyclone`); answer Q108, Q109 (and Q106, Q107).
+
 **New weapon and skill play: the memory blade (憶刃) and its ultimate the Sigil Chain (千刃印)** (2026-11-18; [DAILY_2026-11-18.md](DAILY_2026-11-18.md)):
 - The memory blade's play `swipeRecall`: the ways show one by one over the hero (0.5 s each), then "Go!", swiped back from
   memory in 1 s (1.5 s by Lv 5; red prompts, the other way, from Lv 6). Its ultimate `swipeChain`: ten commands on a top

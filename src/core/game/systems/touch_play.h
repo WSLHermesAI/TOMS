@@ -30,6 +30,7 @@
 #include <glm/glm.hpp>
 #include <json.hpp>
 
+#include <algorithm>
 #include <cstdint>
 #include <map>
 #include <random>
@@ -65,6 +66,12 @@ struct TouchPlaySettings {
     float m_fRecallReverse = 0.0f;    // the share of prompts shown red: swipe the other way
     // chain (a skill's commands on the top bar)
     int m_iChainTimeMs = 5000;        // the whole chain's time (a move's timeMs sets it)
+    // spin (a skill: circles round a ring; m_vSliceCues says each turn's way, "cw" or "ccw")
+    int m_iSpinTimeMs = 6000;         // the whole play's time (a move's timeMs sets it; DEX adds)
+    float m_fSpinRadius = 100.0f;     // the ring drawn (a move's size / 2)
+    float m_fSpinMinRadius = 30.0f;   // nearer the middle than this, the finger's angle is not read
+    float m_fSpinTurnDeg = 330.0f;    // this much of a turn, the right way, is one circle (a little short of 360: a hand's circle)
+    int m_iSpinPerfectMs = 900;       // a circle this soon after the last is perfect
     // circles
     int m_iCircleCountMs = 450;       // each circle lit in turn with its number
     int m_iCircleHideMs = 500;        // then all hidden (the owner: 0.5 s)
@@ -151,7 +158,7 @@ public:
     int f_RecallShowing() const;                    // recall, Show: the prompt on the screen now (-1: none, between two)
     int f_RecallShownAgeMs() const;                 // ...since it popped in
     int f_AnswerTimeMs() const;                     // the whole answer time (recall) or the chain's time
-    bool f_Swiping() const { return m_bAiming && (f_IsSwipePlay(m_eType) || m_eType == PlayType::eFREE_SWIPE || m_eType == PlayType::eFREE_SHOT); }
+    bool f_Swiping() const { return m_bAiming && (f_IsSwipePlay(m_eType) || m_eType == PlayType::eFREE_SWIPE || m_eType == PlayType::eFREE_SHOT || m_eType == PlayType::eSPIN_CIRCLE); }
     const std::vector<glm::vec2>& f_Stroke() const { return m_vStroke; }
     // circles
     const std::vector<Circle>& f_Circles() const { return m_vCircles; }
@@ -161,6 +168,11 @@ public:
     bool f_CircleNumbersShown() const;              // counting, or coming back (until the last is back)
     // shape
     const ShapeTrace& f_Trace() const { return m_oTrace; }
+    // spin
+    glm::vec2 f_SpinCentre() const { return m_v2SpinC; }
+    float f_SpinRadius() const { return m_oS.m_fSpinRadius; }
+    bool f_SpinClockwise(int l_iK) const;           // the turn k's way (true: clockwise on the screen)
+    float f_SpinProgress() const { return std::clamp(m_fSpinTurn / std::max(1.0f, m_oS.m_fSpinTurnDeg), 0.0f, 1.0f); }   // the turn going now, 0..1
 
 private:
     void f_NextTarget();
@@ -168,6 +180,7 @@ private:
     void f_FinishOne(bool l_bOk, bool l_bPerfect, float l_fX, float l_fY);
     void f_Release();
     void f_JudgeStroke();
+    void f_SpinPoint(glm::vec2 l_v2P);
     PlayType m_eType = PlayType::eTRACK;
     TouchPlaySettings m_oS;
     glm::vec4 m_v4Area{0.0f};
@@ -197,6 +210,11 @@ private:
     std::vector<Circle> m_vCircles;
     CirclePhase m_eCirclePhase = CirclePhase::Count;
     int m_iPhaseMs = 0;
+    // spin
+    glm::vec2 m_v2SpinC{0.0f};
+    float m_fSpinTurn = 0.0f;      // degrees turned the right way in the current circle (never below 0)
+    float m_fSpinLast = 0.0f;      // the last angle read
+    bool m_bSpinHasLast = false;   // (none after a lift, or near the middle)
     // shape
     ShapeTrace m_oTrace;
 };

@@ -45,7 +45,7 @@ void Game::f_StartCombat(const EnemyInst& l_oE, const std::vector<EnemyInst>& l_
     m_oCs.m_iChain = m_oCs.m_iBestChain = m_oCs.m_iPerfects = m_oCs.m_iAttacksDone = m_oCs.m_iDamageTaken = 0;
     m_oCs.m_iGuardAtMs = -1; m_oCs.m_iGuardCdMs = 0; m_oCs.m_bUltimate = false;
     m_oCs.m_iGuardLockMs = 0; m_oCs.m_iPlayDealt = 0; m_oCs.m_oSkill = CombatState::SkillRun{};
-    m_oCs.m_fCamZoom = 1.0f; m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = 0; m_oCs.m_iCamOn = -1; m_oCs.m_strCamMove.clear();
+    m_oCs.m_fCamZoom = 1.0f; m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = 0; m_oCs.m_iCamOn = -1; m_oCs.m_strCamMove.clear(); m_oCs.m_fCamPan = 0.0f;
     m_oCs.m_iHeroDownMs = 0;
     m_oCs.m_iBossIntroMs = m_oCs.m_iBossIntroMsMax = 0;
     m_oCs.m_iBossIntroFoe = -1; m_oCs.m_iBossIntroWaitMs = m_oCs.m_iBossIntroFrames = 0;
@@ -126,6 +126,7 @@ void Game::f_BeginBossIntro(int l_iFoe) {
     m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = l_iMs;
     m_oCs.m_iCamOn = l_iFoe;
     m_oCs.m_strCamMove = "low";
+    m_oCs.m_fCamPan = 0.0f;
     m_oCs.m_fCamDeg = l_jC.value("deg", 10.0f);
 }
 
@@ -150,8 +151,11 @@ int Game::f_BattleFrame(int l_iDtMs) {
     m_oCs.m_iShakeMs = std::max(0, m_oCs.m_iShakeMs - l_iDtMs);
     m_oCs.m_iDimMs = std::max(0, m_oCs.m_iDimMs - l_iDtMs);
     m_oCs.m_iBannerMs = std::max(0, m_oCs.m_iBannerMs - l_iDtMs);
-    m_oCs.m_iGuardCdMs = std::max(0, m_oCs.m_iGuardCdMs - l_iDtMs);
-    m_oCs.m_iGuardLockMs = std::max(0, m_oCs.m_iGuardLockMs - l_iDtMs);
+    m_oCs.m_iHeroIntroMs = std::max(0, m_oCs.m_iHeroIntroMs - l_iDtMs);
+    if (!m_oCs.m_oSkill.m_bOn) {   // a move's show: the whole fight waits, the guard's wait too (the owner, 2026-11-19)
+        m_oCs.m_iGuardCdMs = std::max(0, m_oCs.m_iGuardCdMs - l_iDtMs);
+        m_oCs.m_iGuardLockMs = std::max(0, m_oCs.m_iGuardLockMs - l_iDtMs);
+    }
     m_oCs.m_iCamMs = std::max(0, m_oCs.m_iCamMs - l_iDtMs);
     m_oCs.m_iCellsPopMs += l_iDtMs;
     m_oArena.m_iTutorialPopMs += l_iDtMs;
@@ -345,6 +349,7 @@ void Game::f_StartCellIntro(int l_iFoe) {
     m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = m_oCellRules.m_iIntroMs;
     m_oCs.m_iCamOn = l_iFoe;
     m_oCs.m_strCamMove.clear();
+    m_oCs.m_fCamPan = 0.0f;
     if (!m_oCellRules.m_strIntroText.empty())
         f_ShowBanner(f_TrParam(m_oLocale.f_Tr(m_oCellRules.m_strIntroText), "name", m_oCs.m_vFoes[(size_t)l_iFoe].m_oEnemy.m_strName), "line", m_oCellRules.m_iIntroUiMs);
     f_FeelMoment("phase");
@@ -711,9 +716,10 @@ std::unique_ptr<toms::FighterView> Game::f_MakeFighterView(const toms::FighterLo
     return std::make_unique<toms::AnimFighterView>(l_spCharacter, l_spHeld, std::move(l_fnFit), l_fUnitsTall, l_bBoxSide);
 }
 
-void Game::f_SetBattleRigState(const std::string& l_strState, bool l_bRestart, const std::string& l_strClip) {
+void Game::f_SetBattleRigState(const std::string& l_strState, bool l_bRestart, const std::string& l_strClip, float l_fSpeed) {
     if (l_strState == m_strBattleRigState && !l_bRestart) return;
     m_strBattleRigState = l_strState;
+    m_fBattleRigSpeed = std::max(0.1f, l_fSpeed);
     // The weapon's clip for this status (items.json "battleAnim" "clips"; docs/gameplay/07 phase 2), else the status's own name.
     auto l_itDef = m_mapEquipmentDefs.find(m_oEquipped.m_strWeaponId);
     const std::string l_strClipName = !l_strClip.empty() ? l_strClip : l_itDef != m_mapEquipmentDefs.end() ? l_itDef->second.f_BattleClip(l_strState) : l_strState;
@@ -750,7 +756,7 @@ void Game::f_UpdateBattleRig(int l_iDtMs) {
         return;
     }
     if (!l_bShooting) f_SetBattleRigState(m_oCs.m_bActive && !m_oCs.m_oAtkBar.m_bCooling ? "charge" : "idle");
-    m_upPlayerView->f_Update(l_iDtMs);   // (its events: the battle's own timers place the numbers)
+    m_upPlayerView->f_Update((int)std::lround((float)l_iDtMs * m_fBattleRigSpeed));   // (its events: the battle's own timers place the numbers)
 }
 
 void Game::f_DrawBattleRig() {
@@ -783,6 +789,11 @@ void Game::f_DrawBattleRig() {
         l_fZoom = 1.0f + (m_oCs.m_fCamZoom - 1.0f) * l_fK * (2.0f - l_fK);
         const glm::vec4 l_v4Fb = f_FighterBox(m_oCs.m_iCamOn);
         l_v2Focus = {l_v4Fb.x + l_v4Fb.z * 0.5f, l_v4Fb.y + l_v4Fb.w * 0.5f};
+        if (m_oCs.m_fCamPan > 0.0f && m_pRen) {   // ...and moved toward the middle of the screen (a move's focus on the hero)
+            const glm::vec2 l_v2Mid((float)m_pRen->f_Width() * 0.5f, (float)m_pRen->f_Height() * 0.62f);   // (a little low: a tall fighter's head stays in view)
+            const glm::vec2 l_v2Pan = (l_v2Mid - l_v2Focus) * m_oCs.m_fCamPan * l_fK * (2.0f - l_fK);
+            l_fOx += l_v2Pan.x; l_fOy += l_v2Pan.y;
+        }
     }
     auto l_fnZoomed = [&](glm::vec4 l_v4B) {
         return glm::vec4(l_v2Focus.x + (l_v4B.x - l_v2Focus.x) * l_fZoom + l_fOx, l_v2Focus.y + (l_v4B.y - l_v2Focus.y) * l_fZoom + l_fOy, l_v4B.z * l_fZoom, l_v4B.w * l_fZoom);
@@ -2167,6 +2178,7 @@ void Game::f_Battle3DDangerShot(int l_iFoe, bool l_bIntro) {
     if (!l_bIntro) m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = std::max(300, l_jD.value("ms", 1000));   // (the intro keeps its own time)
     m_oCs.m_iCamOn = l_iFoe;
     m_oCs.m_strCamMove = "low";
+    m_oCs.m_fCamPan = 0.0f;
     m_oCs.m_fCamDeg = l_jD.value("deg", 14.0f);
     const float l_fRumble = l_jD.value("rumble", 6.0f);
     if (l_fRumble > 0.0f) {

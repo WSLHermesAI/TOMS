@@ -1,0 +1,23 @@
+{
+  "_comment": "battle_editor's test setup \"slime Lv1 bow cyclone volley\" (docs/gameplay/13_BATTLE_EDITOR.md §2): not a test, an editor file. The bow's ultimate, the Cyclone Volley (docs/gameplay/22 §4): the super charge starts full, press G, then circle the ring 3 times clockwise and 3 times anticlockwise.",
+  "scene": "battle",
+  "player": {
+    "give": ["bow"],
+    "equip": ["bow"],
+    "weaponLevel": { "bow": 1 },
+    "lv": 1,
+    "maxhp": 120,
+    "hp": 120
+  },
+  "battle": {
+    "enemy": "slime",
+    "play": "weapon",
+    "super": true
+  },
+  "_editor": {
+    "name": "slime Lv1 bow cyclone volley",
+    "pace": "",
+    "foes": ["slime"],
+    "player": { "lv": 1, "hp": 120, "maxhp": 120, "weapon": "bow", "weaponLevel": 1, "attrs": {}, "attrPoints": 0 }
+  }
+}

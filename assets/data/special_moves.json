@@ -147,6 +147,42 @@
       { "at": 300, "do": "shake", "value": 5, "ms": 500, "when": "partial" }
     ]
   },
+  "cyclone_volley": {
+    "_comment": "The bow's ultimate (docs/gameplay/22 §4): a ring on the hero's head (ringY) with sparks going round it; circle it clockwise 3 times, then anticlockwise 3 times, in 6 s. All 6 (or 3 to 5): first his own introduction, as a boss's (the camera low and close on him, the banner with the move's name typed in, his charge; the owner, 2026-11-19); all 6: then he shoots 10 arrows up in 1.5 s that fall on the monster as a meteor shower (each meteor a hit, 2 more round it for show); 3 to 5: 4 meteors (a share of the damage); under 3 it fizzles.",
+    "name": "skill.cyclone_volley",
+    "weapon": "bow",
+    "use": "ultimate",
+    "prompt": "skill.prompt_spin",
+    "damage": 12,
+    "play": { "kind": "spinCircle", "timeMs": 6000, "size": 220, "ringY": -0.12, "minHits": 3, "guideFx": "spin_spark", "guidePeriodMs": 900,
+              "cues": [ "cw", "cw", "cw", "ccw", "ccw", "ccw" ] },
+    "demo": [ { "at": 0, "do": "name", "ms": 1000 }, { "at": 0, "do": "fx", "fx": "bow_great", "on": "player" },
+              { "at": 0, "do": "sound", "fx": "sfx.battle_ultimate" }, { "at": 900, "do": "dim" } ],
+    "step": [ { "do": "fx", "fx": "spin_burst" } ],
+    "finish": [
+      { "at": 0, "do": "intro", "text": "battle.ultimate_label", "ms": 1700, "when": "landed" },
+      { "at": 0, "do": "camera", "zoom": 1.45, "on": "player", "ms": 1700, "move": "low", "deg": 12, "value": 0.85, "when": "landed" },
+      { "at": 0, "do": "clip", "clip": "charge", "speed": 0.75, "when": "landed" },
+      { "at": 0, "do": "fx", "fx": "volley_charge", "on": "player", "when": "landed" },
+      { "at": 0, "do": "sound", "fx": "sfx.boss_intro", "when": "landed" },
+      { "at": 350, "do": "fx", "fx": "bow_great", "on": "player", "when": "landed" },
+      { "at": 900, "do": "fx", "fx": "volley_charge", "on": "player", "when": "landed" },
+      { "at": 900, "do": "sound", "fx": "sfx.bow_charge", "when": "landed" },
+      { "at": 1800, "do": "camera", "zoom": 1.12, "on": "player", "ms": 2200, "when": "full" },
+      { "at": 1800, "do": "dim", "ms": 2000, "when": "full" },
+      { "at": 1800, "do": "hits", "count": 10, "gapMs": 150, "clip": "attack", "speed": 4, "fx": "bow_release_3",
+        "projectile": "meteor", "impact": "meteor_impact", "flightMs": 380, "extra": 2, "when": "full" },
+      { "at": 2180, "do": "shake", "value": 9, "ms": 1500, "when": "full" },
+      { "at": 3650, "do": "fx", "fx": "meteor_impact", "on": "monster", "when": "full" },
+      { "at": 3650, "do": "fx", "fx": "star_burst_big", "on": "monster", "when": "full" },
+      { "at": 3650, "do": "shake", "value": 14, "ms": 500, "when": "full" },
+      { "at": 3650, "do": "sound", "fx": "sfx.explosion", "when": "full" },
+      { "at": 1800, "do": "banner", "text": "skill.volley_partial", "ms": 800, "when": "partial" },
+      { "at": 1800, "do": "hits", "count": 4, "gapMs": 200, "clip": "attack", "speed": 3, "fx": "bow_release_2",
+        "projectile": "meteor", "impact": "meteor_impact_small", "flightMs": 380, "when": "partial" },
+      { "at": 2180, "do": "shake", "value": 4, "ms": 800, "when": "partial" }
+    ]
+  },
   "tiger_wind": {
     "name": "skill.tiger_wind",
     "weapon": "sword",

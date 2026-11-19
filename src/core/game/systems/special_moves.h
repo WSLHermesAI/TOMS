@@ -15,7 +15,7 @@
 //   }
 //
 // play.kind: a play type's data name (play_type.h): drawShape (trace a shown shape), swipeWay (the sword's prompts: "cues"
-// ["way", "way", "v"]), swipeChain (the cues all on the top bar, swiped in order in timeMs; minHits: fewer and it fizzles), pullRelease (aim the moving targets), sequenceClick (the staff's circles), mash (tap `points` times),
+// ["way", "way", "v"]), spinCircle (circles round a ring of `size`, "cues" ["cw", "cw", "ccw"], in timeMs; guideFx goes round it), swipeChain (the cues all on the top bar, swiped in order in timeMs; minHits: fewer and it fizzles), pullRelease (aim the moving targets), sequenceClick (the staff's circles), mash (tap `points` times),
 // freeSwipe / freeTap / freeShot (any swipe or tap counts for timeMs, each a hit of hitDamage times a normal attack).
 // A show is a list of beats, each at a time
 // ("at", ms from the show's start; "step" beats at each step): pathFx (particles along a shape, and a "corner" effect
@@ -37,7 +37,8 @@ namespace toms {
 
 struct ShowBeat {
     int m_iAtMs = 0;
-    std::string m_strWhat;               // "do": pathFx fx dim countdown banner name namePart count camera clip hits shake sound
+    std::string m_strWhat;               // "do": pathFx fx dim countdown banner name namePart count camera clip hits shake sound intro
+                                         // (intro: the hero's own boss-style banner, "text" its label, the move's name typed in, "ms")
     std::string m_strFx, m_strCorner, m_strShape, m_strClip, m_strText, m_strOn;   // its effect, a pathFx's corner effect, the shape, the clip, a text key, who
     int m_iMs = 0;                     // how long (pathFx, camera, dim)
     int m_iCount = 0, m_iGapMs = 0;       // hits
@@ -45,7 +46,12 @@ struct ShowBeat {
     float m_fZoom = 1.0f;              // camera
     std::string m_strMove;             // camera, on a 3D stage (docs/gameplay/21 §4.2): "" a push in, "orbit" part of a circle and back
     float m_fDeg = 30.0f;              // camera "orbit": how far round (degrees)
-    std::string m_strWhen;             // a finish beat: "" always, "full" only when every step was done, "partial" only when not (22 §3)
+    std::string m_strWhen;             // a finish beat: "" always, "full" every step done, "partial" landed but not full, "landed" either (22 §3)
+    float m_fSpeed = 1.0f;             // clip, hits: the hero's clip played this many times faster ("speed"; the bow's volley: 4)
+    // hits: each hit a projectile falling from the sky onto the monster ("projectile", "impact" where it lands, "flightMs");
+    // it is launched flightMs before its hit, and "extra" more fall round the monster for show (the bow's meteor shower)
+    std::string m_strProjectile, m_strImpact;
+    int m_iFlightMs = 400, m_iExtra = 0;
 };
 
 struct SkillPlaySpec {
@@ -58,6 +64,10 @@ struct SkillPlaySpec {
     float m_fCornerRadius = 44.0f;
     std::vector<std::string> m_vCues;  // swipe: each prompt, "way", a gesture or a shape name
     int m_iMinHits = 0;                // fewer steps done than this: the move fizzles (no damage; 22 §3, a chain's 6 of 10)
+    std::string m_strGuideFx;          // spin: particles going round the ring the way to draw ("guideFx")
+    int m_iGuidePeriodMs = 900;        // ...once round in this long ("guidePeriodMs")
+    float m_fRingY = -0.12f;           // spin: the ring's middle this share of the hero's box height down from its top ("ringY"; his picture
+                                       // is drawn taller than the box, so his head is above it: -0.12 puts the ring on his head)
 };
 
 struct SpecialMove {
@@ -78,10 +88,11 @@ SpecialMoveTable f_SpecialMovesFromJson(const nlohmann::json& l_jJ);   // keys s
 
 // A show's end: its last beat's time plus its length (a hits beat: count x gapMs).
 int f_ShowLength(const std::vector<ShowBeat>& l_vBeats);
-// A beat's "when" against the play's outcome (full: every step done).
-bool f_BeatOn(const ShowBeat& l_oB, bool l_bFull);
+// A beat's "when" against the play's outcome (full: every step done; landed: not fizzled, minHits reached): "" always,
+// "full", "partial" (landed but not full), "landed" (full or partial).
+bool f_BeatOn(const ShowBeat& l_oB, bool l_bFull, bool l_bLanded = true);
 // The show's end counting only the beats on for this outcome.
-int f_ShowLength(const std::vector<ShowBeat>& l_vBeats, bool l_bFull);
+int f_ShowLength(const std::vector<ShowBeat>& l_vBeats, bool l_bFull, bool l_bLanded = true);
 // The beats whose time is in (fromMs, toMs] (fromMs < 0: from the start, the beats at 0 too).
 std::vector<const ShowBeat*> f_BeatsDue(const std::vector<ShowBeat>& l_vBeats, int l_iFromMs, int l_iToMs);
 // The move's name as far as a step: the first `done` of `total` shares of its letters (UTF-8 kept whole).

@@ -1,0 +1,26 @@
+{
+  "_comment": "The bow's ultimate (docs/gameplay/22 §4; special_moves.json cyclone_volley): full super charge, g at frame 10; its name, then the ring with its sparks; no circle drawn: time up, it fizzles (no hit).",
+  "scene": "battle",
+  "player": {
+    "equip": [
+      "bow"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000,
+    "super": true,
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 520,
+    "keys": "g@10"
+  },
+  "expect": {
+    "battleEvents": {
+      "skill": 1,
+      "hit": 0
+    }
+  }
+}

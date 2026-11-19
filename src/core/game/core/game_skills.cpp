@@ -45,6 +45,7 @@ toms::TouchPlaySettings Game::f_TouchSettingsFor(toms::PlayType l_eType) const {
     l_oS.m_iCircleTapMs += l_iDex * l_oS.m_iDexWindowMs;
     l_oS.m_iRecallAnswerMs += l_iDex * l_oS.m_iDexWindowMs;   // the memory blade's answer time and a chain's (22 §2, §3)
     l_oS.m_iChainTimeMs += l_iDex * l_oS.m_iDexWindowMs;
+    l_oS.m_iSpinTimeMs += l_iDex * l_oS.m_iDexWindowMs;     // a spin's time (22 §4)
     if (l_eType == toms::PlayType::ePULL_RELEASE) {   // STR holds the pull longer, DEX keeps the aim still (16 §3.2)
         l_oS.m_iBowHoldMs += std::max(0, f_AttrValue("str")) * l_oS.m_iBowHoldPerStr;
         l_oS.m_fBowShakePx /= 1.0f + (float)std::max(0, f_AttrValue("dex")) * l_oS.m_fBowShakePerDex;
@@ -199,7 +200,7 @@ void Game::f_TouchPlayed(int l_iIndexBefore, int l_iHitsBefore) {
             m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
             if (m_oCs.m_oSkill.m_iOwner < 0) {   // the player's move: an attack clip per answer, growing with the combo (17 I1, §19)
                 m_oCs.m_iComboCount++;
-                f_PlayAnswerClip();
+                if (l_eType != toms::PlayType::eSPIN_CIRCLE) f_PlayAnswerClip();   // (a spin gathers its power: the shots come in the finish)
                 f_ComboWord();
             }
             if (toms::f_IsFreePlay(l_eType) && f_FreeHit(l_oH)) return;   // the last monster fell: the move is over
@@ -392,6 +393,9 @@ void Game::f_SkillBeat(const toms::ShowBeat& l_oB, glm::vec2 l_v2At) {
         m_oCs.m_iDimMs = m_oSettings.m_bReduceEffects ? 0 : std::max(700, l_oB.m_iMs > 0 ? l_oB.m_iMs : 60000);   // until the move ends (endSkill)
     } else if (l_oB.m_strWhat == "banner") {
         f_ShowBanner(m_oLocale.f_Has(l_oB.m_strText) ? m_oLocale.f_Tr(l_oB.m_strText) : l_oB.m_strText, m_oCs.m_oSkill.m_iOwner >= 0 ? "line" : "ultimate", l_oB.m_iMs > 0 ? l_oB.m_iMs : 1500);
+    } else if (l_oB.m_strWhat == "intro") {   // the hero's own introduction (the owner, 2026-11-19: like a boss's): label, name typed in
+        m_oCs.m_iHeroIntroMs = m_oCs.m_iHeroIntroMsMax = l_oB.m_iMs > 0 ? l_oB.m_iMs : 1600;
+        m_oCs.m_strHeroIntroLabel = l_oB.m_strText.empty() ? std::string("battle.ultimate_label") : l_oB.m_strText;
     } else if (l_oB.m_strWhat == "name") {
         f_ShowBanner(f_SkillName(), "ultimate", l_oB.m_iMs > 0 ? l_oB.m_iMs : 1400);
     } else if (l_oB.m_strWhat == "namePart") {
@@ -404,10 +408,11 @@ void Game::f_SkillBeat(const toms::ShowBeat& l_oB, glm::vec2 l_v2At) {
         m_oCs.m_iCamOn = l_oB.m_strOn == "monster" ? l_iT : -1;
         m_oCs.m_strCamMove = m_oSettings.m_bReduceEffects ? std::string() : l_oB.m_strMove;   // (an orbit is a lot of motion)
         m_oCs.m_fCamDeg = l_oB.m_fDeg;
+        m_oCs.m_fCamPan = std::clamp(l_oB.m_fValue, 0.0f, 1.0f);
     } else if (l_oB.m_strWhat == "clip") {
         if (f_BattleRigReady() && m_oCs.m_oSkill.m_iOwner < 0) {
             const bool l_bHas = m_upPlayerView && !l_oB.m_strClip.empty() && m_upPlayerView->f_Has(l_oB.m_strClip);
-            f_SetBattleRigState("attack", true, l_bHas ? l_oB.m_strClip : std::string());
+            f_SetBattleRigState("attack", true, l_bHas ? l_oB.m_strClip : std::string(), l_oB.m_fSpeed);
         }
     } else if (l_oB.m_strWhat == "hits") {   // the finish's hits share the move's damage (set when the finish began)
         if (m_oCs.m_oSkill.m_ePhase == P::Finish && m_oCs.m_oSkill.m_iOwner < 0 && m_oCs.m_oSkill.m_iHitDmg > 0) {
@@ -416,6 +421,16 @@ void Game::f_SkillBeat(const toms::ShowBeat& l_oB, glm::vec2 l_v2At) {
             m_oCs.m_oSkill.m_iHitsLeft = l_iCount;
             m_oCs.m_oSkill.m_iHitGapMs = std::max(30, l_oB.m_iGapMs);
             m_oCs.m_oSkill.m_iHitMs = 0;
+            m_oCs.m_oSkill.m_strHitClip = l_oB.m_strClip;   // each hit its own shot (the bow's volley, 22 §4)
+            m_oCs.m_oSkill.m_strHitFx = l_oB.m_strFx;
+            m_oCs.m_oSkill.m_fHitClipSpeed = l_oB.m_fSpeed;
+            m_oCs.m_oSkill.m_pRain = nullptr;
+            if (!l_oB.m_strProjectile.empty()) {   // the shots go up and fall as projectiles: each hit lands when its projectile does
+                m_oCs.m_oSkill.m_pRain = &l_oB;
+                m_oCs.m_oSkill.m_iRainLeft = l_iCount;
+                m_oCs.m_oSkill.m_iRainMs = 0;
+                m_oCs.m_oSkill.m_iHitMs = l_oB.m_iFlightMs;
+            }
         }
     } else if (l_oB.m_strWhat == "shake") {
         if (!m_oSettings.m_bReduceEffects) {
@@ -444,9 +459,17 @@ void Game::f_UpdateSkill(int l_iDtMs) {
         l_oTs.m_fShapeCornerRadius = l_oD.m_oPlay.m_fCornerRadius;
         l_oTs.m_iShapeTimeMs = l_oTs.m_iMashTimeMs = l_oTs.m_iFreeTimeMs = l_oD.m_oPlay.m_iTimeMs;
         l_oTs.m_iChainTimeMs = l_oD.m_oPlay.m_iTimeMs + (l_oTs.m_iChainTimeMs - m_oTouchSettings.m_iChainTimeMs);   // its time, and what DEX adds
+        l_oTs.m_iSpinTimeMs = l_oD.m_oPlay.m_iTimeMs + (l_oTs.m_iSpinTimeMs - m_oTouchSettings.m_iSpinTimeMs);
         l_oTs.m_vSliceCues = l_oD.m_oPlay.m_vCues;
         const glm::vec2 l_v2C = f_SkillCentre();
-        const glm::vec4 l_v4Area = l_eType == toms::PlayType::eDRAW_SHAPE ? glm::vec4(l_v2C.x - 100.0f, l_v2C.y - 100.0f, 200.0f, 200.0f) : f_TouchArea();
+        glm::vec4 l_v4Area = l_eType == toms::PlayType::eDRAW_SHAPE ? glm::vec4(l_v2C.x - 100.0f, l_v2C.y - 100.0f, 200.0f, 200.0f) : f_TouchArea();
+        if (l_eType == toms::PlayType::eSPIN_CIRCLE) {   // the ring on the hero's head (22 §4; the owner, 2026-11-19); its size from the move
+            const glm::vec4 l_v4Hero = f_FighterBox(-1);
+            l_oTs.m_fSpinRadius = l_oD.m_oPlay.m_fSize * 0.5f;
+            const float l_fR = l_oTs.m_fSpinRadius + 6.0f;   // (kept on the screen)
+            const glm::vec2 l_v2M(std::max(l_fR, l_v4Hero.x + l_v4Hero.z * 0.5f), std::max(l_fR, l_v4Hero.y + l_v4Hero.w * l_oD.m_oPlay.m_fRingY));
+            l_v4Area = glm::vec4(l_v2M.x - l_oTs.m_fSpinRadius, l_v2M.y - l_oTs.m_fSpinRadius, 2.0f * l_oTs.m_fSpinRadius, 2.0f * l_oTs.m_fSpinRadius);
+        }
         m_oCs.m_oTouch.f_Start(l_eType, l_oD.m_oPlay.m_iPoints, true, l_v4Area, (uint32_t)m_oPlayRng(), l_oTs);
         m_bTouchHeld = false;
         l_oS.m_ePhase = P::Play;
@@ -454,6 +477,19 @@ void Game::f_UpdateSkill(int l_iDtMs) {
         return;
     }
     if (l_oS.m_ePhase == P::Play) {
+        if (l_oD.m_oPlay.m_eType == toms::PlayType::eSPIN_CIRCLE && !l_oD.m_oPlay.m_strGuideFx.empty() && m_oCs.m_oTouch.f_Running()) {
+            // the guide: three sparks going round the ring the way the turn due goes (22 §4), new ones every 60 ms
+            const toms::TouchPlay& l_oP = m_oCs.m_oTouch;
+            for (l_oS.m_iGuideMs += l_iDtMs; l_oS.m_iGuideMs >= 60; l_oS.m_iGuideMs -= 60) {
+                const float l_fWay = l_oP.f_SpinClockwise(l_oP.f_Index()) ? 1.0f : -1.0f;
+                const float l_fBase = -90.0f + l_fWay * 360.0f * (float)l_oP.f_ClockMs() / (float)l_oD.m_oPlay.m_iGuidePeriodMs;
+                for (int l_iK = 0; l_iK < 3; l_iK++) {
+                    const float l_fRad = (l_fBase + 120.0f * (float)l_iK) / 57.29578f;
+                    const glm::vec2 l_v2At = l_oP.f_SpinCentre() + glm::vec2(std::cos(l_fRad), std::sin(l_fRad)) * l_oP.f_SpinRadius();
+                    f_PlayBattleFxAt(l_oD.m_oPlay.m_strGuideFx, l_v2At.x, l_v2At.y, true);
+                }
+            }
+        }
         f_StepTouchPlay(l_iDtMs);
         if (m_oCs.m_oTouch.f_Running()) return;
         // the play is over: what was done counts (Q45: a share of the hits and the damage)
@@ -469,11 +505,21 @@ void Game::f_UpdateSkill(int l_iDtMs) {
             if (l_oS.m_fShare <= 0.0f) f_PopWord(m_oLocale.f_Tr("battle.move.default.miss"), -1, "move-miss");
         }
         const bool l_bFull0 = l_oS.m_fShare >= 1.0f;   // a finish beat may be for the full play only, or the partial one (22 §3)
-        for (const toms::ShowBeat* l_pB : toms::f_BeatsDue(l_oD.m_vFinish, -1, 0)) if (toms::f_BeatOn(*l_pB, l_bFull0)) f_SkillBeat(*l_pB, f_SkillCentre());
+        for (const toms::ShowBeat* l_pB : toms::f_BeatsDue(l_oD.m_vFinish, -1, 0)) if (toms::f_BeatOn(*l_pB, l_bFull0, l_oS.m_fShare > 0.0f)) f_SkillBeat(*l_pB, f_SkillCentre());
         return;
     }
     const bool l_bFull = l_oS.m_fShare >= 1.0f;
-    for (const toms::ShowBeat* l_pB : toms::f_BeatsDue(l_oD.m_vFinish, l_iBefore, l_oS.m_iPhaseMs)) if (toms::f_BeatOn(*l_pB, l_bFull)) f_SkillBeat(*l_pB, f_SkillCentre());
+    const bool l_bLanded = l_oS.m_fShare > 0.0f;
+    for (const toms::ShowBeat* l_pB : toms::f_BeatsDue(l_oD.m_vFinish, l_iBefore, l_oS.m_iPhaseMs)) if (toms::f_BeatOn(*l_pB, l_bFull, l_bLanded)) f_SkillBeat(*l_pB, f_SkillCentre());
+    if (l_oS.m_pRain && l_oS.m_iRainLeft > 0) {   // a shot goes up, its projectile falls on the monster (the bow's meteors)
+        for (l_oS.m_iRainMs -= l_iDtMs; l_oS.m_iRainMs <= 0 && l_oS.m_iRainLeft > 0; l_oS.m_iRainMs += std::max(30, l_oS.m_iHitGapMs)) {
+            l_oS.m_iRainLeft--;
+            if (!l_oS.m_strHitClip.empty() && f_BattleRigReady() && l_oS.m_iOwner < 0 && m_upPlayerView && m_upPlayerView->f_Has(l_oS.m_strHitClip))
+                f_SetBattleRigState("attack", true, l_oS.m_strHitClip, l_oS.m_fHitClipSpeed);
+            if (!l_oS.m_strHitFx.empty()) f_PlayBattleFx(l_oS.m_strHitFx, -1);
+            f_LaunchRain(*l_oS.m_pRain, m_oCs.m_iTarget);
+        }
+    }
     if (l_oS.m_iHitsLeft > 0) {
         l_oS.m_iHitMs -= l_iDtMs;
         while (l_oS.m_iHitMs <= 0 && l_oS.m_iHitsLeft > 0 && m_oCs.m_oSkill.m_bOn) {
@@ -481,6 +527,11 @@ void Game::f_UpdateSkill(int l_iDtMs) {
             l_oS.m_iHitMs += l_oS.m_iHitGapMs;
             const int l_iT = m_oCs.m_iTarget;
             if (l_iT < 0 || l_iT >= (int)m_oCs.m_vFoes.size() || m_oCs.m_vFoes[(size_t)l_iT].f_Down()) { l_oS.m_iHitsLeft = 0; break; }
+            if (!l_oS.m_pRain) {   // (with projectiles, the shot went up at its launch)
+                if (!l_oS.m_strHitClip.empty() && f_BattleRigReady() && l_oS.m_iOwner < 0 && m_upPlayerView && m_upPlayerView->f_Has(l_oS.m_strHitClip))
+                    f_SetBattleRigState("attack", true, l_oS.m_strHitClip, l_oS.m_fHitClipSpeed);   // a shot per hit, from its start
+                if (!l_oS.m_strHitFx.empty()) f_PlayBattleFx(l_oS.m_strHitFx, -1);
+            }
             f_BattleEvent("hit", -1, l_iT, l_oS.m_iHitDmg, "skill");
             f_PopDamage(l_oS.m_iHitDmg, l_iT, "perfect");
             f_FeelMoment("hit");
@@ -494,13 +545,31 @@ void Game::f_UpdateSkill(int l_iDtMs) {
             }
         }
     }
-    if (m_oCs.m_oSkill.m_bOn && l_oS.m_iPhaseMs >= toms::f_ShowLength(l_oD.m_vFinish, l_bFull) && l_oS.m_iHitsLeft <= 0) f_EndSkill();
+    if (m_oCs.m_oSkill.m_bOn && l_oS.m_iPhaseMs >= toms::f_ShowLength(l_oD.m_vFinish, l_bFull, l_bLanded) && l_oS.m_iHitsLeft <= 0) f_EndSkill();
+}
+
+// One falling projectile at the monster, from high up and to its left (the hero's side), its impact where it lands; and
+// the beat's "extra" ones round it, for show (no damage). The hit itself lands in updateSkill, flightMs later.
+void Game::f_LaunchRain(const toms::ShowBeat& l_oB, int l_iFoe) {
+    if (l_iFoe < 0 || l_iFoe >= (int)m_oCs.m_vFoes.size()) return;
+    const glm::vec4 l_v4F = f_FighterBox(l_iFoe);
+    std::uniform_real_distribution<float> l_oU(0.0f, 1.0f);
+    for (int l_iK = 0; l_iK <= l_oB.m_iExtra; l_iK++) {
+        const bool l_bMain = l_iK == 0;
+        const glm::vec2 l_v2To(l_v4F.x + l_v4F.z * (l_bMain ? 0.35f + 0.3f * l_oU(m_oPlayRng) : -0.2f + 1.4f * l_oU(m_oPlayRng)),
+                               l_v4F.y + l_v4F.w * (l_bMain ? 0.35f + 0.25f * l_oU(m_oPlayRng) : 0.55f + 0.4f * l_oU(m_oPlayRng)));
+        const glm::vec2 l_v2From(l_v2To.x - 180.0f - 160.0f * l_oU(m_oPlayRng), -60.0f - 80.0f * l_oU(m_oPlayRng));
+        const int l_iFlight = l_bMain ? l_oB.m_iFlightMs : (int)((float)l_oB.m_iFlightMs * (0.8f + 0.5f * l_oU(m_oPlayRng)));
+        f_LaunchBattleFx(l_bMain ? l_oB.m_strProjectile : l_oB.m_strProjectile + "_small", l_v2From, l_v2To, l_iFlight,
+                       l_bMain ? l_oB.m_strImpact : l_oB.m_strImpact + "_small", std::string());
+    }
 }
 
 void Game::f_EndSkill() {
     const CombatState::SkillRun l_oS = m_oCs.m_oSkill;
     m_oCs.m_oSkill = CombatState::SkillRun{};
     m_oCs.m_iDimMs = 0;
+    m_oCs.m_iHeroIntroMs = 0;
     m_oCs.m_oTouch.f_Stop();
     m_oCs.m_bTouchPaid = false;
     if (!l_oS.m_pDef) return;

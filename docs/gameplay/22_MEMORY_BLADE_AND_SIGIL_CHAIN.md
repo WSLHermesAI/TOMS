@@ -9,7 +9,7 @@ The owner asked for more weapon plays and more skill plays (2026-11-18). Two exa
 - **A skill:** 10 commands shown along the top centre, to be swiped in order in a time that can be changed (for example
   5 s). When all are done, a very striking finish hits the monster.
 
-Both are **built** (§2, §3). §5 lists more ideas, not built. The questions are in §7 and in
+Both are **built** (§2, §3), and the bow's Cyclone Volley (§4, 2026-11-19). §6 lists more ideas, not built. The questions are in §8 and in
 [13_OPEN_DECISIONS.md](../project/13_OPEN_DECISIONS.md).
 
 ## 1. Where they fit
@@ -78,6 +78,14 @@ it by naming it in its `"ultimate"`.
 
 **The finish** depends on how many were done:
 
+**First, the hero's introduction** (6 or 3–5 done; the owner, 2026-11-19: "like a boss intro"): for 1.7 s the camera comes
+low and close on the hero and brings him to the middle of the screen (`camera` `value` 0.85), he draws his bow slowly
+(`charge` ×0.75) in gathering sparks with the boss sting and the bow's charge sound, and the boss banner slides in from
+the right in his colours: "絕招發動！" ("ULTIMATE!", `battle.ultimate_label`) with the move's name typed in under it
+(`battle.json` `feelFx` `"heroIntro"`: `nameAtMs` 350, `typeMsPerChar` 90). As in all of a move's show, **the fight waits**:
+the monsters' clocks, the attack bar and the guard's wait stop, and the attack button says "attacking" until the end.
+Then the shots (below), from 1.8 s.
+
 | Done | Finish | Damage |
 |---|---|---|
 | **10 of 10** | **full:** the camera orbits in on the monster (×1.7, 50°), a seal trail and a big star burst on it, the big attack clip, **10 hits** with a 1.3 s shake, then a last burst and an explosion sound | ×12 a normal hit |
@@ -91,12 +99,51 @@ finish lasts as long as the beats it plays.
 The commands are 10 ways for now. Gestures and shapes (`"v"`, `"m"`, `"circle"`, ...) work in `cues` already, and the bar
 draws them small (Q104).
 
-## 4. The numbers in `battle.json` `"plays"`
+## 4. The Cyclone Volley (旋風連矢): `spinCircle`
+
+The owner asked for a new bow skill (2026-11-19): a rotating ring with particles; draw a circle clockwise 3 times, then
+anticlockwise 3 times; then the special shot: the hero charges his power, then shoots 10 times in 1.5 s, each shot
+hurting the monster. It is the **bow's ultimate** now (`weapon_play.json` `"bow"` `"ultimate": "cyclone_volley"`; the
+free shot it replaces stays in `special_moves.json`, Q108).
+
+**The play** (`play.kind` `spinCircle`):
+
+1. **The demo:** the move's name, a burst on the hero, the ultimate's sound, then the screen dims (1 s).
+2. **The ring** (`size` 220) on the hero's head (`ringY` -0.12: its middle that share of his box's height above the box's
+   top, as his picture is drawn taller than the box; the owner, 2026-11-19). Three sparks (`guideFx` `spin_spark`) go round
+   it the way to draw, once every 0.9 s (`guidePeriodMs`).
+3. **In the ring:** the way ("順時針" / "逆時針", green / pink) and the count of that way ("2/3"); 24 ticks round the ring
+   light up as the turn goes. Under it, a dot per turn (done green, missed red, due yellow, the anticlockwise ones purple),
+   and the time bar.
+4. **A turn:** the finger's angle round the ring's middle; the right way adds, the wrong way takes back (never below 0).
+   330° (`spinTurnDeg`) is one circle: a burst (`spin_burst`) where it ends, the combo count. A turn may take several
+   strokes; nearer the middle than 30 px (`spinMinRadius`) is not read.
+5. **Time:** `timeMs` 6 s for all 6 (+ DEX). The turns not done when it ends are missed.
+
+**The finish:**
+
+| Done | Finish | Damage |
+|---|---|---|
+| **6 of 6** | **full:** after the introduction the sky darkens and **10 shots go up, 150 ms apart** (each restarts his `attack` clip at ×4 speed, with a release burst on him) and **fall as a meteor shower**: each `meteor` lands 380 ms later on the monster with a fiery blast (`meteor_impact`) and is a hit, and 2 smaller ones fall round it for show; a strong shake while they fall, then a last blast, a star burst, a big shake and an explosion | ×12 a normal hit, in 10 |
+| 3–5 | **partial:** the introduction, then "Not all the power gathered...", 4 meteors 200 ms apart (smaller blasts, none for show) | ×12 × done / 6, in 4 |
+| 0–2 | **fizzles** (`minHits` 3): the miss word only (no introduction, no partial beats), no damage | 0 |
+
+**New in the move data:** `play.guideFx`, `play.guidePeriodMs` (the ring's sparks) and `play.ringY` (its height); `"speed"`
+on a `clip` or `hits` beat (the hero's clip that many times faster); a `hits` beat's `"clip"` and `"fx"` (on the hero at each
+shot), and `"projectile"`, `"impact"`, `"flightMs"`, `"extra"`: each hit a projectile launched `flightMs` before it from high
+up to the monster's left, its impact where it lands, and `extra` more (the effect's name + `_small`) round the monster;
+an `"intro"` beat (the hero's banner: `"text"` its label key, `"ms"`); a `camera` beat's `"value"` (in 2D, the share of the
+way its fighter moves to the screen's middle, a little below it); `"when": "landed"` (full or partial, not a fizzle), and
+`"partial"` now needs the move to land. `fx/battle.particle` has `meteor`, `meteor_small`, `meteor_impact`,
+`meteor_impact_small`.
+
+## 5. The numbers in `battle.json` `"plays"`
 
 `recallShowMs` 500, `recallGapMs` 80, `recallReadyMs` 250, `recallAnswerMs` 1000, `recallPerCueMs` 0, `recallReverse` 0,
-`chainTimeMs` 5000 (a move's `timeMs` replaces it).
+`chainTimeMs` 5000 (a move's `timeMs` replaces it), `spinTimeMs` 6000 (the same), `spinMinRadius` 30, `spinTurnDeg` 330,
+`spinPerfectMs` 900.
 
-## 5. More ideas (not built)
+## 6. More ideas (not built)
 
 From the owner's request on 2026-11-18. Each reuses the play blocks (16 §2) as far as it can.
 
@@ -134,7 +181,7 @@ From the owner's request on 2026-11-18. Each reuses the play blocks (16 §2) as 
   window. A monster's status attack then changes how the player plays.
 - **Keyboard on the desktop:** the direction plays also take the arrow keys / WASD (Q107).
 
-## 6. Code and tests
+## 7. Code and tests
 
 - `play_type.h` (the two types; `f_IsSwipePlay` includes them, `f_IsCueTrackSwipe` does not), `touch_play.h/.cpp` (the
   plays), `weapon_play.h/.cpp` (`recall` rows), `special_moves.h/.cpp` (`minHits`, `when`), `game_skills.cpp` (timing by
@@ -144,8 +191,15 @@ From the owner's request on 2026-11-18. Each reuses the play blocks (16 §2) as 
   and `when`.
 - Scenarios: `battle_play_recall` (nothing answered: one combo, no hits), `battle_ultimate_sigil` (nothing swiped: it
   fizzles), `battle_ultimate_sigil_full` (all 10 swiped: 10 hits).
+- The Cyclone Volley: `play_type.h` (`eSPIN_CIRCLE`), `touch_play.h/.cpp` (the turns), `special_moves.h/.cpp` (`guideFx`,
+  `speed`), `game_skills.cpp` (the ring's place and size, its sparks, a shot per hit), `game_combat.cpp` (the hero's clip
+  speed), `game_ui.cpp` and `battle.rcss` (the ring, ticks, label, dots), `fx/battle.particle` (`spin_spark`,
+  `spin_burst`, `volley_charge`), `main_sdl.cpp` (a test drag round a circle: `"o:cx:cy:r:turns:frames@frame"`).
+  Tests: `unit.play_types_test` (turns both ways, a turn in two strokes, the middle not read, time up, the move's data);
+  scenarios `battle_ultimate_cyclone` (no circle: it fizzles) and `battle_ultimate_cyclone_full` (6 circles: 10 hits).
+  Battle editor setup: `slime Lv1 bow cyclone volley`.
 
-## 7. Questions for the owner
+## 8. Questions for the owner
 
 Also in [13_OPEN_DECISIONS.md](../project/13_OPEN_DECISIONS.md). Q100–Q104 are built with the proposal; answer only to
 change them.
@@ -157,5 +211,7 @@ change them.
 | **Q102** Memory blade timing by level (§2 table) | 1 s → 1.5 s; red prompts from Lv 6 | Keep it; try it and tune |  |
 | **Q103** Which weapons get the Sigil Chain? | the memory blade only; the iron sword keeps its free swipe | Keep it |  |
 | **Q104** Sigil Chain: commands, time, threshold | 10 ways, 5 s, partial from 6, ×12 | Keep it; add V / circle from a later level |  |
-| **Q106** Which idea in §5 next? | none | the parry shield, then Blade Storm |  |
+| **Q106** Which idea in §6 next? | none | the parry shield, then Blade Storm |  |
 | **Q107** Keyboard for the direction plays on desktop? | mouse only | arrow keys / WASD, diagonals with two keys |  |
+| **Q108** The bow's ultimate: the Cyclone Volley in place of the free shot (built)? | the Cyclone Volley; `battle_ultimate_free_bow` (switched off) still expects the free shot and would fail | Keep it; delete that scenario or move it to another weapon |  |
+| **Q109** Cyclone Volley numbers | 3 clockwise + 3 anticlockwise, 6 s, partial from 3, ×12, 10 shots in 1.5 s | Keep it; try it and tune |  |

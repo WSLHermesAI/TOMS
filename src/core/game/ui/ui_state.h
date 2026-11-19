@@ -168,6 +168,7 @@ struct UiBattle {
     bool m_bFocus = false;                 // the first danger's moment: only the monster is shown
     // a boss's introduction (Game::f_StartBossIntro): the banner, its words, the name typed so far, the banner's slide (px)
     bool m_bBossIntro = false;
+    bool m_bHeroIntro = false;     // ...the hero's own (a move's "intro" beat): the same banner from the other side, his colours
     std::string m_strBossIntroLabel, m_strBossIntroName;
     float m_fBossIntroX = 0.0f;
     std::vector<UiBattleCell> m_vCells;

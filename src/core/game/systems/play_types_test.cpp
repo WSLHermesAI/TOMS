@@ -311,6 +311,60 @@ int main() {
         CHECK(l_pC && f_BeatOn(l_pC->m_vFinish[0], true) && !f_BeatOn(l_pC->m_vFinish[0], false) && f_BeatOn(l_pC->m_vFinish[1], false) &&
                   f_BeatOn(l_pC->m_vFinish[2], true) && f_BeatOn(l_pC->m_vFinish[2], false), "full / partial / always");
         CHECK(l_pC && f_ShowLength(l_pC->m_vFinish, true) == 2000 && f_ShowLength(l_pC->m_vFinish, false) == 900, "each outcome's show length");
+        CHECK(l_pC && !f_BeatOn(l_pC->m_vFinish[1], false, false) && f_BeatOn(l_pC->m_vFinish[2], false, false) && f_ShowLength(l_pC->m_vFinish, false, false) == 400,
+              "a fizzle: no partial beats, only those for always");
+        ShowBeat l_oLanded;
+        l_oLanded.m_strWhen = "landed";
+        CHECK(f_BeatOn(l_oLanded, true, true) && f_BeatOn(l_oLanded, false, true) && !f_BeatOn(l_oLanded, false, false), "\"landed\": full or partial, not a fizzle");
+    }
+    // ---- the bow's volley: circles round a ring (docs/gameplay/22 §4) ----
+    {
+        CHECK(f_PlayTypeFromString("spinCircle") == PlayType::eSPIN_CIRCLE && std::string(f_PlayTypeName(PlayType::eSPIN_CIRCLE)) == "spinCircle" &&
+                  !f_IsSwipePlay(PlayType::eSPIN_CIRCLE), "spinCircle: its name both ways, not a swipe");
+        TouchPlaySettings l_oS;
+        l_oS.m_vSliceCues = {"cw", "ccw"};
+        l_oS.m_iSpinTimeMs = 3000;
+        const glm::vec4 l_v4Ring(400, 100, 200, 200);   // the ring's middle at (500, 200)
+        // round the middle, `turns` times (< 0: anticlockwise), radius 80, a point every 10 degrees, held
+        auto l_fnCircle = [](TouchPlay& l_oP, float l_fTurns) {
+            const int l_iSteps = (int)std::lround(std::fabs(l_fTurns) * 36.0f);
+            for (int l_iK = 0; l_iK <= l_iSteps; l_iK++) {
+                const float l_fA = (l_fTurns > 0 ? 1.0f : -1.0f) * (float)l_iK * 10.0f / 57.29578f;
+                l_oP.f_Pointer(l_iK == 0 ? 0 : 1, 500.0f + 80.0f * std::cos(l_fA), 200.0f + 80.0f * std::sin(l_fA));
+            }
+            l_oP.f_Pointer(2, 500.0f + 80.0f * std::cos((l_fTurns > 0 ? 1.0f : -1.0f) * (float)l_iSteps * 10.0f / 57.29578f), 200.0f);
+        };
+        TouchPlay l_oP;
+        l_oP.f_Start(PlayType::eSPIN_CIRCLE, 2, true, l_v4Ring, 3, l_oS);
+        CHECK(l_oP.f_Started() && l_oP.f_SpinClockwise(0) && !l_oP.f_SpinClockwise(1) && glm::length(l_oP.f_SpinCentre() - glm::vec2(500, 200)) < 0.01f,
+              "starts at once; clockwise then anticlockwise; the ring in the area's middle");
+        l_fnCircle(l_oP, -1.0f);
+        CHECK(l_oP.f_Index() == 0 && l_oP.f_SpinProgress() == 0.0f, "the wrong way does nothing");
+        l_fnCircle(l_oP, 0.5f);
+        CHECK(l_oP.f_Index() == 0 && l_oP.f_SpinProgress() > 0.4f && l_oP.f_SpinProgress() < 0.7f, "half a turn: half done");
+        l_fnCircle(l_oP, 0.5f);
+        CHECK(l_oP.f_Index() == 1 && l_oP.f_Result().m_iHits == 1, "the other half, in a second stroke: one circle");
+        l_fnCircle(l_oP, 1.0f);
+        CHECK(l_oP.f_Index() == 1, "clockwise again: the next is anticlockwise");
+        l_fnCircle(l_oP, -1.0f);
+        CHECK(l_oP.f_Done() && l_oP.f_Result().m_iHits == 2 && !l_oP.f_Result().m_bFailed, "2 of 2");
+        TouchPlay l_oNear;   // round the middle itself: not read
+        l_oNear.f_Start(PlayType::eSPIN_CIRCLE, 2, true, l_v4Ring, 3, l_oS);
+        for (int l_iK = 0; l_iK <= 72; l_iK++) l_oNear.f_Pointer(l_iK == 0 ? 0 : 1, 500.0f + 10.0f * std::cos(l_iK * 0.1745f), 200.0f + 10.0f * std::sin(l_iK * 0.1745f));
+        CHECK(l_oNear.f_Index() == 0, "tiny circles round the middle do not count");
+        l_oNear.f_Update(3000);
+        CHECK(l_oNear.f_Done() && l_oNear.f_Result().m_iHits == 0 && l_oNear.f_TakeHits().size() == 2, "time up: the turns not done are missed");
+        TouchPlay l_oHalf;   // no cues: half one way, half the other
+        l_oHalf.f_Start(PlayType::eSPIN_CIRCLE, 6, true, l_v4Ring, 3, TouchPlaySettings());
+        CHECK(l_oHalf.f_SpinClockwise(2) && !l_oHalf.f_SpinClockwise(3), "6 with no cues: 3 clockwise, 3 anticlockwise");
+        const TouchPlaySettings l_oJ = f_TouchPlayFromJson(nlohmann::json::parse(R"({ "plays": { "spinTimeMs": 5000, "spinTurnDeg": 10 } })"));
+        CHECK(l_oJ.m_iSpinTimeMs == 5000 && l_oJ.m_fSpinTurnDeg == 90.0f, "battle.json spin: read and kept in range");
+        const SpecialMoveTable l_oT = f_SpecialMovesFromJson(nlohmann::json::parse(R"({
+          "volley": { "play": { "kind": "spinCircle", "size": 220, "minHits": 3, "guideFx": "spin_spark", "cues": ["cw","cw","cw","ccw","ccw","ccw"] },
+                      "finish": [ { "at": 800, "do": "hits", "count": 10, "gapMs": 150, "clip": "attack", "speed": 4 } ] } })"));
+        const SpecialMove* l_pV = l_oT.f_Find("volley");
+        CHECK(l_pV && l_pV->m_oPlay.m_eType == PlayType::eSPIN_CIRCLE && l_pV->m_oPlay.m_iPoints == 6 && l_pV->m_oPlay.m_strGuideFx == "spin_spark" &&
+                  l_pV->m_vFinish[0].m_fSpeed == 4.0f && l_pV->m_vFinish[0].m_strClip == "attack", "a volley move: 6 turns from its cues, its guide, its fast shots");
     }
     if (g_iFail) { std::printf("play_types_test: %d failure(s)\n", g_iFail); return 1; }
     std::printf("play_types_test: all passed\n");
