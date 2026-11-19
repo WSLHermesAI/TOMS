@@ -322123,6 +322123,1677 @@ Tg��kU(�0�Pc���&���f� �����}`4ʔL��Z�6�Ql(��;���^�s�iڌ ��ģ$�cæ(�R��
    ]
   },
   {
+   "name": "spin_spark",
+   "duration": 0.5,
+   "emitters": [
+    {
+     "name": "glint",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.3,
+     "speed": 0,
+     "size": 18,
+     "rotation": [
+      0,
+      45
+     ],
+     "color": [
+      0.5,
+      1.0,
+      0.85,
+      1
+     ],
+     "sprite": "fx:star",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.6,
+        "ease": "backOut"
+       },
+       {
+        "t": 1,
+        "v": 1.6
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 2
+     }
+    },
+    {
+     "name": "motes",
+     "maxParticles": 5,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         3,
+         5
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.3,
+      0.6
+     ],
+     "speed": [
+      20,
+      60
+     ],
+     "size": [
+      6,
+      10
+     ],
+     "color": [
+      [
+       0.5,
+       1.0,
+       0.85,
+       1
+      ],
+      [
+       0.85,
+       1.0,
+       1.0,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0,
+       -40
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    }
+   ]
+  },
+  {
+   "name": "spin_burst",
+   "duration": 0.9,
+   "emitters": [
+    {
+     "name": "flash",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.25,
+     "speed": 0,
+     "size": 60,
+     "rotation": [
+      0,
+      45
+     ],
+     "color": [
+      0.5,
+      1.0,
+      0.85,
+      1
+     ],
+     "sprite": "fx:star",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.6,
+        "ease": "backOut"
+       },
+       {
+        "t": 1,
+        "v": 1.6
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 2
+     }
+    },
+    {
+     "name": "ring",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.4,
+     "speed": 0,
+     "size": 26,
+     "color": [
+      0.5,
+      1.0,
+      0.85,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 3.0
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    },
+    {
+     "name": "sparks",
+     "maxParticles": 14,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         10,
+         14
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.3,
+      0.6
+     ],
+     "speed": [
+      120,
+      240
+     ],
+     "size": [
+      8,
+      14
+     ],
+     "color": [
+      [
+       0.5,
+       1.0,
+       0.85,
+       1
+      ],
+      [
+       1.0,
+       1.0,
+       1.0,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0,
+       100
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    }
+   ]
+  },
+  {
+   "name": "volley_charge",
+   "duration": 0.8,
+   "emitters": [
+    {
+     "name": "in",
+     "maxParticles": 30,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 15
+       },
+       {
+        "t": 0.35,
+        "count": 15
+       }
+      ]
+     },
+     "shape": {
+      "type": "ring",
+      "radius": 168.0,
+      "thickness": 28.8
+     },
+     "life": [
+      0.28,
+      0.4
+     ],
+     "speed": 0.0,
+     "size": [
+      16.0,
+      25.6
+     ],
+     "color": [
+      [
+       0.5,
+       1.0,
+       0.85,
+       1
+      ],
+      [
+       1.0,
+       1.0,
+       1.0,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         0.3
+        ]
+       },
+       {
+        "t": 0.25,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0.4
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.8
+       },
+       {
+        "t": 1,
+        "v": 1.4
+       }
+      ]
+     },
+     "forces": {
+      "radial": [
+       -2560.0,
+       -2048.0
+      ],
+      "drag": 1
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    },
+    {
+     "name": "core",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0.3,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.5,
+     "speed": 0.0,
+     "size": 86.4,
+     "rotation": [
+      0,
+      45
+     ],
+     "color": [
+      0.5,
+      1.0,
+      0.85,
+      1
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.6,
+        "ease": "backOut"
+       },
+       {
+        "t": 1,
+        "v": 1.6
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 2
+     }
+    }
+   ]
+  },
+  {
+   "name": "meteor",
+   "duration": 0,
+   "emitters": [
+    {
+     "name": "embers",
+     "maxParticles": 60,
+     "emission": {
+      "rate": 120
+     },
+     "life": [
+      0.35,
+      0.7
+     ],
+     "speed": [
+      60.0,
+      180.0
+     ],
+     "direction": 180,
+     "spread": 70,
+     "size": [
+      8.0,
+      14.0
+     ],
+     "color": [
+      [
+       1.0,
+       0.9,
+       0.5,
+       1
+      ],
+      [
+       1.0,
+       0.5,
+       0.1,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.3
+       }
+      ]
+     },
+     "forces": {
+      "drag": 1.5,
+      "gravity": [
+       0,
+       160
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    },
+    {
+     "name": "head",
+     "maxParticles": 30,
+     "emission": {
+      "rate": 90
+     },
+     "life": 0.1,
+     "speed": 0.0,
+     "size": [
+      145.2,
+      167.0
+     ],
+     "color": [
+      [
+       1.0,
+       0.55,
+       0.15,
+       1
+      ],
+      [
+       1.0,
+       0.85,
+       0.4,
+       1
+      ]
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 2
+     }
+    },
+    {
+     "name": "core",
+     "maxParticles": 30,
+     "emission": {
+      "rate": 90
+     },
+     "life": 0.08,
+     "speed": 0.0,
+     "size": [
+      65.3,
+      72.6
+     ],
+     "color": [
+      [
+       1,
+       1,
+       0.85,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 3
+     }
+    },
+    {
+     "name": "trail",
+     "maxParticles": 140,
+     "emission": {
+      "rate": 320
+     },
+     "life": [
+      0.35,
+      0.7
+     ],
+     "speed": [
+      22.0,
+      88.0
+     ],
+     "direction": 180,
+     "spread": 25,
+     "size": [
+      30.0,
+      52.0
+     ],
+     "color": [
+      [
+       1.0,
+       0.4,
+       0.08,
+       1
+      ],
+      [
+       1.0,
+       0.8,
+       0.3,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.3
+       }
+      ]
+     },
+     "forces": {
+      "drag": 2
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    }
+   ]
+  },
+  {
+   "name": "meteor_small",
+   "duration": 0,
+   "emitters": [
+    {
+     "name": "embers",
+     "maxParticles": 30,
+     "emission": {
+      "rate": 72
+     },
+     "life": [
+      0.35,
+      0.7
+     ],
+     "speed": [
+      30.0,
+      90.0
+     ],
+     "direction": 180,
+     "spread": 70,
+     "size": [
+      4.0,
+      7.0
+     ],
+     "color": [
+      [
+       1.0,
+       0.9,
+       0.5,
+       1
+      ],
+      [
+       1.0,
+       0.5,
+       0.1,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.3
+       }
+      ]
+     },
+     "forces": {
+      "drag": 1.5,
+      "gravity": [
+       0,
+       160
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    },
+    {
+     "name": "head",
+     "maxParticles": 15,
+     "emission": {
+      "rate": 54
+     },
+     "life": 0.1,
+     "speed": 0.0,
+     "size": [
+      72.6,
+      83.5
+     ],
+     "color": [
+      [
+       1.0,
+       0.55,
+       0.15,
+       1
+      ],
+      [
+       1.0,
+       0.85,
+       0.4,
+       1
+      ]
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 2
+     }
+    },
+    {
+     "name": "core",
+     "maxParticles": 15,
+     "emission": {
+      "rate": 54
+     },
+     "life": 0.08,
+     "speed": 0.0,
+     "size": [
+      32.6,
+      36.3
+     ],
+     "color": [
+      [
+       1,
+       1,
+       0.85,
+       1
+      ],
+      [
+       1,
+       1,
+       1,
+       1
+      ]
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 3
+     }
+    },
+    {
+     "name": "trail",
+     "maxParticles": 70,
+     "emission": {
+      "rate": 192
+     },
+     "life": [
+      0.35,
+      0.7
+     ],
+     "speed": [
+      11.0,
+      44.0
+     ],
+     "direction": 180,
+     "spread": 25,
+     "size": [
+      15.0,
+      26.0
+     ],
+     "color": [
+      [
+       1.0,
+       0.4,
+       0.08,
+       1
+      ],
+      [
+       1.0,
+       0.8,
+       0.3,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.3
+       }
+      ]
+     },
+     "forces": {
+      "drag": 2
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    }
+   ]
+  },
+  {
+   "name": "meteor_impact",
+   "duration": 1.2,
+   "emitters": [
+    {
+     "name": "flash",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.25,
+     "speed": 0.0,
+     "size": 300.0,
+     "rotation": [
+      0,
+      45
+     ],
+     "color": [
+      1.0,
+      0.7,
+      0.3,
+      1
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.6,
+        "ease": "backOut"
+       },
+       {
+        "t": 1,
+        "v": 1.6
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 3
+     }
+    },
+    {
+     "name": "ring",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.45,
+     "speed": 0.0,
+     "size": 88.0,
+     "color": [
+      1.0,
+      0.6,
+      0.15,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 4.5
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    },
+    {
+     "name": "ring_2",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0.07,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.4,
+     "speed": 0.0,
+     "size": 61.6,
+     "color": [
+      1.0,
+      0.6,
+      0.15,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 3.2
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    },
+    {
+     "name": "sparks",
+     "maxParticles": 30,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         22,
+         30
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.3,
+      0.65
+     ],
+     "speed": [
+      484.0,
+      924.0
+     ],
+     "size": [
+      17.6,
+      30.8
+     ],
+     "color": [
+      [
+       1.0,
+       0.85,
+       0.4,
+       1
+      ],
+      [
+       1.0,
+       0.35,
+       0.05,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0.0,
+       572.0
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    }
+   ]
+  },
+  {
+   "name": "meteor_impact_small",
+   "duration": 1.2,
+   "emitters": [
+    {
+     "name": "flash",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.25,
+     "speed": 0.0,
+     "size": 135.0,
+     "rotation": [
+      0,
+      45
+     ],
+     "color": [
+      1.0,
+      0.7,
+      0.3,
+      1
+     ],
+     "sprite": "fx:glow",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 0.6,
+        "ease": "backOut"
+       },
+       {
+        "t": 1,
+        "v": 1.6
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 3
+     }
+    },
+    {
+     "name": "ring",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.45,
+     "speed": 0.0,
+     "size": 39.6,
+     "color": [
+      1.0,
+      0.6,
+      0.15,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 4.5
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    },
+    {
+     "name": "ring_2",
+     "maxParticles": 1,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0.07,
+        "count": 1
+       }
+      ]
+     },
+     "life": 0.4,
+     "speed": 0.0,
+     "size": 27.7,
+     "color": [
+      1.0,
+      0.6,
+      0.15,
+      1
+     ],
+     "sprite": "fx:ring",
+     "overLife": {
+      "color": [
+       {
+        "t": 0,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ],
+        "ease": "quadraticIn"
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1,
+        "ease": "cubicOut"
+       },
+       {
+        "t": 1,
+        "v": 3.2
+       }
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "order": 0
+     }
+    },
+    {
+     "name": "sparks",
+     "maxParticles": 15,
+     "emission": {
+      "rate": 0,
+      "bursts": [
+       {
+        "t": 0,
+        "count": [
+         11,
+         15
+        ]
+       }
+      ]
+     },
+     "shape": {
+      "type": "point",
+      "outward": true
+     },
+     "life": [
+      0.3,
+      0.65
+     ],
+     "speed": [
+      217.8,
+      415.8
+     ],
+     "size": [
+      7.9,
+      13.9
+     ],
+     "color": [
+      [
+       1.0,
+       0.85,
+       0.4,
+       1
+      ],
+      [
+       1.0,
+       0.35,
+       0.05,
+       1
+      ]
+     ],
+     "sprite": "fx:spark",
+     "overLife": {
+      "color": [
+       {
+        "t": 0.5,
+        "v": [
+         1,
+         1,
+         1,
+         1
+        ]
+       },
+       {
+        "t": 1,
+        "v": [
+         1,
+         1,
+         1,
+         0
+        ]
+       }
+      ],
+      "size": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 0.4
+       }
+      ]
+     },
+     "forces": {
+      "drag": 3,
+      "gravity": [
+       0.0,
+       572.0
+      ]
+     },
+     "render": {
+      "blend": "add",
+      "alignToVelocity": true,
+      "order": 1
+     }
+    }
+   ]
+  },
+  {
    "name": "shield_crack",
    "duration": 0.9,
    "emitters": [
@@ -352108,6 +353779,22 @@ body { z-index: 30; }
 .tp.arrow.now.open { background-color: #ffd54a; }
 .tp.arrow.now.open.head { background-color: transparent; border-color: #ffd54a; }
 .tp.time.open { background-color: #ff9a3a; }
+/* the memory blade (docs/gameplay/22 §2): a red prompt asks for the other way; a dot per prompt; "Go!" */
+.tp.arrow.now.rev { background-color: #ff5a5a; }
+.tp.arrow.now.rev.head { background-color: transparent; border-color: #ff5a5a; }
+.tp.slot    { border-width: 2px; border-color: #ffffff90; }
+.tp.slot.seen { background-color: #c8a0ff; border-color: #c8a0ff; }
+.tp.slot.now  { background-color: #ffd54a; border-color: #ffffff; }
+.tp.slot.done { background-color: #6fe08a; border-color: #6fe08a; }
+.tp.go      { font-size: 36px; color: #ffd54a; font-effect: outline(3px #402800); }
+/* a skill's chain of commands (22 §3): the bar along the top centre */
+.tp.spinring { border-width: 3px; border-color: #7fffd8a0; background-color: #0c2a2440; }
+.tp.spintick { background-color: #ffffff30; }
+.tp.spintick.on { background-color: #7fffd8; }
+.tp.spinlabel { font-size: 22px; color: #7fffd8; font-effect: outline(2px #00302a); text-align: center; }
+.tp.spinlabel.ccw { color: #ffb0f0; font-effect: outline(2px #3a0030); }
+.tp.slot.missed { background-color: #ff5050; border-color: #ff5050; }
+.tp.chainbar { background-color: #10142ac0; border-width: 2px; border-color: #ffd54a90; }
 .tp.warn    { font-size: 34px; color: #ffd54a; font-effect: outline(3px #402800); }
 .tp.star    { background-color: #c8a0ff60; }
 .tp.star.done { background-color: #ffe066; }
@@ -352225,10 +353912,12 @@ body { z-index: 30; }
 .cellbox.danger { decorator: image(battle/cell_danger.png); }
 .cfill { position: absolute; left: 9px; top: 9px; bottom: 9px; max-width: 94%; background-color: #ff5a3a70; border-radius: 6px; }
 .cme { position: absolute; left: 50%; top: 50%; margin-left: -46px; margin-top: -46px; width: 92px; height: 92px; decorator: image(battle/cell_here.png); }
-/* the first danger's moment (battle.json cells.intro): only the monster and its banner are shown */
-body.focus #title, body.focus #player-hp, body.focus #player-hp-text, body.focus #guard, body.focus #guard-bar, body.focus #attack-state,
-body.focus #super, body.focus #super-btn, body.focus #active-btn, body.focus #tutorial, body.focus .fhp, body.focus .ftext, body.focus .intent, body.focus .tp,
-body.focus #play, body.focus .fhead, body.focus #chain, body.focus #crit, body.focus #clock, body.focus #clock-label { visibility: hidden; }
+/* the first danger's moment (battle.json cells.intro) and a boss's introduction: only the monster and its banner are shown.
+   (The class is "moment", not "focus": common.rcss .focus is the 80 % black backdrop of the menus, and on the battle's
+   body it laid that black over the whole screen; the owner, 2026-11-15) */
+body.moment #title, body.moment #player-hp, body.moment #player-hp-text, body.moment #guard, body.moment #guard-bar, body.moment #attack-state,
+body.moment #super, body.moment #super-btn, body.moment #active-btn, body.moment #tutorial, body.moment .fhp, body.moment .ftext, body.moment .intent, body.moment .tp,
+body.moment #play, body.moment .fhead, body.moment #chain, body.moment #crit, body.moment #clock, body.moment #clock-label { visibility: hidden; }
 /* the new game's tutorial (docs/gameplay/19 B6): its words across the top of the fight, and a gold edge on what they mean */
 #tutorial { position: absolute; left: 50%; margin-left: -400px; width: 800px; top: 10px; padding: 12px 14px; text-align: center;
             font-size: 28px; color: #ffffff; font-effect: outline(2px #000000); background-color: #0a0608e0;
@@ -352357,6 +354046,8 @@ body.focus #play, body.focus .fhead, body.focus #chain, body.focus #crit, body.f
            border-top: 4px #ffcf4a; border-bottom: 4px #ffcf4a; }
 .bi-label { margin-top: 16px; font-size: 28px; line-height: 32px; color: #ff6a50; font-effect: outline(2px #2a0000); }
 .bi-name { margin-top: 10px; font-size: 68px; line-height: 76px; color: #ffe590; font-effect: glow(2px 10px 0px 0px #ff8a1e); }
+#boss-intro.hero .bi-label { color: #7fffd8; font-effect: outline(2px #00302a); }
+#boss-intro.hero .bi-name { color: #fffbe0; font-effect: glow(2px 10px 0px 0px #20d0a0); }
 @media (orientation: portrait) { #boss-intro { top: 900px; } }
 <rml>
 <head>
@@ -352370,7 +354061,7 @@ body.focus #play, body.focus .fhead, body.focus #chain, body.focus #crit, body.f
      pressed just before a hit; the ATTACK panel only says ready / recovering. Moments (BREAK!, a monster's line, the
      ultimate) cross the screen; a win ends on the result screen (grade, the weapon's progress, the rewards).
      Data: battle.* (UiBattle). Landscape and portrait (docs/gameplay/12_UI_LAYOUT.md): placed by battle.rcss. -->
-<body data-model="game" data-event-click="act('battle_continue')" data-class-focus="battle.focus">
+<body data-model="game" data-event-click="act('battle_continue')" data-class-moment="battle.focus">
     <!-- no backdrop here: the game draws it (Game::drawBattleRig), under the player and the monster it draws -->
     <div id="title">{{battle.title}}</div>
     <!-- the fighters' boxes: always there, the game places the animated player and monster in them (GameUi reads
@@ -352405,7 +354096,7 @@ body.focus #play, body.focus .fhead, body.focus #chain, body.focus #crit, body.f
             <div class="fbreak" data-style-width="f.break_pct + '%'"></div></div>
     </div></div>
     <!-- a boss's introduction (Game::f_StartBossIntro): a banner slides in, its name types in -->
-    <div id="boss-intro" data-if="battle.boss_intro">
+    <div id="boss-intro" data-if="battle.boss_intro" data-class-hero="battle.hero_intro">
         <div class="bi-band" data-style-transform="'translateX(' + battle.boss_intro_x + 'px)'">
             <div class="bi-label">{{battle.boss_intro_label}}</div>
             <div class="bi-name">{{battle.boss_intro_name}}</div>
@@ -354189,6 +355880,7 @@ body.scene { background-color: transparent; }
     "attack_pause_ms: while the player or the enemy attacks, BOTH sides' clocks pause this long (the bars do not",
     "move or cool down, the enemy's clock waits) -- the owner's rule, docs/gameplay/07_GAMEPLAY_PLAN.md §4. 0 turns it off.",
     "hit_number_delay_ms: the damage number appears this long after the attack starts (when the swing lands).",
+    "superPoints: how many points (one per attack that does damage) fill the super charge for the weapon's ultimate (the owner, 2026-11-18: 3; a rebirth halves a run's, at least 1).",
     "pace (docs/gameplay/13_BATTLE_EDITOR.md §6.3, the owner 2026-10-25: both, switchable): \"cooldown\" = each bar waits",
     "bar_cooldown_ms after a tap (as before); \"stamina\" = no waits, but starting an attack and each guard tap cost stamina,",
     "which refills while no attack runs (stamina: max, regenPerS, attack, guard). A weapon (weapon_play.json \"pace\") or a",
@@ -354225,6 +355917,7 @@ body.scene { background-color: transparent; }
   "bar_cooldown_ms": 1000,
   "attack_pause_ms": 450,
   "hit_number_delay_ms": 180,
+  "superPoints": 3,
   "combo_holds_monsters": false,
   "combo_runs_through_attacks": true,
   "pace": "cooldown",
@@ -354318,13 +356011,17 @@ body.scene { background-color: transparent; }
              "cueExtraMs": { "v": 400, "m": 900, "square": 1100, "triangle": 800, "circle": 800 },
              "dexWayDeg": 1.5, "dexWayMaxDeg": 40, "dexGestureMaxDeg": 15, "dexCornerPct": 1.5, "dexWindowMs": 10, "freeMinSwipe": 25,
              "circleCountMs": 450, "circleHideMs": 500, "circleWarnMs": 0, "circleReturnMs": 100, "circleTapMs": 900,
-             "circlePerfectMs": 500 },
+             "circlePerfectMs": 500,
+             "recallShowMs": 500, "recallGapMs": 80, "recallReadyMs": 250, "recallAnswerMs": 1000, "recallPerCueMs": 0, "recallReverse": 0,
+             "chainTimeMs": 5000,
+             "spinTimeMs": 6000, "spinMinRadius": 30, "spinTurnDeg": 330, "spinPerfectMs": 900 },
   "feelFx": {
     "_comment": "The attack feel (docs/gameplay/20): the effects are in media/fx/battle.particle (tools/make_battle_fx.py), the sounds by key.",
     "sprayTiers": 5, "sprayComboStep": 2, "swordSound": "sfx.sword_slash",
     "wand": { "pitchStep": 2.0, "tiers": 4, "damageRamp": 1.6, "hintSound": "sfx.wand_hint", "vanishSound": "sfx.wand_vanish",
               "castSound": "sfx.wand_cast" },
     "bow": { "gatherEveryMs": 90, "chargeSound": "sfx.bow_charge", "explodeSound": "sfx.explosion" },
+    "heroIntro": { "_comment": "the hero's own introduction of an ultimate (a move's intro beat, docs/gameplay/22 §4): the boss banner from the right; the move's name types in from nameAtMs, a letter every typeMsPerChar", "nameAtMs": 350, "typeMsPerChar": 90 },
     "bossIntro": { "startDelayMs": 300, "ms": 3400, "nameAtMs": 700, "typeMsPerChar": 110, "zoom": 1.7, "deg": 10, "clip": "special", "fx": "boss_intro", "fxAtMs": 250,
                    "sound": "sfx.boss_intro", "off": false },
     "specialAttack": { "powerMs": 3500, "powerFx": "monster_power", "powerSound": "sfx.monster_power",
@@ -357130,13 +358827,24 @@ body.scene { background-color: transparent; }
             "weapon": "staff"
           },
           "next": null
+        },
+        {
+          "label": {
+            "zh_TW": "試試憶刃",
+            "en": "Try the memory blade"
+          },
+          "action": {
+            "type": "tryWeapon",
+            "weapon": "memory_blade"
+          },
+          "next": null
         }
       ]
     },
     "weapons": {
       "text": {
-        "zh_TW": "「弓：往後拉再放開，拉得越久越有力。劍：照著指示的方向揮砍。法杖：依序點中出現的圓圈。」",
-        "en": "\"The bow: draw back and let go, and the longer the draw, the harder the shot. The sword: slash the way it shows you. The staff: touch the circles in their order.\""
+        "zh_TW": "「弓：往後拉再放開，拉得越久越有力。劍：照著指示的方向揮砍。法杖：依序點中出現的圓圈。憶刃：先記住依序亮起的方向，看到「Go!」再憑記憶揮出來。」",
+        "en": "\"The bow: draw back and let go, and the longer the draw, the harder the shot. The sword: slash the way it shows you. The staff: touch the circles in their order. The memory blade: remember the ways it shows you one by one, then slash them back from memory when it says Go!\""
       },
       "choices": [
         {
@@ -357169,6 +358877,17 @@ body.scene { background-color: transparent; }
           "action": {
             "type": "tryWeapon",
             "weapon": "staff"
+          },
+          "next": null
+        },
+        {
+          "label": {
+            "zh_TW": "試試憶刃",
+            "en": "Try the memory blade"
+          },
+          "action": {
+            "type": "tryWeapon",
+            "weapon": "memory_blade"
           },
           "next": null
         }
@@ -357220,6 +358939,17 @@ body.scene { background-color: transparent; }
           "action": {
             "type": "tryWeapon",
             "weapon": "staff"
+          },
+          "next": null
+        },
+        {
+          "label": {
+            "zh_TW": "換試憶刃",
+            "en": "Try the memory blade"
+          },
+          "action": {
+            "type": "tryWeapon",
+            "weapon": "memory_blade"
           },
           "next": null
         }
@@ -368806,6 +370536,29 @@ body.scene { background-color: transparent; }
       "character": "anim/hero_sword.anim"
     }
   },
+  "memory_blade": {
+    "type": "weapon",
+    "sprite": "item_sword.png",
+    "name": "item.memory_blade.name",
+    "desc": "item.memory_blade.desc",
+    "stats": {
+      "atk": 3
+    },
+    "price": 60,
+    "important": false,
+    "bar": {
+      "v0": 12,
+      "vmax": 180,
+      "rampTime": 2.2,
+      "greenHalf": 12,
+      "blueOuter": 32,
+      "redOuter": 60,
+      "maxMult": 2.2
+    },
+    "battleAnim": {
+      "character": "anim/hero_sword.anim"
+    }
+  },
   "staff": {
     "type": "weapon",
     "sprite": "item_staff.png",
@@ -370221,6 +371974,70 @@ body.scene { background-color: transparent; }
         "value": 6,
         "ms": 1100
       }
+    ]
+  },
+  "sigil_chain": {
+    "_comment": "The memory blade's ultimate (docs/gameplay/22 §3): ten commands on the top bar, swiped in order in 5 s. 10 of 10: the full finish; 6 to 9: the partial one (a share of the damage); under 6 it fizzles.",
+    "name": "skill.sigil_chain",
+    "weapon": "memory_blade",
+    "use": "ultimate",
+    "prompt": "skill.prompt_chain",
+    "damage": 12,
+    "play": { "kind": "swipeChain", "timeMs": 5000, "minHits": 6,
+              "cues": [ "way", "way", "way", "way", "way", "way", "way", "way", "way", "way" ] },
+    "demo": [ { "at": 0, "do": "name", "ms": 1000 }, { "at": 0, "do": "fx", "fx": "sword_great", "on": "player" },
+              { "at": 0, "do": "sound", "fx": "sfx.boss_intro" }, { "at": 900, "do": "dim" } ],
+    "step": [ { "do": "fx", "fx": "seal_burst", "on": "player" }, { "do": "namePart" } ],
+    "finish": [
+      { "at": 0, "do": "camera", "zoom": 1.7, "on": "monster", "ms": 2000, "move": "orbit", "deg": 50, "when": "full" },
+      { "at": 0, "do": "fx", "fx": "seal_trail", "on": "monster", "when": "full" },
+      { "at": 150, "do": "clip", "clip": "attack_big", "when": "full" },
+      { "at": 300, "do": "fx", "fx": "star_burst_big", "on": "monster", "when": "full" },
+      { "at": 400, "do": "hits", "count": 10, "gapMs": 90, "when": "full" },
+      { "at": 400, "do": "shake", "value": 10, "ms": 1300, "when": "full" },
+      { "at": 1300, "do": "fx", "fx": "sword_perfect", "on": "monster", "when": "full" },
+      { "at": 1300, "do": "sound", "fx": "sfx.explosion", "when": "full" },
+      { "at": 0, "do": "banner", "text": "skill.chain_partial", "ms": 900, "when": "partial" },
+      { "at": 0, "do": "camera", "zoom": 1.25, "on": "monster", "ms": 1000, "when": "partial" },
+      { "at": 150, "do": "clip", "clip": "attack_big", "when": "partial" },
+      { "at": 300, "do": "hits", "count": 4, "gapMs": 120, "when": "partial" },
+      { "at": 300, "do": "shake", "value": 5, "ms": 500, "when": "partial" }
+    ]
+  },
+  "cyclone_volley": {
+    "_comment": "The bow's ultimate (docs/gameplay/22 §4): a ring on the hero's head (ringY) with sparks going round it; circle it clockwise 3 times, then anticlockwise 3 times, in 6 s. All 6 (or 3 to 5): first his own introduction, as a boss's (the camera low and close on him, the banner with the move's name typed in, his charge; the owner, 2026-11-19); all 6: then he shoots 10 arrows up in 1.5 s that fall on the monster as a meteor shower (each meteor a hit, 2 more round it for show); 3 to 5: 4 meteors (a share of the damage); under 3 it fizzles.",
+    "name": "skill.cyclone_volley",
+    "weapon": "bow",
+    "use": "ultimate",
+    "prompt": "skill.prompt_spin",
+    "damage": 12,
+    "play": { "kind": "spinCircle", "timeMs": 6000, "size": 220, "ringY": -0.12, "minHits": 3, "guideFx": "spin_spark", "guidePeriodMs": 900,
+              "cues": [ "cw", "cw", "cw", "ccw", "ccw", "ccw" ] },
+    "demo": [ { "at": 0, "do": "name", "ms": 1000 }, { "at": 0, "do": "fx", "fx": "bow_great", "on": "player" },
+              { "at": 0, "do": "sound", "fx": "sfx.battle_ultimate" }, { "at": 900, "do": "dim" } ],
+    "step": [ { "do": "fx", "fx": "spin_burst" } ],
+    "finish": [
+      { "at": 0, "do": "intro", "text": "battle.ultimate_label", "ms": 1700, "when": "landed" },
+      { "at": 0, "do": "camera", "zoom": 1.45, "on": "player", "ms": 1700, "move": "low", "deg": 12, "value": 0.85, "when": "landed" },
+      { "at": 0, "do": "clip", "clip": "charge", "speed": 0.75, "when": "landed" },
+      { "at": 0, "do": "fx", "fx": "volley_charge", "on": "player", "when": "landed" },
+      { "at": 0, "do": "sound", "fx": "sfx.boss_intro", "when": "landed" },
+      { "at": 350, "do": "fx", "fx": "bow_great", "on": "player", "when": "landed" },
+      { "at": 900, "do": "fx", "fx": "volley_charge", "on": "player", "when": "landed" },
+      { "at": 900, "do": "sound", "fx": "sfx.bow_charge", "when": "landed" },
+      { "at": 1800, "do": "camera", "zoom": 1.12, "on": "player", "ms": 2200, "when": "full" },
+      { "at": 1800, "do": "dim", "ms": 2000, "when": "full" },
+      { "at": 1800, "do": "hits", "count": 10, "gapMs": 150, "clip": "attack", "speed": 4, "fx": "bow_release_3",
+        "projectile": "meteor", "impact": "meteor_impact", "flightMs": 380, "extra": 2, "when": "full" },
+      { "at": 2180, "do": "shake", "value": 9, "ms": 1500, "when": "full" },
+      { "at": 3650, "do": "fx", "fx": "meteor_impact", "on": "monster", "when": "full" },
+      { "at": 3650, "do": "fx", "fx": "star_burst_big", "on": "monster", "when": "full" },
+      { "at": 3650, "do": "shake", "value": 14, "ms": 500, "when": "full" },
+      { "at": 3650, "do": "sound", "fx": "sfx.explosion", "when": "full" },
+      { "at": 1800, "do": "banner", "text": "skill.volley_partial", "ms": 800, "when": "partial" },
+      { "at": 1800, "do": "hits", "count": 4, "gapMs": 200, "clip": "attack", "speed": 3, "fx": "bow_release_2",
+        "projectile": "meteor", "impact": "meteor_impact_small", "flightMs": 380, "when": "partial" },
+      { "at": 2180, "do": "shake", "value": 4, "ms": 800, "when": "partial" }
     ]
   },
   "tiger_wind": {
@@ -393411,6 +395228,126 @@ body.scene { background-color: transparent; }
       "ko": "화살표가 빛날 때 그 방향으로",
       "es": "desliza hacia la flecha mientras brilla"
     },
+    "battle.play_hint_swipeRecall": {
+      "zh_TW": "記住依序亮起的方向，再憑記憶劃出",
+      "en": "remember the ways as they show, then swipe them from memory",
+      "zh_CN": "记住依序亮起的方向，再凭记忆划出",
+      "ja": "順に光る向きを覚え、記憶で振り抜け",
+      "ko": "차례로 빛나는 방향을 외워 기억대로 그어라",
+      "es": "memoriza las direcciones y deslízalas de memoria"
+    },
+    "battle.play_hint_swipeChain": {
+      "zh_TW": "照上方的指令依序劃出",
+      "en": "swipe the commands along the top in order",
+      "zh_CN": "照上方的指令依序划出",
+      "ja": "上の指令を順になぞれ",
+      "ko": "위의 지시를 차례로 그어라",
+      "es": "desliza las órdenes de arriba en orden"
+    },
+    "battle.recall_go": {
+      "zh_TW": "出招！",
+      "en": "Go!",
+      "zh_CN": "出招！",
+      "ja": "今だ！",
+      "ko": "지금!",
+      "es": "¡Ya!"
+    },
+    "skill.sigil_chain": {
+      "zh_TW": "千刃印",
+      "en": "Sigil Chain",
+      "zh_CN": "千刃印",
+      "ja": "千刃印",
+      "ko": "천인의 인",
+      "es": "Cadena de sellos"
+    },
+    "skill.prompt_chain": {
+      "zh_TW": "依序劃出上方的十道指令！",
+      "en": "Swipe all ten commands in order!",
+      "zh_CN": "依序划出上方的十道指令！",
+      "ja": "上の十の指令を順になぞれ！",
+      "ko": "위의 열 가지 지시를 차례로 그어라!",
+      "es": "¡Desliza las diez órdenes en orden!"
+    },
+    "skill.chain_partial": {
+      "zh_TW": "印未全成……",
+      "en": "The sigil is incomplete...",
+      "zh_CN": "印未全成……",
+      "ja": "印は未完成……",
+      "ko": "인이 완성되지 않았다……",
+      "es": "El sello quedó incompleto..."
+    },
+    "skill.cyclone_volley": {
+      "zh_TW": "旋風連矢",
+      "en": "Cyclone Volley",
+      "zh_CN": "旋风连矢",
+      "ja": "旋風連矢",
+      "ko": "회오리 연사",
+      "es": "Andanada ciclón"
+    },
+    "skill.prompt_spin": {
+      "zh_TW": "依方向畫圈，凝聚力量！",
+      "en": "Circle the ring the way it shows to gather power!",
+      "zh_CN": "按方向画圈，凝聚力量！",
+      "ja": "示す向きに円を描いて力を溜めろ！",
+      "ko": "표시된 방향으로 원을 그려 힘을 모아라!",
+      "es": "¡Traza círculos en la dirección indicada para cargar poder!"
+    },
+    "skill.volley_partial": {
+      "zh_TW": "力量未聚滿……",
+      "en": "Not all the power gathered...",
+      "zh_CN": "力量未聚满……",
+      "ja": "力が溜まりきらない……",
+      "ko": "힘이 다 모이지 않았다……",
+      "es": "No reuniste todo el poder..."
+    },
+    "battle.spin_cw": {
+      "zh_TW": "順時針",
+      "en": "Clockwise",
+      "zh_CN": "顺时针",
+      "ja": "時計回り",
+      "ko": "시계 방향",
+      "es": "Horario"
+    },
+    "battle.spin_ccw": {
+      "zh_TW": "逆時針",
+      "en": "Anticlockwise",
+      "zh_CN": "逆时针",
+      "ja": "反時計回り",
+      "ko": "반시계 방향",
+      "es": "Antihorario"
+    },
+    "battle.ultimate_label": {
+      "zh_TW": "絕招發動！",
+      "en": "ULTIMATE!",
+      "zh_CN": "绝招发动！",
+      "ja": "必殺技発動！",
+      "ko": "필살기 발동!",
+      "es": "¡ATAQUE DEFINITIVO!"
+    },
+    "battle.play_hint_spinCircle": {
+      "zh_TW": "順著光點的方向畫圈",
+      "en": "Circle the ring the way the sparks go",
+      "zh_CN": "顺着光点的方向画圈",
+      "ja": "光の回る向きに円を描け",
+      "ko": "빛이 도는 방향으로 원을 그려라",
+      "es": "Traza círculos en la dirección de las chispas"
+    },
+    "item.memory_blade.name": {
+      "zh_TW": "憶刃",
+      "en": "Memory Blade",
+      "zh_CN": "忆刃",
+      "ja": "記憶の刃",
+      "ko": "기억의 검",
+      "es": "Hoja de la memoria"
+    },
+    "item.memory_blade.desc": {
+      "zh_TW": "先看後劈的劍：方向一個接一個亮起又消失，再憑記憶在時限內劃出。",
+      "en": "A blade for a sharp mind: the ways light up one by one and vanish; swipe them back from memory in time.",
+      "zh_CN": "先看后劈的剑：方向一个接一个亮起又消失，再凭记忆在时限内划出。",
+      "ja": "見てから斬る剣：向きが一つずつ光って消える。時間内に記憶で振り抜け。",
+      "ko": "보고 베는 검: 방향이 하나씩 빛났다 사라진다. 시간 안에 기억대로 그어라.",
+      "es": "Una hoja para mentes agudas: las direcciones brillan una a una y desaparecen; deslízalas de memoria a tiempo."
+    },
     "battle.play_hint_sequenceClick": {
       "zh_TW": "記住順序，再依序點擊",
       "en": "watch the order, then tap them in turn",
@@ -402205,8 +404142,8 @@ body.scene { background-color: transparent; }
   }
 }
 {
-  "number": 13,
-  "sha": "e8bbe4b"
+  "number": 15,
+  "sha": "0c6c8c5"
 }
 {
   "_comment": [
@@ -402237,7 +404174,8 @@ body.scene { background-color: transparent; }
     "play: the weapon's own attack, a play type (docs/gameplay/17 §4.1, play_type.h): track (the point track), pullRelease (drag back and let go at the target), swipeWay (swipe the arrows' ways), swipeGesture (draw gestures), sequenceClick (tap the circles in order). Each counts its points like the track, so the results, fx and clips stay the same. Scenarios play the track unless their battle sets \"play\".",
     "comboTiers: how the combo grows (17 §19): from `from` hits in a row on, the player's clip, the hit effect and the feel moment (battle.json feel). A miss starts it again; each attack starts it again unless comboKeep (the bow: one arrow an attack, so the count goes on until a miss).",
     "ultimate: the special_moves.json move this weapon uses when the super charge is full (17 §16 Q49): change the id to bind another.",
-    "swipeCues: the gesture prompts by level (17 §4.2): from lv on, the last prompts ask for these (v, m, square; or a shape: triangle, circle) instead of a way."
+    "swipeCues: the gesture prompts by level (17 §4.2): from lv on, the last prompts ask for these (v, m, square; or a shape: triangle, circle) instead of a way.",
+    "recall: the memory blade's timing by level (play swipeRecall, docs/gameplay/22 §2): showMs each prompt shown, answerMs the whole answer time (+ perCueMs a prompt), reverse the share shown red (swipe the other way). A row sets only its keys; the rest come from the rows below it, then data/battle.json \"plays\" (recallShowMs, recallAnswerMs, ...)."
   ],
   "default": {
     "missBack": [
@@ -403077,7 +405015,7 @@ body.scene { background-color: transparent; }
       }
     ],
     "play": "pullRelease",
-    "ultimate": "free_shot"
+    "ultimate": "cyclone_volley"
   },
   "sword": {
     "missBack": [
@@ -403274,6 +405212,215 @@ body.scene { background-color: transparent; }
           "v",
           "v"
         ]
+      }
+    ]
+  },
+  "memory_blade": {
+    "missBack": [
+      {
+        "lv": 1,
+        "back": "start"
+      },
+      {
+        "lv": 3,
+        "back": 2
+      },
+      {
+        "lv": 5,
+        "back": 1
+      }
+    ],
+    "missWaitMs": 600,
+    "levels": [
+      {
+        "lv": 1,
+        "points": 3,
+        "stats": {
+          "str": 10
+        }
+      },
+      {
+        "lv": 2,
+        "points": 3,
+        "stats": {
+          "str": 12,
+          "dex": 5
+        }
+      },
+      {
+        "lv": 3,
+        "points": 4,
+        "stats": {
+          "str": 14,
+          "dex": 10
+        }
+      },
+      {
+        "lv": 4,
+        "points": 4,
+        "stats": {
+          "str": 16,
+          "dex": 12
+        }
+      },
+      {
+        "lv": 5,
+        "points": 5,
+        "stats": {
+          "str": 20,
+          "dex": 15
+        }
+      },
+      {
+        "lv": 6,
+        "points": 5,
+        "stats": {
+          "str": 22,
+          "dex": 17
+        }
+      },
+      {
+        "lv": 7,
+        "points": 5,
+        "stats": {
+          "str": 24,
+          "dex": 19
+        }
+      },
+      {
+        "lv": 8,
+        "points": 5,
+        "stats": {
+          "str": 26,
+          "dex": 21
+        }
+      },
+      {
+        "lv": 9,
+        "points": 5,
+        "stats": {
+          "str": 28,
+          "dex": 23
+        }
+      },
+      {
+        "lv": 10,
+        "points": 5,
+        "stats": {
+          "str": 30,
+          "dex": 25
+        }
+      }
+    ],
+    "levelExp": {
+      "first": 5,
+      "scale": 2
+    },
+    "turnBack": false,
+    "sweepMs": 1500,
+    "chargeMs": 1800,
+    "chargeSpeedUp": 0.8,
+    "chargeDamage": 1.0,
+    "hitWindow": 0.07,
+    "fx": [
+      {
+        "lv": 1,
+        "release": "sword_release_1",
+        "hit": "sword_hit_1"
+      },
+      {
+        "lv": 3,
+        "release": "sword_release_2",
+        "hit": "sword_hit_2"
+      },
+      {
+        "lv": 5,
+        "release": "sword_release_3",
+        "hit": "sword_hit_3"
+      }
+    ],
+    "results": [
+      {
+        "hits": "all",
+        "name": "perfect",
+        "damage": 1.2,
+        "stunMs": 500,
+        "breakAdd": 1,
+        "fx": "sword_perfect",
+        "anim": "attack_big",
+        "move": "battle.move.sword.perfect"
+      },
+      {
+        "hits": 2,
+        "name": "great",
+        "fx": "sword_great",
+        "move": "battle.move.sword.great"
+      },
+      {
+        "hits": 0,
+        "name": "miss",
+        "fx": "miss_puff",
+        "move": "battle.move.sword.miss"
+      }
+    ],
+    "comboTiers": [
+      {
+        "from": 1,
+        "clip": "attack",
+        "fx": "sword_hit_1",
+        "feel": "hit"
+      },
+      {
+        "from": 2,
+        "clip": "attack_2",
+        "fx": "sword_hit_2",
+        "feel": "hit"
+      },
+      {
+        "from": 3,
+        "clip": "attack_3",
+        "fx": "sword_hit_3",
+        "feel": "great"
+      },
+      {
+        "from": 4,
+        "clip": "attack_4",
+        "fx": "sword_great",
+        "feel": "great"
+      },
+      {
+        "from": 5,
+        "clip": "attack_big",
+        "fx": "sword_perfect",
+        "feel": "perfect"
+      }
+    ],
+    "play": "swipeRecall",
+    "ultimate": "sigil_chain",
+    "recall": [
+      {
+        "lv": 1,
+        "showMs": 500,
+        "answerMs": 1000,
+        "perCueMs": 0,
+        "reverse": 0
+      },
+      {
+        "lv": 3,
+        "answerMs": 1300
+      },
+      {
+        "lv": 5,
+        "answerMs": 1500
+      },
+      {
+        "lv": 6,
+        "reverse": 0.2
+      },
+      {
+        "lv": 8,
+        "showMs": 420,
+        "reverse": 0.3
       }
     ]
   },
