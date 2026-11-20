@@ -1,0 +1,84 @@
+{
+  "_comment": "Chapter 3 of the story revamp (docs/gameplay/23 §4): F14, the library puzzle: the talking book's riddle (water) gives the ledger's third page.",
+  "npcId": "scholar",
+  "start": "book",
+  "nodes": {
+    "book": {
+      "text": {
+        "zh_TW": "一本會說話的書飄在半空：「吾乃知識之書！答對吾之謎題，便給你最後一頁。『越洗越髒的是什麼？』」",
+        "en": "A talking book floats in the air. \"I am the Book of Knowledge! Answer my riddle and the last page is yours. 'What gets dirtier the more you wash?'\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「水。」",
+            "en": "\"Water.\""
+          },
+          "next": "right"
+        },
+        {
+          "label": {
+            "zh_TW": "「凱。」",
+            "en": "\"Kai.\""
+          },
+          "next": "wrong"
+        },
+        {
+          "label": {
+            "zh_TW": "「盤子。」",
+            "en": "\"A plate.\""
+          },
+          "next": "wrong"
+        }
+      ]
+    },
+    "wrong": {
+      "text": {
+        "zh_TW": "書：「錯！」它啪地合上，又打開。「……吾心情好，再給你一次機會。」",
+        "en": "The book: \"Wrong!\" It snaps shut, then opens again. \"...I am in a good mood. One more try.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「水。」",
+            "en": "\"Water.\""
+          },
+          "next": "right"
+        },
+        {
+          "label": {
+            "zh_TW": "「皮普的錢。」",
+            "en": "\"Pip's money.\""
+          },
+          "next": "wrong"
+        }
+      ]
+    },
+    "right": {
+      "text": {
+        "zh_TW": "書：「正確！」一張紙從書頁間飛出來，落在你手上：名冊的最後一頁。",
+        "en": "The book: \"Correct!\" A sheet flies out from between its pages and lands in your hand: the ledger's last page."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（收下）",
+            "en": "(Take it)"
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "addVar",
+              "var": "ledger_pages",
+              "delta": 1
+            },
+            {
+              "type": "setFlag",
+              "flag": "c3.riddle"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

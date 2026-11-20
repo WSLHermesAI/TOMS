@@ -1,0 +1,111 @@
+{
+  "_comment": [
+    "Chapter 3 of the story revamp (docs/gameplay/23 §4): The Gate of Lies, F11-F15. Three ledger pages (ledger_pages; the",
+    "third behind the talking book's riddle) make the whole ledger (ev_c3_ledger_whole, on the var changing). The innkeeper",
+    "(F11) and the scholar (F13) are NPCs whose chat is their rescue."
+  ],
+  "act": "ch_03",
+  "theme": "the gate of lies",
+  "events": [
+    {
+      "eventId": "ev_c3_page1",
+      "kind": "quest",
+      "text": "ev_c3_page1.text",
+      "title": "ev_c3_page1.title",
+      "desc": "ev_c3_page1.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c3_page1"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c3_page2",
+      "kind": "quest",
+      "text": "ev_c3_page2.text",
+      "title": "ev_c3_page2.title",
+      "desc": "ev_c3_page2.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c3_page2"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c3_pip_map",
+      "kind": "comic",
+      "text": "ev_c3_pip_map.text",
+      "title": "ev_c3_pip_map.title",
+      "desc": "ev_c3_pip_map.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c3_pip_map"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c3_clerk",
+      "kind": "choice",
+      "text": "ev_c3_clerk.text",
+      "title": "ev_c3_clerk.title",
+      "desc": "ev_c3_clerk.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c3_clerk"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c3_riddle",
+      "kind": "quest",
+      "text": "ev_c3_riddle.text",
+      "title": "ev_c3_riddle.title",
+      "desc": "ev_c3_riddle.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c3_riddle"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c3_ledger_whole",
+      "kind": "scene",
+      "text": "ev_c3_ledger_whole.text",
+      "title": "ev_c3_ledger_whole.title",
+      "desc": "ev_c3_ledger_whole.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c3_ledger"
+        }
+      ],
+      "trigger": {
+        "on": "varChanged",
+        "var": "ledger_pages"
+      },
+      "requires": {
+        "type": "varAtLeast",
+        "var": "ledger_pages",
+        "value": 3
+      }
+    },
+    {
+      "eventId": "ev_c3_letter2",
+      "kind": "scene",
+      "text": "ev_c3_letter2.text",
+      "title": "ev_c3_letter2.title",
+      "desc": "ev_c3_letter2.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c3_letter2"
+        }
+      ]
+    }
+  ]
+}

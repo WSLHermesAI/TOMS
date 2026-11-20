@@ -5,13 +5,18 @@
   "chat": {
     "lines": [
       {
-        "dialogue": "blacksmith"
+        "dialogue": "c2_blacksmith",
+        "requires": {
+          "not": {
+            "type": "runFlagSet",
+            "flag": "home.blacksmith"
+          }
+        }
       }
     ],
     "order": "loop"
   },
   "topics": {
     "menu": "auto"
-  },
-  "draft": true
+  }
 }

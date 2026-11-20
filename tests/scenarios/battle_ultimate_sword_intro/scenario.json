@@ -1,0 +1,29 @@
+{
+  "_comment": "The sword's ultimate (the owner, 2026-11-20; docs/gameplay/22 §4.1; special_moves.json tiger_wind): full super charge, g at frame 10; its name, then 5 prompts to swipe as shown. None swiped: it fizzles (no hit, no introduction).",
+  "scene": "battle",
+  "player": {
+    "give": [
+      "sword"
+    ],
+    "equip": [
+      "sword"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000,
+    "super": true,
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 520,
+    "keys": "g@10"
+  },
+  "expect": {
+    "battleEvents": {
+      "skill": 1,
+      "hit": 0
+    }
+  }
+}

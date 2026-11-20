@@ -182,6 +182,16 @@ bool Game::f_StartScenarioJson(const nlohmann::json& l_jSc, const std::string& l
         }
     for (const std::string& l_strF : f_Strings(l_jSc, "flags")) f_DebugSetFlag(l_strF);
     for (const std::string& l_strE : f_Strings(l_jSc, "eventsDone")) f_DebugFinishEvent(l_strE);
+    if (l_jSc.contains("vars") && l_jSc["vars"].is_object())   // event variables: { "ledger_pages": 2 } (docs/gameplay/23)
+        for (auto l_oIt = l_jSc["vars"].begin(); l_oIt != l_jSc["vars"].end(); ++l_oIt)
+            if (l_oIt.value().is_number_integer()) m_oRun.f_SetVar(l_oIt.key(), l_oIt.value().get<int>());
+    if (l_jSc.contains("missions") && l_jSc["missions"].is_object())   // quests and their state: { "m_c3_ledger": "active" }
+        for (auto l_oIt = l_jSc["missions"].begin(); l_oIt != l_jSc["missions"].end(); ++l_oIt) {
+            if (!l_oIt.value().is_string()) continue;
+            toms::MissionTracker& l_oT = m_mapMissionTrackers[l_oIt.key()];
+            l_oT.m_strMissionId = l_oIt.key();
+            l_oT.m_eState = toms::f_MissionStateFromString(l_oIt.value().get<std::string>());
+        }
     if (l_jSc.contains("cards") && l_jSc["cards"].is_object())   // monster cards held: { "slime": 2 } (the training ground, 16 §5)
         for (auto l_oIt = l_jSc["cards"].begin(); l_oIt != l_jSc["cards"].end(); ++l_oIt)
             if (l_oIt.value().is_number_integer()) m_oMeta.m_mapCards[l_oIt.key()].m_iCopies = std::max(0, l_oIt.value().get<int>());
@@ -365,6 +375,13 @@ bool Game::f_ScenarioCheck(std::string& l_strReport) const {
         l_fnFail("the floor is " + m_strCurStage + ", expected " + m_jScenarioExpect["stage"].get<std::string>());
     for (const std::string& l_strId : f_Strings(m_jScenarioExpect, "inventoryHas"))
         if (std::find(m_oPl.m_vInv.begin(), m_oPl.m_vInv.end(), l_strId) == m_oPl.m_vInv.end()) l_fnFail("the inventory has no " + l_strId);
+    if (m_jScenarioExpect.contains("missions") && m_jScenarioExpect["missions"].is_object())   // quest id -> its state (docs/gameplay/23 §7)
+        for (auto l_oIt = m_jScenarioExpect["missions"].begin(); l_oIt != m_jScenarioExpect["missions"].end(); ++l_oIt) {
+            auto l_itT = m_mapMissionTrackers.find(l_oIt.key());
+            const std::string l_strHave = l_itT == m_mapMissionTrackers.end() ? std::string("none") : std::string(toms::f_ToString(l_itT->second.m_eState));
+            if (l_oIt.value().is_string() && l_strHave != l_oIt.value().get<std::string>())
+                l_fnFail("the quest " + l_oIt.key() + " is " + l_strHave + ", expected " + l_oIt.value().get<std::string>());
+        }
     for (const std::string& l_strF : f_Strings(m_jScenarioExpect, "flags"))
         if (!m_oRun.f_Flag(l_strF)) l_fnFail("the flag " + l_strF + " is not set");
     if (m_jScenarioExpect.contains("cards") && m_jScenarioExpect["cards"].is_object())   // monster id -> copies held

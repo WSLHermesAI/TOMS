@@ -1,0 +1,45 @@
+{
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): F05, a rescue behind the orchard gate: the healer (and the shepherd girl's sheep) go home.",
+  "npcId": "healer",
+  "start": "orchard",
+  "nodes": {
+    "orchard": {
+      "text": {
+        "zh_TW": "舊果園裡，村裡的治療師正替一隻受傷的羊包紮。「里歐？你怎麼進來的——」",
+        "en": "In the old orchard, the village healer is bandaging a hurt sheep. \"Leo? How did you get in here—\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「牧羊女給的鑰匙。我們回家吧。」",
+            "en": "\"The shepherd girl's key. Let's go home.\""
+          },
+          "next": "home",
+          "action": {
+            "type": "rescue",
+            "npc": "healer"
+          }
+        }
+      ]
+    },
+    "home": {
+      "text": {
+        "zh_TW": "治療師：「好孩子。回村後來找我，受傷了我幫你治。」她抱起羊。「這隻也一起帶回去。」",
+        "en": "Healer: \"Good boy. Come to me in the village when you're hurt.\" She picks up the sheep. \"This one's coming home too.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「嗯！」",
+            "en": "\"Okay!\""
+          },
+          "next": null,
+          "action": {
+            "type": "setFlag",
+            "flag": "c1.sheep_home"
+          }
+        }
+      ]
+    }
+  }
+}

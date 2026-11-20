@@ -18,6 +18,161 @@
       "ko": "재앙에서 살아남은 마을. 장로가 여전히 이곳을 지키고 있습니다.",
       "es": "El pueblo que sobrevivió al desastre; el anciano aún vigila aquí."
     },
-    "action": { "kind": "talk", "npc": "villager_elder" }
+    "action": {
+      "kind": "talk",
+      "npc": "villager_elder"
+    }
+  },
+  "hub_bakery": {
+    "id": "hub_bakery",
+    "unlockFlag": "home.baker",
+    "name": {
+      "zh_TW": "麵包店",
+      "en": "Bakery",
+      "zh_CN": "面包店",
+      "ja": "パン屋",
+      "ko": "빵집",
+      "es": "Panadería"
+    },
+    "desc": {
+      "zh_TW": "從塔裡救回來的麵包師又生起了爐火。",
+      "en": "The baker you freed from the tower has lit the oven again.",
+      "zh_CN": "从塔里救回来的面包师又生起了炉火。",
+      "ja": "塔から救い出したパン屋が、また窯に火を入れた。",
+      "ko": "탑에서 구해 낸 제빵사가 다시 화덕에 불을 지폈다.",
+      "es": "El panadero que rescataste de la torre ha vuelto a encender el horno."
+    },
+    "action": {
+      "kind": "talk",
+      "npc": "baker"
+    }
+  },
+  "hub_weapon_master": {
+    "id": "hub_weapon_master",
+    "unlockFlag": "hub.village",
+    "name": {
+      "zh_TW": "武師的院子",
+      "en": "The Weapon Master's Yard"
+    },
+    "desc": {
+      "zh_TW": "武師在燒焦的院子裡磨著刀。",
+      "en": "The weapon master sharpens blades in his scorched yard."
+    },
+    "action": {
+      "kind": "talk",
+      "npc": "weapon_master_village"
+    }
+  },
+  "hub_healer": {
+    "id": "hub_healer",
+    "unlockFlag": "home.healer",
+    "name": {
+      "zh_TW": "治療師的小屋",
+      "en": "The Healer's Hut"
+    },
+    "desc": {
+      "zh_TW": "從塔裡救回來的治療師，在這裡替人療傷。",
+      "en": "The healer you freed from the tower tends the wounded here."
+    },
+    "action": {
+      "kind": "talk",
+      "npc": "healer"
+    }
+  },
+  "hub_tobi": {
+    "id": "hub_tobi",
+    "unlockFlag": "home.village_boy",
+    "name": {
+      "zh_TW": "小托的木桶",
+      "en": "Tobi's Barrel"
+    },
+    "desc": {
+      "zh_TW": "小托又躲回他最愛的木桶裡了，不過這次是在玩。",
+      "en": "Tobi is back in his favourite barrel. This time he's only playing."
+    },
+    "action": {
+      "kind": "talk",
+      "npc": "village_boy_home"
+    }
+  },
+  "hub_pip": {
+    "id": "hub_pip",
+    "unlockFlag": "home.chest_peddler",
+    "name": {
+      "zh_TW": "皮普的雜貨攤",
+      "en": "Pip's Stall"
+    },
+    "desc": {
+      "zh_TW": "皮普在村口擺了個攤，每樣東西都貴一點點。",
+      "en": "Pip has set up a stall by the gate. Everything costs a little too much."
+    },
+    "action": {
+      "kind": "talk",
+      "npc": "pip_shop"
+    }
+  },
+  "hub_blacksmith": {
+    "id": "hub_blacksmith",
+    "unlockFlag": "home.blacksmith",
+    "name": {
+      "zh_TW": "鐵匠鋪",
+      "en": "The Forge"
+    },
+    "desc": {
+      "zh_TW": "鐵匠的爐火又燒起來了。",
+      "en": "The blacksmith's forge is burning again."
+    },
+    "action": {
+      "kind": "talk",
+      "npc": "blacksmith"
+    }
+  },
+  "hub_cartographer": {
+    "id": "hub_cartographer",
+    "unlockFlag": "home.cartographer",
+    "name": {
+      "zh_TW": "製圖師的桌子",
+      "en": "The Cartographer's Table"
+    },
+    "desc": {
+      "zh_TW": "攤滿地圖的桌子，上面畫著塔的每一層。",
+      "en": "A table covered in maps of every floor of the tower."
+    },
+    "action": {
+      "kind": "talk",
+      "npc": "cartographer"
+    }
+  },
+  "hub_inn": {
+    "id": "hub_inn",
+    "unlockFlag": "home.innkeeper",
+    "name": {
+      "zh_TW": "旅店",
+      "en": "The Inn"
+    },
+    "desc": {
+      "zh_TW": "旅店的煙囪又冒煙了，整條街都是燉肉的香味。",
+      "en": "The inn's chimney is smoking again. The whole street smells of stew."
+    },
+    "action": {
+      "kind": "talk",
+      "npc": "innkeeper"
+    }
+  },
+  "hub_scholar": {
+    "id": "hub_scholar",
+    "unlockFlag": "home.scholar",
+    "name": {
+      "zh_TW": "學者的書房",
+      "en": "The Scholar's Study"
+    },
+    "desc": {
+      "zh_TW": "學者把救回來的書一本本晾乾。",
+      "en": "The scholar is drying out the books he saved, one by one."
+    },
+    "action": {
+      "kind": "talk",
+      "npc": "scholar"
+    }
   }
 }

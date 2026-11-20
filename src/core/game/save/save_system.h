@@ -94,6 +94,9 @@ struct RunSaveData {
     // ---- M8, run scope: the Super-Attack Gauge's per-run cap (docs/story/STORY_DATA_SCHEMA.md §8's
     // "必殺充能上限｜floor(舊值÷2)（最少1）") -- see RunStoryState::kDefaultSuperMax for the baseline.
     int m_iSuperMax = 0;   // 0: not saved, battle.json "superPoints" (RunStoryState::readFrom)
+    // The quests (missions) of this run: id -> its tracker as mission_system.h writes it (state, progress). The story
+    // revamp's quest log (docs/gameplay/23 §7): saved with the run, empty in an older save.
+    nlohmann::json m_jMissions = nlohmann::json::object();
 };
 
 // Migrations (docs/gameplay/05_SAVE_SYSTEM.md): before a file is parsed, its json is brought up to the current schema one version

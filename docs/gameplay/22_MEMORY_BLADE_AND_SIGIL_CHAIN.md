@@ -137,6 +137,36 @@ way its fighter moves to the screen's middle, a little below it); `"when": "land
 `"partial"` now needs the move to land. `fx/battle.particle` has `meteor`, `meteor_small`, `meteor_impact`,
 `meteor_impact_small`.
 
+### 4.1 The sword's and the staff's ultimates (2026-11-20)
+
+The owner asked for the same rundown on all four weapons, and chose to replace the sword's free swipe and the staff's free
+tap ("as fast as you can", every hit during the play, no finish to introduce) with the two moves already in the data:
+
+| Weapon | Ultimate | The play | Full finish (after the introduction) | Partial (3 or 4 of 5) |
+|---|---|---|---|---|
+| Iron sword | **虎虎生風** Tiger Wind (`tiger_wind`) | 5 prompts swiped as shown (the last a V; weapon level adds V's) | 8 fast cuts (his `attack` ×3 speed, a burst on him each), then his big blow and a burst on the monster; ×10 (it was ×4 as a skill) | 3 cuts, "威力未盡……" |
+| Staff | **星之印** Star Seal (`star_seal`) | the pentagram drawn by particles, then traced in 6 s, corner to corner (strokes may be lifted) | the star drawn again, 10 falling stars (`meteor` with a `star_burst` impact), his big cast, a big burst; ×10 | 4 hits, "威力未盡……" |
+
+Both fizzle under 3 of 5 (`minHits` 3). The name is no longer built piece by piece during the play (the introduction types
+it whole). The shape is now drawn on the hero's head, like the bow's ring (before, it sat at the fighters' feet, half off
+the screen). The free swipe / tap / shot moves stay in `special_moves.json`, no weapon's (Q108).
+
+### 4.2 One rundown for every special attack (the owner, 2026-11-20)
+
+The owner's rule (also in `CLAUDE.md`): every special attack, the hero's or a monster's, plays the same three parts.
+
+| | 1. The play | 2. The introduction (1.7 s, the fight waits) | 3. The attack |
+|---|---|---|---|
+| The hero's ultimate | his input (circles, prompts, a star, commands) | the camera on him, the banner from the right: "絕招發動！" + the move's name; his charge pose | his finish, him in view (the camera ×1.12 on him) |
+| A monster's special guard (`"use": "guard"`) | the player's guard play (draw a seal, tap fast) | the camera on it, the banner from the left in a boss's colours: "必殺技！" + its attack's name; its `power` pose, power burst, the boss sting, then its roar | its hit lands, less by the guard done |
+| A monster's special attack (its danger cells) | its power-up while the player dodges | the same, right before the hit (`Game::f_StartFoeIntro`; `feelFx` `specialAttack` `"intro"`) | its hit lands (unleash, knock-down) |
+
+During the introduction every clock, bar and cooldown waits, cell moves too. A monster's sounds and effects in it are bound
+to it. A fizzled hero's move shows only its miss word (no introduction). Tests: `battle_special_down` and
+`battle_floor_boss` expect one `foeIntro` (820 frames now); `battle_ultimate_sword_intro`, `battle_ultimate_sword_partial`,
+`battle_ultimate_staff_intro`, `battle_ultimate_staff_full`.
+
+
 ## 5. The numbers in `battle.json` `"plays"`
 
 `recallShowMs` 500, `recallGapMs` 80, `recallReadyMs` 250, `recallAnswerMs` 1000, `recallPerCueMs` 0, `recallReverse` 0,
@@ -209,9 +239,9 @@ change them.
 | **Q100** The memory play: a new sword type (built), or the two-handed sword's play (Q59)? | a new type, 憶刃 Memory Blade; the two-handed sword keeps its V swipes | Keep it |  |
 | **Q101** Memory blade: a wrong swipe | misses that prompt; the next is due; the hits so far count | Keep it |  |
 | **Q102** Memory blade timing by level (§2 table) | 1 s → 1.5 s; red prompts from Lv 6 | Keep it; try it and tune |  |
-| **Q103** Which weapons get the Sigil Chain? | the memory blade only; the iron sword keeps its free swipe | Keep it |  |
+| **Q103** Which weapons get the Sigil Chain? | the memory blade only; the iron sword's is now Tiger Wind (§4.1) | Keep it |  |
 | **Q104** Sigil Chain: commands, time, threshold | 10 ways, 5 s, partial from 6, ×12 | Keep it; add V / circle from a later level |  |
 | **Q106** Which idea in §6 next? | none | the parry shield, then Blade Storm |  |
 | **Q107** Keyboard for the direction plays on desktop? | mouse only | arrow keys / WASD, diagonals with two keys |  |
-| **Q108** The bow's ultimate: the Cyclone Volley in place of the free shot (built)? | the Cyclone Volley; `battle_ultimate_free_bow` (switched off) still expects the free shot and would fail | Keep it; delete that scenario or move it to another weapon |  |
+| **Q108** The free swipe / tap / shot ultimates are no weapon's now (§4, §4.1); their 3 switched-off scenarios would fail | keep the moves and the scenarios | delete the 3 scenarios; keep the moves for a later weapon |  |
 | **Q109** Cyclone Volley numbers | 3 clockwise + 3 anticlockwise, 6 s, partial from 3, ×12, 10 shots in 1.5 s | Keep it; try it and tune |  |

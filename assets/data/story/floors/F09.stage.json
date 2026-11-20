@@ -23,13 +23,11 @@
     "h": "item:potion_blue",
     "H": "item:potion_red",
     "E": "event:ev_common_relic_chipped_blade",
-    "F": "event:ev_forest_charcoal_kiln",
-    "G": "event:ev_forest_broken_arrow",
-    "I": "event:ev_common_shard_wandering",
+    "F": "event:ev_c2_wobbles",
     "Y": "key:yellow",
     "y": "door:yellow",
     "A": "monster:thorn_boar",
-    "C": "npc:lumberjack"
+    "C": "npc:cartographer"
   },
   "tiles": [
     "########################",
@@ -46,10 +44,10 @@
     "#.1...#..#..#..#.h..d###",
     "#..####..#..#..#..#..###",
     "#.....#..y.....#.X#..###",
-    "#.A..A#.Ey.F..G#.U#.a###",
+    "#.A..A#.Ey.F...#.U#.a###",
     "####..#..#..#..####..###",
     "#........#..#........###",
-    "#....A..N#C.#.H..H..I###",
+    "#....A..N#C.#.H..H...###",
     "########################"
   ],
   "story_note": {

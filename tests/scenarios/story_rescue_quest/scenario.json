@@ -1,0 +1,21 @@
+{
+  "_comment": "The story revamp's tools (docs/gameplay/23 §7, S1): a quest taken (m_rescue_baker, a flag objective), the baker freed (rescue: home.baker set, the village's bakery opens), the quest done by that flag and claimed (+20 gold), then healing for 5 gold (HP full). Enter on each node's one choice.",
+  "scene": "dialogue",
+  "player": {
+    "gold": 0,
+    "hp": 10
+  },
+  "dialogue": {
+    "file": "dialogue.json"
+  },
+  "test": {
+    "frames": 90,
+    "keys": "enter@10,enter@25,enter@40,enter@55"
+  },
+  "expect": {
+    "flags": [
+      "home.baker"
+    ],
+    "gold": 15
+  }
+}

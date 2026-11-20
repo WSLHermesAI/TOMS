@@ -1,0 +1,29 @@
+{
+  "_comment": "The staff's ultimate (the owner, 2026-11-20; docs/gameplay/22 §4.1; special_moves.json star_seal): full super charge, g at frame 10; its name, then the pentagram drawn by particles, then 6 s to trace it. Nothing traced: it fizzles (no hit, no introduction).",
+  "scene": "battle",
+  "player": {
+    "give": [
+      "staff"
+    ],
+    "equip": [
+      "staff"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000,
+    "super": true,
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 620,
+    "keys": "g@10"
+  },
+  "expect": {
+    "battleEvents": {
+      "skill": 1,
+      "hit": 0
+    }
+  }
+}

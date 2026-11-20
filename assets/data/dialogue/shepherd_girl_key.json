@@ -1,0 +1,23 @@
+{
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): F03, talk N times (the owner, Q112): the 5th talk gives the orchard key (the gate on F05). finishOnClose: closing it finishes the event (its actions give the key).",
+  "npcId": "shepherd_girl",
+  "start": "key",
+  "nodes": {
+    "key": {
+      "text": {
+        "zh_TW": "牧羊女：「你每次都回來看我……你是好人。」她從圍裙裡掏出一把生鏽的鑰匙。「這是塔裡舊果園的鑰匙。灰面具把一個人關在那裡……在上面兩層。」",
+        "en": "Shepherd girl: \"You keep coming back to see me... you're kind.\" She takes a rusty key from her apron. \"It opens the old orchard in the tower. The grey masks locked someone in there... two floors up.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「謝謝妳。我也會把妳的羊帶回來。」",
+            "en": "\"Thank you. I'll bring your sheep back too.\""
+          },
+          "next": null
+        }
+      ]
+    }
+  },
+  "finishOnClose": true
+}

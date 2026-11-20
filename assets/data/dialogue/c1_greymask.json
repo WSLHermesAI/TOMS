@@ -1,0 +1,64 @@
+{
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): F05, before the chapter's boss: Grey Mask on the stairs.",
+  "npcId": "villager_elder",
+  "start": "stairs",
+  "nodes": {
+    "stairs": {
+      "text": {
+        "zh_TW": "樓梯上站著一個人——灰色的面具，沒有表情。",
+        "en": "Someone stands on the stairs: a grey mask with no face."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": "taunt"
+        }
+      ]
+    },
+    "taunt": {
+      "text": {
+        "zh_TW": "灰面：「農夫家的小鬼，居然自己送上門。省得我們去找。」他打了個響指，一頭巨獸從陰影裡走出來。「把他打昏，帶上來。別弄壞了。」",
+        "en": "Grey Mask: \"The farmer's brat, walking right into our hands. Saves us the search.\" He snaps his fingers and a huge beast steps out of the shadows. \"Knock him out and bring him up. Don't break him.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「我爹娘在哪！？」",
+            "en": "\"Where are my parents!?\""
+          },
+          "next": "gone"
+        },
+        {
+          "label": {
+            "zh_TW": "「我會讓你付出代價！」",
+            "en": "\"You'll pay for this!\""
+          },
+          "next": "gone",
+          "action": {
+            "type": "addCounter",
+            "counter": "vengeance",
+            "delta": 1
+          }
+        }
+      ]
+    },
+    "gone": {
+      "text": {
+        "zh_TW": "灰面沒有回答。他轉身走上樓梯，消失在黑暗裡。",
+        "en": "Grey Mask doesn't answer. He turns and climbs the stairs into the dark."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「站住！」",
+            "en": "\"Come back!\""
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

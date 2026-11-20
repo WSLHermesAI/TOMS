@@ -44,6 +44,7 @@
     "finish": [ { "at": 0, "do": "shake", "value": 5, "ms": 300 } ]
   },
   "star_seal": {
+    "_comment": "The staff's ultimate (the owner, 2026-11-20; docs/gameplay/22 §4.1): the pentagram shown by particles, then traced in 6 s. Then the shared rundown: the hero's introduction, then the attack. 5 of 5: the star drawn again, 10 falling stars, a last burst; 3 or 4: 4 hits; fewer: it fizzles.",
     "name": "skill.star_seal",
     "weapon": "staff",
     "use": "ultimate",
@@ -51,6 +52,7 @@
     "damage": 10,
     "play": {
       "kind": "drawShape",
+      "minHits": 3,
       "shape": "pentagram",
       "timeMs": 6000,
       "size": 230,
@@ -81,42 +83,30 @@
       },
       {
         "do": "count"
-      },
-      {
-        "do": "namePart"
       }
     ],
     "finish": [
-      {
-        "at": 0,
-        "do": "name"
-      },
-      {
-        "at": 0,
-        "do": "camera",
-        "zoom": 1.5,
-        "on": "player",
-        "ms": 1700,
-        "move": "orbit",
-        "deg": 35
-      },
-      {
-        "at": 200,
-        "do": "clip",
-        "clip": "attack_big"
-      },
-      {
-        "at": 400,
-        "do": "hits",
-        "count": 10,
-        "gapMs": 110
-      },
-      {
-        "at": 400,
-        "do": "shake",
-        "value": 6,
-        "ms": 1100
-      }
+      { "at": 0, "do": "intro", "text": "battle.ultimate_label", "ms": 1700, "when": "landed" },
+      { "at": 0, "do": "camera", "zoom": 1.45, "on": "player", "ms": 1700, "move": "low", "deg": 12, "value": 0.85, "when": "landed" },
+      { "at": 0, "do": "clip", "clip": "charge", "speed": 0.75, "when": "landed" },
+      { "at": 0, "do": "fx", "fx": "staff_great", "on": "player", "when": "landed" },
+      { "at": 0, "do": "sound", "fx": "sfx.boss_intro", "when": "landed" },
+      { "at": 900, "do": "fx", "fx": "staff_great", "on": "player", "when": "landed" },
+      { "at": 900, "do": "sound", "fx": "sfx.magic_cast", "when": "landed" },
+      { "at": 1800, "do": "camera", "zoom": 1.12, "on": "player", "ms": 2100, "when": "full" },
+      { "at": 1800, "do": "dim", "ms": 1800, "when": "full" },
+      { "at": 1800, "do": "pathFx", "shape": "pentagram", "fx": "star_trail", "corner": "star_burst", "ms": 700, "when": "full" },
+      { "at": 2300, "do": "hits", "count": 10, "gapMs": 110, "clip": "attack", "speed": 3, "fx": "staff_great",
+        "projectile": "meteor", "impact": "star_burst", "flightMs": 320, "when": "full" },
+      { "at": 2600, "do": "shake", "value": 7, "ms": 1200, "when": "full" },
+      { "at": 3700, "do": "clip", "clip": "attack_big", "when": "full" },
+      { "at": 3800, "do": "fx", "fx": "star_burst_big", "on": "monster", "when": "full" },
+      { "at": 3800, "do": "fx", "fx": "staff_perfect", "on": "monster", "when": "full" },
+      { "at": 3800, "do": "shake", "value": 13, "ms": 450, "when": "full" },
+      { "at": 3800, "do": "sound", "fx": "sfx.explosion", "when": "full" },
+      { "at": 1800, "do": "banner", "text": "skill.ultimate_partial", "ms": 800, "when": "partial" },
+      { "at": 1800, "do": "hits", "count": 4, "gapMs": 160, "clip": "attack", "speed": 2.5, "fx": "staff_great", "when": "partial" },
+      { "at": 1850, "do": "shake", "value": 4, "ms": 700, "when": "partial" }
     ]
   },
   "sigil_chain": {
@@ -130,21 +120,28 @@
               "cues": [ "way", "way", "way", "way", "way", "way", "way", "way", "way", "way" ] },
     "demo": [ { "at": 0, "do": "name", "ms": 1000 }, { "at": 0, "do": "fx", "fx": "sword_great", "on": "player" },
               { "at": 0, "do": "sound", "fx": "sfx.boss_intro" }, { "at": 900, "do": "dim" } ],
-    "step": [ { "do": "fx", "fx": "seal_burst", "on": "player" }, { "do": "namePart" } ],
+    "step": [ { "do": "fx", "fx": "seal_burst", "on": "player" } ],
     "finish": [
-      { "at": 0, "do": "camera", "zoom": 1.7, "on": "monster", "ms": 2000, "move": "orbit", "deg": 50, "when": "full" },
-      { "at": 0, "do": "fx", "fx": "seal_trail", "on": "monster", "when": "full" },
-      { "at": 150, "do": "clip", "clip": "attack_big", "when": "full" },
-      { "at": 300, "do": "fx", "fx": "star_burst_big", "on": "monster", "when": "full" },
-      { "at": 400, "do": "hits", "count": 10, "gapMs": 90, "when": "full" },
-      { "at": 400, "do": "shake", "value": 10, "ms": 1300, "when": "full" },
-      { "at": 1300, "do": "fx", "fx": "sword_perfect", "on": "monster", "when": "full" },
-      { "at": 1300, "do": "sound", "fx": "sfx.explosion", "when": "full" },
-      { "at": 0, "do": "banner", "text": "skill.chain_partial", "ms": 900, "when": "partial" },
-      { "at": 0, "do": "camera", "zoom": 1.25, "on": "monster", "ms": 1000, "when": "partial" },
-      { "at": 150, "do": "clip", "clip": "attack_big", "when": "partial" },
-      { "at": 300, "do": "hits", "count": 4, "gapMs": 120, "when": "partial" },
-      { "at": 300, "do": "shake", "value": 5, "ms": 500, "when": "partial" }
+      { "at": 0, "do": "intro", "text": "battle.ultimate_label", "ms": 1700, "when": "landed" },
+      { "at": 0, "do": "camera", "zoom": 1.45, "on": "player", "ms": 1700, "move": "low", "deg": 12, "value": 0.85, "when": "landed" },
+      { "at": 0, "do": "clip", "clip": "charge", "speed": 0.75, "when": "landed" },
+      { "at": 0, "do": "fx", "fx": "seal_burst", "on": "player", "when": "landed" },
+      { "at": 0, "do": "sound", "fx": "sfx.boss_intro", "when": "landed" },
+      { "at": 900, "do": "fx", "fx": "seal_burst", "on": "player", "when": "landed" },
+      { "at": 900, "do": "sound", "fx": "sfx.sword_slash", "when": "landed" },
+      { "at": 1800, "do": "camera", "zoom": 1.12, "on": "player", "ms": 1800, "when": "full" },
+      { "at": 1800, "do": "fx", "fx": "seal_trail", "on": "monster", "when": "full" },
+      { "at": 1950, "do": "clip", "clip": "attack_big", "when": "full" },
+      { "at": 2100, "do": "fx", "fx": "star_burst_big", "on": "monster", "when": "full" },
+      { "at": 2200, "do": "hits", "count": 10, "gapMs": 90, "clip": "attack", "speed": 3, "when": "full" },
+      { "at": 2200, "do": "shake", "value": 10, "ms": 1300, "when": "full" },
+      { "at": 3100, "do": "fx", "fx": "sword_perfect", "on": "monster", "when": "full" },
+      { "at": 3100, "do": "sound", "fx": "sfx.explosion", "when": "full" },
+      { "at": 1800, "do": "banner", "text": "skill.chain_partial", "ms": 900, "when": "partial" },
+      { "at": 1800, "do": "camera", "zoom": 1.08, "on": "player", "ms": 1000, "when": "partial" },
+      { "at": 1950, "do": "clip", "clip": "attack_big", "when": "partial" },
+      { "at": 2100, "do": "hits", "count": 4, "gapMs": 120, "when": "partial" },
+      { "at": 2100, "do": "shake", "value": 5, "ms": 500, "when": "partial" }
     ]
   },
   "cyclone_volley": {
@@ -184,13 +181,15 @@
     ]
   },
   "tiger_wind": {
+    "_comment": "The sword's ultimate (the owner, 2026-11-20; docs/gameplay/22 §4.1): 5 prompts swiped as shown (the last a V). Then the shared rundown: the hero's introduction, then the attack. 5 of 5: 8 fast cuts and a last big blow; 3 or 4: 3 cuts; fewer: it fizzles.",
     "name": "skill.tiger_wind",
     "weapon": "sword",
     "use": "ultimate",
     "prompt": "skill.prompt_cut",
-    "damage": 4,
+    "damage": 10,
     "play": {
       "kind": "swipeWay",
+      "minHits": 3,
       "cues": [
         "way",
         "way",
@@ -223,38 +222,28 @@
       },
       {
         "do": "count"
-      },
-      {
-        "do": "namePart"
       }
     ],
     "finish": [
-      {
-        "at": 0,
-        "do": "camera",
-        "zoom": 1.4,
-        "on": "monster",
-        "ms": 1400,
-        "move": "orbit",
-        "deg": 35
-      },
-      {
-        "at": 100,
-        "do": "clip",
-        "clip": "attack_big"
-      },
-      {
-        "at": 300,
-        "do": "hits",
-        "count": 4,
-        "gapMs": 160
-      },
-      {
-        "at": 300,
-        "do": "shake",
-        "value": 7,
-        "ms": 700
-      }
+      { "at": 0, "do": "intro", "text": "battle.ultimate_label", "ms": 1700, "when": "landed" },
+      { "at": 0, "do": "camera", "zoom": 1.45, "on": "player", "ms": 1700, "move": "low", "deg": 12, "value": 0.85, "when": "landed" },
+      { "at": 0, "do": "clip", "clip": "charge", "speed": 0.75, "when": "landed" },
+      { "at": 0, "do": "fx", "fx": "sword_great", "on": "player", "when": "landed" },
+      { "at": 0, "do": "sound", "fx": "sfx.boss_intro", "when": "landed" },
+      { "at": 900, "do": "fx", "fx": "sword_great", "on": "player", "when": "landed" },
+      { "at": 900, "do": "sound", "fx": "sfx.sword_slash", "when": "landed" },
+      { "at": 1800, "do": "camera", "zoom": 1.12, "on": "player", "ms": 1700, "when": "full" },
+      { "at": 1800, "do": "dim", "ms": 1600, "when": "full" },
+      { "at": 1800, "do": "hits", "count": 8, "gapMs": 120, "clip": "attack", "speed": 3, "fx": "sword_great", "when": "full" },
+      { "at": 1850, "do": "shake", "value": 8, "ms": 1100, "when": "full" },
+      { "at": 2850, "do": "clip", "clip": "attack_big", "when": "full" },
+      { "at": 2950, "do": "fx", "fx": "sword_perfect", "on": "monster", "when": "full" },
+      { "at": 2950, "do": "fx", "fx": "star_burst_big", "on": "monster", "when": "full" },
+      { "at": 2950, "do": "shake", "value": 13, "ms": 450, "when": "full" },
+      { "at": 2950, "do": "sound", "fx": "sfx.explosion", "when": "full" },
+      { "at": 1800, "do": "banner", "text": "skill.ultimate_partial", "ms": 800, "when": "partial" },
+      { "at": 1800, "do": "hits", "count": 3, "gapMs": 160, "clip": "attack", "speed": 2.5, "fx": "sword_great", "when": "partial" },
+      { "at": 1850, "do": "shake", "value": 4, "ms": 600, "when": "partial" }
     ]
   },
   "falcon_rain": {
@@ -358,12 +347,15 @@
       }
     ],
     "finish": [
-      {
-        "at": 0,
-        "do": "fx",
-        "fx": "monster_parried",
-        "on": "player"
-      }
+      { "at": 0, "do": "intro", "text": "battle.foe_special_label", "ms": 1700 },
+      { "at": 0, "do": "camera", "zoom": 1.45, "on": "monster", "ms": 1700, "move": "low", "deg": 12, "value": 0.85 },
+      { "at": 0, "do": "clip", "clip": "power" },
+      { "at": 0, "do": "fx", "fx": "monster_power", "on": "monster" },
+      { "at": 0, "do": "sound", "fx": "sfx.boss_intro" },
+      { "at": 900, "do": "fx", "fx": "monster_charge", "on": "monster" },
+      { "at": 1750, "do": "fx", "fx": "monster_unleash", "on": "monster" },
+      { "at": 1750, "do": "sound", "fx": "sfx.monster_roar" },
+      { "at": 1800, "do": "fx", "fx": "monster_parried", "on": "player" }
     ]
   },
   "guard_mash": {
@@ -394,12 +386,15 @@
       }
     ],
     "finish": [
-      {
-        "at": 0,
-        "do": "fx",
-        "fx": "shield_crack",
-        "on": "player"
-      }
+      { "at": 0, "do": "intro", "text": "battle.foe_special_label", "ms": 1700 },
+      { "at": 0, "do": "camera", "zoom": 1.45, "on": "monster", "ms": 1700, "move": "low", "deg": 12, "value": 0.85 },
+      { "at": 0, "do": "clip", "clip": "power" },
+      { "at": 0, "do": "fx", "fx": "monster_power", "on": "monster" },
+      { "at": 0, "do": "sound", "fx": "sfx.boss_intro" },
+      { "at": 900, "do": "fx", "fx": "monster_charge", "on": "monster" },
+      { "at": 1750, "do": "fx", "fx": "monster_unleash", "on": "monster" },
+      { "at": 1750, "do": "sound", "fx": "sfx.monster_roar" },
+      { "at": 1800, "do": "fx", "fx": "shield_crack", "on": "player" }
     ]
   }
 }

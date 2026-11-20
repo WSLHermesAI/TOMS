@@ -1,0 +1,74 @@
+{
+  "_comment": "Chapter 3 of the story revamp (docs/gameplay/23 §4): the whole ledger (three pages, ledger_pages 3): Leo's line, and Kai's sister Mira (c3.ledger: the quest done).",
+  "npcId": "knight_errant",
+  "start": "read",
+  "nodes": {
+    "read": {
+      "text": {
+        "zh_TW": "三頁名冊拼在一起。最下面一行寫著：「橡木村，農夫家——有記號的孩子：里歐。主人親自處理。」再往上一行……",
+        "en": "The three pages fit together. The last line reads: \"Oakhollow, the farmer's house: the marked child, Leo. To be handled by the Master.\" One line above it..."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……凱？」",
+            "en": "\"...Kai?\""
+          },
+          "next": "mira"
+        }
+      ]
+    },
+    "mira": {
+      "text": {
+        "zh_TW": "凱的手在發抖：「『王都，騎士家——米菈，十二歲。』……是我妹妹。」他握緊劍。「我一直以為她只是被派去遠方的修道院。」",
+        "en": "Kai's hands are shaking. \"'The capital, a knight's house: Mira, twelve.'... That's my little sister.\" He grips his sword. \"I thought she'd been sent to a convent far away.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「我們一起把她帶回來。」",
+            "en": "\"We'll bring her back. Together.\""
+          },
+          "next": "end",
+          "actions": [
+            {
+              "type": "addCounter",
+              "counter": "trust",
+              "delta": 1
+            },
+            {
+              "type": "setFlag",
+              "flag": "c3.ledger"
+            }
+          ]
+        },
+        {
+          "label": {
+            "zh_TW": "「……冷靜點，凱。」",
+            "en": "\"...Stay calm, Kai.\""
+          },
+          "next": "end",
+          "action": {
+            "type": "setFlag",
+            "flag": "c3.ledger"
+          }
+        }
+      ]
+    },
+    "end": {
+      "text": {
+        "zh_TW": "凱把名冊收好，聲音很低：「……灰面。我一定要問清楚。」",
+        "en": "Kai folds the ledger away, his voice low. \"...Grey Mask. I'm going to get answers.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): the morning at home, the last before the raid; it leads to the weapon master's trial.",
+  "npcId": "farmer_wife",
+  "start": "wake",
+  "nodes": {
+    "wake": {
+      "text": {
+        "zh_TW": "媽媽：「里歐，起床了！今天是你十二歲生日——還有，你昨晚是不是偷吃了整鍋燉菜？」",
+        "en": "Mom: \"Leo, up! It's your twelfth birthday. And did you eat the whole pot of stew last night?\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……是老鼠吃的。」",
+            "en": "\"...It was the mice.\""
+          },
+          "next": "dad"
+        },
+        {
+          "label": {
+            "zh_TW": "「我在長身體嘛！」",
+            "en": "\"I'm growing!\""
+          },
+          "next": "dad"
+        }
+      ]
+    },
+    "dad": {
+      "text": {
+        "zh_TW": "爸爸：「老鼠會把碗舔得這麼乾淨？」爸爸笑著揉亂你的頭髮。「去吧，武師在村口等你。生日禮物——今天你可以挑第一把武器。」",
+        "en": "Dad: \"Mice that lick the bowl this clean?\" He ruffles your hair, laughing. \"Go on, the weapon master is waiting at the gate. Your present: today you choose your first weapon.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「真的嗎！？」",
+            "en": "\"Really!?\""
+          },
+          "next": "mom"
+        }
+      ]
+    },
+    "mom": {
+      "text": {
+        "zh_TW": "媽媽：「早點回來吃晚飯。還有……不管發生什麼事，都別離你爸太遠。」她的手停在你肩上，比平常久了一點。",
+        "en": "Mom: \"Be back for supper. And... whatever happens, stay close to your father.\" Her hand rests on your shoulder a moment longer than usual."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「知道啦！」",
+            "en": "\"I know, I know!\""
+          },
+          "next": null,
+          "action": {
+            "type": "startDialogue",
+            "dialogue": "weapon_master"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "_comment": "Chapter 3 of the story revamp (docs/gameplay/23 §4): F11, a rescue: the innkeeper goes home (the village inn).",
+  "npcId": "innkeeper",
+  "start": "bar",
+  "nodes": {
+    "bar": {
+      "text": {
+        "zh_TW": "旅店老闆娘被綁在吧檯邊，還在罵人：「放開我！我的燉肉還在爐子上！」",
+        "en": "The innkeeper is tied to a bar stool, still shouting. \"Let me go! My stew is still on the stove!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（解開她）「燉肉……燒焦了吧。」",
+            "en": "(Untie her) \"That stew... is probably burnt.\""
+          },
+          "next": "home",
+          "action": {
+            "type": "rescue",
+            "npc": "innkeeper"
+          }
+        }
+      ]
+    },
+    "home": {
+      "text": {
+        "zh_TW": "老闆娘：「燒焦就重煮！里歐，回村後來旅店，我煮一大鍋給你——你最愛的。」",
+        "en": "Innkeeper: \"Then I'll cook another! Leo, come to the inn when you're back. A whole pot, just for you. Your favourite.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「（口水）……說好了。」",
+            "en": "\"(Drool)... Deal.\""
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

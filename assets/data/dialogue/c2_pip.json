@@ -1,0 +1,107 @@
+{
+  "_comment": "Chapter 2 of the story revamp (docs/gameplay/23 §4): F07, Pip the greedy little monster merchant: an \"investment\", then he moves to the village and opens a shop.",
+  "npcId": "chest_peddler",
+  "start": "hi",
+  "nodes": {
+    "hi": {
+      "text": {
+        "zh_TW": "一隻抱著寶箱、戴著單片眼鏡的小怪物跳到你面前。「嘿嘿，客人！我叫皮普。我一看就知道——你以後會發大財！」",
+        "en": "A little monster hugging a treasure chest and wearing a monocle hops in front of you. \"Heh heh, a customer! I'm Pip. I can tell at a glance: you're going to be rich!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……我身上只有幾個銅板。」",
+            "en": "\"...I've only got a few coins.\""
+          },
+          "next": "pitch"
+        },
+        {
+          "label": {
+            "zh_TW": "「真的嗎？」",
+            "en": "\"Really?\""
+          },
+          "next": "pitch"
+        }
+      ]
+    },
+    "pitch": {
+      "text": {
+        "zh_TW": "皮普：「現在投資十枚金幣，等你打倒塔主，我還你一百枚！穩賺不賠！」",
+        "en": "Pip: \"Invest ten gold now, and when you beat the tower's master I'll pay you back a hundred! Can't lose!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「好，投資！」（10 金幣）",
+            "en": "\"Deal! I'll invest.\" (10 gold)"
+          },
+          "next": "deal",
+          "requires": {
+            "type": "statAtLeast",
+            "stat": "gold",
+            "value": 10
+          },
+          "actions": [
+            {
+              "type": "addStat",
+              "stat": "gold",
+              "delta": -10
+            },
+            {
+              "type": "setFlag",
+              "flag": "c2.pip_invested"
+            }
+          ]
+        },
+        {
+          "label": {
+            "zh_TW": "「聽起來像騙局。」",
+            "en": "\"Sounds like a scam.\""
+          },
+          "next": "clever"
+        }
+      ]
+    },
+    "deal": {
+      "text": {
+        "zh_TW": "皮普把金幣咬了一下。「合作愉快！為了保護我的投資，我決定跟著你——不對，我先去你的村子開店。你一定會常來的！」",
+        "en": "Pip bites the coin. \"Pleasure doing business! To protect my investment I'll follow you... no, I'll open a shop in your village first. You'll be back a lot!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……隨便你。」",
+            "en": "\"...Whatever you say.\""
+          },
+          "next": null,
+          "action": {
+            "type": "rescue",
+            "npc": "chest_peddler",
+            "text": "village.moved_in"
+          }
+        }
+      ]
+    },
+    "clever": {
+      "text": {
+        "zh_TW": "皮普：「聰明的客人！我更喜歡你了。我去你的村子開店——聰明的客人最會花錢了。」",
+        "en": "Pip: \"A clever customer! I like you even more. I'll open a shop in your village. Clever ones spend the most.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……隨便你。」",
+            "en": "\"...Whatever you say.\""
+          },
+          "next": null,
+          "action": {
+            "type": "rescue",
+            "npc": "chest_peddler",
+            "text": "village.moved_in"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "_comment": "Chapter 2 of the story revamp (docs/gameplay/23 §4): F09, Sir Wobbles again (comic; his king comes later).",
+  "npcId": "villager",
+  "start": "soot",
+  "nodes": {
+    "soot": {
+      "text": {
+        "zh_TW": "晃晃爵士又出現了，水桶被燻得漆黑。「平民！吾正在修行……修行被烤。」",
+        "en": "Sir Wobbles again, his bucket black with soot. \"Commoner! I am training... training at being toasted.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……你還好嗎？」",
+            "en": "\"...Are you okay?\""
+          },
+          "next": "king"
+        }
+      ]
+    },
+    "king": {
+      "text": {
+        "zh_TW": "晃晃爵士：「吾聽說吾王——偉大的史萊姆王，被收集者抓去了！若你見到他……請溫柔一點。他很怕癢。」",
+        "en": "Sir Wobbles: \"I hear my liege, the great Slime King, was taken by the Collectors! If you meet him... please be gentle. He is very ticklish.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……我盡量。」",
+            "en": "\"...I'll try.\""
+          },
+          "next": null,
+          "action": {
+            "type": "setFlag",
+            "flag": "c2.wobbles"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "_comment": "Chapter 2 of the story revamp (docs/gameplay/23 §4): F10, a choice: Kai caught in a Collector snare (free him: trust; walk away: less); he joins either way. His wolf quest is paid here.",
+  "npcId": "knight_errant",
+  "start": "snare",
+  "nodes": {
+    "snare": {
+      "text": {
+        "zh_TW": "凱的腳被收集者的捕獸夾夾住了，劍掉在搆不到的地方。狼群正在靠近。「別、別管我！這是陷阱，他們要的是你！」",
+        "en": "Kai's foot is caught in a Collector snare; his sword lies out of reach. Wolves are closing in. \"D-don't mind me! It's a trap. It's you they want!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「說什麼傻話。」（撬開夾子）",
+            "en": "\"Don't be stupid.\" (Pry the snare open)"
+          },
+          "next": "saved",
+          "actions": [
+            {
+              "type": "addCounter",
+              "counter": "trust",
+              "delta": 1
+            },
+            {
+              "type": "setFlag",
+              "flag": "c2.saved_kai"
+            }
+          ]
+        },
+        {
+          "label": {
+            "zh_TW": "「你說過會一直盯著我的。」（轉身走開）",
+            "en": "\"You said you'd keep watching me.\" (Walk away)"
+          },
+          "next": "left",
+          "actions": [
+            {
+              "type": "addCounter",
+              "counter": "trust",
+              "delta": -1
+            },
+            {
+              "type": "setFlag",
+              "flag": "c2.left_kai"
+            }
+          ]
+        }
+      ]
+    },
+    "saved": {
+      "text": {
+        "zh_TW": "凱一瘸一拐地站起來，撿回劍。「……謝了。」他別過頭。「從現在起，我跟你一起走。不是因為信任你——是因為你顯然需要人看著。」",
+        "en": "Kai limps to his feet and picks up his sword. \"...Thanks.\" He looks away. \"From now on I'm coming with you. Not because I trust you. Because you clearly need watching.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「狼也打倒三隻了喔。」",
+            "en": "\"And I beat the three wolves.\""
+          },
+          "next": "paid",
+          "requires": {
+            "all": [
+              {
+                "type": "missionComplete",
+                "missionId": "m_c2_wolves"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c2.wolves_paid"
+                }
+              }
+            ]
+          },
+          "actions": [
+            {
+              "type": "claimMission",
+              "missionId": "m_c2_wolves"
+            },
+            {
+              "type": "setFlag",
+              "flag": "c2.wolves_paid"
+            },
+            {
+              "type": "setFlag",
+              "flag": "c2.kai_joined"
+            }
+          ]
+        },
+        {
+          "label": {
+            "zh_TW": "「好啦好啦。」",
+            "en": "\"Okay, okay.\""
+          },
+          "next": null,
+          "action": {
+            "type": "setFlag",
+            "flag": "c2.kai_joined"
+          }
+        }
+      ]
+    },
+    "left": {
+      "text": {
+        "zh_TW": "你走了幾步，身後傳來一聲大叫——然後是劍砍斷鐵夾的聲音。凱追了上來，一臉怒氣：「……你真的走掉了！？」",
+        "en": "A few steps on, there's a yell behind you, then a blade cutting through iron. Kai catches up, furious. \"...You actually walked away!?\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「我知道你辦得到。」",
+            "en": "\"I knew you could do it.\""
+          },
+          "next": null,
+          "action": {
+            "type": "setFlag",
+            "flag": "c2.kai_joined"
+          }
+        }
+      ]
+    },
+    "paid": {
+      "text": {
+        "zh_TW": "凱：「……哼，我收回『壞人』那句話。這是王都的賞金。」",
+        "en": "Kai: \"...Hmph. I take back the villain part. Here, the capital's bounty.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「謝啦。」",
+            "en": "\"Thanks.\""
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

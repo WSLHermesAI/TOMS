@@ -1,19 +1,42 @@
 {
+  "_comment": "Chapter 2 of the story revamp (docs/gameplay/23 §4): the cartographer at home (hub_cartographer): who is still held; Liora foreshadowed.",
   "npcId": "cartographer",
   "start": "root",
   "nodes": {
     "root": {
       "text": {
-        "zh_TW": "旅人，你好。我是製圖師。",
-        "en": "Good day, traveller. I'm the cartographer."
+        "zh_TW": "製圖師：「要看看我的地圖嗎？」",
+        "en": "Cartographer: \"Want to see my map?\""
       },
       "choices": [
         {
           "label": {
-            "zh_TW": "再見。",
-            "en": "Goodbye."
+            "zh_TW": "「還有誰被抓走了？」",
+            "en": "\"Who's still missing?\""
+          },
+          "next": "missing"
+        },
+        {
+          "label": {
+            "zh_TW": "「再見。」",
+            "en": "\"Bye.\""
           },
           "next": null
+        }
+      ]
+    },
+    "missing": {
+      "text": {
+        "zh_TW": "製圖師：「你爹娘被帶往更上面——門樓那邊。還有好多王都的人。對了……塔頂的窗戶邊，常有個穿白裙的女孩在唱歌。」",
+        "en": "Cartographer: \"Your parents were taken further up, toward the gatehouse. Lots of people from the capital too. Oh, and... a girl in a white dress often sings at a window at the very top.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": "root"
         }
       ]
     }

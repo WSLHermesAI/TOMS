@@ -1,0 +1,28 @@
+{
+  "_comment": "Chapter 3's end (docs/gameplay/23 §4): F16 reached (the Grimoire Warden beaten) after chapter 2, the ledger quest done; the elder reads the ledger: Grey Mask was one of the village, twelve years ago; the quest paid (claimed) and c3.done.",
+  "scene": "dialogue",
+  "stage": "F16",
+  "flags": [
+    "c1.done",
+    "c2.done"
+  ],
+  "missions": {
+    "m_c3_ledger": "completed"
+  },
+  "dialogue": {
+    "id": "villager_elder"
+  },
+  "test": {
+    "frames": 70,
+    "keys": "enter@10,enter@25,enter@40"
+  },
+  "expect": {
+    "scene": "stage",
+    "flags": [
+      "c3.done"
+    ],
+    "missions": {
+      "m_c3_ledger": "claimed"
+    }
+  }
+}

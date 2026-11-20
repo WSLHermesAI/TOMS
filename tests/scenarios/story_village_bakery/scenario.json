@@ -1,0 +1,14 @@
+{
+  "_comment": "The village grows (docs/gameplay/23 §5, S1): with the baker home (home.baker, set by a rescue), the village's bakery (hub.json hub_bakery, unlockFlag home.baker) opens and talks to the baker. Without the flag the scenario could not start: the place would be locked.",
+  "scene": "hub",
+  "flags": [
+    "hub.village",
+    "home.baker"
+  ],
+  "hub": {
+    "location": "hub_bakery"
+  },
+  "test": {
+    "frames": 40
+  }
+}

@@ -109,8 +109,10 @@ void Game::f_ChooseDialogue(int l_iIdx) {
     // A topic's choices are remembered per event (choiceMade {eventId, id}), so later dialogues and events can ask
     // which way the player went.
     if (l_bTopic && !l_oCh.m_strId.empty()) m_oRun.f_MakeChoice(l_strEventId, l_oCh.m_strId, true);
+    m_bDlgReplaced = false;
     if (!l_oCh.m_jAction.is_null()) f_RunStoryActions(l_oCh.m_jAction);
     if (!l_oCh.m_jActions.is_null()) f_RunStoryActions(l_oCh.m_jActions);
+    if (m_bDlgReplaced) { m_bDlgReplaced = false; return; }   // the choice opened another dialogue (a scene goes on): it stays
     if (l_bTopic) {   // an after-dialogue's `finish` / `fire` are ignored: the event is already finished
         for (const std::string& l_strF : l_oCh.m_vFire) f_WakeEvent(l_strF);
         if (l_oCh.m_bFinish) f_FinishTalkEvent(l_strEventId);
@@ -376,8 +378,8 @@ void Game::f_RunStoryActions(const nlohmann::json& l_jActions) {
             m_oG.m_oRun.f_AddVar(l_strV, l_iDelta);
             if (m_oG.m_oRun.f_Var(l_strV) != l_iBefore) m_oG.f_VarChanged(l_strV);
         }
-        void f_SetFlag(const std::string& l_strF) override { if (!l_strF.empty()) m_oG.m_oRun.f_SetFlag(l_strF, true); }
-        void f_SetStoryFlag(const std::string& l_strF) override { if (!l_strF.empty()) toms::f_SetStoryFlag(m_oG.m_oMeta, l_strF); }
+        void f_SetFlag(const std::string& l_strF) override { if (!l_strF.empty()) { m_oG.m_oRun.f_SetFlag(l_strF, true); m_oG.f_MissionProgress("flag", l_strF); } }
+        void f_SetStoryFlag(const std::string& l_strF) override { if (!l_strF.empty()) { toms::f_SetStoryFlag(m_oG.m_oMeta, l_strF); m_oG.f_MissionProgress("flag", l_strF); } }
         void f_AddCounter(const std::string& l_strC, int l_iDelta) override { if (!l_strC.empty() && l_iDelta != 0) m_oG.m_oRun.f_AddCounter(l_strC, l_iDelta); }
         void f_FireEvent(const std::string& l_strId) override { m_oG.f_WakeEvent(l_strId); }
         void f_Message(const std::string& l_strKey) override { m_oG.m_vNotifications.push_back({m_oG.m_oLocale.f_Tr(l_strKey), 3800}); }
@@ -445,7 +447,12 @@ void Game::f_CloseMiniGame() {
 
 // ---- the start story: the weapon trial (docs/gameplay/07 phase 3) ----
 
-void Game::f_StartWeaponTrial() { m_setTutorialSeen.clear(); f_StartDialogue("weapon_master"); }
+// The start story: the prologue first when the data has one (docs/gameplay/23 §4, chapter 1: the morning at home; its
+// last choice takes the player to the weapon master), else the weapon master at once.
+void Game::f_StartWeaponTrial() {
+    m_setTutorialSeen.clear();
+    f_StartDialogue(f_ReadDialogue("prologue_morning").is_object() ? "prologue_morning" : "weapon_master");
+}
 
 void Game::f_TryWeapon(const std::string& l_strWeaponId) {
     if (!m_mapEquipmentDefs.count(l_strWeaponId)) return;
@@ -486,12 +493,29 @@ void Game::f_RunDialogueAction(const nlohmann::json& l_jAction) {
     if (l_strType == "tryWeapon") { f_TryWeapon(l_jAction.value("weapon", std::string())); return; }   // docs/gameplay/07 phase 3
     if (l_strType == "chooseWeapon") { f_ChooseWeapon(); return; }
     if (l_strType == "miniGame") { f_EndDialogue(); f_OpenMiniGame(l_jAction.value("id", std::string())); return; }   // docs/gameplay/07 phase 6
+    // the story revamp's verbs (docs/gameplay/23 §5, §7): a rescue, a scene, the village's services
+    if (l_strType == "rescue") { f_RescueNpc(l_jAction.value("npc", std::string()), l_jAction.value("text", std::string("village.rescued"))); return; }
+    if (l_strType == "startDialogue") {   // a story scene: a floor event (or a talk) opens a dialogue file
+        const std::string l_strId = l_jAction.value("dialogue", std::string());
+        if (!l_strId.empty() && f_ReadDialogue(l_strId).is_object()) { f_StartDialogue(l_strId); m_bDlgReplaced = true; }
+        return;
+    }
+    if (l_strType == "openStore") { f_EndDialogue(); f_OpenStore(); return; }   // a villager's shop (Pip's)
+    if (l_strType == "heal") {   // a villager's healing: full HP for its cost in gold
+        const int l_iCost = std::max(0, l_jAction.value("cost", 0));
+        if (m_oPl.m_iGold < l_iCost) { m_vNotifications.push_back({m_oLocale.f_Tr("village.no_gold"), 3200}); return; }
+        m_oPl.m_iGold -= l_iCost;
+        m_oPl.m_iHp = f_EffectiveMaxHp();
+        m_vNotifications.push_back({m_oLocale.f_Tr("village.healed"), 3200});
+        f_MarkProgressDirty();
+        return;
+    }
     if (l_strType == "give") {
         std::string l_strItemId = l_jAction.value("itemId", std::string());
         if (!l_strItemId.empty()) f_ReceiveItem(l_strItemId);
     } else if (l_strType == "setStoryFlag") {
         std::string l_strFlag = l_jAction.value("flag", std::string());
-        if (!l_strFlag.empty()) toms::f_SetStoryFlag(m_oMeta, l_strFlag);
+        if (!l_strFlag.empty()) { toms::f_SetStoryFlag(m_oMeta, l_strFlag); f_MissionProgress("flag", l_strFlag); }
     } else if (l_strType == "enterBattle") {
         // Only meaningful after a dialogue_gate encounter (movePlayer) stashed an enemy.
         if (m_bHasPendingEncounter) {
@@ -727,7 +751,51 @@ int Game::f_MainMenuRowIndex(MainMenuRow l_eR) const {
 void Game::f_StartMission(const std::string& l_strId) {
     auto& l_oT = m_mapMissionTrackers[l_strId];   // creates a fresh (Locked, progress=0) tracker if absent
     if (l_oT.m_strMissionId.empty()) l_oT.m_strMissionId = l_strId;
+    if (l_oT.m_eState == toms::MissionState::Completed || l_oT.m_eState == toms::MissionState::Claimed) return;   // (asked again: no restart)
     l_oT.m_eState = toms::MissionState::Active;
+    m_vNotifications.push_back({toms::f_FillText(m_oLocale.f_Tr("mission.started"), {{"title", f_MissionTitle(l_strId)}}), 3200});
+    // a "flag" quest whose flag is already set (the villager already home) is done at once (23 §7)
+    auto l_itDef = m_mapMissionDefs.find(l_strId);
+    if (l_itDef != m_mapMissionDefs.end() && l_itDef->second.m_oObjective.m_strType == "flag" &&
+        (m_oRun.f_Flag(l_itDef->second.m_oObjective.m_strTargetId) || toms::f_HasStoryFlag(m_oMeta, l_itDef->second.m_oObjective.m_strTargetId)))
+        f_MissionProgress("flag", l_itDef->second.m_oObjective.m_strTargetId);
+    f_MarkProgressDirty();
+}
+
+void Game::f_MissionProgress(const std::string& l_strType, const std::string& l_strTarget) {
+    for (auto& [l_strId, l_oTracker] : m_mapMissionTrackers) {
+        auto l_itIt = m_mapMissionDefs.find(l_strId);
+        if (l_itIt == m_mapMissionDefs.end()) continue;
+        const toms::MissionState l_eBefore = l_oTracker.m_eState;
+        toms::f_ApplyProgressEvent(l_oTracker, l_itIt->second, l_strType, l_strTarget);
+        if (l_eBefore != toms::MissionState::Completed && l_oTracker.m_eState == toms::MissionState::Completed) {   // done: go back to its giver
+            m_vNotifications.push_back({toms::f_FillText(m_oLocale.f_Tr("mission.ready"), {{"title", f_MissionTitle(l_strId)}}), 4200});
+            f_MarkProgressDirty();
+        }
+    }
+}
+
+std::string Game::f_MissionTitle(const std::string& l_strId) const {
+    const std::string l_strKey = "mission." + l_strId + ".title";
+    return m_oLocale.f_Has(l_strKey) ? m_oLocale.f_Tr(l_strKey) : l_strId;
+}
+
+void Game::f_RescueNpc(const std::string& l_strNpc, const std::string& l_strTextKey) {
+    if (l_strNpc.empty() || m_oRun.f_Flag("home." + l_strNpc)) return;   // (freed once)
+    m_oRun.f_SetFlag("home." + l_strNpc, true);
+    // freed: the villager leaves this floor (as a finished event leaves its tile)
+    for (Entity& l_oE : m_oSt.m_vEntities) {
+        if (l_oE.m_bConsumed || l_oE.m_strKind != "npc:" + l_strNpc) continue;
+        l_oE.m_bConsumed = true;
+        if (l_oE.m_iY >= 0 && l_oE.m_iY < (int)m_oSt.m_vTiles.size() && l_oE.m_iX >= 0 && l_oE.m_iX < (int)m_oSt.m_vTiles[(size_t)l_oE.m_iY].size())
+            m_oSt.m_vTiles[(size_t)l_oE.m_iY][(size_t)l_oE.m_iX] = '.';
+        toms::f_SetEntityStatus(m_mapEntityStatus, f_StatusKeyAt(l_oE.m_iX, l_oE.m_iY), toms::EntityStatus::Collected);
+    }
+    const std::string l_strKey = "npc." + l_strNpc + ".name";
+    const std::string l_strName = m_oLocale.f_Has(l_strKey) ? m_oLocale.f_Tr(l_strKey) : l_strNpc;
+    m_vNotifications.push_back({toms::f_FillText(m_oLocale.f_Tr(l_strTextKey.empty() ? std::string("village.rescued") : l_strTextKey), {{"name", l_strName}}), 4200});
+    f_MissionProgress("flag", "home." + l_strNpc);
+    f_MarkProgressDirty();
 }
 
 // Milestone 8: grants the reward and flips Completed -> Claimed. Strictly gated on the tracker
@@ -748,7 +816,8 @@ void Game::f_ClaimMission(const std::string& l_strId) {
         f_GainExp(l_oDef.m_iRewardExp);
     }
     l_itTrackerIt->second.m_eState = toms::MissionState::Claimed;
-    f_PushNotification(m_oLocale.f_Tr("mission.completed_prefix") + l_strId);
+    f_PushNotification(toms::f_FillText(m_oLocale.f_Tr("mission.claimed"), {{"title", f_MissionTitle(l_strId)}}));
+    f_MarkProgressDirty();
 }
 
 // Subscribes mission-progress handlers to the global EventBus once (called from loadAssets).
@@ -776,16 +845,10 @@ void Game::f_WireMissionEvents() {
     // so the handlers must go with it -- busSubs_ removes them when the Game is destroyed.
     m_vBusSubs.clear();   // loadAssets again on the same Game: never twice
     m_vBusSubs.push_back(toms::f_GlobalEventBus().f_Listen<toms::EnemyDefeated>([this](const toms::EnemyDefeated& l_oE) {
-        for (auto& [l_strId, l_oTracker] : m_mapMissionTrackers) {
-            auto l_itIt = m_mapMissionDefs.find(l_strId);
-            if (l_itIt != m_mapMissionDefs.end()) toms::f_ApplyProgressEvent(l_oTracker, l_itIt->second, "defeat", l_oE.m_strEnemyId);
-        }
+        f_MissionProgress("defeat", l_oE.m_strEnemyId);
     }));
     m_vBusSubs.push_back(toms::f_GlobalEventBus().f_Listen<toms::ItemCollected>([this](const toms::ItemCollected& l_oE) {
-        for (auto& [l_strId, l_oTracker] : m_mapMissionTrackers) {
-            auto l_itIt = m_mapMissionDefs.find(l_strId);
-            if (l_itIt != m_mapMissionDefs.end()) toms::f_ApplyProgressEvent(l_oTracker, l_itIt->second, "collect", l_oE.m_strItemId);
-        }
+        f_MissionProgress("collect", l_oE.m_strItemId);
     }));
 }
 

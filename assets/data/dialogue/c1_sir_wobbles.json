@@ -1,0 +1,69 @@
+{
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): F02, a comic side quest: Sir Wobbles, the slime knight (he comes back in later chapters).",
+  "npcId": "villager",
+  "start": "halt",
+  "nodes": {
+    "halt": {
+      "text": {
+        "zh_TW": "一隻頭上頂著水桶的史萊姆擋住了路。「站住！吾乃塔之騎士——晃晃爵士！」",
+        "en": "A slime wearing a bucket blocks the way. \"Halt! I am a knight of the tower: Sir Wobbles!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……那是水桶吧？」",
+            "en": "\"...Is that a bucket?\""
+          },
+          "next": "bucket"
+        },
+        {
+          "label": {
+            "zh_TW": "「是的爵士大人，請讓我通過。」",
+            "en": "\"Of course, Sir. May I pass?\""
+          },
+          "next": "bless"
+        }
+      ]
+    },
+    "bucket": {
+      "text": {
+        "zh_TW": "「這是頭盔！！」它氣得整個身體都在晃。「騎士才不會被無禮的平民傷到……嗚嗚……」",
+        "en": "\"It is a HELMET!!\" It wobbles with rage. \"A knight is never hurt by rude commoners... sniff...\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「好啦好啦，是頭盔。」",
+            "en": "\"Fine, fine. It's a helmet.\""
+          },
+          "next": "bless"
+        }
+      ]
+    },
+    "bless": {
+      "text": {
+        "zh_TW": "晃晃爵士：「哼哼，有禮貌的平民！吾賜你騎士團的祝福！」它吐出一瓶黏黏的藥水。「下次見面，吾會更強！」",
+        "en": "Sir Wobbles: \"Hmph, a polite commoner! Accept the blessing of my order!\" It spits out a sticky potion. \"When we meet again, I shall be mightier!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……謝謝？」",
+            "en": "\"...Thanks?\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "give",
+              "itemId": "potion_red"
+            },
+            {
+              "type": "setFlag",
+              "flag": "c1.wobbles"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

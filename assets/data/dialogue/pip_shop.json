@@ -1,0 +1,69 @@
+{
+  "_comment": "Chapter 2 of the story revamp (docs/gameplay/23 §4): Pip in the village (hub_pip): the store, the chest game.",
+  "npcId": "chest_peddler",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "皮普：「歡迎光臨！今天特價——什麼都不特價！」",
+        "en": "Pip: \"Welcome! Today's special: nothing is on special!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「看看商品。」",
+            "en": "\"Let me see your wares.\""
+          },
+          "next": null,
+          "action": {
+            "type": "openStore"
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「撬寶箱遊戲。」",
+            "en": "\"The chest game.\""
+          },
+          "next": null,
+          "action": {
+            "type": "miniGame",
+            "id": "chest_lockpick"
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「我的投資呢？」",
+            "en": "\"What about my investment?\""
+          },
+          "next": "invest",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c2.pip_invested"
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「再見。」",
+            "en": "\"Bye.\""
+          },
+          "next": null
+        }
+      ]
+    },
+    "invest": {
+      "text": {
+        "zh_TW": "皮普：「好得很！正在穩定成長中！……你先爬到塔頂再說。」",
+        "en": "Pip: \"Doing great! Growing steadily! ...Get to the top first, then we'll talk.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": "root"
+        }
+      ]
+    }
+  }
+}

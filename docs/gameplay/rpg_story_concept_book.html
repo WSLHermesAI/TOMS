@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RPG Story Concept Book — The Godborn</title>
+<style>
+:root{--bg:#101522;--panel:#192235;--panel2:#202d43;--ink:#edf2fb;--muted:#aab8ce;--gold:#f4c66a;--cyan:#83d8e8;--line:#34435c;--pink:#f29cba}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 80% 0%,#263653 0,#101522 42rem);color:var(--ink);font:16px/1.65 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+a{color:var(--cyan);text-decoration:none}a:hover{text-decoration:underline}.wrap{max-width:1100px;margin:auto;padding:28px 22px 70px}
+header{padding:64px 0 42px;border-bottom:1px solid var(--line)}.eyebrow{color:var(--gold);text-transform:uppercase;letter-spacing:.18em;font-size:.78rem;font-weight:800}
+h1{font-size:clamp(2.5rem,7vw,5rem);line-height:1.02;margin:.25em 0;color:#fff;letter-spacing:-.04em}h2{font-size:2rem;margin:0 0 18px;line-height:1.2}h3{font-size:1.25rem;margin:0 0 8px;color:#fff}p{margin:.45em 0 1em}.lead{font-size:1.18rem;color:#d2deef;max-width:760px}.tagrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px}.tag{border:1px solid #52647e;border-radius:99px;padding:4px 11px;color:#dce8f8;font-size:.8rem}
+nav{position:sticky;top:0;z-index:5;background:#101522eF;backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:10px max(22px,calc((100vw - 1056px)/2));display:flex;gap:18px;overflow:auto;white-space:nowrap;font-size:.9rem}
+section{padding:44px 0;border-bottom:1px solid var(--line)}.sub{color:var(--muted);max-width:780px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}.card{background:linear-gradient(145deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 12px 32px #0002}.card p,.card li{color:#c6d2e3}.num{color:var(--gold);font-weight:800;font-size:.8rem;letter-spacing:.1em}.callout{border-left:3px solid var(--gold);padding:14px 18px;background:#f4c66a12;border-radius:0 12px 12px 0;margin:18px 0}.story{display:grid;grid-template-columns:1fr 1.4fr;gap:20px;align-items:start}.story .hook{font-size:1.18rem;color:#e5edf8}.pill{display:inline-block;color:var(--gold);font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+table{width:100%;border-collapse:collapse;background:var(--panel);border-radius:12px;overflow:hidden}th,td{text-align:left;padding:13px 15px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--gold);background:#26344b}td{color:#d2deef}
+.characters{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}.character{padding:18px;border-radius:15px;background:var(--panel);border:1px solid var(--line)}.initial{width:42px;height:42px;border-radius:12px;background:#34445e;color:var(--gold);display:grid;place-items:center;font-weight:900;font-size:1.2rem;margin-bottom:12px}
+ul{padding-left:1.2em}li{margin:.35em 0}.mechanic{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.monster{background:#172238;border:1px solid var(--line);border-radius:13px;padding:16px}.monster strong{color:var(--cyan)}
+details{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 17px;margin:10px 0}summary{cursor:pointer;font-weight:750;color:#fff}details p{color:#c6d2e3}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:15px}.controls label{display:block;color:var(--muted);font-size:.85rem;margin-bottom:5px}.controls select{width:100%;padding:11px;border-radius:9px;border:1px solid var(--line);background:#101a2b;color:var(--ink);font:inherit}
+button{border:0;border-radius:10px;background:var(--gold);color:#182033;font-weight:850;padding:12px 18px;font:inherit;cursor:pointer;margin-top:17px}button:hover{filter:brightness(1.08)}.result{margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:12px;background:#101a2b;color:#dbe6f5}
+footer{padding:28px 0;color:var(--muted);font-size:.9rem}
+@media(max-width:680px){.wrap{padding:18px 16px 50px}header{padding:45px 0 32px}.story{grid-template-columns:1fr}nav{padding-left:16px}th,td{padding:10px 9px;font-size:.9rem}}
+@media print{body{background:white;color:#111}.card,.character,.monster,details,table{break-inside:avoid;background:#fff;color:#111;border:1px solid #aaa}p,li,td,.sub,.lead,footer{color:#333}nav,button{display:none}header{border-color:#aaa}h1,h2,h3{color:#111}section{border-color:#aaa}.tag{color:#333;border-color:#888}}
+</style>
+</head>
+<body>
+<nav>
+<a href="#quick">Quick Ideas</a><a href="#stories">Story Concepts</a><a href="#godborn">Recommended RPG</a><a href="#cast">Characters</a><a href="#chapters">Chapters</a><a href="#systems">Gameplay</a><a href="#direction">Choose Direction</a>
+</nav>
+<div class="wrap">
+<header>
+<div class="eyebrow">RPG concept collection · Story development starter</div>
+<h1>THE GODBORN<br><span style="color:var(--gold)">A Nobody’s Destiny</span></h1>
+<p class="lead">A funny, adventurous fantasy RPG with a heartfelt core: an ordinary orphan discovers a godlike power and sets out to rescue the parents who raised him—only to uncover a secret that could decide the fate of the world.</p>
+<div class="tagrow"><span class="tag">JRPG</span><span class="tag">Fantasy Adventure</span><span class="tag">Comedy</span><span class="tag">Emotional Story</span><span class="tag">Character Progression</span></div>
+</header>
+
+<section id="quick">
+<div class="eyebrow">01 · Brainstorming</div><h2>Five funny RPG premises</h2>
+<p class="sub">Each idea starts with a simple comedic hook that can grow into a larger adventure.</p>
+<div class="grid">
+<div class="card"><div class="num">IDEA 01</div><h3>The World’s Worst Hero</h3><p>The prophecy chooses a hero whose only talent is running away. Every escape makes him stronger—so the party has to convince him to stop fleeing long enough to save the world.</p><p><b>Comedy hook:</b> 100% escape success, 0% courage.</p></div>
+<div class="card"><div class="num">IDEA 02</div><h3>I Accidentally Became the Demon King</h3><p>An ordinary office worker is transported to a fantasy world and mistaken for the new Demon King. Monsters adore him; human kingdoms want him dead.</p><p><b>Comedy hook:</b> He defeats enemies with awkward performance reviews.</p></div>
+<div class="card"><div class="num">IDEA 03</div><h3>My Dad Is the Final Boss</h3><p>A young adventurer discovers that the Demon King is his missing father, who may be protecting the world from something even worse.</p><p><b>Comedy hook:</b> Boss fights are interrupted by embarrassing childhood stories.</p></div>
+<div class="card"><div class="num">IDEA 04</div><h3>The Chicken That Saved the World</h3><p>A farmer’s chicken eats a mysterious crystal and becomes the most powerful creature alive. It will only help if properly fed.</p><p><b>Comedy hook:</b> Summon an army of furious chickens.</p></div>
+<div class="card"><div class="num">IDEA 05</div><h3>The Last Save Point</h3><p>A hero can save and reload reality, but each reload changes the world. NPCs begin remembering events that never happened—and the final boss notices the loop.</p><p><b>Comedy hook:</b> The world gets increasingly annoyed by the player’s repeated attempts.</p></div>
+</div>
+</section>
+
+<section id="stories">
+<div class="eyebrow">02 · Main story pitches</div><h2>Five bigger storylines</h2>
+<p class="sub">These concepts are designed around a memorable opening, a strong personal motivation, and a twist that can reframe the adventure.</p>
+<details open><summary>A. Save the Last Princess, Save the World — Adventure + Comedy</summary>
+<p><b>Opening:</b> Demons attack the kingdom and kidnap the princess, who supposedly maintains the world’s magical balance. A broke adventurer volunteers only because he hears the rescue reward includes free dinner.</p>
+<p><b>Twist:</b> The princess is not helpless. She is the strongest person in the kingdom, but her power is sealed. The Demon King needs her help to stop an ancient evil, and the hero is the only one who can unlock her power.</p>
+<p><b>Character dynamic:</b> The princess repeatedly saves the hero while he insists he is the legendary chosen one. She knows he is making it up.</p>
+<p><b>Ending direction:</b> The pair discover that the true enemy is the ancient god who created the kingdom.</p>
+</details>
+<details><summary>B. The Orphan Who Became a God — Coming of Age + Revenge</summary>
+<p><b>Opening:</b> A poor orphan lives happily with his adoptive farmer parents. One night, mysterious soldiers burn the village, kidnap his parents, and leave him for dead. Before he loses consciousness, he hears: “Find the child. The prophecy says he is the last key.”</p>
+<p><b>Awakening:</b> He wakes surrounded by defeated monsters. He can see magical energy, understand ancient languages, and absorb abilities from creatures he defeats.</p>
+<p><b>Twist:</b> His parents were not ordinary farmers. They knew he was the last descendant of an ancient race called the Godborn and hid his identity so he could have a normal childhood.</p>
+<p><b>Journey:</b> Track the attackers, learn the truth about his powers, find his parents, uncover an empire collecting gifted children, and discover why the Demon King is trying to prevent an even greater catastrophe.</p>
+<p><b>Emotional payoff:</b> “We never wanted you to become a god. We just wanted you to have a happy childhood.”</p>
+</details>
+<details><summary>C. The Hero Who Wasn’t Supposed to Exist — Fantasy + Mystery</summary>
+<p><b>Opening:</b> Every thousand years, a Goddess chooses a hero to defeat the Demon King. This time, she chooses someone who has already died. He wakes with no memories, while strangers seem to know who he really is.</p>
+<p><b>Twist:</b> He is the previous Demon King, reincarnated without his memories. He once sacrificed himself to seal a greater evil. His former generals recognize him and keep trying to recruit him back.</p>
+<p><b>Core choice:</b> Reclaim his old power or destroy it forever.</p>
+</details>
+<details><summary>D. My Little Sister Is the Final Boss — Family + Comedy</summary>
+<p><b>Opening:</b> The kingdom declares that a young adventurer’s little sister is the reincarnation of the Dark Goddess and tries to execute her. He escapes with her to prove her innocence.</p>
+<p><b>Twist:</b> She really can destroy the world, but cannot control her power. When she gets angry, monsters appear; when she cries, the weather changes.</p>
+<p><b>Gameplay hook:</b> Protect her, teach her magic, and make choices that shape her personality and abilities.</p>
+<p><b>Final choice:</b> Seal her power, sacrifice yourself to contain it, or accept her power and fight the gods together.</p>
+</details>
+<details><summary>E. The Villain Is the Player — Meta RPG + Mystery</summary>
+<p><b>Opening:</b> The hero accepts quests, kills monsters, loots houses, and grinds for levels. Then NPCs begin questioning his actions: “Why did you kill three hundred slimes just to get stronger?”</p>
+<p><b>Twist:</b> The world is alive. Its inhabitants are conscious and realize the protagonist has been exploiting their lives like a game. The world itself becomes the final opponent.</p>
+<p><b>Core question:</b> What does being a hero mean when the people in the world do not experience it as a game?</p>
+</details>
+</section>
+
+<section id="godborn">
+<div class="eyebrow">03 · Recommended direction</div><h2>THE GODBORN: A Nobody’s Destiny</h2>
+<div class="callout"><b>Core promise:</b> A nobody becomes powerful enough to challenge gods, but the thing he wants most is not a throne or a kingdom. He just wants his family back.</div>
+<div class="story">
+<div><div class="pill">The opening hook</div><p class="hook">An ordinary orphan discovers that he possesses the power of an ancient god. He sets out to rescue his adoptive parents, only to discover that his family is connected to the secret behind the world’s destruction.</p></div>
+<div class="card"><h3>Story tone</h3><p>Keep the main plot emotionally sincere. Let comedy come from character personalities, party arguments, strange side quests, monster abilities, and the contrast between the hero’s humble goals and the enormous stakes.</p><h3>Central themes</h3><ul><li>Family is defined by love, not blood.</li><li>Power does not determine a person’s worth.</li><li>Being a hero means choosing whom to protect.</li><li>Even gods can misunderstand the meaning of humanity.</li></ul></div>
+</div>
+</section>
+
+<section id="cast">
+<div class="eyebrow">04 · Party members</div><h2>Main characters</h2>
+<div class="characters">
+<div class="character"><div class="initial">L</div><h3>Leo — The Orphan</h3><p>Main protagonist. Initially weak, stubborn, funny, and always hungry. Can absorb monster abilities. Wants to rescue the parents who raised him.</p></div>
+<div class="character"><div class="initial">L</div><h3>Luna — The Sister</h3><p>A mysterious girl who travels with Leo. Looks innocent but may possess enough power to destroy entire armies. Her true identity is a major mystery.</p></div>
+<div class="character"><div class="initial">K</div><h3>Kai — The Rival</h3><p>A royal knight who believes Leo is dangerous. Competitive and overly serious, he gradually becomes Leo’s closest friend.</p></div>
+<div class="character"><div class="initial">P</div><h3>Pip — The Merchant</h3><p>A greedy little monster who joins the party because he thinks Leo will become rich. Surprisingly resourceful, but always looking for a deal.</p></div>
+</div>
+</section>
+
+<section id="chapters">
+<div class="eyebrow">05 · Campaign outline</div><h2>Seven-chapter structure</h2>
+<table><thead><tr><th>Chapter</th><th>Story beat</th><th>Gameplay focus</th></tr></thead><tbody>
+<tr><td>1. The Burning Village</td><td>Parents kidnapped; Leo’s power awakens.</td><td>Tutorial, first boss, escape and survival.</td></tr>
+<tr><td>2. The Adventurer’s Guild</td><td>Leo enters the wider world and forms a party.</td><td>Quests, party setup, town exploration.</td></tr>
+<tr><td>3. The Forbidden Forest</td><td>Ancient monsters reveal clues about Leo’s origin.</td><td>Exploration, monster skills, dungeon puzzles.</td></tr>
+<tr><td>4. The Kingdom of Lies</td><td>The party learns why Leo’s parents were targeted.</td><td>Investigation, political conflict, major boss.</td></tr>
+<tr><td>5. The Dark Goddess</td><td>Luna’s identity and dangerous power are revealed.</td><td>Companion story, relationship choices.</td></tr>
+<tr><td>6. The Fallen Gods</td><td>The party discovers the truth about the Godborn and the ancient threat.</td><td>Late-game abilities, large dungeons, god battles.</td></tr>
+<tr><td>7. The Final Choice</td><td>Leo must decide how to save his family and the world.</td><td>Final battle and multiple endings.</td></tr>
+</tbody></table>
+</section>
+
+<section id="systems">
+<div class="eyebrow">06 · Signature gameplay</div><h2>Monster Soul System</h2>
+<p class="sub">Leo absorbs abilities from monsters he defeats. Make the system useful in combat, exploration, and puzzles—then add a few ridiculous abilities for comic relief.</p>
+<div class="mechanic">
+<div class="monster"><strong>Fire Slime</strong><p>Fireball — Launch a small explosive flame.</p></div>
+<div class="monster"><strong>Ice Wolf</strong><p>Ice Fang — Freeze or slow enemies.</p></div>
+<div class="monster"><strong>Stone Golem</strong><p>Iron Skin — Reduce incoming damage.</p></div>
+<div class="monster"><strong>Shadow Demon</strong><p>Shadow Step — Teleport a short distance.</p></div>
+<div class="monster"><strong>Chicken Soul</strong><p>Egg Production — Lay eggs. Surprisingly useful for cooking quests and one very strange puzzle.</p></div>
+<div class="monster"><strong>Slime Soul</strong><p>Bouncy Body — Bounce over gaps, but stairs become a serious problem.</p></div>
+<div class="monster"><strong>Goblin Soul</strong><p>Black-Market Charm — Get discounts from suspicious merchants.</p></div>
+<div class="monster"><strong>Skeleton Soul</strong><p>Poison Immunity — Immune to poison, but unable to eat food.</p></div>
+</div>
+<div class="callout"><b>Design suggestion:</b> Let players equip a limited number of souls at once. This creates build choices and makes each new monster ability feel meaningful instead of turning the protagonist into an unlimited collection of skills.</div>
+<h3>Other systems worth considering</h3>
+<ul><li><b>Party banter:</b> Short conversations during travel that reveal relationships and deliver humor.</li><li><b>Camp system:</b> Cook, craft, talk to companions, and unlock personal scenes.</li><li><b>Monster research:</b> Learn enemy weaknesses and discover unusual non-combat uses for abilities.</li><li><b>Choice-driven endings:</b> Decisions affect trust, companion outcomes, and the final resolution.</li><li><b>Side quests:</b> Mix heartfelt local stories with absurd requests and recurring comic characters.</li></ul>
+</section>
+
+<section id="direction">
+<div class="eyebrow">07 · Development direction</div><h2>Shape your version of the RPG</h2>
+<p class="sub">Use these selectors to create a short direction brief. Your choices stay in this page and are not uploaded anywhere.</p>
+<div class="controls">
+<div><label for="tone">Story tone</label><select id="tone"><option>Funny + Epic + Emotional</option><option>Dark fantasy + Serious + Emotional</option><option>Comedy + Crazy plot twists</option><option>Heroic adventure + Mystery</option></select></div>
+<div><label for="world">World</label><select id="world"><option>Traditional fantasy kingdom</option><option>Anime fantasy world</option><option>Modern world + Supernatural powers</option><option>Fantasy + Sci-fi</option></select></div>
+<div><label for="hero">Protagonist</label><select id="hero"><option>Young orphan with hidden god power</option><option>Ordinary guy accidentally becoming a hero</option><option>Young hero protecting family</option><option>Multiple protagonists with different stories</option></select></div>
+<div><label for="combat">Combat</label><select id="combat"><option>Action RPG (real-time combat)</option><option>Turn-based JRPG</option><option>Tactical RPG</option></select></div>
+<div><label for="scope">Game scope</label><select id="scope"><option>Medium-sized RPG (10–20 hours)</option><option>Small RPG (2–5 hours)</option><option>Large RPG (30+ hours)</option></select></div>
+</div>
+<button onclick="makeBrief()">Generate my direction brief</button>
+<div class="result" id="brief" aria-live="polite">Choose your preferences and generate a brief to see your selected direction here.</div>
+</section>
+
+<footer>RPG Story Concept Book · Working title: <b>The Godborn: A Nobody’s Destiny</b><br>Concept draft for early-stage game development. Names, plot details, mechanics, and scope are starting points and can be changed.</footer>
+</div>
+<script>
+function makeBrief(){
+ const fields=[['Story tone','tone'],['World','world'],['Protagonist','hero'],['Combat','combat'],['Game scope','scope']];
+ const lines=fields.map(([label,id])=>'<li><b>'+label+':</b> '+document.getElementById(id).value+'</li>').join('');
+ document.getElementById('brief').innerHTML='<b>Your RPG direction</b><ul>'+lines+'</ul><p>Recommended next step: expand this direction into a full game design document with the world map, character arcs, quest chain, combat loop, progression, and ending branches.</p>';
+}
+</script>
+</body>
+</html>

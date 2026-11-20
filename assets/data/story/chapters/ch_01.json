@@ -1,7 +1,7 @@
 {
   "id": "ch_01",
-  "floors": ["F01", "F02", "F03", "F04", "F05", "F06", "F07"],
-  "bossFloor": "F07",
+  "floors": ["F01", "F02", "F03", "F04", "F05"],
+  "bossFloor": "F05",
   "bossStage": "stage01",
   "title": "story.ch01.title",
   "desc": "story.ch01.desc",
@@ -27,7 +27,7 @@
     }
   ],
   "sideStoryHooks": ["ss_01"],
-  "exitConditions": { "type": "stageCleared", "stageId": "F07" },
+  "exitConditions": { "type": "stageCleared", "stageId": "F06" },
 
   "enemyMix": ["slime", "bat"],
   "itemTable": ["potion_red", "coin", "gem_def"]

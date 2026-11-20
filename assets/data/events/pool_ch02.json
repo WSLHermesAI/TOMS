@@ -1,0 +1,62 @@
+{
+  "_comment": [
+    "Chapter 2 of the story revamp (docs/gameplay/23 §4): The Forest Path, F06-F10. Kai (knight_errant, F06), Pip",
+    "(chest_peddler, F07), the blacksmith (F08) and the cartographer (F09) are NPCs whose chat is their scene."
+  ],
+  "act": "ch_02",
+  "theme": "the forest path",
+  "events": [
+    {
+      "eventId": "ev_c2_scarf",
+      "kind": "scene",
+      "text": "ev_c2_scarf.text",
+      "title": "ev_c2_scarf.title",
+      "desc": "ev_c2_scarf.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c2_scarf"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c2_wobbles",
+      "kind": "comic",
+      "text": "ev_c2_wobbles.text",
+      "title": "ev_c2_wobbles.title",
+      "desc": "ev_c2_wobbles.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c2_wobbles"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c2_kai_snare",
+      "kind": "choice",
+      "text": "ev_c2_kai_snare.text",
+      "title": "ev_c2_kai_snare.title",
+      "desc": "ev_c2_kai_snare.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c2_kai_snare"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c2_liora_letter",
+      "kind": "scene",
+      "text": "ev_c2_liora_letter.text",
+      "title": "ev_c2_liora_letter.title",
+      "desc": "ev_c2_liora_letter.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c2_letter"
+        }
+      ]
+    }
+  ]
+}

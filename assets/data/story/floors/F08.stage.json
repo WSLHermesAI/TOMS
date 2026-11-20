@@ -24,12 +24,11 @@
     "H": "item:potion_red",
     "E": "event:ev_common_relic_road",
     "F": "event:ev_common_cache_wall",
-    "G": "event:ev_common_whisper_old_song",
     "I": "event:ev_common_trap_rubble",
     "Y": "key:yellow",
     "y": "door:yellow",
     "A": "monster:forest_wolf",
-    "C": "npc:hunter"
+    "C": "npc:blacksmith"
   },
   "tiles": [
     "#######################",
@@ -43,7 +42,7 @@
     "#C......H..H#....D...##",
     "#######..#######..#..##",
     "#........#.....#..#..##",
-    "#.E..F..G#.....#.Y#..##",
+    "#.E..F...#.....#.Y#..##",
     "#yy##########..#..#..##",
     "#.....#..#..#........##",
     "#.2..N#..#..#.A..A...##",

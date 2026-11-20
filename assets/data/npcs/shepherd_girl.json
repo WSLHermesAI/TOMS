@@ -5,13 +5,18 @@
   "chat": {
     "lines": [
       {
-        "dialogue": "shepherd_girl"
+        "dialogue": "shepherd_girl_1"
+      },
+      {
+        "dialogue": "shepherd_girl_2"
+      },
+      {
+        "dialogue": "shepherd_girl_3"
       }
     ],
     "order": "loop"
   },
   "topics": {
     "menu": "auto"
-  },
-  "draft": true
+  }
 }

@@ -1,0 +1,22 @@
+{
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): F03, the shepherd girl's shy lines; talk to her again and again (the talk-N event ev_c1_shepherd_key).",
+  "npcId": "shepherd_girl",
+  "start": "say",
+  "nodes": {
+    "say": {
+      "text": {
+        "zh_TW": "牧羊女：「……」她躲到柱子後面。",
+        "en": "Shepherd girl: \"...\" She hides behind a pillar."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

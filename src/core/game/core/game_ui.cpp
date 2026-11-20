@@ -443,14 +443,15 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
                     l_nAt += l_u8C < 0x80 ? 1 : l_u8C < 0xE0 ? 2 : l_u8C < 0xF0 ? 3 : 4;
                 }
                 l_oB.m_strBossIntroName = l_iT < l_jC.value("nameAtMs", 600) ? std::string() : l_strName.substr(0, std::min(l_nAt, l_strName.size()));
-            } else if (m_oCs.m_iHeroIntroMs > 0) {   // the hero's introduction of his ultimate: the same banner from the right, his name for it
+            } else if (m_oCs.m_iHeroIntroMs > 0) {   // a special attack's introduction (22 §4.2): the hero's from the right, a monster's from the left
                 const nlohmann::json l_jC = f_FeelFx().value("heroIntro", nlohmann::json::object());
                 const int l_iT = m_oCs.m_iHeroIntroMsMax - m_oCs.m_iHeroIntroMs, l_iNameAt = l_jC.value("nameAtMs", 350);
-                l_oB.m_bBossIntro = l_oB.m_bHeroIntro = true;
+                l_oB.m_bBossIntro = true;
+                l_oB.m_bHeroIntro = m_oCs.m_iIntroOwner < 0;
                 l_oB.m_strBossIntroLabel = l_oL.f_Tr(m_oCs.m_strHeroIntroLabel);
                 const float l_fIn = std::min(1.0f, (float)l_iT / 240.0f);
-                l_oB.m_fBossIntroX = 1100.0f * (1.0f - l_fIn) * (1.0f - l_fIn);
-                const std::string l_strName = f_SkillName();
+                l_oB.m_fBossIntroX = (m_oCs.m_iIntroOwner < 0 ? 1100.0f : -1100.0f) * (1.0f - l_fIn) * (1.0f - l_fIn);
+                const std::string l_strName = m_oCs.m_strIntroName;
                 const int l_iChars = std::max(0, (l_iT - l_iNameAt) / std::max(1, l_jC.value("typeMsPerChar", 90)) + 1);
                 size_t l_nAt = 0;   // the first l_iChars letters (UTF-8)
                 for (int l_iK = 0; l_iK < l_iChars && l_nAt < l_strName.size(); l_iK++) {

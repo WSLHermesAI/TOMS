@@ -347,6 +347,17 @@ glm::vec2 Game::f_SkillCentre() const {
     return {(l_v4P.x + l_v4P.z * 0.5f + l_v4F.x + l_v4F.z * 0.5f) * 0.5f, std::max(l_v4P.y + l_v4P.w, l_v4F.y + l_v4F.w) - 10.0f};
 }
 
+// A move's shape (drawShape) or ring (spinCircle) is drawn on the hero, where his attacks are drawn (the owner, 2026-11-19:
+// the ring on his head; 2026-11-20: every weapon the same): his box's middle, ringY of its height down from its top, kept
+// on the screen whole (size / 2 from each edge).
+glm::vec2 Game::f_SkillShapeCentre(const toms::SpecialMove& l_oD) const {
+    const glm::vec4 l_v4Hero = f_FighterBox(-1);
+    const float l_fR = l_oD.m_oPlay.m_fSize * 0.5f + 6.0f;
+    const float l_fW = m_pRen ? (float)m_pRen->f_Width() : 1024.0f, l_fH = m_pRen ? (float)m_pRen->f_Height() : 768.0f;
+    return {std::clamp(l_v4Hero.x + l_v4Hero.z * 0.5f, l_fR, std::max(l_fR, l_fW - l_fR)),
+            std::clamp(l_v4Hero.y + l_v4Hero.w * l_oD.m_oPlay.m_fRingY, l_fR, std::max(l_fR, l_fH - l_fR))};
+}
+
 std::string Game::f_SkillName() const {
     if (!m_oCs.m_oSkill.m_pDef) return std::string();
     const std::string& l_strK = m_oCs.m_oSkill.m_pDef->m_strName;
@@ -370,7 +381,7 @@ void Game::f_SkillBeat(const toms::ShowBeat& l_oB, glm::vec2 l_v2At) {
     const int l_iT = m_oCs.m_oSkill.m_iOwner >= 0 ? m_oCs.m_oSkill.m_iOwner : m_oCs.m_iTarget;
     if (l_oB.m_strWhat == "pathFx") {   // particles along the shape in its drawing order, a bigger burst at each corner
         const std::string l_strShape = l_oB.m_strShape.empty() ? l_oD.m_oPlay.m_strShape : l_oB.m_strShape;
-        const glm::vec2 l_v2C = f_SkillCentre();
+        const glm::vec2 l_v2C = f_SkillShapeCentre(l_oD);   // where the shape is traced
         const int l_iN = std::max(8, l_oB.m_iMs / 60);
         for (int l_iK = 0; l_iK < l_iN; l_iK++) {
             const float l_fF = (float)l_iK / (float)(l_iN - 1);
@@ -393,9 +404,11 @@ void Game::f_SkillBeat(const toms::ShowBeat& l_oB, glm::vec2 l_v2At) {
         m_oCs.m_iDimMs = m_oSettings.m_bReduceEffects ? 0 : std::max(700, l_oB.m_iMs > 0 ? l_oB.m_iMs : 60000);   // until the move ends (endSkill)
     } else if (l_oB.m_strWhat == "banner") {
         f_ShowBanner(m_oLocale.f_Has(l_oB.m_strText) ? m_oLocale.f_Tr(l_oB.m_strText) : l_oB.m_strText, m_oCs.m_oSkill.m_iOwner >= 0 ? "line" : "ultimate", l_oB.m_iMs > 0 ? l_oB.m_iMs : 1500);
-    } else if (l_oB.m_strWhat == "intro") {   // the hero's own introduction (the owner, 2026-11-19: like a boss's): label, name typed in
+    } else if (l_oB.m_strWhat == "intro") {   // the special attack's introduction (22 §4.2): its maker's banner, the label, the name typed in
         m_oCs.m_iHeroIntroMs = m_oCs.m_iHeroIntroMsMax = l_oB.m_iMs > 0 ? l_oB.m_iMs : 1600;
-        m_oCs.m_strHeroIntroLabel = l_oB.m_strText.empty() ? std::string("battle.ultimate_label") : l_oB.m_strText;
+        m_oCs.m_iIntroOwner = m_oCs.m_oSkill.m_iOwner;
+        m_oCs.m_strHeroIntroLabel = !l_oB.m_strText.empty() ? l_oB.m_strText : m_oCs.m_oSkill.m_iOwner < 0 ? std::string("battle.ultimate_label") : std::string("battle.foe_special_label");
+        m_oCs.m_strIntroName = f_SkillName();
     } else if (l_oB.m_strWhat == "name") {
         f_ShowBanner(f_SkillName(), "ultimate", l_oB.m_iMs > 0 ? l_oB.m_iMs : 1400);
     } else if (l_oB.m_strWhat == "namePart") {
@@ -410,7 +423,8 @@ void Game::f_SkillBeat(const toms::ShowBeat& l_oB, glm::vec2 l_v2At) {
         m_oCs.m_fCamDeg = l_oB.m_fDeg;
         m_oCs.m_fCamPan = std::clamp(l_oB.m_fValue, 0.0f, 1.0f);
     } else if (l_oB.m_strWhat == "clip") {
-        if (f_BattleRigReady() && m_oCs.m_oSkill.m_iOwner < 0) {
+        if (m_oCs.m_oSkill.m_iOwner >= 0) f_FoeLook(l_iT, l_oB.m_strClip);   // a monster's move: its own look's state (its clip, else the shared one)
+        else if (f_BattleRigReady()) {
             const bool l_bHas = m_upPlayerView && !l_oB.m_strClip.empty() && m_upPlayerView->f_Has(l_oB.m_strClip);
             f_SetBattleRigState("attack", true, l_bHas ? l_oB.m_strClip : std::string(), l_oB.m_fSpeed);
         }
@@ -438,7 +452,8 @@ void Game::f_SkillBeat(const toms::ShowBeat& l_oB, glm::vec2 l_v2At) {
             m_oCs.m_iShakeMs = m_oCs.m_iShakeMsMax = l_oB.m_iMs > 0 ? l_oB.m_iMs : 300;
         }
     } else if (l_oB.m_strWhat == "sound") {
-        m_oAudio.f_Play(l_oB.m_strFx);
+        if (m_oCs.m_oSkill.m_iOwner >= 0) f_PlayFoeSound(l_iT, l_oB.m_strFx);   // a monster's: bound to it (the 2026-11-13 rule)
+        else m_oAudio.f_Play(l_oB.m_strFx);
     }
 }
 
@@ -461,14 +476,11 @@ void Game::f_UpdateSkill(int l_iDtMs) {
         l_oTs.m_iChainTimeMs = l_oD.m_oPlay.m_iTimeMs + (l_oTs.m_iChainTimeMs - m_oTouchSettings.m_iChainTimeMs);   // its time, and what DEX adds
         l_oTs.m_iSpinTimeMs = l_oD.m_oPlay.m_iTimeMs + (l_oTs.m_iSpinTimeMs - m_oTouchSettings.m_iSpinTimeMs);
         l_oTs.m_vSliceCues = l_oD.m_oPlay.m_vCues;
-        const glm::vec2 l_v2C = f_SkillCentre();
+        const glm::vec2 l_v2C = f_SkillShapeCentre(l_oD);   // a shape or a ring: on the hero's head (22 §4)
         glm::vec4 l_v4Area = l_eType == toms::PlayType::eDRAW_SHAPE ? glm::vec4(l_v2C.x - 100.0f, l_v2C.y - 100.0f, 200.0f, 200.0f) : f_TouchArea();
-        if (l_eType == toms::PlayType::eSPIN_CIRCLE) {   // the ring on the hero's head (22 §4; the owner, 2026-11-19); its size from the move
-            const glm::vec4 l_v4Hero = f_FighterBox(-1);
+        if (l_eType == toms::PlayType::eSPIN_CIRCLE) {   // its size from the move
             l_oTs.m_fSpinRadius = l_oD.m_oPlay.m_fSize * 0.5f;
-            const float l_fR = l_oTs.m_fSpinRadius + 6.0f;   // (kept on the screen)
-            const glm::vec2 l_v2M(std::max(l_fR, l_v4Hero.x + l_v4Hero.z * 0.5f), std::max(l_fR, l_v4Hero.y + l_v4Hero.w * l_oD.m_oPlay.m_fRingY));
-            l_v4Area = glm::vec4(l_v2M.x - l_oTs.m_fSpinRadius, l_v2M.y - l_oTs.m_fSpinRadius, 2.0f * l_oTs.m_fSpinRadius, 2.0f * l_oTs.m_fSpinRadius);
+            l_v4Area = glm::vec4(l_v2C.x - l_oTs.m_fSpinRadius, l_v2C.y - l_oTs.m_fSpinRadius, 2.0f * l_oTs.m_fSpinRadius, 2.0f * l_oTs.m_fSpinRadius);
         }
         m_oCs.m_oTouch.f_Start(l_eType, l_oD.m_oPlay.m_iPoints, true, l_v4Area, (uint32_t)m_oPlayRng(), l_oTs);
         m_bTouchHeld = false;
@@ -570,6 +582,7 @@ void Game::f_EndSkill() {
     m_oCs.m_oSkill = CombatState::SkillRun{};
     m_oCs.m_iDimMs = 0;
     m_oCs.m_iHeroIntroMs = 0;
+    m_oCs.m_iIntroOwner = -1;
     m_oCs.m_oTouch.f_Stop();
     m_oCs.m_bTouchPaid = false;
     if (!l_oS.m_pDef) return;

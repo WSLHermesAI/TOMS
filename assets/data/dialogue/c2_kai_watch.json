@@ -1,0 +1,22 @@
+{
+  "_comment": "Chapter 2 of the story revamp (docs/gameplay/23 §4): Kai, met already.",
+  "npcId": "knight_errant",
+  "start": "say",
+  "nodes": {
+    "say": {
+      "text": {
+        "zh_TW": "凱：「我在看著你喔。……你吃飯了沒？」",
+        "en": "Kai: \"I'm watching you. ...Have you eaten?\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

@@ -19,9 +19,9 @@
     "why": "他是封印的源頭；不擊敗他，安穩之星永不重啟。但他也是師兄——十條結局取決於你如何面對這件事。"
   },
   "chapters": [
-    { "id": "ch_01", "title": "我為何舉劍", "seal": "memory",   "floors": "F01-F07", "bossFloor": "F07", "bossStage": "stage01", "boss": "slime_king" },
-    { "id": "ch_02", "title": "老巫師的氣", "seal": "qi",       "floors": "F08-F14", "bossFloor": "F14", "bossStage": "stage02", "boss": "bat_matron" },
-    { "id": "ch_03", "title": "門環上的刻痕", "seal": "daoji",  "floors": "F15-F21", "bossFloor": "F21", "bossStage": "stage03", "boss": "golem" },
+    { "id": "ch_01", "title": "燃燒的村莊", "seal": "memory",   "floors": "F01-F05", "bossFloor": "F05", "bossStage": "stage01", "boss": "gravewarden" },
+    { "id": "ch_02", "title": "森林小徑", "seal": "qi",       "floors": "F06-F10", "bossFloor": "F10", "bossStage": "stage02", "boss": "chronoknight" },
+    { "id": "ch_03", "title": "謊言之門", "seal": "daoji",  "floors": "F11-F15", "bossFloor": "F15", "bossStage": "stage03", "boss": "grimoox_warden" },
     { "id": "ch_04", "title": "執卷人的遺骸", "seal": "jindan", "floors": "F22-F28", "bossFloor": "F28", "bossStage": "stage04", "boss": "skeleton_scholar_boss" },
     { "id": "ch_05", "title": "我死的那一夜", "seal": "soul",   "floors": "F29-F35", "bossFloor": "F35", "bossStage": "stage05", "boss": "wraith_choir" },
     { "id": "ch_06", "title": "雙修之石", "seal": "yuanying",   "floors": "F36-F42", "bossFloor": "F42", "bossStage": "stage06", "boss": "twin_golem" },
@@ -52,7 +52,7 @@
   "arc": [
     "第一幕：我為何舉劍 — 記憶之鎖。村莊外緣的井中妖，讓你第一次決定為何而戰。",
     "第二幕：老巫師的氣 — 氣感之鎖。林道上的折箭獵手，教你禦氣。",
-    "第三幕：門環上的刻痕 — 道基之鎖。門樓的守門石巨人，逼你在破壞與解印之間選擇。",
+    "第三章：謊言之門 — 收集者的名冊、凱的妹妹、會說話的書，以及 L 的第二封信。",
     "第四幕：執卷人的遺骸 — 金丹之鎖。藏書閣的骷髏學者，攤開撕頁者的線索。",
     "第五幕：我死的那一夜 — 魂魄之鎖。墓穴的亡者合唱，讓你面對被背刺的那一夜。",
     "第六幕：雙修之石 — 元嬰之鎖。洞窟的雙首晶獸，問你晶石要獨取還是分予。",

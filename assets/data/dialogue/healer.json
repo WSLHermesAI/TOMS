@@ -1,17 +1,29 @@
 {
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): the healer at home (hub_healer): full HP for 10 gold.",
   "npcId": "healer",
   "start": "root",
   "nodes": {
     "root": {
       "text": {
-        "zh_TW": "旅人，你好。我是治療師。",
-        "en": "Good day, traveller. I'm the healer."
+        "zh_TW": "治療師：「受傷了嗎？讓我看看。」",
+        "en": "Healer: \"Hurt? Let me see.\""
       },
       "choices": [
         {
           "label": {
-            "zh_TW": "再見。",
-            "en": "Goodbye."
+            "zh_TW": "「請幫我治療（10 金幣）。」",
+            "en": "\"Please heal me (10 gold).\""
+          },
+          "next": null,
+          "action": {
+            "type": "heal",
+            "cost": 10
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「我沒事。」",
+            "en": "\"I'm fine.\""
           },
           "next": null
         }

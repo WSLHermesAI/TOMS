@@ -9,7 +9,8 @@
 //   fireEvent           wake another event (as an event's `next`; a "chain" event runs at once)
 //   message             a notification line (a text key)
 // Every place that changes the game from data uses this: a tile event's record, an NPC topic's dialogue choices,
-// a chat line, an after-dialogue, and the old dialogue verbs pass through `other` (startMission, makeChoice, ...).
+// a chat line, an after-dialogue, and the old dialogue verbs pass through `other` (startMission, makeChoice, ...;
+// the story revamp's rescue {npc, text}, startDialogue {dialogue}, openStore, heal {cost}: docs/gameplay/23 §7).
 // So a story built from events, NPCs and dialogues has one set of rules, one set of checks and one test.
 //
 // Pure logic: the game plugs its state in through StoryEffects (Game's own implementation; a recording fake in
@@ -56,7 +57,8 @@ RunReport f_RunActions(const nlohmann::json& l_jActions, StoryEffects& l_oFx);
 struct Catalog {
     std::set<std::string> m_setStats, m_setItems, m_setVars, m_setFlags, m_setCounters, m_setEvents;
     std::set<std::string> m_setOtherVerbs = {"startMission", "claimMission", "makeChoice", "enterBattle", "unlockSkill",
-                                        "setSideStoryState"};
+                                        "setSideStoryState",
+                                        "rescue", "startDialogue", "openStore", "heal"};   // the story revamp's (docs/gameplay/23 §7)
 };
 
 // Problems in `actions` (same shapes as runActions): unknown verbs, missing fields, names not in the catalogue,

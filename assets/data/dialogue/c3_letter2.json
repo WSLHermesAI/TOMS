@@ -1,0 +1,26 @@
+{
+  "_comment": "Chapter 3 of the story revamp (docs/gameplay/23 §4): F15, Liora's second letter: the Master is older than the Sorcerer King; Grey Mask was one of the village.",
+  "npcId": "princess",
+  "start": "letter",
+  "nodes": {
+    "letter": {
+      "text": {
+        "zh_TW": "又一封繫著絲帶的信：「你找到名冊了吧。上面寫的『主人』不是巫師王——是比他更古老的東西。你爹娘還活著，他們很勇敢。還有……灰面以前，也是你們村子的人。——L」",
+        "en": "Another ribbon-tied letter: \"You found the ledger, didn't you. The 'Master' it names is not the Sorcerer King. It is something far older. Your parents are alive, and they are brave. And... Grey Mask was once one of your village. - L\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「我們村子的人……？」",
+            "en": "\"One of our village...?\""
+          },
+          "next": null,
+          "action": {
+            "type": "setFlag",
+            "flag": "c3.letter2"
+          }
+        }
+      ]
+    }
+  }
+}

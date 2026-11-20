@@ -5,13 +5,18 @@
   "chat": {
     "lines": [
       {
-        "dialogue": "village_boy"
+        "dialogue": "village_boy_f01",
+        "requires": {
+          "not": {
+            "type": "runFlagSet",
+            "flag": "home.village_boy"
+          }
+        }
       }
     ],
     "order": "loop"
   },
   "topics": {
     "menu": "auto"
-  },
-  "draft": true
+  }
 }

@@ -1051,7 +1051,7 @@
       }
     ],
     "play": "swipeWay",
-    "ultimate": "free_swipe",
+    "ultimate": "tiger_wind",
     "swipeCues": [
       {
         "lv": 3,
@@ -1453,7 +1453,7 @@
       }
     ],
     "play": "sequenceClick",
-    "ultimate": "free_tap",
+    "ultimate": "star_seal",
     "hitWindowMs": 140,
     "lateMs": 80
   }

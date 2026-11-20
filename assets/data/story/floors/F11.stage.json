@@ -20,21 +20,19 @@
     "d": "item:gem_def",
     "h": "item:potion_blue",
     "H": "item:potion_red",
-    "E": "event:ev_common_whisper_old_road",
-    "F": "event:ev_forest_charcoal_kiln",
-    "G": "event:ev_common_whisper_old_song",
+    "E": "event:ev_c3_page1",
     "I": "event:ev_forest_trap_net",
     "Y": "key:yellow",
     "y": "door:yellow",
     "A": "monster:bandit",
     "C": "monster:horn_beetle",
     "J": "monster:forest_wolf",
-    "K": "npc:fisherman"
+    "K": "npc:innkeeper"
   },
   "tiles": [
     "#########################",
     "#....K#..............#..#",
-    "#.H..H#.2..E..F..G..U#.I#",
+    "#.H..H#.2..E........U#.I#",
     "#..####..####..#######..#",
     "#.....#..#........#.....#",
     "#.a..d#.A#.h......#.....#",
@@ -128,5 +126,5 @@
       "uid": "o20"
     }
   },
-  "theme": "forest"
+  "theme": "castle"
 }

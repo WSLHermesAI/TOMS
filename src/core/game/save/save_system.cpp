@@ -130,6 +130,7 @@ nlohmann::json f_ToJson(const RunSaveData& l_oR) {
     if (!l_oR.m_mapNpcTalk.empty()) l_jJ["npcTalk"] = l_oR.m_mapNpcTalk;
     if (!l_oR.m_mapEventCounts.empty()) l_jJ["eventCounts"] = l_oR.m_mapEventCounts;
     l_jJ["superMax"] = l_oR.m_iSuperMax;
+    if (l_oR.m_jMissions.is_object() && !l_oR.m_jMissions.empty()) l_jJ["missions"] = l_oR.m_jMissions;
     return l_jJ;
 }
 
@@ -202,6 +203,7 @@ RunSaveData f_RunFromJson(const nlohmann::json& l_jIn, bool* l_pVersionMismatch)
         for (auto& [l_strK, l_jV] : l_jJ["npcTalk"].items())
             if (l_jV.is_array()) { std::vector<int>& l_vT = l_oR.m_mapNpcTalk[l_strK]; for (auto& l_jN : l_jV) if (l_jN.is_number_integer()) l_vT.push_back(l_jN.get<int>()); }
     l_oR.m_iSuperMax = l_jJ.value("superMax", 0);   // 0: battle.json "superPoints"
+    if (l_jJ.contains("missions") && l_jJ["missions"].is_object()) l_oR.m_jMissions = l_jJ["missions"];
     return l_oR;
 }
 

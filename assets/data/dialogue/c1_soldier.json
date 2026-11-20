@@ -1,0 +1,81 @@
+{
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): F04, a choice: spare the hungry soldier (mercy) or threaten him (vengeance); he comes back in chapter 5.",
+  "npcId": "villager",
+  "start": "cower",
+  "nodes": {
+    "cower": {
+      "text": {
+        "zh_TW": "角落裡縮著一個年輕的灰面具士兵，面具歪了，肚子咕咕叫。「別、別殺我……我是被抓來當兵的……」",
+        "en": "A young grey-mask soldier cowers in the corner, mask askew, stomach growling. \"D-don't kill me... they made me join...\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（分他半塊麵包）「走吧，別再回來。」",
+            "en": "(Share half your bread) \"Go. Don't come back.\""
+          },
+          "next": "spared",
+          "actions": [
+            {
+              "type": "addCounter",
+              "counter": "mercy",
+              "delta": 1
+            },
+            {
+              "type": "setFlag",
+              "flag": "c1.spared_soldier"
+            }
+          ]
+        },
+        {
+          "label": {
+            "zh_TW": "「說！我爹娘被帶去哪了！」",
+            "en": "\"Talk! Where did they take my parents!\""
+          },
+          "next": "scared",
+          "actions": [
+            {
+              "type": "addCounter",
+              "counter": "vengeance",
+              "delta": 1
+            },
+            {
+              "type": "setFlag",
+              "flag": "c1.threatened_soldier"
+            }
+          ]
+        }
+      ]
+    },
+    "spared": {
+      "text": {
+        "zh_TW": "士兵愣住了。「你……謝謝。」他壓低聲音：「灰面在五層等你。他知道你會來。」說完他就逃走了。",
+        "en": "The soldier stares. \"You... thank you.\" He lowers his voice. \"Grey Mask is waiting on the fifth floor. He knows you're coming.\" Then he runs."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null
+        }
+      ]
+    },
+    "scared": {
+      "text": {
+        "zh_TW": "士兵發抖：「最、最上面！給『主人』的！灰面在五層等你……求求你放過我！」他連滾帶爬地逃了。",
+        "en": "The soldier shakes. \"The t-top! For 'the Master'! Grey Mask is waiting on the fifth floor... please let me go!\" He scrambles away."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

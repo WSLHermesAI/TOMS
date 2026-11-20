@@ -1,12 +1,12 @@
 {
   "npcId": "weapon_master",
-  "_comment": "The start story (docs/gameplay/07 phase 3): the player tries the weapons (tryWeapon: the tutorial fight with a toad, battle.json tutorial), comes back to 'after' each time, and keeps one (chooseWeapon). Opened by the title's New Game.",
+  "_comment": "The start story (docs/gameplay/07 phase 3): the player tries the weapons (tryWeapon: the tutorial fight with a toad, battle.json tutorial), comes back to 'after' each time, and keeps one (chooseWeapon). Opened by the title's New Game. The story revamp (docs/gameplay/23, chapter 1): the prologue_morning opens it; choosing a weapon goes on to the night raid (prologue_night).",
   "start": "intro",
   "nodes": {
     "intro": {
       "text": {
-        "zh_TW": "村口，一位老武師攔住了你：「要上塔？先挑一把趁手的兵器。先拿林邊那隻苔蛙練練手，我教你怎麼打，不合手就換。」",
-        "en": "At the edge of the village an old weapon master stops you: \"Climbing the tower? Pick a weapon that fits your hand first. Practise on the toad at the edge of the woods, and I will show you how to fight. Change if one does not suit you.\""
+        "zh_TW": "武師在村口等著你：「生日快樂，里歐！你爹託我讓你挑第一把兵器。先拿林邊那隻苔蛙練練手，我教你怎麼打，不合手就換。」",
+        "en": "The weapon master is waiting at the village gate. \"Happy birthday, Leo! Your father asked me to let you pick your first weapon. Practise on the toad at the edge of the woods, and I will show you how to fight. Change if one does not suit you.\""
       },
       "choices": [
         {
@@ -128,7 +128,13 @@
           "action": {
             "type": "chooseWeapon"
           },
-          "next": null
+          "next": null,
+          "actions": [
+            {
+              "type": "startDialogue",
+              "dialogue": "prologue_night"
+            }
+          ]
         },
         {
           "label": {

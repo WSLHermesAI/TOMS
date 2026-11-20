@@ -1,0 +1,18 @@
+{
+  "_comment": "Chapter 1, F03's talk-N event (the owner, Q112; docs/gameplay/23 §5): the shy shepherd girl's three lines go round; the 5th talk is ev_c1_shepherd_key (talkCountAtLeast 4): she gives the orchard key. The first talk by walking into her (right), the next four by Enter facing her; Enter closes each.",
+  "scene": "stage",
+  "stage": "F03",
+  "player": {
+    "x": 16,
+    "y": 14
+  },
+  "test": {
+    "frames": 280,
+    "keys": "right@10,enter@40,enter@55,enter@85,enter@100,enter@130,enter@145,enter@175,enter@190,enter@220"
+  },
+  "expect": {
+    "inventoryHas": [
+      "key_orchard"
+    ]
+  }
+}

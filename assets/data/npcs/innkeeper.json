@@ -5,13 +5,18 @@
   "chat": {
     "lines": [
       {
-        "dialogue": "innkeeper"
+        "dialogue": "c3_innkeeper",
+        "requires": {
+          "not": {
+            "type": "runFlagSet",
+            "flag": "home.innkeeper"
+          }
+        }
       }
     ],
     "order": "loop"
   },
   "topics": {
     "menu": "auto"
-  },
-  "draft": true
+  }
 }

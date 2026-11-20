@@ -1,0 +1,114 @@
+{
+  "_comment": "Chapter 3 of the story revamp (docs/gameplay/23 §4): F13, a choice: the clerk who wrote the names (spare: mercy; a confession for the king: trust, c3.confession; smash his inkwell: vengeance).",
+  "npcId": "villager",
+  "start": "clerk",
+  "nodes": {
+    "clerk": {
+      "text": {
+        "zh_TW": "一個戴眼鏡的書記縮在桌子底下，懷裡抱著一本厚厚的帳簿。「我、我只是負責寫字的！名字是他們說，我寫！」",
+        "en": "A clerk in spectacles cowers under a desk, hugging a thick record book. \"I-I only do the writing! They say the names, I write them down!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「你走吧。」",
+            "en": "\"Just go.\""
+          },
+          "next": "go",
+          "actions": [
+            {
+              "type": "addCounter",
+              "counter": "mercy",
+              "delta": 1
+            },
+            {
+              "type": "setFlag",
+              "flag": "c3.clerk_spared"
+            }
+          ]
+        },
+        {
+          "label": {
+            "zh_TW": "「那就寫一份供詞，交給國王。」",
+            "en": "\"Then write a confession for the king.\""
+          },
+          "next": "confess",
+          "actions": [
+            {
+              "type": "addCounter",
+              "counter": "trust",
+              "delta": 1
+            },
+            {
+              "type": "setFlag",
+              "flag": "c3.confession"
+            }
+          ]
+        },
+        {
+          "label": {
+            "zh_TW": "（打翻他的墨水瓶）",
+            "en": "(Smash his inkwell)"
+          },
+          "next": "ink",
+          "actions": [
+            {
+              "type": "addCounter",
+              "counter": "vengeance",
+              "delta": 1
+            },
+            {
+              "type": "setFlag",
+              "flag": "c3.inkwell"
+            }
+          ]
+        }
+      ]
+    },
+    "go": {
+      "text": {
+        "zh_TW": "書記愣了一下，抱著帳簿逃走了。",
+        "en": "The clerk blinks, then flees with his book."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null
+        }
+      ]
+    },
+    "confess": {
+      "text": {
+        "zh_TW": "書記顫抖著寫完，蓋上收集者的印章。「這、這是全部了。主人的命令……都在上面。」凱把供詞收進鎧甲裡：「王都會看到的。」",
+        "en": "The clerk writes with shaking hands and stamps it with the Collectors' seal. \"Th-that's all of it. The Master's orders... all there.\" Kai tucks the confession into his armour. \"The capital will see this.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null
+        }
+      ]
+    },
+    "ink": {
+      "text": {
+        "zh_TW": "墨水潑滿了整張桌子。書記哭著跑了。凱看著你，什麼也沒說。",
+        "en": "Ink splashes across the whole desk. The clerk runs off in tears. Kai looks at you and says nothing."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

@@ -992,6 +992,25 @@
     "big": true,
     "_boss": "F04's boss, beside its up stairs (the owner, 2026-11-13)"
   },
+  "grimoox_warden": {
+    "bossTier": "stage",
+    "name": { "zh_TW": "魔典守衛", "en": "Grimoire Warden", "zh_CN": "魔典牛", "ja": "グリモックス", "ko": "마도서 황소", "es": "Grimobuey" },
+    "sprite": "m_grimoox.png",
+    "look": "grimoox",
+    "hp": 380, "body": 4,
+    "atk": 32,
+    "def": 5,
+    "exp": 40,
+    "weaponExp": 3,
+    "gold": 35,
+    "break": 9,
+    "atk_interval_ms": 2600,
+    "moves": [{ "id": "strike", "weight": 2 }, "boss_near", "boss_line", "boss_fan"],
+    "guardsStairs": true,
+    "intro": true,
+    "big": true,
+    "_boss": "chapter 3's boss, F15 (the story revamp, docs/gameplay/23 §4): a stronger Grimoox"
+  },
   "gravewarden": {
     "bossTier": "stage",
     "name": { "zh_TW": "守墓骷髏騎士", "en": "Gravewarden", "zh_CN": "守墓骷髅骑士", "ja": "墓守の骸骨騎士", "ko": "묘지기 해골 기사", "es": "Guardatumbas" },

@@ -1,0 +1,98 @@
+{
+  "_comment": "The story revamp's tools (docs/gameplay/23 §7, S1) in one test dialogue: take a quest, free a villager (it goes home: home.baker, the bakery opens), the quest is done, claim it, then a villager's healing.",
+  "npcId": "story_test",
+  "start": "ask",
+  "nodes": {
+    "ask": {
+      "text": {
+        "zh_TW": "長老：麵包師被帶上塔了，拜託你。",
+        "en": "Elder: they took the baker up the tower. Please."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "交給我。",
+            "en": "Leave it to me."
+          },
+          "action": {
+            "type": "startMission",
+            "missionId": "m_rescue_baker"
+          },
+          "next": "free"
+        }
+      ]
+    },
+    "free": {
+      "text": {
+        "zh_TW": "麵包師被綁在柱子上。",
+        "en": "The baker is tied to a post."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "解開繩子。",
+            "en": "Untie him."
+          },
+          "action": {
+            "type": "rescue",
+            "npc": "baker"
+          },
+          "next": "claim"
+        }
+      ]
+    },
+    "claim": {
+      "text": {
+        "zh_TW": "長老：你把他帶回來了！",
+        "en": "Elder: you brought him home!"
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "領取報酬。",
+            "en": "Take the reward."
+          },
+          "action": {
+            "type": "claimMission",
+            "missionId": "m_rescue_baker"
+          },
+          "next": "heal"
+        }
+      ]
+    },
+    "heal": {
+      "text": {
+        "zh_TW": "治療師：要治療嗎？5 金幣。",
+        "en": "Healer: healing? 5 gold."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "好。",
+            "en": "Yes."
+          },
+          "action": {
+            "type": "heal",
+            "cost": 5
+          },
+          "next": "done"
+        }
+      ]
+    },
+    "done": {
+      "text": {
+        "zh_TW": "治療師：好多了吧？",
+        "en": "Healer: better?"
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "謝謝。",
+            "en": "Thanks."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

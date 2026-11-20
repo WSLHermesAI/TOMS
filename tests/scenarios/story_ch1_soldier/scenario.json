@@ -1,0 +1,19 @@
+{
+  "_comment": "Chapter 1, F04's choice (docs/gameplay/23 §5): stepping onto the event (ev_c1_hungry_soldier) opens its scene (startDialogue c1_soldier); sharing the bread spares him (c1.spared_soldier, mercy + 1), and he warns that Grey Mask waits on the fifth floor.",
+  "scene": "stage",
+  "stage": "F04",
+  "player": {
+    "x": 7,
+    "y": 8
+  },
+  "test": {
+    "frames": 90,
+    "keys": "right@10,enter@40,enter@60"
+  },
+  "expect": {
+    "flags": [
+      "c1.spared_soldier",
+      "event_ev_c1_hungry_soldier"
+    ]
+  }
+}

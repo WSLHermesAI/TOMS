@@ -156,7 +156,8 @@
                    "sound": "sfx.boss_intro", "off": false },
     "specialAttack": { "powerMs": 3500, "powerFx": "monster_power", "powerSound": "sfx.monster_power",
                        "chargeFx": "monster_charge", "chargeFxEveryMs": 450,
-                       "unleashFx": "monster_unleash", "shout": "sfx.monster_roar", "shakePx": 16, "shakeMs": 520, "downMs": 1600 },
+                       "unleashFx": "monster_unleash", "shout": "sfx.monster_roar", "shakePx": 16, "shakeMs": 520, "downMs": 1600,
+      "intro": { "_comment": "the same rundown as the hero's ultimates (the owner, 2026-11-20; docs/gameplay/22 §4.2): its power-up (the dodge), then this (the fight waits: the camera on it, the banner \"必殺技！\" with the attack's name typed in), then it lands", "ms": 1700, "zoom": 1.45, "deg": 12, "pan": 0.85, "label": "battle.foe_special_label", "fx": "monster_power", "sound": "sfx.boss_intro" } },
     "foeAttack": {
       "flightMs": 180, "impactDelayMs": 150,
       "strike":     { "impact": "monster_claw" },

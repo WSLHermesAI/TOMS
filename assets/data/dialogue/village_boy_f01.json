@@ -1,0 +1,41 @@
+{
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): F01, the first rescue: Tobi, hiding in a barrel, goes home.",
+  "npcId": "village_boy",
+  "start": "hi",
+  "nodes": {
+    "hi": {
+      "text": {
+        "zh_TW": "小托：「里歐！？我躲在木桶裡……他們把大家都抓走了！」",
+        "en": "Tobi: \"Leo!? I hid in a barrel... they took everyone!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「沿著原路跑回村裡，去找長老！」",
+            "en": "\"Run back the way I came and find the elder!\""
+          },
+          "next": "bye",
+          "action": {
+            "type": "rescue",
+            "npc": "village_boy"
+          }
+        }
+      ]
+    },
+    "bye": {
+      "text": {
+        "zh_TW": "小托：「你……你的眼睛在發光耶。好帥！」他一溜煙跑了。",
+        "en": "Tobi: \"Your... your eyes are glowing. So cool!\" He dashes off."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

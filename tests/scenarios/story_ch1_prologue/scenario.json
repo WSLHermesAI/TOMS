@@ -1,0 +1,11 @@
+{
+  "_comment": "Chapter 1's start (docs/gameplay/23 §4): New Game's start story opens the morning at home (prologue_morning); its three choices lead to the weapon master's trial (his intro node), the birthday present.",
+  "scene": "weaponTrial",
+  "test": {
+    "frames": 70,
+    "keys": "enter@10,enter@25,enter@40"
+  },
+  "expect": {
+    "dialogueNode": "intro"
+  }
+}

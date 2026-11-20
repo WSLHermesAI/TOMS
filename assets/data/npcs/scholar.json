@@ -5,13 +5,18 @@
   "chat": {
     "lines": [
       {
-        "dialogue": "scholar"
+        "dialogue": "c3_scholar",
+        "requires": {
+          "not": {
+            "type": "runFlagSet",
+            "flag": "home.scholar"
+          }
+        }
       }
     ],
     "order": "loop"
   },
   "topics": {
     "menu": "auto"
-  },
-  "draft": true
+  }
 }

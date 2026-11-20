@@ -5,7 +5,13 @@
   "chat": {
     "lines": [
       {
-        "dialogue": "chest_peddler"
+        "dialogue": "c2_pip",
+        "requires": {
+          "not": {
+            "type": "runFlagSet",
+            "flag": "home.chest_peddler"
+          }
+        }
       }
     ],
     "order": "loop"

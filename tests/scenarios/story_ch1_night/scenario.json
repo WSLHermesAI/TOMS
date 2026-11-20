@@ -1,0 +1,17 @@
+{
+  "_comment": "Chapter 1's night raid (docs/gameplay/23 §4; dialogue prologue_night): through its eight nodes, the last choice opens the village (hub.village) and starts the main quest and the baker's; the ending node's first choice (mercy).",
+  "scene": "dialogue",
+  "dialogue": {
+    "id": "prologue_night"
+  },
+  "test": {
+    "frames": 150,
+    "keys": "enter@10,enter@24,enter@38,enter@52,enter@66,enter@80,enter@94,enter@108"
+  },
+  "expect": {
+    "scene": "stage",
+    "flags": [
+      "hub.village"
+    ]
+  }
+}

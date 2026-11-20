@@ -1,0 +1,20 @@
+{
+  "_comment": "Chapter 2, F06 (docs/gameplay/23 §4): Kai the royal knight comes to arrest Leo (c2_kai_meet); the calm answer (trust + 1), and he gives his quest: three forest wolves (m_c2_wolves active, c2.kai_met).",
+  "scene": "talk",
+  "talk": {
+    "npc": "knight_errant"
+  },
+  "test": {
+    "frames": 80,
+    "keys": "enter@15,enter@30,enter@45"
+  },
+  "expect": {
+    "scene": "stage",
+    "flags": [
+      "c2.kai_met"
+    ],
+    "missions": {
+      "m_c2_wolves": "active"
+    }
+  }
+}

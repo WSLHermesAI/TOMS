@@ -1,0 +1,22 @@
+{
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): F04, a quest's find (m_c1_whetstone): the flag c1.whetstone.",
+  "npcId": "weapon_master",
+  "start": "stone",
+  "nodes": {
+    "stone": {
+      "text": {
+        "zh_TW": "碎石堆裡有一塊刻著武師記號的磨刀石——他說追灰面具時弄丟的那塊。",
+        "en": "In the rubble lies a whetstone carved with the weapon master's mark: the one he lost chasing the grey masks."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「帶回去給他。」",
+            "en": "\"I'll take it back to him.\""
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

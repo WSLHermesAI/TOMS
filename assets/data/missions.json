@@ -55,5 +55,85 @@
     "rewardExp": 20,
     "rewardGold": 25,
     "rewardItemId": "potion_red"
+  },
+  "m_rescue_baker": {
+    "missionId": "m_rescue_baker",
+    "title": "mission.m_rescue_baker.title",
+    "desc": "mission.m_rescue_baker.desc",
+    "kind": "once",
+    "giver": "villager_elder",
+    "prerequisites": null,
+    "objective": {
+      "type": "flag",
+      "targetId": "home.baker",
+      "count": 1
+    },
+    "rewardExp": 10,
+    "rewardGold": 20,
+    "rewardItemId": ""
+  },
+  "m_main_parents": {
+    "missionId": "m_main_parents",
+    "title": "mission.m_main_parents.title",
+    "desc": "mission.m_main_parents.desc",
+    "kind": "once",
+    "giver": "villager_elder",
+    "prerequisites": null,
+    "objective": {
+      "type": "flag",
+      "targetId": "home.parents",
+      "count": 1
+    },
+    "rewardExp": 0,
+    "rewardGold": 0,
+    "rewardItemId": ""
+  },
+  "m_c1_whetstone": {
+    "missionId": "m_c1_whetstone",
+    "title": "mission.m_c1_whetstone.title",
+    "desc": "mission.m_c1_whetstone.desc",
+    "kind": "once",
+    "giver": "weapon_master",
+    "prerequisites": null,
+    "objective": {
+      "type": "flag",
+      "targetId": "c1.whetstone",
+      "count": 1
+    },
+    "rewardExp": 15,
+    "rewardGold": 15,
+    "rewardItemId": "gem_atk"
+  },
+  "m_c2_wolves": {
+    "missionId": "m_c2_wolves",
+    "title": "mission.m_c2_wolves.title",
+    "desc": "mission.m_c2_wolves.desc",
+    "kind": "once",
+    "giver": "knight_errant",
+    "prerequisites": null,
+    "objective": {
+      "type": "defeat",
+      "targetId": "forest_wolf",
+      "count": 3
+    },
+    "rewardExp": 20,
+    "rewardGold": 20,
+    "rewardItemId": ""
+  },
+  "m_c3_ledger": {
+    "missionId": "m_c3_ledger",
+    "title": "mission.m_c3_ledger.title",
+    "desc": "mission.m_c3_ledger.desc",
+    "kind": "once",
+    "giver": "villager_elder",
+    "prerequisites": null,
+    "objective": {
+      "type": "flag",
+      "targetId": "c3.ledger",
+      "count": 1
+    },
+    "rewardExp": 30,
+    "rewardGold": 30,
+    "rewardItemId": "gem_def"
   }
 }

@@ -5,13 +5,25 @@
   "chat": {
     "lines": [
       {
-        "dialogue": "knight_errant"
+        "dialogue": "c2_kai_meet",
+        "requires": {
+          "not": {
+            "type": "runFlagSet",
+            "flag": "c2.kai_met"
+          }
+        }
+      },
+      {
+        "dialogue": "c2_kai_watch",
+        "requires": {
+          "type": "runFlagSet",
+          "flag": "c2.kai_met"
+        }
       }
     ],
     "order": "loop"
   },
   "topics": {
     "menu": "auto"
-  },
-  "draft": true
+  }
 }

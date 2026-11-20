@@ -5,13 +5,18 @@
   "chat": {
     "lines": [
       {
-        "dialogue": "cartographer"
+        "dialogue": "c2_cartographer",
+        "requires": {
+          "not": {
+            "type": "runFlagSet",
+            "flag": "home.cartographer"
+          }
+        }
       }
     ],
     "order": "loop"
   },
   "topics": {
     "menu": "auto"
-  },
-  "draft": true
+  }
 }

@@ -1,6 +1,7 @@
 {
   "_comment": [
-    "Event kinds: names and editor colours (edited in the event editor's Kinds tab)."
+    "Event kinds: names and editor colours (edited in the event editor's Kinds tab).",
+    "The story revamp (docs/gameplay/23 §5): rescue (a villager freed goes home), quest, choice, scene (a floor scene: its actions open a dialogue, startDialogue), comic, talk_n (an NPC that gives something on the Nth talk)."
   ],
   "relic": {
     "name": {
@@ -57,5 +58,40 @@
       "en": "Defeat Monster"
     },
     "color": "#8b929c"
+  },
+  "quest": {
+    "name": {
+      "zh_TW": "任務",
+      "en": "Quest"
+    },
+    "color": "#ffb347"
+  },
+  "choice": {
+    "name": {
+      "zh_TW": "抉擇",
+      "en": "Choice"
+    },
+    "color": "#e86fd1"
+  },
+  "scene": {
+    "name": {
+      "zh_TW": "劇情",
+      "en": "Story scene"
+    },
+    "color": "#6f9bff"
+  },
+  "comic": {
+    "name": {
+      "zh_TW": "喜劇支線",
+      "en": "Comic side quest"
+    },
+    "color": "#ffe066"
+  },
+  "talk_n": {
+    "name": {
+      "zh_TW": "談話 N 次",
+      "en": "Talk N times"
+    },
+    "color": "#9be15d"
   }
 }

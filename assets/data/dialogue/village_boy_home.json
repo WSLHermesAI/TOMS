@@ -1,0 +1,22 @@
+{
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): Tobi at home (hub_tobi): hints.",
+  "npcId": "village_boy",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "小托：「里歐！聽說塔裡有隻頂著水桶的史萊姆，自稱騎士耶，超好笑！還有，三層有個害羞的牧羊女，多跟她說幾次話，她就不怕你了。」",
+        "en": "Tobi: \"Leo! They say there's a slime in the tower wearing a bucket who calls himself a knight. So funny! Oh, and there's a shy shepherd girl on the third floor. Talk to her a few times and she won't be scared of you.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「謝啦，小托。」",
+            "en": "\"Thanks, Tobi.\""
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

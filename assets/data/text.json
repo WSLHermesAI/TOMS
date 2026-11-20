@@ -1191,6 +1191,14 @@
       "ko": "힘이 다 모이지 않았다……",
       "es": "No reuniste todo el poder..."
     },
+    "skill.ultimate_partial": {
+      "zh_TW": "威力未盡……",
+      "en": "Not at full power...",
+      "zh_CN": "威力未尽……",
+      "ja": "威力が出し切れない……",
+      "ko": "위력이 다 나오지 않았다……",
+      "es": "No a plena potencia..."
+    },
     "battle.spin_cw": {
       "zh_TW": "順時針",
       "en": "Clockwise",
@@ -1214,6 +1222,14 @@
       "ja": "必殺技発動！",
       "ko": "필살기 발동!",
       "es": "¡ATAQUE DEFINITIVO!"
+    },
+    "battle.foe_special_label": {
+      "zh_TW": "必殺技！",
+      "en": "SPECIAL ATTACK!",
+      "zh_CN": "必杀技！",
+      "ja": "必殺技！",
+      "ko": "필살기!",
+      "es": "¡ATAQUE ESPECIAL!"
     },
     "battle.play_hint_spinCircle": {
       "zh_TW": "順著光點的方向畫圈",
@@ -1914,6 +1930,358 @@
       "ja": "功法習得：",
       "ko": "무공 습득: ",
       "es": "Técnica desbloqueada: "
+    },
+    "village.rescued": {
+      "zh_TW": "{name}回到村莊了！",
+      "en": "{name} went home to the village!",
+      "zh_CN": "{name}回到村庄了！",
+      "ja": "{name}が村に帰った！",
+      "ko": "{name}이(가) 마을로 돌아갔다!",
+      "es": "¡{name} volvió a la aldea!"
+    },
+    "village.moved_in": {
+      "zh_TW": "{name}搬到村裡開店了！",
+      "en": "{name} moved into the village!",
+      "zh_CN": "{name}搬到村里开店了！",
+      "ja": "{name}が村に引っ越してきた！",
+      "ko": "{name}이(가) 마을로 이사 왔다!",
+      "es": "¡{name} se mudó a la aldea!"
+    },
+    "village.healed": {
+      "zh_TW": "傷都好了。",
+      "en": "You are healed.",
+      "zh_CN": "伤都好了。",
+      "ja": "傷が治った。",
+      "ko": "상처가 다 나았다.",
+      "es": "Te has curado."
+    },
+    "village.no_gold": {
+      "zh_TW": "金幣不夠。",
+      "en": "Not enough gold.",
+      "zh_CN": "金币不够。",
+      "ja": "ゴールドが足りない。",
+      "ko": "골드가 부족하다.",
+      "es": "No tienes suficiente oro."
+    },
+    "item.key_orchard.name": {
+      "zh_TW": "舊果園的鑰匙",
+      "en": "Orchard Key"
+    },
+    "item.key_orchard.desc": {
+      "zh_TW": "牧羊女給的生鏽鑰匙，能打開塔裡舊果園的門。",
+      "en": "The shepherd girl's rusty key. It opens the old orchard in the tower."
+    },
+    "mission.m_main_parents.title": {
+      "zh_TW": "把爹娘帶回家",
+      "en": "Bring Mom and Dad Home"
+    },
+    "mission.m_main_parents.desc": {
+      "zh_TW": "收集者把爹娘帶上了塔頂，要交給「主人」。一層一層爬上去，把他們帶回家。",
+      "en": "The Collectors took your parents to the top of the tower, for \"the Master\". Climb floor by floor and bring them home."
+    },
+    "mission.m_c1_whetstone.title": {
+      "zh_TW": "武師的磨刀石",
+      "en": "The Weapon Master's Whetstone"
+    },
+    "mission.m_c1_whetstone.desc": {
+      "zh_TW": "武師追灰面具時，把磨刀石掉在塔的四層附近。",
+      "en": "The weapon master lost his whetstone around the tower's fourth floor, chasing the grey masks."
+    },
+    "ev_c1_hairpin.title": {
+      "zh_TW": "媽媽的髮簪",
+      "en": "Mom's Hairpin"
+    },
+    "ev_c1_hairpin.desc": {
+      "zh_TW": "一層地上的木髮簪：媽媽來過這裡。",
+      "en": "A wooden hairpin on the first floor: Mom passed this way."
+    },
+    "ev_c1_hairpin.text": {
+      "zh_TW": "媽媽的髮簪……",
+      "en": "Mom's hairpin..."
+    },
+    "ev_c1_collector_order.title": {
+      "zh_TW": "收集者的命令",
+      "en": "The Collectors' Order"
+    },
+    "ev_c1_collector_order.desc": {
+      "zh_TW": "「有記號的那個，要活的。」",
+      "en": "\"The marked one, alive.\""
+    },
+    "ev_c1_collector_order.text": {
+      "zh_TW": "一張命令書。",
+      "en": "An order."
+    },
+    "ev_c1_sir_wobbles.title": {
+      "zh_TW": "晃晃爵士",
+      "en": "Sir Wobbles"
+    },
+    "ev_c1_sir_wobbles.desc": {
+      "zh_TW": "頂著水桶的史萊姆騎士。",
+      "en": "A slime knight in a bucket."
+    },
+    "ev_c1_sir_wobbles.text": {
+      "zh_TW": "站住！",
+      "en": "Halt!"
+    },
+    "ev_c1_rescue_baker.title": {
+      "zh_TW": "被綁的麵包師",
+      "en": "The Baker, Tied Up"
+    },
+    "ev_c1_rescue_baker.desc": {
+      "zh_TW": "三層，麵包師被綁在柱子上。",
+      "en": "Third floor: the baker tied to a post."
+    },
+    "ev_c1_rescue_baker.text": {
+      "zh_TW": "嗚嗚嗚！",
+      "en": "Mmmph!"
+    },
+    "ev_c1_shepherd_key.title": {
+      "zh_TW": "牧羊女的鑰匙",
+      "en": "The Shepherd Girl's Key"
+    },
+    "ev_c1_shepherd_key.desc": {
+      "zh_TW": "多跟害羞的牧羊女說幾次話。",
+      "en": "Talk to the shy shepherd girl a few times."
+    },
+    "ev_c1_shepherd_key.text": {
+      "zh_TW": "你是好人。",
+      "en": "You're kind."
+    },
+    "ev_c1_whetstone.title": {
+      "zh_TW": "磨刀石",
+      "en": "The Whetstone"
+    },
+    "ev_c1_whetstone.desc": {
+      "zh_TW": "刻著武師記號的磨刀石。",
+      "en": "A whetstone with the weapon master's mark."
+    },
+    "ev_c1_whetstone.text": {
+      "zh_TW": "找到磨刀石了！",
+      "en": "The whetstone!"
+    },
+    "ev_c1_hungry_soldier.title": {
+      "zh_TW": "飢餓的士兵",
+      "en": "The Hungry Soldier"
+    },
+    "ev_c1_hungry_soldier.desc": {
+      "zh_TW": "一個被抓來當兵的灰面具少年。",
+      "en": "A grey-mask boy who was made to join."
+    },
+    "ev_c1_hungry_soldier.text": {
+      "zh_TW": "別殺我……",
+      "en": "Don't kill me..."
+    },
+    "ev_c1_rescue_healer.title": {
+      "zh_TW": "舊果園的治療師",
+      "en": "The Healer in the Orchard"
+    },
+    "ev_c1_rescue_healer.desc": {
+      "zh_TW": "五層的舊果園裡關著治療師。",
+      "en": "The healer is locked in the fifth floor's old orchard."
+    },
+    "ev_c1_rescue_healer.text": {
+      "zh_TW": "里歐？",
+      "en": "Leo?"
+    },
+    "ev_c1_greymask.title": {
+      "zh_TW": "樓梯上的灰面",
+      "en": "Grey Mask on the Stairs"
+    },
+    "ev_c1_greymask.desc": {
+      "zh_TW": "收集者的隊長在五層等你。",
+      "en": "The Collectors' captain waits on the fifth floor."
+    },
+    "ev_c1_greymask.text": {
+      "zh_TW": "灰面……",
+      "en": "Grey Mask..."
+    },
+    "mission.m_c2_wolves.title": {
+      "zh_TW": "凱的試煉：三隻狼",
+      "en": "Kai's Test: Three Wolves"
+    },
+    "mission.m_c2_wolves.desc": {
+      "zh_TW": "森林裡的狼在幫收集者趕人。打倒三隻森林狼。",
+      "en": "The forest wolves herd people for the Collectors. Beat three forest wolves."
+    },
+    "ev_c2_scarf.title": {
+      "zh_TW": "媽媽的圍巾",
+      "en": "Mom's Scarf"
+    },
+    "ev_c2_scarf.desc": {
+      "zh_TW": "圍巾裡別著爸爸的字條。",
+      "en": "A note from Dad, pinned inside."
+    },
+    "ev_c2_scarf.text": {
+      "zh_TW": "媽媽的圍巾……",
+      "en": "Mom's scarf..."
+    },
+    "ev_c2_wobbles.title": {
+      "zh_TW": "被烤的爵士",
+      "en": "The Toasted Knight"
+    },
+    "ev_c2_wobbles.desc": {
+      "zh_TW": "晃晃爵士的王被抓走了。",
+      "en": "Sir Wobbles' king was taken."
+    },
+    "ev_c2_wobbles.text": {
+      "zh_TW": "平民！",
+      "en": "Commoner!"
+    },
+    "ev_c2_kai_snare.title": {
+      "zh_TW": "捕獸夾裡的凱",
+      "en": "Kai in the Snare"
+    },
+    "ev_c2_kai_snare.desc": {
+      "zh_TW": "救他，還是走開？",
+      "en": "Free him, or walk away?"
+    },
+    "ev_c2_kai_snare.text": {
+      "zh_TW": "別管我！",
+      "en": "Don't mind me!"
+    },
+    "ev_c2_liora_letter.title": {
+      "zh_TW": "L 的信",
+      "en": "L's Letter"
+    },
+    "ev_c2_liora_letter.desc": {
+      "zh_TW": "「別相信灰面。我在塔頂等你。」",
+      "en": "\"Don't trust Grey Mask. I am waiting at the top.\""
+    },
+    "ev_c2_liora_letter.text": {
+      "zh_TW": "一封信。",
+      "en": "A letter."
+    },
+    "mission.m_c3_ledger.title": {
+      "zh_TW": "孩子的名冊",
+      "en": "The Ledger of Children"
+    },
+    "mission.m_c3_ledger.desc": {
+      "zh_TW": "收集者的名冊被撕成了三頁。找齊它，看看他們到底在抓誰。",
+      "en": "The Collectors' ledger was torn into three pages. Find them all and see who they are really after."
+    },
+    "ev_c3_page1.title": {
+      "zh_TW": "名冊第一頁",
+      "en": "Ledger, Page One"
+    },
+    "ev_c3_page1.desc": {
+      "zh_TW": "「村名：橡木村。」",
+      "en": "\"Village: Oakhollow.\""
+    },
+    "ev_c3_page1.text": {
+      "zh_TW": "燒剩的紙……",
+      "en": "A burnt sheet..."
+    },
+    "ev_c3_page2.title": {
+      "zh_TW": "名冊第二頁",
+      "en": "Ledger, Page Two"
+    },
+    "ev_c3_page2.desc": {
+      "zh_TW": "「有記號的一名，交主人處理。」",
+      "en": "\"The marked one, to the Master.\""
+    },
+    "ev_c3_page2.text": {
+      "zh_TW": "又一頁。",
+      "en": "Another page."
+    },
+    "ev_c3_pip_map.title": {
+      "zh_TW": "百分之九十九的地圖",
+      "en": "The 99% Map"
+    },
+    "ev_c3_pip_map.desc": {
+      "zh_TW": "皮普的新商品。",
+      "en": "Pip's newest product."
+    },
+    "ev_c3_pip_map.text": {
+      "zh_TW": "客人！",
+      "en": "Customer!"
+    },
+    "ev_c3_clerk.title": {
+      "zh_TW": "寫名字的書記",
+      "en": "The Clerk Who Wrote the Names"
+    },
+    "ev_c3_clerk.desc": {
+      "zh_TW": "放過他、要他寫供詞，還是打翻墨水？",
+      "en": "Spare him, make him confess, or smash his ink?"
+    },
+    "ev_c3_clerk.text": {
+      "zh_TW": "我只是寫字的！",
+      "en": "I only write!"
+    },
+    "ev_c3_riddle.title": {
+      "zh_TW": "會說話的書",
+      "en": "The Talking Book"
+    },
+    "ev_c3_riddle.desc": {
+      "zh_TW": "答對謎題，拿到最後一頁。",
+      "en": "Answer its riddle for the last page."
+    },
+    "ev_c3_riddle.text": {
+      "zh_TW": "吾乃知識之書！",
+      "en": "I am the Book of Knowledge!"
+    },
+    "ev_c3_ledger_whole.title": {
+      "zh_TW": "完整的名冊",
+      "en": "The Whole Ledger"
+    },
+    "ev_c3_ledger_whole.desc": {
+      "zh_TW": "里歐的名字，還有凱的妹妹。",
+      "en": "Leo's name, and Kai's little sister."
+    },
+    "ev_c3_ledger_whole.text": {
+      "zh_TW": "三頁拼在一起……",
+      "en": "The three pages fit together..."
+    },
+    "ev_c3_letter2.title": {
+      "zh_TW": "L 的第二封信",
+      "en": "L's Second Letter"
+    },
+    "ev_c3_letter2.desc": {
+      "zh_TW": "「主人不是巫師王。」",
+      "en": "\"The Master is not the Sorcerer King.\""
+    },
+    "ev_c3_letter2.text": {
+      "zh_TW": "又一封信。",
+      "en": "Another letter."
+    },
+    "mission.started": {
+      "zh_TW": "接下任務：{title}",
+      "en": "Quest started: {title}",
+      "zh_CN": "接下任务：{title}",
+      "ja": "クエスト開始：{title}",
+      "ko": "퀘스트 시작: {title}",
+      "es": "Misión aceptada: {title}"
+    },
+    "mission.ready": {
+      "zh_TW": "任務達成：{title}（回去回報吧）",
+      "en": "Quest done: {title} (go back and tell them)",
+      "zh_CN": "任务达成：{title}（回去回报吧）",
+      "ja": "クエスト達成：{title}（報告しに戻ろう）",
+      "ko": "퀘스트 달성: {title} (돌아가서 알리자)",
+      "es": "Misión cumplida: {title} (vuelve a contarlo)"
+    },
+    "mission.claimed": {
+      "zh_TW": "任務完成：{title}",
+      "en": "Quest complete: {title}",
+      "zh_CN": "任务完成：{title}",
+      "ja": "クエスト完了：{title}",
+      "ko": "퀘스트 완료: {title}",
+      "es": "Misión completada: {title}"
+    },
+    "mission.m_rescue_baker.title": {
+      "zh_TW": "找回麵包師",
+      "en": "Bring the Baker Home",
+      "zh_CN": "找回面包师",
+      "ja": "パン屋を連れ戻せ",
+      "ko": "제빵사를 데려오라",
+      "es": "Trae al panadero a casa"
+    },
+    "mission.m_rescue_baker.desc": {
+      "zh_TW": "麵包師被收集者帶上了塔。找到他，讓他回村裡。",
+      "en": "The Collectors took the baker up the tower. Find him and bring him home.",
+      "zh_CN": "面包师被收集者带上了塔。找到他，让他回村里。",
+      "ja": "パン屋は収集者に塔へ連れ去られた。見つけて村へ帰そう。",
+      "ko": "수집자들이 제빵사를 탑으로 끌고 갔다. 그를 찾아 마을로 데려오자.",
+      "es": "Los Recolectores se llevaron al panadero a la torre. Encuéntralo y tráelo a casa."
     },
     "mission.completed_prefix": {
       "zh_TW": "任務完成：",
@@ -2726,16 +3094,16 @@
       "es": "為什麼要攀上這座塔？"
     },
     "story.ch01.title": {
-      "zh_TW": "我為何舉劍",
-      "en": "Why I Raise the Blade",
+      "zh_TW": "燃燒的村莊",
+      "en": "The Burning Village",
       "zh_CN": "我為何舉劍",
       "ja": "我為何舉劍",
       "ko": "我為何舉劍",
       "es": "我為何舉劍"
     },
     "story.ch02.title": {
-      "zh_TW": "老巫師的氣",
-      "en": "The Old Sorcerer's Qi",
+      "zh_TW": "森林小徑",
+      "en": "The Forest Path",
       "zh_CN": "老巫師的氣",
       "ja": "老巫師的氣",
       "ko": "老巫師的氣",
@@ -2766,8 +3134,8 @@
       "es": "門環上的刻痕要怎麼處理？"
     },
     "story.ch03.title": {
-      "zh_TW": "門環上的刻痕",
-      "en": "The Notch on the Ring",
+      "zh_TW": "謊言之門",
+      "en": "The Gate of Lies",
       "zh_CN": "門環上的刻痕",
       "ja": "門環上的刻痕",
       "ko": "門環上的刻痕",
@@ -2806,240 +3174,240 @@
       "es": "執卷人的遺骸"
     },
     "story.f01.intro": {
-      "zh_TW": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」",
-      "en": "Village edge: the well",
+      "zh_TW": "地上還有拖行的痕跡，一路往上。",
+      "en": "Drag marks run across the floor, all leading up.",
       "zh_CN": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」",
       "ja": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」",
       "ko": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」",
       "es": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」"
     },
     "story.f01.name": {
-      "zh_TW": "村莊外緣・井",
-      "en": "Village edge: the well",
+      "zh_TW": "塔底・焦痕小路",
+      "en": "Tower Base: the Scorched Path",
       "zh_CN": "村莊外緣・井",
       "ja": "村莊外緣・井",
       "ko": "村莊外緣・井",
       "es": "村莊外緣・井"
     },
     "story.f02.intro": {
-      "zh_TW": "風把穀殼吹過腳邊，村子的日子還在繼續。",
-      "en": "The drying yard",
+      "zh_TW": "塔把村外的田吞了進來，籬笆還歪歪地立著。",
+      "en": "The tower swallowed the fields outside the village. The fences still lean.",
       "zh_CN": "風把穀殼吹過腳邊，村子的日子還在繼續。",
       "ja": "風把穀殼吹過腳邊，村子的日子還在繼續。",
       "ko": "風把穀殼吹過腳邊，村子的日子還在繼續。",
       "es": "風把穀殼吹過腳邊，村子的日子還在繼續。"
     },
     "story.f02.name": {
-      "zh_TW": "曬穀場",
-      "en": "The drying yard",
+      "zh_TW": "斷籬之間",
+      "en": "Among the Broken Fences",
       "zh_CN": "曬穀場",
       "ja": "曬穀場",
       "ko": "曬穀場",
       "es": "曬穀場"
     },
     "story.f03.intro": {
-      "zh_TW": "祠堂的木像沒有臉——有人刻意磨掉了。",
-      "en": "The old shrine",
+      "zh_TW": "空氣裡有麵包的味道……還是你餓了？",
+      "en": "The air smells of bread... or are you just hungry?",
       "zh_CN": "祠堂的木像沒有臉——有人刻意磨掉了。",
       "ja": "祠堂的木像沒有臉——有人刻意磨掉了。",
       "ko": "祠堂的木像沒有臉——有人刻意磨掉了。",
       "es": "祠堂的木像沒有臉——有人刻意磨掉了。"
     },
     "story.f03.name": {
-      "zh_TW": "舊祠堂",
-      "en": "The old shrine",
+      "zh_TW": "穀倉迴廊",
+      "en": "The Granary Halls",
       "zh_CN": "舊祠堂",
       "ja": "舊祠堂",
       "ko": "舊祠堂",
       "es": "舊祠堂"
     },
     "story.f04.intro": {
-      "zh_TW": "井底的石壁刻著七道痕，其中一道是新的。",
-      "en": "The well of memory",
+      "zh_TW": "磨坊的水車還在轉，卻沒有水。",
+      "en": "The mill wheel still turns, with no water.",
       "zh_CN": "井底的石壁刻著七道痕，其中一道是新的。",
       "ja": "井底的石壁刻著七道痕，其中一道是新的。",
       "ko": "井底的石壁刻著七道痕，其中一道是新的。",
       "es": "井底的石壁刻著七道痕，其中一道是新的。"
     },
     "story.f04.name": {
-      "zh_TW": "記憶之井",
-      "en": "The well of memory",
+      "zh_TW": "燒毀的磨坊",
+      "en": "The Burnt Mill",
       "zh_CN": "記憶之井",
       "ja": "記憶之井",
       "ko": "記憶之井",
       "es": "記憶之井"
     },
     "story.f05.intro": {
-      "zh_TW": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」",
-      "en": "Xiaosui's stall",
+      "zh_TW": "樓梯頂端，有人在等你。",
+      "en": "At the top of the stairs, someone is waiting.",
       "zh_CN": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」",
       "ja": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」",
       "ko": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」",
       "es": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」"
     },
     "story.f05.name": {
-      "zh_TW": "小穗的攤位",
-      "en": "Xiaosui's stall",
+      "zh_TW": "果園石階",
+      "en": "The Orchard Stairs",
       "zh_CN": "小穗的攤位",
       "ja": "小穗的攤位",
       "ko": "小穗的攤位",
       "es": "小穗的攤位"
     },
     "story.f06.intro": {
-      "zh_TW": "坡道上的腳印比你早一步，方向卻是往下的。",
-      "en": "Slope to the gate",
+      "zh_TW": "塔的牆裂開了，樹根從石縫裡長出來。森林在上面等著。",
+      "en": "The tower walls split; roots push through the stones. The forest waits above.",
       "zh_CN": "坡道上的腳印比你早一步，方向卻是往下的。",
       "ja": "坡道上的腳印比你早一步，方向卻是往下的。",
       "ko": "坡道上的腳印比你早一步，方向卻是往下的。",
       "es": "坡道上的腳印比你早一步，方向卻是往下的。"
     },
     "story.f06.name": {
-      "zh_TW": "往門樓的坡道",
-      "en": "Slope to the gate",
+      "zh_TW": "樹根花園",
+      "en": "The Root Garden",
       "zh_CN": "往門樓的坡道",
       "ja": "往門樓的坡道",
       "ko": "往門樓的坡道",
       "es": "往門樓的坡道"
     },
     "story.f07.intro": {
-      "zh_TW": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。",
-      "en": "Village edge: the seal knot",
+      "zh_TW": "一座和你家一模一樣的村子……只是沒有人。",
+      "en": "A village just like yours... with no one in it.",
       "zh_CN": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。",
       "ja": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。",
       "ko": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。",
       "es": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。"
     },
     "story.f07.name": {
-      "zh_TW": "村莊外緣・封印結",
-      "en": "Village edge: the seal knot",
+      "zh_TW": "塔中村落",
+      "en": "The Village Inside the Tower",
       "zh_CN": "村莊外緣・封印結",
       "ja": "村莊外緣・封印結",
       "ko": "村莊外緣・封印結",
       "es": "村莊外緣・封印結"
     },
     "story.f08.intro": {
-      "zh_TW": "林線之後，霧開始有自己的重量。",
-      "en": "Forest path",
+      "zh_TW": "霧很濃，濃到能聽見有人在霧裡數錢。",
+      "en": "The mist is so thick you can hear someone counting coins in it.",
       "zh_CN": "林線之後，霧開始有自己的重量。",
       "ja": "林線之後，霧開始有自己的重量。",
       "ko": "林線之後，霧開始有自己的重量。",
       "es": "林線之後，霧開始有自己的重量。"
     },
     "story.f08.name": {
-      "zh_TW": "林道入口",
-      "en": "Forest path",
+      "zh_TW": "霧林",
+      "en": "The Misty Wood",
       "zh_CN": "林道入口",
       "ja": "林道入口",
       "ko": "林道入口",
       "es": "林道入口"
     },
     "story.f09.intro": {
-      "zh_TW": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」",
-      "en": "The old sorcerer's campfire",
+      "zh_TW": "炭窯還溫著，收集者剛走不久。",
+      "en": "The kilns are still warm. The Collectors left not long ago.",
       "zh_CN": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」",
       "ja": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」",
       "ko": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」",
       "es": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」"
     },
     "story.f09.name": {
-      "zh_TW": "老巫師的營火",
-      "en": "The old sorcerer's campfire",
+      "zh_TW": "炭窯小徑",
+      "en": "The Charcoal Path",
       "zh_CN": "老巫師的營火",
       "ja": "老巫師的營火",
       "ko": "老巫師的營火",
       "es": "老巫師的營火"
     },
     "story.f10.intro": {
-      "zh_TW": "腳下全是折斷的箭——有人不希望你走到這裡。",
-      "en": "Broken-arrow snares",
+      "zh_TW": "到處都是收集者的捕獸夾——捕的不是野獸。",
+      "en": "Collector snares everywhere, and they are not for animals.",
       "zh_CN": "腳下全是折斷的箭——有人不希望你走到這裡。",
       "ja": "腳下全是折斷的箭——有人不希望你走到這裡。",
       "ko": "腳下全是折斷的箭——有人不希望你走到這裡。",
       "es": "腳下全是折斷的箭——有人不希望你走到這裡。"
     },
     "story.f10.name": {
-      "zh_TW": "折箭陷阱區",
-      "en": "Broken-arrow snares",
+      "zh_TW": "陷阱林",
+      "en": "The Snare Wood",
       "zh_CN": "折箭陷阱區",
       "ja": "折箭陷阱區",
       "ko": "折箭陷阱區",
       "es": "折箭陷阱區"
     },
     "story.f11.intro": {
-      "zh_TW": "一支插在樹心的箭，箭羽是你前世的紋樣。",
-      "en": "The old arrow",
+      "zh_TW": "門上掛著收集者的灰色旗子。",
+      "en": "Grey Collector banners hang over the gate.",
       "zh_CN": "一支插在樹心的箭，箭羽是你前世的紋樣。",
       "ja": "一支插在樹心的箭，箭羽是你前世的紋樣。",
       "ko": "一支插在樹心的箭，箭羽是你前世的紋樣。",
       "es": "一支插在樹心的箭，箭羽是你前世的紋樣。"
     },
     "story.f11.name": {
-      "zh_TW": "林中的舊箭",
-      "en": "The old arrow",
+      "zh_TW": "外門",
+      "en": "The Outer Gate",
       "zh_CN": "林中的舊箭",
       "ja": "林中的舊箭",
       "ko": "林中的舊箭",
       "es": "林中的舊箭"
     },
     "story.f12.intro": {
-      "zh_TW": "無名塚沒有名字，只有一把沒收鞘的劍。",
-      "en": "The nameless grave",
+      "zh_TW": "牆上貼滿了懸賞單——上面全是孩子的臉。",
+      "en": "The walls are covered in notices, all of them children's faces.",
       "zh_CN": "無名塚沒有名字，只有一把沒收鞘的劍。",
       "ja": "無名塚沒有名字，只有一把沒收鞘的劍。",
       "ko": "無名塚沒有名字，只有一把沒收鞘的劍。",
       "es": "無名塚沒有名字，只有一把沒收鞘的劍。"
     },
     "story.f12.name": {
-      "zh_TW": "無名塚",
-      "en": "The nameless grave",
+      "zh_TW": "收費大廳",
+      "en": "The Toll Hall",
       "zh_CN": "無名塚",
       "ja": "無名塚",
       "ko": "無名塚",
       "es": "無名塚"
     },
     "story.f13.intro": {
-      "zh_TW": "霧裡的獵徑繞回原處，像有人希望你留在這裡。",
-      "en": "Hunting trail in fog",
+      "zh_TW": "墨水的味道。有人在這裡寫下了很多名字。",
+      "en": "The smell of ink. Someone wrote a great many names here.",
       "zh_CN": "霧裡的獵徑繞回原處，像有人希望你留在這裡。",
       "ja": "霧裡的獵徑繞回原處，像有人希望你留在這裡。",
       "ko": "霧裡的獵徑繞回原處，像有人希望你留在這裡。",
       "es": "霧裡的獵徑繞回原處，像有人希望你留在這裡。"
     },
     "story.f13.name": {
-      "zh_TW": "霧中的獵徑",
-      "en": "Hunting trail in fog",
+      "zh_TW": "書記房",
+      "en": "The Clerks' Rooms",
       "zh_CN": "霧中的獵徑",
       "ja": "霧中的獵徑",
       "ko": "霧中的獵徑",
       "es": "霧中的獵徑"
     },
     "story.f14.intro": {
-      "zh_TW": "折箭獵手在霧中拉弓，箭尖對著你的胸口。",
-      "en": "Forest path: the seal knot",
+      "zh_TW": "一本書從你頭上飛過去，還瞪了你一眼。",
+      "en": "A book flies over your head and glares at you.",
       "zh_CN": "折箭獵手在霧中拉弓，箭尖對著你的胸口。",
       "ja": "折箭獵手在霧中拉弓，箭尖對著你的胸口。",
       "ko": "折箭獵手在霧中拉弓，箭尖對著你的胸口。",
       "es": "折箭獵手在霧中拉弓，箭尖對著你的胸口。"
     },
     "story.f14.name": {
-      "zh_TW": "林道・封印結",
-      "en": "Forest path: the seal knot",
+      "zh_TW": "書庫後的林院",
+      "en": "The Courtyard Behind the Stacks",
       "zh_CN": "林道・封印結",
       "ja": "林道・封印結",
       "ko": "林道・封印結",
       "es": "林道・封印結"
     },
     "story.f15.intro": {
-      "zh_TW": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。",
-      "en": "Soldiers before the gate",
+      "zh_TW": "從這裡，你第一次看見了塔頂。",
+      "en": "From here, for the first time, you can see the top of the tower.",
       "zh_CN": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。",
       "ja": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。",
       "ko": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。",
       "es": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。"
     },
     "story.f15.name": {
-      "zh_TW": "門樓前的道兵",
-      "en": "Soldiers before the gate",
+      "zh_TW": "門樓頂",
+      "en": "The Gatehouse Roof",
       "zh_CN": "門樓前的道兵",
       "ja": "門樓前的道兵",
       "ko": "門樓前的道兵",
@@ -4905,240 +5273,240 @@
       "_todo": true
     },
     "story.f01.ambient.1": {
-      "zh_TW": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」",
-      "en": "Village edge: the well",
+      "zh_TW": "地上還有拖行的痕跡，一路往上。",
+      "en": "Drag marks run across the floor, all leading up.",
       "zh_CN": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」",
       "ja": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」",
       "ko": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」",
       "es": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」"
     },
     "story.f01.ambient.2": {
-      "zh_TW": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」",
-      "en": "Village edge: the well",
+      "zh_TW": "塔底・焦痕小路",
+      "en": "Tower Base: the Scorched Path",
       "zh_CN": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」",
       "ja": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」",
       "ko": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」",
       "es": "長老指向塔頂：「封印安穩之星的人，也在等一個理由。」"
     },
     "story.f02.ambient.1": {
-      "zh_TW": "風把穀殼吹過腳邊，村子的日子還在繼續。",
-      "en": "The drying yard",
+      "zh_TW": "塔把村外的田吞了進來，籬笆還歪歪地立著。",
+      "en": "The tower swallowed the fields outside the village. The fences still lean.",
       "zh_CN": "風把穀殼吹過腳邊，村子的日子還在繼續。",
       "ja": "風把穀殼吹過腳邊，村子的日子還在繼續。",
       "ko": "風把穀殼吹過腳邊，村子的日子還在繼續。",
       "es": "風把穀殼吹過腳邊，村子的日子還在繼續。"
     },
     "story.f02.ambient.2": {
-      "zh_TW": "風把穀殼吹過腳邊，村子的日子還在繼續。",
-      "en": "The drying yard",
+      "zh_TW": "斷籬之間",
+      "en": "Among the Broken Fences",
       "zh_CN": "風把穀殼吹過腳邊，村子的日子還在繼續。",
       "ja": "風把穀殼吹過腳邊，村子的日子還在繼續。",
       "ko": "風把穀殼吹過腳邊，村子的日子還在繼續。",
       "es": "風把穀殼吹過腳邊，村子的日子還在繼續。"
     },
     "story.f03.ambient.1": {
-      "zh_TW": "祠堂的木像沒有臉——有人刻意磨掉了。",
-      "en": "The old shrine",
+      "zh_TW": "空氣裡有麵包的味道……還是你餓了？",
+      "en": "The air smells of bread... or are you just hungry?",
       "zh_CN": "祠堂的木像沒有臉——有人刻意磨掉了。",
       "ja": "祠堂的木像沒有臉——有人刻意磨掉了。",
       "ko": "祠堂的木像沒有臉——有人刻意磨掉了。",
       "es": "祠堂的木像沒有臉——有人刻意磨掉了。"
     },
     "story.f03.ambient.2": {
-      "zh_TW": "祠堂的木像沒有臉——有人刻意磨掉了。",
-      "en": "The old shrine",
+      "zh_TW": "穀倉迴廊",
+      "en": "The Granary Halls",
       "zh_CN": "祠堂的木像沒有臉——有人刻意磨掉了。",
       "ja": "祠堂的木像沒有臉——有人刻意磨掉了。",
       "ko": "祠堂的木像沒有臉——有人刻意磨掉了。",
       "es": "祠堂的木像沒有臉——有人刻意磨掉了。"
     },
     "story.f04.ambient.1": {
-      "zh_TW": "井底的石壁刻著七道痕，其中一道是新的。",
-      "en": "The well of memory",
+      "zh_TW": "磨坊的水車還在轉，卻沒有水。",
+      "en": "The mill wheel still turns, with no water.",
       "zh_CN": "井底的石壁刻著七道痕，其中一道是新的。",
       "ja": "井底的石壁刻著七道痕，其中一道是新的。",
       "ko": "井底的石壁刻著七道痕，其中一道是新的。",
       "es": "井底的石壁刻著七道痕，其中一道是新的。"
     },
     "story.f04.ambient.2": {
-      "zh_TW": "井底的石壁刻著七道痕，其中一道是新的。",
-      "en": "The well of memory",
+      "zh_TW": "燒毀的磨坊",
+      "en": "The Burnt Mill",
       "zh_CN": "井底的石壁刻著七道痕，其中一道是新的。",
       "ja": "井底的石壁刻著七道痕，其中一道是新的。",
       "ko": "井底的石壁刻著七道痕，其中一道是新的。",
       "es": "井底的石壁刻著七道痕，其中一道是新的。"
     },
     "story.f05.ambient.1": {
-      "zh_TW": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」",
-      "en": "Xiaosui's stall",
+      "zh_TW": "樓梯頂端，有人在等你。",
+      "en": "At the top of the stairs, someone is waiting.",
       "zh_CN": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」",
       "ja": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」",
       "ko": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」",
       "es": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」"
     },
     "story.f05.ambient.2": {
-      "zh_TW": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」",
-      "en": "Xiaosui's stall",
+      "zh_TW": "果園石階",
+      "en": "The Orchard Stairs",
       "zh_CN": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」",
       "ja": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」",
       "ko": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」",
       "es": "小穗遞來半塊餅：「你小時候也是這樣分著吃的。」"
     },
     "story.f06.ambient.1": {
-      "zh_TW": "坡道上的腳印比你早一步，方向卻是往下的。",
-      "en": "Slope to the gate",
+      "zh_TW": "塔的牆裂開了，樹根從石縫裡長出來。森林在上面等著。",
+      "en": "The tower walls split; roots push through the stones. The forest waits above.",
       "zh_CN": "坡道上的腳印比你早一步，方向卻是往下的。",
       "ja": "坡道上的腳印比你早一步，方向卻是往下的。",
       "ko": "坡道上的腳印比你早一步，方向卻是往下的。",
       "es": "坡道上的腳印比你早一步，方向卻是往下的。"
     },
     "story.f06.ambient.2": {
-      "zh_TW": "坡道上的腳印比你早一步，方向卻是往下的。",
-      "en": "Slope to the gate",
+      "zh_TW": "樹根花園",
+      "en": "The Root Garden",
       "zh_CN": "坡道上的腳印比你早一步，方向卻是往下的。",
       "ja": "坡道上的腳印比你早一步，方向卻是往下的。",
       "ko": "坡道上的腳印比你早一步，方向卻是往下的。",
       "es": "坡道上的腳印比你早一步，方向卻是往下的。"
     },
     "story.f07.ambient.1": {
-      "zh_TW": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。",
-      "en": "Village edge: the seal knot",
+      "zh_TW": "一座和你家一模一樣的村子……只是沒有人。",
+      "en": "A village just like yours... with no one in it.",
       "zh_CN": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。",
       "ja": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。",
       "ko": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。",
       "es": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。"
     },
     "story.f07.ambient.2": {
-      "zh_TW": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。",
-      "en": "Village edge: the seal knot",
+      "zh_TW": "塔中村落",
+      "en": "The Village Inside the Tower",
       "zh_CN": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。",
       "ja": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。",
       "ko": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。",
       "es": "井中妖從水裡爬出來，嘴裡喊著你的舊名字。"
     },
     "story.f08.ambient.1": {
-      "zh_TW": "林線之後，霧開始有自己的重量。",
-      "en": "Forest path",
+      "zh_TW": "霧很濃，濃到能聽見有人在霧裡數錢。",
+      "en": "The mist is so thick you can hear someone counting coins in it.",
       "zh_CN": "林線之後，霧開始有自己的重量。",
       "ja": "林線之後，霧開始有自己的重量。",
       "ko": "林線之後，霧開始有自己的重量。",
       "es": "林線之後，霧開始有自己的重量。"
     },
     "story.f08.ambient.2": {
-      "zh_TW": "林線之後，霧開始有自己的重量。",
-      "en": "Forest path",
+      "zh_TW": "霧林",
+      "en": "The Misty Wood",
       "zh_CN": "林線之後，霧開始有自己的重量。",
       "ja": "林線之後，霧開始有自己的重量。",
       "ko": "林線之後，霧開始有自己的重量。",
       "es": "林線之後，霧開始有自己的重量。"
     },
     "story.f09.ambient.1": {
-      "zh_TW": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」",
-      "en": "The old sorcerer's campfire",
+      "zh_TW": "炭窯還溫著，收集者剛走不久。",
+      "en": "The kilns are still warm. The Collectors left not long ago.",
       "zh_CN": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」",
       "ja": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」",
       "ko": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」",
       "es": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」"
     },
     "story.f09.ambient.2": {
-      "zh_TW": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」",
-      "en": "The old sorcerer's campfire",
+      "zh_TW": "炭窯小徑",
+      "en": "The Charcoal Path",
       "zh_CN": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」",
       "ja": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」",
       "ko": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」",
       "es": "老巫師把火撥旺：「先學會不被殺死，再談殺人。」"
     },
     "story.f10.ambient.1": {
-      "zh_TW": "腳下全是折斷的箭——有人不希望你走到這裡。",
-      "en": "Broken-arrow snares",
+      "zh_TW": "到處都是收集者的捕獸夾——捕的不是野獸。",
+      "en": "Collector snares everywhere, and they are not for animals.",
       "zh_CN": "腳下全是折斷的箭——有人不希望你走到這裡。",
       "ja": "腳下全是折斷的箭——有人不希望你走到這裡。",
       "ko": "腳下全是折斷的箭——有人不希望你走到這裡。",
       "es": "腳下全是折斷的箭——有人不希望你走到這裡。"
     },
     "story.f10.ambient.2": {
-      "zh_TW": "腳下全是折斷的箭——有人不希望你走到這裡。",
-      "en": "Broken-arrow snares",
+      "zh_TW": "陷阱林",
+      "en": "The Snare Wood",
       "zh_CN": "腳下全是折斷的箭——有人不希望你走到這裡。",
       "ja": "腳下全是折斷的箭——有人不希望你走到這裡。",
       "ko": "腳下全是折斷的箭——有人不希望你走到這裡。",
       "es": "腳下全是折斷的箭——有人不希望你走到這裡。"
     },
     "story.f11.ambient.1": {
-      "zh_TW": "一支插在樹心的箭，箭羽是你前世的紋樣。",
-      "en": "The old arrow",
+      "zh_TW": "門上掛著收集者的灰色旗子。",
+      "en": "Grey Collector banners hang over the gate.",
       "zh_CN": "一支插在樹心的箭，箭羽是你前世的紋樣。",
       "ja": "一支插在樹心的箭，箭羽是你前世的紋樣。",
       "ko": "一支插在樹心的箭，箭羽是你前世的紋樣。",
       "es": "一支插在樹心的箭，箭羽是你前世的紋樣。"
     },
     "story.f11.ambient.2": {
-      "zh_TW": "一支插在樹心的箭，箭羽是你前世的紋樣。",
-      "en": "The old arrow",
+      "zh_TW": "外門",
+      "en": "The Outer Gate",
       "zh_CN": "一支插在樹心的箭，箭羽是你前世的紋樣。",
       "ja": "一支插在樹心的箭，箭羽是你前世的紋樣。",
       "ko": "一支插在樹心的箭，箭羽是你前世的紋樣。",
       "es": "一支插在樹心的箭，箭羽是你前世的紋樣。"
     },
     "story.f12.ambient.1": {
-      "zh_TW": "無名塚沒有名字，只有一把沒收鞘的劍。",
-      "en": "The nameless grave",
+      "zh_TW": "牆上貼滿了懸賞單——上面全是孩子的臉。",
+      "en": "The walls are covered in notices, all of them children's faces.",
       "zh_CN": "無名塚沒有名字，只有一把沒收鞘的劍。",
       "ja": "無名塚沒有名字，只有一把沒收鞘的劍。",
       "ko": "無名塚沒有名字，只有一把沒收鞘的劍。",
       "es": "無名塚沒有名字，只有一把沒收鞘的劍。"
     },
     "story.f12.ambient.2": {
-      "zh_TW": "無名塚沒有名字，只有一把沒收鞘的劍。",
-      "en": "The nameless grave",
+      "zh_TW": "收費大廳",
+      "en": "The Toll Hall",
       "zh_CN": "無名塚沒有名字，只有一把沒收鞘的劍。",
       "ja": "無名塚沒有名字，只有一把沒收鞘的劍。",
       "ko": "無名塚沒有名字，只有一把沒收鞘的劍。",
       "es": "無名塚沒有名字，只有一把沒收鞘的劍。"
     },
     "story.f13.ambient.1": {
-      "zh_TW": "霧裡的獵徑繞回原處，像有人希望你留在這裡。",
-      "en": "Hunting trail in fog",
+      "zh_TW": "墨水的味道。有人在這裡寫下了很多名字。",
+      "en": "The smell of ink. Someone wrote a great many names here.",
       "zh_CN": "霧裡的獵徑繞回原處，像有人希望你留在這裡。",
       "ja": "霧裡的獵徑繞回原處，像有人希望你留在這裡。",
       "ko": "霧裡的獵徑繞回原處，像有人希望你留在這裡。",
       "es": "霧裡的獵徑繞回原處，像有人希望你留在這裡。"
     },
     "story.f13.ambient.2": {
-      "zh_TW": "霧裡的獵徑繞回原處，像有人希望你留在這裡。",
-      "en": "Hunting trail in fog",
+      "zh_TW": "書記房",
+      "en": "The Clerks' Rooms",
       "zh_CN": "霧裡的獵徑繞回原處，像有人希望你留在這裡。",
       "ja": "霧裡的獵徑繞回原處，像有人希望你留在這裡。",
       "ko": "霧裡的獵徑繞回原處，像有人希望你留在這裡。",
       "es": "霧裡的獵徑繞回原處，像有人希望你留在這裡。"
     },
     "story.f14.ambient.1": {
-      "zh_TW": "折箭獵手在霧中拉弓，箭尖對著你的胸口。",
-      "en": "Forest path: the seal knot",
+      "zh_TW": "一本書從你頭上飛過去，還瞪了你一眼。",
+      "en": "A book flies over your head and glares at you.",
       "zh_CN": "折箭獵手在霧中拉弓，箭尖對著你的胸口。",
       "ja": "折箭獵手在霧中拉弓，箭尖對著你的胸口。",
       "ko": "折箭獵手在霧中拉弓，箭尖對著你的胸口。",
       "es": "折箭獵手在霧中拉弓，箭尖對著你的胸口。"
     },
     "story.f14.ambient.2": {
-      "zh_TW": "折箭獵手在霧中拉弓，箭尖對著你的胸口。",
-      "en": "Forest path: the seal knot",
+      "zh_TW": "書庫後的林院",
+      "en": "The Courtyard Behind the Stacks",
       "zh_CN": "折箭獵手在霧中拉弓，箭尖對著你的胸口。",
       "ja": "折箭獵手在霧中拉弓，箭尖對著你的胸口。",
       "ko": "折箭獵手在霧中拉弓，箭尖對著你的胸口。",
       "es": "折箭獵手在霧中拉弓，箭尖對著你的胸口。"
     },
     "story.f15.ambient.1": {
-      "zh_TW": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。",
-      "en": "Soldiers before the gate",
+      "zh_TW": "從這裡，你第一次看見了塔頂。",
+      "en": "From here, for the first time, you can see the top of the tower.",
       "zh_CN": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。",
       "ja": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。",
       "ko": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。",
       "es": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。"
     },
     "story.f15.ambient.2": {
-      "zh_TW": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。",
-      "en": "Soldiers before the gate",
+      "zh_TW": "門樓頂",
+      "en": "The Gatehouse Roof",
       "zh_CN": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。",
       "ja": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。",
       "ko": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。",
@@ -9616,8 +9984,8 @@
       "en": "Old Woman"
     },
     "npc.village_boy.name": {
-      "zh_TW": "村裡的男孩",
-      "en": "Village Boy"
+      "zh_TW": "小托",
+      "en": "Tobi"
     },
     "npc.village_girl.name": {
       "zh_TW": "村裡的女孩",
@@ -9652,8 +10020,8 @@
       "en": "Peddler"
     },
     "npc.innkeeper.name": {
-      "zh_TW": "旅店老闆",
-      "en": "Innkeeper"
+      "zh_TW": "旅店老闆娘",
+      "en": "The Innkeeper"
     },
     "npc.blacksmith.name": {
       "zh_TW": "鐵匠",
@@ -9684,8 +10052,8 @@
       "en": "Guard Captain"
     },
     "npc.knight_errant.name": {
-      "zh_TW": "遊俠騎士",
-      "en": "Knight Errant"
+      "zh_TW": "凱",
+      "en": "Kai"
     },
     "npc.archer_scout.name": {
       "zh_TW": "弓箭斥候",
@@ -9988,8 +10356,8 @@
       "es": "Aquí ya no queda nada que ganar."
     },
     "npc.chest_peddler.name": {
-      "zh_TW": "抱寶箱的行商",
-      "en": "Peddler with a Chest",
+      "zh_TW": "皮普",
+      "en": "Pip",
       "zh_CN": "抱宝箱的行商",
       "ja": "宝箱を抱えた行商人",
       "ko": "상자를 든 행상",

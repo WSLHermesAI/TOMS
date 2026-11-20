@@ -240,8 +240,13 @@ struct CombatState : public Trackable {
     int m_iFrameDt = 0;               // the battle's time this frame: 0 in a hit stop, slower in the last hit's slow motion
     int m_iHitStopMs = 0;             // both sides freeze (15 §3.8)
     int m_iCellIntroMs = 0;           // the first danger's moment: time left; everything waits, only the monster moves
-    int m_iHeroIntroMs = 0, m_iHeroIntroMsMax = 0;   // the hero's own introduction of his ultimate (a move's "intro" beat): the boss banner, his side
-    std::string m_strHeroIntroLabel;                 // ...its label's text key (the move's name types in under it)
+    // A special attack's introduction (the owner, 2026-11-20: every special attack, the hero's or a monster's, has the same
+    // rundown: its play, then this, then the attack; docs/gameplay/22 §4.2): the boss banner, the label and the attack's
+    // name typed in, the camera on whoever makes it. A move's "intro" beat, or a monster's special attack (f_StartFoeIntro).
+    int m_iHeroIntroMs = 0, m_iHeroIntroMsMax = 0;   // time left / in all
+    int m_iIntroOwner = -1;                          // -1 the hero (his colours, from the right); 0.. that monster (a boss's look, from the left)
+    std::string m_strHeroIntroLabel, m_strIntroName; // the label's text key; the attack's name (already in the player's language)
+    int m_iIntroFoeFire = -1;                        // a monster's special attack waits for its introduction, then lands (f_StartFoeIntro)
     int m_iBossIntroMs = 0, m_iBossIntroMsMax = 0;   // a boss's introduction (f_StartBossIntro): time left; everything waits the same way
     // (it is armed first: it waits for the battle's first drawn frame, then startDelayMs, so loading never eats it)
     int m_iBossIntroFoe = -1, m_iBossIntroWaitMs = 0, m_iBossIntroFrames = 0;
@@ -449,7 +454,7 @@ public:
     bool f_ReduceEffects() const { return m_oSettings.m_bReduceEffects; }
     bool f_BattleCellsOn() const { return m_oCs.m_bActive && m_oCs.m_bCellsOn; }
     // a moment when everything waits and only the monster is shown: the first danger's, or a boss's introduction
-    bool f_CellIntroOn() const { return m_oCs.m_iCellIntroMs > 0 || m_oCs.m_iBossIntroMs > 0 || m_oCs.m_iBossIntroFoe >= 0; }
+    bool f_CellIntroOn() const { return m_oCs.m_iCellIntroMs > 0 || m_oCs.m_iBossIntroMs > 0 || m_oCs.m_iBossIntroFoe >= 0 || m_oCs.m_iIntroFoeFire >= 0; }
     // A boss's introduction (the owner, 2026-11-14, Q82: "a special opening to introduce the boss (like Mega Man)"):
     // enemies.json "intro": true; battle.json feelFx "bossIntro". The fight waits; the camera goes low and close on it,
     // it poses, its particles and its sting, a banner slides in and its name types in letter by letter.
@@ -852,7 +857,8 @@ private:
     void f_UpdateSkill(int l_iDtMs);
     void f_SkillBeat(const toms::ShowBeat& l_oB, glm::vec2 l_v2At);
     void f_EndSkill();
-    glm::vec2 f_SkillCentre() const;                  // where a move's shape is drawn: between the fighters
+    glm::vec2 f_SkillCentre() const;                  // between the fighters (a step's burst with no place of its own)
+    glm::vec2 f_SkillShapeCentre(const toms::SpecialMove& l_oD) const;   // a move's shape or ring: on the hero's head (ringY), on the screen
     std::string f_SkillName() const;                  // the running skill's name, in the language
     // the training ground (16 §5): a monster's card spent for fights in a row with more EXP and weapon wins
 public:
@@ -1207,7 +1213,9 @@ private:
     void f_PlayBattleFxAt(const std::string& l_strEffect, float l_fX, float l_fY, bool l_bOverUi, int l_iDelayMs = 0, float l_fScale = 1.0f,
                           float l_fRotationDeg = 0.0f);
     // The attack feel (docs/gameplay/20; data/battle.json "feelFx").
-    void f_LaunchRain(const toms::ShowBeat& l_oB, int l_iFoe);   // one of a move's falling projectiles (and its extras) at a monster
+    void f_LaunchRain(const toms::ShowBeat& l_oB, int l_iFoe);
+    // A monster's special attack (a powered move, feelFx "specialAttack"): its introduction before it lands (22 §4.2).
+    void f_StartFoeIntro(int l_iFoe);   // one of a move's falling projectiles (and its extras) at a monster
     void f_LaunchBattleFx(const std::string& l_strEffect, glm::vec2 l_v2From, glm::vec2 l_v2To, int l_iFlightMs, const std::string& l_strImpact,
                           const std::string& l_strImpactSound);
     void f_FoeAttackFx(int l_iFoe, const toms::MoveDef& l_oMove, bool l_bReaches);   // its cast, a projectile or a strike, its sound (§5)
@@ -1534,6 +1542,14 @@ private:
     std::map<std::string, toms::MissionDefinition> m_mapMissionDefs;
     std::map<std::string, toms::MissionTracker> m_mapMissionTrackers;
     void f_StartMission(const std::string& l_strId);
+    // Every quest's progress for one happening ("defeat" a monster id, "collect" an item id, "flag" a flag set: a rescue's
+    // "home.<npc>", a choice's flag); a quest that is done says so (docs/gameplay/23 §7).
+    void f_MissionProgress(const std::string& l_strType, const std::string& l_strTarget);
+    std::string f_MissionTitle(const std::string& l_strId) const;   // its title in the player's language (the id if none)
+    // A villager freed in the tower goes home (docs/gameplay/23 §5): the run flag "home.<npc>" (the village's places with
+    // that unlockFlag open, hub.json), a notice, and the quests waiting for it.
+    void f_RescueNpc(const std::string& l_strNpc, const std::string& l_strTextKey = "village.rescued");   // (its notice: a text key with {name})
+    bool m_bDlgReplaced = false;   // a choice's action opened another dialogue (startDialogue): the choice must not close it
     // Milestone 8: grants a Completed mission's reward and flips it to Claimed. Idempotent --
     // a no-op unless the tracker's state is exactly Completed, so re-triggering this (e.g. the
     // dialogue choice that calls it stays visible after claiming) can never double-grant.

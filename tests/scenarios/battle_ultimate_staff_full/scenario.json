@@ -1,0 +1,30 @@
+{
+  "_comment": "The staff's ultimate done in full (the owner, 2026-11-20; docs/gameplay/22 §4.1; special_moves.json star_seal): g at frame 10; the pentagram, on the hero's head, traced in five strokes corner to corner (top, bottom right, left, right, bottom left, top). 5 of 5: the hero's introduction, then 10 falling stars, each a hit.",
+  "scene": "battle",
+  "player": {
+    "give": [
+      "staff"
+    ],
+    "equip": [
+      "staff"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000,
+    "super": true,
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 600,
+    "keys": "g@10",
+    "drags": "142:246:210:454:6@160,210:454:33:326:6@172,33:326:252:326:6@184,252:326:75:454:6@196,75:454:142:246:6@208"
+  },
+  "expect": {
+    "battleEvents": {
+      "skill": 1,
+      "hit": 10
+    }
+  }
+}

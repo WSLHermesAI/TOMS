@@ -61,6 +61,22 @@
   battle's shared list or a bare `Audio::f_Play`. When the default rule is wrong for it, give it its own line in
   `"onFoeDeath"`.
 
+### Special attacks: one rundown, the hero's and the monsters'
+
+- **Every special attack plays the same rundown** (the owner, 2026-11-20; docs/gameplay/22 §4.2): a weapon's ultimate, any
+  skill of the player's, a monster's special attack and its special guard move (`special_moves.json` `"use": "guard"`).
+  1. **The play:** the player's input (the hero's move), or a monster's power-up while the player dodges (its danger
+     cells) or the player's guard play.
+  2. **The introduction (1.7 s):** the whole fight waits (every clock, bar and cooldown); the camera comes low and close
+     on whoever makes the attack and brings it to the middle of the screen; the boss banner slides in with the label
+     ("絕招發動！" for the hero, from the right; "必殺技！" for a monster, from the left) and the attack's name typed in;
+     its power pose, effects and sound.
+  3. **The attack:** its animation, effects and hits, with the maker in view.
+- **A new move gets it from its data:** an `"intro"` beat with its `camera` (`"value"`: the pan to the middle), `clip`,
+  `fx` and `sound` beats at 0–1.7 s (the hero's with `"when": "landed"`, so a fizzle shows only its miss word), and its
+  attack after. A monster's powered attack gets it from `Game::f_StartFoeIntro` (`battle.json` `feelFx` `specialAttack`
+  `"intro"`). A monster's sounds and effects in it stay bound to that monster (the rule above).
+
 ### Git: no commit and no new branch until the owner asks
 
 - **Don't commit and don't create a branch until the owner asks for that** (the owner, 2026-11-05). Finished work stays

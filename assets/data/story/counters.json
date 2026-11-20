@@ -8,5 +8,8 @@
   ],
   "insight":  { "label": { "zh_TW": "道心澄明", "en": "Clarity of Dao" },  "displayAt": 6, "clamp": [-20, 20] },
   "resolve":  { "label": { "zh_TW": "執念纏身", "en": "Burning Resolve" }, "displayAt": 6, "clamp": [-20, 20] },
-  "humanity": { "label": { "zh_TW": "仁心未泯", "en": "Heart Unsevered" }, "displayAt": 6, "clamp": [-20, 20] }
+  "humanity": { "label": { "zh_TW": "仁心未泯", "en": "Heart Unsevered" }, "displayAt": 6, "clamp": [-20, 20] },
+  "mercy": {"label": {"zh_TW": "寬恕", "en": "Mercy"}, "displayAt": 6, "clamp": [-20, 20]},
+  "vengeance": {"label": {"zh_TW": "復仇", "en": "Vengeance"}, "displayAt": 6, "clamp": [-20, 20]},
+  "trust": {"label": {"zh_TW": "信任", "en": "Trust"}, "displayAt": 6, "clamp": [-20, 20]}
 }

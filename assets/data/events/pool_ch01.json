@@ -1,0 +1,150 @@
+{
+  "_comment": [
+    "Chapter 1 of the story revamp (docs/gameplay/23 §4, §5): The Burning Village, F01-F05. Each floor's real events: scenes",
+    "(startDialogue), rescues (the dialogue's rescue action), a quest's find, a choice, a comic side quest, a talk-N gift.",
+    "Tobi (F01) is an NPC whose chat is his rescue; the shepherd girl's key comes from ev_c1_shepherd_key (talk N)."
+  ],
+  "act": "ch_01",
+  "theme": "the burning village",
+  "events": [
+    {
+      "eventId": "ev_c1_hairpin",
+      "kind": "scene",
+      "text": "ev_c1_hairpin.text",
+      "title": "ev_c1_hairpin.title",
+      "desc": "ev_c1_hairpin.desc",
+      "actions": [
+        {
+          "type": "setFlag",
+          "flag": "c1.hairpin"
+        },
+        {
+          "type": "startDialogue",
+          "dialogue": "c1_hairpin"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c1_collector_order",
+      "kind": "scene",
+      "text": "ev_c1_collector_order.text",
+      "title": "ev_c1_collector_order.title",
+      "desc": "ev_c1_collector_order.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c1_order"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c1_sir_wobbles",
+      "kind": "comic",
+      "text": "ev_c1_sir_wobbles.text",
+      "title": "ev_c1_sir_wobbles.title",
+      "desc": "ev_c1_sir_wobbles.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c1_sir_wobbles"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c1_rescue_baker",
+      "kind": "rescue",
+      "text": "ev_c1_rescue_baker.text",
+      "title": "ev_c1_rescue_baker.title",
+      "desc": "ev_c1_rescue_baker.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c1_baker"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c1_shepherd_key",
+      "kind": "talk_n",
+      "text": "ev_c1_shepherd_key.text",
+      "title": "ev_c1_shepherd_key.title",
+      "desc": "ev_c1_shepherd_key.desc",
+      "actions": [
+        {
+          "type": "give",
+          "itemId": "key_orchard"
+        },
+        {
+          "type": "setFlag",
+          "flag": "c1.orchard_key"
+        }
+      ],
+      "trigger": {
+        "on": "talk",
+        "npc": "shepherd_girl"
+      },
+      "requires": {
+        "type": "talkCountAtLeast",
+        "npc": "shepherd_girl",
+        "value": 4
+      },
+      "dialogue": "shepherd_girl_key"
+    },
+    {
+      "eventId": "ev_c1_whetstone",
+      "kind": "quest",
+      "text": "ev_c1_whetstone.text",
+      "title": "ev_c1_whetstone.title",
+      "desc": "ev_c1_whetstone.desc",
+      "actions": [
+        {
+          "type": "setFlag",
+          "flag": "c1.whetstone"
+        },
+        {
+          "type": "startDialogue",
+          "dialogue": "c1_whetstone"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c1_hungry_soldier",
+      "kind": "choice",
+      "text": "ev_c1_hungry_soldier.text",
+      "title": "ev_c1_hungry_soldier.title",
+      "desc": "ev_c1_hungry_soldier.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c1_soldier"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c1_rescue_healer",
+      "kind": "rescue",
+      "text": "ev_c1_rescue_healer.text",
+      "title": "ev_c1_rescue_healer.title",
+      "desc": "ev_c1_rescue_healer.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c1_healer"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c1_greymask",
+      "kind": "scene",
+      "text": "ev_c1_greymask.text",
+      "title": "ev_c1_greymask.title",
+      "desc": "ev_c1_greymask.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c1_greymask"
+        }
+      ]
+    }
+  ]
+}

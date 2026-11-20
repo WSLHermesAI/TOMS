@@ -1,0 +1,21 @@
+{
+  "_comment": "Chapter 2's end (docs/gameplay/23 §4): F11 reached (the F10 boss beaten) after chapter 1, the elder hears about Kai and Pip and reads L's letter: Princess Liora (c2.done).",
+  "scene": "dialogue",
+  "stage": "F11",
+  "flags": [
+    "c1.done"
+  ],
+  "dialogue": {
+    "id": "villager_elder"
+  },
+  "test": {
+    "frames": 70,
+    "keys": "enter@10,enter@25,enter@40"
+  },
+  "expect": {
+    "scene": "stage",
+    "flags": [
+      "c2.done"
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "_comment": "Chapter 2, F10's choice (docs/gameplay/23 §4): Kai caught in a Collector snare; freeing him (trust + 1, c2.saved_kai) and he joins (c2.kai_joined). (His wolf quest's pay is a choice there only when the quest is done; not in this test.)",
+  "scene": "dialogue",
+  "flags": [
+    "c2.kai_met"
+  ],
+  "dialogue": {
+    "id": "c2_kai_snare"
+  },
+  "test": {
+    "frames": 80,
+    "keys": "enter@15,enter@30,enter@45"
+  },
+  "expect": {
+    "scene": "stage",
+    "flags": [
+      "c2.saved_kai",
+      "c2.kai_joined"
+    ]
+  }
+}

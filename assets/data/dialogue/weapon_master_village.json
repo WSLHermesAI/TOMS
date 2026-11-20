@@ -1,0 +1,110 @@
+{
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): the weapon master in the village (hub_weapon_master): his quest (the whetstone on F04).",
+  "npcId": "weapon_master",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "武師：「小子，有你的。」",
+        "en": "Weapon master: \"Not bad, kid.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「有什麼能幫忙的嗎？」",
+            "en": "\"Anything I can help with?\""
+          },
+          "next": "ask",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "type": "missionActive",
+                  "missionId": "m_c1_whetstone"
+                }
+              },
+              {
+                "not": {
+                  "type": "missionComplete",
+                  "missionId": "m_c1_whetstone"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「我找到你的磨刀石了！」",
+            "en": "\"I found your whetstone!\""
+          },
+          "next": "thanks",
+          "requires": {
+            "all": [
+              {
+                "type": "missionComplete",
+                "missionId": "m_c1_whetstone"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c1.whetstone_thanked"
+                }
+              }
+            ]
+          },
+          "actions": [
+            {
+              "type": "claimMission",
+              "missionId": "m_c1_whetstone"
+            },
+            {
+              "type": "setFlag",
+              "flag": "c1.whetstone_thanked"
+            }
+          ]
+        },
+        {
+          "label": {
+            "zh_TW": "「再見。」",
+            "en": "\"Bye.\""
+          },
+          "next": null
+        }
+      ]
+    },
+    "ask": {
+      "text": {
+        "zh_TW": "武師：「我追灰面具時，把磨刀石掉在塔裡了，大概在四層。幫我找回來，我給你點好東西。」",
+        "en": "Weapon master: \"I lost my whetstone in the tower chasing the grey masks. The fourth floor, I think. Bring it back and I'll give you something good.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「交給我！」",
+            "en": "\"Leave it to me!\""
+          },
+          "next": null,
+          "action": {
+            "type": "startMission",
+            "missionId": "m_c1_whetstone"
+          }
+        }
+      ]
+    },
+    "thanks": {
+      "text": {
+        "zh_TW": "武師：「就是它！拿去——這顆寶石能讓你更有力。」",
+        "en": "Weapon master: \"That's the one! Here: this gem will make you stronger.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「謝謝！」",
+            "en": "\"Thanks!\""
+          },
+          "next": "root"
+        }
+      ]
+    }
+  }
+}

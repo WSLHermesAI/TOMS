@@ -48,6 +48,7 @@ void Game::f_StartCombat(const EnemyInst& l_oE, const std::vector<EnemyInst>& l_
     m_oCs.m_fCamZoom = 1.0f; m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = 0; m_oCs.m_iCamOn = -1; m_oCs.m_strCamMove.clear(); m_oCs.m_fCamPan = 0.0f;
     m_oCs.m_iHeroDownMs = 0;
     m_oCs.m_iBossIntroMs = m_oCs.m_iBossIntroMsMax = 0;
+    m_oCs.m_iHeroIntroMs = m_oCs.m_iHeroIntroMsMax = 0; m_oCs.m_iIntroOwner = -1; m_oCs.m_iIntroFoeFire = -1;
     m_oCs.m_iBossIntroFoe = -1; m_oCs.m_iBossIntroWaitMs = m_oCs.m_iBossIntroFrames = 0;
     m_oCs.m_oResult = CombatState::Result{};
     m_oCs.m_ePace = f_EffectivePace();
@@ -171,6 +172,14 @@ int Game::f_BattleFrame(int l_iDtMs) {
             const int l_iFoe = m_oCs.m_iBossIntroFoe;
             m_oCs.m_iBossIntroFoe = -1;
             f_BeginBossIntro(l_iFoe);
+        }
+        l_iBdt = 0;
+    } else if (m_oCs.m_iIntroFoeFire >= 0) {   // a monster's special attack's introduction: everything waits, then it lands
+        if (m_oCs.m_iHeroIntroMs <= 0) {
+            const int l_iFoe = m_oCs.m_iIntroFoeFire;
+            m_oCs.m_iIntroFoeFire = -1;
+            m_oCs.m_iIntroOwner = -1;
+            if (m_oCs.m_bActive && l_iFoe < (int)m_oCs.m_vFoes.size() && !m_oCs.m_vFoes[(size_t)l_iFoe].f_Down()) f_ResolveEnemyClockFire(l_iFoe);
         }
         l_iBdt = 0;
     } else if (m_oCs.m_iBossIntroMs > 0) {   // a boss's introduction: everything waits (f_StartBossIntro)
@@ -423,7 +432,11 @@ void Game::f_StepFoes(int l_iDtMs) {
         }
         if (l_oF.m_iClockMs >= l_oF.m_iMoveMs) {
             l_oF.m_iClockMs = 0;
-            f_ResolveEnemyClockFire(l_iFoe);
+            const toms::MoveDef& l_oFire = m_oMoves.f_Get(l_oF.m_strMove);
+            const bool l_bIntro = l_oF.m_bPowered && l_oFire.m_strGuardPlay.empty() &&   // (a special guard play brings its own, in its move's finish)
+                                  !f_FeelFx().value("specialAttack", nlohmann::json::object()).value("intro", nlohmann::json::object()).value("off", false);
+            if (l_bIntro) f_StartFoeIntro(l_iFoe);   // its introduction first; it lands after (f_BattleFrame)
+            else f_ResolveEnemyClockFire(l_iFoe);
         }
     }
 }
@@ -2207,6 +2220,34 @@ void Game::f_StartFoePower(int l_iFoe, bool l_bIntro) {
     f_PlayFoeSound(l_iFoe, l_jS.value("powerSound", std::string("sfx.monster_power")));
     if (m_oCs.m_iCamOn == l_iFoe && m_oCs.m_iCamMs > 0)   // the close-up stays on it for the whole power-up
         m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = std::max(m_oCs.m_iCamMsMax, l_iPower);
+}
+
+// A monster's special attack, its power-up done (the dodge): its introduction (the owner, 2026-11-20: the same rundown as
+// the hero's ultimates, docs/gameplay/22 §4.2). The fight waits; the camera low and close on it, brought to the middle;
+// the boss banner from the left: "必殺技！" and the attack's name typed in; its power pose, a burst, the boss sting.
+// battle.json feelFx "specialAttack" "intro": ms, zoom, pan, label, fx, sound, off. Then it lands (f_BattleFrame).
+void Game::f_StartFoeIntro(int l_iFoe) {
+    const nlohmann::json l_jI = f_FeelFx().value("specialAttack", nlohmann::json::object()).value("intro", nlohmann::json::object());
+    const CombatState::Foe& l_oF = m_oCs.m_vFoes[(size_t)l_iFoe];
+    const toms::MoveDef& l_oM = m_oMoves.f_Get(l_oF.m_strMove);
+    const int l_iMs = std::max(300, l_jI.value("ms", 1700));
+    m_oCs.m_iIntroFoeFire = l_iFoe;
+    m_oCs.m_iIntroOwner = l_iFoe;
+    m_oCs.m_iHeroIntroMs = m_oCs.m_iHeroIntroMsMax = l_iMs;
+    m_oCs.m_strHeroIntroLabel = l_jI.value("label", std::string("battle.foe_special_label"));
+    m_oCs.m_strIntroName = !l_oM.m_strText.empty() && m_oLocale.f_Has(l_oM.m_strText) ? m_oLocale.f_Tr(l_oM.m_strText) : l_oF.m_oEnemy.m_strName;
+    f_BattleEvent("foeIntro", l_iFoe, -1, l_iMs, l_oF.m_strMove);
+    f_FoeLook(l_iFoe, "power");
+    f_PlayBattleFx(l_jI.value("fx", std::string("monster_power")), l_iFoe);
+    f_PlayFoeSound(l_iFoe, l_jI.value("sound", std::string("sfx.boss_intro")));
+    const bool l_bReduced = m_oSettings.m_bReduceEffects;
+    const float l_fZoom = l_jI.value("zoom", 1.45f);
+    m_oCs.m_fCamZoom = l_bReduced ? 1.0f + (l_fZoom - 1.0f) * 0.4f : std::max(1.01f, l_fZoom);
+    m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = l_iMs;
+    m_oCs.m_iCamOn = l_iFoe;
+    m_oCs.m_strCamMove = "low";
+    m_oCs.m_fCamDeg = l_jI.value("deg", 12.0f);
+    m_oCs.m_fCamPan = std::clamp(l_jI.value("pan", 0.85f), 0.0f, 1.0f);
 }
 
 void Game::f_UnleashFoePower(int l_iFoe) {

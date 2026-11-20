@@ -1,0 +1,16 @@
+{
+  "_comment": "Chapter 1, F01's first rescue (docs/gameplay/23 §5): talking to Tobi (village_boy, hiding in a barrel) and telling him to run home sends him to the village (home.village_boy; the village's Tobi's Barrel opens).",
+  "scene": "talk",
+  "talk": {
+    "npc": "village_boy"
+  },
+  "test": {
+    "frames": 50,
+    "keys": "enter@15"
+  },
+  "expect": {
+    "flags": [
+      "home.village_boy"
+    ]
+  }
+}

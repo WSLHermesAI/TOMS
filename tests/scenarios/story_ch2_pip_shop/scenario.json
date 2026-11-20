@@ -1,0 +1,18 @@
+{
+  "_comment": "Chapter 2, the village grows (docs/gameplay/23 §4): with Pip home (home.chest_peddler), his stall (hub_pip) opens; its first choice opens the store (the openStore action).",
+  "scene": "hub",
+  "flags": [
+    "hub.village",
+    "home.chest_peddler"
+  ],
+  "hub": {
+    "location": "hub_pip"
+  },
+  "test": {
+    "frames": 50,
+    "keys": "enter@15"
+  },
+  "expect": {
+    "scene": "store"
+  }
+}

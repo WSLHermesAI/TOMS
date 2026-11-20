@@ -1038,5 +1038,20 @@
     "battleAnim": {
       "character": "anim/hero_staff.anim"
     }
+  },
+  "key_orchard": {
+    "type": "story",
+    "sprite": "key_red.png",
+    "tint": [
+      0.45,
+      0.85,
+      0.35
+    ],
+    "name": "item.key_orchard.name",
+    "desc": "item.key_orchard.desc",
+    "stats": {},
+    "price": 0,
+    "important": true,
+    "opens": "gate:key_orchard"
   }
 }

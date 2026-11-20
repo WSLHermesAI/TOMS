@@ -1,0 +1,17 @@
+{
+  "_comment": "Chapter 3, F13's choice (docs/gameplay/23 §4): the clerk who wrote the names; the second answer, a confession for the king (trust + 1, c3.confession, used later).",
+  "scene": "dialogue",
+  "dialogue": {
+    "id": "c3_clerk"
+  },
+  "test": {
+    "frames": 60,
+    "keys": "down@10,enter@18,enter@33"
+  },
+  "expect": {
+    "scene": "stage",
+    "flags": [
+      "c3.confession"
+    ]
+  }
+}

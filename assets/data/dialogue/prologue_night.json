@@ -1,0 +1,172 @@
+{
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): the night raid after the weapon trial: the Collectors, Grey Mask, the parents taken, the power wakes, the elder sends Leo up the tower.",
+  "npcId": "villager_elder",
+  "start": "fire",
+  "nodes": {
+    "fire": {
+      "text": {
+        "zh_TW": "那天夜裡，狗叫聲吵醒了你。窗外一片火光。",
+        "en": "That night the dogs wake you. The window is full of fire."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「媽？爸？」",
+            "en": "\"Mom? Dad?\""
+          },
+          "next": "masks"
+        }
+      ]
+    },
+    "masks": {
+      "text": {
+        "zh_TW": "戴著灰色面具的士兵衝進村子，把村民一個個拖出家門。他們的隊長站在火光裡——臉上是一張沒有表情的灰面具。",
+        "en": "Soldiers in grey masks pour into the village, dragging people out of their homes. Their captain stands in the firelight, his face a blank grey mask."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": "order"
+        }
+      ]
+    },
+    "order": {
+      "text": {
+        "zh_TW": "灰面：「找到那個孩子。預言說他是最後的鑰匙。其他人——全部帶上塔。」",
+        "en": "Grey Mask: \"Find the child. The prophecy says he is the last key. The rest: take them all up the tower.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": "run"
+        }
+      ]
+    },
+    "run": {
+      "text": {
+        "zh_TW": "爸爸抓起乾草叉擋在門口：「里歐，從後門跑！」媽媽把你推出窗外：「別回頭！別讓他們看見你的眼睛——」",
+        "en": "Dad grabs a pitchfork and blocks the door. \"Leo, out the back, run!\" Mom pushes you through the window. \"Don't look back! Don't let them see your eyes—\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「我不走！」",
+            "en": "\"I'm not leaving!\""
+          },
+          "next": "black"
+        }
+      ]
+    },
+    "black": {
+      "text": {
+        "zh_TW": "一記重擊。世界變黑了。",
+        "en": "A heavy blow. The world goes black."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": "wake"
+        }
+      ]
+    },
+    "wake": {
+      "text": {
+        "zh_TW": "你醒來時，身邊倒著好幾隻怪物——全都被打倒了。你的手掌還在發著微光。是……你做的嗎？",
+        "en": "When you wake, monsters lie all around you, every one of them beaten. Your palms are still glowing. Did... you do that?"
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（握緊拳頭）",
+            "en": "(Clench your fists)"
+          },
+          "next": "elder"
+        }
+      ]
+    },
+    "elder": {
+      "text": {
+        "zh_TW": "長老：「里歐！謝天謝地……」老人拄著拐杖，滿臉是灰。「他們把你爹娘、還有半個村子的人，都帶上了村外那座塔。麵包師也在裡面。」",
+        "en": "Elder: \"Leo! Thank the heavens...\" The old man leans on his stick, face black with soot. \"They took your parents and half the village up the tower outside the village. The baker too.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": "go"
+        }
+      ]
+    },
+    "go": {
+      "text": {
+        "zh_TW": "長老：「從來沒有人從那座塔活著下來。可是你剛才……那些怪物……也許你真的辦得到。去吧，孩子。把他們帶回家。」",
+        "en": "Elder: \"No one has ever come down that tower alive. But what you just did... those monsters... maybe you really can. Go, child. Bring them home.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「我會把大家都帶回來。」",
+            "en": "\"I'll bring everyone back.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "setFlag",
+              "flag": "hub.village"
+            },
+            {
+              "type": "startMission",
+              "missionId": "m_main_parents"
+            },
+            {
+              "type": "startMission",
+              "missionId": "m_rescue_baker"
+            },
+            {
+              "type": "addCounter",
+              "counter": "mercy",
+              "delta": 1
+            }
+          ]
+        },
+        {
+          "label": {
+            "zh_TW": "「我會讓那個灰面付出代價。」",
+            "en": "\"I'll make Grey Mask pay.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "setFlag",
+              "flag": "hub.village"
+            },
+            {
+              "type": "startMission",
+              "missionId": "m_main_parents"
+            },
+            {
+              "type": "startMission",
+              "missionId": "m_rescue_baker"
+            },
+            {
+              "type": "addCounter",
+              "counter": "vengeance",
+              "delta": 1
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

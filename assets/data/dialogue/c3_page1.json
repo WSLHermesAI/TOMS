@@ -1,0 +1,33 @@
+{
+  "_comment": "Chapter 3 of the story revamp (docs/gameplay/23 §4): F11, the ledger's first page (ledger_pages + 1; the quest m_c3_ledger).",
+  "npcId": "villager_elder",
+  "start": "page",
+  "nodes": {
+    "page": {
+      "text": {
+        "zh_TW": "門邊的火盆裡有半張燒剩的紙：「……收集名冊，第一頁。村名：橡木村。人數……」後面被撕掉了。",
+        "en": "In a brazier by the gate lies half a burnt sheet: \"...Collection Ledger, page one. Village: Oakhollow. Head count...\" The rest is torn away."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「橡木村……是我們村。名冊還有其他頁。」",
+            "en": "\"Oakhollow... that's our village. There are more pages.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "startMission",
+              "missionId": "m_c3_ledger"
+            },
+            {
+              "type": "addVar",
+              "var": "ledger_pages",
+              "delta": 1
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -85,9 +85,9 @@
 | **Q100** 記憶玩法：新的劍類型，還是雙手劍的玩法（Q59）？ | 新類型「憶刃」；雙手劍保留 V 形滑動 | 維持現狀 |  | [22](../../gameplay/zh_TW/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §1 |
 | **Q101** 憶刃：劃錯時？ | 該提示失手，換下一個；已命中的照算 | 維持現狀 |  | [22](../../gameplay/zh_TW/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §2 |
 | **Q102** 憶刃依等級的時間？ | 回答 1 秒 → 1.5 秒；Lv 6 起有紅色提示（反方向） | 維持，試玩後再調 |  | [22](../../gameplay/zh_TW/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §2 |
-| **Q103** 哪些武器有**千刃印**絕招？ | 只有憶刃；鐵劍保留自由斬 | 維持現狀 |  | [22](../../gameplay/zh_TW/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §3 |
+| **Q103** 哪些武器有**千刃印**絕招？ | 只有憶刃；鐵劍的絕招現在是虎虎生風（擁有者，2026-11-20，22 第 4.1 節） | 維持現狀 |  | [22](../../gameplay/zh_TW/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §3 |
 | **Q104** 千刃印：指令、時間、門檻？ | 10 個方向、5 秒、6 個起算部分收招、×12 | 維持，較高等級再加 V／圓形 |  | [22](../../gameplay/zh_TW/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §3 |
-| **Q108** 弓的絕招：用**旋風連矢**取代自由射擊？ | 旋風連矢；`battle_ultimate_free_bow`（已關閉）仍預期自由射擊，打開會失敗 | 維持；刪除該情境或改給別的武器 |  | [22](../../gameplay/zh_TW/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §4 |
+| **Q108** 自由斬／點擊／射擊絕招現在不屬於任何武器（11-19 弓改旋風連矢；11-20 劍改虎虎生風、法杖改星之印）：它們 3 個已關閉的情境（`battle_ultimate_free_*`）仍預期這些招式，打開會失敗 | 招式與情境維持原樣 | 刪除這 3 個情境；招式留給以後的武器 |  | [22](../../gameplay/zh_TW/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §4.1 |
 | **Q109** 旋風連矢的數值？ | 順時針 3 圈＋逆時針 3 圈、6 秒、3 圈起算部分收招、×12、1.5 秒射 10 箭 | 維持，試玩後再調 |  | [22](../../gameplay/zh_TW/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §4 |
 
 ## 3. 不是問題，但在等您

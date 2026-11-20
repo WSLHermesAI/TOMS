@@ -1,19 +1,42 @@
 {
+  "_comment": "Chapter 3 of the story revamp (docs/gameplay/23 §4): the scholar at home (hub_scholar): the Godborn (sets up chapter 4).",
   "npcId": "scholar",
   "start": "root",
   "nodes": {
     "root": {
       "text": {
-        "zh_TW": "旅人，你好。我是學者。",
-        "en": "Good day, traveller. I'm the scholar."
+        "zh_TW": "學者：「啊，里歐。要聽聽『神裔』的故事嗎？」",
+        "en": "Scholar: \"Ah, Leo. Shall I tell you about the Godborn?\""
       },
       "choices": [
         {
           "label": {
-            "zh_TW": "再見。",
-            "en": "Goodbye."
+            "zh_TW": "「神裔是什麼？」",
+            "en": "\"What are the Godborn?\""
+          },
+          "next": "lore"
+        },
+        {
+          "label": {
+            "zh_TW": "「下次吧。」",
+            "en": "\"Another time.\""
           },
           "next": null
+        }
+      ]
+    },
+    "lore": {
+      "text": {
+        "zh_TW": "學者：「傳說中，神裔能吸收被自己打倒之物的力量。他們幫人類擋住了古神……然後消失了。最後一個神裔的下落，連書上都沒寫。」他看著你的手。「……直到現在。」",
+        "en": "Scholar: \"Legend says the Godborn could take in the power of whatever they defeated. They held back the old gods for mankind... and then vanished. Not even the books say where the last one went.\" He looks at your hands. \"...Until now.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": "root"
         }
       ]
     }

@@ -1,0 +1,22 @@
+{
+  "_comment": "Chapter 1, F05's orchard (docs/gameplay/23 §5): the orchard key opens its gate (gate:key_orchard), and the healer locked inside is freed (ev_c1_rescue_healer: home.healer; the village's healer opens) with the shepherd girl's sheep (c1.sheep_home).",
+  "scene": "stage",
+  "stage": "F05",
+  "player": {
+    "x": 8,
+    "y": 10,
+    "give": [
+      "key_orchard"
+    ]
+  },
+  "test": {
+    "frames": 160,
+    "keys": "right@10,right@25,right@40,down@55,right@70,enter@100,enter@120"
+  },
+  "expect": {
+    "flags": [
+      "home.healer",
+      "c1.sheep_home"
+    ]
+  }
+}

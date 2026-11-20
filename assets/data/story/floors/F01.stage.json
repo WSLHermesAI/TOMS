@@ -21,13 +21,13 @@
     "a": "item:coin",
     "d": "item:gem_def",
     "h": "item:potion_red",
-    "E": "event:ev_village_well",
+    "E": "event:ev_c1_hairpin",
     "F": "event:ev_common_cache_wall",
-    "G": "event:ev_village_ledger",
+    "G": "event:ev_c1_collector_order",
     "Y": "key:yellow",
     "y": "door:yellow",
     "A": "monster:mossling",
-    "C": "npc:farmer",
+    "C": "npc:village_boy",
     "I": "event:ev_打到第一層Boss"
   },
   "tiles": [

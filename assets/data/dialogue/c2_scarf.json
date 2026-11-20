@@ -1,0 +1,26 @@
+{
+  "_comment": "Chapter 2 of the story revamp (docs/gameplay/23 §4): F06, a clue: the parents passed here, and still think of him.",
+  "npcId": "farmer_wife",
+  "start": "scarf",
+  "nodes": {
+    "scarf": {
+      "text": {
+        "zh_TW": "媽媽的圍巾掛在樹根上，裡面別著一張爸爸寫的字條：「里歐——要好好吃飯。」",
+        "en": "Mom's scarf hangs on a root, with a note in Dad's handwriting pinned inside: \"Leo, eat properly.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……我有在吃啦。」",
+            "en": "\"...I am eating.\""
+          },
+          "next": null,
+          "action": {
+            "type": "setFlag",
+            "flag": "c2.scarf"
+          }
+        }
+      ]
+    }
+  }
+}

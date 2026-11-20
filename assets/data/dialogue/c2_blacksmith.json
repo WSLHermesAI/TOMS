@@ -1,0 +1,41 @@
+{
+  "_comment": "Chapter 2 of the story revamp (docs/gameplay/23 §4): F08, a rescue: the blacksmith goes home (the village forge).",
+  "npcId": "blacksmith",
+  "start": "cage",
+  "nodes": {
+    "cage": {
+      "text": {
+        "zh_TW": "鐵匠被鎖在鐵籠裡，正用頭撞籠子。「里歐！快，這籠子的鎖是爛貨——用力踢！」",
+        "en": "The blacksmith is locked in an iron cage, butting it with his head. \"Leo! Quick, the lock's junk. Kick it hard!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（用力一踢）",
+            "en": "(Kick it hard)"
+          },
+          "next": "free",
+          "action": {
+            "type": "rescue",
+            "npc": "blacksmith"
+          }
+        }
+      ]
+    },
+    "free": {
+      "text": {
+        "zh_TW": "鐵匠：「哈！我就說是爛貨。回村後來我的鋪子，我幫你把武器磨亮。」",
+        "en": "Blacksmith: \"Ha! Told you it was junk. Come to my forge back home and I'll put an edge on your weapon.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「一言為定！」",
+            "en": "\"Deal!\""
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

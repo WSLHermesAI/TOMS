@@ -1,19 +1,58 @@
 {
+  "_comment": "Chapter 2 of the story revamp (docs/gameplay/23 §4): the blacksmith at home (hub_blacksmith): an attack gem for 30 gold.",
   "npcId": "blacksmith",
   "start": "root",
   "nodes": {
     "root": {
       "text": {
-        "zh_TW": "旅人，你好。我是鐵匠。",
-        "en": "Good day, traveller. I'm the blacksmith."
+        "zh_TW": "鐵匠：「爐火燒起來了！要我幫你打點什麼？」",
+        "en": "Blacksmith: \"The forge is lit! What can I do for you?\""
       },
       "choices": [
         {
           "label": {
-            "zh_TW": "再見。",
-            "en": "Goodbye."
+            "zh_TW": "「磨亮武器（30 金幣）。」",
+            "en": "\"Sharpen my weapon (30 gold).\""
+          },
+          "next": "done",
+          "requires": {
+            "type": "statAtLeast",
+            "stat": "gold",
+            "value": 30
+          },
+          "actions": [
+            {
+              "type": "addStat",
+              "stat": "gold",
+              "delta": -30
+            },
+            {
+              "type": "give",
+              "itemId": "gem_atk"
+            }
+          ]
+        },
+        {
+          "label": {
+            "zh_TW": "「下次再來。」",
+            "en": "\"Another time.\""
           },
           "next": null
+        }
+      ]
+    },
+    "done": {
+      "text": {
+        "zh_TW": "鐵匠：「好了！現在它能把石頭劈成兩半。」",
+        "en": "Blacksmith: \"There! Now it'll cut a stone in two.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": "root"
         }
       ]
     }

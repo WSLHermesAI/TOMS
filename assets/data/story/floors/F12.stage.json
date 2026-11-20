@@ -20,10 +20,10 @@
     "d": "item:gem_def",
     "h": "item:potion_blue",
     "H": "item:potion_red",
-    "E": "event:ev_common_whisper_old_road",
+    "E": "event:ev_c3_page2",
     "F": "event:ev_common_cache_wall",
     "G": "event:ev_forest_hunter_cache",
-    "I": "event:ev_forest_lost_child",
+    "I": "event:ev_c3_pip_map",
     "Y": "key:yellow",
     "y": "door:yellow",
     "A": "monster:kobold",
@@ -122,5 +122,5 @@
       "uid": "o18"
     }
   },
-  "theme": "forest"
+  "theme": "castle"
 }

@@ -1,0 +1,16 @@
+{
+  "_comment": "Chapter 3, F11's rescue (docs/gameplay/23 §4): the innkeeper tied to a stool goes home (home.innkeeper; the village inn opens).",
+  "scene": "talk",
+  "talk": {
+    "npc": "innkeeper"
+  },
+  "test": {
+    "frames": 50,
+    "keys": "enter@15"
+  },
+  "expect": {
+    "flags": [
+      "home.innkeeper"
+    ]
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "_comment": "Chapter 3 of the story revamp (docs/gameplay/23 §4): F12, Pip again (comic): a 99% accurate map.",
+  "npcId": "chest_peddler",
+  "start": "pip",
+  "nodes": {
+    "pip": {
+      "text": {
+        "zh_TW": "皮普從柱子後面探出頭：「客人！書庫的地圖，準確度高達百分之九十九！只要五枚金幣！」",
+        "en": "Pip pops out from behind a pillar. \"Customer! A map of the library, ninety-nine percent accurate! Only five gold!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「剩下的百分之一呢？」",
+            "en": "\"And the other one percent?\""
+          },
+          "next": "one"
+        }
+      ]
+    },
+    "one": {
+      "text": {
+        "zh_TW": "皮普：「……出口就是入口。小事！」他還是塞了一瓶藥水給你。「算了，這次送你。投資要照顧。」",
+        "en": "Pip: \"...The exit is the entrance. A detail!\" He presses a potion into your hands anyway. \"Fine, this one's free. A good investor looks after his investment.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……謝了。」",
+            "en": "\"...Thanks.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "give",
+              "itemId": "potion_red"
+            },
+            {
+              "type": "setFlag",
+              "flag": "c3.pip_map"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

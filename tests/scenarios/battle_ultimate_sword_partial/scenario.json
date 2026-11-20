@@ -1,0 +1,30 @@
+{
+  "_comment": "The sword's ultimate, 4 of its 5 prompts swiped (the test's fixed seed gives ↘ ↓ ← →, then a V a straight drag cannot draw): 3 or 4 is the partial finish (docs/gameplay/22 §4.1): the hero's introduction first (the camera on him, 絕招發動！ and the move's name), then 3 cuts.",
+  "scene": "battle",
+  "player": {
+    "give": [
+      "sword"
+    ],
+    "equip": [
+      "sword"
+    ]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000,
+    "super": true,
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 560,
+    "keys": "g@10",
+    "drags": "300:400:385:485:4@105,300:400:300:520:4@137,300:400:180:400:4@169,300:400:420:400:4@201"
+  },
+  "expect": {
+    "battleEvents": {
+      "skill": 1,
+      "hit": 3
+    }
+  }
+}

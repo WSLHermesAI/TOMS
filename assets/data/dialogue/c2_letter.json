@@ -1,0 +1,26 @@
+{
+  "_comment": "Chapter 2 of the story revamp (docs/gameplay/23 §4): F10, a scene: the first letter from Liora.",
+  "npcId": "princess",
+  "start": "letter",
+  "nodes": {
+    "letter": {
+      "text": {
+        "zh_TW": "一封用絲帶綁著的信，字跡工整：「致那個手會發光的孩子：別相信灰面。我在塔頂等你。——L」",
+        "en": "A letter tied with ribbon, in neat handwriting: \"To the child with glowing hands: don't trust Grey Mask. I am waiting at the top of the tower. - L\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「L……是誰？」",
+            "en": "\"L... who's that?\""
+          },
+          "next": null,
+          "action": {
+            "type": "setFlag",
+            "flag": "c2.letter"
+          }
+        }
+      ]
+    }
+  }
+}

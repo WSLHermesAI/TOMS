@@ -169,6 +169,11 @@ int main() {
         bool l_bMismatch = false;
         RunSaveData l_oR2 = f_RunFromJson(l_jOld, &l_bMismatch);
         CHECK(l_bMismatch && l_oR2.m_oPlayer.m_iHp == 50 && l_oR2.m_strFloor == "F01" && l_oR2.m_iSuperMax == 0, "a version-1 run loads with defaults");
+        CHECK(l_oR2.m_jMissions.is_object() && l_oR2.m_jMissions.empty(), "an old run has no quests");
+        RunSaveData l_oQ;   // the quests travel with the run (docs/gameplay/23 §7)
+        l_oQ.m_jMissions["m_rescue_baker"] = {{"missionId", "m_rescue_baker"}, {"state", "completed"}, {"progress", 1}};
+        const RunSaveData l_oQBack = f_RunFromJson(f_ToJson(l_oQ), nullptr);
+        CHECK(l_oQBack.m_jMissions.value("m_rescue_baker", nlohmann::json::object()).value("state", std::string()) == "completed", "a quest saved and read back");
         CHECK(f_EntityStatusKey("F03", 4, 5, "o12") == "F03#o12", "an object with a uid is keyed by it");
         CHECK(f_EntityStatusKey("F03", 4, 5, "") == "F03|4,5", "an object without one is keyed by its position");
         f_DeleteSlot(l_strDir, 1);

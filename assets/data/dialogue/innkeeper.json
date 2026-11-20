@@ -1,19 +1,57 @@
 {
+  "_comment": "Chapter 3 of the story revamp (docs/gameplay/23 §4): the innkeeper at home (hub_inn): stew that heals for 5 gold, and L's letters to read again.",
   "npcId": "innkeeper",
   "start": "root",
   "nodes": {
     "root": {
       "text": {
-        "zh_TW": "旅人，你好。我是旅店老闆。",
-        "en": "Good day, traveller. I'm the innkeeper."
+        "zh_TW": "老闆娘：「回來啦！燉肉剛好！」",
+        "en": "Innkeeper: \"You're back! The stew's just right!\""
       },
       "choices": [
         {
           "label": {
-            "zh_TW": "再見。",
-            "en": "Goodbye."
+            "zh_TW": "「吃一碗（5 金幣，回滿體力）。」",
+            "en": "\"A bowl, please (5 gold, full HP).\""
+          },
+          "next": null,
+          "action": {
+            "type": "heal",
+            "cost": 5
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「再看一次 L 的信。」",
+            "en": "\"Let me read L's letters again.\""
+          },
+          "next": "letters",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c2.letter"
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「下次吧。」",
+            "en": "\"Another time.\""
           },
           "next": null
+        }
+      ]
+    },
+    "letters": {
+      "text": {
+        "zh_TW": "你把信攤在桌上。「別相信灰面。我在塔頂等你。」字跡很工整，最後一個字卻有點抖。",
+        "en": "You spread the letters on the table. \"Don't trust Grey Mask. I am waiting at the top.\" Neat handwriting, but the last word wobbles a little."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": "root"
         }
       ]
     }

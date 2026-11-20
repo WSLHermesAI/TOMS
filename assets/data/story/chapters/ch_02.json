@@ -1,7 +1,7 @@
 {
   "id": "ch_02",
-  "floors": ["F08", "F09", "F10", "F11", "F12", "F13", "F14"],
-  "bossFloor": "F14",
+  "floors": ["F06", "F07", "F08", "F09", "F10"],
+  "bossFloor": "F10",
   "bossStage": "stage02",
   "title": "story.ch02.title",
   "desc": "story.ch02.desc",
@@ -17,7 +17,7 @@
   "grants": { "skills": ["s_yuqi"], "skillPoints": 1, "unlocks": ["gameplay.shield"] },
   "choices": [],
   "sideStoryHooks": ["ss_02"],
-  "exitConditions": { "type": "stageCleared", "stageId": "F14" },
+  "exitConditions": { "type": "stageCleared", "stageId": "F11" },
 
   "enemyMix": ["slime", "bat"],
   "itemTable": ["potion_red", "coin", "gem_def", "potion_blue"]

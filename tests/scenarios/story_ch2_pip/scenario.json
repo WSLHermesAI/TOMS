@@ -1,0 +1,22 @@
+{
+  "_comment": "Chapter 2, F07 (docs/gameplay/23 §4): Pip the greedy merchant's \"investment\" (10 gold: c2.pip_invested), then he moves to the village (home.chest_peddler: Pip's stall opens, the store and the chest game).",
+  "scene": "talk",
+  "player": {
+    "gold": 25
+  },
+  "talk": {
+    "npc": "chest_peddler"
+  },
+  "test": {
+    "frames": 80,
+    "keys": "enter@15,enter@30,enter@45"
+  },
+  "expect": {
+    "scene": "stage",
+    "gold": 15,
+    "flags": [
+      "c2.pip_invested",
+      "home.chest_peddler"
+    ]
+  }
+}

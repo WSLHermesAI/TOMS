@@ -19,7 +19,16 @@
     "scope": "run",
     "category": "elder"
   },
+  "ledger_pages": {
+    "type": "int",
+    "default": 0,
+    "scope": "run",
+    "min": 0,
+    "max": 3,
+    "category": "chapter3"
+  },
   "_categories": [
-    "elder"
+    "elder",
+    "chapter3"
   ]
 }

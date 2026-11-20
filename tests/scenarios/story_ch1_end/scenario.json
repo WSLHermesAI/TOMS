@@ -1,0 +1,20 @@
+{
+  "_comment": "Chapter 1's end (docs/gameplay/23 §4): after Grey Mask on the stairs (event_ev_c1_greymask), the elder in the village tells where Leo came from: c1.done.",
+  "scene": "dialogue",
+  "flags": [
+    "event_ev_c1_greymask"
+  ],
+  "dialogue": {
+    "id": "villager_elder"
+  },
+  "test": {
+    "frames": 70,
+    "keys": "enter@10,enter@25,enter@40"
+  },
+  "expect": {
+    "scene": "stage",
+    "flags": [
+      "c1.done"
+    ]
+  }
+}

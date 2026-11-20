@@ -1,0 +1,41 @@
+{
+  "_comment": "Chapter 2 of the story revamp (docs/gameplay/23 §4): F09, a rescue: the cartographer goes home (hints about who is still held).",
+  "npcId": "cartographer",
+  "start": "map",
+  "nodes": {
+    "map": {
+      "text": {
+        "zh_TW": "製圖師縮在角落畫地圖。「噓，我在畫逃生路線……啊，里歐！你就是逃生路線！」",
+        "en": "The cartographer huddles in a corner, drawing a map. \"Shh, I'm drawing an escape route... oh, Leo! YOU are the escape route!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「跟我回家吧。」",
+            "en": "\"Come home with me.\""
+          },
+          "next": "home",
+          "action": {
+            "type": "rescue",
+            "npc": "cartographer"
+          }
+        }
+      ]
+    },
+    "home": {
+      "text": {
+        "zh_TW": "製圖師：「回村後來問我，我把看到被抓的人都畫在地圖上。」",
+        "en": "Cartographer: \"Ask me back in the village. I'll mark everyone I saw them take on my map.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「拜託你了。」",
+            "en": "\"Please do.\""
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

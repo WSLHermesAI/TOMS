@@ -1,0 +1,22 @@
+{
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): F01, a clue: the mother passed here.",
+  "npcId": "farmer_wife",
+  "start": "pin",
+  "nodes": {
+    "pin": {
+      "text": {
+        "zh_TW": "地上有一支木髮簪——媽媽每天別在頭上的那支。",
+        "en": "On the floor lies a wooden hairpin: the one Mom wears every day."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「她來過這裡……她還活著。」",
+            "en": "\"She was here... she's alive.\""
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

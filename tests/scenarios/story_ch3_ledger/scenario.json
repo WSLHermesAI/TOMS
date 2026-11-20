@@ -1,0 +1,27 @@
+{
+  "_comment": "Chapter 3's ledger (docs/gameplay/23 §4): two pages found, the quest active; the talking book's riddle (water) gives the third page, and the whole ledger opens at once (ev_c3_ledger_whole, on ledger_pages reaching 3): Leo's line and Kai's sister Mira; \"together\" (trust). The quest is done (c3.ledger).",
+  "scene": "dialogue",
+  "vars": {
+    "ledger_pages": 2
+  },
+  "missions": {
+    "m_c3_ledger": "active"
+  },
+  "dialogue": {
+    "id": "c3_riddle"
+  },
+  "test": {
+    "frames": 110,
+    "keys": "enter@10,enter@25,enter@40,enter@55,enter@70"
+  },
+  "expect": {
+    "scene": "stage",
+    "flags": [
+      "c3.riddle",
+      "c3.ledger"
+    ],
+    "missions": {
+      "m_c3_ledger": "completed"
+    }
+  }
+}

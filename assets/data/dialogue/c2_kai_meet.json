@@ -1,0 +1,89 @@
+{
+  "_comment": "Chapter 2 of the story revamp (docs/gameplay/23 §4): F06, Kai the royal knight comes to arrest Leo; his quest (three forest wolves).",
+  "npcId": "knight_errant",
+  "start": "meet",
+  "nodes": {
+    "meet": {
+      "text": {
+        "zh_TW": "一個穿著皇家鎧甲的少年擋在路上，劍已出鞘。「奉王命：收押危險的孩子。就是你吧？手會發光的那個。」",
+        "en": "A boy in royal armour blocks the way, sword drawn. \"By order of the crown: the dangerous child is to be contained. That's you, isn't it? The one with glowing hands.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「我只是要去救我爹娘！」",
+            "en": "\"I'm only going to save my parents!\""
+          },
+          "next": "calm",
+          "action": {
+            "type": "addCounter",
+            "counter": "trust",
+            "delta": 1
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「想抓我？來試試看啊！」",
+            "en": "\"Want to catch me? Try it!\""
+          },
+          "next": "trip"
+        }
+      ]
+    },
+    "calm": {
+      "text": {
+        "zh_TW": "凱愣了一下，收起劍。「……收集者也抓了王都的人。好吧，我先不抓你——但我會一直盯著你。我叫凱。」",
+        "en": "Kai hesitates, then sheathes his sword. \"...The Collectors took people from the capital too. Fine. I won't arrest you yet, but I'll be watching you. I'm Kai.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": "job"
+        }
+      ]
+    },
+    "trip": {
+      "text": {
+        "zh_TW": "凱揮劍，你一閃——他自己絆了一跤。「……剛才不算！」他爬起來，臉紅到耳根。「我叫凱。我會一直盯著你的。」",
+        "en": "Kai swings; you dodge, and he trips over his own feet. \"...That didn't count!\" He scrambles up, red to the ears. \"I'm Kai. I'll be watching you.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": "job"
+        }
+      ]
+    },
+    "job": {
+      "text": {
+        "zh_TW": "凱：「既然要往上走，幫個忙：森林裡的狼在幫收集者趕人。打倒三隻，我就相信你不是壞人。」",
+        "en": "Kai: \"If you're going up anyway, make yourself useful. The forest wolves are herding people for the Collectors. Beat three of them and I'll believe you're not a villain.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「交給我。」",
+            "en": "\"Leave it to me.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "startMission",
+              "missionId": "m_c2_wolves"
+            },
+            {
+              "type": "setFlag",
+              "flag": "c2.kai_met"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

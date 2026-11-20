@@ -1,7 +1,7 @@
 {
   "id": "ch_03",
-  "floors": ["F15", "F16", "F17", "F18", "F19", "F20", "F21"],
-  "bossFloor": "F21",
+  "floors": ["F11", "F12", "F13", "F14", "F15"],
+  "bossFloor": "F15",
   "bossStage": "stage03",
   "title": "story.ch03.title",
   "desc": "story.ch03.desc",
@@ -29,7 +29,7 @@
     }
   ],
   "sideStoryHooks": ["ss_03"],
-  "exitConditions": { "type": "stageCleared", "stageId": "F21" },
+  "exitConditions": { "type": "stageCleared", "stageId": "F16" },
 
   "enemyMix": ["bat", "golem"],
   "itemTable": ["potion_red", "potion_blue", "gem_atk"]

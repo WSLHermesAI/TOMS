@@ -1,0 +1,41 @@
+{
+  "_comment": "Chapter 3 of the story revamp (docs/gameplay/23 §4): F13, a rescue: the scholar goes home (the village: what Godborn means).",
+  "npcId": "scholar",
+  "start": "books",
+  "nodes": {
+    "books": {
+      "text": {
+        "zh_TW": "一位學者被埋在書堆裡，只露出一隻手在揮。「救命——不，等等，先別動那本！那是初版！」",
+        "en": "A scholar is buried under a pile of books, one hand waving. \"Help! No, wait, don't move that one! It's a first edition!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（小心地把他挖出來）",
+            "en": "(Dig him out carefully)"
+          },
+          "next": "home",
+          "action": {
+            "type": "rescue",
+            "npc": "scholar"
+          }
+        }
+      ]
+    },
+    "home": {
+      "text": {
+        "zh_TW": "學者：「謝謝你，孩子。我看到收集者的名冊了——你的名字旁邊寫著兩個字：『神裔』。回村後來找我，我把我知道的都告訴你。」",
+        "en": "Scholar: \"Thank you, child. I saw the Collectors' ledger. Next to your name there was one word: 'Godborn'. Come and find me in the village and I'll tell you all I know.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「神裔……？」",
+            "en": "\"Godborn...?\""
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

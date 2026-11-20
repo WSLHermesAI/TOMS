@@ -1,0 +1,20 @@
+{
+  "_comment": "Chapter 1's quest (docs/gameplay/23 §5): the weapon master in the village (weapon_master_village) asks for his whetstone; the whetstone already found on F04 (c1.whetstone), taking the quest finishes it at once (a flag quest whose flag is set).",
+  "scene": "dialogue",
+  "flags": [
+    "c1.whetstone"
+  ],
+  "dialogue": {
+    "id": "weapon_master_village"
+  },
+  "test": {
+    "frames": 60,
+    "keys": "enter@10,enter@25"
+  },
+  "expect": {
+    "scene": "stage",
+    "missions": {
+      "m_c1_whetstone": "completed"
+    }
+  }
+}

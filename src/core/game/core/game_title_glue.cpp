@@ -34,6 +34,7 @@ toms::RunSaveData Game::f_RunSaveFromState() const {
     l_oR.m_oPlayer.m_iCrystals = m_oPl.m_iCrystals;
     l_oR.m_oPlayer.m_strWeapon = m_oEquipped.m_strWeaponId; l_oR.m_oPlayer.m_strArmor = m_oEquipped.m_strArmorId; l_oR.m_oPlayer.m_strTalent = m_oEquipped.m_strTalentId;
     l_oR.m_mapEntityStatus = m_mapEntityStatus;
+    for (const auto& [l_strId, l_oT] : m_mapMissionTrackers) l_oR.m_jMissions[l_strId] = toms::f_ToJson(l_oT);   // the quests (23 §7)
     // S3: the run's story state travels with the run save (schemaVersion 3) -- choices, counters,
     // side-story states, run flags, shards, floor progress and deaths.
     m_oRun.f_WriteInto(l_oR);
@@ -94,6 +95,12 @@ void Game::f_ApplyLoadedRun(const toms::MetaSaveData& l_oM, const toms::RunSaveD
     if (m_oMeta.m_iCycleIndex <= 1) m_oRun.f_SetSuperMax(m_oRun.f_BaseSuperMax());   // first life: battle.json "superPoints"
     // Anything that belongs to the *previous* run must not leak into the loaded one.
     m_mapMissionTrackers.clear();
+    if (l_oR.m_jMissions.is_object())   // the run's quests come back (23 §7); an unknown one is kept, as it was saved
+        for (auto& [l_strId, l_jT] : l_oR.m_jMissions.items()) {
+            toms::MissionTracker l_oT = toms::f_MissionTrackerFromJson(l_jT);
+            if (l_oT.m_strMissionId.empty()) l_oT.m_strMissionId = l_strId;
+            m_mapMissionTrackers[l_strId] = l_oT;
+        }
     m_vNotifications.clear();
     m_oCs = CombatState{};
     m_bInDialogue = false; m_vDlgChoices.clear(); m_strDlgNode = "root";

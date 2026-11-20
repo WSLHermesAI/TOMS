@@ -1,0 +1,41 @@
+{
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): F03, a rescue: the baker goes home (the elder's quest, the village bakery).",
+  "npcId": "baker",
+  "start": "tied",
+  "nodes": {
+    "tied": {
+      "text": {
+        "zh_TW": "麵包師被綁在柱子上，嘴裡塞著自己的圍裙。「嗚嗚嗚！」",
+        "en": "The baker is tied to a post, gagged with his own apron. \"Mmmph!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「我來了！」（解開繩子）",
+            "en": "\"Hold on!\" (Untie him)"
+          },
+          "next": "thanks",
+          "action": {
+            "type": "rescue",
+            "npc": "baker"
+          }
+        }
+      ]
+    },
+    "thanks": {
+      "text": {
+        "zh_TW": "麵包師：「里歐！我看到他們把你爸媽往上帶……灰面說，要帶去見『主人』。」他擦擦眼睛。「回村後，我烤麵包給你吃，吃到飽！」",
+        "en": "Baker: \"Leo! I saw them take your parents further up... Grey Mask said they were for 'the Master'.\" He wipes his eyes. \"When I'm home I'll bake for you. All you can eat!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「說好了喔！」",
+            "en": "\"It's a deal!\""
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}
