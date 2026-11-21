@@ -148,7 +148,6 @@ bool Game::f_StartScenarioJson(const nlohmann::json& l_jSc, const std::string& l
     m_strUltimateOverride = l_jSc.value("battle", nlohmann::json::object()).value("ultimate", std::string());
     m_fScenarioBattleSpeed = std::max(0.1f, l_jSc.value("battle", nlohmann::json::object()).value("speed", 1.0f));
     if (l_jSc.value("battle3d", false)) m_bBattle3DAllowed = true;   // the battle on its 3D stage (docs/gameplay/21), as in normal play
-    if (l_jSc.value("walk3d", false)) m_bWalk3DAllowed = true;       // the floor in 3D (docs/gameplay/24), as in normal play
     const nlohmann::json l_jTest = l_jSc.value("test", nlohmann::json::object());
     m_iScenarioTestFrames = l_jTest.value("frames", 0);
     m_strScenarioTestKeys = l_jTest.value("keys", std::string());
@@ -441,7 +440,7 @@ bool Game::f_ScenarioCheck(std::string& l_strReport) const {
                      std::to_string((int)(l_v4M.y + l_v4M.w)));
     }
     if (m_jScenarioExpect.value("walk3d", false)) {   // the floor is drawn in 3D, and a click on the hero finds his tile (docs/gameplay/24)
-        if (!m_bWalk3DOn) l_fnFail("the floor is not in 3D (data/stage3d.json, its model from tools/stage3d/make_floor3d.py, mesh shaders)");
+        if (!m_bWalk3DOn) l_fnFail("the floor is not drawn in 3D (data/stage3d.json, the look's textures, mesh shaders)");
         else {
             const glm::vec4 l_v4C = m_mat4Walk3DViewProj * glm::vec4(m_oPl.m_iX + 0.5f, 0.0f, m_oPl.m_iY + 0.5f, 1.0f);
             const glm::vec2 l_v2Dev((l_v4C.x / l_v4C.w * 0.5f + 0.5f) * m_v2Walk3DDevice.x, (0.5f - l_v4C.y / l_v4C.w * 0.5f) * m_v2Walk3DDevice.y);

@@ -36,14 +36,8 @@ void Game::f_SetMoveHeldY(int l_iDir) {
 // ---- Click-to-move (see walkTo()'s declaration in game.h) ----
 
 bool Game::f_ScreenToTile(float l_fPx, float l_fPy, int& l_iTx, int& l_iTy) const {
-    if (!m_pRen) return false;
-    if (m_bWalk3DOn) return f_Walk3DScreenToTile(l_fPx, l_fPy, l_iTx, l_iTy);   // the 3D floor: the ground under the point
-    float l_fTs; int l_iCols, l_iRows; f_CameraViewportTiles(l_fTs, l_iCols, l_iRows);
-    if (l_fTs <= 0.0f) return false;
-    // draw(): tile (x,y) is at (-camX*ts + x*ts, 60 - camY*ts + y*ts).
-    l_iTx = (int)std::floor(l_fPx / l_fTs + m_oCam.f_X());
-    l_iTy = (int)std::floor((l_fPy - 60.0f) / l_fTs + m_oCam.f_Y());
-    return l_iTx >= 0 && l_iTy >= 0 && l_iTx < (int)m_oSt.m_iWidth && l_iTy < (int)m_oSt.m_iHeight;
+    // the 3D floor: the ground under the point (none while the floor is still loading)
+    return m_pRen && m_bWalk3DOn && f_Walk3DScreenToTile(l_fPx, l_fPy, l_iTx, l_iTy);
 }
 
 bool Game::f_WalkPassable(int l_iX, int l_iY) const {

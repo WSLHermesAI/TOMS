@@ -87,12 +87,11 @@ These were not answered, so the proposal was built. Nothing waits on them.
 | **Q101** Memory blade: a wrong swipe? | misses that prompt; the next is due; the hits so far count | Keep it |  | [22](../gameplay/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §2 |
 | **Q102** Memory blade timing by level? | answer 1 s → 1.5 s; red prompts (the other way) from Lv 6 | Keep it; try it and tune |  | [22](../gameplay/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §2 |
 | **Q103** Which weapons get the **Sigil Chain** ultimate? | the memory blade only; the iron sword's is now Tiger Wind (the owner, 2026-11-20, 22 §4.1) | Keep it |  | [22](../gameplay/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §3 |
-| **Q104** Sigil Chain: commands, time, threshold? | 10 ways, 5 s, partial finish from 6, ×12 | Keep it; add V / circle from a later level |  | [22](../gameplay/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §3 |
+| **Q104** Sigil Chain: commands, time, threshold? | 10 ways, 5 s, partial finish from 6, ×12 | Keep it; add V / circle from a later level |  | [22](../gameplay/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §3 |
 | **Q108** The free swipe / tap / shot ultimates are no weapon's now (the bow's Cyclone Volley, 11-19; the sword's Tiger Wind and the staff's Star Seal, 11-20): their 3 switched-off scenarios (`battle_ultimate_free_*`) expect them and would fail | keep the moves and the scenarios as they are | delete the 3 scenarios; keep the moves for a later weapon |  | [22](../gameplay/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §4.1 |
 | **Q109** Cyclone Volley numbers? | 3 clockwise + 3 anticlockwise, 6 s, partial from 3, ×12, 10 shots in 1.5 s | Keep it; try it and tune |  | [22](../gameplay/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §4 |
-| **Q117** 3D floors for everyone by default, with 2D in Settings? | 3D on (the Windows desktop), 2D on a floor with no model yet (only F01 has one) | Yes; Settings > 3D floors in step 2 |  | [24](../gameplay/24_STAGE_3D.md) §7 |
 | **Q118** The walking camera: fixed (north up), or can the player turn it 90°? | fixed, tilted 55°, following the hero | Fixed: the maps are made top-down |  | [24](../gameplay/24_STAGE_3D.md) §7 |
-| **Q119** Wall height: 1 m (the camera sees over) or 1.6 m with a wall in front of the hero fading? | 1 m | 1 m now; try 1.6 m with the fade in step 2 |  | [24](../gameplay/24_STAGE_3D.md) §7 |
+| **Q119** Wall height: 1 m (the camera sees over) or 1.6 m with a wall in front of the hero fading? | 1 m | 1 m now; try 1.6 m with the fade |  | [24](../gameplay/24_STAGE_3D.md) §7 |
 | **Q120** Monsters on the 3D map: their battle art, or new small painted map art? | their 16-pixel map sprites, larger (step 1); their battle art in step 3 | Their battle art |  | [24](../gameplay/24_STAGE_3D.md) §7 |
 | **Q121** The village and the hub screens in 3D too? | no, their painted screens | No, until the floors are done |  | [24](../gameplay/24_STAGE_3D.md) §7 |
 

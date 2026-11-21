@@ -258,15 +258,15 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
             l_oH.m_strChapterSub = m_oSt.m_strName;
             l_oH.m_fChapterAlpha = std::min(1.0f, m_fChapterCardMs / 600.0f);
         }
-        // Name plates over bosses and roamers, at the same place the map draws them.
-        float l_fTs; int l_iCols, l_iRows; f_CameraViewportTiles(l_fTs, l_iCols, l_iRows);
-        const float l_fOx = -m_oCam.f_X() * l_fTs, l_fOy = 60.0f - m_oCam.f_Y() * l_fTs, l_fInset = l_fTs / 6.0f;
+        // Name plates over bosses and roamers: over the head of its sprite standing on the 3D floor.
         const float l_fScreenW = m_pRen ? (float)m_pRen->f_Width() : 1024.0f, l_fScreenH = m_pRen ? (float)m_pRen->f_Height() : 768.0f;
         for (const auto& l_oE : m_oSt.m_vEntities) {
-            if (l_oE.m_bConsumed || !(l_oE.m_oFp.f_BossTier() || l_oE.m_bRoamer)) continue;
-            const float l_fX = l_fOx + l_oE.m_iX * l_fTs + l_fInset, l_fY = l_fOy + l_oE.m_iY * l_fTs + l_fInset, l_fW = l_oE.m_oFp.m_iW * l_fTs - 2.0f * l_fInset;
-            if (l_fX + l_fW < 0 || l_fX > l_fScreenW || l_fY < 0 || l_fY > l_fScreenH) continue;
-            l_oH.m_vBanners.push_back({l_oE.m_strDisplayName.empty() ? l_oE.m_strId : l_oE.m_strDisplayName, l_fX + l_fW * 0.5f, l_fY - 2.0f});
+            if (!m_bWalk3DOn || l_oE.m_bConsumed || !(l_oE.m_oFp.f_BossTier() || l_oE.m_bRoamer)) continue;
+            const float l_fTall = f_Walk3DHeight("monster") * (float)l_oE.m_oFp.m_iH + 0.1f;
+            bool l_bOk = false;
+            const glm::vec2 l_v2P = f_Walk3DToDesign(glm::vec3(l_oE.m_iX + l_oE.m_oFp.m_iW * 0.5f, l_fTall, l_oE.m_iY + l_oE.m_oFp.m_iH - 0.45f), l_bOk);
+            if (!l_bOk || l_v2P.x < 0 || l_v2P.x > l_fScreenW || l_v2P.y < 0 || l_v2P.y > l_fScreenH) continue;
+            l_oH.m_vBanners.push_back({l_oE.m_strDisplayName.empty() ? l_oE.m_strId : l_oE.m_strDisplayName, l_v2P.x, l_v2P.y});
         }
 
 
@@ -773,12 +773,10 @@ void Game::f_BuildMenuUi(toms::UiMenu& l_oM) const {
                 l_oM.m_vRows.push_back({std::string((int)l_nI == l_oL.f_LanguageIndex() ? "[x] " : "[ ] ") + l_vLangs[l_nI].m_strName, "", l_fnSel(l_nI), true});
             if (!l_oM.m_vRows.empty()) l_oM.m_vRows[0].m_strSection = l_oL.f_Tr("settings.language");   // section: language
             f_AppendArtStyleRows(l_oM.m_vRows, m_iInGameMenuSel - (int)l_vLangs.size());       // section: art style
-            const size_t l_nCam = l_oM.m_vRows.size();                                      // section: other
-            l_oM.m_vRows.push_back({l_oL.f_Tr(m_oCam.f_Mode() == toms::Camera::Mode::Rooms ? "settings.camera_rooms" : "settings.camera_follow"),
-                              "", l_fnSel(l_nCam), true});
-            l_oM.m_vRows[l_nCam].m_strSection = l_oL.f_Tr("settings.other_section");
+            const size_t l_nCam = l_oM.m_vRows.size() - 1;                                  // section: other (from the next row)
             l_oM.m_vRows.push_back({l_oL.f_Tr(m_oSettings.m_bReduceEffects ? "settings.reduce_effects_on" : "settings.reduce_effects_off"),
                               "", l_fnSel(l_nCam + 1), true});   // docs/gameplay/15 §3.8
+            l_oM.m_vRows[l_nCam + 1].m_strSection = l_oL.f_Tr("settings.other_section");
             {   // the battle speed (17 I10): activating the row takes the next step
                 char l_pszSpeed[16];
                 std::snprintf(l_pszSpeed, sizeof l_pszSpeed, "%g", m_oSettings.m_fBattleSpeed);

@@ -125,7 +125,6 @@ struct Args {
     std::string m_strTitleScene;            // --title-scene=<file|none|ocean>
     std::string m_strBattle3D;              // --battle-3d=on|off (empty: on in normal play, off in scripted runs)
     std::string m_strBattle3DWait;          // --battle-3d-wait=on|off (empty: on in scripted runs)
-    std::string m_strWalk3D;                // --walk-3d=on|off (empty: on in normal play, off in scripted runs)
     float m_fUiScale = 0.0f;              // --ui-scale=<x>: the phone UI scale on desktop (testing the web build's small-screen layout)
     int m_iWindowW = 1280, m_iWindowH = 720;   // --window=WxH
     int m_iResizeFrame = -1, m_iResizeW = 0, m_iResizeH = 0;   // --resize=frame:WxH
@@ -252,7 +251,6 @@ Args f_ParseArgs(const std::vector<std::string>& l_vArgv) {
         else if (const char* l_pszV = l_fnValue(l_strS, "--title-scene=")) l_oA.m_strTitleScene = l_pszV;
         else if (const char* l_pszV = l_fnValue(l_strS, "--battle-3d=")) l_oA.m_strBattle3D = l_pszV;
         else if (const char* l_pszV = l_fnValue(l_strS, "--battle-3d-wait=")) l_oA.m_strBattle3DWait = l_pszV;
-        else if (const char* l_pszV = l_fnValue(l_strS, "--walk-3d=")) l_oA.m_strWalk3D = l_pszV;
         else if (const char* l_pszV = l_fnValue(l_strS, "--ui-scale=")) l_oA.m_fUiScale = (float)std::atof(l_pszV);
         else if (const char* l_pszV = l_fnValue(l_strS, "--resize=")) { int l_iF = 0, l_iW = 0, l_iH = 0; if (std::sscanf(l_pszV, "%d:%dx%d", &l_iF, &l_iW, &l_iH) == 3 && l_iW >= 200 && l_iH >= 200) { l_oA.m_iResizeFrame = l_iF; l_oA.m_iResizeW = l_iW; l_oA.m_iResizeH = l_iH; } }
         else if (const char* l_pszV = l_fnValue(l_strS, "--window=")) { int l_iW = 0, l_iH = 0; if (std::sscanf(l_pszV, "%dx%d", &l_iW, &l_iH) == 2 && l_iW >= 200 && l_iH >= 200) { l_oA.m_iWindowW = l_iW; l_oA.m_iWindowH = l_iH; } }
@@ -484,14 +482,6 @@ bool f_AppInit(App& l_oApp) {
     l_oOpts.m_bBattle3D = l_oArgs.m_strBattle3D == "on";   // Android: the painted backdrop until the owner asks (Q92)
 #else   // the desktop and, since 2026-11-11, the browser (the owner: "turn it on")
     l_oOpts.m_bBattle3D = l_oArgs.m_strBattle3D == "on" || (l_oArgs.m_strBattle3D.empty() && l_oArgs.m_iFrames == 0 && l_oArgs.m_iFixedDtMs == 0);
-#endif
-    // Walking a floor in 3D (docs/gameplay/24): the Windows desktop's normal play; a scripted run keeps the 2D map (its
-    // reference pictures) unless it asks; the browser too since 2026-11-21 (the owner: "make 3D looking as default");
-    // Android only when the owner asks for it.
-#if defined(__ANDROID__)
-    l_oOpts.m_bWalk3D = l_oArgs.m_strWalk3D == "on";
-#else
-    l_oOpts.m_bWalk3D = l_oArgs.m_strWalk3D == "on" || (l_oArgs.m_strWalk3D.empty() && l_oArgs.m_iFrames == 0 && l_oArgs.m_iFixedDtMs == 0);
 #endif
     l_oOpts.m_bBattle3DWait = l_oArgs.m_strBattle3DWait == "on" ||
                               (l_oArgs.m_strBattle3DWait.empty() && (l_oArgs.m_iFrames > 0 || l_oArgs.m_iFixedDtMs > 0));   // a scripted run: the same picture every time

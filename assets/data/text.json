@@ -219,22 +219,6 @@
       "ko": "{lang}(으)로 전환하시겠습니까?",
       "es": "¿Cambiar a {lang}?"
     },
-    "settings.camera_follow": {
-      "zh_TW": "鏡頭：跟隨角色",
-      "en": "Camera: Follow",
-      "zh_CN": "镜头：跟随角色",
-      "ja": "カメラ：追従",
-      "ko": "카메라: 추적",
-      "es": "Cámara: Seguimiento"
-    },
-    "settings.camera_rooms": {
-      "zh_TW": "鏡頭：分區顯示",
-      "en": "Camera: Rooms",
-      "zh_CN": "镜头：分区显示",
-      "ja": "カメラ：エリア表示",
-      "ko": "카메라: 구역 표시",
-      "es": "Cámara: Por Secciones"
-    },
     "settings.style_section": {
       "zh_TW": "畫面風格",
       "en": "Art style",

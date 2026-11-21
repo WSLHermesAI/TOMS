@@ -38,7 +38,7 @@ set(TOMS_UNIT_TESTS
     engine/canvas_test
     game/core/atlas_sprites_test   game/core/res_keys_test
     game/save/save_test
-    game/systems/camera_test        game/systems/cycle_system_test     game/systems/ending_system_test
+    game/systems/cycle_system_test     game/systems/ending_system_test
     game/systems/equipment_actives_test game/systems/equipment_test    game/systems/floor_table_test
     game/systems/footprint_test     game/systems/forge_system_test     game/systems/hub_system_test
     game/systems/mission_test       game/systems/run_state_test        game/systems/skill_system_test

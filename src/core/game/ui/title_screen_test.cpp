@@ -48,21 +48,17 @@ int main() {
         l_oS.m_strLanguage = "en";
         l_oS.m_iSlotCount = 4;
         l_oS.m_fUiFontScale = 1.75f;
-        l_oS.m_iCameraMode = 1;
         auto l_jJ = f_ToJson(l_oS);
         GameSettings l_oS2 = f_GameSettingsFromJson(l_jJ);
         CHECK(l_oS2.m_strLanguage == "en" && l_oS2.m_iSlotCount == 4, "settings JSON round-trip");
-        CHECK(l_oS2.m_iCameraMode == 1, "cameraMode round-trips");
 
         // Out-of-range values are clamped, not accepted blindly.
         nlohmann::json l_jBad;
         l_jBad["slotCount"] = 99;
         l_jBad["uiFontScale"] = 100.0f;
-        l_jBad["cameraMode"] = 7;
         GameSettings l_oS3 = f_GameSettingsFromJson(l_jBad);
         CHECK(l_oS3.m_iSlotCount <= 8, "slotCount is clamped to the layout maximum");
         CHECK(l_oS3.m_fUiFontScale <= 4.0f, "uiFontScale is clamped to a sane range");
-        CHECK(l_oS3.m_iCameraMode == 0, "an unrecognized cameraMode falls back to Follow (0)");
 
         // File round-trip.
         std::string l_strPath = "title_test_settings.json";

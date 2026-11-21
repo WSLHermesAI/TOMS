@@ -332,8 +332,6 @@ bool Game::f_LoadAssets(const std::string& l_strAssetDir) {
         const char* l_pszForced = std::getenv("TOMS_LANGUAGE");
         if (!m_oLocale.f_SetLanguage(l_pszForced && *l_pszForced ? std::string(l_pszForced) : m_oSettings.m_strLanguage)) m_oLocale.f_SetLanguage("en");
         if (!(l_pszForced && *l_pszForced)) m_oSettings.m_strLanguage = m_oLocale.f_LanguageCode();
-        m_oCam.f_SetMode(toms::Camera::f_ModeFromIndex(m_oSettings.m_iCameraMode));
-        m_oCam.f_SetViewCols(m_oSettings.m_iViewCols);
         m_oTitle.f_SetSlotCount(m_oSettings.m_iSlotCount);
         m_oTitle.f_SetLanguageCount(m_oLocale.f_LanguageCount());
         m_oTitle.f_SetLanguageIndex(m_oLocale.f_LanguageIndex());
@@ -461,7 +459,6 @@ void Game::f_LoadStage(const std::string& l_strId, StageArrival l_eArrival) {
         m_strStoryIntroKey = l_pFloor->m_strIntroKey;
         m_vStoryAmbientKeys = l_pFloor->m_vAmbientKeys;
         m_iStoryTurns = 0;
-        m_iThemeActIndex = l_pFloor->m_iActIndex;
         m_fChapterCardMs = 0.0f;
         if (l_pFloor->m_iIndexInAct == 1 && !l_pFloor->m_strAct.empty()) {   // first floor of an act -> act card
             std::string l_strTitle = m_oLocale.f_Tr("story." + l_pFloor->m_strActKey + ".title");
@@ -481,7 +478,6 @@ void Game::f_LoadStage(const std::string& l_strId, StageArrival l_eArrival) {
         m_strStoryIntroKey.clear();
         m_vStoryAmbientKeys.clear();
         m_iStoryTurns = 0;
-        m_iThemeActIndex = 1;
         m_fChapterCardMs = 0.0f;
     }
     // Q7 / 05_FLOOR_LINKS: every stair as a list with its tile and lock. A floor's own `stairs` list wins over the
@@ -627,8 +623,5 @@ void Game::f_LoadStage(const std::string& l_strId, StageArrival l_eArrival) {
             if (l_oE.m_strKind == "stairs_down" || l_oE.m_strKind == "stairs_up") { m_oPl.m_iX = l_oE.m_iX; m_oPl.m_iY = l_oE.m_iY; break; }
     }
     m_oFloor.f_Build(*this);   // a class per thing on the floor, with its looks (map_objects.h)
-    // A floor change must never visibly pan in from wherever the camera was on the PREVIOUS
-    // floor (different grid, different scale of "makes sense") -- jump straight to the new
-    // floor's starting view instead of easing into it.
-    m_oCam.f_Snap();
+    m_strWalk3DFloor.clear();  // the 3D camera starts on the hero on the new floor (no pan from the last one)
 }

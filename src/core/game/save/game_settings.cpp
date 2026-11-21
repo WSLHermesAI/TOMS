@@ -9,8 +9,6 @@ nlohmann::json f_ToJson(const GameSettings& l_oS) {
     l_jJ["language"] = l_oS.m_strLanguage;
     l_jJ["slotCount"] = l_oS.m_iSlotCount;
     l_jJ["uiFontScale"] = l_oS.m_fUiFontScale;
-    l_jJ["cameraMode"] = l_oS.m_iCameraMode;
-    l_jJ["viewCols"] = l_oS.m_iViewCols;
     l_jJ["artStyle"] = l_oS.m_strArtStyle;
     if (!l_oS.m_strPlayerLook.empty()) l_jJ["playerLook"] = l_oS.m_strPlayerLook;
     l_jJ["particleGpuThreshold"] = l_oS.m_iParticleGpuThreshold;
@@ -35,12 +33,6 @@ GameSettings f_GameSettingsFromJson(const nlohmann::json& l_jJ) {
     float l_fFs = l_jJ.value("uiFontScale", 1.5f);
     if (l_fFs < 0.5f || l_fFs > 4.0f) l_fFs = 1.5f;
     l_oS.m_fUiFontScale = l_fFs;
-    int l_iCam = l_jJ.value("cameraMode", 0);
-    l_oS.m_iCameraMode = (l_iCam == 1) ? 1 : 0;   // unrecognized/missing -> Follow
-    int l_iVc = l_jJ.value("viewCols", 13);
-    if (l_iVc < 4) l_iVc = 4;      // cameraViewportTiles() floors at 4 anyway; keep the setting sane
-    if (l_iVc > 60) l_iVc = 60;    // past this a tile is a couple px, not a testing scenario
-    l_oS.m_iViewCols = l_iVc;
     l_oS.m_strArtStyle = l_jJ.value("artStyle", std::string());
     l_oS.m_strPlayerLook = l_jJ.value("playerLook", std::string());
     l_oS.m_iParticleGpuThreshold = std::max(0, l_jJ.value("particleGpuThreshold", g_iDefaultParticleGpuThreshold));

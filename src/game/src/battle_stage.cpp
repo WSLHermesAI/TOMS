@@ -1,5 +1,6 @@
 // battle_stage.cpp -- see battle_stage.h.
 #include "battle_stage.h"
+#include "floor_mesh.h"
 #include "color_space.h"   // TOMS_GAMMA_SPACE: web and Android blend in gamma space
 
 #include "gltf_environment.h"
@@ -168,9 +169,28 @@ std::shared_ptr<BattleStage::Loaded> BattleStage::f_LoadCpu(nlohmann::json l_jRo
 
     if (!l_jRow.value("ground", std::string()).empty() && !(l_oL.m_spGround = l_fnModel(l_jRow["ground"].get<std::string>()))) return l_spL;
     if (!l_jRow.value("shadow", std::string()).empty() && !(l_oL.m_spShadow = l_fnModel(l_jRow["shadow"].get<std::string>()))) return l_spL;
+    // a floor walked in 3D (docs/gameplay/24): its walls and ground made here from its wall rows (floor_mesh.h)
+    auto l_fnFloor = [&](const nlohmann::json& l_jF) -> std::shared_ptr<Model> {
+        std::vector<std::string> l_vWalls;
+        for (const auto& l_jRowS : l_jF.value("walls", nlohmann::json::array())) if (l_jRowS.is_string()) l_vWalls.push_back(l_jRowS.get<std::string>());
+        const std::string l_strGlb = f_MakeFloorGlb(l_vWalls, l_jF.value("look", std::string("castle")), l_jF.value("wallHeight", 1.0f),
+                                                    l_jF.value("groundRepeat", 2.0f));
+        auto l_spM = std::make_shared<Model>();
+        std::string l_strWhy;
+        if (!gltf::f_LoadModelFromMemory(l_strGlb.data(), l_strGlb.size(), l_fnPath("stage3d"), l_spM->m_oModel, &l_strWhy)) {
+            l_oL.m_strError = "the floor's model: " + l_strWhy;
+            return nullptr;
+        }
+        l_spM->m_oPose.f_Bind(&l_spM->m_oModel);
+        l_spM->m_oPose.f_UpdateWorld();
+        l_oL.m_mapModels["floor:" + l_jF.dump()] = l_spM;
+        return l_spM;
+    };
     for (const auto& l_jP : l_jRow.value("props", nlohmann::json::array())) {
         Prop l_oP;
-        if (!(l_oP.m_spModel = l_fnModel(l_jP.value("model", std::string())))) return l_spL;
+        if (l_jP.contains("floor")) {
+            if (!(l_oP.m_spModel = l_fnFloor(l_jP["floor"]))) return l_spL;
+        } else if (!(l_oP.m_spModel = l_fnModel(l_jP.value("model", std::string())))) return l_spL;
         const std::string l_strNode = l_jP.value("node", std::string());
         if (!l_strNode.empty()) {   // one piece of a kit: every other root node hidden, this one at the origin
             const gltf::Model& l_oM = l_oP.m_spModel->m_oModel;

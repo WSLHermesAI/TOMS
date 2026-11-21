@@ -656,10 +656,9 @@ MapObject* MapFloor::f_ObjectAt(int l_iX, int l_iY, const char* l_pszKindPrefix)
 // each covers (S1 F5): a 2x2 boss stands behind what is below it, the player behind the monsters below it. The same
 // order as before: the stage file's order, then the player, stably sorted.
 void MapFloor::f_Render(const MapView& l_oV) {
-    // walking in 3D (docs/gameplay/24): each object in its own world group, standing on its tile
-    const bool l_b3D = l_oV.m_fOx == 0.0f && l_oV.m_fOy == 0.0f && m_pGame && m_pGame->f_Walk3DOn();
+    // the floor in 3D (docs/gameplay/24): each object in its own world group, standing on its tile
+    if (!m_pGame || !m_pGame->f_Walk3DOn()) return;
     for (const auto& l_spO : m_vObjects) {
-        if (!l_b3D) { l_spO->f_RenderUnderlay(l_oV); continue; }
         if (!m_pGame->f_Walk3DBeginObject(*l_spO, l_oV)) continue;
         l_spO->f_RenderUnderlay(l_oV);
         m_pGame->f_Walk3DEndObject();
@@ -674,7 +673,6 @@ void MapFloor::f_Render(const MapView& l_oV) {
         return l_pA->f_TieX() < l_pB->f_TieX();
     });
     for (MapObject* l_pO : m_vDrawList) {
-        if (!l_b3D) { l_pO->f_Render(l_oV); continue; }
         if (l_pO == m_spPlayer.get() && m_pGame->f_DrawWalk3DHero()) continue;   // his painted battle character
         if (!m_pGame->f_Walk3DBeginObject(*l_pO, l_oV)) continue;
         l_pO->f_Render(l_oV);

@@ -12,98 +12,102 @@
 | 角色？ | **手繪圖，放大**：地圖上用戰鬥角色的手繪圖，不用 16 像素小圖 |
 | 材質？ | **AI 繪製，每種外觀一套**（木、城堡、洞窟、墓穴……），無縫 |
 
-**這是計畫。第 1 步（F01 原型，§6）已做好；其他步驟還沒做。**未決的問題在 §7 與
+之後（2026-11-21）：「make 3D looking as default」（瀏覽器也要），以及「remove fallback to 2D and delete related useless files,
+and make a loading circle while change to next scene too long」。
+
+**已做好：每一層都是 3D，沒有 2D 地圖（§6）。第 3–5 步（§5）還沒做。**未決的問題在 §7 與
 [13_OPEN_DECISIONS.md](../../project/zh_TW/13_OPEN_DECISIONS.md)。
 
 ## 1. 原本的樣子
 
-- 走路的畫面把樓層畫成平的 16 像素圖塊、從上往下看（`Game::f_DrawTileLayer`），每種格子、每種樓層主題一張圖
-  （`wall_wood`、`floor_wood`……），地圖上的物件畫在上面（`MapFloor::f_Render`）。
+- 走路的畫面把樓層畫成平的 16 像素圖塊、從上往下看，每種格子、每種樓層主題一張圖（`wall_wood`、`floor_wood`……），依章節染色，
+  用 2D 鏡頭（設定：跟隨或分區）在上面捲動。
 - 戰鬥已經有 3D 舞台（[21_BATTLE_3D.md](21_BATTLE_3D.md)）：glTF PBR 繪製器、照明用的 HDR 天空、有陰影貼圖的太陽或月亮、點光源、
   背景載入，以及站在場景中、受場景光照的 2D 圖（world group）。**3D 樓層全部沿用**；繪製器不需要新東西。
 
 ## 2. 怎麼運作
 
 ```
-樓層檔（FNN.stage.json：tiles、theme）──tools/stage3d/make_floor3d.py──► stage3d/floors/FNN.gltf
-                                                                         （＋ looks/<theme>/*.jpg、*_n.png）
-data/stage3d.json（鏡頭、每種外觀的光、圖的高度）──► Game::f_Walk3DStage ──► 主程式的 BattleStage
+樓層的格子地圖（FNN.stage.json / stageNN.json、編輯器做的任何關卡）─┐
+data/stage3d.json（外觀的光、鏡頭、圖的高度）─────────────────────┼─► Game::f_Walk3DStage
+                                                                   │     （牆的列、外觀）
+主程式的 BattleStage ◄─ floor_mesh.cpp：牆＋地面，記憶體中的 .glb ◄─┘
+        ▲                  ＋ stage3d/looks/<look>/*.jpg / *_n.png（手繪）
 地圖的物件（MapFloor）──► 各自一個 world group，站在自己的格子上 ──► 在同一個場景中受光
 ```
 
-- **一格是一公尺**：x 是行，z 是列（南方是 +z），y 朝上。模型用這個單位，所以地圖的一格就是模型的一平方公尺，不需要其他換算。
-- **主程式**（`GameSession`）為樓層多一個 `BattleStage`。進入樓層時在背景載入樓層的模型，在畫面是走路場景時（上面沒有戰鬥、對話、商店、
-  標題或結局）畫出來。戰鬥的舞台與樓層不會在同一格畫面出現；兩者共用 3D 的 view。
-- **遊戲**（`game_walk3d.cpp`）提供舞台設定（模型當成一個 prop，所以牆會投下太陽的影子）、鏡頭與影子的位置。畫的時候，每個地圖物件
-  放進自己的 world group：它的 2D 外觀照舊畫進每格 100 像素地圖上的方框，group 讓方框站在它的格子上，面向鏡頭並稍微往後仰。
-  地面的標記（樓梯、上鎖樓梯的鎖頭、走路的目標）平躺在地板上。
-- **主角**是他武器的手繪戰鬥角色（與戰鬥相同的動畫，播 idle），面向他最後走的方向。怪物、人物與物品仍是地圖小圖，放大（§5）。
-- **點擊**經過鏡頭：螢幕上的一點變成一條射線，射線在地面上找到格子（`Game::f_Walk3DScreenToTile`）。按鍵照舊。
-- **2D 地圖保留**：沒有模型的樓層、`stage3d.json` `"on": false`、`--walk-3d=off`，或沒有 mesh shader 的繪製器，都畫舊的地圖。
-  腳本執行（測試）除非要求（`--walk-3d=on`、情境的 `"walk3d": true`）都畫 2D，所以參考圖不會變。
+- **一格是一公尺**：x 是行，z 是列（南方是 +z），y 朝上。
+- **進入樓層時才做出樓層的模型**（`src/game/src/floor_mesh.cpp`），從牆的格子，在載入器的背景執行緒上：每層不需要檔案，所以每一層、
+  手繪地圖與編輯器做的關卡都是 3D。只看牆：門打開或怪物的格子清空時不會重做。
+- **主程式**（`GameSession`）為樓層多一個 `BattleStage`。進入樓層時在背景載入，在畫面是走路場景時畫出來。戰鬥的舞台與樓層不會在
+  同一格畫面出現；兩者共用 3D 的 view。
+- **遊戲**（`game_walk3d.cpp`）提供舞台設定、鏡頭與影子的位置。每個地圖物件放進自己的 world group：它的 2D 外觀照舊畫進每格
+  100 像素地圖上的方框，group 讓方框站在它的格子上，面向鏡頭並稍微往後仰。地面的標記（樓梯、門的格子、上鎖樓梯的鎖頭、開啟樓梯的
+  箭頭、走路的目標）平躺在地板上；在畫面外的開啟樓梯，畫面邊緣會有一個指向它的金色標記。頭目與遊蕩者的名牌在它們的圖的頭上。
+- **主角**是他武器的手繪戰鬥角色（播 idle），面向他最後走的方向。怪物、人物與物品仍是地圖小圖，放大（第 3 步）。
+- **點擊**經過鏡頭：螢幕上的一點變成一條射線，射線在地面上找到格子。
+- **沒有 2D 地圖。**樓層載入時，HUD 後面什麼都不畫；載入超過 `loadingDelayMs`（250 毫秒）時，畫面中央顯示**載入圓圈**（十二個點，
+  一秒轉一圈，淡入）。戰鬥的 3D 舞台還在載入時也會顯示。腳本執行（測試）會等載入完成，所以每次的畫面都一樣。
+- 所有地方：Windows 桌面、瀏覽器（那裡沒有太陽的影子，與 3D 戰鬥相同）、編輯器的遊戲畫面，以及 Android（沒試過：Android 只在
+  擁有者要求時建置）。
 
-## 3. 樓層的模型（`tools/stage3d/make_floor3d.py`）
+## 3. 外觀（`tools/stage3d/paint_looks.py`）
 
-- **牆**：每個 `#` 格是 1 公尺高的方塊（鏡頭看得到牆後：牆後的主角仍看得見）。只做它的頂面，以及旁邊是空格的側面（包括地圖邊緣：
-  最下面一列的正面看得到）。F01 是 734 個三角形。
-- **地面**：整張地圖下面一個四邊形，材質每 2 公尺重複一次。
-- **三種材質**：地面、牆、牆頂。材質用樓層的外觀（它的 `"theme"`；沒有就是 castle），同一外觀的所有樓層共用（`.gltf` 中的
-  `../looks/<look>/`）。
-- **外觀**（wood、forest、castle、cave、crypt、crystal、ice、lava、sand、shadow）：`--paint <look>` 用 ComfyUI 畫每個部分
-  （SDXL，Juggernaut XL，1024 像素；文字在工具的 `LOOKS`），做成無縫（與移動一半的自己混合）、512 像素，並從亮度做出法線貼圖。
-  `--seeds` 可試多個；用第一個，其他留在 `Build/art_out/stage3d/` 比較。還沒畫的外觀由工具畫（外觀顏色的簡單花紋），所以每層都能建。
-- **木**（第 1 章）已畫好：橡木地板（地面）、圓木牆、牆頂是深色的舊木板（重畫一次：第一次的牆頂有很搶眼的綠苔）。
+- **三個部分**：地面（每 2 公尺重複）、牆的側面、牆頂。牆高 1 公尺（鏡頭看得到牆後：牆後的主角仍看得見）。
+- **10 種外觀**都畫好了：wood、forest、castle、cave、crypt、crystal、ice、lava、sand、shadow。每個部分用 ComfyUI 畫（SDXL，
+  Juggernaut XL，1024 像素；文字在工具的 `LOOKS`），做成無縫（與移動一半的自己混合）、512 像素，並從亮度做出法線貼圖。樓層用它關卡檔的
+  `"theme"`；`stage3d.json` 沒有的主題用 `"defaultLook"`（castle）。
+- `--seeds` 可試多個；用第一個，其他留在 `Build/art_out/stage3d/` 比較。木的牆頂重畫過一次（第一次有很搶眼的綠苔）。
 
 ```
-python tools/stage3d/make_floor3d.py F01 F02           建這幾層
-python tools/stage3d/make_floor3d.py --all             所有樓層
-python tools/stage3d/make_floor3d.py --paint castle    畫一種外觀（ComfyUI 在 127.0.0.1:8188），然後建
-python tools/stage3d/make_floor3d.py --paint wood --parts top --seeds 5,8   重畫一個部分
+python tools/stage3d/paint_looks.py castle                    畫一種外觀（ComfyUI 在 127.0.0.1:8188）
+python tools/stage3d/paint_looks.py --all                     所有外觀
+python tools/stage3d/paint_looks.py wood --parts top --seeds 5,8   重畫一個部分，試兩次
 ```
 
 ## 4. `data/stage3d.json`
 
 | 鍵 | 內容 |
 |---|---|
-| `on` | false：所有樓層 2D |
-| `model` | 樓層的模型，`{id}` = 樓層 id（`stage3d/floors/{id}.gltf`） |
+| `defaultLook` | 主題沒有外觀的樓層用的外觀（castle） |
+| `wallHeight`、`groundRepeat` | 牆高（1 公尺）、地面材質的大小（2 公尺） |
+| `loadingDelayMs` | 場景載入超過這麼久就顯示載入圓圈（250） |
 | `shadow` | 主角、怪物與人物腳下的柔和圓影（戰鬥用的那個） |
-| `camera` | `pitch`（55°）、`distance`（11 公尺）、`fov`（38°）、`follow`（追上主角的速度）、`lookAhead` |
+| `camera` | `pitch`（56°）、`distance`（11 公尺）、`fov`（38°）、`follow`（追上主角的速度）、`lookAhead` |
 | `sprites` | `glow`、`lean`（24°）、`shadow`（圓影半徑）、依種類的 `heights`（一格大的圖：player、monster、npc、item、door、event、other）、`paintedHero`、`paintedHeroHeight` |
-| `looks` | 依主題，其餘用 `default`：`sky`（只照明：`"background": false`，塔站在黑暗中）、`exposure`、`light`（太陽：dir、color、intensity、ambient） |
+| `looks` | 每種外觀的 `sky`（只照明：`"background": false`，塔站在黑暗中）、`exposure`、`light`（太陽：dir、color、intensity、ambient） |
 
 ## 5. 計畫
 
 | 步驟 | 內容 | 狀態 |
 |---|---|---|
-| **1. F01 原型** | 工具、畫好的木外觀、`stage3d.json`、主程式的第二個舞台、跟隨鏡頭、站在場景中的地圖物件、會轉身的手繪主角、點擊 3D 地面、`--walk-3d`、情境 `walk_3d` | **2026-11-21 已做好** |
-| 2. 每一層 | 畫其他 9 種外觀；建 F01–F35；設定 > 3D 樓層（開／輕量／關，像 3D 戰鬥）；模型中的樓梯做成階梯、門做成門框；擋在鏡頭與主角之間的牆變淡 | |
+| 1. F01 原型 | 外觀繪製工具、木外觀、`stage3d.json`、主程式的第二個舞台、跟隨鏡頭、站在場景中的地圖物件、會轉身的手繪主角、點擊 3D 地面、情境 `walk_3d` | **2026-11-21 已做好** |
+| 2. 每一層，沒有 2D | 10 種外觀都畫好；進入樓層時從格子地圖做出模型；移除 2D 地圖、它的鏡頭與設定列；載入圓圈；瀏覽器也開 | **2026-11-21 已做好**（第一版計畫中還沒做的：模型中的樓梯做成階梯、門做成門框；擋在主角前的牆變淡） |
 | 3. 地圖上的手繪圖 | 怪物用戰鬥圖（放大，播 idle）、人物用全身手繪圖、物品與鑰匙用手繪圖示；主角的走路動畫與格子之間的平順移動（現在像 2D 一樣一次跳一格） | |
 | 4. 氣氛 | 火把（點光源與火焰）、光束、灰塵與火星、一點霧、每章的調色；樓層橫幅與進場時的慢速鏡頭 | |
-| 5. 打磨 | 地圖邊緣的鏡頭限制、事件時短暫的晃動、慢電腦的速度；Android 只在擁有者要求時（網頁：2026-11-21 起開） | |
+| 5. 打磨 | 地圖邊緣的鏡頭限制、事件時短暫的晃動、慢電腦的速度；Android 在擁有者要求時 | |
 
-## 6. 第 1 步的成果（2026-11-21）
+## 6. 已做好的內容（2026-11-21）
 
-- `tools/stage3d/make_floor3d.py`：模型建造與外觀繪製（§3）。`assets/media/stage3d/floors/F01.gltf`（＋ `.bin`）、
-  `assets/media/stage3d/looks/wood/`（地面、牆、頂：顏色與法線貼圖）。
-- `assets/data/stage3d.json`（鍵 `data.stage3d`）。
-- `src/core/game/core/game_walk3d.cpp`：舞台設定、鏡頭、影子、站立的物件、手繪主角、地面的標記、點擊地面。3D 開著時
-  `MapFloor::f_Render` 把每個物件放進自己的 group。
-- `src/game/src/game_session.cpp`：`m_upWalkStage`，在走路場景時畫。`BattleStage`：天空可以只照明不畫出來（`"background": false`）。
-- `--walk-3d=on|off`（`main_sdl.cpp`；瀏覽器用 `?walk-3d=off`）：Windows 桌面一般遊玩時開，2026-11-21 起瀏覽器也開（擁有者：
-  「make 3D looking as default」；已在 headless Chrome 用 GPU 檢查：F01 是 3D，那裡沒有太陽的影子，與 3D 戰鬥相同）；腳本執行時關；
-  Android 只在要求時。
+- `src/game/src/floor_mesh.cpp`（＋ `.h`）：從牆的列做出樓層模型，記憶體中的 `.glb`。`BattleStage` 用它讀取 prop
+  `{"floor": {"walls", "look", "wallHeight", "groundRepeat"}}`；天空可以只照明不畫出來（`"background": false`）。
+- `src/core/game/core/game_walk3d.cpp`：舞台設定、鏡頭、影子、站立的物件、手繪主角、地面的標記、畫面外樓梯的標記、點擊地面、載入圓圈。
+  `Game::f_DrawGroundMarks`（game_scene_draw.cpp）畫標記；`MapFloor::f_Render` 把每個物件放進自己的 group。
+- `src/game/src/game_session.cpp`：`m_upWalkStage`，在走路場景時畫；`Game::f_SetSceneLoading`。
+- `tools/stage3d/paint_looks.py`、`assets/media/stage3d/looks/<look>/`（10 種外觀 × 3 部分：顏色與法線貼圖）、
+  `assets/data/stage3d.json`（鍵 `data.stage3d`）。
 - 情境 `walk_3d`：F01 是 3D，點擊主角會找到他的格子。
-
-**第 1 步仍像 2D 的部分：**怪物、人物與物品的圖（16 像素圖，放大）；樓梯（地板上的一張平面圖）；門（一張站立的圖）。F01 以外的樓層
-還沒有模型，所以畫 2D。
+- **已移除：**2D 圖塊的繪製、它的章節染色（`f_FloorThemeTint`）、2D 鏡頭（`toms::Camera`、`systems/camera.*`、`camera_test`）、
+  設定 > 鏡頭（跟隨／分區）與它的文字、設定檔的 `cameraMode` 與 `viewCols`、F1 面板的「可見格數」滑桿、`--walk-3d`、情境的
+  `"walk3d"`，以及第 1 步預先建好的 `stage3d/floors/F01.gltf`。**保留：**2D 的牆與地板圖（圖集中的 `wall_<theme>`、`floor_<theme>`）：
+  關卡編輯器用它們畫地圖。
 
 ## 7. 未決的問題
 
 | 問題 | 預設 | 我的建議 | 回答 |
 |---|---|---|---|
-| **Q117** 預設每個人都用 3D 樓層，設定裡可選 2D？ | 3D 開（桌面），沒有模型時 2D | 是；第 2 步加設定 > 3D 樓層 |  |
+| **Q117** 預設每個人都用 3D 樓層，設定裡可選 2D？ | — | — | **每個人都 3D，沒有 2D**（擁有者，2026-11-21：「remove fallback to 2D」） |
 | **Q118** 鏡頭：固定（北方在上），還是玩家可以轉 90°？ | 固定 | 固定：地圖是從上往下設計的，「上」維持在上 |  |
-| **Q119** 牆高：1 公尺（鏡頭看得到牆後），或更高（1.6 公尺）並讓擋在主角前的牆變淡？ | 1 公尺 | 現在 1 公尺；第 2 步試 1.6 公尺加變淡 |  |
+| **Q119** 牆高：1 公尺（鏡頭看得到牆後），或更高（1.6 公尺）並讓擋在主角前的牆變淡？ | 1 公尺 | 現在 1 公尺；試 1.6 公尺加變淡 |  |
 | **Q120** 地圖上的怪物：用戰鬥圖（一張圖，與戰鬥中相同），還是新畫的小地圖圖？ | 戰鬥圖 | 戰鬥圖 |  |
 | **Q121** 村莊與據點畫面也要 3D？ | 不要，保留手繪畫面 | 不要，等樓層做完 |  |

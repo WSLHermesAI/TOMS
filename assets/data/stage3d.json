@@ -1,13 +1,16 @@
 {
   "_doc": [
-    "stage3d: walking a floor in 3D (docs/gameplay/24_STAGE_3D.md). The floor's walls and ground are a model made from its tile map by tools/stage3d/make_floor3d.py (model: {id} = the floor's id); a floor without one is drawn in 2D.",
-    "on: false = every floor in 2D. Also off with --walk-3d=off, and in scripted runs unless --walk-3d=on.",
+    "stage3d: walking the floors in 3D (docs/gameplay/24_STAGE_3D.md). There is no 2D map: the game makes each floor's walls and ground from its tile map when the floor is entered (src/game/src/floor_mesh.cpp: a wall cell is a block wallHeight metres tall, one tile = one metre; the ground's texture repeats every groundRepeat metres), textured with its look's painted pictures (assets/media/stage3d/looks/<look>/, tools/stage3d/paint_looks.py).",
+    "loadingDelayMs: a scene still loading after this long (the floor's or the battle's 3D stage) shows the turning loading circle.",
+    "shadow: the soft disc under the hero, the monsters and the people (the battle's).",
     "camera: pitch (degrees down from level), distance (metres from the hero), fov (degrees, up and down), follow (how fast it catches up with the hero: 1/s), lookAhead (metres north of the hero it looks at).",
-    "sprites: the map's sprites standing in the scene: glow (their own light), lean (degrees they lean back toward the camera; 0 = upright), heights (metres for a one-tile sprite, by kind: player, monster, npc, item, door, event, other), shadow (the soft disc under each: its radius in metres; 0 = none), paintedHero (the hero drawn as his weapon's painted battle character, its idle clip, turned the way he last walked) and paintedHeroHeight (metres).",
-    "looks: by the floor's theme (its stage file's \"theme\"), \"default\" for the rest: sky (an HDR or JPG: hdr, intensity, yaw, blur; background false = it only lights, the tower stands in the dark), exposure, light (dir, color, intensity, ambient) as battle.json stages3d."
+    "sprites: the map's sprites standing in the scene: glow (their own light), lean (degrees they lean back toward the camera; 0 = upright), heights (metres for a one-tile sprite, by kind: player, monster, npc, item, door, event, other), shadow (the soft disc's radius in metres; 0 = none), paintedHero (the hero drawn as his weapon's painted battle character, its idle clip, turned the way he last walked) and paintedHeroHeight (metres).",
+    "looks: by the floor's theme (its stage file's \"theme\"); a theme not here uses defaultLook. Each: sky (an HDR or JPG that lights the floor: hdr, intensity, yaw; background false = only light, the tower stands in the dark), exposure, light (the sun: dir, color, intensity, ambient) as battle.json stages3d."
   ],
-  "on": true,
-  "model": "stage3d/floors/{id}.gltf",
+  "defaultLook": "castle",
+  "wallHeight": 1.0,
+  "groundRepeat": 2.0,
+  "loadingDelayMs": 250,
   "shadow": "battle3d/moonlit_ruins/blob.glb",
   "camera": { "pitch": 56, "distance": 11.0, "fov": 38, "follow": 7.0, "lookAhead": 0.6 },
   "sprites": {
@@ -15,15 +18,55 @@
     "heights": { "player": 1.45, "monster": 1.35, "npc": 1.45, "item": 0.8, "door": 1.0, "event": 1.0, "other": 1.0 }
   },
   "looks": {
-    "default": {
-      "sky": { "hdr": "battle3d/moonlit_ruins/sky.jpg", "intensity": 0.8, "background": false },
-      "exposure": 0.55,
-      "light": { "dir": [0.45, -0.8, 0.35], "color": [1.0, 0.9, 0.75], "intensity": 4.0, "ambient": 0.45 }
-    },
     "wood": {
       "sky": { "hdr": "battle3d/moonlit_ruins/sky.jpg", "intensity": 0.9, "background": false },
       "exposure": 0.6,
       "light": { "dir": [0.45, -0.8, 0.35], "color": [1.0, 0.86, 0.66], "intensity": 4.5, "ambient": 0.5 }
+    },
+    "forest": {
+      "sky": { "hdr": "battle3d/moonlit_ruins/sky.jpg", "intensity": 0.9, "background": false },
+      "exposure": 0.6,
+      "light": { "dir": [0.4, -0.85, 0.3], "color": [0.95, 1.0, 0.8], "intensity": 4.5, "ambient": 0.5 }
+    },
+    "castle": {
+      "sky": { "hdr": "battle3d/moonlit_ruins/sky.jpg", "intensity": 0.8, "background": false },
+      "exposure": 0.55,
+      "light": { "dir": [0.45, -0.8, 0.35], "color": [1.0, 0.93, 0.82], "intensity": 4.0, "ambient": 0.45 }
+    },
+    "cave": {
+      "sky": { "hdr": "battle3d/moonlit_ruins/sky.jpg", "intensity": 0.6, "background": false },
+      "exposure": 0.6,
+      "light": { "dir": [0.35, -0.85, 0.4], "color": [1.0, 0.78, 0.55], "intensity": 3.5, "ambient": 0.4 }
+    },
+    "crypt": {
+      "sky": { "hdr": "battle3d/moonlit_ruins/sky.jpg", "intensity": 0.7, "background": false },
+      "exposure": 0.55,
+      "light": { "dir": [0.4, -0.8, 0.45], "color": [0.75, 0.85, 1.0], "intensity": 3.5, "ambient": 0.45 }
+    },
+    "crystal": {
+      "sky": { "hdr": "battle3d/moonlit_ruins/sky.jpg", "intensity": 0.8, "background": false },
+      "exposure": 0.55,
+      "light": { "dir": [0.45, -0.8, 0.35], "color": [0.9, 0.82, 1.0], "intensity": 4.0, "ambient": 0.5 }
+    },
+    "ice": {
+      "sky": { "hdr": "battle3d/moonlit_ruins/sky.jpg", "intensity": 0.8, "background": false },
+      "exposure": 0.5,
+      "light": { "dir": [0.45, -0.8, 0.35], "color": [0.85, 0.93, 1.0], "intensity": 4.0, "ambient": 0.5 }
+    },
+    "lava": {
+      "sky": { "hdr": "battle3d/moonlit_ruins/sky.jpg", "intensity": 0.6, "background": false },
+      "exposure": 0.6,
+      "light": { "dir": [0.4, -0.8, 0.4], "color": [1.0, 0.6, 0.4], "intensity": 4.0, "ambient": 0.45 }
+    },
+    "sand": {
+      "sky": { "hdr": "battle3d/moonlit_ruins/sky.jpg", "intensity": 0.9, "background": false },
+      "exposure": 0.55,
+      "light": { "dir": [0.5, -0.8, 0.3], "color": [1.0, 0.9, 0.7], "intensity": 4.5, "ambient": 0.5 }
+    },
+    "shadow": {
+      "sky": { "hdr": "battle3d/moonlit_ruins/sky.jpg", "intensity": 0.6, "background": false },
+      "exposure": 0.6,
+      "light": { "dir": [0.4, -0.8, 0.4], "color": [0.8, 0.7, 1.0], "intensity": 3.5, "ambient": 0.45 }
     }
   }
 }

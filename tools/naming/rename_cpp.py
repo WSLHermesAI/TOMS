@@ -435,6 +435,8 @@ def jobs_for(only):
             r = rel(f)
             if not r or r.startswith(EXCLUDE) or not r.endswith(CPP_EXT):
                 continue
+            if not os.path.isfile(f):   # a file deleted since that build was configured (an old android / web build)
+                continue
             if only and only not in r:
                 continue
             if config == 'win':

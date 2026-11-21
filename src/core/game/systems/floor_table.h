@@ -81,26 +81,6 @@ private:
     std::vector<FloorInfo> m_vFloors;
 };
 
-// S3.5 (e): per-act palette. Every act renders with the same atlas, so without this the tower has no
-// visual progression at all (owner: "all stages looks same"). Pure data -> RGB: the maze's wall/floor
-// tiles are tinted by it, which is visible immediately and needs no new art (S8 owns real tilesets).
-// Values are deliberately mid-bright so sprites, HUD text and the pad stay readable on top.
-inline void f_FloorThemeTint(int l_iActIndex, float l_arrOut[4]) {
-    switch (l_iActIndex) {
-        case 1:  l_arrOut[0]=1.00f; l_arrOut[1]=0.94f; l_arrOut[2]=0.82f; break;  // village  -- warm daylight
-        case 2:  l_arrOut[0]=0.88f; l_arrOut[1]=1.00f; l_arrOut[2]=0.86f; break;  // forest   -- green shade
-        case 3:  l_arrOut[0]=0.86f; l_arrOut[1]=0.92f; l_arrOut[2]=1.00f; break;  // gate     -- steel blue
-        case 4:  l_arrOut[0]=1.00f; l_arrOut[1]=0.92f; l_arrOut[2]=0.78f; break;  // market   -- amber lamp
-        case 5:  l_arrOut[0]=0.86f; l_arrOut[1]=0.86f; l_arrOut[2]=1.00f; break;  // barracks -- cold indigo
-        case 6:  l_arrOut[0]=0.78f; l_arrOut[1]=0.95f; l_arrOut[2]=0.98f; break;  // cavern   -- wet stone
-        case 7:  l_arrOut[0]=0.94f; l_arrOut[1]=0.85f; l_arrOut[2]=1.00f; break;  // library  -- violet dust
-        case 8:  l_arrOut[0]=0.88f; l_arrOut[1]=0.98f; l_arrOut[2]=0.94f; break;  // crypt    -- sickly green
-        case 9:  l_arrOut[0]=1.00f; l_arrOut[1]=0.88f; l_arrOut[2]=0.88f; break;  // sanctum  -- altar red
-        default: l_arrOut[0]=0.95f; l_arrOut[1]=0.95f; l_arrOut[2]=1.00f; break;  // peak     -- thin air, pale
-    }
-    l_arrOut[3] = 1.0f;
-}
-
 // S3.5 (c): which of a floor's lines to show. The intro holds for a while, then the ambient lines
 // rotate -- the same "nothing looks frozen" rule the title screen follows.
 // turns < 0 -> 0 (the intro); otherwise 0 for the first kIntroTurns, then 1..n cycling.

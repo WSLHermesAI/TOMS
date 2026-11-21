@@ -20,18 +20,6 @@ void Game::f_Draw() {
     // M7 (first slice): an active ending takes over the whole screen the same way the title does
     // -- nothing behind it is meaningful once a run has actually ended (see triggerEnding()).
     if (f_EndingActive()) { f_DrawPreviewAnim(); m_pRen->end(); return; }
-    // Milestone 9 originally shrank tile size to fit the whole (up to 34x31) grid onto one
-    // fixed-size screen -- legible on desktop, but tiny/hard-to-tap on mobile once stages grew
-    // past the smallest ones. Now tile size is derived from viewCols_ (how many columns should
-    // be visible -- see its declaration in game.h) and a camera (camX_/camY_, eased toward
-    // updateCameraTarget()'s result every frame in update()) scrolls a viewport over the grid
-    // instead -- see cameraMode_'s declaration in game.h for the two modes.
-    int l_iGw = m_oSt.m_iWidth, l_iGh = m_oSt.m_iHeight;
-    float l_fOy = 60.0f;
-    float l_fTs; int l_iViewCols, l_iViewRows; f_CameraViewportTiles(l_fTs, l_iViewCols, l_iViewRows);
-    float l_fOx = -m_oCam.f_X() * l_fTs;
-    l_fOy -= m_oCam.f_Y() * l_fTs;
-
     const bool l_bShowStore = f_StoreModal();
     // Milestone 7 bugfix (still relevant under Battle System v2): this used to fall back to
     // scanning cs.log for the substring "倒下" to keep the overlay open during the brief post-lose
@@ -45,54 +33,37 @@ void Game::f_Draw() {
     const bool l_bShowTalk   = !l_bShowStore && !l_bShowBattle && (m_iHideMask & 2) == 0 && m_bInDialogue;
     const bool l_bShowWalk   = !l_bShowStore && !l_bShowBattle && !l_bShowTalk;   // the player menu draws over the map
 
-    // ---- walking scene: the floor's tiles, then its objects (each draws itself by status: map_objects.h) ----
-    if (l_bShowWalk && m_bWalk3DOn) {   // the floor in 3D (game_walk3d.cpp): the host drew its walls and ground
+    // ---- walking scene: the floor in 3D (game_walk3d.cpp, docs/gameplay/24): the host drew its walls and ground; its
+    // objects stand on it (each draws itself by status: map_objects.h). Still loading: nothing, the loading circle ----
+    if (l_bShowWalk && m_bWalk3DOn) {
         m_pRen->f_SetNode(NODE_STAGE);
         f_DrawWalk3D();
-    } else if (l_bShowWalk) {
-        m_pRen->f_SetNode(NODE_STAGE);
-        // Only draw tiles the camera can actually see (+1 tile of padding on every side so a
-        // mid-pan fractional camX_/camY_ never pops a row/column in right at the edge) --
-        // stage_11 is 34x31 (1054 tiles) against a ~21x13 viewport, so this is a real ~4x cut
-        // in quads submitted, not just tidiness.
-        int l_iStartX = std::max(0, (int)std::floor(m_oCam.f_X()) - 1);
-        int l_iEndX   = std::min(l_iGw, (int)std::ceil(m_oCam.f_X()) + l_iViewCols + 1);
-        int l_iStartY = std::max(0, (int)std::floor(m_oCam.f_Y()) - 1);
-        int l_iEndY   = std::min(l_iGh, (int)std::ceil(m_oCam.f_Y()) + l_iViewRows + 1);
-        MapView l_oView;
-        l_oView.m_fOx = l_fOx; l_oView.m_fOy = l_fOy; l_oView.m_fTs = l_fTs;
-        // Entity/player sprites were inset by a fixed 8px into their 48px tile before Milestone 9; now that ts varies
-        // per stage, the inset scales with it (same ~1/6 ratio, so this renders identically to before at ts=48).
-        l_oView.m_fInset = l_fTs / 6.0f;
-        l_oView.m_fSSize = l_fTs - 2.0f * l_oView.m_fInset;
-        f_DrawTileLayer(l_oView, l_iStartX, l_iEndX, l_iStartY, l_iEndY);
-        m_oFloor.f_Render(l_oView);
         f_DrawStylingSpikeBackdrop();
     }
     // Battle / dialogue / inventory / store: the RmlUi documents fill the screen, no world behind. A weapon with battle
     // clips draws the player's character and the weapon where the battle screen's player picture would be.
     if (l_bShowBattle) f_DrawBattleRig();
+    f_DrawLoadingCircle();
     f_DrawPreviewAnim(); m_pRen->end();
 }
 
-// The floor's tiles (the act's colour washed over them), the locked stairs' padlocks and the click-to-move target.
-void Game::f_DrawTileLayer(const MapView& l_oV, int l_iStartX, int l_iEndX, int l_iStartY, int l_iEndY, bool l_bMarksOnly) {
+// The ground's marks, drawn on the map's pixels (the 3D floor lays them on its ground, game_walk3d.cpp): the stairs and
+// the door tiles (the walls and the plain floor are the 3D model), the locked stairs' padlocks, an opened stair's gold
+// arrow, and the click-to-move target.
+void Game::f_DrawGroundMarks(const MapView& l_oV) {
     const float l_fOx = l_oV.m_fOx, l_fOy = l_oV.m_fOy, l_fTs = l_oV.m_fTs;
-    // S3.5 (e): the act's palette tints the map tiles. One atlas, ten looks -- no new art needed,
-    // and the maze stays readable because the tint is a light wash rather than a replace.
-    float l_arrThemeTint[4];
-    toms::f_FloorThemeTint(m_iThemeActIndex, l_arrThemeTint);
-    // the floor's theme: its own wall / floor / stairs pictures where the atlas has them
+    static const float l_arrWhite[4] = {1, 1, 1, 1};
+    // the floor's theme: its own stairs pictures where the atlas has them
     auto l_fnThemed = [&](const std::string& l_strName) {
-        if (m_oSt.m_strTheme.empty() || (l_strName != "wall" && l_strName != "floor" && l_strName != "stairs_up" && l_strName != "stairs_down")) return l_strName;
+        if (m_oSt.m_strTheme.empty() || (l_strName != "stairs_up" && l_strName != "stairs_down")) return l_strName;
         const std::string l_strT = l_strName + "_" + m_oSt.m_strTheme;
         return m_mapIdToLayer.count(l_strT) ? l_strT : l_strName;
     };
-    for (int l_iY = l_iStartY; l_iY < l_iEndY; l_iY++) for (int l_iX = l_iStartX; l_iX < l_iEndX; l_iX++) {
-        char l_cC = m_oSt.f_At(l_iX,l_iY);
-        if (l_bMarksOnly && (l_cC == '#' || f_CellSprite(l_cC) == "floor")) continue;   // the 3D floor has them
-        int l_iLayer = f_SpriteLayer(l_fnThemed(f_CellSprite(l_cC)));
-        m_pRen->f_DrawSprite(f_SpriteQuad(l_fOx + l_iX*l_fTs, l_fOy + l_iY*l_fTs, l_fTs, l_fTs, l_iLayer, l_arrThemeTint));
+    for (int l_iY = 0; l_iY < m_oSt.m_iHeight; l_iY++) for (int l_iX = 0; l_iX < m_oSt.m_iWidth; l_iX++) {
+        const char l_cC = m_oSt.f_At(l_iX, l_iY);
+        if (l_cC == '#' || f_CellSprite(l_cC) == "floor") continue;   // the 3D floor has them
+        const int l_iLayer = f_SpriteLayer(l_fnThemed(f_CellSprite(l_cC)));
+        m_pRen->f_DrawSprite(f_SpriteQuad(l_fOx + l_iX * l_fTs, l_fOy + l_iY * l_fTs, l_fTs, l_fTs, l_iLayer, l_arrWhite));
     }
     // Q7: a locked stair stays visible, dimmed, with a padlock on it until its event is finished.
     auto l_fnSolid = [&](float l_fX, float l_fY, float l_fW, float l_fH, float l_fR, float l_fG, float l_fB, float l_fA) {
@@ -102,7 +73,7 @@ void Game::f_DrawTileLayer(const MapView& l_oV, int l_iStartX, int l_iEndX, int 
         m_pRen->f_DrawSprite(l_oQ);
     };
     for (const toms::StairLink& l_oS : m_oSt.m_vStairs) {
-        if (!f_StairLocked(l_oS) || l_oS.m_iX < l_iStartX || l_oS.m_iX >= l_iEndX || l_oS.m_iY < l_iStartY || l_oS.m_iY >= l_iEndY) continue;
+        if (!f_StairLocked(l_oS) || l_oS.m_iX < 0) continue;
         const float l_fX0 = l_fOx + l_oS.m_iX * l_fTs, l_fY0 = l_fOy + l_oS.m_iY * l_fTs, l_fU = l_fTs / 16.0f;
         l_fnSolid(l_fX0, l_fY0, l_fTs, l_fTs, 0.0f, 0.0f, 0.0f, 0.45f);                                   // dimmed stair
         l_fnSolid(l_fX0 + 5 * l_fU, l_fY0 + 3 * l_fU, 1.5f * l_fU, 5 * l_fU, 0.20f, 0.16f, 0.08f, 1.0f);       // shackle, left
@@ -112,31 +83,11 @@ void Game::f_DrawTileLayer(const MapView& l_oV, int l_iStartX, int l_iEndX, int 
         l_fnSolid(l_fX0 + 4.5f * l_fU, l_fY0 + 8 * l_fU, 7 * l_fU, 5 * l_fU, 0.98f, 0.80f, 0.30f, 1.0f);       // body
         l_fnSolid(l_fX0 + 7.5f * l_fU, l_fY0 + 9 * l_fU, 1 * l_fU, 2.5f * l_fU, 0.20f, 0.16f, 0.08f, 1.0f);    // keyhole
     }
-    // W38: a stair that just opened (its "go to the stairs" event is open) has a gold arrow bobbing over it, so the
-    // player sees where to go; it goes once the stair is taken.
+    // W38: a stair that just opened (its "go to the stairs" event is open) glows, a gold arrow bobbing over it, so the
+    // player sees where to go; it goes once the stair is taken. Off the screen: f_DrawWalk3DStairPointer.
     for (const toms::StairLink& l_oS : m_oSt.m_vStairs) {
         if (!f_StairJustOpened(m_oSt.m_strId, l_oS) || l_oS.m_iX < 0) continue;
         const float l_fU = l_fTs / 16.0f;
-        if (l_oS.m_iX < l_iStartX || l_oS.m_iX >= l_iEndX || l_oS.m_iY < l_iStartY || l_oS.m_iY >= l_iEndY) {
-            // off screen: a gold badge at the edge of the view, its arrow pointing the way to the stair
-            const int l_iTx = std::clamp(l_oS.m_iX, l_iStartX + 1, std::max(l_iStartX + 1, l_iEndX - 2));
-            const int l_iTy = std::clamp(l_oS.m_iY, l_iStartY + 1, std::max(l_iStartY + 1, l_iEndY - 2));
-            const float l_fBx = l_fOx + l_iTx * l_fTs, l_fBy = l_fOy + l_iTy * l_fTs;
-            const int l_iDx = l_oS.m_iX - l_iTx, l_iDy = l_oS.m_iY - l_iTy;
-            const bool l_bHoriz = std::abs(l_iDx) >= std::abs(l_iDy);
-            const int l_iSign = l_bHoriz ? (l_iDx > 0 ? 1 : -1) : (l_iDy > 0 ? 1 : -1);
-            const float l_fPulse = 0.75f + 0.25f * std::sin((float)std::fmod(m_dIdleClockMs, 800.0) / 800.0f * 6.2831853f);
-            l_fnSolid(l_fBx + 2 * l_fU, l_fBy + 2 * l_fU, 12 * l_fU, 12 * l_fU, 0.20f, 0.16f, 0.08f, 0.9f);                  // badge outline
-            l_fnSolid(l_fBx + 3 * l_fU, l_fBy + 3 * l_fU, 10 * l_fU, 10 * l_fU, 1.0f, 0.85f, 0.3f, l_fPulse);                   // badge
-            for (int l_iR = 0; l_iR < 4; l_iR++) {                                                             // the arrow head
-                const float l_fLen = (7.0f - 2.0f * l_iR) * l_fU, l_fOff = (l_iSign > 0 ? 9.0f + l_iR : 6.0f - l_iR) * l_fU;
-                if (l_bHoriz) l_fnSolid(l_fBx + l_fOff, l_fBy + 8 * l_fU - l_fLen * 0.5f, l_fU, l_fLen, 0.20f, 0.16f, 0.08f, 1.0f);
-                else       l_fnSolid(l_fBx + 8 * l_fU - l_fLen * 0.5f, l_fBy + l_fOff, l_fLen, l_fU, 0.20f, 0.16f, 0.08f, 1.0f);
-            }
-            if (l_bHoriz) l_fnSolid(l_fBx + (l_iSign > 0 ? 4 : 10) * l_fU, l_fBy + 7.5f * l_fU, 5 * l_fU, l_fU, 0.20f, 0.16f, 0.08f, 1.0f);   // the shaft
-            else       l_fnSolid(l_fBx + 7.5f * l_fU, l_fBy + (l_iSign > 0 ? 4 : 10) * l_fU, l_fU, 5 * l_fU, 0.20f, 0.16f, 0.08f, 1.0f);
-            continue;
-        }
         const float l_fBob = std::sin((float)std::fmod(m_dIdleClockMs, 1000.0) / 1000.0f * 6.2831853f) * 2.0f * l_fU;
         const float l_fCx = l_fOx + l_oS.m_iX * l_fTs + l_fTs * 0.5f, l_fTop = l_fOy + l_oS.m_iY * l_fTs - 9.0f * l_fU + l_fBob;
         l_fnSolid(l_fOx + l_oS.m_iX * l_fTs, l_fOy + l_oS.m_iY * l_fTs, l_fTs, l_fTs, 1.0f, 0.85f, 0.3f, 0.22f);                    // the stair glows
@@ -441,18 +392,6 @@ void Game::f_DrawDebugOverlay() {
             m_pRen->f_SetNodeFilter((uint8_t)l_iNodeSel);
     }
     ImGui::Separator();
-    // Maze camera: how many tile columns are visible (tile size + row count both derive from
-    // this -- see cameraViewportTiles()). Applies live every frame (nothing to "apply"), and
-    // persists to settings.json when you release the slider so a chosen value survives restart
-    // -- IsItemDeactivatedAfterEdit() fires once per drag instead of once per dragged pixel.
-    ImGui::TextUnformatted("Maze camera (see also: in-game menu > Settings > Camera mode)");
-    int l_iVisibleCells = m_oCam.f_ViewCols();
-    if (ImGui::SliderInt("Visible cells", &l_iVisibleCells, 6, 40)) m_oCam.f_SetViewCols(l_iVisibleCells);
-    if (ImGui::IsItemDeactivatedAfterEdit()) {
-        m_oSettings.m_iViewCols = m_oCam.f_ViewCols();
-        toms::f_EnsureSaveDir(toms::f_DefaultSaveDir());
-        toms::f_SaveGameSettings(toms::f_SettingsPath(), m_oSettings);
-    }
     ImGui::Separator();
     ImGui::TextWrapped("Last combat log: %s", m_oCs.m_strLog.empty() ? "(none)" : m_oCs.m_strLog.c_str());
     ImGui::Text("Inventory: %d item(s)", (int)m_oPl.m_vInv.size());

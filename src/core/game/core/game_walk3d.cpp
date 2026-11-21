@@ -1,8 +1,9 @@
-// game_walk3d.cpp -- walking a floor in 3D (docs/gameplay/24_STAGE_3D.md). The host draws the floor's model (its walls
-// and ground, made from the tile map by tools/stage3d/make_floor3d.py) with the battle stage's renderer and a camera
-// tilted down on the hero; the game draws the map's objects as before, each in its own world group standing on its
-// tile (the battle's fighters' way, docs/gameplay/21 §4.3), and the ground's marks (stairs, padlocks, the walk target)
-// lying on the floor. One tile is one metre: x its column, z its row, y up.
+// game_walk3d.cpp -- walking a floor in 3D (docs/gameplay/24_STAGE_3D.md). The host makes the floor's model from its
+// tile map when the floor is entered (its walls and ground: floor_mesh.h) and draws it with the battle stage's renderer
+// and a camera tilted down on the hero; the game draws the map's objects as before, each in its own world group
+// standing on its tile (the battle's fighters' way, docs/gameplay/21 §4.3), and the ground's marks (stairs, padlocks,
+// the walk target) lying on the floor. One tile is one metre: x its column, z its row, y up. There is no 2D map: while
+// the floor's model loads, the screen shows a turning circle (f_DrawLoadingCircle).
 #include "game_internal.h"
 #include "map_objects.h"
 
@@ -11,21 +12,108 @@
 using namespace toms::game_detail;
 
 nlohmann::json Game::f_Walk3DStage() const {
-    if (!m_bWalk3DAllowed || !m_jStage3D.is_object() || !m_jStage3D.value("on", true) || m_oSt.m_strId.empty()) return nullptr;
-    std::string l_strModel = m_jStage3D.value("model", std::string());
-    const size_t l_nAt = l_strModel.find("{id}");
-    if (l_strModel.empty() || l_nAt == std::string::npos) return nullptr;
-    l_strModel.replace(l_nAt, 4, m_oSt.m_strId);
+    if (!m_jStage3D.is_object() || m_oSt.m_iWidth <= 0 || m_oSt.m_iHeight <= 0) return nullptr;
+    // the look: the floor's theme where data/stage3d.json has it (its painted textures, its light), else the default
     const nlohmann::json l_jLooks = m_jStage3D.value("looks", nlohmann::json::object());
-    nlohmann::json l_jRow = l_jLooks.contains(m_oSt.m_strTheme) ? l_jLooks[m_oSt.m_strTheme] : l_jLooks.value("default", nlohmann::json::object());
+    const std::string l_strLook = l_jLooks.contains(m_oSt.m_strTheme) ? m_oSt.m_strTheme : m_jStage3D.value("defaultLook", std::string("castle"));
+    nlohmann::json l_jRow = l_jLooks.value(l_strLook, nlohmann::json::object());
     if (!l_jRow.is_object()) l_jRow = nlohmann::json::object();
+    // the walls only (a door or a monster's tile is ground): a door opening does not make the floor again
+    nlohmann::json l_jWalls = nlohmann::json::array();
+    for (int l_iY = 0; l_iY < m_oSt.m_iHeight; l_iY++) {
+        std::string l_strRow((size_t)m_oSt.m_iWidth, '.');
+        for (int l_iX = 0; l_iX < m_oSt.m_iWidth; l_iX++) if (m_oSt.f_At(l_iX, l_iY) == '#') l_strRow[(size_t)l_iX] = '#';
+        l_jWalls.push_back(l_strRow);
+    }
     // the floor as a prop: its walls cast the sun's shadows (a "ground" casts none)
-    l_jRow["props"] = nlohmann::json::array({{{"model", l_strModel}, {"at", {0, 0, 0}}}});
+    nlohmann::json l_jFloor = {{"walls", l_jWalls}, {"look", l_strLook}, {"wallHeight", m_jStage3D.value("wallHeight", 1.0f)},
+                               {"groundRepeat", m_jStage3D.value("groundRepeat", 2.0f)}};
+    l_jRow["props"] = nlohmann::json::array({{{"floor", l_jFloor}, {"at", {0, 0, 0}}}});
     const std::string l_strShadow = m_jStage3D.value("shadow", std::string());
     if (!l_strShadow.empty() && m_jStage3D.value("sprites", nlohmann::json::object()).value("shadow", 0.3f) > 0.0f) l_jRow["shadow"] = l_strShadow;
     l_jRow["sprites"] = {{"glow", m_jStage3D.value("sprites", nlohmann::json::object()).value("glow", 0.5f)}};
     l_jRow["shadowBounds"] = {{-1, 0, -1}, {m_oSt.m_iWidth + 1, 2, m_oSt.m_iHeight + 1}};
     return l_jRow;
+}
+
+void Game::f_SetSceneLoading(bool l_bLoading, int l_iDtMs) {
+    if (!l_bLoading) { m_iSceneLoadingMs = -1; return; }
+    m_iSceneLoadingMs = std::max(0, m_iSceneLoadingMs) + std::max(0, l_iDtMs);
+}
+
+// A scene that takes a while to come (the floor's or the battle's 3D stage loading): after a short moment (a quick load
+// shows nothing), twelve dots in a circle at the middle of the screen, the bright one going round, fading in.
+void Game::f_DrawLoadingCircle() {
+    const int l_iDelayMs = m_jStage3D.is_object() ? m_jStage3D.value("loadingDelayMs", 250) : 250;
+    if (m_iSceneLoadingMs < l_iDelayMs || !m_pRen) return;
+    m_pRen->f_SetNode(NODE_STAGE);
+    const float l_fFade = std::min(1.0f, (float)(m_iSceneLoadingMs - l_iDelayMs) / 300.0f);
+    const float l_fCx = (float)m_pRen->f_Width() * 0.5f, l_fCy = (float)m_pRen->f_Height() * 0.5f;
+    const float l_fR = 28.0f, l_fDot = 9.0f;
+    const float l_fTurn = (float)std::fmod((double)m_iSceneLoadingMs / 1000.0, 1.0);   // one turn a second
+    for (int l_iI = 0; l_iI < 12; l_iI++) {
+        const float l_fA = (float)l_iI / 12.0f * 6.2831853f - 1.5707963f;
+        // how far behind the bright dot this one is (0 = it): the tail fades
+        const float l_fBehind = std::fmod(l_fTurn * 12.0f - (float)l_iI + 12.0f, 12.0f) / 12.0f;
+        const float l_fLight = 0.25f + 0.75f * (1.0f - l_fBehind) * (1.0f - l_fBehind);
+        Quad l_oQ;
+        l_oQ.m_arrRect[0] = l_fCx + std::cos(l_fA) * l_fR - l_fDot * 0.5f;
+        l_oQ.m_arrRect[1] = l_fCy + std::sin(l_fA) * l_fR - l_fDot * 0.5f;
+        l_oQ.m_arrRect[2] = l_fDot;
+        l_oQ.m_arrRect[3] = l_fDot;
+        l_oQ.m_arrUv[0] = 0; l_oQ.m_arrUv[1] = 0; l_oQ.m_arrUv[2] = 1; l_oQ.m_arrUv[3] = 1;
+        l_oQ.m_bSolid = true;
+        l_oQ.m_arrTint[0] = 1.0f; l_oQ.m_arrTint[1] = 0.88f; l_oQ.m_arrTint[2] = 0.55f; l_oQ.m_arrTint[3] = l_fLight * l_fFade;
+        m_pRen->f_DrawSprite(l_oQ);
+    }
+}
+
+glm::vec2 Game::f_Walk3DToDesign(const glm::vec3& l_v3P, bool& l_bOk) const {
+    l_bOk = false;
+    if (!m_pRen || m_v2Walk3DDevice.x <= 0.0f || m_v4Walk3DDesign.z <= 0.0f || m_v4Walk3DDesign.w <= 0.0f) return glm::vec2(0.0f);
+    const glm::vec4 l_v4C = m_mat4Walk3DViewProj * glm::vec4(l_v3P, 1.0f);
+    if (l_v4C.w <= 1e-4f) return glm::vec2(0.0f);
+    l_bOk = true;
+    const glm::vec2 l_v2Dev((l_v4C.x / l_v4C.w * 0.5f + 0.5f) * m_v2Walk3DDevice.x, (0.5f - l_v4C.y / l_v4C.w * 0.5f) * m_v2Walk3DDevice.y);
+    return glm::vec2((l_v2Dev.x - m_v4Walk3DDesign.x) / m_v4Walk3DDesign.z * (float)m_pRen->f_Width(),
+                     (l_v2Dev.y - m_v4Walk3DDesign.y) / m_v4Walk3DDesign.w * (float)m_pRen->f_Height());
+}
+
+// W38 off the screen: a stair that just opened and is not in view gets a gold badge at the screen's edge, its arrow
+// pointing the way to it (on the screen, over the 3D floor).
+void Game::f_DrawWalk3DStairPointer() {
+    const float l_fW = (float)m_pRen->f_Width(), l_fH = (float)m_pRen->f_Height(), l_fU = 3.0f, l_fM = 40.0f;
+    auto l_fnSolid = [&](float l_fX, float l_fY, float l_fSw, float l_fSh, float l_fR, float l_fG, float l_fB, float l_fA) {
+        Quad l_oQ; l_oQ.m_arrRect[0] = l_fX; l_oQ.m_arrRect[1] = l_fY; l_oQ.m_arrRect[2] = l_fSw; l_oQ.m_arrRect[3] = l_fSh;
+        l_oQ.m_arrUv[0] = 0; l_oQ.m_arrUv[1] = 0; l_oQ.m_arrUv[2] = 1; l_oQ.m_arrUv[3] = 1; l_oQ.m_bSolid = true;
+        l_oQ.m_arrTint[0] = l_fR; l_oQ.m_arrTint[1] = l_fG; l_oQ.m_arrTint[2] = l_fB; l_oQ.m_arrTint[3] = l_fA;
+        m_pRen->f_DrawSprite(l_oQ);
+    };
+    for (const toms::StairLink& l_oS : m_oSt.m_vStairs) {
+        if (!f_StairJustOpened(m_oSt.m_strId, l_oS) || l_oS.m_iX < 0) continue;
+        bool l_bOk = false;
+        const glm::vec2 l_v2P = f_Walk3DToDesign(glm::vec3(l_oS.m_iX + 0.5f, 0.0f, l_oS.m_iY + 0.5f), l_bOk);
+        if (l_bOk && l_v2P.x >= 0.0f && l_v2P.x <= l_fW && l_v2P.y >= 0.0f && l_v2P.y <= l_fH) continue;   // in view: its own arrow
+        const glm::vec2 l_v2C(l_fW * 0.5f, l_fH * 0.5f);
+        const glm::vec2 l_v2D = l_bOk ? l_v2P - l_v2C : glm::vec2(0.0f, -1.0f);
+        if (glm::length(l_v2D) < 1e-3f) continue;
+        // the badge on the screen's edge (a margin in), toward the stair
+        const float l_fK = std::min((l_fW * 0.5f - l_fM) / std::max(1e-3f, std::fabs(l_v2D.x)), (l_fH * 0.5f - l_fM) / std::max(1e-3f, std::fabs(l_v2D.y)));
+        const glm::vec2 l_v2B = l_v2C + l_v2D * l_fK;
+        const bool l_bHoriz = std::fabs(l_v2D.x) * l_fH >= std::fabs(l_v2D.y) * l_fW;
+        const int l_iSign = l_bHoriz ? (l_v2D.x > 0 ? 1 : -1) : (l_v2D.y > 0 ? 1 : -1);
+        const float l_fBx = l_v2B.x - 8 * l_fU, l_fBy = l_v2B.y - 8 * l_fU;
+        const float l_fPulse = 0.75f + 0.25f * std::sin((float)std::fmod(m_dIdleClockMs, 800.0) / 800.0f * 6.2831853f);
+        l_fnSolid(l_fBx + 2 * l_fU, l_fBy + 2 * l_fU, 12 * l_fU, 12 * l_fU, 0.20f, 0.16f, 0.08f, 0.9f);   // badge outline
+        l_fnSolid(l_fBx + 3 * l_fU, l_fBy + 3 * l_fU, 10 * l_fU, 10 * l_fU, 1.0f, 0.85f, 0.3f, l_fPulse);   // badge
+        for (int l_iR = 0; l_iR < 4; l_iR++) {   // the arrow head
+            const float l_fLen = (7.0f - 2.0f * l_iR) * l_fU, l_fOff = (l_iSign > 0 ? 9.0f + l_iR : 6.0f - l_iR) * l_fU;
+            if (l_bHoriz) l_fnSolid(l_fBx + l_fOff, l_fBy + 8 * l_fU - l_fLen * 0.5f, l_fU, l_fLen, 0.20f, 0.16f, 0.08f, 1.0f);
+            else l_fnSolid(l_fBx + 8 * l_fU - l_fLen * 0.5f, l_fBy + l_fOff, l_fLen, l_fU, 0.20f, 0.16f, 0.08f, 1.0f);
+        }
+        if (l_bHoriz) l_fnSolid(l_fBx + (l_iSign > 0 ? 4 : 10) * l_fU, l_fBy + 7.5f * l_fU, 5 * l_fU, l_fU, 0.20f, 0.16f, 0.08f, 1.0f);   // the shaft
+        else l_fnSolid(l_fBx + 7.5f * l_fU, l_fBy + (l_iSign > 0 ? 4 : 10) * l_fU, l_fU, 5 * l_fU, 0.20f, 0.16f, 0.08f, 1.0f);
+    }
 }
 
 bool Game::f_WalkSceneShown() const {
@@ -128,9 +216,10 @@ void Game::f_DrawWalk3D() {
     l_mat4Ground[2] = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);   // facing up
     l_mat4Ground[3] = glm::vec4(0.0f, 0.015f, 0.0f, 1.0f);
     m_pRen->f_BeginWorld(&l_mat4Ground[0][0], true);
-    f_DrawTileLayer(l_oV, 0, m_oSt.m_iWidth, 0, m_oSt.m_iHeight, true);
+    f_DrawGroundMarks(l_oV);
     m_pRen->f_EndWorld();
     m_oFloor.f_Render(l_oV);   // each object in its own standing group (f_Walk3DBeginObject)
+    f_DrawWalk3DStairPointer();
 }
 
 // A point of the screen (design pixels) -> the tile under it on the ground (the 3D floor's f_ScreenToTile).

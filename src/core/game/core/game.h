@@ -16,7 +16,7 @@
 #include "save_system.h" // toms::MetaSaveData — see Game::meta_ (Milestone 3; disk persistence is Milestone 5's job)
 #include "mission_system.h" // toms::MissionDefinition/MissionTracker — see Game::missionDefs_/missionTrackers_
 #include "power_bar.h"
-#include "camera.h"       // toms::Camera — maze camera (own file/class)       // toms::PowerBarParams/simulatePosition/... — see CombatState's Phase
+// power_bar.h: toms::PowerBarParams/simulatePosition/... — see CombatState's Phase
 #include "equipment_system.h" // toms::EquippedSet/EquipmentDefinition — see Game::equipped_/equipmentDefs_
 #include "skill_system.h"     // toms::SkillDefinition — see Game::skillDefs_ (S4: the skill tree)
 #include "forge_system.h"     // toms::ForgeRecipeDefinition — see Game::forgeDefs_ (S5: forging)
@@ -559,11 +559,6 @@ public:
     bool f_StairsConfirmIsUp() const { return m_bStairsConfirmIsUp; }
     void f_ConfirmStageTransition();
     void f_CancelStageTransition();
-    // Maze camera mode (see toms::Camera::Mode in camera.h). Applying a change re-targets the
-    // camera immediately (no confirm dialog needed -- unlike language, this is a low-stakes,
-    // instantly-visible, freely-reversible preference).
-    int f_CameraModeIndex() const { return m_oCam.f_ModeIndex(); }
-    void f_SetCameraModeIndex(int l_iM);
     // The player menu's System tab (the old in-game menu): Store, Skills, Forge, Village, Save,
     // Settings, Fullscreen, Back to title. inGameMenuOpen() is true while the player menu is open.
     bool f_InGameMenuOpen() const { return m_bInGameMenuOpen; }
@@ -734,11 +729,11 @@ public:
     std::vector<glm::vec4> f_Battle3DShadows() const;
     // ---- walking a floor in 3D (docs/gameplay/24_STAGE_3D.md): the floor's model (its walls and ground, made from the
     // tile map) drawn by the host with the battle stage's renderer, the map's sprites standing in it, the camera following ----
-    // The host can draw it (mesh shaders, not --walk-3d=off): set once when it starts.
-    void f_SetWalk3DAllowed(bool l_bAllowed) { m_bWalk3DAllowed = l_bAllowed; }
-    // The floor's stage for the host's BattleStage (data/stage3d.json: its model as a prop, its look's sky and light);
-    // null: the floor is drawn in 2D (3D off, or no model for it).
+    // The floor's stage for the host's BattleStage (data/stage3d.json: its walls made into a model from the tile map,
+    // its look's sky and light); null: no floor loaded.
     nlohmann::json f_Walk3DStage() const;
+    // The host each frame: the scene it should show is still loading (dt: ms since the last frame).
+    void f_SetSceneLoading(bool l_bLoading, int l_iDtMs);
     // The walking scene is what the screen shows (no battle, dialogue, store, title or ending over it).
     bool f_WalkSceneShown() const;
     struct Walk3DCamera {
@@ -747,7 +742,7 @@ public:
     };
     // This frame's camera: tilted down on the hero, catching up with him (dt: seconds since the last frame).
     Walk3DCamera f_Walk3DCamera(float l_fDtSeconds);
-    // The host drew the floor this frame (as f_SetBattle3DView); on = false: the floor is drawn in 2D this frame.
+    // The host drew the floor this frame (as f_SetBattle3DView); on = false: not drawn this frame (still loading).
     void f_SetWalk3DView(bool l_bOn, const glm::mat4& l_mat4ViewProj, const glm::vec2& l_v2Device, const glm::vec4& l_v4DesignInDevice);
     bool f_Walk3DOn() const { return m_bWalk3DOn; }
     // The soft discs under the hero, the monsters and the people: x, y, z their feet, w the radius (metres).
@@ -969,8 +964,6 @@ private:
     // S3.5 (c): the act card shown for a couple of seconds when a floor with indexInAct == 1 loads.
     float m_fChapterCardMs = 0.0f;
     std::string m_strChapterCardTitle;
-    // S3.5 (e): the act whose palette tints this floor's tiles (floorThemeTint, floor_table.h).
-    int m_iThemeActIndex = 1;
     std::string m_strCurFloorId;              // "F07" while the run is on a generated/boss floor, else ""
 public:
     // S3: read-only access for tests (run_state_test.cpp) and debug tools -- the run state itself
@@ -1066,7 +1059,6 @@ public:
     // whether the act card is up.
     int f_StoryLineIndex() const { return toms::f_StoryLineIndex(m_iStoryTurns, (int)m_vStoryAmbientKeys.size()); }
     bool f_ChapterCardVisible() const { return m_fChapterCardMs > 0.0f; }
-    int f_ThemeAct() const { return m_iThemeActIndex; }
     // Mobile: enlarge the on-screen pad (1.0 on desktop) and the dialogue box.
     void f_SetUiScale(float l_fS) { if (l_fS > 0.0f) m_fUiScale = l_fS; }
     // saveCurrentRun() itself stays where it was (private); this is the one public entry the web
@@ -1305,10 +1297,10 @@ private:
     std::vector<std::string> m_vResourceMessages;
     // The floor's things, a class per kind (map_objects.h), made when a floor loads; they draw themselves by status.
     MapFloor m_oFloor;
-    // tiles, locked stairs, walk target; marksOnly: not the walls and the plain floor (the 3D floor has them)
-    void f_DrawTileLayer(const MapView& l_oV, int l_iStartX, int l_iEndX, int l_iStartY, int l_iEndY, bool l_bMarksOnly = false);
+    // the ground's marks lying on the 3D floor: stairs, door tiles, locked stairs' padlocks, an opened stair's arrow, the walk target
+    void f_DrawGroundMarks(const MapView& l_oV);
     // walking in 3D (f_SetWalk3DView)
-    bool m_bWalk3DAllowed = false, m_bWalk3DOn = false;
+    bool m_bWalk3DOn = false;
     glm::mat4 m_mat4Walk3DViewProj{1.0f};
     glm::vec4 m_v4Walk3DDesign{0.0f, 0.0f, 1.0f, 1.0f};
     glm::vec2 m_v2Walk3DDevice{0.0f};
@@ -1322,6 +1314,12 @@ private:
     bool f_Walk3DBeginObject(const MapObject& l_oO, const MapView& l_oV);   // MapFloor: an object's world group (false: nothing to draw)
     void f_Walk3DEndObject();
     bool f_Walk3DScreenToTile(float l_fPx, float l_fPy, int& l_iTx, int& l_iTy) const;
+    // A point of the 3D floor -> design pixels (ok: in front of the camera)
+    glm::vec2 f_Walk3DToDesign(const glm::vec3& l_v3P, bool& l_bOk) const;
+    // The next scene is still loading (the host: the floor's or the battle's 3D stage): after a moment a circle turns
+    int m_iSceneLoadingMs = -1;                          // -1: not loading
+    void f_DrawLoadingCircle();
+    void f_DrawWalk3DStairPointer();                     // an opened stair off the screen: a badge at the edge pointing to it
     // The hero as his painted battle character (stage3d.json sprites "paintedHero"), standing on his tile, turned the
     // way he last walked. False: not drawn so (the map's own sprite then).
     bool f_DrawWalk3DHero();
@@ -1657,16 +1655,6 @@ private:
     void f_DrawStylingSpikeBackdrop();
     int m_iTotalStages = 10;   // highest stage index (derived from data/stages at loadStage)
 
-    // ---- maze camera ----
-    // The camera itself lives in src/game/camera.{h,cpp} as toms::Camera: mode (Follow/Rooms),
-    // zoom (viewCols), the eased position and its target, plus the viewport math and the edge
-    // clamping. Deliberately free of renderer/game coupling (pure math, unit-tested by
-    // camera_test.cpp) -- this class only hands it the drawing area in pixels and the focus tile.
-    toms::Camera m_oCam;
-    // Adapter: the camera needs the drawing area in pixels (the 1024x768 design canvas unless the
-    // renderer reports otherwise), which only Game knows. Kept as one call site so draw() and
-    // update() can never compute a different viewport.
-    void f_CameraViewportTiles(float& l_fTs, int& l_iCols, int& l_iRows) const;
     // store system state
     std::vector<StoreItemDef> m_vStoreItems;
     int m_iStoreUnlockStage = 3;   // stage index at which the shop unlocks (from store.json)

@@ -26,7 +26,7 @@ add_library(toms_core STATIC
     ${L_GAME}/systems/mission_system.cpp ${L_GAME}/systems/equipment_system.cpp
     ${L_GAME}/systems/skill_system.cpp ${L_GAME}/systems/forge_system.cpp ${L_GAME}/systems/hub_system.cpp
     ${L_GAME}/systems/equipment_actives.cpp ${L_GAME}/systems/ending_system.cpp
-    ${L_GAME}/systems/cycle_system.cpp ${L_GAME}/systems/camera.cpp ${L_GAME}/systems/roamer.cpp
+    ${L_GAME}/systems/cycle_system.cpp ${L_GAME}/systems/roamer.cpp
     ${L_GAME}/systems/run_state.cpp ${L_GAME}/systems/floor_table.cpp
     ${L_GAME}/systems/weapon_play.cpp   # data/weapon_play.json (docs/gameplay/07 §5.6)
     ${L_GAME}/systems/combo_play.cpp    # Battle v3 point play (docs/gameplay/07 §4, §5.1)
@@ -74,7 +74,7 @@ set_target_properties(toms_physics PROPERTIES FOLDER "toms")
 # ---- toms_game_host: GameSession, shared by the SDL game and the Qt editor ----
 add_library(toms_game_host STATIC src/game_session.h src/game_session.cpp src/game_ui.h src/game_ui.cpp
             src/title_scene.h src/title_scene.cpp
-            src/battle_stage.h src/battle_stage.cpp)
+            src/battle_stage.h src/battle_stage.cpp src/floor_mesh.h src/floor_mesh.cpp)
 toms_target_defaults(toms_game_host)
 target_include_directories(toms_game_host PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(toms_game_host PUBLIC toms_core toms_bgfx)

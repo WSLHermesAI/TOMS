@@ -127,7 +127,7 @@ void Game::f_InGameMenuMove(int l_iDelta) {
         int l_iN = std::max(1, (int)f_HubMenuOrder().size());
         m_iInGameMenuSel = ((m_iInGameMenuSel + l_iDelta) % l_iN + l_iN) % l_iN;
     } else {
-        // languages, the art style rows (none when only the original exists), the camera row, the reduce-effects row
+        // languages, the art style rows (none when only the original exists), reduce effects, battle speed, 3D battle
         int l_iN = std::max(1, m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount() + 3);
         m_iInGameMenuSel = ((m_iInGameMenuSel + l_iDelta) % l_iN + l_iN) % l_iN;
     }
@@ -225,18 +225,12 @@ void Game::f_InGameMenuActivate() {
         m_bInGameLangConfirmYes = true;
         m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
     } else if (m_iInGameMenuSel == m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount()) {
-        // The camera row (after the art styles): cycles instantly, no confirm dialog needed -- unlike
-        // language, this is a low-stakes preference whose effect the player already sees behind
-        // this very menu (the maze keeps scrolling/paging under the scrim).
-        f_SetCameraModeIndex(1 - f_CameraModeIndex());
-        m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
-    } else if (m_iInGameMenuSel == m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount() + 1) {
         f_SetReduceEffects(!m_oSettings.m_bReduceEffects);   // "Reduce shaking and flashes" (docs/gameplay/15 §3.8)
         m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
-    } else if (m_iInGameMenuSel == m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount() + 2) {
+    } else if (m_iInGameMenuSel == m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount() + 1) {
         f_CycleBattleSpeed();   // docs/gameplay/17 I10
         m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
-    } else if (m_iInGameMenuSel == m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount() + 3) {
+    } else if (m_iInGameMenuSel == m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount() + 2) {
         f_CycleBattle3DMode();   // Q95: full -> light -> off
         m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
     }

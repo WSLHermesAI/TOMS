@@ -42,34 +42,9 @@ Quad Game::f_SpriteQuad(float l_fX, float l_fY, float l_fW, float l_fH, int l_iL
 }
 
 
-// ---------- maze camera ----------
-// The camera's own math lives in src/game/camera.cpp (toms::Camera). What remains here is glue:
-// hand it the pixel size of the drawing area, the grid size and the focus tile, then ease it.
-
-// Adapter over toms::Camera::viewportTiles() so nothing else has to know the renderer exists.
-void Game::f_CameraViewportTiles(float& l_fTs, int& l_iCols, int& l_iRows) const {
-    const float l_fW = m_pRen ? (float)m_pRen->f_Width()  : 1024.0f;
-    const float l_fH = m_pRen ? (float)m_pRen->f_Height() : 768.0f;
-    m_oCam.f_ViewportTiles(l_fW, l_fH, l_fTs, l_iCols, l_iRows);
-}
-
-void Game::f_SetCameraModeIndex(int l_iM) {
-    m_oCam.f_SetMode(toms::Camera::f_ModeFromIndex(l_iM));
-    m_oSettings.m_iCameraMode = m_oCam.f_ModeIndex();
-    toms::f_EnsureSaveDir(toms::f_DefaultSaveDir());
-    toms::f_SaveGameSettings(toms::f_SettingsPath(), m_oSettings);
-    // Re-target immediately so the effect is visible right away instead of waiting for the
-    // player to take a step; ease into it rather than snapping (consistent with "Rooms" mode's
-    // own slide, and it's a nicer transition than a hard cut for "Follow" too).
-    m_oCam.f_Retarget(m_oPl.m_iX, m_oPl.m_iY, m_oSt.m_iWidth, m_oSt.m_iHeight,
-                  m_pRen ? (float)m_pRen->f_Width() : 1024.0f, m_pRen ? (float)m_pRen->f_Height() : 768.0f);
-}
-
-
-void Game::f_CanvasChanged() {
-    m_oCam.f_Retarget(m_oPl.m_iX, m_oPl.m_iY, m_oSt.m_iWidth, m_oSt.m_iHeight, m_pRen ? (float)m_pRen->f_Width() : 1024.0f, m_pRen ? (float)m_pRen->f_Height() : 768.0f);
-    m_oCam.f_Snap();
-}
+// The design canvas changed (the screen turned): the floor's 3D camera fits the new shape by itself (the host's
+// projection), nothing to move here.
+void Game::f_CanvasChanged() {}
 
 std::vector<int> Game::f_StoreTabIndices() const {
     // The tab is the item's type (data/items.json): 0 consumables, 1 weapons, 2 armor, 3 talents.
@@ -397,16 +372,6 @@ void Game::f_Update(int l_iDtMs) {
         }
     }
 
-    // Maze camera: retarget on the player's tile, then ease toward it (both modes slide --
-    // Rooms' target only actually MOVES when the player crosses into a different section, so it
-    // reads as "smoothly snap to the new room" for that mode and as continuous following for
-    // Follow mode). All of that lives in toms::Camera (src/game/camera.cpp); the easing is
-    // frame-rate-independent exponential smoothing, not a fixed-duration tween.
-    if (!m_oTitle.f_IsOpen()) {
-        m_oCam.f_Retarget(m_oPl.m_iX, m_oPl.m_iY, m_oSt.m_iWidth, m_oSt.m_iHeight,
-                      m_pRen ? (float)m_pRen->f_Width() : 1024.0f, m_pRen ? (float)m_pRen->f_Height() : 768.0f);
-        m_oCam.f_Update((float)l_iDtMs / 1000.0f);
-    }
 }
 
 void Game::f_SaveFrame(const std::string& l_strPath) {
