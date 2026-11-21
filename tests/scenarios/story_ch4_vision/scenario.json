@@ -1,0 +1,24 @@
+{
+  "_comment": "Chapter 4, F19 (docs/gameplay/23 §4): with the wyrm's test done, stepping on the vision (ev_c4_vision; it waits for missionComplete m_c4_wyrm) shows the snowy night twelve years ago and the youth with the scar; the test is paid (claimed), c4.vision.",
+  "scene": "stage",
+  "stage": "F19",
+  "missions": {
+    "m_c4_wyrm": "completed"
+  },
+  "player": {
+    "x": 4,
+    "y": 17
+  },
+  "test": {
+    "frames": 110,
+    "keys": "right@10,enter@40,enter@55,enter@70"
+  },
+  "expect": {
+    "flags": [
+      "c4.vision"
+    ],
+    "missions": {
+      "m_c4_wyrm": "claimed"
+    }
+  }
+}

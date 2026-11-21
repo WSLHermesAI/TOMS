@@ -1,19 +1,42 @@
 {
+  "_comment": "Chapter 4 of the story revamp (docs/gameplay/23 §4): the archer scout at home (hub_archer): Grey Mask at night with a child's wooden horse.",
   "npcId": "archer_scout",
   "start": "root",
   "nodes": {
     "root": {
       "text": {
-        "zh_TW": "旅人，你好。我是弓箭斥候。",
-        "en": "Good day, traveller. I'm the archer scout."
+        "zh_TW": "斥候：「灰面的事，你想知道多少？」",
+        "en": "Scout: \"How much do you want to know about Grey Mask?\""
       },
       "choices": [
         {
           "label": {
-            "zh_TW": "再見。",
-            "en": "Goodbye."
+            "zh_TW": "「他去哪了？」",
+            "en": "\"Where did he go?\""
+          },
+          "next": "where"
+        },
+        {
+          "label": {
+            "zh_TW": "「下次吧。」",
+            "en": "\"Another time.\""
           },
           "next": null
+        }
+      ]
+    },
+    "where": {
+      "text": {
+        "zh_TW": "斥候：「往上，軍營。他每晚都一個人坐著，看一個小木馬——小孩玩的那種。很奇怪吧？」",
+        "en": "Scout: \"Up, to the barracks. Every night he sits alone looking at a little wooden horse. A child's toy. Strange, right?\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……木馬。」",
+            "en": "\"...A wooden horse.\""
+          },
+          "next": "root"
         }
       ]
     }

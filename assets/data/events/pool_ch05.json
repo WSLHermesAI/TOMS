@@ -1,0 +1,129 @@
+{
+  "_comment": [
+    "Chapter 5 of the story revamp (docs/gameplay/23 §4): The Collectors' Barracks, F21-F25. Payoffs: the spared soldier",
+    "(c1.spared_soldier), the clerk's confession (c3.confession), the Slime King (c4.slime_king). The cell keys from the",
+    "sleeping guard (talk N: ev_c5_guard_key) open the cells (gate:key_cells). The unmasking after Grey Mask decides the ending."
+  ],
+  "act": "ch_05",
+  "theme": "the collectors' barracks",
+  "events": [
+    {
+      "eventId": "ev_c5_ambush",
+      "kind": "choice",
+      "text": "ev_c5_ambush.text",
+      "title": "ev_c5_ambush.title",
+      "desc": "ev_c5_ambush.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c5_ambush"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c5_pip_uniform",
+      "kind": "comic",
+      "text": "ev_c5_pip_uniform.text",
+      "title": "ev_c5_pip_uniform.title",
+      "desc": "ev_c5_pip_uniform.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c5_pip_uniform"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c5_guard_key",
+      "kind": "talk_n",
+      "text": "ev_c5_guard_key.text",
+      "title": "ev_c5_guard_key.title",
+      "desc": "ev_c5_guard_key.desc",
+      "trigger": {
+        "on": "talk",
+        "npc": "town_guard"
+      },
+      "requires": {
+        "type": "talkCountAtLeast",
+        "npc": "town_guard",
+        "value": 2
+      },
+      "dialogue": "c5_guard_key",
+      "actions": [
+        {
+          "type": "give",
+          "itemId": "key_cells"
+        },
+        {
+          "type": "setFlag",
+          "flag": "c5.cell_keys"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c5_cells",
+      "kind": "rescue",
+      "text": "ev_c5_cells.text",
+      "title": "ev_c5_cells.title",
+      "desc": "ev_c5_cells.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c5_cells"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c5_mira",
+      "kind": "rescue",
+      "text": "ev_c5_mira.text",
+      "title": "ev_c5_mira.title",
+      "desc": "ev_c5_mira.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c5_mira"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c5_captain",
+      "kind": "choice",
+      "text": "ev_c5_captain.text",
+      "title": "ev_c5_captain.title",
+      "desc": "ev_c5_captain.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c5_captain"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c5_horse",
+      "kind": "scene",
+      "text": "ev_c5_horse.text",
+      "title": "ev_c5_horse.title",
+      "desc": "ev_c5_horse.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c5_horse"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c5_unmask",
+      "kind": "choice",
+      "text": "ev_c5_unmask.text",
+      "title": "ev_c5_unmask.title",
+      "desc": "ev_c5_unmask.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c5_unmask"
+        }
+      ]
+    }
+  ]
+}

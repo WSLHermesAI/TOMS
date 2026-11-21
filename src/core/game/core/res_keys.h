@@ -31,6 +31,7 @@ inline constexpr const char g_pszDataMissions[]      = "data.missions";         
 inline constexpr const char g_pszDataMoves[]         = "data.moves";              // json ../data/moves.json
 inline constexpr const char g_pszDataSkills[]        = "data.skills";             // json ../data/skills.json
 inline constexpr const char g_pszDataSpecialMoves[]  = "data.special_moves";      // json ../data/special_moves.json
+inline constexpr const char g_pszDataStage3d[]       = "data.stage3d";            // json ../data/stage3d.json
 inline constexpr const char g_pszDataStats[]         = "data.stats";              // json ../data/stats.json
 inline constexpr const char g_pszDataStore[]         = "data.store";              // json ../data/store.json
 inline constexpr const char g_pszDataStoryCounters[] = "data.story.counters";     // json ../data/story/counters.json
@@ -122,6 +123,7 @@ inline constexpr const char* g_arrAll[] = {
     g_pszDataMoves,
     g_pszDataSkills,
     g_pszDataSpecialMoves,
+    g_pszDataStage3d,
     g_pszDataStats,
     g_pszDataStore,
     g_pszDataStoryCounters,

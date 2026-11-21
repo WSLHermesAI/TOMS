@@ -1053,5 +1053,20 @@
     "price": 0,
     "important": true,
     "opens": "gate:key_orchard"
+  },
+  "key_cells": {
+    "type": "story",
+    "sprite": "key_red.png",
+    "tint": [
+      0.85,
+      0.35,
+      0.3
+    ],
+    "name": "item.key_cells.name",
+    "desc": "item.key_cells.desc",
+    "stats": {},
+    "price": 0,
+    "important": true,
+    "opens": "gate:key_cells"
   }
 }

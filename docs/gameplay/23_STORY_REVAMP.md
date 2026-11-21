@@ -5,7 +5,7 @@
 The owner (2026-11-20): the battle is "6 of 10", the story and events "1 of 10". Most events are a hello and nothing to do.
 The game needs a real RPG feeling: a funny story, someone to save, a reason for revenge, events worth playing. The owner
 asked which pitch of [rpg_story_concept_book.html](rpg_story_concept_book.html) is closest to the game, and chose the
-direction below. **This is a plan; S1 (the tools), chapters 1–3 (§4.1–4.3) are built, chapters 4–7 are not.** The open questions are in §9 and in
+direction below. **This is a plan; S1 (the tools), chapters 1–5 (§4.1–4.5) are built, chapters 6–7 are not.** The open questions are in §9 and in
 [13_OPEN_DECISIONS.md](../project/13_OPEN_DECISIONS.md).
 
 ## 1. Where the game is now
@@ -135,6 +135,35 @@ Pip "moved into the village"). Tests: `story_ch2_kai`, `_pip`, `_pip_shop`, `_sn
 
 F11–F14 belong to chapter 3 now (the castle look on F11–F13 and F15). Scenarios can now set event variables (`"vars"`)
 and quests in a state (`"missions"`). Tests: `story_ch3_ledger`, `_clerk`, `_rescues`, `_end`.
+
+### 4.4 Chapter 4 as built (2026-11-21)
+
+| Where | What happens | Data |
+|---|---|---|
+| F16 the Stair Down | The dwarf the Collectors made dig "until he hit the sleeping things": **rescue** (the dwarf's anvil: a DEF gem for 30 gold). **The voice in the wall**: "little light... you smell like the old masters": **scene** | `npcs/dwarf`, `hub_dwarf`, `ev_c4_whisper` |
+| F17 the Sleeping Hall | **The Slime King in chains** ("We are so ticklish"): free him with care (mercy) or ask what's in it for you (Pip: "Deal!"); Sir Wobbles dubs Leo "Sir Leo of the Bucket", two potions: **comic** (the payoff of his thread) | `ev_c4_slime_king` |
+| F18 the Wyrm's Den | **The stone wyrm**, a Buried One with glowing eyes: "Child of the Godborn. The last one." Its **quest**: defeat three crystal spiders | `ev_c4_wyrm`, `m_c4_wyrm` |
+| F19 the Dreaming Cave | **The vision** (only after the test; before, the tile waits): a snowy night twelve years ago, Mom running with the glowing baby, and a youth with a scar on his chin: "Sis, I'll protect him." The wyrm: "She hid you in an ordinary village. That was her gift." The test paid | `ev_c4_vision` (`requires` missionComplete) |
+| F20 the Deep Gate | The archer scout from the capital: **rescue** (the lookout: Grey Mask sits alone at night with a child's wooden horse; he flinches at the name "Bran"). **The mural** of the Godborn and the Buried Ones against a black hand from the sky: **scene**. **The Sleeping Colossus** (a stronger Cragtortle, with the boss introduction) | `npcs/archer_scout`, `hub_archer`, `ev_c4_mural`, `buried_colossus` |
+| The village | The elder hears about the youth with the scar: "**Bran. Your mother's younger brother.** He adored you... ten years ago he left for the capital and never came back." (c4.done) | `villager_elder` |
+
+F16–F20 belong to chapter 4 (the crypt look on F16–F17, the cave on F18–F20). Scenarios can expect a flag left unset
+(`"notFlags"`). Tests: `story_ch4_wyrm`, `_vision`, `_vision_locked`, `_slime_king`, `_dwarf`, `_end`.
+
+### 4.5 Chapter 5 as built (2026-11-21)
+
+| Where | What happens | Data |
+|---|---|---|
+| F21 the Barracks Gate (the hand-made map) | **The ambush**: the soldier spared in chapter 1 warns of the nets and gives a potion; otherwise the nets fall (-30 HP): a **payoff**. **Pip's** "barely worn" Collector uniform (10 gold; it is pink): **comic** | `ev_c5_ambush`, `ev_c5_pip_uniform` |
+| F22 the Drill Yard | **The sleeping guard** ("Mom, five more minutes"): the third talk drops the cell keys: **talk N** | `npcs/town_guard`, `ev_c5_guard_key` |
+| F23 the Cells | The cell gate (the keys): the miller, the weaver, the fisherman and the tailor: **mass rescue** (the village square); if the Slime King was freed, **Sir Wobbles' slime army** glues the guards down. "Your parents were taken to the Sanctum" | `gate:key_cells`, `ev_c5_cells`, `hub_square` |
+| F24 the Captain's Quarters | **Mira**, digging out with a spoon: the reunion with Kai (trust), she goes to the village. **The Collectors' captain**: with the clerk's confession Kai reads "take the Collectors' own children next" and the soldiers lay down their arms (potions); without it, a fight (-20 HP): a **payoff** | `ev_c5_mira`, `hub_mira`, `ev_c5_captain` |
+| F25 Grey Mask's Hall | The wooden horse Leo chewed as a baby. **Grey Mask** (the boss, with the boss introduction; the Chronoknight's look for now), the only way to the stairs. Then **the unmasking**: Bran, the mother's brother; the Master threatened to burn the village, he served to protect them, and failed. **The big choice**: kill him (vengeance + 2; Leo takes in his power, ATK + 3), send him home to make amends (mercy + 2; he rebuilds the burned houses), or the king's justice (trust + 2) | `ev_c5_horse`, `grey_mask`, `ev_c5_unmask`, `hub_bran` |
+| The village | The elder's line for each choice (c5.done) | `villager_elder` |
+
+The choice is the one §6's endings read (`c5.bran_killed`, `c5.bran_spared`, `c5.bran_justice`). F21–F25 belong to chapter
+5 (the castle look). Tests: `story_ch5_ambush_warned`, `_ambush_nets`, `_guard_key`, `_cells`, `_mira`, `_captain`,
+`_unmask`, `_end`.
 
 ## 5. Events that do something
 

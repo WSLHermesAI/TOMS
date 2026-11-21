@@ -37,6 +37,7 @@ void Game::f_SetMoveHeldY(int l_iDir) {
 
 bool Game::f_ScreenToTile(float l_fPx, float l_fPy, int& l_iTx, int& l_iTy) const {
     if (!m_pRen) return false;
+    if (m_bWalk3DOn) return f_Walk3DScreenToTile(l_fPx, l_fPy, l_iTx, l_iTy);   // the 3D floor: the ground under the point
     float l_fTs; int l_iCols, l_iRows; f_CameraViewportTiles(l_fTs, l_iCols, l_iRows);
     if (l_fTs <= 0.0f) return false;
     // draw(): tile (x,y) is at (-camX*ts + x*ts, 60 - camY*ts + y*ts).

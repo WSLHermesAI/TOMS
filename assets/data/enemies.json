@@ -973,6 +973,25 @@
     "big": true,
     "_boss": "F03's boss, beside its up stairs (the owner, 2026-11-13)"
   },
+  "buried_colossus": {
+    "bossTier": "stage",
+    "name": { "zh_TW": "沉睡的巨像", "en": "The Sleeping Colossus", "zh_CN": "晶岩龟", "ja": "クリスタルガメ", "ko": "수정바위거북", "es": "Tortucristal" },
+    "sprite": "m_cragtortle.png",
+    "look": "cragtortle",
+    "hp": 460, "body": 4,
+    "atk": 36,
+    "def": 6,
+    "exp": 55,
+    "weaponExp": 3,
+    "gold": 45,
+    "break": 9,
+    "atk_interval_ms": 2600,
+    "moves": [{ "id": "strike", "weight": 2 }, "boss_near", "boss_line", "boss_fan"],
+    "guardsStairs": true,
+    "intro": true,
+    "big": true,
+    "_boss": "chapter 4's boss, F20 (the story revamp, docs/gameplay/23 §4): a Buried One woken too early; a stronger Cragtortle"
+  },
   "grimoox": {
     "bossTier": "stage",
     "name": { "zh_TW": "魔典牛", "en": "Grimoox", "zh_CN": "魔典牛", "ja": "グリモックス", "ko": "마도서 황소", "es": "Grimobuey" },
@@ -1124,5 +1143,24 @@
     "intro": true,
     "big": true,
     "_boss": "F10's boss, beside its up stairs (the owner, 2026-11-13)"
+  },
+  "grey_mask": {
+    "bossTier": "stage",
+    "name": { "zh_TW": "灰面", "en": "Grey Mask", "zh_CN": "时钟骑士", "ja": "クロノナイト", "ko": "시계 기사", "es": "Cronocaballero" },
+    "sprite": "m_chronoknight.png",
+    "look": "chronoknight",
+    "hp": 540, "body": 5,
+    "atk": 40,
+    "def": 7,
+    "exp": 70,
+    "weaponExp": 5,
+    "gold": 60,
+    "break": 12,
+    "atk_interval_ms": 2600,
+    "moves": [{ "id": "strike", "weight": 2 }, "heavy", "boss_near", "boss_line", "boss_fan"],
+    "guardsStairs": true,
+    "intro": true,
+    "big": true,
+    "_boss": "chapter 5's boss, F25 (the story revamp, docs/gameplay/23 §4): the Collectors' captain, Bran; the Chronoknight's look for now"
   }
 }

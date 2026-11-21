@@ -1,0 +1,111 @@
+{
+  "_comment": "Chapter 5 of the story revamp (docs/gameplay/23 §4): F23, the mass rescue behind the cell gate (the miller, the weaver, the fisherman, the tailor go home; the slime army if the Slime King was freed).",
+  "npcId": "miller",
+  "start": "cells",
+  "nodes": {
+    "cells": {
+      "text": {
+        "zh_TW": "牢門一打開，熟悉的臉全擠到了門口：磨坊主、織布女、漁夫、裁縫……「里歐！？是里歐！」",
+        "en": "The cell door swings open and familiar faces crowd to it: the miller, the weaver, the fisherman, the tailor... \"Leo!? It's Leo!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「大家，我們回家！」",
+            "en": "\"Everyone, we're going home!\""
+          },
+          "next": "home",
+          "actions": [
+            {
+              "type": "rescue",
+              "npc": "miller"
+            },
+            {
+              "type": "rescue",
+              "npc": "weaver"
+            },
+            {
+              "type": "rescue",
+              "npc": "fisherman"
+            },
+            {
+              "type": "rescue",
+              "npc": "tailor"
+            },
+            {
+              "type": "setFlag",
+              "flag": "c5.cells"
+            }
+          ]
+        },
+        {
+          "label": {
+            "zh_TW": "「晃晃爵士——就是現在！」",
+            "en": "\"Sir Wobbles, now!\""
+          },
+          "next": "slimes",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c4.slime_king"
+          }
+        }
+      ]
+    },
+    "slimes": {
+      "text": {
+        "zh_TW": "一大群史萊姆從通風口湧進來，黏住了每一個守衛。晃晃爵士站在最前面：「為了水桶騎士！」凱：「……我不想承認，但這很有用。」",
+        "en": "A flood of slimes pours in through the vents and glues every guard to the floor. Sir Wobbles leads them: \"For Sir Leo of the Bucket!\" Kai: \"...I hate to admit it, but that worked.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「大家，我們回家！」",
+            "en": "\"Everyone, we're going home!\""
+          },
+          "next": "home",
+          "actions": [
+            {
+              "type": "rescue",
+              "npc": "miller"
+            },
+            {
+              "type": "rescue",
+              "npc": "weaver"
+            },
+            {
+              "type": "rescue",
+              "npc": "fisherman"
+            },
+            {
+              "type": "rescue",
+              "npc": "tailor"
+            },
+            {
+              "type": "setFlag",
+              "flag": "c5.cells"
+            },
+            {
+              "type": "setFlag",
+              "flag": "c5.slime_army"
+            }
+          ]
+        }
+      ]
+    },
+    "home": {
+      "text": {
+        "zh_TW": "磨坊主抓住你的手：「你爹娘……前一天晚上就被帶到更上面的神殿了。他們一直在問你有沒有好好吃飯。」",
+        "en": "The miller grabs your hands. \"Your parents... they were taken further up, to the Sanctum, the night before. They kept asking if you were eating properly.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……我有啦。」",
+            "en": "\"...I am.\""
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "_comment": "Chapter 5, F24 (docs/gameplay/23 §4): Mira, Kai's little sister, digging out with a spoon; the reunion, and she goes to the village (home.mira, c5.mira, trust + 1).",
+  "scene": "dialogue",
+  "dialogue": {
+    "id": "c5_mira"
+  },
+  "test": {
+    "frames": 70,
+    "keys": "enter@10,enter@25,enter@40"
+  },
+  "expect": {
+    "scene": "stage",
+    "flags": [
+      "c5.mira",
+      "home.mira"
+    ]
+  }
+}

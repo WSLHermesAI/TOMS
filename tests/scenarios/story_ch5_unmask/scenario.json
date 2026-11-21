@@ -1,0 +1,19 @@
+{
+  "_comment": "Chapter 5, F25 after the Grey Mask boss (docs/gameplay/23 §4): the unmasking (Bran, the mother's brother) and the big choice; the second answer sends him home (c5.bran_spared, mercy + 2, home.bran: the burned houses), c5.unmasked.",
+  "scene": "dialogue",
+  "dialogue": {
+    "id": "c5_unmask"
+  },
+  "test": {
+    "frames": 90,
+    "keys": "enter@10,enter@25,down@40,enter@48,enter@63"
+  },
+  "expect": {
+    "scene": "stage",
+    "flags": [
+      "c5.unmasked",
+      "c5.bran_spared",
+      "home.bran"
+    ]
+  }
+}

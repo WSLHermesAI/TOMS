@@ -1,0 +1,23 @@
+{
+  "_comment": "Chapter 5, F24's payoff (docs/gameplay/23 §4): with the clerk's confession from chapter 3 (c3.confession), Kai reads it and the Collector soldiers lay down their arms (c5.stood_down, two potions).",
+  "scene": "dialogue",
+  "flags": [
+    "c3.confession"
+  ],
+  "dialogue": {
+    "id": "c5_captain"
+  },
+  "test": {
+    "frames": 60,
+    "keys": "enter@10,enter@25"
+  },
+  "expect": {
+    "scene": "stage",
+    "flags": [
+      "c5.stood_down"
+    ],
+    "inventoryHas": [
+      "potion_red"
+    ]
+  }
+}

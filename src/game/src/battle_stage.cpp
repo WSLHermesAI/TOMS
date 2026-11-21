@@ -151,7 +151,7 @@ std::shared_ptr<BattleStage::Loaded> BattleStage::f_LoadCpu(nlohmann::json l_jRo
     }
     GltfRenderer::Frame& l_oLook = l_oL.m_oLook;
     l_oLook.m_bEnvironment = l_oL.m_bSky;
-    l_oLook.m_bBackground = l_oL.m_bSky;
+    l_oLook.m_bBackground = l_oL.m_bSky && l_jSky.value("background", true);   // false: it only lights (the floors in 3D, docs/gameplay/24)
     l_oLook.m_fEnvironmentIntensity = l_jSky.value("intensity", 1.0f);
     l_oLook.m_fEnvironmentYaw = glm::radians(l_jSky.value("yaw", 0.0f));
     l_oLook.m_fBackgroundBlur = l_jSky.value("blur", 0.0f);

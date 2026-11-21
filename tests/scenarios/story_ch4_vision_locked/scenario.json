@@ -1,0 +1,21 @@
+{
+  "_comment": "Chapter 4, F19 (docs/gameplay/23 §4): before the wyrm's test is done, the vision does not open: stepping on it only marks it started (no c4.vision).",
+  "scene": "stage",
+  "stage": "F19",
+  "missions": {
+    "m_c4_wyrm": "active"
+  },
+  "player": {
+    "x": 4,
+    "y": 17
+  },
+  "test": {
+    "frames": 60,
+    "keys": "right@10"
+  },
+  "expect": {
+    "notFlags": [
+      "c4.vision"
+    ]
+  }
+}

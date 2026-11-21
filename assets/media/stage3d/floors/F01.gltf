@@ -1,0 +1,375 @@
+{
+ "asset": {
+  "version": "2.0",
+  "generator": "tools/stage3d/make_floor3d.py"
+ },
+ "scene": 0,
+ "scenes": [
+  {
+   "nodes": [
+    0
+   ]
+  }
+ ],
+ "nodes": [
+  {
+   "mesh": 0,
+   "name": "F01"
+  }
+ ],
+ "meshes": [
+  {
+   "name": "F01",
+   "primitives": [
+    {
+     "attributes": {
+      "POSITION": 0,
+      "NORMAL": 1,
+      "TANGENT": 2,
+      "TEXCOORD_0": 3
+     },
+     "indices": 4,
+     "material": 0
+    },
+    {
+     "attributes": {
+      "POSITION": 5,
+      "NORMAL": 6,
+      "TANGENT": 7,
+      "TEXCOORD_0": 8
+     },
+     "indices": 9,
+     "material": 1
+    },
+    {
+     "attributes": {
+      "POSITION": 10,
+      "NORMAL": 11,
+      "TANGENT": 12,
+      "TEXCOORD_0": 13
+     },
+     "indices": 14,
+     "material": 2
+    }
+   ]
+  }
+ ],
+ "buffers": [
+  {
+   "uri": "F01.bin",
+   "byteLength": 79272
+  }
+ ],
+ "bufferViews": [
+  {
+   "buffer": 0,
+   "byteOffset": 0,
+   "byteLength": 48,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 48,
+   "byteLength": 48,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 96,
+   "byteLength": 64,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 160,
+   "byteLength": 32,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 192,
+   "byteLength": 24,
+   "target": 34963
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 216,
+   "byteLength": 11808,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 12024,
+   "byteLength": 11808,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 23832,
+   "byteLength": 15744,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 39576,
+   "byteLength": 7872,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 47448,
+   "byteLength": 5904,
+   "target": 34963
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 53352,
+   "byteLength": 5760,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 59112,
+   "byteLength": 5760,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 64872,
+   "byteLength": 7680,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 72552,
+   "byteLength": 3840,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 76392,
+   "byteLength": 2880,
+   "target": 34963
+  }
+ ],
+ "accessors": [
+  {
+   "bufferView": 0,
+   "componentType": 5126,
+   "count": 4,
+   "type": "VEC3",
+   "min": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "max": [
+    19.0,
+    0.0,
+    16.0
+   ]
+  },
+  {
+   "bufferView": 1,
+   "componentType": 5126,
+   "count": 4,
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 2,
+   "componentType": 5126,
+   "count": 4,
+   "type": "VEC4"
+  },
+  {
+   "bufferView": 3,
+   "componentType": 5126,
+   "count": 4,
+   "type": "VEC2"
+  },
+  {
+   "bufferView": 4,
+   "componentType": 5125,
+   "count": 6,
+   "type": "SCALAR"
+  },
+  {
+   "bufferView": 5,
+   "componentType": 5126,
+   "count": 984,
+   "type": "VEC3",
+   "min": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "max": [
+    19.0,
+    1.0,
+    16.0
+   ]
+  },
+  {
+   "bufferView": 6,
+   "componentType": 5126,
+   "count": 984,
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 7,
+   "componentType": 5126,
+   "count": 984,
+   "type": "VEC4"
+  },
+  {
+   "bufferView": 8,
+   "componentType": 5126,
+   "count": 984,
+   "type": "VEC2"
+  },
+  {
+   "bufferView": 9,
+   "componentType": 5125,
+   "count": 1476,
+   "type": "SCALAR"
+  },
+  {
+   "bufferView": 10,
+   "componentType": 5126,
+   "count": 480,
+   "type": "VEC3",
+   "min": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "max": [
+    19.0,
+    1.0,
+    16.0
+   ]
+  },
+  {
+   "bufferView": 11,
+   "componentType": 5126,
+   "count": 480,
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 12,
+   "componentType": 5126,
+   "count": 480,
+   "type": "VEC4"
+  },
+  {
+   "bufferView": 13,
+   "componentType": 5126,
+   "count": 480,
+   "type": "VEC2"
+  },
+  {
+   "bufferView": 14,
+   "componentType": 5125,
+   "count": 720,
+   "type": "SCALAR"
+  }
+ ],
+ "materials": [
+  {
+   "name": "wood_ground",
+   "pbrMetallicRoughness": {
+    "baseColorTexture": {
+     "index": 0
+    },
+    "metallicFactor": 0.0,
+    "roughnessFactor": 0.85
+   },
+   "normalTexture": {
+    "index": 1,
+    "scale": 1.0
+   }
+  },
+  {
+   "name": "wood_wall",
+   "pbrMetallicRoughness": {
+    "baseColorTexture": {
+     "index": 2
+    },
+    "metallicFactor": 0.0,
+    "roughnessFactor": 0.85
+   },
+   "normalTexture": {
+    "index": 3,
+    "scale": 1.0
+   }
+  },
+  {
+   "name": "wood_top",
+   "pbrMetallicRoughness": {
+    "baseColorTexture": {
+     "index": 4
+    },
+    "metallicFactor": 0.0,
+    "roughnessFactor": 0.95
+   },
+   "normalTexture": {
+    "index": 5,
+    "scale": 1.0
+   }
+  }
+ ],
+ "samplers": [
+  {
+   "magFilter": 9729,
+   "minFilter": 9987,
+   "wrapS": 10497,
+   "wrapT": 10497
+  }
+ ],
+ "images": [
+  {
+   "uri": "../looks/wood/ground_c.jpg"
+  },
+  {
+   "uri": "../looks/wood/ground_n.png"
+  },
+  {
+   "uri": "../looks/wood/wall_c.jpg"
+  },
+  {
+   "uri": "../looks/wood/wall_n.png"
+  },
+  {
+   "uri": "../looks/wood/top_c.jpg"
+  },
+  {
+   "uri": "../looks/wood/top_n.png"
+  }
+ ],
+ "textures": [
+  {
+   "source": 0,
+   "sampler": 0
+  },
+  {
+   "source": 1,
+   "sampler": 0
+  },
+  {
+   "source": 2,
+   "sampler": 0
+  },
+  {
+   "source": 3,
+   "sampler": 0
+  },
+  {
+   "source": 4,
+   "sampler": 0
+  },
+  {
+   "source": 5,
+   "sampler": 0
+  }
+ ]
+}

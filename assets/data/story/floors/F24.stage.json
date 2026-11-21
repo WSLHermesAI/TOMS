@@ -19,26 +19,23 @@
     "a": "item:exp_up",
     "d": "item:potion_blue",
     "h": "item:potion_red",
-    "E": "event:ev_library_scholar_whisper_v2",
+    "E": "event:ev_c5_mira",
     "F": "event:ev_common_cache_wall_v4",
     "G": "event:ev_common_trap_rubble",
-    "I": "event:ev_common_rescue_lost_soldier",
-    "J": "event:ev_common_merchant_echo_ash",
-    "K": "event:ev_common_merchant_echo_ash_v2",
+    "K": "event:ev_c5_captain",
     "Y": "key:yellow",
     "y": "door:yellow",
     "A": "monster:zombie",
     "C": "monster:glow_worm",
-    "H": "monster:grave_rat",
-    "L": "npc:priest"
+    "H": "monster:grave_rat"
   },
   "tiles": [
     "#################################",
     "#..#....................#.....###",
-    "#.a#.Y..D..a..d..d..h..h#.K..J###",
+    "#.a#.Y..D..a..d..d..h..h#.K...###",
     "#..#..#..#..#..####..####..#..###",
     "#.....#.....#.....#.....#.....###",
-    "#.1..C#.h...#.....#.....#.U..I###",
+    "#.1..C#.h...#.....#.....#.U...###",
     "#..#######..#..####..#######..###",
     "#..#........#..#.....#.....#..###",
     "#.H#........#..#.....#.....#.G###",
@@ -53,7 +50,7 @@
     "#.....#.1..A..Ay.2#..#.....#..###",
     "#..#..#############..####..#..###",
     "#.......................#.....###",
-    "#.......................#....L###",
+    "#.......................#.....###",
     "####..#############..####..######",
     "#.............................###",
     "#.............................###",
@@ -167,5 +164,5 @@
       "uid": "o31"
     }
   },
-  "theme": "crypt"
+  "theme": "castle"
 }

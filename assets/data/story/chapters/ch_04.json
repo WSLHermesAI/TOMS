@@ -1,7 +1,7 @@
 {
   "id": "ch_04",
-  "floors": ["F22", "F23", "F24", "F25", "F26", "F27", "F28"],
-  "bossFloor": "F28",
+  "floors": ["F16", "F17", "F18", "F19", "F20"],
+  "bossFloor": "F20",
   "bossStage": "stage04",
   "title": "story.ch04.title",
   "desc": "story.ch04.desc",
@@ -26,7 +26,7 @@
     }
   ],
   "sideStoryHooks": ["ss_04"],
-  "exitConditions": { "type": "stageCleared", "stageId": "F28" },
+  "exitConditions": { "type": "stageCleared", "stageId": "F21" },
 
   "enemyMix": ["bat", "skeleton"],
   "itemTable": ["potion_red", "potion_blue", "exp_up"]

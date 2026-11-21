@@ -1,0 +1,25 @@
+{
+  "_comment": "Chapter 5, F23's mass rescue (docs/gameplay/23 §4): the cell keys open the cell gate (gate:key_cells); the miller, the weaver, the fisherman and the tailor go home (the village square opens), c5.cells.",
+  "scene": "stage",
+  "stage": "F23",
+  "player": {
+    "x": 7,
+    "y": 11,
+    "give": [
+      "key_cells"
+    ]
+  },
+  "test": {
+    "frames": 150,
+    "keys": "down@10,down@25,down@40,left@55,enter@85,enter@105"
+  },
+  "expect": {
+    "flags": [
+      "c5.cells",
+      "home.miller",
+      "home.weaver",
+      "home.fisherman",
+      "home.tailor"
+    ]
+  }
+}

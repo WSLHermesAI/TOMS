@@ -149,6 +149,7 @@ bool GameSession::f_Start(const SessionOptions& l_oOpts, std::string& l_strError
     if (l_oOpts.m_bBattleLog) m_upGame->f_SetBattleLogToStderr(true);
     m_upGame->f_SetShowVersion(l_oOpts.m_bShowVersion);
     m_upGame->f_SetBattle3DAllowed(l_oOpts.m_bBattle3D);
+    m_upGame->f_SetWalk3DAllowed(l_oOpts.m_bWalk3D);
     m_bBattle3DWait = l_oOpts.m_bBattle3DWait;
     // The 3D scene behind the title: the sea, or a model; without either the title is plain.
     bool l_bOcean = l_oOpts.m_strTitleScene == "ocean";
@@ -256,6 +257,8 @@ void GameSession::f_Stop() {
     m_upTitleScene.reset();
     if (m_upBattleStage) m_upBattleStage->f_Shutdown();
     m_upBattleStage.reset();
+    if (m_upWalkStage) m_upWalkStage->f_Shutdown();
+    m_upWalkStage.reset();
     if (m_upUi) m_upUi->f_Shutdown();
     if (m_upRml) m_upRml->f_Shutdown();
     m_upUi.reset();
@@ -522,10 +525,34 @@ bool GameSession::f_Frame(int l_iDtMs, const InputState& l_oIn, uint32_t l_uDevi
     }
     // A stage still on its way (loading): the battle shows no painted backdrop meanwhile (it would pop, then the stage).
     l_oG.f_SetBattle3DComing(l_pStage && !l_bStage && !(m_upBattleStage && m_upBattleStage->f_Failed(l_pStage->dump())));
-    m_pRenderer->f_SetSceneViews(TitleScene::m_u16FirstView, l_bScene ? m_upTitleScene->f_ViewCount() : l_bStage ? m_upBattleStage->f_ViewCount() : 0);
+    // Walking a floor in 3D (docs/gameplay/24): its model loaded as soon as the floor is entered, drawn while the walking
+    // scene is on the screen (the same views: never with the battle's stage or the title's scene).
+    bool l_bWalk = false;
+    const nlohmann::json l_jWalk = l_bScene ? nlohmann::json() : l_oG.f_Walk3DStage();
+    if (!l_jWalk.is_null()) {
+        if (!m_upWalkStage) m_upWalkStage = std::make_unique<BattleStage>();
+        m_upWalkStage->f_Request(l_jWalk, m_strAssetDir, m_bBattle3DWait);
+        std::string l_strWhy;
+        if (!m_upWalkStage->f_Poll(l_strWhy)) std::fprintf(stderr, "[walk3d] the floor in 2D: %s\n", l_strWhy.c_str());
+        if (!l_bStage && l_uDeviceW > 0 && l_uDeviceH > 0 && l_oG.f_WalkSceneShown() && m_upWalkStage->f_ReadyFor(l_jWalk.dump())) {
+            const Game::Walk3DCamera l_oWc = l_oG.f_Walk3DCamera(l_iDtMs / 1000.0f);
+            BattleStage::Camera l_oCam;
+            l_oCam.m_v3Eye = l_oWc.m_v3Eye;
+            l_oCam.m_v3Look = l_oWc.m_v3Look;
+            l_oCam.m_fFovYDeg = l_oWc.m_fFovYDeg;
+            const glm::mat4 l_mat4Vp = m_upWalkStage->f_Draw(l_iDtMs / 1000.0f, l_uDeviceW, l_uDeviceH, l_oCam, l_oG.f_Walk3DShadows());
+            const auto l_oFit = BgfxRenderer::f_ComputeAspectFitViewport(l_uDeviceW, l_uDeviceH, BgfxRenderer::m_uDesignW, BgfxRenderer::m_uDesignH);
+            l_oG.f_SetWalk3DView(true, l_mat4Vp, glm::vec2((float)l_uDeviceW, (float)l_uDeviceH),
+                                 glm::vec4(l_oFit.m_fX, l_oFit.m_fY, l_oFit.m_fWidth, l_oFit.m_fHeight));
+            l_bWalk = true;
+        }
+    }
+    if (!l_bWalk) l_oG.f_SetWalk3DView(false, glm::mat4(1.0f), glm::vec2(0.0f), glm::vec4(0.0f));
+    m_pRenderer->f_SetSceneViews(TitleScene::m_u16FirstView, l_bScene ? m_upTitleScene->f_ViewCount() : l_bStage ? m_upBattleStage->f_ViewCount() : l_bWalk ? m_upWalkStage->f_ViewCount() : 0);
     if (m_upUi) m_upUi->f_SetTitleScene(l_bScene);
     l_oG.f_Draw();   // the world -> BgfxRenderer::end(): views kViewClear + kViewGame
     if (l_bStage) m_upBattleStage->f_DrawSprites(m_pRenderer->f_WorldGroups());   // the fighters' sprites, in the 3D scene
+    if (l_bWalk) m_upWalkStage->f_DrawSprites(m_pRenderer->f_WorldGroups());      // the map's sprites, standing on the floor
     {           // the UI over it, under ImGui
         const auto l_oVp = BgfxRenderer::f_ComputeAspectFitViewport(l_uDeviceW, l_uDeviceH, BgfxRenderer::m_uDesignW, BgfxRenderer::m_uDesignH);
         m_upRml->f_SetViewport(l_oVp.m_fX, l_oVp.m_fY, l_oVp.m_fWidth, l_oVp.m_fHeight);

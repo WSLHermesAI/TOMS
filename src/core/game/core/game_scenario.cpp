@@ -148,6 +148,7 @@ bool Game::f_StartScenarioJson(const nlohmann::json& l_jSc, const std::string& l
     m_strUltimateOverride = l_jSc.value("battle", nlohmann::json::object()).value("ultimate", std::string());
     m_fScenarioBattleSpeed = std::max(0.1f, l_jSc.value("battle", nlohmann::json::object()).value("speed", 1.0f));
     if (l_jSc.value("battle3d", false)) m_bBattle3DAllowed = true;   // the battle on its 3D stage (docs/gameplay/21), as in normal play
+    if (l_jSc.value("walk3d", false)) m_bWalk3DAllowed = true;       // the floor in 3D (docs/gameplay/24), as in normal play
     const nlohmann::json l_jTest = l_jSc.value("test", nlohmann::json::object());
     m_iScenarioTestFrames = l_jTest.value("frames", 0);
     m_strScenarioTestKeys = l_jTest.value("keys", std::string());
@@ -384,6 +385,8 @@ bool Game::f_ScenarioCheck(std::string& l_strReport) const {
         }
     for (const std::string& l_strF : f_Strings(m_jScenarioExpect, "flags"))
         if (!m_oRun.f_Flag(l_strF)) l_fnFail("the flag " + l_strF + " is not set");
+    for (const std::string& l_strF : f_Strings(m_jScenarioExpect, "notFlags"))   // a flag that must stay unset (a locked story step)
+        if (m_oRun.f_Flag(l_strF)) l_fnFail("the flag " + l_strF + " is set");
     if (m_jScenarioExpect.contains("cards") && m_jScenarioExpect["cards"].is_object())   // monster id -> copies held
         for (auto l_oIt = m_jScenarioExpect["cards"].begin(); l_oIt != m_jScenarioExpect["cards"].end(); ++l_oIt) {
             auto l_itR = m_oMeta.m_mapCards.find(l_oIt.key());
@@ -436,6 +439,19 @@ bool Game::f_ScenarioCheck(std::string& l_strReport) const {
             l_fnFail("the hero should stand nearer than the monster: hero box " + std::to_string((int)l_v4H.w) + " px tall, feet at " +
                      std::to_string((int)(l_v4H.y + l_v4H.w)) + "; monster " + std::to_string((int)l_v4M.w) + " px, feet at " +
                      std::to_string((int)(l_v4M.y + l_v4M.w)));
+    }
+    if (m_jScenarioExpect.value("walk3d", false)) {   // the floor is drawn in 3D, and a click on the hero finds his tile (docs/gameplay/24)
+        if (!m_bWalk3DOn) l_fnFail("the floor is not in 3D (data/stage3d.json, its model from tools/stage3d/make_floor3d.py, mesh shaders)");
+        else {
+            const glm::vec4 l_v4C = m_mat4Walk3DViewProj * glm::vec4(m_oPl.m_iX + 0.5f, 0.0f, m_oPl.m_iY + 0.5f, 1.0f);
+            const glm::vec2 l_v2Dev((l_v4C.x / l_v4C.w * 0.5f + 0.5f) * m_v2Walk3DDevice.x, (0.5f - l_v4C.y / l_v4C.w * 0.5f) * m_v2Walk3DDevice.y);
+            const float l_fPx = (l_v2Dev.x - m_v4Walk3DDesign.x) / m_v4Walk3DDesign.z * (float)m_pRen->f_Width();
+            const float l_fPy = (l_v2Dev.y - m_v4Walk3DDesign.y) / m_v4Walk3DDesign.w * (float)m_pRen->f_Height();
+            int l_iTx = -1, l_iTy = -1;
+            if (!f_ScreenToTile(l_fPx, l_fPy, l_iTx, l_iTy) || l_iTx != m_oPl.m_iX || l_iTy != m_oPl.m_iY)
+                l_fnFail("a click on the hero (" + std::to_string((int)l_fPx) + ", " + std::to_string((int)l_fPy) + ") finds tile " +
+                         std::to_string(l_iTx) + ", " + std::to_string(l_iTy) + ", not his " + std::to_string(m_oPl.m_iX) + ", " + std::to_string(m_oPl.m_iY));
+        }
     }
     if (m_jScenarioExpect.contains("foeClips") && m_jScenarioExpect["foeClips"].is_array())   // each monster's clip now
         for (size_t l_nI = 0; l_nI < m_jScenarioExpect["foeClips"].size(); l_nI++) {

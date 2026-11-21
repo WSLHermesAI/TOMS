@@ -1,0 +1,67 @@
+{
+  "_comment": "Chapter 5 of the story revamp (docs/gameplay/23 §4): F24, a rescue: Mira, Kai's little sister (trust + 1; the village).",
+  "npcId": "knight_errant",
+  "start": "room",
+  "nodes": {
+    "room": {
+      "text": {
+        "zh_TW": "最裡面的房間裡，一個綁著辮子的女孩正在用湯匙挖牆。凱的劍掉在地上。「……米菈？」",
+        "en": "In the innermost room, a girl with braids is digging at the wall with a spoon. Kai's sword clatters to the floor. \"...Mira?\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": "hug"
+        }
+      ]
+    },
+    "hug": {
+      "text": {
+        "zh_TW": "米菈：「哥！？你、你怎麼現在才來！我已經挖了三天了！」她撲進凱的懷裡。凱的聲音在發抖：「……對不起。對不起。」",
+        "en": "Mira: \"Big brother!? Wh-why are you only coming now! I've been digging for three days!\" She throws herself into Kai's arms. Kai's voice shakes. \"...I'm sorry. I'm sorry.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（等他們一下）",
+            "en": "(Give them a moment)"
+          },
+          "next": "thanks"
+        }
+      ]
+    },
+    "thanks": {
+      "text": {
+        "zh_TW": "凱轉過身，眼睛紅紅的：「里歐……謝謝你。我欠你一條命。」他把米菈交給村民：「先跟他們去村子。哥哥還有事要做。」",
+        "en": "Kai turns round, eyes red. \"Leo... thank you. I owe you a life.\" He hands Mira over to the villagers. \"Go to the village with them first. Your brother still has work to do.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「走吧，凱。」",
+            "en": "\"Let's go, Kai.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "rescue",
+              "npc": "mira"
+            },
+            {
+              "type": "addCounter",
+              "counter": "trust",
+              "delta": 1
+            },
+            {
+              "type": "setFlag",
+              "flag": "c5.mira"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -732,6 +732,26 @@ public:
     void f_SetBattle3DComing(bool l_bComing) { m_bBattle3DComing = l_bComing; }
     // Where the shown fighters stand: x, y, z their feet, w the shadow's radius (metres).
     std::vector<glm::vec4> f_Battle3DShadows() const;
+    // ---- walking a floor in 3D (docs/gameplay/24_STAGE_3D.md): the floor's model (its walls and ground, made from the
+    // tile map) drawn by the host with the battle stage's renderer, the map's sprites standing in it, the camera following ----
+    // The host can draw it (mesh shaders, not --walk-3d=off): set once when it starts.
+    void f_SetWalk3DAllowed(bool l_bAllowed) { m_bWalk3DAllowed = l_bAllowed; }
+    // The floor's stage for the host's BattleStage (data/stage3d.json: its model as a prop, its look's sky and light);
+    // null: the floor is drawn in 2D (3D off, or no model for it).
+    nlohmann::json f_Walk3DStage() const;
+    // The walking scene is what the screen shows (no battle, dialogue, store, title or ending over it).
+    bool f_WalkSceneShown() const;
+    struct Walk3DCamera {
+        glm::vec3 m_v3Eye{0.0f, 8.0f, 6.0f}, m_v3Look{0.0f};
+        float m_fFovYDeg = 40.0f;
+    };
+    // This frame's camera: tilted down on the hero, catching up with him (dt: seconds since the last frame).
+    Walk3DCamera f_Walk3DCamera(float l_fDtSeconds);
+    // The host drew the floor this frame (as f_SetBattle3DView); on = false: the floor is drawn in 2D this frame.
+    void f_SetWalk3DView(bool l_bOn, const glm::mat4& l_mat4ViewProj, const glm::vec2& l_v2Device, const glm::vec4& l_v4DesignInDevice);
+    bool f_Walk3DOn() const { return m_bWalk3DOn; }
+    // The soft discs under the hero, the monsters and the people: x, y, z their feet, w the radius (metres).
+    std::vector<glm::vec4> f_Walk3DShadows() const;
     // The design canvas changed (the screen turned, canvas.h): the camera fits the new one at once, without easing.
     void f_CanvasChanged();
     // Files by key, never by path (assets/media/resources.json; the keys: res_keys.h, made by tools/make_res_keys.py).
@@ -1285,7 +1305,31 @@ private:
     std::vector<std::string> m_vResourceMessages;
     // The floor's things, a class per kind (map_objects.h), made when a floor loads; they draw themselves by status.
     MapFloor m_oFloor;
-    void f_DrawTileLayer(const MapView& l_oV, int l_iStartX, int l_iEndX, int l_iStartY, int l_iEndY);   // tiles, locked stairs, walk target
+    // tiles, locked stairs, walk target; marksOnly: not the walls and the plain floor (the 3D floor has them)
+    void f_DrawTileLayer(const MapView& l_oV, int l_iStartX, int l_iEndX, int l_iStartY, int l_iEndY, bool l_bMarksOnly = false);
+    // walking in 3D (f_SetWalk3DView)
+    bool m_bWalk3DAllowed = false, m_bWalk3DOn = false;
+    glm::mat4 m_mat4Walk3DViewProj{1.0f};
+    glm::vec4 m_v4Walk3DDesign{0.0f, 0.0f, 1.0f, 1.0f};
+    glm::vec2 m_v2Walk3DDevice{0.0f};
+    glm::vec3 m_v3Walk3DLook{0.0f};                      // where the camera looks now (easing toward the hero)
+    std::string m_strWalk3DFloor;                        // the floor it looked at (another floor: no easing)
+    nlohmann::json m_jStage3D;                           // data/stage3d.json
+    static constexpr float m_fWalk3DTile = 100.0f;       // the map's pixels a tile, drawn in the scene
+    void f_DrawWalk3D();                                 // the floor's marks on the ground, its objects standing
+    // Design pixels -> metres for a sprite standing at `at` (pixel `anchor` there), facing the camera, leaning back
+    glm::mat4 f_Walk3DSpriteMatrix(const glm::vec2& l_v2Anchor, const glm::vec3& l_v3At, float l_fMetresPerPx) const;
+    bool f_Walk3DBeginObject(const MapObject& l_oO, const MapView& l_oV);   // MapFloor: an object's world group (false: nothing to draw)
+    void f_Walk3DEndObject();
+    bool f_Walk3DScreenToTile(float l_fPx, float l_fPy, int& l_iTx, int& l_iTy) const;
+    // The hero as his painted battle character (stage3d.json sprites "paintedHero"), standing on his tile, turned the
+    // way he last walked. False: not drawn so (the map's own sprite then).
+    bool f_DrawWalk3DHero();
+    std::unique_ptr<toms::FighterView> m_upWalkHeroView;   // the weapon's battle look, playing its idle clip on the map
+    std::string m_strWalkHeroWeapon;                       // the weapon it was made for
+    double m_dWalkHeroClockMs = -1.0;                      // the idle clock when it was last moved on
+    int m_iWalkHeroFacing = 1, m_iWalkHeroLastX = -1;      // +1 right, -1 left (the last step sideways)
+    float f_Walk3DHeight(const std::string& l_strKind) const;   // a one-tile sprite's height in metres (stage3d.json sprites heights)
     // A door the player walks into with its key: the key is used, the door opens (its clip plays), the tile becomes
     // floor and stays open on later visits (EntityStatus::Opened). The player stays where they were.
     void f_OpenDoor(int l_iX, int l_iY, char l_cC);

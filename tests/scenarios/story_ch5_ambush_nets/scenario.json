@@ -1,0 +1,21 @@
+{
+  "_comment": "Chapter 5, F21's payoff (docs/gameplay/23 §4): without the spared soldier, the nets fall at the barracks gate (-30 HP, c5.ambushed).",
+  "scene": "dialogue",
+  "player": {
+    "hp": 100
+  },
+  "dialogue": {
+    "id": "c5_ambush"
+  },
+  "test": {
+    "frames": 60,
+    "keys": "enter@10,enter@25"
+  },
+  "expect": {
+    "scene": "stage",
+    "hp": 70,
+    "flags": [
+      "c5.ambushed"
+    ]
+  }
+}

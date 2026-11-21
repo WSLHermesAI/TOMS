@@ -1,0 +1,24 @@
+{
+  "_comment": "Chapter 4's end (docs/gameplay/23 §4): F21 reached (the Sleeping Colossus beaten) after chapter 3 and the vision; the elder hears about the youth with the scar: Bran, the mother's younger brother (c4.done).",
+  "scene": "dialogue",
+  "stage": "F21",
+  "flags": [
+    "c1.done",
+    "c2.done",
+    "c3.done",
+    "c4.vision"
+  ],
+  "dialogue": {
+    "id": "villager_elder"
+  },
+  "test": {
+    "frames": 70,
+    "keys": "enter@10,enter@25,enter@40"
+  },
+  "expect": {
+    "scene": "stage",
+    "flags": [
+      "c4.done"
+    ]
+  }
+}

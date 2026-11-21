@@ -173,6 +173,8 @@ bool Game::f_LoadAssets(const std::string& l_strAssetDir) {
             fprintf(stderr, "[assets] footprints.json: %d type(s) bigger than 1x1\n", l_iN);
         }
     }
+    // walking a floor in 3D (data/stage3d.json, docs/gameplay/24)
+    m_jStage3D = f_ReadJsonFile(f_PathOf(toms::key::g_pszDataStage3d));
     // the battle scene's tuning (data/battle.json): bar speed and the wait after a tap
     {
         nlohmann::json l_jBj = f_ReadJsonFile(f_PathOf(toms::key::g_pszDataBattle));

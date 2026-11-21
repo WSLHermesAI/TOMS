@@ -46,7 +46,10 @@ void Game::f_Draw() {
     const bool l_bShowWalk   = !l_bShowStore && !l_bShowBattle && !l_bShowTalk;   // the player menu draws over the map
 
     // ---- walking scene: the floor's tiles, then its objects (each draws itself by status: map_objects.h) ----
-    if (l_bShowWalk) {
+    if (l_bShowWalk && m_bWalk3DOn) {   // the floor in 3D (game_walk3d.cpp): the host drew its walls and ground
+        m_pRen->f_SetNode(NODE_STAGE);
+        f_DrawWalk3D();
+    } else if (l_bShowWalk) {
         m_pRen->f_SetNode(NODE_STAGE);
         // Only draw tiles the camera can actually see (+1 tile of padding on every side so a
         // mid-pan fractional camX_/camY_ never pops a row/column in right at the edge) --
@@ -73,7 +76,7 @@ void Game::f_Draw() {
 }
 
 // The floor's tiles (the act's colour washed over them), the locked stairs' padlocks and the click-to-move target.
-void Game::f_DrawTileLayer(const MapView& l_oV, int l_iStartX, int l_iEndX, int l_iStartY, int l_iEndY) {
+void Game::f_DrawTileLayer(const MapView& l_oV, int l_iStartX, int l_iEndX, int l_iStartY, int l_iEndY, bool l_bMarksOnly) {
     const float l_fOx = l_oV.m_fOx, l_fOy = l_oV.m_fOy, l_fTs = l_oV.m_fTs;
     // S3.5 (e): the act's palette tints the map tiles. One atlas, ten looks -- no new art needed,
     // and the maze stays readable because the tint is a light wash rather than a replace.
@@ -87,6 +90,7 @@ void Game::f_DrawTileLayer(const MapView& l_oV, int l_iStartX, int l_iEndX, int 
     };
     for (int l_iY = l_iStartY; l_iY < l_iEndY; l_iY++) for (int l_iX = l_iStartX; l_iX < l_iEndX; l_iX++) {
         char l_cC = m_oSt.f_At(l_iX,l_iY);
+        if (l_bMarksOnly && (l_cC == '#' || f_CellSprite(l_cC) == "floor")) continue;   // the 3D floor has them
         int l_iLayer = f_SpriteLayer(l_fnThemed(f_CellSprite(l_cC)));
         m_pRen->f_DrawSprite(f_SpriteQuad(l_fOx + l_iX*l_fTs, l_fOy + l_iY*l_fTs, l_fTs, l_fTs, l_iLayer, l_arrThemeTint));
     }

@@ -5,13 +5,15 @@
   "chat": {
     "lines": [
       {
-        "dialogue": "town_guard"
+        "dialogue": "c5_guard_1"
+      },
+      {
+        "dialogue": "c5_guard_2"
       }
     ],
     "order": "loop"
   },
   "topics": {
     "menu": "auto"
-  },
-  "draft": true
+  }
 }

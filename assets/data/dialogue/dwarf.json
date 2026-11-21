@@ -1,19 +1,58 @@
 {
+  "_comment": "Chapter 4 of the story revamp (docs/gameplay/23 §4): the dwarf at home (hub_dwarf): a DEF gem for 30 gold.",
   "npcId": "dwarf",
   "start": "root",
   "nodes": {
     "root": {
       "text": {
-        "zh_TW": "旅人，你好。我是矮人。",
-        "en": "Good day, traveller. I'm the dwarf."
+        "zh_TW": "矮人：「要幫你把防具敲厚一點嗎？」",
+        "en": "Dwarf: \"Want me to hammer some thickness into your armour?\""
       },
       "choices": [
         {
           "label": {
-            "zh_TW": "再見。",
-            "en": "Goodbye."
+            "zh_TW": "「好（30 金幣）。」",
+            "en": "\"Yes, please (30 gold).\""
+          },
+          "next": "done",
+          "requires": {
+            "type": "statAtLeast",
+            "stat": "gold",
+            "value": 30
+          },
+          "actions": [
+            {
+              "type": "addStat",
+              "stat": "gold",
+              "delta": -30
+            },
+            {
+              "type": "give",
+              "itemId": "gem_def"
+            }
+          ]
+        },
+        {
+          "label": {
+            "zh_TW": "「下次吧。」",
+            "en": "\"Another time.\""
           },
           "next": null
+        }
+      ]
+    },
+    "done": {
+      "text": {
+        "zh_TW": "矮人：「好了！現在連巨像都踩不扁你。」",
+        "en": "Dwarf: \"There! Now not even a colossus could flatten you.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": "root"
         }
       ]
     }

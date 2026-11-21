@@ -1,0 +1,22 @@
+{
+  "_comment": "Chapter 5 of the story revamp (docs/gameplay/23 §4): Mira in the village (hub_mira).",
+  "npcId": "knight_errant",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "米菈在教村裡的小孩揮木劍。「看好了！我哥是皇家騎士，我也會成為騎士！」小托：「那我要當水桶騎士！」",
+        "en": "Mira is teaching the village kids to swing wooden swords. \"Watch closely! My brother's a royal knight, and I'll be a knight too!\" Tobi: \"Then I'll be a bucket knight!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（笑）",
+            "en": "(Laugh)"
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

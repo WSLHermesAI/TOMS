@@ -1,0 +1,26 @@
+{
+  "_comment": "Chapter 4 of the story revamp (docs/gameplay/23 §4): F20, a scene: the mural of the Godborn and the Buried Ones against the old god.",
+  "npcId": "scholar",
+  "start": "wall",
+  "nodes": {
+    "wall": {
+      "text": {
+        "zh_TW": "牆上有一幅巨大的壁畫：一群手掌發光的人，站在石龍和巨像中間，一起擋住從天上伸下來的黑手。最前面的那個人，個子很小。",
+        "en": "A huge mural covers the wall: people with glowing palms stand among stone dragons and giants, holding back a black hand reaching down from the sky. The one at the very front is small."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……天上的東西。」",
+            "en": "\"...The thing in the sky.\""
+          },
+          "next": null,
+          "action": {
+            "type": "setFlag",
+            "flag": "c4.mural"
+          }
+        }
+      ]
+    }
+  }
+}

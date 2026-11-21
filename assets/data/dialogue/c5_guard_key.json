@@ -1,0 +1,23 @@
+{
+  "_comment": "Chapter 5 of the story revamp (docs/gameplay/23 §4): F22, talk N (the third talk): the sleeping guard drops the cell keys.",
+  "npcId": "town_guard",
+  "start": "key",
+  "nodes": {
+    "key": {
+      "text": {
+        "zh_TW": "衛兵翻了個身，鑰匙圈從腰上滑下來，叮噹一聲掉在你腳邊。「……呼……牢房的鑰匙……不要弄丟……」",
+        "en": "The guard rolls over, and a key ring slides off his belt and clinks at your feet. \"...Zzz... the cell keys... don't lose them...\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……不會的。」（撿起來）",
+            "en": "\"...I won't.\" (Pick them up)"
+          },
+          "next": null
+        }
+      ]
+    }
+  },
+  "finishOnClose": true
+}

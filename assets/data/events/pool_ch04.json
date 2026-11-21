@@ -1,0 +1,80 @@
+{
+  "_comment": [
+    "Chapter 4 of the story revamp (docs/gameplay/23 §4): The Buried Ones, F16-F20. The stone wyrm's test (m_c4_wyrm: three",
+    "crystal spiders) opens the vision (ev_c4_vision waits for it: requires missionComplete). The dwarf (F16) and the archer",
+    "scout (F20) are NPCs whose chat is their rescue."
+  ],
+  "act": "ch_04",
+  "theme": "the buried ones",
+  "events": [
+    {
+      "eventId": "ev_c4_whisper",
+      "kind": "scene",
+      "text": "ev_c4_whisper.text",
+      "title": "ev_c4_whisper.title",
+      "desc": "ev_c4_whisper.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c4_whisper"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c4_slime_king",
+      "kind": "comic",
+      "text": "ev_c4_slime_king.text",
+      "title": "ev_c4_slime_king.title",
+      "desc": "ev_c4_slime_king.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c4_slime_king"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c4_wyrm",
+      "kind": "quest",
+      "text": "ev_c4_wyrm.text",
+      "title": "ev_c4_wyrm.title",
+      "desc": "ev_c4_wyrm.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c4_wyrm"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c4_vision",
+      "kind": "scene",
+      "text": "ev_c4_vision.text",
+      "title": "ev_c4_vision.title",
+      "desc": "ev_c4_vision.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c4_vision"
+        }
+      ],
+      "requires": {
+        "type": "missionComplete",
+        "missionId": "m_c4_wyrm"
+      }
+    },
+    {
+      "eventId": "ev_c4_mural",
+      "kind": "scene",
+      "text": "ev_c4_mural.text",
+      "title": "ev_c4_mural.title",
+      "desc": "ev_c4_mural.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c4_mural"
+        }
+      ]
+    }
+  ]
+}

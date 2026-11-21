@@ -1,0 +1,41 @@
+{
+  "_comment": "Chapter 4 of the story revamp (docs/gameplay/23 §4): F16, a scene: the first Buried One speaks through the wall.",
+  "npcId": "villager_elder",
+  "start": "voice",
+  "nodes": {
+    "voice": {
+      "text": {
+        "zh_TW": "石壁裡傳來一個很低、很老的聲音：「……小小的光……你身上，有舊主人的味道……」凱拔出劍：「誰！？」聲音笑了：「別怕，騎士。我們只是……醒得太早了。」",
+        "en": "A low, very old voice comes from inside the stone wall. \"...Little light... you smell like the old masters...\" Kai draws his sword. \"Who's there!?\" The voice laughs. \"Peace, knight. We have only... woken too early.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「舊主人……是誰？」",
+            "en": "\"The old masters... who?\""
+          },
+          "next": "more"
+        }
+      ]
+    },
+    "more": {
+      "text": {
+        "zh_TW": "聲音：「往下走，小小的光。到龍的巢穴來。我們等你，等了很久了。」",
+        "en": "The voice: \"Come down, little light. Come to the wyrm's den. We have waited for you a long, long time.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null,
+          "action": {
+            "type": "setFlag",
+            "flag": "c4.whisper"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -19,9 +19,8 @@
     "a": "item:gem_atk",
     "d": "item:potion_blue",
     "h": "item:potion_red",
-    "E": "event:ev_gate_soldier_plate",
+    "E": "event:ev_c4_mural",
     "F": "event:ev_common_cache_wall",
-    "G": "event:ev_common_whisper_old_song",
     "I": "event:ev_common_relic_chipped_blade",
     "J": "event:ev_common_trap_rubble",
     "Y": "key:yellow",
@@ -31,7 +30,8 @@
     "H": "monster:gem_slime",
     "K": "monster:crystal_spider",
     "L": "monster:stone_lizard",
-    "M": "npc:archer_scout"
+    "M": "npc:archer_scout",
+    "X": "monster:buried_colossus"
   },
   "tiles": [
     "###############################",
@@ -42,7 +42,7 @@
     "#.....#..#.......d#..#....I...#",
     "#..####..#..####..#..####..#..#",
     "#..#..#..#.....#..#..#........#",
-    "#..#..#..#....M#.U#..#.F..G...#",
+    "#..#..#..#....M#XU#..#.F......#",
     "#..#..#..#..#######..#..####..#",
     "#........#...........y.....#..#",
     "#........#.......1..Hy.E...#..#",

@@ -1,0 +1,20 @@
+{
+  "_comment": "Chapter 4, F17 (docs/gameplay/23 §4): the Slime King in chains, freed with care (mercy + 1); Sir Wobbles dubs Leo \"Sir Leo of the Bucket\" and two potions (c4.slime_king).",
+  "scene": "dialogue",
+  "dialogue": {
+    "id": "c4_slime_king"
+  },
+  "test": {
+    "frames": 60,
+    "keys": "enter@10,enter@25"
+  },
+  "expect": {
+    "scene": "stage",
+    "flags": [
+      "c4.slime_king"
+    ],
+    "inventoryHas": [
+      "potion_red"
+    ]
+  }
+}

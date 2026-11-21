@@ -1,0 +1,96 @@
+{
+  "_comment": "Chapter 5 of the story revamp (docs/gameplay/23 §4): F24, a payoff: the clerk's confession from chapter 3 (the soldiers lay down their arms, potions) or a fight (-20 HP).",
+  "npcId": "town_guard",
+  "start": "line",
+  "nodes": {
+    "line": {
+      "text": {
+        "zh_TW": "收集者的隊長帶著一排士兵擋住了走廊。「放下武器，小鬼。主人要的是你，不是他們。」",
+        "en": "The Collectors' captain blocks the corridor with a line of soldiers. \"Drop your weapon, brat. The Master wants you, not them.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「凱，把供詞給他們看。」",
+            "en": "\"Kai, show them the confession.\""
+          },
+          "next": "read",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c3.confession"
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「我不會停下的。」",
+            "en": "\"I'm not stopping.\""
+          },
+          "next": "fight",
+          "requires": {
+            "not": {
+              "type": "runFlagSet",
+              "flag": "c3.confession"
+            }
+          }
+        }
+      ]
+    },
+    "read": {
+      "text": {
+        "zh_TW": "凱展開書記寫的供詞：「主人的命令：收完村子的孩子，接下來收『收集者』自己的孩子。」士兵們你看我、我看你。一把劍落地，又一把……",
+        "en": "Kai unrolls the clerk's confession. \"The Master's orders: when the villages' children are taken, take the Collectors' own children next.\" The soldiers look at one another. One sword hits the floor. Then another..."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「回家吧。去保護你們的孩子。」",
+            "en": "\"Go home. Protect your children.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "addCounter",
+              "counter": "mercy",
+              "delta": 1
+            },
+            {
+              "type": "give",
+              "itemId": "potion_red",
+              "count": 2
+            },
+            {
+              "type": "setFlag",
+              "flag": "c5.stood_down"
+            }
+          ]
+        }
+      ]
+    },
+    "fight": {
+      "text": {
+        "zh_TW": "士兵們衝了過來。你和凱背靠背打出一條路，身上多了好幾道傷。",
+        "en": "The soldiers charge. Back to back, you and Kai fight your way through, and you don't come out unscathed."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……走！」",
+            "en": "\"...Move!\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "addStat",
+              "stat": "hp",
+              "delta": -20
+            },
+            {
+              "type": "setFlag",
+              "flag": "c5.captain_fought"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

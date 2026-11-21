@@ -1,0 +1,16 @@
+{
+  "_comment": "Chapter 4, F16's rescue (docs/gameplay/23 §4): the dwarf the Collectors made dig goes home (home.dwarf; the dwarf's anvil opens in the village).",
+  "scene": "talk",
+  "talk": {
+    "npc": "dwarf"
+  },
+  "test": {
+    "frames": 50,
+    "keys": "enter@15"
+  },
+  "expect": {
+    "flags": [
+      "home.dwarf"
+    ]
+  }
+}

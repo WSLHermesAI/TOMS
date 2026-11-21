@@ -1,0 +1,18 @@
+{
+  "_comment": "Chapter 5, F22's talk-N event (docs/gameplay/23 §5): the sleeping guard mumbles two lines; the third talk (ev_c5_guard_key, talkCountAtLeast 2) drops the cell keys. The first talk by walking into him, the next by Enter.",
+  "scene": "stage",
+  "stage": "F22",
+  "player": {
+    "x": 11,
+    "y": 1
+  },
+  "test": {
+    "frames": 170,
+    "keys": "left@10,enter@40,enter@55,enter@85,enter@100,enter@130"
+  },
+  "expect": {
+    "inventoryHas": [
+      "key_cells"
+    ]
+  }
+}

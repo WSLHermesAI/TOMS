@@ -174,5 +174,85 @@
       "kind": "talk",
       "npc": "scholar"
     }
+  },
+  "hub_dwarf": {
+    "id": "hub_dwarf",
+    "unlockFlag": "home.dwarf",
+    "name": {
+      "zh_TW": "矮人的打鐵台",
+      "en": "The Dwarf's Anvil"
+    },
+    "desc": {
+      "zh_TW": "矮人在鐵匠鋪旁邊擺了一張自己的打鐵台，兩人每天比誰敲得響。",
+      "en": "The dwarf set up his own anvil beside the forge. He and the blacksmith compete every day over who hammers louder."
+    },
+    "action": {
+      "kind": "talk",
+      "npc": "dwarf"
+    }
+  },
+  "hub_archer": {
+    "id": "hub_archer",
+    "unlockFlag": "home.archer_scout",
+    "name": {
+      "zh_TW": "斥候的瞭望台",
+      "en": "The Scout's Lookout"
+    },
+    "desc": {
+      "zh_TW": "斥候在村口搭了一座瞭望台，眼睛一直看著塔。",
+      "en": "The scout built a lookout by the gate and never takes her eyes off the tower."
+    },
+    "action": {
+      "kind": "talk",
+      "npc": "archer_scout"
+    }
+  },
+  "hub_square": {
+    "id": "hub_square",
+    "unlockFlag": "home.miller",
+    "name": {
+      "zh_TW": "村子廣場",
+      "en": "The Village Square"
+    },
+    "desc": {
+      "zh_TW": "被救回來的村民聚在廣場上，水車又轉了起來。",
+      "en": "The rescued villagers gather in the square. The mill wheel turns again."
+    },
+    "action": {
+      "kind": "talk",
+      "npc": "village_square"
+    }
+  },
+  "hub_mira": {
+    "id": "hub_mira",
+    "unlockFlag": "home.mira",
+    "name": {
+      "zh_TW": "米菈的練習場",
+      "en": "Mira's Practice Yard"
+    },
+    "desc": {
+      "zh_TW": "米菈在教村裡的小孩揮木劍。",
+      "en": "Mira teaches the village kids to swing wooden swords."
+    },
+    "action": {
+      "kind": "talk",
+      "npc": "mira_home"
+    }
+  },
+  "hub_bran": {
+    "id": "hub_bran",
+    "unlockFlag": "home.bran",
+    "name": {
+      "zh_TW": "燒毀的房子",
+      "en": "The Burned Houses"
+    },
+    "desc": {
+      "zh_TW": "布蘭一個人在重建他燒掉的房子。",
+      "en": "Bran rebuilds, alone, the houses he burned."
+    },
+    "action": {
+      "kind": "talk",
+      "npc": "bran_home"
+    }
   }
 }

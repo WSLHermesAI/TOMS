@@ -1,0 +1,29 @@
+{
+  "_doc": [
+    "stage3d: walking a floor in 3D (docs/gameplay/24_STAGE_3D.md). The floor's walls and ground are a model made from its tile map by tools/stage3d/make_floor3d.py (model: {id} = the floor's id); a floor without one is drawn in 2D.",
+    "on: false = every floor in 2D. Also off with --walk-3d=off, and in scripted runs unless --walk-3d=on.",
+    "camera: pitch (degrees down from level), distance (metres from the hero), fov (degrees, up and down), follow (how fast it catches up with the hero: 1/s), lookAhead (metres north of the hero it looks at).",
+    "sprites: the map's sprites standing in the scene: glow (their own light), lean (degrees they lean back toward the camera; 0 = upright), heights (metres for a one-tile sprite, by kind: player, monster, npc, item, door, event, other), shadow (the soft disc under each: its radius in metres; 0 = none), paintedHero (the hero drawn as his weapon's painted battle character, its idle clip, turned the way he last walked) and paintedHeroHeight (metres).",
+    "looks: by the floor's theme (its stage file's \"theme\"), \"default\" for the rest: sky (an HDR or JPG: hdr, intensity, yaw, blur; background false = it only lights, the tower stands in the dark), exposure, light (dir, color, intensity, ambient) as battle.json stages3d."
+  ],
+  "on": true,
+  "model": "stage3d/floors/{id}.gltf",
+  "shadow": "battle3d/moonlit_ruins/blob.glb",
+  "camera": { "pitch": 56, "distance": 11.0, "fov": 38, "follow": 7.0, "lookAhead": 0.6 },
+  "sprites": {
+    "glow": 0.45, "lean": 24, "shadow": 0.32, "paintedHero": true, "paintedHeroHeight": 1.6,
+    "heights": { "player": 1.45, "monster": 1.35, "npc": 1.45, "item": 0.8, "door": 1.0, "event": 1.0, "other": 1.0 }
+  },
+  "looks": {
+    "default": {
+      "sky": { "hdr": "battle3d/moonlit_ruins/sky.jpg", "intensity": 0.8, "background": false },
+      "exposure": 0.55,
+      "light": { "dir": [0.45, -0.8, 0.35], "color": [1.0, 0.9, 0.75], "intensity": 4.0, "ambient": 0.45 }
+    },
+    "wood": {
+      "sky": { "hdr": "battle3d/moonlit_ruins/sky.jpg", "intensity": 0.9, "background": false },
+      "exposure": 0.6,
+      "light": { "dir": [0.45, -0.8, 0.35], "color": [1.0, 0.86, 0.66], "intensity": 4.5, "ambient": 0.5 }
+    }
+  }
+}

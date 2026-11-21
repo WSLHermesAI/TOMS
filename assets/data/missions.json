@@ -135,5 +135,21 @@
     "rewardExp": 30,
     "rewardGold": 30,
     "rewardItemId": "gem_def"
+  },
+  "m_c4_wyrm": {
+    "missionId": "m_c4_wyrm",
+    "title": "mission.m_c4_wyrm.title",
+    "desc": "mission.m_c4_wyrm.desc",
+    "kind": "once",
+    "giver": "stone_wyrm",
+    "prerequisites": null,
+    "objective": {
+      "type": "defeat",
+      "targetId": "crystal_spider",
+      "count": 3
+    },
+    "rewardExp": 40,
+    "rewardGold": 40,
+    "rewardItemId": "gem_atk"
   }
 }

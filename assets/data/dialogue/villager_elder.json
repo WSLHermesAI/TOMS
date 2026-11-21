@@ -1,5 +1,5 @@
 {
-  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): the elder in the village (hub_village): the baker's quest claimed, the tower, and the chapter's end after Grey Mask. Chapter 2 (23 §4): its end after F10 (c2.done). Chapter 3: its end after F15 (c3.done; the ledger quest paid).",
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): the elder in the village (hub_village): the baker's quest claimed, the tower, and the chapter's end after Grey Mask. Chapter 2 (23 §4): its end after F10 (c2.done). Chapter 3: its end after F15 (c3.done; the ledger quest paid). Chapter 4: its end after F20 and the vision (c4.done): Bran, the mother's brother. Chapter 5: its end after F25 and the unmasking (c5.done), one line per choice.",
   "npcId": "villager_elder",
   "start": "root",
   "nodes": {
@@ -107,6 +107,134 @@
                   "type": "runFlagSet",
                   "flag": "c3.done"
                 }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「我看見了十二年前的事。」",
+            "en": "\"I saw what happened twelve years ago.\""
+          },
+          "next": "c4end1",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c3.done"
+              },
+              {
+                "type": "runFlagSet",
+                "flag": "c4.vision"
+              },
+              {
+                "type": "stageCleared",
+                "stageId": "F21"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c4.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「灰面……是布蘭舅舅。我沒有原諒他。」",
+            "en": "\"Grey Mask... was Uncle Bran. I didn't forgive him.\""
+          },
+          "next": "c5kill",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c4.done"
+              },
+              {
+                "type": "runFlagSet",
+                "flag": "c5.unmasked"
+              },
+              {
+                "type": "stageCleared",
+                "stageId": "F26"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c5.done"
+                }
+              },
+              {
+                "type": "runFlagSet",
+                "flag": "c5.bran_killed"
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「灰面是布蘭舅舅。我讓他回來了。」",
+            "en": "\"Grey Mask was Uncle Bran. I sent him home.\""
+          },
+          "next": "c5spare",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c4.done"
+              },
+              {
+                "type": "runFlagSet",
+                "flag": "c5.unmasked"
+              },
+              {
+                "type": "stageCleared",
+                "stageId": "F26"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c5.done"
+                }
+              },
+              {
+                "type": "runFlagSet",
+                "flag": "c5.bran_spared"
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「灰面是布蘭舅舅。凱帶他去王都了。」",
+            "en": "\"Grey Mask was Uncle Bran. Kai took him to the capital.\""
+          },
+          "next": "c5just",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c4.done"
+              },
+              {
+                "type": "runFlagSet",
+                "flag": "c5.unmasked"
+              },
+              {
+                "type": "stageCleared",
+                "stageId": "F26"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c5.done"
+                }
+              },
+              {
+                "type": "runFlagSet",
+                "flag": "c5.bran_justice"
               }
             ]
           }
@@ -262,6 +390,97 @@
               "flag": "c3.done"
             }
           ]
+        }
+      ]
+    },
+    "c4end1": {
+      "text": {
+        "zh_TW": "你說起雪夜、發光的嬰兒，還有那個下巴有疤的少年。長老的拐杖掉在地上。",
+        "en": "You tell him about the snowy night, the glowing baby, and the youth with a scar on his chin. The elder's stick clatters to the floor."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「長老？」",
+            "en": "\"Elder?\""
+          },
+          "next": "c4end2"
+        }
+      ]
+    },
+    "c4end2": {
+      "text": {
+        "zh_TW": "長老：「下巴有疤……布蘭。你娘的弟弟。」他的聲音在發抖。「他很疼你，里歐。可是十年前他說要去王都，就再也沒回來……」",
+        "en": "Elder: \"A scar on his chin... Bran. Your mother's younger brother.\" His voice shakes. \"He adored you, Leo. Ten years ago he said he was going to the capital, and he never came back...\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（第四章 完）",
+            "en": "(End of Chapter 4)"
+          },
+          "next": null,
+          "action": {
+            "type": "setFlag",
+            "flag": "c4.done"
+          }
+        }
+      ]
+    },
+    "c5kill": {
+      "text": {
+        "zh_TW": "長老沉默了很久。「……那孩子，從小就愛逞強。」他把手放在你的肩上。「你身上的光變得不一樣了，里歐。別讓它把你變成別人。」",
+        "en": "The elder is silent for a long time. \"...That boy always tried to carry everything himself.\" He puts a hand on your shoulder. \"Your light has changed, Leo. Don't let it turn you into someone else.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（第五章 完）",
+            "en": "(End of Chapter 5)"
+          },
+          "next": null,
+          "action": {
+            "type": "setFlag",
+            "flag": "c5.done"
+          }
+        }
+      ]
+    },
+    "c5spare": {
+      "text": {
+        "zh_TW": "長老看著廣場上一個人搬木頭的布蘭。「……村民還沒準備好原諒他。但你準備好了。」他笑了。「你娘會為你驕傲的。」",
+        "en": "The elder watches Bran hauling timber alone across the square. \"...The village isn't ready to forgive him yet. But you were.\" He smiles. \"Your mother will be proud of you.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（第五章 完）",
+            "en": "(End of Chapter 5)"
+          },
+          "next": null,
+          "action": {
+            "type": "setFlag",
+            "flag": "c5.done"
+          }
+        }
+      ]
+    },
+    "c5just": {
+      "text": {
+        "zh_TW": "長老點點頭。「讓國王來判吧。這不是一個孩子該背的擔子。」他看著塔頂。「去吧，去神殿。把你爹娘帶回家。」",
+        "en": "The elder nods. \"Let the king judge him. That's not a burden a child should carry.\" He looks up at the top of the tower. \"Go on, to the Sanctum. Bring your parents home.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（第五章 完）",
+            "en": "(End of Chapter 5)"
+          },
+          "next": null,
+          "action": {
+            "type": "setFlag",
+            "flag": "c5.done"
+          }
         }
       ]
     }

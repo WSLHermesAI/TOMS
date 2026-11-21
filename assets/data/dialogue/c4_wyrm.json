@@ -1,0 +1,47 @@
+{
+  "_comment": "Chapter 4 of the story revamp (docs/gameplay/23 §4): F18, a scene and a quest: the stone wyrm, a Buried One, recognises the last Godborn (m_c4_wyrm: three crystal spiders).",
+  "npcId": "villager_elder",
+  "start": "den",
+  "nodes": {
+    "den": {
+      "text": {
+        "zh_TW": "洞穴深處，一條石頭做的巨龍睜開了眼睛。牠的眼睛和你的手掌一樣，發著光。「神裔之子。最後的一個。」",
+        "en": "Deep in the cave, a dragon made of stone opens its eyes. They glow, just like your palms. \"Child of the Godborn. The last one.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「你認識我？」",
+            "en": "\"You know me?\""
+          },
+          "next": "test"
+        }
+      ]
+    },
+    "test": {
+      "text": {
+        "zh_TW": "石龍：「我認識你的血。很久以前，你的族人和我們一起，擋住了天上的東西。」牠低下頭。「證明你的力量：打倒三隻晶蛛——牠們在偷我們的夢。之後，我讓你看見你忘記的事。」",
+        "en": "The stone wyrm: \"I know your blood. Long ago your people stood with us against the thing in the sky.\" It lowers its head. \"Prove your strength: defeat three crystal spiders. They feed on our dreams. Then I will show you what you have forgotten.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「好。」",
+            "en": "\"All right.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "startMission",
+              "missionId": "m_c4_wyrm"
+            },
+            {
+              "type": "setFlag",
+              "flag": "c4.wyrm_met"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

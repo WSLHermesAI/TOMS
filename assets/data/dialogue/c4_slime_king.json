@@ -1,0 +1,77 @@
+{
+  "_comment": "Chapter 4 of the story revamp (docs/gameplay/23 §4): F17, the comic payoff of Sir Wobbles' thread: the Slime King freed; \"Sir Leo of the Bucket\".",
+  "npcId": "villager",
+  "start": "chains",
+  "nodes": {
+    "chains": {
+      "text": {
+        "zh_TW": "一隻戴著小王冠的巨大史萊姆被鍊子綁成了一顆粽子。「嗚嗚……寡人……寡人好癢……」",
+        "en": "A huge slime in a tiny crown is tied up in chains like a parcel. \"Boo-hoo... We are... We are so ticklish...\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（小心地解開鍊子）",
+            "en": "(Carefully undo the chains)"
+          },
+          "next": "free",
+          "actions": [
+            {
+              "type": "addCounter",
+              "counter": "mercy",
+              "delta": 1
+            }
+          ]
+        },
+        {
+          "label": {
+            "zh_TW": "「先說好，救你有什麼好處？」",
+            "en": "\"First: what's in it for me?\""
+          },
+          "next": "deal"
+        }
+      ]
+    },
+    "deal": {
+      "text": {
+        "zh_TW": "史萊姆王：「放肆！……不過，寡人的果凍是全國最好吃的。」皮普的聲音從某處傳來：「成交！」",
+        "en": "Slime King: \"Impudent! ...However, the royal jelly is the finest in the land.\" Pip's voice calls from somewhere: \"Deal!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（解開鍊子）",
+            "en": "(Undo the chains)"
+          },
+          "next": "free"
+        }
+      ]
+    },
+    "free": {
+      "text": {
+        "zh_TW": "「陛下——！」晃晃爵士頂著水桶衝進來，哭得整個身體都在晃。他轉向你，用水桶碰了碰你的肩膀：「吾以水桶之名，冊封你為——水桶騎士里歐！」",
+        "en": "\"Your Majesty—!\" Sir Wobbles bursts in, bucket on, wobbling with tears. He turns to you and taps your shoulder with his bucket. \"In the name of the Bucket, I dub thee... Sir Leo of the Bucket!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……謝謝？」",
+            "en": "\"...Thanks?\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "give",
+              "itemId": "potion_red",
+              "count": 2
+            },
+            {
+              "type": "setFlag",
+              "flag": "c4.slime_king"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

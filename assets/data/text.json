@@ -2243,6 +2243,194 @@
       "zh_TW": "又一封信。",
       "en": "Another letter."
     },
+    "mission.m_c4_wyrm.title": {
+      "zh_TW": "石龍的試煉",
+      "en": "The Wyrm's Test"
+    },
+    "mission.m_c4_wyrm.desc": {
+      "zh_TW": "晶蛛在偷沉睡者的夢。打倒三隻晶蛛，證明神裔的力量。",
+      "en": "The crystal spiders feed on the sleepers' dreams. Defeat three to prove the Godborn's strength."
+    },
+    "ev_c4_whisper.title": {
+      "zh_TW": "牆裡的聲音",
+      "en": "The Voice in the Wall"
+    },
+    "ev_c4_whisper.desc": {
+      "zh_TW": "「小小的光……」",
+      "en": "\"Little light...\""
+    },
+    "ev_c4_whisper.text": {
+      "zh_TW": "有聲音……",
+      "en": "A voice..."
+    },
+    "ev_c4_slime_king.title": {
+      "zh_TW": "被綁的史萊姆王",
+      "en": "The Slime King in Chains"
+    },
+    "ev_c4_slime_king.desc": {
+      "zh_TW": "晃晃爵士的王。",
+      "en": "Sir Wobbles' king."
+    },
+    "ev_c4_slime_king.text": {
+      "zh_TW": "寡人好癢……",
+      "en": "We are so ticklish..."
+    },
+    "ev_c4_wyrm.title": {
+      "zh_TW": "石龍",
+      "en": "The Stone Wyrm"
+    },
+    "ev_c4_wyrm.desc": {
+      "zh_TW": "「神裔之子。最後的一個。」",
+      "en": "\"Child of the Godborn. The last one.\""
+    },
+    "ev_c4_wyrm.text": {
+      "zh_TW": "石龍睜開了眼睛。",
+      "en": "The stone wyrm opens its eyes."
+    },
+    "ev_c4_vision.title": {
+      "zh_TW": "十二年前的雪夜",
+      "en": "A Snowy Night, Twelve Years Ago"
+    },
+    "ev_c4_vision.desc": {
+      "zh_TW": "石龍讓你看見忘記的事（先完成石龍的試煉）。",
+      "en": "The wyrm shows you what you forgot (after its test)."
+    },
+    "ev_c4_vision.text": {
+      "zh_TW": "石龍的眼睛亮了起來……",
+      "en": "The wyrm's eyes begin to glow..."
+    },
+    "ev_c4_mural.title": {
+      "zh_TW": "壁畫",
+      "en": "The Mural"
+    },
+    "ev_c4_mural.desc": {
+      "zh_TW": "神裔與沉睡者，擋住天上的東西。",
+      "en": "The Godborn and the Buried Ones, holding back the thing in the sky."
+    },
+    "ev_c4_mural.text": {
+      "zh_TW": "一幅壁畫。",
+      "en": "A mural."
+    },
+    "story.ch05.title": {
+      "zh_TW": "收集者軍營",
+      "en": "The Collectors' Barracks"
+    },
+    "npc.mira.name": {
+      "zh_TW": "米菈",
+      "en": "Mira"
+    },
+    "npc.bran.name": {
+      "zh_TW": "布蘭",
+      "en": "Bran"
+    },
+    "village.went_home_alone": {
+      "zh_TW": "{name}一個人往村子走去了。",
+      "en": "{name} set off alone toward the village."
+    },
+    "item.key_cells.name": {
+      "zh_TW": "牢房的鑰匙",
+      "en": "Cell Keys"
+    },
+    "item.key_cells.desc": {
+      "zh_TW": "打瞌睡的衛兵掉下的鑰匙圈。",
+      "en": "The key ring the sleeping guard dropped."
+    },
+    "ev_c5_ambush.title": {
+      "zh_TW": "大門的埋伏",
+      "en": "The Ambush at the Gate"
+    },
+    "ev_c5_ambush.desc": {
+      "zh_TW": "上面架著網。",
+      "en": "Nets rigged overhead."
+    },
+    "ev_c5_ambush.text": {
+      "zh_TW": "有人在叫你……",
+      "en": "Someone is calling you..."
+    },
+    "ev_c5_pip_uniform.title": {
+      "zh_TW": "九成新的制服",
+      "en": "A Barely Worn Uniform"
+    },
+    "ev_c5_pip_uniform.desc": {
+      "zh_TW": "粉紅色的。",
+      "en": "It's pink."
+    },
+    "ev_c5_pip_uniform.text": {
+      "zh_TW": "客人！",
+      "en": "Customer!"
+    },
+    "ev_c5_guard_key.title": {
+      "zh_TW": "打瞌睡的衛兵",
+      "en": "The Sleeping Guard"
+    },
+    "ev_c5_guard_key.desc": {
+      "zh_TW": "多跟他說幾次話。",
+      "en": "Talk to him a few times."
+    },
+    "ev_c5_guard_key.text": {
+      "zh_TW": "叮噹。",
+      "en": "Clink."
+    },
+    "ev_c5_cells.title": {
+      "zh_TW": "牢房裡的村民",
+      "en": "The Villagers in the Cells"
+    },
+    "ev_c5_cells.desc": {
+      "zh_TW": "磨坊主、織布女、漁夫、裁縫。",
+      "en": "The miller, the weaver, the fisherman, the tailor."
+    },
+    "ev_c5_cells.text": {
+      "zh_TW": "里歐！？",
+      "en": "Leo!?"
+    },
+    "ev_c5_mira.title": {
+      "zh_TW": "米菈",
+      "en": "Mira"
+    },
+    "ev_c5_mira.desc": {
+      "zh_TW": "凱的妹妹。",
+      "en": "Kai's little sister."
+    },
+    "ev_c5_mira.text": {
+      "zh_TW": "……米菈？",
+      "en": "...Mira?"
+    },
+    "ev_c5_captain.title": {
+      "zh_TW": "收集者的隊長",
+      "en": "The Collectors' Captain"
+    },
+    "ev_c5_captain.desc": {
+      "zh_TW": "書記的供詞能派上用場嗎？",
+      "en": "Will the clerk's confession help?"
+    },
+    "ev_c5_captain.text": {
+      "zh_TW": "放下武器，小鬼。",
+      "en": "Drop your weapon, brat."
+    },
+    "ev_c5_horse.title": {
+      "zh_TW": "小木馬",
+      "en": "The Wooden Horse"
+    },
+    "ev_c5_horse.desc": {
+      "zh_TW": "耳朵被咬得坑坑巴巴。",
+      "en": "Its ears chewed ragged."
+    },
+    "ev_c5_horse.text": {
+      "zh_TW": "一隻小木馬。",
+      "en": "A little wooden horse."
+    },
+    "ev_c5_unmask.title": {
+      "zh_TW": "面具底下",
+      "en": "Beneath the Mask"
+    },
+    "ev_c5_unmask.desc": {
+      "zh_TW": "殺他、放他、還是交給國王？",
+      "en": "Kill him, spare him, or the king's justice?"
+    },
+    "ev_c5_unmask.text": {
+      "zh_TW": "面具裂開了。",
+      "en": "The mask cracks open."
+    },
     "mission.started": {
       "zh_TW": "接下任務：{title}",
       "en": "Quest started: {title}",
@@ -3166,8 +3354,8 @@
       "es": "撕頁者留下的殘頁，要怎麼處理？"
     },
     "story.ch04.title": {
-      "zh_TW": "執卷人的遺骸",
-      "en": "The Scribe's Remains",
+      "zh_TW": "沉睡者",
+      "en": "The Buried Ones",
       "zh_CN": "執卷人的遺骸",
       "ja": "執卷人的遺骸",
       "ko": "執卷人的遺骸",
@@ -3414,160 +3602,160 @@
       "es": "門樓前的道兵"
     },
     "story.f16.intro": {
-      "zh_TW": "石階上刻滿了名字，最後一個位置是空的。",
-      "en": "The gate steps",
+      "zh_TW": "階梯一直往下，比塔的地基還深。",
+      "en": "The stairs go down, deeper than the tower's foundations.",
       "zh_CN": "石階上刻滿了名字，最後一個位置是空的。",
       "ja": "石階上刻滿了名字，最後一個位置是空的。",
       "ko": "石階上刻滿了名字，最後一個位置是空的。",
       "es": "石階上刻滿了名字，最後一個位置是空的。"
     },
     "story.f16.name": {
-      "zh_TW": "門樓石階",
-      "en": "The gate steps",
+      "zh_TW": "通往地底的階梯",
+      "en": "The Stair Down",
       "zh_CN": "門樓石階",
       "ja": "門樓石階",
       "ko": "門樓石階",
       "es": "門樓石階"
     },
     "story.f17.intro": {
-      "zh_TW": "走廊兩側的刻痕連成一張臉，你認得那張臉。",
-      "en": "Corridor of carvings",
+      "zh_TW": "石棺裡傳來打呼聲。很大聲。",
+      "en": "Snoring comes from the stone coffins. Very loud snoring.",
       "zh_CN": "走廊兩側的刻痕連成一張臉，你認得那張臉。",
       "ja": "走廊兩側的刻痕連成一張臉，你認得那張臉。",
       "ko": "走廊兩側的刻痕連成一張臉，你認得那張臉。",
       "es": "走廊兩側的刻痕連成一張臉，你認得那張臉。"
     },
     "story.f17.name": {
-      "zh_TW": "刻痕迴廊",
-      "en": "Corridor of carvings",
+      "zh_TW": "沉睡之廳",
+      "en": "The Sleeping Hall",
       "zh_CN": "刻痕迴廊",
       "ja": "刻痕迴廊",
       "ko": "刻痕迴廊",
       "es": "刻痕迴廊"
     },
     "story.f18.intro": {
-      "zh_TW": "門環上的刻痕與你腰間那把劍的缺口吻合。",
-      "en": "The ring and the rubbing",
+      "zh_TW": "洞頂垂下的鐘乳石，排成了一條龍的形狀。",
+      "en": "The stalactites hang in the shape of a dragon.",
       "zh_CN": "門環上的刻痕與你腰間那把劍的缺口吻合。",
       "ja": "門環上的刻痕與你腰間那把劍的缺口吻合。",
       "ko": "門環上的刻痕與你腰間那把劍的缺口吻合。",
       "es": "門環上的刻痕與你腰間那把劍的缺口吻合。"
     },
     "story.f18.name": {
-      "zh_TW": "門環與拓印",
-      "en": "The ring and the rubbing",
+      "zh_TW": "龍之巢穴",
+      "en": "The Wyrm's Den",
       "zh_CN": "門環與拓印",
       "ja": "門環與拓印",
       "ko": "門環與拓印",
       "es": "門環與拓印"
     },
     "story.f19.intro": {
-      "zh_TW": "門環上的刻痕——可以補，也可以砸。",
-      "en": "The notch on the ring",
+      "zh_TW": "晶石裡映著不屬於這裡的影子。",
+      "en": "The crystals reflect shadows that do not belong here.",
       "zh_CN": "門環上的刻痕——可以補，也可以砸。",
       "ja": "門環上的刻痕——可以補，也可以砸。",
       "ko": "門環上的刻痕——可以補，也可以砸。",
       "es": "門環上的刻痕——可以補，也可以砸。"
     },
     "story.f19.name": {
-      "zh_TW": "門環上的刻痕",
-      "en": "The notch on the ring",
+      "zh_TW": "夢之窟",
+      "en": "The Dreaming Cave",
       "zh_CN": "門環上的刻痕",
       "ja": "門環上的刻痕",
       "ko": "門環上的刻痕",
       "es": "門環上的刻痕"
     },
     "story.f20.intro": {
-      "zh_TW": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。",
-      "en": "First qi beyond the gate",
+      "zh_TW": "巨大的石門後面，有東西在翻身。",
+      "en": "Behind the huge stone gate, something is turning over in its sleep.",
       "zh_CN": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。",
       "ja": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。",
       "ko": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。",
       "es": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。"
     },
     "story.f20.name": {
-      "zh_TW": "門內的第一道氣",
-      "en": "First qi beyond the gate",
+      "zh_TW": "深淵之門",
+      "en": "The Deep Gate",
       "zh_CN": "門內的第一道氣",
       "ja": "門內的第一道氣",
       "ko": "門內的第一道氣",
       "es": "門內的第一道氣"
     },
     "story.f21.intro": {
-      "zh_TW": "守門石巨人的眼窩裡亮著兩點舊火。",
-      "en": "The gate: the seal knot",
+      "zh_TW": "灰色的旗子插滿了城牆。",
+      "en": "Grey banners line every wall.",
       "zh_CN": "守門石巨人的眼窩裡亮著兩點舊火。",
       "ja": "守門石巨人的眼窩裡亮著兩點舊火。",
       "ko": "守門石巨人的眼窩裡亮著兩點舊火。",
       "es": "守門石巨人的眼窩裡亮著兩點舊火。"
     },
     "story.f21.name": {
-      "zh_TW": "門樓・封印結",
-      "en": "The gate: the seal knot",
+      "zh_TW": "兵營大門",
+      "en": "The Barracks Gate",
       "zh_CN": "門樓・封印結",
       "ja": "門樓・封印結",
       "ko": "門樓・封印結",
       "es": "門樓・封印結"
     },
     "story.f22.intro": {
-      "zh_TW": "門楣上的字被人劃掉一半，只剩下「……卷」。",
-      "en": "Library outer court: the shattered lintel scroll",
+      "zh_TW": "假人身上全是劍痕。有一個假人戴著水桶。",
+      "en": "The training dummies are covered in sword cuts. One of them is wearing a bucket.",
       "zh_CN": "門楣上的字被人劃掉一半，只剩下「……卷」。",
       "ja": "門楣上的字被人劃掉一半，只剩下「……卷」。",
       "ko": "門楣上的字被人劃掉一半，只剩下「……卷」。",
       "es": "門楣上的字被人劃掉一半，只剩下「……卷」。"
     },
     "story.f22.name": {
-      "zh_TW": "藏書閣外苑・碎裂的門聯",
-      "en": "Library outer court: the shattered lintel scroll",
+      "zh_TW": "操練場",
+      "en": "The Drill Yard",
       "zh_CN": "藏書閣外苑・碎裂的門聯",
       "ja": "藏書閣外苑・碎裂的門聯",
       "ko": "藏書閣外苑・碎裂的門聯",
       "es": "藏書閣外苑・碎裂的門聯"
     },
     "story.f23.intro": {
-      "zh_TW": "書廊繞著中庭盤旋而上，蝙蝠棲在最上層的橫梁。",
-      "en": "The library: the spiral gallery",
+      "zh_TW": "牢房深處傳來熟悉的聲音。",
+      "en": "Familiar voices echo from deep in the cells.",
       "zh_CN": "書廊繞著中庭盤旋而上，蝙蝠棲在最上層的橫梁。",
       "ja": "書廊繞著中庭盤旋而上，蝙蝠棲在最上層的橫梁。",
       "ko": "書廊繞著中庭盤旋而上，蝙蝠棲在最上層的橫梁。",
       "es": "書廊繞著中庭盤旋而上，蝙蝠棲在最上層的橫梁。"
     },
     "story.f23.name": {
-      "zh_TW": "藏書閣・迴旋書廊",
-      "en": "The library: the spiral gallery",
+      "zh_TW": "牢房",
+      "en": "The Cells",
       "zh_CN": "藏書閣・迴旋書廊",
       "ja": "藏書閣・迴旋書廊",
       "ko": "藏書閣・迴旋書廊",
       "es": "藏書閣・迴旋書廊"
     },
     "story.f24.intro": {
-      "zh_TW": "抄寫房裡的墨硯早已乾涸，筆桿卻還立在原處。",
-      "en": "The library: the copying room",
+      "zh_TW": "桌上的地圖，畫著每一個被燒掉的村子。",
+      "en": "The map on the desk marks every village they burned.",
       "zh_CN": "抄寫房裡的墨硯早已乾涸，筆桿卻還立在原處。",
       "ja": "抄寫房裡的墨硯早已乾涸，筆桿卻還立在原處。",
       "ko": "抄寫房裡的墨硯早已乾涸，筆桿卻還立在原處。",
       "es": "抄寫房裡的墨硯早已乾涸，筆桿卻還立在原處。"
     },
     "story.f24.name": {
-      "zh_TW": "藏書閣・抄寫房",
-      "en": "The library: the copying room",
+      "zh_TW": "隊長室",
+      "en": "The Captain's Quarters",
       "zh_CN": "藏書閣・抄寫房",
       "ja": "藏書閣・抄寫房",
       "ko": "藏書閣・抄寫房",
       "es": "藏書閣・抄寫房"
     },
     "story.f25.intro": {
-      "zh_TW": "架上多是空的，撕去的書頁邊緣還帶著新痕。",
-      "en": "The library: the shelves of torn volumes",
+      "zh_TW": "大廳很冷，只有一盞燈還亮著。",
+      "en": "The hall is cold. Only one lamp is still burning.",
       "zh_CN": "架上多是空的，撕去的書頁邊緣還帶著新痕。",
       "ja": "架上多是空的，撕去的書頁邊緣還帶著新痕。",
       "ko": "架上多是空的，撕去的書頁邊緣還帶著新痕。",
       "es": "架上多是空的，撕去的書頁邊緣還帶著新痕。"
     },
     "story.f25.name": {
-      "zh_TW": "藏書閣・殘卷架",
-      "en": "The library: the shelves of torn volumes",
+      "zh_TW": "灰面的大廳",
+      "en": "Grey Mask's Hall",
       "zh_CN": "藏書閣・殘卷架",
       "ja": "藏書閣・殘卷架",
       "ko": "藏書閣・殘卷架",
@@ -5513,160 +5701,160 @@
       "es": "道兵的鎧甲裡沒有身體，只有一縷不肯散去的氣。"
     },
     "story.f16.ambient.1": {
-      "zh_TW": "石階上刻滿了名字，最後一個位置是空的。",
-      "en": "The gate steps",
+      "zh_TW": "階梯一直往下，比塔的地基還深。",
+      "en": "The stairs go down, deeper than the tower's foundations.",
       "zh_CN": "石階上刻滿了名字，最後一個位置是空的。",
       "ja": "石階上刻滿了名字，最後一個位置是空的。",
       "ko": "石階上刻滿了名字，最後一個位置是空的。",
       "es": "石階上刻滿了名字，最後一個位置是空的。"
     },
     "story.f16.ambient.2": {
-      "zh_TW": "石階上刻滿了名字，最後一個位置是空的。",
-      "en": "The gate steps",
+      "zh_TW": "通往地底的階梯",
+      "en": "The Stair Down",
       "zh_CN": "石階上刻滿了名字，最後一個位置是空的。",
       "ja": "石階上刻滿了名字，最後一個位置是空的。",
       "ko": "石階上刻滿了名字，最後一個位置是空的。",
       "es": "石階上刻滿了名字，最後一個位置是空的。"
     },
     "story.f17.ambient.1": {
-      "zh_TW": "走廊兩側的刻痕連成一張臉，你認得那張臉。",
-      "en": "Corridor of carvings",
+      "zh_TW": "石棺裡傳來打呼聲。很大聲。",
+      "en": "Snoring comes from the stone coffins. Very loud snoring.",
       "zh_CN": "走廊兩側的刻痕連成一張臉，你認得那張臉。",
       "ja": "走廊兩側的刻痕連成一張臉，你認得那張臉。",
       "ko": "走廊兩側的刻痕連成一張臉，你認得那張臉。",
       "es": "走廊兩側的刻痕連成一張臉，你認得那張臉。"
     },
     "story.f17.ambient.2": {
-      "zh_TW": "走廊兩側的刻痕連成一張臉，你認得那張臉。",
-      "en": "Corridor of carvings",
+      "zh_TW": "沉睡之廳",
+      "en": "The Sleeping Hall",
       "zh_CN": "走廊兩側的刻痕連成一張臉，你認得那張臉。",
       "ja": "走廊兩側的刻痕連成一張臉，你認得那張臉。",
       "ko": "走廊兩側的刻痕連成一張臉，你認得那張臉。",
       "es": "走廊兩側的刻痕連成一張臉，你認得那張臉。"
     },
     "story.f18.ambient.1": {
-      "zh_TW": "門環上的刻痕與你腰間那把劍的缺口吻合。",
-      "en": "The ring and the rubbing",
+      "zh_TW": "洞頂垂下的鐘乳石，排成了一條龍的形狀。",
+      "en": "The stalactites hang in the shape of a dragon.",
       "zh_CN": "門環上的刻痕與你腰間那把劍的缺口吻合。",
       "ja": "門環上的刻痕與你腰間那把劍的缺口吻合。",
       "ko": "門環上的刻痕與你腰間那把劍的缺口吻合。",
       "es": "門環上的刻痕與你腰間那把劍的缺口吻合。"
     },
     "story.f18.ambient.2": {
-      "zh_TW": "門環上的刻痕與你腰間那把劍的缺口吻合。",
-      "en": "The ring and the rubbing",
+      "zh_TW": "龍之巢穴",
+      "en": "The Wyrm's Den",
       "zh_CN": "門環上的刻痕與你腰間那把劍的缺口吻合。",
       "ja": "門環上的刻痕與你腰間那把劍的缺口吻合。",
       "ko": "門環上的刻痕與你腰間那把劍的缺口吻合。",
       "es": "門環上的刻痕與你腰間那把劍的缺口吻合。"
     },
     "story.f19.ambient.1": {
-      "zh_TW": "門環上的刻痕——可以補，也可以砸。",
-      "en": "The notch on the ring",
+      "zh_TW": "晶石裡映著不屬於這裡的影子。",
+      "en": "The crystals reflect shadows that do not belong here.",
       "zh_CN": "門環上的刻痕——可以補，也可以砸。",
       "ja": "門環上的刻痕——可以補，也可以砸。",
       "ko": "門環上的刻痕——可以補，也可以砸。",
       "es": "門環上的刻痕——可以補，也可以砸。"
     },
     "story.f19.ambient.2": {
-      "zh_TW": "門環上的刻痕——可以補，也可以砸。",
-      "en": "The notch on the ring",
+      "zh_TW": "夢之窟",
+      "en": "The Dreaming Cave",
       "zh_CN": "門環上的刻痕——可以補，也可以砸。",
       "ja": "門環上的刻痕——可以補，也可以砸。",
       "ko": "門環上的刻痕——可以補，也可以砸。",
       "es": "門環上的刻痕——可以補，也可以砸。"
     },
     "story.f20.ambient.1": {
-      "zh_TW": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。",
-      "en": "First qi beyond the gate",
+      "zh_TW": "巨大的石門後面，有東西在翻身。",
+      "en": "Behind the huge stone gate, something is turning over in its sleep.",
       "zh_CN": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。",
       "ja": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。",
       "ko": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。",
       "es": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。"
     },
     "story.f20.ambient.2": {
-      "zh_TW": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。",
-      "en": "First qi beyond the gate",
+      "zh_TW": "深淵之門",
+      "en": "The Deep Gate",
       "zh_CN": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。",
       "ja": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。",
       "ko": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。",
       "es": "門後的第一口氣帶著鐵鏽味，但確實能呼吸。"
     },
     "story.f21.ambient.1": {
-      "zh_TW": "守門石巨人的眼窩裡亮著兩點舊火。",
-      "en": "The gate: the seal knot",
+      "zh_TW": "灰色的旗子插滿了城牆。",
+      "en": "Grey banners line every wall.",
       "zh_CN": "守門石巨人的眼窩裡亮著兩點舊火。",
       "ja": "守門石巨人的眼窩裡亮著兩點舊火。",
       "ko": "守門石巨人的眼窩裡亮著兩點舊火。",
       "es": "守門石巨人的眼窩裡亮著兩點舊火。"
     },
     "story.f21.ambient.2": {
-      "zh_TW": "守門石巨人的眼窩裡亮著兩點舊火。",
-      "en": "The gate: the seal knot",
+      "zh_TW": "兵營大門",
+      "en": "The Barracks Gate",
       "zh_CN": "守門石巨人的眼窩裡亮著兩點舊火。",
       "ja": "守門石巨人的眼窩裡亮著兩點舊火。",
       "ko": "守門石巨人的眼窩裡亮著兩點舊火。",
       "es": "守門石巨人的眼窩裡亮著兩點舊火。"
     },
     "story.f22.ambient.1": {
-      "zh_TW": "灰塵在光柱裡緩緩打轉，這裡很久沒人打掃了。",
-      "en": "Dust turns slowly in the shafts of light. No one has swept here in a long time.",
+      "zh_TW": "假人身上全是劍痕。有一個假人戴著水桶。",
+      "en": "The training dummies are covered in sword cuts. One of them is wearing a bucket.",
       "zh_CN": "灰塵在光柱裡緩緩打轉，這裡很久沒人打掃了。",
       "ja": "灰塵在光柱裡緩緩打轉，這裡很久沒人打掃了。",
       "ko": "灰塵在光柱裡緩緩打轉，這裡很久沒人打掃了。",
       "es": "灰塵在光柱裡緩緩打轉，這裡很久沒人打掃了。"
     },
     "story.f22.ambient.2": {
-      "zh_TW": "遠處傳來翻書的聲音，卻沒有腳步聲。",
-      "en": "Somewhere far off, pages turn, but there are no footsteps.",
+      "zh_TW": "操練場",
+      "en": "The Drill Yard",
       "zh_CN": "遠處傳來翻書的聲音，卻沒有腳步聲。",
       "ja": "遠處傳來翻書的聲音，卻沒有腳步聲。",
       "ko": "遠處傳來翻書的聲音，卻沒有腳步聲。",
       "es": "遠處傳來翻書的聲音，卻沒有腳步聲。"
     },
     "story.f23.ambient.1": {
-      "zh_TW": "迴旋梯的扶手上，刻著許多重複的名字縮寫。",
-      "en": "The spiral stair's handrail is carved with the same initials, over and over.",
+      "zh_TW": "牢房深處傳來熟悉的聲音。",
+      "en": "Familiar voices echo from deep in the cells.",
       "zh_CN": "迴旋梯的扶手上，刻著許多重複的名字縮寫。",
       "ja": "迴旋梯的扶手上，刻著許多重複的名字縮寫。",
       "ko": "迴旋梯的扶手上，刻著許多重複的名字縮寫。",
       "es": "迴旋梯的扶手上，刻著許多重複的名字縮寫。"
     },
     "story.f23.ambient.2": {
-      "zh_TW": "蝙蝠振翅的聲音在書廊裡放大了三倍。",
-      "en": "In the book gallery, the beating of bats' wings sounds three times as loud.",
+      "zh_TW": "牢房",
+      "en": "The Cells",
       "zh_CN": "蝙蝠振翅的聲音在書廊裡放大了三倍。",
       "ja": "蝙蝠振翅的聲音在書廊裡放大了三倍。",
       "ko": "蝙蝠振翅的聲音在書廊裡放大了三倍。",
       "es": "蝙蝠振翅的聲音在書廊裡放大了三倍。"
     },
     "story.f24.ambient.1": {
-      "zh_TW": "抄寫房的窗戶全被書架擋住，光只能從縫隙擠進來。",
-      "en": "Shelves block every window of the copying room; light only squeezes in through the gaps.",
+      "zh_TW": "桌上的地圖，畫著每一個被燒掉的村子。",
+      "en": "The map on the desk marks every village they burned.",
       "zh_CN": "抄寫房的窗戶全被書架擋住，光只能從縫隙擠進來。",
       "ja": "抄寫房的窗戶全被書架擋住，光只能從縫隙擠進來。",
       "ko": "抄寫房的窗戶全被書架擋住，光只能從縫隙擠進來。",
       "es": "抄寫房的窗戶全被書架擋住，光只能從縫隙擠進來。"
     },
     "story.f24.ambient.2": {
-      "zh_TW": "某張書桌上，一份謄抄到一半的稿子還攤開著。",
-      "en": "On one desk, a copy is still spread open, half finished.",
+      "zh_TW": "隊長室",
+      "en": "The Captain's Quarters",
       "zh_CN": "某張書桌上，一份謄抄到一半的稿子還攤開著。",
       "ja": "某張書桌上，一份謄抄到一半的稿子還攤開著。",
       "ko": "某張書桌上，一份謄抄到一半的稿子還攤開著。",
       "es": "某張書桌上，一份謄抄到一半的稿子還攤開著。"
     },
     "story.f25.ambient.1": {
-      "zh_TW": "空書架的陰影裡，似乎有什麼東西剛剛移動過。",
-      "en": "Something seems to have just moved in the shadow of the empty shelves.",
+      "zh_TW": "大廳很冷，只有一盞燈還亮著。",
+      "en": "The hall is cold. Only one lamp is still burning.",
       "zh_CN": "空書架的陰影裡，似乎有什麼東西剛剛移動過。",
       "ja": "空書架的陰影裡，似乎有什麼東西剛剛移動過。",
       "ko": "空書架的陰影裡，似乎有什麼東西剛剛移動過。",
       "es": "空書架的陰影裡，似乎有什麼東西剛剛移動過。"
     },
     "story.f25.ambient.2": {
-      "zh_TW": "地上散落的紙頁全被踩得模糊，唯獨一角還算完整。",
-      "en": "The pages on the floor have been trampled into a blur, all but one corner.",
+      "zh_TW": "灰面的大廳",
+      "en": "Grey Mask's Hall",
       "zh_CN": "地上散落的紙頁全被踩得模糊，唯獨一角還算完整。",
       "ja": "地上散落的紙頁全被踩得模糊，唯獨一角還算完整。",
       "ko": "地上散落的紙頁全被踩得模糊，唯獨一角還算完整。",
@@ -10044,8 +10232,8 @@
       "en": "Tailor"
     },
     "npc.town_guard.name": {
-      "zh_TW": "城鎮衛兵",
-      "en": "Town Guard"
+      "zh_TW": "打瞌睡的衛兵",
+      "en": "The Sleeping Guard"
     },
     "npc.guard_captain.name": {
       "zh_TW": "衛兵隊長",

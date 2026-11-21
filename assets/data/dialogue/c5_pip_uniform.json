@@ -1,0 +1,60 @@
+{
+  "_comment": "Chapter 5 of the story revamp (docs/gameplay/23 §4): F21, Pip again (comic): a \"barely worn\" Collector uniform. It is pink.",
+  "npcId": "chest_peddler",
+  "start": "pip",
+  "nodes": {
+    "pip": {
+      "text": {
+        "zh_TW": "皮普穿著一件收集者的制服跳出來：「客人！收集者制服，九成新，只要十枚金幣！穿上它，沒人認得你！」",
+        "en": "Pip hops out wearing a Collector uniform. \"Customer! A Collector uniform, barely worn, only ten gold! Put it on and nobody will know you!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「好，我買（10 金幣）。」",
+            "en": "\"Fine, I'll take it (10 gold).\""
+          },
+          "next": "pink",
+          "requires": {
+            "type": "statAtLeast",
+            "stat": "gold",
+            "value": 10
+          },
+          "actions": [
+            {
+              "type": "addStat",
+              "stat": "gold",
+              "delta": -10
+            },
+            {
+              "type": "setFlag",
+              "flag": "c5.uniform"
+            }
+          ]
+        },
+        {
+          "label": {
+            "zh_TW": "「……不用了。」",
+            "en": "\"...No thanks.\""
+          },
+          "next": null
+        }
+      ]
+    },
+    "pink": {
+      "text": {
+        "zh_TW": "你穿上制服。凱看了你一眼：「……它是粉紅色的。」皮普：「限量款！」",
+        "en": "You put on the uniform. Kai takes one look at you. \"...It's pink.\" Pip: \"Limited edition!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

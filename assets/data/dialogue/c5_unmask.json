@@ -1,0 +1,170 @@
+{
+  "_comment": "Chapter 5 of the story revamp (docs/gameplay/23 §4): F25, after the Grey Mask boss: the unmasking (Bran, the mother's brother) and the big choice: kill him (vengeance + 2, c5.bran_killed; ATK + 3), send him home (mercy + 2, c5.bran_spared; home.bran), or the king's justice (trust + 2, c5.bran_justice). It decides the ending (23 §6).",
+  "npcId": "villager",
+  "start": "mask",
+  "nodes": {
+    "mask": {
+      "text": {
+        "zh_TW": "灰面跪在地上，面具裂開了。底下是一張你認得的臉，下巴上有一道疤。「……里歐。你長這麼大了。」",
+        "en": "Grey Mask kneels on the floor, his mask cracked open. Beneath it is a face you know, with a scar on the chin. \"...Leo. Look how big you've grown.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……布蘭舅舅。」",
+            "en": "\"...Uncle Bran.\""
+          },
+          "next": "why"
+        }
+      ]
+    },
+    "why": {
+      "text": {
+        "zh_TW": "布蘭：「十年前，主人找到了我們。他說：交出神裔的孩子，不然就燒掉整個村子。我以為……只要我替他做事，就能拖住他，就能保護你們。」他從懷裡拿出另一隻小木馬。「這是我刻給你的。你小時候一直咬它。」",
+        "en": "Bran: \"Ten years ago, the Master found us. Hand over the Godborn child, he said, or he'd burn the whole village. I thought... if I served him, I could hold him off. I could protect you.\" He takes another little wooden horse from his coat. \"I carved this for you. You used to chew on it.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": "kai"
+        }
+      ]
+    },
+    "kai": {
+      "text": {
+        "zh_TW": "布蘭：「可是他等不及了。那一夜……我沒能阻止。」凱的劍抵住他的喉嚨：「米菈也是你抓的。」布蘭沒有躲。「是。」",
+        "en": "Bran: \"But he grew impatient. That night... I couldn't stop it.\" Kai's sword rests against his throat. \"You took Mira too.\" Bran doesn't flinch. \"I did.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……你燒了我們的家。」（舉起武器）",
+            "en": "\"...You burned our home.\" (Raise your weapon)"
+          },
+          "next": "kill",
+          "actions": [
+            {
+              "type": "addCounter",
+              "counter": "vengeance",
+              "delta": 2
+            },
+            {
+              "type": "setFlag",
+              "flag": "c5.bran_killed"
+            }
+          ]
+        },
+        {
+          "label": {
+            "zh_TW": "「回村子去。用你剩下的日子去補償大家。」",
+            "en": "\"Go back to the village. Spend the rest of your life making it right.\""
+          },
+          "next": "spare",
+          "actions": [
+            {
+              "type": "addCounter",
+              "counter": "mercy",
+              "delta": 2
+            },
+            {
+              "type": "setFlag",
+              "flag": "c5.bran_spared"
+            }
+          ]
+        },
+        {
+          "label": {
+            "zh_TW": "「凱，帶他去王都受審。」",
+            "en": "\"Kai, take him to the capital to stand trial.\""
+          },
+          "next": "justice",
+          "actions": [
+            {
+              "type": "addCounter",
+              "counter": "trust",
+              "delta": 2
+            },
+            {
+              "type": "setFlag",
+              "flag": "c5.bran_justice"
+            }
+          ]
+        }
+      ]
+    },
+    "kill": {
+      "text": {
+        "zh_TW": "布蘭閉上眼睛：「你爹娘……在上面的神殿。主人要的是你的身體，里歐。救他們……拜託。」他倒下了。你的手掌亮得刺眼——有什麼東西流進了你的身體。凱別過頭去。",
+        "en": "Bran closes his eyes. \"Your parents... are in the Sanctum above. The Master wants your body, Leo. Save them... please.\" He falls. Your palms flare blindingly, and something flows into you. Kai looks away."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "addStat",
+              "stat": "atk",
+              "delta": 3
+            },
+            {
+              "type": "setFlag",
+              "flag": "c5.unmasked"
+            }
+          ]
+        }
+      ]
+    },
+    "spare": {
+      "text": {
+        "zh_TW": "布蘭哭了。「……我會的。」他把神殿的路畫在你手上。「你爹娘在神殿。主人要的是你的身體——別讓他碰到你。」他轉身往塔下走去。",
+        "en": "Bran weeps. \"...I will.\" He draws the way to the Sanctum on your palm. \"Your parents are in the Sanctum. The Master wants your body. Don't let him touch you.\" He turns and walks down the tower."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……路上小心，舅舅。」",
+            "en": "\"...Be careful, Uncle.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "rescue",
+              "npc": "bran",
+              "text": "village.went_home_alone"
+            },
+            {
+              "type": "setFlag",
+              "flag": "c5.unmasked"
+            }
+          ]
+        }
+      ]
+    },
+    "justice": {
+      "text": {
+        "zh_TW": "凱用繩子綁住布蘭的手。「你會在國王面前說出一切。」布蘭點點頭：「應該的。」他看著你：「你爹娘在神殿。主人要的是你的身體——小心。」",
+        "en": "Kai binds Bran's hands. \"You'll tell the king everything.\" Bran nods. \"As I should.\" He looks at you. \"Your parents are in the Sanctum. The Master wants your body. Be careful.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……走吧。」",
+            "en": "\"...Let's go.\""
+          },
+          "next": null,
+          "action": {
+            "type": "setFlag",
+            "flag": "c5.unmasked"
+          }
+        }
+      ]
+    }
+  }
+}

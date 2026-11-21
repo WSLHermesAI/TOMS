@@ -1,0 +1,62 @@
+{
+  "_comment": "Chapter 4 of the story revamp (docs/gameplay/23 §4): F19, the vision (after the wyrm's test): Mom fleeing twelve years ago with the glowing baby, and a youth with a scar: \"Sis, I'll protect him.\"",
+  "npcId": "farmer_wife",
+  "start": "snow",
+  "nodes": {
+    "snow": {
+      "text": {
+        "zh_TW": "石龍的眼睛亮起來，你看見了——十二年前的雪夜。一個年輕女人抱著發光的嬰兒在雪裡奔跑。是媽媽，比現在年輕得多。",
+        "en": "The wyrm's eyes flare, and you see it: a snowy night twelve years ago. A young woman runs through the snow holding a glowing baby. It's Mom, much younger."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": "man"
+        }
+      ]
+    },
+    "man": {
+      "text": {
+        "zh_TW": "她身邊跟著一個少年，下巴上有一道疤。他接過嬰兒，笨拙地哄著：「姐，我會保護他的。不管誰來，我都會保護他。」",
+        "en": "A youth runs beside her, a scar on his chin. He takes the baby and rocks him clumsily. \"Sis, I'll protect him. Whoever comes, I'll protect him.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……那是誰？」",
+            "en": "\"...Who is that?\""
+          },
+          "next": "gone"
+        }
+      ]
+    },
+    "gone": {
+      "text": {
+        "zh_TW": "影像散去了。石龍的聲音很輕：「她把你藏在平凡的村子裡，讓你忘記自己是誰。那是她給你的禮物。」",
+        "en": "The vision fades. The wyrm's voice is soft. \"She hid you in an ordinary village and let you forget who you are. That was her gift to you.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「媽……」",
+            "en": "\"Mom...\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "claimMission",
+              "missionId": "m_c4_wyrm"
+            },
+            {
+              "type": "setFlag",
+              "flag": "c4.vision"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

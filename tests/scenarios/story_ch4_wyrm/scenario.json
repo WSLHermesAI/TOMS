@@ -1,0 +1,20 @@
+{
+  "_comment": "Chapter 4, F18 (docs/gameplay/23 §4): the stone wyrm recognises the last Godborn and sets its test (m_c4_wyrm: three crystal spiders; active, c4.wyrm_met).",
+  "scene": "dialogue",
+  "dialogue": {
+    "id": "c4_wyrm"
+  },
+  "test": {
+    "frames": 60,
+    "keys": "enter@10,enter@25"
+  },
+  "expect": {
+    "scene": "stage",
+    "flags": [
+      "c4.wyrm_met"
+    ],
+    "missions": {
+      "m_c4_wyrm": "active"
+    }
+  }
+}

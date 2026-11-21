@@ -5,13 +5,18 @@
   "chat": {
     "lines": [
       {
-        "dialogue": "dwarf"
+        "dialogue": "c4_dwarf",
+        "requires": {
+          "not": {
+            "type": "runFlagSet",
+            "flag": "home.dwarf"
+          }
+        }
       }
     ],
     "order": "loop"
   },
   "topics": {
     "menu": "auto"
-  },
-  "draft": true
+  }
 }

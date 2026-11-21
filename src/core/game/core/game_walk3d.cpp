@@ -1,0 +1,188 @@
+// game_walk3d.cpp -- walking a floor in 3D (docs/gameplay/24_STAGE_3D.md). The host draws the floor's model (its walls
+// and ground, made from the tile map by tools/stage3d/make_floor3d.py) with the battle stage's renderer and a camera
+// tilted down on the hero; the game draws the map's objects as before, each in its own world group standing on its
+// tile (the battle's fighters' way, docs/gameplay/21 §4.3), and the ground's marks (stairs, padlocks, the walk target)
+// lying on the floor. One tile is one metre: x its column, z its row, y up.
+#include "game_internal.h"
+#include "map_objects.h"
+
+#include <glm/gtc/matrix_transform.hpp>
+
+using namespace toms::game_detail;
+
+nlohmann::json Game::f_Walk3DStage() const {
+    if (!m_bWalk3DAllowed || !m_jStage3D.is_object() || !m_jStage3D.value("on", true) || m_oSt.m_strId.empty()) return nullptr;
+    std::string l_strModel = m_jStage3D.value("model", std::string());
+    const size_t l_nAt = l_strModel.find("{id}");
+    if (l_strModel.empty() || l_nAt == std::string::npos) return nullptr;
+    l_strModel.replace(l_nAt, 4, m_oSt.m_strId);
+    const nlohmann::json l_jLooks = m_jStage3D.value("looks", nlohmann::json::object());
+    nlohmann::json l_jRow = l_jLooks.contains(m_oSt.m_strTheme) ? l_jLooks[m_oSt.m_strTheme] : l_jLooks.value("default", nlohmann::json::object());
+    if (!l_jRow.is_object()) l_jRow = nlohmann::json::object();
+    // the floor as a prop: its walls cast the sun's shadows (a "ground" casts none)
+    l_jRow["props"] = nlohmann::json::array({{{"model", l_strModel}, {"at", {0, 0, 0}}}});
+    const std::string l_strShadow = m_jStage3D.value("shadow", std::string());
+    if (!l_strShadow.empty() && m_jStage3D.value("sprites", nlohmann::json::object()).value("shadow", 0.3f) > 0.0f) l_jRow["shadow"] = l_strShadow;
+    l_jRow["sprites"] = {{"glow", m_jStage3D.value("sprites", nlohmann::json::object()).value("glow", 0.5f)}};
+    l_jRow["shadowBounds"] = {{-1, 0, -1}, {m_oSt.m_iWidth + 1, 2, m_oSt.m_iHeight + 1}};
+    return l_jRow;
+}
+
+bool Game::f_WalkSceneShown() const {
+    if (m_oTitle.f_IsOpen() || f_EndingActive() || f_StoreModal()) return false;
+    if ((m_iHideMask & 1) == 0 && (m_oCs.m_bActive || m_oCs.m_bWon || m_oCs.m_iResultPauseMs > 0)) return false;
+    if ((m_iHideMask & 2) == 0 && m_bInDialogue) return false;
+    return true;
+}
+
+Game::Walk3DCamera Game::f_Walk3DCamera(float l_fDtSeconds) {
+    const nlohmann::json l_jCam = m_jStage3D.is_object() ? m_jStage3D.value("camera", nlohmann::json::object()) : nlohmann::json::object();
+    const glm::vec3 l_v3Target(m_oPl.m_iX + 0.5f, 0.6f, m_oPl.m_iY + 0.5f - l_jCam.value("lookAhead", 0.0f));
+    if (m_strWalk3DFloor != m_oSt.m_strId) {   // a new floor: straight on the hero
+        m_strWalk3DFloor = m_oSt.m_strId;
+        m_v3Walk3DLook = l_v3Target;
+    } else {
+        const float l_fK = 1.0f - std::exp(-std::max(0.1f, l_jCam.value("follow", 7.0f)) * std::clamp(l_fDtSeconds, 0.0f, 0.25f));
+        m_v3Walk3DLook += (l_v3Target - m_v3Walk3DLook) * l_fK;
+    }
+    const float l_fPitch = glm::radians(std::clamp(l_jCam.value("pitch", 55.0f), 10.0f, 89.0f));
+    const float l_fDist = std::max(2.0f, l_jCam.value("distance", 11.0f));
+    Walk3DCamera l_oC;
+    l_oC.m_v3Look = m_v3Walk3DLook;
+    l_oC.m_v3Eye = m_v3Walk3DLook + glm::vec3(0.0f, std::sin(l_fPitch) * l_fDist, std::cos(l_fPitch) * l_fDist);   // south of him, looking north
+    l_oC.m_fFovYDeg = l_jCam.value("fov", 38.0f);
+    return l_oC;
+}
+
+void Game::f_SetWalk3DView(bool l_bOn, const glm::mat4& l_mat4ViewProj, const glm::vec2& l_v2Device, const glm::vec4& l_v4DesignInDevice) {
+    m_bWalk3DOn = l_bOn && m_pRen && m_pRen->f_SupportsWorld();
+    if (!m_bWalk3DOn) return;
+    m_mat4Walk3DViewProj = l_mat4ViewProj;
+    m_v2Walk3DDevice = l_v2Device;
+    m_v4Walk3DDesign = l_v4DesignInDevice;
+}
+
+std::vector<glm::vec4> Game::f_Walk3DShadows() const {
+    std::vector<glm::vec4> l_vOut;
+    const float l_fR = m_jStage3D.is_object() ? m_jStage3D.value("sprites", nlohmann::json::object()).value("shadow", 0.3f) : 0.0f;
+    if (l_fR <= 0.0f) return l_vOut;
+    l_vOut.push_back(glm::vec4(m_oPl.m_iX + 0.5f, 0.0f, m_oPl.m_iY + 0.55f, l_fR));
+    for (const Entity& l_oE : m_oSt.m_vEntities) {
+        if (l_oE.m_bConsumed) continue;
+        const std::string l_strK = l_oE.m_strKind.substr(0, l_oE.m_strKind.find(':'));
+        if (l_strK != "monster" && l_strK != "npc") continue;
+        l_vOut.push_back(glm::vec4(l_oE.m_iX + l_oE.m_oFp.m_iW * 0.5f, 0.0f, l_oE.m_iY + l_oE.m_oFp.m_iH - 0.45f, l_fR * (float)l_oE.m_oFp.m_iW));
+    }
+    return l_vOut;
+}
+
+float Game::f_Walk3DHeight(const std::string& l_strKind) const {
+    const nlohmann::json l_jH = m_jStage3D.is_object() ? m_jStage3D.value("sprites", nlohmann::json::object()).value("heights", nlohmann::json::object())
+                                                      : nlohmann::json::object();
+    if (l_jH.contains(l_strKind) && l_jH[l_strKind].is_number()) return l_jH[l_strKind].get<float>();
+    return l_jH.value("other", 1.0f);
+}
+
+glm::mat4 Game::f_Walk3DSpriteMatrix(const glm::vec2& l_v2Anchor, const glm::vec3& l_v3At, float l_fMetresPerPx) const {
+    // the camera's right on the ground, the way it looks along the ground (away), the sprite's up leaning back that much
+    glm::vec3 l_v3Right(m_mat4Walk3DViewProj[0][0], 0.0f, m_mat4Walk3DViewProj[2][0]);
+    l_v3Right = glm::length(l_v3Right) > 1e-6f ? glm::normalize(l_v3Right) : glm::vec3(1.0f, 0.0f, 0.0f);
+    const glm::vec3 l_v3Away(l_v3Right.z, 0.0f, -l_v3Right.x);
+    const float l_fLean = glm::radians(m_jStage3D.is_object() ? m_jStage3D.value("sprites", nlohmann::json::object()).value("lean", 20.0f) : 20.0f);
+    const glm::vec3 l_v3Up = glm::vec3(0.0f, std::cos(l_fLean), 0.0f) + l_v3Away * std::sin(l_fLean);
+    const glm::vec3 l_v3Normal = -l_v3Away * std::cos(l_fLean) + glm::vec3(0.0f, std::sin(l_fLean), 0.0f);   // toward the camera
+    glm::mat4 l_mat4M(1.0f);
+    l_mat4M[0] = glm::vec4(l_v3Right * l_fMetresPerPx, 0.0f);
+    l_mat4M[1] = glm::vec4(-l_v3Up * l_fMetresPerPx, 0.0f);
+    l_mat4M[2] = glm::vec4(l_v3Normal, 0.0f);
+    l_mat4M[3] = glm::vec4(l_v3At - l_v3Right * (l_v2Anchor.x * l_fMetresPerPx) + l_v3Up * (l_v2Anchor.y * l_fMetresPerPx), 1.0f);
+    return l_mat4M;
+}
+
+// An object of the map (MapFloor::f_Render): drawn as in 2D into its rect on a map of m_fWalk3DTile pixels a tile, that
+// rect standing on its bottom row's middle, its sprite the kind's height (a one-tile sprite; a bigger one in proportion).
+bool Game::f_Walk3DBeginObject(const MapObject& l_oO, const MapView& l_oV) {
+    const MapRect l_oR = l_oO.f_Rect(l_oV);
+    if (l_oR.m_fW <= 0.0f || l_oR.m_fH <= 0.0f || l_oV.m_fSSize <= 0.0f) return false;
+    const Entity* l_pE = l_oO.f_Entity();
+    const std::string l_strKind = l_pE ? l_pE->m_strKind.substr(0, l_pE->m_strKind.find(':')) : std::string("player");
+    const float l_fMpp = f_Walk3DHeight(l_strKind) / l_oV.m_fSSize;
+    const glm::vec2 l_v2Feet(l_oR.m_fX + l_oR.m_fW * 0.5f, l_oR.m_fY + l_oR.m_fH);
+    const glm::vec3 l_v3At(l_v2Feet.x / l_oV.m_fTs, 0.0f, (l_v2Feet.y + l_oV.m_fInset) / l_oV.m_fTs - 0.45f);
+    const glm::mat4 l_mat4M = f_Walk3DSpriteMatrix(l_v2Feet, l_v3At, l_fMpp);
+    m_pRen->f_BeginWorld(&l_mat4M[0][0], true);
+    return true;
+}
+
+void Game::f_Walk3DEndObject() { m_pRen->f_EndWorld(); }
+
+void Game::f_DrawWalk3D() {
+    MapView l_oV;
+    l_oV.m_fTs = m_fWalk3DTile;
+    l_oV.m_fInset = l_oV.m_fTs / 6.0f;
+    l_oV.m_fSSize = l_oV.m_fTs - 2.0f * l_oV.m_fInset;
+    // the marks lying on the ground, a little above it: a map pixel is 1 / tile metres, its x the world's x, its y the z
+    glm::mat4 l_mat4Ground(1.0f);
+    l_mat4Ground[0] = glm::vec4(1.0f / l_oV.m_fTs, 0.0f, 0.0f, 0.0f);
+    l_mat4Ground[1] = glm::vec4(0.0f, 0.0f, 1.0f / l_oV.m_fTs, 0.0f);
+    l_mat4Ground[2] = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);   // facing up
+    l_mat4Ground[3] = glm::vec4(0.0f, 0.015f, 0.0f, 1.0f);
+    m_pRen->f_BeginWorld(&l_mat4Ground[0][0], true);
+    f_DrawTileLayer(l_oV, 0, m_oSt.m_iWidth, 0, m_oSt.m_iHeight, true);
+    m_pRen->f_EndWorld();
+    m_oFloor.f_Render(l_oV);   // each object in its own standing group (f_Walk3DBeginObject)
+}
+
+// A point of the screen (design pixels) -> the tile under it on the ground (the 3D floor's f_ScreenToTile).
+bool Game::f_Walk3DScreenToTile(float l_fPx, float l_fPy, int& l_iTx, int& l_iTy) const {
+    if (!m_pRen || m_v2Walk3DDevice.x <= 0.0f || m_v2Walk3DDevice.y <= 0.0f) return false;
+    const glm::vec2 l_v2Dev(m_v4Walk3DDesign.x + l_fPx / (float)m_pRen->f_Width() * m_v4Walk3DDesign.z,
+                            m_v4Walk3DDesign.y + l_fPy / (float)m_pRen->f_Height() * m_v4Walk3DDesign.w);
+    const glm::vec2 l_v2Ndc(l_v2Dev.x / m_v2Walk3DDevice.x * 2.0f - 1.0f, 1.0f - l_v2Dev.y / m_v2Walk3DDevice.y * 2.0f);
+    const glm::mat4 l_mat4Inv = glm::inverse(m_mat4Walk3DViewProj);
+    auto l_fnAt = [&](float l_fZ) { const glm::vec4 l_v4P = l_mat4Inv * glm::vec4(l_v2Ndc, l_fZ, 1.0f); return glm::vec3(l_v4P) / l_v4P.w; };
+    const glm::vec3 l_v3A = l_fnAt(0.2f), l_v3B = l_fnAt(0.8f);   // two points on the ray (inside either depth range)
+    if (std::fabs(l_v3B.y - l_v3A.y) < 1e-6f) return false;
+    const float l_fT = -l_v3A.y / (l_v3B.y - l_v3A.y);
+    const glm::vec3 l_v3G = l_v3A + (l_v3B - l_v3A) * l_fT;
+    l_iTx = (int)std::floor(l_v3G.x);
+    l_iTy = (int)std::floor(l_v3G.z);
+    return l_iTx >= 0 && l_iTy >= 0 && l_iTx < (int)m_oSt.m_iWidth && l_iTy < (int)m_oSt.m_iHeight;
+}
+
+bool Game::f_DrawWalk3DHero() {
+    const nlohmann::json l_jSp = m_jStage3D.is_object() ? m_jStage3D.value("sprites", nlohmann::json::object()) : nlohmann::json::object();
+    if (!l_jSp.value("paintedHero", false)) return false;
+    auto l_itDef = m_mapEquipmentDefs.find(m_oEquipped.m_strWeaponId);
+    if (l_itDef == m_mapEquipmentDefs.end()) return false;
+    if (!m_upWalkHeroView || m_strWalkHeroWeapon != m_oEquipped.m_strWeaponId) {   // the weapon's look, once per weapon
+        m_strWalkHeroWeapon = m_oEquipped.m_strWeaponId;
+        toms::FighterLook l_oLook;
+        l_oLook.m_strRender = l_itDef->second.m_strBattleRender;
+        l_oLook.m_strCharacter = l_itDef->second.m_strBattleCharacterAnim;
+        l_oLook.m_strHeld = l_itDef->second.m_strBattleHeldAnim;
+        l_oLook.m_strModel = l_itDef->second.m_strBattleModel;
+        m_upWalkHeroView = f_MakeFighterView(l_oLook, [this](const toms::anim::Clip& l_oC) { return f_FitClipToCharacter(l_oC, f_PlayerSprite()); },
+                                             32.0f, false);
+        if (m_upWalkHeroView && !m_upWalkHeroView->f_Play(l_itDef->second.f_BattleClip("idle"), true)) m_upWalkHeroView.reset();
+        m_dWalkHeroClockMs = -1.0;
+    }
+    if (!m_upWalkHeroView) return false;
+    if (m_dWalkHeroClockMs >= 0.0) m_upWalkHeroView->f_Update((int)std::clamp(m_dIdleClockMs - m_dWalkHeroClockMs, 0.0, 100.0));
+    m_dWalkHeroClockMs = m_dIdleClockMs;
+    if (m_iWalkHeroLastX >= 0 && m_oPl.m_iX != m_iWalkHeroLastX) m_iWalkHeroFacing = m_oPl.m_iX < m_iWalkHeroLastX ? -1 : 1;
+    m_iWalkHeroLastX = m_oPl.m_iX;
+    // the battle's box shape: its height is the hero's height (as on the 3D battle stage)
+    glm::vec4 l_v4Box(0.0f, 0.0f, std::max(1.0f, m_v4UiPlayerBox.z), std::max(1.0f, m_v4UiPlayerBox.w));
+    const glm::vec2 l_v2Feet(l_v4Box.z * 0.5f, l_v4Box.w);
+    glm::mat4 l_mat4M = f_Walk3DSpriteMatrix(l_v2Feet, glm::vec3(m_oPl.m_iX + 0.5f, 0.0f, m_oPl.m_iY + 0.55f), l_jSp.value("paintedHeroHeight", 1.6f) / l_v4Box.w);
+    if (m_iWalkHeroFacing < 0) {   // turned left: mirrored about his feet
+        const glm::vec3 l_v3Feet = glm::vec3(l_mat4M * glm::vec4(l_v2Feet, 0.0f, 1.0f));
+        l_mat4M[0] = -l_mat4M[0];
+        l_mat4M[3] = glm::vec4(l_v3Feet - glm::vec3(l_mat4M * glm::vec4(l_v2Feet, 0.0f, 0.0f)), 1.0f);
+    }
+    m_pRen->f_BeginWorld(&l_mat4M[0][0], true);
+    m_upWalkHeroView->f_Draw(m_pRen, l_v4Box);
+    m_pRen->f_EndWorld();
+    return true;
+}

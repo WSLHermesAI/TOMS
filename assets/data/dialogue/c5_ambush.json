@@ -1,0 +1,90 @@
+{
+  "_comment": "Chapter 5 of the story revamp (docs/gameplay/23 §4): F21, a payoff: the hungry soldier from chapter 1 (spared: he warns of the nets, a potion; not: the nets fall, -30 HP).",
+  "npcId": "villager",
+  "start": "gate",
+  "nodes": {
+    "gate": {
+      "text": {
+        "zh_TW": "你一走進兵營大門，就聽見有人小聲喊你的名字。",
+        "en": "As you step through the barracks gate, someone whispers your name."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「是你……四層那個餓肚子的士兵？」",
+            "en": "\"It's you... the hungry soldier from the fourth floor?\""
+          },
+          "next": "warned",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c1.spared_soldier"
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「誰？」",
+            "en": "\"Who's there?\""
+          },
+          "next": "nets",
+          "requires": {
+            "not": {
+              "type": "runFlagSet",
+              "flag": "c1.spared_soldier"
+            }
+          }
+        }
+      ]
+    },
+    "warned": {
+      "text": {
+        "zh_TW": "年輕的士兵摘下面具，臉上還有麵包屑。「他們在門上面架了網，等你走過去。往左邊繞。」他塞給你一瓶藥水。「上次的麵包……謝謝。」",
+        "en": "The young soldier takes off his mask. There are still breadcrumbs on his face. \"They've rigged nets above the gate, waiting for you. Go round to the left.\" He presses a potion into your hand. \"For the bread... thanks.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「你也快逃吧。」",
+            "en": "\"Get out of here too.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "give",
+              "itemId": "potion_red"
+            },
+            {
+              "type": "setFlag",
+              "flag": "c5.warned"
+            }
+          ]
+        }
+      ]
+    },
+    "nets": {
+      "text": {
+        "zh_TW": "頭頂一暗——一張大網落下來！你和凱在網裡掙扎了好久才砍出一條路。",
+        "en": "Everything goes dark overhead: a huge net drops! You and Kai thrash in it for a long time before you cut your way out."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……痛死了。」",
+            "en": "\"...Ow.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "addStat",
+              "stat": "hp",
+              "delta": -30
+            },
+            {
+              "type": "setFlag",
+              "flag": "c5.ambushed"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

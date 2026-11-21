@@ -72,6 +72,9 @@ struct SessionOptions {
     // normal play on the desktop; off in scripted runs (their reference pictures) unless --battle-3d=on.
     bool m_bBattle3D = false;
     bool m_bBattle3DWait = false;   // load the stage before going on (scripted runs: their pictures never wait on the disk)
+    // Walking a floor in 3D (data/stage3d.json, docs/gameplay/24_STAGE_3D.md): on in normal play on the Windows desktop;
+    // off in scripted runs unless --walk-3d=on.
+    bool m_bWalk3D = false;
     // Read changed art, clips and effects again while running (Game::setHotReload, docs/engine/12_RESOURCE_MANAGER.md §4.6).
     bool m_bHotReload = false;
 };
@@ -135,6 +138,7 @@ private:
     std::unique_ptr<GameUi> m_upUi;                 // the game's documents + data model (game_ui.h)
     std::unique_ptr<TitleScene> m_upTitleScene;     // the 3D scene behind the title (title_scene.h)
     std::unique_ptr<BattleStage> m_upBattleStage;   // the battle's 3D stage (battle_stage.h), kept between battles
+    std::unique_ptr<BattleStage> m_upWalkStage;     // the floor in 3D (docs/gameplay/24): its walls and ground, the same renderer
     bool m_bBattle3DWait = false;                   // SessionOptions::m_bBattle3DWait
     double m_dUiTime = 0;
     std::string m_strUiLanguage;                     // language the UI font was last chosen for

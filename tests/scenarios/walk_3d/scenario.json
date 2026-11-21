@@ -1,0 +1,12 @@
+{
+  "_comment": "Walking a floor in 3D (docs/gameplay/24_STAGE_3D.md, step 1): F01's model (tools/stage3d/make_floor3d.py) is drawn with the camera tilted down on the hero, the map's sprites standing in it, and a click on the hero finds his tile on the 3D ground. walk3d turns it on as in normal play.",
+  "scene": "stage",
+  "stage": "F01",
+  "walk3d": true,
+  "test": {
+    "frames": 30
+  },
+  "expect": {
+    "walk3d": true
+  }
+}

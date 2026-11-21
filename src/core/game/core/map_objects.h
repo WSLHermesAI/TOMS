@@ -216,4 +216,5 @@ private:
     std::shared_ptr<PlayerObject> m_spPlayer;
     std::vector<MapObject*> m_vDrawList; // scratch
     int m_iGeneration = 0;
+    Game* m_pGame = nullptr;             // the game it was built for (walking in 3D: f_Render)
 };

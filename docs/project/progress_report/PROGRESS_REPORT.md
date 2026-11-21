@@ -15,6 +15,25 @@
 
 ## ▶ Next Step
 
+**The story's chapters 4–5 playable; F01 walks in real 3D** (2026-11-21; [DAILY_2026-11-21.md](DAILY_2026-11-21.md)):
+- Chapters 4–5 (F16–F25) written in zh_TW + en: the buried ones and the vision of Leo's birth (Bran, Mom's brother), the
+  Collectors' barracks, the cells, Mira, Grey Mask unmasked as Bran and the big choice (kill, spare, justice). 14 new scenarios.
+- The owner: walking a floor "looks 80s". Doc [gameplay/24](../../gameplay/24_STAGE_3D.md) (+ zh_TW) plans real 3D floors;
+  step 1 built: `tools/stage3d/make_floor3d.py` (tile map -> model, AI-painted looks), F01 in 3D with the sun's shadows, a
+  tilted follow camera, the painted hero; `--walk-3d`; scenario `walk_3d`.
+- **Not committed.** Changed-only 34 of 322, all passed (after `tools\build.cmd`); naming checker 0 edits; 182 tests switched off.
+  **Owner:** play F01 and chapters 4–5; Q117–Q121; commit when you want. Next: 3D step 2 (every floor, Settings) or chapters 6–7.
+
+**The story revamp: chapters 1–3 playable; one rundown for every special attack** (2026-11-20; [DAILY_2026-11-20.md](DAILY_2026-11-20.md)):
+- The owner rated the story "1 of 10"; doc [gameplay/23](../../gameplay/23_STORY_REVAMP.md) (+ zh_TW) plans the revamp from the concept
+  book (pitch B, the orphan, with Princess Liora; 7 chapters × ~5 floors). S1 tools built (rescue, scenes, village places, saved quests).
+- Chapters 1–3 (F01–F15) written in zh_TW + en: the burning village, the forest path (Kai, Pip), the gate of lies (the ledger, Kai's sister);
+  rescues grow the village (10 places), 5 quests, choices on mercy / vengeance / trust, comic side quests, Liora's letters.
+- Every weapon's ultimate and every monster special attack: the play, a boss-style introduction, the attack (a `CLAUDE.md` rule);
+  sword → Tiger Wind, staff → Star Seal.
+- **Not committed.** Changed-only 19 of 307, all passed (after `tools\build.cmd`); naming checker 0 edits; 181 tests switched off by the owner.
+  **Owner:** play chapters 1–3; Q108; commit when you want. Next: chapter 4 (F16–F20).
+
 **The bow's new ultimate, the Cyclone Volley (旋風連矢)** (2026-11-19; [DAILY_2026-11-19.md](DAILY_2026-11-19.md)):
 - A ring on the hero's head with sparks going round it: circle it 3 times clockwise, then 3 anticlockwise, in 6 s (a new
   play type, `spinCircle`). Then the hero's own introduction like a boss's (the camera on him, the banner "絕招發動！" with

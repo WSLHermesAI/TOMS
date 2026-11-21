@@ -1,0 +1,41 @@
+{
+  "_comment": "Chapter 4 of the story revamp (docs/gameplay/23 §4): F20, a rescue: the archer scout (the village: Grey Mask's trail; the name \"Bran\").",
+  "npcId": "archer_scout",
+  "start": "hide",
+  "nodes": {
+    "hide": {
+      "text": {
+        "zh_TW": "王都的弓箭斥候躲在岩縫裡，箭袋已經空了。「你就是那個發光的孩子？我在跟蹤灰面——他往上去了，還一直在找一個叫『布蘭』的名字……不，是他在躲這個名字。」",
+        "en": "An archer scout from the capital hides in a crack in the rock, quiver empty. \"You're the glowing kid? I've been tailing Grey Mask. He went up... and he keeps flinching at a name. 'Bran'.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「先跟我回村子。」",
+            "en": "\"Come back to the village with me first.\""
+          },
+          "next": "home",
+          "action": {
+            "type": "rescue",
+            "npc": "archer_scout"
+          }
+        }
+      ]
+    },
+    "home": {
+      "text": {
+        "zh_TW": "斥候：「好。回去我把看到的都告訴你。」",
+        "en": "Scout: \"Fine. I'll tell you everything I saw when we're back.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「謝了。」",
+            "en": "\"Thanks.\""
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

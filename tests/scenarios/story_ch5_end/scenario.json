@@ -1,0 +1,26 @@
+{
+  "_comment": "Chapter 5's end (docs/gameplay/23 §4): F26 reached after chapter 4 and the unmasking; Bran sent home, the elder: \"the village isn't ready to forgive him yet. But you were.\" (c5.done).",
+  "scene": "dialogue",
+  "stage": "F26",
+  "flags": [
+    "c1.done",
+    "c2.done",
+    "c3.done",
+    "c4.done",
+    "c5.unmasked",
+    "c5.bran_spared"
+  ],
+  "dialogue": {
+    "id": "villager_elder"
+  },
+  "test": {
+    "frames": 60,
+    "keys": "enter@10,enter@25"
+  },
+  "expect": {
+    "scene": "stage",
+    "flags": [
+      "c5.done"
+    ]
+  }
+}

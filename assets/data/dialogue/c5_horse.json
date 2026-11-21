@@ -1,0 +1,26 @@
+{
+  "_comment": "Chapter 5 of the story revamp (docs/gameplay/23 §4): F25, a scene: the wooden horse Bran carved.",
+  "npcId": "villager",
+  "start": "horse",
+  "nodes": {
+    "horse": {
+      "text": {
+        "zh_TW": "桌上有一隻小木馬，耳朵被咬得坑坑巴巴的。你認得那些牙印——小時候，你一直咬著這樣一隻木馬睡覺。",
+        "en": "On the desk stands a little wooden horse, its ears chewed ragged. You know those teeth marks. As a small child you always fell asleep chewing a horse just like it."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……這是我的？」",
+            "en": "\"...This is mine?\""
+          },
+          "next": null,
+          "action": {
+            "type": "setFlag",
+            "flag": "c5.horse"
+          }
+        }
+      ]
+    }
+  }
+}

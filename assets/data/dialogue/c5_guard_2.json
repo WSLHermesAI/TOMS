@@ -1,0 +1,22 @@
+{
+  "_comment": "Chapter 5 of the story revamp (docs/gameplay/23 §4): F22, the sleeping guard's lines; the third talk is ev_c5_guard_key.",
+  "npcId": "town_guard",
+  "start": "zzz",
+  "nodes": {
+    "zzz": {
+      "text": {
+        "zh_TW": "衛兵：「……呼……今天的燉肉……加辣……」",
+        "en": "The guard: \"...Zzz... today's stew... extra spicy...\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

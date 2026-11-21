@@ -5,13 +5,18 @@
   "chat": {
     "lines": [
       {
-        "dialogue": "archer_scout"
+        "dialogue": "c4_archer",
+        "requires": {
+          "not": {
+            "type": "runFlagSet",
+            "flag": "home.archer_scout"
+          }
+        }
       }
     ],
     "order": "loop"
   },
   "topics": {
     "menu": "auto"
-  },
-  "draft": true
+  }
 }

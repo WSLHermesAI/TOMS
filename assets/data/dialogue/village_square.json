@@ -1,0 +1,37 @@
+{
+  "_comment": "Chapter 5 of the story revamp (docs/gameplay/23 §4): the village square (hub_square): everyone home but the parents.",
+  "npcId": "miller",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "村子的廣場上，磨坊的水車又轉了起來。織布女在晾布，漁夫在補網，裁縫在幫大家改衣服——全村的人都在。",
+        "en": "In the village square the mill wheel is turning again. The weaver hangs out cloth, the fisherman mends his nets, the tailor alters everyone's clothes. The whole village is here."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……大家都回來了。」",
+            "en": "\"...Everyone's back.\""
+          },
+          "next": "almost"
+        }
+      ]
+    },
+    "almost": {
+      "text": {
+        "zh_TW": "磨坊主：「還差你爹娘。快去把他們帶回來，我們等著開慶功宴！」",
+        "en": "Miller: \"All but your parents. Hurry and bring them home. We're saving the feast for them!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「嗯！」",
+            "en": "\"Yeah!\""
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

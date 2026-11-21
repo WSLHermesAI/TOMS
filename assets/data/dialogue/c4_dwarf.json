@@ -1,0 +1,41 @@
+{
+  "_comment": "Chapter 4 of the story revamp (docs/gameplay/23 §4): F16, a rescue: the dwarf the Collectors made dig goes home (the village: a DEF gem).",
+  "npcId": "dwarf",
+  "start": "dig",
+  "nodes": {
+    "dig": {
+      "text": {
+        "zh_TW": "一個矮人被鍊在牆邊，還在用十字鎬敲石頭。「收集者要我往下挖，挖到『沉睡的東西』為止。我挖到了……然後我就不想再挖了。」",
+        "en": "A dwarf chained to the wall is still swinging his pick at the rock. \"The Collectors made me dig down until I hit 'the sleeping things'. I hit them... and then I didn't want to dig any more.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（砸開鍊子）「回村裡吧，那裡的石頭比較乖。」",
+            "en": "(Break the chain) \"Come to the village. The rocks there behave.\""
+          },
+          "next": "home",
+          "action": {
+            "type": "rescue",
+            "npc": "dwarf"
+          }
+        }
+      ]
+    },
+    "home": {
+      "text": {
+        "zh_TW": "矮人：「哈！好小子。小心點——底下的東西在睡覺，但睡得不沉。」",
+        "en": "Dwarf: \"Ha! Good lad. Careful down there. The things below are sleeping, but not deeply.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……知道了。」",
+            "en": "\"...Got it.\""
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}
