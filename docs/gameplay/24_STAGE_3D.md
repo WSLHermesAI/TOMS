@@ -91,7 +91,7 @@ python tools/stage3d/make_floor3d.py --paint wood --parts top --seeds 5,8   repa
 | 2. Every floor | Paint the other 9 looks; build F01–F35; Settings > 3D floors (on / light / off, like the 3D battle); stairs as steps and doors as frames in the model; a wall between the camera and the hero fades | |
 | 3. Painted art on the map | Monsters as their battle art (larger, their idle clips), people as painted full-body art, items and keys as painted icons; the hero's walk clip and a smooth step between tiles (today he jumps a tile, as in 2D) | |
 | 4. Atmosphere | Torches (point lights and their fire), light shafts, dust and embers, a little fog, a colour grade per chapter; the floor's banner and entry over a slow camera move | |
-| 5. Polish | The camera's limits at the map's edges, a short shake for events, the speed on slow machines; web and Android only when the owner asks | |
+| 5. Polish | The camera's limits at the map's edges, a short shake for events, the speed on slow machines; Android only when the owner asks (the web: on since 2026-11-21) | |
 
 ## 6. Step 1, as built (2026-11-21)
 
@@ -102,8 +102,9 @@ python tools/stage3d/make_floor3d.py --paint wood --parts top --seeds 5,8   repa
   the ground's marks, the click on the ground. `MapFloor::f_Render` puts each object in its own group when 3D is on.
 - `src/game/src/game_session.cpp`: `m_upWalkStage`, drawn while the walking scene shows. `BattleStage`: a sky can light
   without being drawn (`"background": false`).
-- `--walk-3d=on|off` (`main_sdl.cpp`): on in normal play on the Windows desktop; off in scripted runs; the web and
-  Android only when asked.
+- `--walk-3d=on|off` (`main_sdl.cpp`; in the browser `?walk-3d=off`): on in normal play on the Windows desktop and, since
+  2026-11-21, in the browser (the owner: "make 3D looking as default"; checked in headless Chrome on the GPU: F01 in 3D,
+  no sun shadows there, as in the 3D battle); off in scripted runs; Android only when asked.
 - The scenario `walk_3d`: F01 in 3D, and a click on the hero finds his tile.
 
 **Still 2D-looking in step 1:** the monsters', people's and items' sprites (16-pixel art, larger); the stairs (a flat

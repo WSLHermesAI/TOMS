@@ -80,7 +80,7 @@ python tools/stage3d/make_floor3d.py --paint wood --parts top --seeds 5,8   重�
 | 2. 每一層 | 畫其他 9 種外觀；建 F01–F35；設定 > 3D 樓層（開／輕量／關，像 3D 戰鬥）；模型中的樓梯做成階梯、門做成門框；擋在鏡頭與主角之間的牆變淡 | |
 | 3. 地圖上的手繪圖 | 怪物用戰鬥圖（放大，播 idle）、人物用全身手繪圖、物品與鑰匙用手繪圖示；主角的走路動畫與格子之間的平順移動（現在像 2D 一樣一次跳一格） | |
 | 4. 氣氛 | 火把（點光源與火焰）、光束、灰塵與火星、一點霧、每章的調色；樓層橫幅與進場時的慢速鏡頭 | |
-| 5. 打磨 | 地圖邊緣的鏡頭限制、事件時短暫的晃動、慢電腦的速度；網頁與 Android 只在擁有者要求時 | |
+| 5. 打磨 | 地圖邊緣的鏡頭限制、事件時短暫的晃動、慢電腦的速度；Android 只在擁有者要求時（網頁：2026-11-21 起開） | |
 
 ## 6. 第 1 步的成果（2026-11-21）
 
@@ -90,7 +90,9 @@ python tools/stage3d/make_floor3d.py --paint wood --parts top --seeds 5,8   重�
 - `src/core/game/core/game_walk3d.cpp`：舞台設定、鏡頭、影子、站立的物件、手繪主角、地面的標記、點擊地面。3D 開著時
   `MapFloor::f_Render` 把每個物件放進自己的 group。
 - `src/game/src/game_session.cpp`：`m_upWalkStage`，在走路場景時畫。`BattleStage`：天空可以只照明不畫出來（`"background": false`）。
-- `--walk-3d=on|off`（`main_sdl.cpp`）：Windows 桌面一般遊玩時開；腳本執行時關；網頁與 Android 只在要求時。
+- `--walk-3d=on|off`（`main_sdl.cpp`；瀏覽器用 `?walk-3d=off`）：Windows 桌面一般遊玩時開，2026-11-21 起瀏覽器也開（擁有者：
+  「make 3D looking as default」；已在 headless Chrome 用 GPU 檢查：F01 是 3D，那裡沒有太陽的影子，與 3D 戰鬥相同）；腳本執行時關；
+  Android 只在要求時。
 - 情境 `walk_3d`：F01 是 3D，點擊主角會找到他的格子。
 
 **第 1 步仍像 2D 的部分：**怪物、人物與物品的圖（16 像素圖，放大）；樓梯（地板上的一張平面圖）；門（一張站立的圖）。F01 以外的樓層

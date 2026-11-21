@@ -486,8 +486,9 @@ bool f_AppInit(App& l_oApp) {
     l_oOpts.m_bBattle3D = l_oArgs.m_strBattle3D == "on" || (l_oArgs.m_strBattle3D.empty() && l_oArgs.m_iFrames == 0 && l_oArgs.m_iFixedDtMs == 0);
 #endif
     // Walking a floor in 3D (docs/gameplay/24): the Windows desktop's normal play; a scripted run keeps the 2D map (its
-    // reference pictures) unless it asks; the web and Android only when the owner asks for them (Windows first).
-#if defined(__ANDROID__) || defined(__EMSCRIPTEN__)
+    // reference pictures) unless it asks; the browser too since 2026-11-21 (the owner: "make 3D looking as default");
+    // Android only when the owner asks for it.
+#if defined(__ANDROID__)
     l_oOpts.m_bWalk3D = l_oArgs.m_strWalk3D == "on";
 #else
     l_oOpts.m_bWalk3D = l_oArgs.m_strWalk3D == "on" || (l_oArgs.m_strWalk3D.empty() && l_oArgs.m_iFrames == 0 && l_oArgs.m_iFixedDtMs == 0);
