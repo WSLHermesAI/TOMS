@@ -174,7 +174,7 @@ std::shared_ptr<BattleStage::Loaded> BattleStage::f_LoadCpu(nlohmann::json l_jRo
         std::vector<std::string> l_vWalls;
         for (const auto& l_jRowS : l_jF.value("walls", nlohmann::json::array())) if (l_jRowS.is_string()) l_vWalls.push_back(l_jRowS.get<std::string>());
         const std::string l_strGlb = f_MakeFloorGlb(l_vWalls, l_jF.value("look", std::string("castle")), l_jF.value("wallHeight", 1.0f),
-                                                    l_jF.value("groundRepeat", 2.0f));
+                                                    l_jF.value("groundRepeat", 2.0f), l_jF.value("stairShade", 0.5f));
         auto l_spM = std::make_shared<Model>();
         std::string l_strWhy;
         if (!gltf::f_LoadModelFromMemory(l_strGlb.data(), l_strGlb.size(), l_fnPath("stage3d"), l_spM->m_oModel, &l_strWhy)) {

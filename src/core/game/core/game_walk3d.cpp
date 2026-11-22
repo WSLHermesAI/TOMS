@@ -30,7 +30,7 @@ nlohmann::json Game::f_Walk3DStage() const {
     }
     // the floor as a prop: its walls cast the sun's shadows (a "ground" casts none)
     nlohmann::json l_jFloor = {{"walls", l_jWalls}, {"look", l_strLook}, {"wallHeight", m_jStage3D.value("wallHeight", 1.0f)},
-                               {"groundRepeat", m_jStage3D.value("groundRepeat", 2.0f)}};
+                               {"groundRepeat", m_jStage3D.value("groundRepeat", 2.0f)}, {"stairShade", m_jStage3D.value("stairShade", 0.5f)}};
     l_jRow["props"] = nlohmann::json::array({{{"floor", l_jFloor}, {"at", {0, 0, 0}}}});
     const std::string l_strShadow = m_jStage3D.value("shadow", std::string());
     if (!l_strShadow.empty() && m_jStage3D.value("sprites", nlohmann::json::object()).value("shadow", 0.3f) > 0.0f) l_jRow["shadow"] = l_strShadow;

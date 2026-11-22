@@ -51,8 +51,8 @@ the map's objects (MapFloor) ──► one world group each, standing on its til
   gold badge at the screen's edge pointing to it. Boss and roamer name plates sit over their sprites' heads.
 - **The stairs** are in the model (the owner, 2026-11-22: "2D stair too flat, it is easy to ignore"): four steps walked
   onto from an open side (south first, facing the camera). **Up** climbs to the walls' top; **down** goes into a pit as
-  deep. Treads in the look's ground texture (lighter than the walls' tops, so they stand out), risers and the pit in its
-  wall texture. Each stair has its own light (`stairLights`: warm over a stair up, cool in a stair down's pit; brighter
+  deep. Treads in the look's ground texture darkened (`stairShade` 0.35: the owner, 2026-11-22, "too similar to the floor's
+  colour"), risers and the pit in its wall texture. Each stair has its own light (`stairLights`: warm over a stair up, cool in a stair down's pit; brighter
   when just opened, dimmer when locked; the nearest to the hero first). The padlock and the gold arrow stand over the
   stair (on the top step, or over the pit), no longer flat on the ground.
 - **An event** waiting on its tile is a small swirl of light, "like memory thoughts" (the owner, 2026-11-22; it was a gold
@@ -97,6 +97,7 @@ python tools/stage3d/paint_looks.py wood --parts top --seeds 5,8   repaint one p
 | `loadingDelayMs` | a scene still loading after this long shows the loading circle (250) |
 | `viewScales` | the steps of Settings > View size, × the camera's distance (1, 1.5, 2, 3) |
 | `shadow` | the soft disc under the hero, the monsters and the people (the battle's) |
+| `stairShade` | how dark the stairs' treads are: the ground's texture × it (0.35) |
 | `stairLights` | each stair's light: `up` / `down` colours, `intensity` (×1.6 just opened, ×0.5 locked), `range`, `off` |
 | `camera` | `pitch` (56°), `distance` (11 m), `fov` (38°), `follow` (how fast it catches up), `lookAhead` |
 | `sprites` | `glow`, `lean` (24°), `shadow` (the disc's radius), `heights` by kind (a one-tile sprite: player, monster, npc, item, door, event, other), `paintedHero`, `paintedHeroHeight` |

@@ -5,6 +5,7 @@
 #include <json.hpp>
 
 #include <cstdint>
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 
@@ -36,14 +37,15 @@ struct Part {
 
 }  // namespace
 
-std::string f_MakeFloorGlb(const std::vector<std::string>& l_vWalls, const std::string& l_strLook, float l_fWallHeight, float l_fGroundRepeat) {
+std::string f_MakeFloorGlb(const std::vector<std::string>& l_vWalls, const std::string& l_strLook, float l_fWallHeight, float l_fGroundRepeat,
+                           float l_fStairShade) {
     const int l_iH = (int)l_vWalls.size();
     int l_iW = 0;
     for (const std::string& l_strRow : l_vWalls) l_iW = std::max(l_iW, (int)l_strRow.size());
     auto l_fnWall = [&](int l_iX, int l_iZ) {
         return l_iZ >= 0 && l_iZ < l_iH && l_iX >= 0 && l_iX < (int)l_vWalls[(size_t)l_iZ].size() && l_vWalls[(size_t)l_iZ][(size_t)l_iX] == '#';
     };
-    Part l_oGround, l_oSide, l_oTop;
+    Part l_oGround, l_oSide, l_oTop, l_oStair;
     const float l_fW = (float)l_iW, l_fD = (float)l_iH, l_fR = std::max(0.1f, l_fGroundRepeat), l_fWh = l_fWallHeight;
     auto l_fnCell = [&](int l_iX, int l_iZ) {
         return l_iZ >= 0 && l_iZ < l_iH && l_iX >= 0 && l_iX < (int)l_vWalls[(size_t)l_iZ].size() ? l_vWalls[(size_t)l_iZ][(size_t)l_iX] : '#';
@@ -81,9 +83,9 @@ std::string f_MakeFloorGlb(const std::vector<std::string>& l_vWalls, const std::
             const float l_fPrev = l_bUp ? l_iK * l_fStepH : -l_iK * l_fStepH;              // the one before it
             {   // the tread
                 glm::vec3 l_arrP[4] = {l_fnP(l_fU0, -0.5f, l_fTop), l_fnP(l_fU0, 0.5f, l_fTop), l_fnP(l_fU1, 0.5f, l_fTop), l_fnP(l_fU1, -0.5f, l_fTop)};
-                glm::vec2 l_arrUv[4];   // the floor's own boards / slabs: lighter than the walls' tops, so the steps stand out
+                glm::vec2 l_arrUv[4];   // the floor's own boards / slabs, darkened (stairShade): they stand out from the ground
                 for (int l_iC = 0; l_iC < 4; l_iC++) l_arrUv[l_iC] = glm::vec2(l_arrP[l_iC].x, l_arrP[l_iC].z) / l_fR;
-                l_oGround.f_Quad(l_arrP, {0, 1, 0}, l_v3Side, l_arrUv);
+                l_oStair.f_Quad(l_arrP, {0, 1, 0}, l_v3Side, l_arrUv);
             }
             {   // the riser at its front edge: from the step before up to it (up), or down to it (down)
                 glm::vec3 l_arrP[4] = {l_fnP(l_fU0, -0.5f, l_fPrev), l_fnP(l_fU0, 0.5f, l_fPrev), l_fnP(l_fU0, 0.5f, l_fTop), l_fnP(l_fU0, -0.5f, l_fTop)};
@@ -168,8 +170,13 @@ std::string f_MakeFloorGlb(const std::vector<std::string>& l_vWalls, const std::
         l_jAcc.push_back({{"bufferView", l_jViews.size() - 1}, {"componentType", l_iComp}, {"count", l_nCount}, {"type", l_pszType}});
         return (int)l_jAcc.size() - 1;
     };
-    const std::pair<const char*, const Part*> l_arrParts[3] = {{"ground", &l_oGround}, {"wall", &l_oSide}, {"top", &l_oTop}};
-    for (const auto& [l_pszName, l_pPart] : l_arrParts) {
+    // (name, its texture, its part, its colour's shade): the stairs' treads are the ground's boards, darkened
+    struct PartOut { const char* m_pszName; const char* m_pszTex; const Part* m_pPart; float m_fShade; };
+    const PartOut l_arrParts[4] = {{"ground", "ground", &l_oGround, 1.0f}, {"wall", "wall", &l_oSide, 1.0f}, {"top", "top", &l_oTop, 1.0f},
+                                   {"stair", "ground", &l_oStair, std::clamp(l_fStairShade, 0.05f, 1.0f)}};
+    for (const PartOut& l_oPart : l_arrParts) {
+        const char* const l_pszName = l_oPart.m_pszName;
+        const Part* const l_pPart = l_oPart.m_pPart;
         if (l_pPart->m_vIdx.empty()) continue;
         glm::vec3 l_v3Min(1e30f), l_v3Max(-1e30f);
         for (const glm::vec3& l_v3P : l_pPart->m_vPos) { l_v3Min = glm::min(l_v3Min, l_v3P); l_v3Max = glm::max(l_v3Max, l_v3P); }
@@ -182,12 +189,13 @@ std::string f_MakeFloorGlb(const std::vector<std::string>& l_vWalls, const std::
         const int l_iUv = l_fnAdd(l_pPart->m_vUv.data(), l_nN * sizeof(glm::vec2), 34962, l_nN, "VEC2", 5126);
         const int l_iIdx = l_fnAdd(l_pPart->m_vIdx.data(), l_pPart->m_vIdx.size() * 4, 34963, l_pPart->m_vIdx.size(), "SCALAR", 5125);
         const size_t l_nImg = l_jImages.size();
-        l_jImages.push_back({{"uri", "looks/" + l_strLook + "/" + l_pszName + "_c.jpg"}});
-        l_jImages.push_back({{"uri", "looks/" + l_strLook + "/" + l_pszName + "_n.png"}});
+        l_jImages.push_back({{"uri", "looks/" + l_strLook + "/" + l_oPart.m_pszTex + "_c.jpg"}});
+        l_jImages.push_back({{"uri", "looks/" + l_strLook + "/" + l_oPart.m_pszTex + "_n.png"}});
         l_jTex.push_back({{"source", l_nImg}, {"sampler", 0}});
         l_jTex.push_back({{"source", l_nImg + 1}, {"sampler", 0}});
+        const float l_fS = l_oPart.m_fShade;
         l_jMats.push_back({{"name", l_strLook + "_" + l_pszName},
-                           {"pbrMetallicRoughness", {{"baseColorTexture", {{"index", l_nImg}}}, {"metallicFactor", 0.0},
+                           {"pbrMetallicRoughness", {{"baseColorTexture", {{"index", l_nImg}}}, {"baseColorFactor", {l_fS, l_fS, l_fS, 1.0f}}, {"metallicFactor", 0.0},
                                                      {"roughnessFactor", std::strcmp(l_pszName, "top") == 0 ? 0.95 : 0.85}}},
                            {"normalTexture", {{"index", l_nImg + 1}}}});
         l_jPrims.push_back({{"attributes", {{"POSITION", l_iPos}, {"NORMAL", l_iNor}, {"TANGENT", l_iTan}, {"TEXCOORD_0", l_iUv}}},

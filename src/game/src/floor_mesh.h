@@ -14,7 +14,8 @@
 namespace toms::next {
 
 // walls: the map's rows, '#' = a wall, 'U' / 'D' = stairs up / down (anything else is open ground). look: the folder under stage3d/looks/.
+// stairShade: the stairs' treads are the ground's texture times this (darker, so they stand out from the floor).
 std::string f_MakeFloorGlb(const std::vector<std::string>& l_vWalls, const std::string& l_strLook, float l_fWallHeight = 1.0f,
-                           float l_fGroundRepeat = 2.0f);
+                           float l_fGroundRepeat = 2.0f, float l_fStairShade = 0.5f);
 
 }  // namespace toms::next
