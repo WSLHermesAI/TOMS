@@ -264,7 +264,14 @@ bool Game::f_StartScenarioJson(const nlohmann::json& l_jSc, const std::string& l
             m_bComboHoldsMonsters = l_jRules.value("combo_holds_monsters", false);
             m_bComboRunsThroughAttacks = l_jRules.value("combo_runs_through_attacks", true);
         }
-        f_StartCombat(l_oEn, l_vParty);
+        // a boss's sequence (docs/gameplay/25): "gauntlet": its guards, fought one at a time before it
+        std::vector<EnemyInst> l_vGuards;
+        for (const std::string& l_strG : f_Strings(l_jB, "gauntlet")) {
+            EnemyInst l_oG;
+            if (f_EnemyFromData(l_strG, l_jB.value("guards", nlohmann::json::object()), l_oG)) l_vGuards.push_back(l_oG);
+        }
+        if (!l_vGuards.empty()) f_StartGauntlet(l_oEn, l_vGuards);
+        else { f_EndGauntlet(); f_StartCombat(l_oEn, l_vParty); }
         if (l_jB.value("super", false)) m_oCs.m_iSuperCharge = m_oRun.f_SuperMax();   // the ultimate ready (docs/gameplay/16 §6)
         if (l_strS == "battleWon") f_FinishCombatWin();
     } else if (l_strS == "arena") {
@@ -439,6 +446,18 @@ bool Game::f_ScenarioCheck(std::string& l_strReport) const {
             l_fnFail("the hero should stand nearer than the monster: hero box " + std::to_string((int)l_v4H.w) + " px tall, feet at " +
                      std::to_string((int)(l_v4H.y + l_v4H.w)) + "; monster " + std::to_string((int)l_v4M.w) + " px, feet at " +
                      std::to_string((int)(l_v4M.y + l_v4M.w)));
+    }
+    if (m_jScenarioExpect.contains("gauntlet") && m_jScenarioExpect["gauntlet"].is_object()) {   // a boss's sequence (docs/gameplay/25)
+        const nlohmann::json& l_jG = m_jScenarioExpect["gauntlet"];
+        const int l_iSteps = m_oGauntlet.m_bOn ? (int)m_oGauntlet.m_vSteps.size() : 0;
+        if (l_jG.contains("steps") && l_iSteps != l_jG["steps"].get<int>())
+            l_fnFail("the boss sequence has " + std::to_string(l_iSteps) + " fights, expected " + std::to_string(l_jG["steps"].get<int>()));
+        if (l_jG.contains("at") && (!m_oGauntlet.m_bOn || m_oGauntlet.m_iStep != l_jG["at"].get<int>()))
+            l_fnFail("the boss sequence is at fight " + std::to_string(m_oGauntlet.m_iStep) + ", expected " + std::to_string(l_jG["at"].get<int>()));
+        if (l_jG.contains("foe") && (m_oCs.m_vFoes.empty() || m_oCs.m_vFoes[0].m_oEnemy.m_strId != l_jG["foe"].get<std::string>()))
+            l_fnFail("the monster fought is \"" + (m_oCs.m_vFoes.empty() ? std::string() : m_oCs.m_vFoes[0].m_oEnemy.m_strId) + "\", expected " + l_jG["foe"].get<std::string>());
+        if (l_jG.contains("moved") && (glm::length(m_v3BattleTravel) > 0.01f) != l_jG["moved"].get<bool>())
+            l_fnFail(std::string("the stage ") + (glm::length(m_v3BattleTravel) > 0.01f ? "moved on" : "did not move on") + " to the next monster");
     }
     if (m_jScenarioExpect.value("walk3d", false)) {   // the floor is drawn in 3D, and a click on the hero finds his tile (docs/gameplay/24)
         if (!m_bWalk3DOn) l_fnFail("the floor is not drawn in 3D (data/stage3d.json, the look's textures, mesh shaders)");

@@ -94,6 +94,10 @@ These were not answered, so the proposal was built. Nothing waits on them.
 | **Q119** Wall height: 1 m (the camera sees over) or 1.6 m with a wall in front of the hero fading? | 1 m | 1 m now; try 1.6 m with the fade |  | [24](../gameplay/24_STAGE_3D.md) §7 |
 | **Q120** Monsters on the 3D map: their battle art, or new small painted map art? | their 16-pixel map sprites, larger (step 1); their battle art in step 3 | Their battle art |  | [24](../gameplay/24_STAGE_3D.md) §7 |
 | **Q121** The village and the hub screens in 3D too? | no, their painted screens | No, until the floors are done |  | [24](../gameplay/24_STAGE_3D.md) §7 |
+| **Q122** A boss without its own list of guards: the floor's monsters (3 kinds), or no sequence until each boss has its list? | the floor's monsters | Keep it; write lists for the story bosses later |  | [25](../gameplay/25_BOSS_GAUNTLET.md) §5 |
+| **Q123** HP between a boss sequence's fights: kept, or some back after each win? | kept | Kept: the sequence is the test |  | [25](../gameplay/25_BOSS_GAUNTLET.md) §5 |
+| **Q124** Each guard pays as a normal win (gold, EXP, card)? | yes | Yes |  | [25](../gameplay/25_BOSS_GAUNTLET.md) §5 |
+| **Q125** A boss sequence lost: start again from the first guard, or from the fight lost? | from the first guard | From the first guard |  | [25](../gameplay/25_BOSS_GAUNTLET.md) §5 |
 
 ## 3. Not questions, but waiting for you
 

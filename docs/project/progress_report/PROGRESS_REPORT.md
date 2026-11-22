@@ -15,6 +15,14 @@
 
 ## ▶ Next Step
 
+**A boss's fight as a sequence; the bow's ultimate camera** (2026-11-22, later; [DAILY_2026-11-22.md](DAILY_2026-11-22.md)):
+- A boss's guards are fought one at a time; after each win the 3D stage travels on to the next monster (no result
+  screen, the hero back to idle); the monsters still to come wait further on as dark shapes; a ladder of the fights
+  down the left, black until reached; the boss last. Doc [gameplay/25](../../gameplay/25_BOSS_GAUNTLET.md) (+ zh_TW).
+- The bow's ultimate: over the hero's shoulder toward the monster as it fires, then the camera cranes up for the
+  meteor shower. The stairs' treads darker (owner's commit `d821674`).
+- Changed-only 37 of 324, all passed; naming checker 0 edits. **Owner:** fight a floor boss; Q122-Q125.
+
 **Every floor walks in 3D, no 2D map; view size, event swirls, 3D stairs** (2026-11-22; [DAILY_2026-11-22.md](DAILY_2026-11-22.md)):
 - Each floor's walls and ground are made from its tile map when entered (`floor_mesh.cpp`), in 10 AI-painted looks; the
   browser is 3D too; the 2D map, its camera and Settings row are removed; a loading circle shows for a slow scene.

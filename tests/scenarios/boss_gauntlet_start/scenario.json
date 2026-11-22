@@ -1,0 +1,21 @@
+{
+  "_comment": "A boss's fight as a sequence (docs/gameplay/25_BOSS_GAUNTLET.md): bumping into F01's floor boss (the hivebear) starts its guards first, one at a time: the floor's other monster kinds in the map's order (capling, mossling, bat), then the boss -- four fights, the first a capling alone.",
+  "scene": "stage",
+  "stage": "F01",
+  "player": {
+    "x": 10,
+    "y": 4
+  },
+  "test": {
+    "frames": 40,
+    "keys": "right@10"
+  },
+  "expect": {
+    "gauntlet": {
+      "steps": 4,
+      "at": 0,
+      "foe": "capling"
+    },
+    "scene": "battle"
+  }
+}

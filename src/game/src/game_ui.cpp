@@ -138,6 +138,13 @@ void f_RegisterTypes(Rml::DataModelConstructor& l_oC) {
         l_oS.RegisterMember("style", &UiPopup::m_strStyle);
     }
     l_oC.RegisterArray<std::vector<UiPopup>>();
+    if (auto l_oS = l_oC.RegisterStruct<UiGauntletStep>()) {
+        l_oS.RegisterMember("sprite", &UiGauntletStep::m_strSprite);
+        l_oS.RegisterMember("name", &UiGauntletStep::m_strName);
+        l_oS.RegisterMember("state", &UiGauntletStep::m_strState);
+        l_oS.RegisterMember("boss", &UiGauntletStep::m_bBoss);
+    }
+    l_oC.RegisterArray<std::vector<UiGauntletStep>>();
     if (auto l_oS = l_oC.RegisterStruct<UiBattleCell>()) {
         l_oS.RegisterMember("x", &UiBattleCell::m_fX);
         l_oS.RegisterMember("y", &UiBattleCell::m_fY);
@@ -224,6 +231,7 @@ void f_RegisterTypes(Rml::DataModelConstructor& l_oC) {
         l_oS.RegisterMember("cell_hint_y", &UiBattle::m_fCellHintY);
         l_oS.RegisterMember("focus", &UiBattle::m_bFocus);
         l_oS.RegisterMember("cells", &UiBattle::m_vCells);
+        l_oS.RegisterMember("steps", &UiBattle::m_vSteps);
         l_oS.RegisterMember("touch_kind", &UiBattle::m_strTouchKind);
         l_oS.RegisterMember("touch", &UiBattle::m_vTouch);
         l_oS.RegisterMember("skill_prompt", &UiBattle::m_strSkillPrompt);

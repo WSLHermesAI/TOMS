@@ -1351,6 +1351,14 @@
       "zh_TW": "戰鬥速度：{x} 倍",
       "en": "Battle speed: x{x}"
     },
+    "battle.gauntlet_reward": {
+      "zh_TW": "+{gold} 金幣・+{exp} 經驗",
+      "en": "+{gold} gold · +{exp} EXP"
+    },
+    "battle.gauntlet_boss": {
+      "zh_TW": "頭目 ？",
+      "en": "BOSS ?"
+    },
     "settings.view_scale": {
       "zh_TW": "畫面範圍：{x} 倍",
       "en": "View size: x{x}"

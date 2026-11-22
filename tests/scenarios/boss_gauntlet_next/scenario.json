@@ -1,0 +1,24 @@
+{
+  "_comment": "A boss's sequence goes on (docs/gameplay/25_BOSS_GAUNTLET.md): its first guard (a bat) beaten, there is no result screen: the 3D stage travels on to the next monster's place and the second fight (a slime) starts by itself; the boss is last.",
+  "scene": "battleWon",
+  "battle3d": true,
+  "battle": {
+    "enemy": "hivebear",
+    "gauntlet": [
+      "bat",
+      "slime"
+    ]
+  },
+  "test": {
+    "frames": 140
+  },
+  "expect": {
+    "gauntlet": {
+      "steps": 3,
+      "at": 1,
+      "foe": "slime",
+      "moved": true
+    },
+    "scene": "battle"
+  }
+}

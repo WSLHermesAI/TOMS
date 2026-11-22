@@ -161,7 +161,10 @@ int Game::f_BattleFrame(int l_iDtMs) {
     m_oCs.m_iCellsPopMs += l_iDtMs;
     m_oArena.m_iTutorialPopMs += l_iDtMs;
     int l_iBdt = l_iDtMs;
-    if (m_oCs.m_iBossIntroFoe >= 0) {   // a boss's introduction, armed: wait for the first drawn frame, then startDelayMs
+    if (m_oCs.m_iTravelMs > 0) {   // a boss sequence: the stage travels to the next monster; everything waits (game_gauntlet.cpp)
+        f_StepGauntletTravel(l_iDtMs);
+        l_iBdt = 0;
+    } else if (m_oCs.m_iBossIntroFoe >= 0) {   // a boss's introduction, armed: wait for the first drawn frame, then startDelayMs
         // (the first battle frame runs before anything is drawn; from the second on, a frame is on screen. Each step
         // counts at most 34 ms, so the hitch of a first draw that loads textures does not eat the delay.)
         // The 3D stage still loading (in the background, after the battle opened) is darkness at 80 %: the introduction
@@ -814,11 +817,12 @@ void Game::f_DrawBattleRig() {
     if (m_bBattle3DOn) f_DrawBattle3DStageFx();
     // The player's place on the battle screen (battle.rcss #player, wherever the layout put it: playerBox_) and each
     // monster's (battle.rcss .foe .fbox: foeBox_): the view fills its box, the feet at the bottom centre.
-    const bool l_bFocus = f_CellIntroOn() && !m_oCs.m_bCellsShown;   // the first danger's moment: only the monster
+    const bool l_bFocus = f_CellIntroOn() && m_oCs.m_iTravelMs <= 0 && !m_oCs.m_bCellsShown;   // the first danger's moment: only the monster
     if (f_Battle3DSpritesOn()) {   // on the 3D stage: their sprites placed in the scene (the host draws them there, lit)
         if (!l_bFocus && f_BattleRigReady() && !m_strBattleRigState.empty()) f_DrawBattle3DFighter(-1);
         for (size_t l_nI = 0; l_nI < m_vFoeRigs.size() && l_nI < m_oCs.m_vFoes.size(); l_nI++)
             if (m_vFoeRigs[l_nI].m_upView && !m_vFoeRigs[l_nI].m_strState.empty()) f_DrawBattle3DFighter((int)l_nI);
+        if (!l_bFocus) f_DrawGauntletWaiting();   // a boss's sequence: the monsters still to come, further on
     } else {
         if (!l_bFocus && f_BattleRigReady() && !m_strBattleRigState.empty()) m_upPlayerView->f_Draw(m_pRen, l_fnZoomed(m_v4PlayerBox + glm::vec4(m_v2HeroShift.x, m_v2HeroShift.y, 0.0f, 0.0f)));
         for (size_t l_nI = 0; l_nI < m_vFoeRigs.size() && l_nI < m_oCs.m_vFoes.size(); l_nI++) {
@@ -1343,11 +1347,18 @@ void Game::f_FinishCombatWin() {
         l_bBoss = l_bBoss || l_oF.m_oEnemy.m_bBoss;
     }
     if (l_bBoss) { m_oCs.m_strLog = m_oLocale.f_Tr("battle.boss_win"); f_LoadStage("stage_11"); }
+    // a guard of a boss's sequence beaten: no result screen; its pay as a notice, and on to the next fight (game.cpp)
+    if (m_oGauntlet.m_bOn && m_oGauntlet.m_iStep + 1 < (int)m_oGauntlet.m_vSteps.size()) {
+        m_oGauntlet.m_bAdvance = true;
+        m_vNotifications.push_back({f_TrParam(f_TrParam(m_oLocale.f_Tr("battle.gauntlet_reward"), "gold", std::to_string(l_oRes.m_iGold)),
+                                              "exp", std::to_string(l_oRes.m_iExp)), 2500});
+    }
     f_MarkProgressDirty();   // gold/exp/level/entity-status all changed: autosave will flush it
 }
 
 void Game::f_FinishCombatLose() {
     if (f_ArenaEndFight(false)) return;   // the weapon test arena: no death counted, no respawn
+    f_EndGauntlet();   // a boss sequence lost: the boss stays; the next try starts from its first guard
     m_oCs.m_bActive = false; m_oCs.m_bWon = false;
     f_BattleEvent("lose", -1, -1);
     // M7 (first slice): noteDeath() existed since S3 (schemaVersion 3's deathsTotal/deathsNonBoss)
@@ -1916,6 +1927,8 @@ Game::Battle3DCamera Game::f_Battle3DCamera(const glm::vec2& l_v2Device, const g
     const nlohmann::json l_jCam = m_jBattle3DStage.is_object() ? m_jBattle3DStage.value("camera", nlohmann::json::object()) : nlohmann::json::object();
     l_oC.m_v3Eye = f_Vec3Of(l_jCam.value("eye", nlohmann::json()), l_oC.m_v3Eye);
     l_oC.m_v3Look = f_Vec3Of(l_jCam.value("look", nlohmann::json()), l_oC.m_v3Look);
+    l_oC.m_v3Eye += m_v3BattleTravel;    // a boss sequence: the shot moved on with everyone (game_gauntlet.cpp)
+    l_oC.m_v3Look += m_v3BattleTravel;
     l_oC.m_fFovYDeg = l_jCam.value("fov", 45.0f);
     // The shot (made for a 4:3 screen) must fit the design canvas, where the fighters are drawn, across and up and
     // down: the canvas may be narrower than the screen (a tall window) or only part of it (letterboxed).
@@ -1958,7 +1971,32 @@ Game::Battle3DCamera Game::f_Battle3DCamera(const glm::vec2& l_v2Device, const g
             const float l_fA = glm::radians(m_oCs.m_fCamDeg) * std::sin(l_fP * 3.14159265f);
             l_v3Arm = glm::vec3(l_v3Arm.x * std::cos(l_fA) + l_v3Arm.z * std::sin(l_fA), l_v3Arm.y, -l_v3Arm.x * std::sin(l_fA) + l_v3Arm.z * std::cos(l_fA));
         }
-        if (m_oCs.m_strCamMove != "low") {
+        // "behind" (an ultimate fired: the owner, 2026-11-22): from behind the hero, over his shoulder, looking past him at
+        // the monster -- the shot goes where he looks. "rain": from there the camera cranes up and looks down on the monster
+        // (a meteor shower falling on it), eased back down as it ends. "deg": the shoulder's side offset in degrees.
+        if ((m_oCs.m_strCamMove == "behind" || m_oCs.m_strCamMove == "rain") && !m_oCs.m_vFoes.empty()) {
+            const nlohmann::json l_jB = l_jCam.value("behind", nlohmann::json::object());
+            const int l_iFoe = std::clamp(m_oCs.m_iTarget, 0, (int)m_oCs.m_vFoes.size() - 1);
+            const glm::vec3 l_v3Hero = f_Battle3DHeroFeet(), l_v3Foe = f_Battle3DMark(l_iFoe);
+            glm::vec3 l_v3Back(l_v3Hero.x - l_v3Foe.x, 0.0f, l_v3Hero.z - l_v3Foe.z);   // from the monster through the hero
+            l_v3Back = glm::length(l_v3Back) > 1e-3f ? glm::normalize(l_v3Back) : glm::vec3(0.0f, 0.0f, 1.0f);
+            const float l_fSide = glm::radians(m_oCs.m_fCamDeg != 0.0f ? m_oCs.m_fCamDeg : l_jB.value("deg", 26.0f));
+            l_v3Back = glm::vec3(l_v3Back.x * std::cos(l_fSide) + l_v3Back.z * std::sin(l_fSide), 0.0f, -l_v3Back.x * std::sin(l_fSide) + l_v3Back.z * std::cos(l_fSide));
+            const float l_fHeroH = f_Battle3DHeight(-1), l_fFoeH = f_Battle3DHeight(l_iFoe);
+            glm::vec3 l_v3NewEye = l_v3Hero + l_v3Back * l_jB.value("distance", 3.8f) + glm::vec3(0.0f, l_fHeroH * l_jB.value("height", 1.2f), 0.0f);
+            glm::vec3 l_v3NewLook = l_v3Foe + glm::vec3(0.0f, l_fFoeH * 0.55f, 0.0f);
+            if (m_oCs.m_strCamMove == "rain") {   // up high behind the hero, looking down on the monster as it is struck
+                const nlohmann::json l_jR = l_jCam.value("rain", nlohmann::json::object());
+                const float l_fP = 1.0f - (float)m_oCs.m_iCamMs / (float)std::max(1, m_oCs.m_iCamMsMax);
+                // behind him while the arrows go up (the first quarter), then up as they fall, holding there
+                const float l_fQ = std::clamp((l_fP - l_jR.value("holdShare", 0.25f)) / std::max(0.05f, l_jR.value("riseShare", 0.35f)), 0.0f, 1.0f);
+                const float l_fUp = l_fQ * l_fQ * (3.0f - 2.0f * l_fQ);
+                l_v3NewEye += glm::vec3(0.0f, l_jR.value("rise", 4.5f) * l_fUp, 0.0f) + l_v3Back * (l_jR.value("back", 1.2f) * l_fUp);
+                l_v3NewLook = glm::mix(l_v3NewLook, l_v3Foe + glm::vec3(0.0f, l_fFoeH * 0.25f, 0.0f), l_fUp);
+            }
+            l_oC.m_v3Eye = glm::mix(l_oC.m_v3Eye, l_v3NewEye, l_fK);
+            l_oC.m_v3Look = glm::mix(l_oC.m_v3Look, l_v3NewLook, l_fK);
+        } else if (m_oCs.m_strCamMove != "low") {
             const float l_fNear = 1.0f / (1.0f + (m_oCs.m_fCamZoom - 1.0f) * l_fK);
             l_oC.m_v3Eye = glm::mix(l_oC.m_v3Eye, l_v3Target + l_v3Arm * l_fNear, l_fK);
             l_oC.m_v3Look = glm::mix(l_oC.m_v3Look, l_v3Target, l_fK);
@@ -1992,14 +2030,15 @@ Game::Battle3DCamera Game::f_Battle3DCamera(const glm::vec2& l_v2Device, const g
 
 glm::vec3 Game::f_Battle3DMark(int l_iWho) const {
     const nlohmann::json l_jMarks = m_jBattle3DStage.is_object() ? m_jBattle3DStage.value("marks", nlohmann::json::object()) : nlohmann::json::object();
-    if (l_iWho < 0) return f_Vec3Of(l_jMarks.value("hero", nlohmann::json()), glm::vec3(-1.2f, 0.0f, 2.0f));
+    // (a boss sequence: everyone moved on to the next monster's place, m_v3BattleTravel)
+    if (l_iWho < 0) return f_Vec3Of(l_jMarks.value("hero", nlohmann::json()), glm::vec3(-1.2f, 0.0f, 2.0f)) + m_v3BattleTravel;
     // the monsters: their own marks for this many (monsters2, monsters3), else spread across from the one mark
     const int l_iCount = std::max(1, (int)m_oCs.m_vFoes.size());
     const nlohmann::json l_jMany = l_jMarks.value("monsters" + std::to_string(l_iCount), nlohmann::json::array());
-    if (l_iCount > 1 && l_jMany.is_array() && l_iWho < (int)l_jMany.size()) return f_Vec3Of(l_jMany[(size_t)l_iWho], glm::vec3(0.0f));
+    if (l_iCount > 1 && l_jMany.is_array() && l_iWho < (int)l_jMany.size()) return f_Vec3Of(l_jMany[(size_t)l_iWho], glm::vec3(0.0f)) + m_v3TravelTo;
     const glm::vec3 l_v3One = f_Vec3Of(l_jMarks.value("monster", nlohmann::json()), glm::vec3(0.6f, 0.0f, -1.0f));
     const float l_fGap = l_jMarks.value("spacing", 1.8f);
-    return l_v3One + glm::vec3(((float)l_iWho - (float)(l_iCount - 1) * 0.5f) * l_fGap, 0.0f, 0.0f);
+    return l_v3One + glm::vec3(((float)l_iWho - (float)(l_iCount - 1) * 0.5f) * l_fGap, 0.0f, 0.0f) + m_v3TravelTo;   // (its own place: the hero travels to it)
 }
 
 float Game::f_Battle3DHeight(int l_iWho) const {
@@ -2065,7 +2104,7 @@ void Game::f_PlaceBattle3DBoxes() {
 std::vector<glm::vec4> Game::f_Battle3DShadows() const {
     std::vector<glm::vec4> l_vOut;
     if (!m_jBattle3DStage.is_object()) return l_vOut;
-    const bool l_bFocus = f_CellIntroOn() && !m_oCs.m_bCellsShown;   // the first danger's moment: only the monster (as drawn)
+    const bool l_bFocus = f_CellIntroOn() && m_oCs.m_iTravelMs <= 0 && !m_oCs.m_bCellsShown;   // the first danger's moment: only the monster (as drawn)
     if (!l_bFocus && f_BattleRigReady() && !m_strBattleRigState.empty())
         l_vOut.push_back(glm::vec4(f_Battle3DHeroFeet(), f_Battle3DHeight(-1) * 0.32f));
     for (size_t l_nI = 0; l_nI < m_vFoeRigs.size() && l_nI < m_oCs.m_vFoes.size(); l_nI++)

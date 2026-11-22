@@ -13,6 +13,14 @@
 <body data-model="game" data-event-click="act('battle_continue')" data-class-moment="battle.focus">
     <!-- no backdrop here: the game draws it (Game::drawBattleRig), under the player and the monster it draws -->
     <div id="title">{{battle.title}}</div>
+    <!-- a boss's sequence (docs/gameplay/25): every fight, top to bottom, the boss's last; black until it is reached -->
+    <div id="gauntlet" data-if="battle.steps.size > 0">
+        <div data-for="s : battle.steps"><div class="gstep" data-class-done="s.state == 'done'" data-class-now="s.state == 'now'"
+             data-class-next="s.state == 'next'" data-class-boss="s.boss">
+            <img data-attr-sprite="s.sprite"/>
+            <div class="gname">{{s.name}}</div>
+        </div><div class="garrow" data-if="!s.boss"></div></div>
+    </div>
     <!-- the fighters' boxes: always there, the game places the animated player and monster in them (GameUi reads
          their layout each frame), or their still pictures fill them -->
     <div id="player" class="fighter"><img data-if="!battle.player_anim" data-attr-sprite="battle.player_sprite"/></div>

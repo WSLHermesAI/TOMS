@@ -316,6 +316,8 @@ void Game::f_Update(int l_iDtMs) {
     }   // (no skill running)
   }
     // The weapon test arena: when a fight is over (a win dismissed, a loss shown), the next one starts.
+    // A boss's sequence (game_gauntlet.cpp): a guard beaten goes straight on to the next fight, no result screen.
+    if (m_oGauntlet.m_bOn && m_oGauntlet.m_bAdvance && m_oCs.m_bWon) { m_oGauntlet.m_bAdvance = false; f_DismissVictory(); }
     if (m_oArena.m_bOn && !m_oCs.m_bActive && !m_oCs.m_bWon && m_oCs.m_iResultPauseMs <= 0 && !m_oTitle.f_IsOpen()) {
         if (m_oArena.m_bTrial) f_EndWeaponTrialFight();   // the start story: back to the weapon master
         else if (m_oArena.m_bTraining && m_oArena.m_iFights >= m_oArena.m_iFightsMax) f_EndTraining();   // the training ground's run is over

@@ -245,3 +245,9 @@ change them.
 | **Q107** Keyboard for the direction plays on desktop? | mouse only | arrow keys / WASD, diagonals with two keys |  |
 | **Q108** The free swipe / tap / shot ultimates are no weapon's now (§4, §4.1); their 3 switched-off scenarios would fail | keep the moves and the scenarios | delete the 3 scenarios; keep the moves for a later weapon |  |
 | **Q109** Cyclone Volley numbers | 3 clockwise + 3 anticlockwise, 6 s, partial from 3, ×12, 10 shots in 1.5 s | Keep it; try it and tune |  |
+
+- **The bow's camera when it fires** (the owner, 2026-11-22): after the introduction (low and close on the hero, the
+  rule), the shot is seen **from behind the hero, over his shoulder, toward the monster** as the arrows go up; then the
+  camera **cranes up and looks down on the monster** as the meteors land, and settles back (`special_moves.json`
+  `cyclone_volley` camera `"move": "rain"`; also `"behind"` alone; battle.json stage camera `behind` (distance 3.8 m,
+  height ×1.2 the hero, deg 26) and `rain` (rise 4.5 m, back 1.2 m, holdShare, riseShare)).

@@ -247,6 +247,7 @@ struct CombatState : public Trackable {
     int m_iIntroOwner = -1;                          // -1 the hero (his colours, from the right); 0.. that monster (a boss's look, from the left)
     std::string m_strHeroIntroLabel, m_strIntroName; // the label's text key; the attack's name (already in the player's language)
     int m_iIntroFoeFire = -1;                        // a monster's special attack waits for its introduction, then lands (f_StartFoeIntro)
+    int m_iTravelMs = 0, m_iTravelMsMax = 0;   // a boss sequence: the stage travelling to the next monster (everything waits)
     int m_iBossIntroMs = 0, m_iBossIntroMsMax = 0;   // a boss's introduction (f_StartBossIntro): time left; everything waits the same way
     // (it is armed first: it waits for the battle's first drawn frame, then startDelayMs, so loading never eats it)
     int m_iBossIntroFoe = -1, m_iBossIntroWaitMs = 0, m_iBossIntroFrames = 0;
@@ -455,7 +456,7 @@ public:
     bool f_ReduceEffects() const { return m_oSettings.m_bReduceEffects; }
     bool f_BattleCellsOn() const { return m_oCs.m_bActive && m_oCs.m_bCellsOn; }
     // a moment when everything waits and only the monster is shown: the first danger's, or a boss's introduction
-    bool f_CellIntroOn() const { return m_oCs.m_iCellIntroMs > 0 || m_oCs.m_iBossIntroMs > 0 || m_oCs.m_iBossIntroFoe >= 0 || m_oCs.m_iIntroFoeFire >= 0; }
+    bool f_CellIntroOn() const { return m_oCs.m_iTravelMs > 0 || m_oCs.m_iCellIntroMs > 0 || m_oCs.m_iBossIntroMs > 0 || m_oCs.m_iBossIntroFoe >= 0 || m_oCs.m_iIntroFoeFire >= 0; }
     // A boss's introduction (the owner, 2026-11-14, Q82: "a special opening to introduce the boss (like Mega Man)"):
     // enemies.json "intro": true; battle.json feelFx "bossIntro". The fight waits; the camera goes low and close on it,
     // it poses, its particles and its sting, a banner slides in and its name types in letter by letter.
@@ -522,7 +523,8 @@ public:
     // Dismisses the post-victory pause (mirrors handleTouch's existing tap-to-dismiss) -- the
     // keyboard path (Enter/Space) had no equivalent before this fix, so "press any key to
     // continue" never actually worked from a keyboard.
-    void f_DismissVictory() { m_oCs.m_bWon = false; m_oCs.m_strLog.clear(); }
+    // The result screen closed: back to the map, or a boss sequence's next fight (game_gauntlet.cpp)
+    void f_DismissVictory();
     bool f_InDialogueFlag() const { return m_bInDialogue; }
     int f_DialogueSel() const { return m_iDlgSel; }
     int f_DialogueChoiceCount() const { return (int)m_vDlgChoices.size(); }
@@ -914,6 +916,23 @@ private:
     // A foe fell (its HP reached 0): its die clip, the log; the target moves on; the last one wins the battle.
     void f_FoeDown(int l_iFoe);
     std::vector<EnemyInst> f_PartyOf(const EnemyInst& l_oLead);
+    // ---- a boss's fight as a sequence (game_gauntlet.cpp, docs/gameplay/25): its guards one at a time, then the boss ----
+    struct Gauntlet {
+        bool m_bOn = false;
+        std::vector<EnemyInst> m_vSteps;   // the guards, then the boss (last)
+        int m_iStep = 0;                   // the fight now
+        bool m_bAdvance = false;           // a guard just beaten: on to the next fight (no result screen)
+    };
+    Gauntlet m_oGauntlet;
+    glm::vec3 m_v3BattleTravel{0.0f}, m_v3TravelFrom{0.0f}, m_v3TravelTo{0.0f};   // the 3D stage's offset: the monster's place now
+    bool f_IsGauntletBoss(const std::string& l_strId) const;   // enemies.json "intro": a boss
+    std::vector<EnemyInst> f_GauntletGuards(const EnemyInst& l_oBoss, const std::vector<std::string>& l_vStageList);
+    void f_StartGauntlet(const EnemyInst& l_oBoss, const std::vector<EnemyInst>& l_vGuards);
+    void f_EndGauntlet();
+    void f_StepGauntletTravel(int l_iDtMs);
+    void f_FillGauntletUi(toms::UiBattle& l_oB) const;
+    glm::vec3 f_GauntletStepVec() const;                  // battle.json "gauntlet" "step": from one monster's place to the next
+    void f_DrawGauntletWaiting();                         // the monsters still to come, standing further on (dark)
     bool f_AfterPlayerHit(const std::string& l_strHitLog, const std::string& l_strWinLog);   // true: the battle was won
     // ---- the revamp (docs/gameplay/15) ----
     float f_BattleSpeed() const;                          // the player's setting, or a scenario's (17 I10)

@@ -128,6 +128,12 @@ struct UiFoe {                         // one monster of the battle (docs/gamepl
     float m_fHeadX = 0, m_fHeadY = 0;
 };
 
+struct UiGauntletStep {                // one fight of a boss's sequence (battle.rml #gauntlet, docs/gameplay/25)
+    std::string m_strSprite, m_strName;    // the monster's picture (_atlas.rcss); "?" / "BOSS" until it is reached
+    std::string m_strState;                // done, now, next (black: not reached yet)
+    bool m_bBoss = false;                  // the last: the boss
+};
+
 struct UiBattleCell {                  // one of the battle's cells (battle_cells.h)
     float m_fX = 0, m_fY = 0, m_fW = 0, m_fH = 0;   // in #cells
     float m_fSkew = 0;                  // the outer columns lean in, as a floor seen in perspective
@@ -175,6 +181,7 @@ struct UiBattle {
     std::vector<UiTouchItem> m_vTouch;    // what it draws over the monster
     std::string m_strSkillPrompt, m_strSkillTime;   // a move's play: "Draw the pentagram!", its seconds left (16 §6)
     std::vector<UiFoe> m_vFoes;           // 1..3; foes[0] is enemy_* above
+    std::vector<UiGauntletStep> m_vSteps; // a boss's sequence: every fight, top to bottom (empty: none)
     // ---- the revamp (docs/gameplay/15_BATTLE_REVAMP.md) ----
     std::string m_strBanner, m_strBannerKind;   // across the screen: break / line / ultimate
     float m_fBannerOpacity = 0, m_fBannerShift = 0;   // its slide in and out (px)

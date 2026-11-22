@@ -316,6 +316,7 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
         // old picture for a moment (it flashed before the animated hero and the 3D stage, the owner 2026-11-11).
         const bool l_bRigTried = m_strBattleRigWeapon == m_oEquipped.m_strWeaponId;
         l_oB.m_bPlayerAnim = !(l_bRigTried && !f_BattleRigReady());
+        f_FillGauntletUi(l_oB);   // a boss's sequence: the ladder (battle.rml #gauntlet)
         for (size_t l_nI = 0; l_nI < m_oCs.m_vFoes.size(); l_nI++) {   // the monsters (battle.rml .foe)
             const CombatState::Foe& l_oF = m_oCs.m_vFoes[l_nI];
             toms::UiFoe l_oUf;
@@ -427,7 +428,7 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
                 : l_oL.f_Tr("battle.shield_none");
             l_oB.m_bCritArmed = m_oCs.m_bNextAttackGuaranteedCrit;
             l_oB.m_strCritHint = l_oL.f_Tr("battle.active_armed_hint");
-            l_oB.m_bFocus = f_CellIntroOn() && !m_oCs.m_bCellsShown;
+            l_oB.m_bFocus = f_CellIntroOn() && m_oCs.m_iTravelMs <= 0 && !m_oCs.m_bCellsShown;
             if (m_oCs.m_iBossIntroMs > 0 && !m_oCs.m_vFoes.empty()) {   // a boss's introduction: the banner slides in, the name types in
                 const nlohmann::json l_jC = f_FeelFx().value("bossIntro", nlohmann::json::object());
                 const int l_iT = m_oCs.m_iBossIntroMsMax - m_oCs.m_iBossIntroMs;

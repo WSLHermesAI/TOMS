@@ -385,7 +385,12 @@ void Game::f_EngageMonster(const Entity& l_oE) {
         m_bHasPendingEncounter = true;
         m_strDlgNpc = "enemy_" + l_oE.m_strId;   // so ChoiceMade{dlgNpc,...} carries the right id
         f_StartDialogue(m_strDlgNpc);
+    } else if (f_IsGauntletBoss(l_oEn.m_strId)) {   // a boss: its guards one at a time, then it (game_gauntlet.cpp)
+        const std::vector<EnemyInst> l_vGuards = f_GauntletGuards(l_oEn, l_oE.m_vGauntlet);
+        if (l_vGuards.empty()) { f_EndGauntlet(); f_StartCombat(l_oEn); }
+        else f_StartGauntlet(l_oEn, l_vGuards);
     } else {
+        f_EndGauntlet();
         f_StartCombat(l_oEn, f_PartyOf(l_oEn));
     }
 }
