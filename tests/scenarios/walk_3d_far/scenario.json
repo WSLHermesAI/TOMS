@@ -1,0 +1,12 @@
+{
+  "_comment": "Walking a floor in 3D, zoomed out (docs/gameplay/24, Settings > View size): F05 at view size 2 (about 24 tiles across); the floor is drawn and a click on the hero still finds his tile.",
+  "scene": "stage",
+  "stage": "F05",
+  "viewScale": 2,
+  "test": {
+    "frames": 30
+  },
+  "expect": {
+    "walk3d": true
+  }
+}

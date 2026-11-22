@@ -146,6 +146,7 @@ bool Game::f_StartScenarioJson(const nlohmann::json& l_jSc, const std::string& l
     // the attack's play (touch_play.h): scenarios play the track unless their battle sets "play" ("weapon": the weapon's)
     m_strPlayOverride = l_jSc.value("battle", nlohmann::json::object()).value("play", std::string("track"));
     m_strUltimateOverride = l_jSc.value("battle", nlohmann::json::object()).value("ultimate", std::string());
+    m_fScenarioViewScale = std::clamp(l_jSc.value("viewScale", 1.0f), 0.5f, 4.0f);   // the walking view (docs/gameplay/24)
     m_fScenarioBattleSpeed = std::max(0.1f, l_jSc.value("battle", nlohmann::json::object()).value("speed", 1.0f));
     if (l_jSc.value("battle3d", false)) m_bBattle3DAllowed = true;   // the battle on its 3D stage (docs/gameplay/21), as in normal play
     const nlohmann::json l_jTest = l_jSc.value("test", nlohmann::json::object());

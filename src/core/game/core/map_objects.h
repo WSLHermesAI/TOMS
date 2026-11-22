@@ -42,6 +42,7 @@ class MapFloor;
 
 namespace map_detail {   // map_objects.cpp: the looks and the builder (friends of Game)
 class RenderLook;
+class SwirlLook;
 struct Builder;
 }  // namespace map_detail
 

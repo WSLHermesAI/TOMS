@@ -47,63 +47,59 @@ void Game::f_Draw() {
     f_DrawPreviewAnim(); m_pRen->end();
 }
 
-// The ground's marks, drawn on the map's pixels (the 3D floor lays them on its ground, game_walk3d.cpp): the stairs and
-// the door tiles (the walls and the plain floor are the 3D model), the locked stairs' padlocks, an opened stair's gold
-// arrow, and the click-to-move target.
+// The ground's marks, drawn on the map's pixels (the 3D floor lays them on its ground, game_walk3d.cpp): the door tiles
+// (the walls, the plain floor and the stairs are the 3D model) and the click-to-move target.
 void Game::f_DrawGroundMarks(const MapView& l_oV) {
     const float l_fOx = l_oV.m_fOx, l_fOy = l_oV.m_fOy, l_fTs = l_oV.m_fTs;
     static const float l_arrWhite[4] = {1, 1, 1, 1};
-    // the floor's theme: its own stairs pictures where the atlas has them
-    auto l_fnThemed = [&](const std::string& l_strName) {
-        if (m_oSt.m_strTheme.empty() || (l_strName != "stairs_up" && l_strName != "stairs_down")) return l_strName;
-        const std::string l_strT = l_strName + "_" + m_oSt.m_strTheme;
-        return m_mapIdToLayer.count(l_strT) ? l_strT : l_strName;
-    };
     for (int l_iY = 0; l_iY < m_oSt.m_iHeight; l_iY++) for (int l_iX = 0; l_iX < m_oSt.m_iWidth; l_iX++) {
         const char l_cC = m_oSt.f_At(l_iX, l_iY);
-        if (l_cC == '#' || f_CellSprite(l_cC) == "floor") continue;   // the 3D floor has them
-        const int l_iLayer = f_SpriteLayer(l_fnThemed(f_CellSprite(l_cC)));
+        if (l_cC == '#' || l_cC == 'U' || l_cC == 'D' || f_CellSprite(l_cC) == "floor") continue;   // the 3D floor has them
+        const int l_iLayer = f_SpriteLayer(f_CellSprite(l_cC));
         m_pRen->f_DrawSprite(f_SpriteQuad(l_fOx + l_iX * l_fTs, l_fOy + l_iY * l_fTs, l_fTs, l_fTs, l_iLayer, l_arrWhite));
     }
-    // Q7: a locked stair stays visible, dimmed, with a padlock on it until its event is finished.
+    // Click-to-move destination: a soft gold plate on the target tile while walking there.
+    if (f_Walking() && m_iWalkTargetX >= 0) {
+        const float l_fM = l_fTs * 0.12f;
+        Quad l_oQ; l_oQ.m_arrRect[0] = l_fOx + m_iWalkTargetX * l_fTs + l_fM; l_oQ.m_arrRect[1] = l_fOy + m_iWalkTargetY * l_fTs + l_fM;
+        l_oQ.m_arrRect[2] = l_fTs - 2 * l_fM; l_oQ.m_arrRect[3] = l_fTs - 2 * l_fM;
+        l_oQ.m_arrUv[0] = 0; l_oQ.m_arrUv[1] = 0; l_oQ.m_arrUv[2] = 1; l_oQ.m_arrUv[3] = 1; l_oQ.m_bSolid = true;
+        l_oQ.m_arrTint[0] = 1.0f; l_oQ.m_arrTint[1] = 0.85f; l_oQ.m_arrTint[2] = 0.3f; l_oQ.m_arrTint[3] = 0.35f;
+        m_pRen->f_DrawSprite(l_oQ);
+    }
+}
+
+// A stair's sign, drawn in the square (x, y, size) that stands over it on the 3D floor (f_DrawWalk3D): Q7, a locked
+// stair's padlock until its event is finished; W38, an opened stair's gold arrow bobbing, pointing down at it, until it
+// is taken. False: nothing to say.
+bool Game::f_DrawStairSign(const toms::StairLink& l_oS, float l_fX0, float l_fY0, float l_fTs) {
     auto l_fnSolid = [&](float l_fX, float l_fY, float l_fW, float l_fH, float l_fR, float l_fG, float l_fB, float l_fA) {
         Quad l_oQ; l_oQ.m_arrRect[0] = l_fX; l_oQ.m_arrRect[1] = l_fY; l_oQ.m_arrRect[2] = l_fW; l_oQ.m_arrRect[3] = l_fH;
         l_oQ.m_arrUv[0] = 0; l_oQ.m_arrUv[1] = 0; l_oQ.m_arrUv[2] = 1; l_oQ.m_arrUv[3] = 1; l_oQ.m_bSolid = true;
         l_oQ.m_arrTint[0] = l_fR; l_oQ.m_arrTint[1] = l_fG; l_oQ.m_arrTint[2] = l_fB; l_oQ.m_arrTint[3] = l_fA;
         m_pRen->f_DrawSprite(l_oQ);
     };
-    for (const toms::StairLink& l_oS : m_oSt.m_vStairs) {
-        if (!f_StairLocked(l_oS) || l_oS.m_iX < 0) continue;
-        const float l_fX0 = l_fOx + l_oS.m_iX * l_fTs, l_fY0 = l_fOy + l_oS.m_iY * l_fTs, l_fU = l_fTs / 16.0f;
-        l_fnSolid(l_fX0, l_fY0, l_fTs, l_fTs, 0.0f, 0.0f, 0.0f, 0.45f);                                   // dimmed stair
+    const float l_fU = l_fTs / 16.0f;
+    if (f_StairLocked(l_oS)) {
         l_fnSolid(l_fX0 + 5 * l_fU, l_fY0 + 3 * l_fU, 1.5f * l_fU, 5 * l_fU, 0.20f, 0.16f, 0.08f, 1.0f);       // shackle, left
         l_fnSolid(l_fX0 + 9.5f * l_fU, l_fY0 + 3 * l_fU, 1.5f * l_fU, 5 * l_fU, 0.20f, 0.16f, 0.08f, 1.0f);    // shackle, right
         l_fnSolid(l_fX0 + 5 * l_fU, l_fY0 + 2.5f * l_fU, 6 * l_fU, 1.5f * l_fU, 0.20f, 0.16f, 0.08f, 1.0f);    // shackle, top
         l_fnSolid(l_fX0 + 3.5f * l_fU, l_fY0 + 7 * l_fU, 9 * l_fU, 7 * l_fU, 0.20f, 0.16f, 0.08f, 1.0f);       // body outline
         l_fnSolid(l_fX0 + 4.5f * l_fU, l_fY0 + 8 * l_fU, 7 * l_fU, 5 * l_fU, 0.98f, 0.80f, 0.30f, 1.0f);       // body
         l_fnSolid(l_fX0 + 7.5f * l_fU, l_fY0 + 9 * l_fU, 1 * l_fU, 2.5f * l_fU, 0.20f, 0.16f, 0.08f, 1.0f);    // keyhole
+        return true;
     }
-    // W38: a stair that just opened (its "go to the stairs" event is open) glows, a gold arrow bobbing over it, so the
-    // player sees where to go; it goes once the stair is taken. Off the screen: f_DrawWalk3DStairPointer.
-    for (const toms::StairLink& l_oS : m_oSt.m_vStairs) {
-        if (!f_StairJustOpened(m_oSt.m_strId, l_oS) || l_oS.m_iX < 0) continue;
-        const float l_fU = l_fTs / 16.0f;
-        const float l_fBob = std::sin((float)std::fmod(m_dIdleClockMs, 1000.0) / 1000.0f * 6.2831853f) * 2.0f * l_fU;
-        const float l_fCx = l_fOx + l_oS.m_iX * l_fTs + l_fTs * 0.5f, l_fTop = l_fOy + l_oS.m_iY * l_fTs - 9.0f * l_fU + l_fBob;
-        l_fnSolid(l_fOx + l_oS.m_iX * l_fTs, l_fOy + l_oS.m_iY * l_fTs, l_fTs, l_fTs, 1.0f, 0.85f, 0.3f, 0.22f);                    // the stair glows
-        l_fnSolid(l_fCx - 1.5f * l_fU, l_fTop, 3.0f * l_fU, 5.0f * l_fU, 0.20f, 0.16f, 0.08f, 1.0f);                 // shaft outline
-        l_fnSolid(l_fCx - 0.75f * l_fU, l_fTop + 0.5f * l_fU, 1.5f * l_fU, 4.5f * l_fU, 1.0f, 0.85f, 0.3f, 1.0f);       // shaft
-        for (int l_iR = 0; l_iR < 4; l_iR++) {                                                             // the head, row by row
-            const float l_fW = (7.0f - 2.0f * l_iR) * l_fU, l_fY = l_fTop + 5.0f * l_fU + l_iR * l_fU;
-            l_fnSolid(l_fCx - l_fW * 0.5f - 0.5f * l_fU, l_fY, l_fW + l_fU, l_fU, 0.20f, 0.16f, 0.08f, 1.0f);
-            l_fnSolid(l_fCx - l_fW * 0.5f, l_fY, l_fW, l_fU, 1.0f, 0.85f, 0.3f, 1.0f);
-        }
+    if (!f_StairJustOpened(m_oSt.m_strId, l_oS)) return false;
+    const float l_fBob = std::sin((float)std::fmod(m_dIdleClockMs, 1000.0) / 1000.0f * 6.2831853f) * 1.5f * l_fU;
+    const float l_fCx = l_fX0 + l_fTs * 0.5f, l_fTop = l_fY0 + 2.0f * l_fU + l_fBob;
+    l_fnSolid(l_fCx - 1.5f * l_fU, l_fTop, 3.0f * l_fU, 5.0f * l_fU, 0.20f, 0.16f, 0.08f, 1.0f);                 // shaft outline
+    l_fnSolid(l_fCx - 0.75f * l_fU, l_fTop + 0.5f * l_fU, 1.5f * l_fU, 4.5f * l_fU, 1.0f, 0.85f, 0.3f, 1.0f);       // shaft
+    for (int l_iR = 0; l_iR < 4; l_iR++) {                                                             // the head, row by row
+        const float l_fW = (7.0f - 2.0f * l_iR) * l_fU, l_fY = l_fTop + 5.0f * l_fU + l_iR * l_fU;
+        l_fnSolid(l_fCx - l_fW * 0.5f - 0.5f * l_fU, l_fY, l_fW + l_fU, l_fU, 0.20f, 0.16f, 0.08f, 1.0f);
+        l_fnSolid(l_fCx - l_fW * 0.5f, l_fY, l_fW, l_fU, 1.0f, 0.85f, 0.3f, 1.0f);
     }
-    // Click-to-move destination: a soft gold plate on the target tile while walking there.
-    if (f_Walking() && m_iWalkTargetX >= 0) {
-        const float l_fM = l_fTs * 0.12f;
-        l_fnSolid(l_fOx + m_iWalkTargetX * l_fTs + l_fM, l_fOy + m_iWalkTargetY * l_fTs + l_fM, l_fTs - 2 * l_fM, l_fTs - 2 * l_fM, 1.0f, 0.85f, 0.3f, 0.35f);
-    }
+    return true;
 }
 
 // The cache's error for a file, worded as the previews always reported it.

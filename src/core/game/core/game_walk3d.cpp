@@ -18,11 +18,14 @@ nlohmann::json Game::f_Walk3DStage() const {
     const std::string l_strLook = l_jLooks.contains(m_oSt.m_strTheme) ? m_oSt.m_strTheme : m_jStage3D.value("defaultLook", std::string("castle"));
     nlohmann::json l_jRow = l_jLooks.value(l_strLook, nlohmann::json::object());
     if (!l_jRow.is_object()) l_jRow = nlohmann::json::object();
-    // the walls only (a door or a monster's tile is ground): a door opening does not make the floor again
+    // the walls and the stairs only (a door or a monster's tile is ground): a door opening does not make the floor again
     nlohmann::json l_jWalls = nlohmann::json::array();
     for (int l_iY = 0; l_iY < m_oSt.m_iHeight; l_iY++) {
         std::string l_strRow((size_t)m_oSt.m_iWidth, '.');
-        for (int l_iX = 0; l_iX < m_oSt.m_iWidth; l_iX++) if (m_oSt.f_At(l_iX, l_iY) == '#') l_strRow[(size_t)l_iX] = '#';
+        for (int l_iX = 0; l_iX < m_oSt.m_iWidth; l_iX++) {
+            const char l_cC = m_oSt.f_At(l_iX, l_iY);
+            if (l_cC == '#' || l_cC == 'U' || l_cC == 'D') l_strRow[(size_t)l_iX] = l_cC;   // walls, and the stairs' steps
+        }
         l_jWalls.push_back(l_strRow);
     }
     // the floor as a prop: its walls cast the sun's shadows (a "ground" casts none)
@@ -32,8 +35,21 @@ nlohmann::json Game::f_Walk3DStage() const {
     const std::string l_strShadow = m_jStage3D.value("shadow", std::string());
     if (!l_strShadow.empty() && m_jStage3D.value("sprites", nlohmann::json::object()).value("shadow", 0.3f) > 0.0f) l_jRow["shadow"] = l_strShadow;
     l_jRow["sprites"] = {{"glow", m_jStage3D.value("sprites", nlohmann::json::object()).value("glow", 0.5f)}};
-    l_jRow["shadowBounds"] = {{-1, 0, -1}, {m_oSt.m_iWidth + 1, 2, m_oSt.m_iHeight + 1}};
+    l_jRow["shadowBounds"] = {{-1, -1.2, -1}, {m_oSt.m_iWidth + 1, 2, m_oSt.m_iHeight + 1}};   // (down: the stairs' pits)
     return l_jRow;
+}
+
+void Game::f_CycleViewScale() {
+    std::vector<float> l_vScales;
+    if (m_jStage3D.is_object())
+        for (const auto& l_jS : m_jStage3D.value("viewScales", nlohmann::json::array())) if (l_jS.is_number()) l_vScales.push_back(l_jS.get<float>());
+    if (l_vScales.empty()) l_vScales = {1.0f, 1.5f, 2.0f, 3.0f};
+    std::sort(l_vScales.begin(), l_vScales.end());
+    float l_fNext = l_vScales.front();
+    for (float l_fS : l_vScales) if (l_fS > m_oSettings.m_fViewScale + 0.001f) { l_fNext = l_fS; break; }
+    m_oSettings.m_fViewScale = l_fNext;
+    toms::f_EnsureSaveDir(toms::f_DefaultSaveDir());
+    toms::f_SaveGameSettings(toms::f_SettingsPath(), m_oSettings);
 }
 
 void Game::f_SetSceneLoading(bool l_bLoading, int l_iDtMs) {
@@ -134,7 +150,8 @@ Game::Walk3DCamera Game::f_Walk3DCamera(float l_fDtSeconds) {
         m_v3Walk3DLook += (l_v3Target - m_v3Walk3DLook) * l_fK;
     }
     const float l_fPitch = glm::radians(std::clamp(l_jCam.value("pitch", 55.0f), 10.0f, 89.0f));
-    const float l_fDist = std::max(2.0f, l_jCam.value("distance", 11.0f));
+    // Settings > View size: further back, more of the floor (x1.5 about 18 tiles across, x2 about 24, x3 about 36)
+    const float l_fDist = std::max(2.0f, l_jCam.value("distance", 11.0f)) * std::clamp(f_ViewScale(), 0.5f, 4.0f);
     Walk3DCamera l_oC;
     l_oC.m_v3Look = m_v3Walk3DLook;
     l_oC.m_v3Eye = m_v3Walk3DLook + glm::vec3(0.0f, std::sin(l_fPitch) * l_fDist, std::cos(l_fPitch) * l_fDist);   // south of him, looking north
@@ -161,6 +178,32 @@ std::vector<glm::vec4> Game::f_Walk3DShadows() const {
         if (l_strK != "monster" && l_strK != "npc") continue;
         l_vOut.push_back(glm::vec4(l_oE.m_iX + l_oE.m_oFp.m_iW * 0.5f, 0.0f, l_oE.m_iY + l_oE.m_oFp.m_iH - 0.45f, l_fR * (float)l_oE.m_oFp.m_iW));
     }
+    return l_vOut;
+}
+
+std::vector<Game::Battle3DLight> Game::f_Walk3DLights() const {
+    std::vector<Battle3DLight> l_vOut;
+    const nlohmann::json l_jL = m_jStage3D.is_object() ? m_jStage3D.value("stairLights", nlohmann::json::object()) : nlohmann::json::object();
+    if (l_jL.value("off", false)) return l_vOut;
+    auto l_fnColor = [&](const char* l_pszKey, const glm::vec3& l_v3Default) {
+        const nlohmann::json l_jC = l_jL.value(l_pszKey, nlohmann::json());
+        return l_jC.is_array() && l_jC.size() >= 3 ? glm::vec3(l_jC[0].get<float>(), l_jC[1].get<float>(), l_jC[2].get<float>()) : l_v3Default;
+    };
+    const float l_fWallH = m_jStage3D.value("wallHeight", 1.0f);
+    for (const toms::StairLink& l_oS : m_oSt.m_vStairs) {
+        if (l_oS.m_iX < 0) continue;
+        Battle3DLight l_oL;
+        l_oL.m_v3Pos = glm::vec3(l_oS.m_iX + 0.5f, l_oS.m_bUp ? l_fWallH + 0.7f : -0.3f, l_oS.m_iY + 0.5f);
+        l_oL.m_v3Color = l_oS.m_bUp ? l_fnColor("up", {1.0f, 0.8f, 0.45f}) : l_fnColor("down", {0.45f, 0.65f, 1.0f});
+        l_oL.m_fIntensity = l_jL.value("intensity", 6.0f) * (f_StairJustOpened(m_oSt.m_strId, l_oS) ? 1.6f : f_StairLocked(l_oS) ? 0.5f : 1.0f);
+        l_oL.m_fRange = l_jL.value("range", 3.0f);
+        l_vOut.push_back(l_oL);
+    }
+    const glm::vec3 l_v3Hero(m_oPl.m_iX + 0.5f, 0.0f, m_oPl.m_iY + 0.5f);
+    std::sort(l_vOut.begin(), l_vOut.end(), [&](const Battle3DLight& l_oA, const Battle3DLight& l_oB) {
+        return glm::length(glm::vec2(l_oA.m_v3Pos.x, l_oA.m_v3Pos.z) - glm::vec2(l_v3Hero.x, l_v3Hero.z)) <
+               glm::length(glm::vec2(l_oB.m_v3Pos.x, l_oB.m_v3Pos.z) - glm::vec2(l_v3Hero.x, l_v3Hero.z));
+    });
     return l_vOut;
 }
 
@@ -219,6 +262,17 @@ void Game::f_DrawWalk3D() {
     f_DrawGroundMarks(l_oV);
     m_pRen->f_EndWorld();
     m_oFloor.f_Render(l_oV);   // each object in its own standing group (f_Walk3DBeginObject)
+    // each stair's sign (a padlock, the gold arrow) standing over it: on the top step (up) or over the pit (down)
+    const float l_fWallH = m_jStage3D.value("wallHeight", 1.0f);
+    for (const toms::StairLink& l_oS : m_oSt.m_vStairs) {
+        if (l_oS.m_iX < 0) continue;
+        const float l_fBase = l_oS.m_bUp ? l_fWallH : 0.0f;
+        const glm::mat4 l_mat4M = f_Walk3DSpriteMatrix(glm::vec2(l_oV.m_fTs * 0.5f, l_oV.m_fTs), glm::vec3(l_oS.m_iX + 0.5f, l_fBase, l_oS.m_iY + 0.5f),
+                                                      0.9f / l_oV.m_fTs);
+        m_pRen->f_BeginWorld(&l_mat4M[0][0], false);
+        f_DrawStairSign(l_oS, 0.0f, 0.0f, l_oV.m_fTs);
+        m_pRen->f_EndWorld();
+    }
     f_DrawWalk3DStairPointer();
 }
 

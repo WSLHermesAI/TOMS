@@ -15,6 +15,15 @@
 
 ## ▶ Next Step
 
+**Every floor walks in 3D, no 2D map; view size, event swirls, 3D stairs** (2026-11-22; [DAILY_2026-11-22.md](DAILY_2026-11-22.md)):
+- Each floor's walls and ground are made from its tile map when entered (`floor_mesh.cpp`), in 10 AI-painted looks; the
+  browser is 3D too; the 2D map, its camera and Settings row are removed; a loading circle shows for a slow scene.
+- Settings > View size x1-x3 (x1.5 default); events are a swirl of light; stairs are four steps (up, or down into a pit)
+  with their own light. Doc [gameplay/24](../../gameplay/24_STAGE_3D.md) (+ zh_TW).
+- The owner committed `6d89213`, `ed9ce58`, `909d5ac` (11-21); the 11-22 work is committed after this report.
+  Changed-only 35 of 322, all passed; naming checker 0 edits; web smoke test passed.
+  **Owner:** play a few floors; Q118-Q121. Next: doc 24 step 3 (painted monsters and people on the map) or chapters 6-7.
+
 **The story's chapters 4–5 playable; F01 walks in real 3D** (2026-11-21; [DAILY_2026-11-21.md](DAILY_2026-11-21.md)):
 - Chapters 4–5 (F16–F25) written in zh_TW + en: the buried ones and the vision of Leo's birth (Bran, Mom's brother), the
   Collectors' barracks, the cells, Mira, Grey Mask unmasked as Bran and the big choice (kill, spare, justice). 14 new scenarios.

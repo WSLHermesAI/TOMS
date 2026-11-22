@@ -5,6 +5,7 @@
 #include <json.hpp>
 
 #include <cstdint>
+#include <cmath>
 #include <cstring>
 
 namespace toms::next {
@@ -44,11 +45,87 @@ std::string f_MakeFloorGlb(const std::vector<std::string>& l_vWalls, const std::
     };
     Part l_oGround, l_oSide, l_oTop;
     const float l_fW = (float)l_iW, l_fD = (float)l_iH, l_fR = std::max(0.1f, l_fGroundRepeat), l_fWh = l_fWallHeight;
-    {
-        glm::vec3 l_arrP[4] = {{0, 0, 0}, {l_fW, 0, 0}, {l_fW, 0, l_fD}, {0, 0, l_fD}};
-        glm::vec2 l_arrUv[4] = {{0, 0}, {l_fW / l_fR, 0}, {l_fW / l_fR, l_fD / l_fR}, {0, l_fD / l_fR}};
-        l_oGround.f_Quad(l_arrP, {0, 1, 0}, {1, 0, 0}, l_arrUv);
-    }
+    auto l_fnCell = [&](int l_iX, int l_iZ) {
+        return l_iZ >= 0 && l_iZ < l_iH && l_iX >= 0 && l_iX < (int)l_vWalls[(size_t)l_iZ].size() ? l_vWalls[(size_t)l_iZ][(size_t)l_iX] : '#';
+    };
+    // the ground: a square a cell, but not under the walls nor where stairs go down (their pit)
+    (void)l_fW; (void)l_fD;
+    for (int l_iZ = 0; l_iZ < l_iH; l_iZ++)
+        for (int l_iX = 0; l_iX < l_iW; l_iX++) {
+            const char l_cC = l_fnCell(l_iX, l_iZ);
+            if (l_cC == '#' || l_cC == 'D') continue;
+            const float l_fX = (float)l_iX, l_fZ = (float)l_iZ;
+            glm::vec3 l_arrP[4] = {{l_fX, 0, l_fZ}, {l_fX + 1, 0, l_fZ}, {l_fX + 1, 0, l_fZ + 1}, {l_fX, 0, l_fZ + 1}};
+            glm::vec2 l_arrUv[4] = {{l_fX / l_fR, l_fZ / l_fR}, {(l_fX + 1) / l_fR, l_fZ / l_fR}, {(l_fX + 1) / l_fR, (l_fZ + 1) / l_fR}, {l_fX / l_fR, (l_fZ + 1) / l_fR}};
+            l_oGround.f_Quad(l_arrP, {0, 1, 0}, {1, 0, 0}, l_arrUv);
+        }
+    // the stairs ('U' up, 'D' down): four steps, walked onto from an open side (south first: it faces the camera); up
+    // climbs to the walls' top, down goes into a pit as deep. Treads in the look's ground, risers and the pit in its wall.
+    const int l_iSteps = 4;
+    auto l_fnStairs = [&](int l_iX, int l_iZ, bool l_bUp) {
+        static const int l_arrDir[4][2] = {{0, 1}, {-1, 0}, {1, 0}, {0, -1}};   // south, west, east, north
+        int l_iDx = 0, l_iDz = 1;
+        for (const auto& l_arrD : l_arrDir) {
+            const char l_cN = l_fnCell(l_iX + l_arrD[0], l_iZ + l_arrD[1]);
+            if (l_cN != '#' && l_cN != 'U' && l_cN != 'D') { l_iDx = l_arrD[0]; l_iDz = l_arrD[1]; break; }
+        }
+        const glm::vec3 l_v3In((float)l_iDx, 0.0f, (float)l_iDz);        // toward the side it is walked onto from
+        const glm::vec3 l_v3Side(-l_v3In.z, 0.0f, l_v3In.x);              // across the steps
+        const glm::vec3 l_v3Mid((float)l_iX + 0.5f, 0.0f, (float)l_iZ + 0.5f);
+        // a point of the cell: u from its open edge (0) to its far edge (1), v across (-0.5..0.5), y up
+        auto l_fnP = [&](float l_fU, float l_fV, float l_fY) { return l_v3Mid + l_v3In * (0.5f - l_fU) + l_v3Side * l_fV + glm::vec3(0.0f, l_fY, 0.0f); };
+        const float l_fStepD = 1.0f / (float)l_iSteps, l_fStepH = l_fWh / (float)l_iSteps;
+        for (int l_iK = 0; l_iK < l_iSteps; l_iK++) {
+            const float l_fU0 = l_iK * l_fStepD, l_fU1 = l_fU0 + l_fStepD;
+            const float l_fTop = l_bUp ? (l_iK + 1) * l_fStepH : -(l_iK + 1) * l_fStepH;   // this step's tread
+            const float l_fPrev = l_bUp ? l_iK * l_fStepH : -l_iK * l_fStepH;              // the one before it
+            {   // the tread
+                glm::vec3 l_arrP[4] = {l_fnP(l_fU0, -0.5f, l_fTop), l_fnP(l_fU0, 0.5f, l_fTop), l_fnP(l_fU1, 0.5f, l_fTop), l_fnP(l_fU1, -0.5f, l_fTop)};
+                glm::vec2 l_arrUv[4];   // the floor's own boards / slabs: lighter than the walls' tops, so the steps stand out
+                for (int l_iC = 0; l_iC < 4; l_iC++) l_arrUv[l_iC] = glm::vec2(l_arrP[l_iC].x, l_arrP[l_iC].z) / l_fR;
+                l_oGround.f_Quad(l_arrP, {0, 1, 0}, l_v3Side, l_arrUv);
+            }
+            {   // the riser at its front edge: from the step before up to it (up), or down to it (down)
+                glm::vec3 l_arrP[4] = {l_fnP(l_fU0, -0.5f, l_fPrev), l_fnP(l_fU0, 0.5f, l_fPrev), l_fnP(l_fU0, 0.5f, l_fTop), l_fnP(l_fU0, -0.5f, l_fTop)};
+                glm::vec2 l_arrUv[4] = {{-0.5f, -l_fPrev}, {0.5f, -l_fPrev}, {0.5f, -l_fTop}, {-0.5f, -l_fTop}};
+                l_oSide.f_Quad(l_arrP, l_bUp ? l_v3In : -l_v3In, l_v3Side, l_arrUv);
+            }
+            if (l_bUp)   // its two sides, where the cell beside is open (a wall beside hides them)
+                for (int l_iS = -1; l_iS <= 1; l_iS += 2) {
+                    const glm::vec3 l_v3Out = l_v3Side * (float)l_iS;
+                    const glm::vec3 l_v3N = l_v3Mid + l_v3Out;
+                    if (l_fnCell((int)std::floor(l_v3N.x), (int)std::floor(l_v3N.z)) == '#') continue;
+                    const float l_fV = 0.5f * (float)l_iS;
+                    glm::vec3 l_arrP[4] = {l_fnP(l_fU0, l_fV, 0.0f), l_fnP(l_fU1, l_fV, 0.0f), l_fnP(l_fU1, l_fV, l_fTop), l_fnP(l_fU0, l_fV, l_fTop)};
+                    glm::vec2 l_arrUv[4] = {{l_fU0, 0.0f}, {l_fU1, 0.0f}, {l_fU1, -l_fTop}, {l_fU0, -l_fTop}};
+                    l_oSide.f_Quad(l_arrP, l_v3Out, -l_v3In, l_arrUv);
+                }
+        }
+        if (l_bUp) {   // its back, where the cell behind is open
+            const glm::vec3 l_v3B = l_v3Mid - l_v3In;
+            if (l_fnCell((int)std::floor(l_v3B.x), (int)std::floor(l_v3B.z)) != '#') {
+                glm::vec3 l_arrP[4] = {l_fnP(1.0f, -0.5f, 0.0f), l_fnP(1.0f, 0.5f, 0.0f), l_fnP(1.0f, 0.5f, l_fWh), l_fnP(1.0f, -0.5f, l_fWh)};
+                glm::vec2 l_arrUv[4] = {{-0.5f, 0.0f}, {0.5f, 0.0f}, {0.5f, -l_fWh}, {-0.5f, -l_fWh}};
+                l_oSide.f_Quad(l_arrP, -l_v3In, l_v3Side, l_arrUv);
+            }
+        } else {   // the pit's three walls (the sides and the back), from the ground down to its bottom
+            const float l_fBottom = -l_fWh;
+            for (int l_iS = -1; l_iS <= 1; l_iS += 2) {
+                const float l_fV = 0.5f * (float)l_iS;
+                glm::vec3 l_arrP[4] = {l_fnP(0.0f, l_fV, 0.0f), l_fnP(1.0f, l_fV, 0.0f), l_fnP(1.0f, l_fV, l_fBottom), l_fnP(0.0f, l_fV, l_fBottom)};
+                glm::vec2 l_arrUv[4] = {{0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, -l_fBottom}, {0.0f, -l_fBottom}};
+                l_oSide.f_Quad(l_arrP, -l_v3Side * (float)l_iS, l_v3In, l_arrUv);
+            }
+            glm::vec3 l_arrP[4] = {l_fnP(1.0f, -0.5f, 0.0f), l_fnP(1.0f, 0.5f, 0.0f), l_fnP(1.0f, 0.5f, l_fBottom), l_fnP(1.0f, -0.5f, l_fBottom)};
+            glm::vec2 l_arrUv[4] = {{-0.5f, 0.0f}, {0.5f, 0.0f}, {0.5f, -l_fBottom}, {-0.5f, -l_fBottom}};
+            l_oSide.f_Quad(l_arrP, l_v3In, l_v3Side, l_arrUv);
+        }
+    };
+    for (int l_iZ = 0; l_iZ < l_iH; l_iZ++)
+        for (int l_iX = 0; l_iX < l_iW; l_iX++) {
+            const char l_cC = l_fnCell(l_iX, l_iZ);
+            if (l_cC == 'U' || l_cC == 'D') l_fnStairs(l_iX, l_iZ, l_cC == 'U');
+        }
     for (int l_iZ = 0; l_iZ < l_iH; l_iZ++)
         for (int l_iX = 0; l_iX < l_iW; l_iX++) {
             if (!l_fnWall(l_iX, l_iZ)) continue;

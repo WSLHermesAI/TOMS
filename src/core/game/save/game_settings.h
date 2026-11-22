@@ -48,6 +48,7 @@ struct GameSettings {
     bool m_bReduceEffects = false;
     int m_iBattle3D = 0;               // Settings > 3D battle (the owner, 2026-11-14, Q95): 0 full, 1 light (no shadows, no point lights), 2 off
     float m_fBattleSpeed = 1.0f;       // Settings > Battle speed (docs/gameplay/17 I10): the battle's own time
+    float m_fViewScale = 1.5f;         // Settings > View size (docs/gameplay/24 §2): x the walking camera's distance (1 = about 12 tiles across; x1.5 by default, the owner 2026-11-22)
     bool m_bBowTutorialDone = false;   // the bow's first-pull tutorial was shown and followed (docs/gameplay/16 §3.2)
 };
 

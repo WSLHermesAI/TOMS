@@ -127,8 +127,8 @@ void Game::f_InGameMenuMove(int l_iDelta) {
         int l_iN = std::max(1, (int)f_HubMenuOrder().size());
         m_iInGameMenuSel = ((m_iInGameMenuSel + l_iDelta) % l_iN + l_iN) % l_iN;
     } else {
-        // languages, the art style rows (none when only the original exists), reduce effects, battle speed, 3D battle
-        int l_iN = std::max(1, m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount() + 3);
+        // languages, the art style rows (none when only the original exists), reduce effects, battle speed, 3D battle, view size
+        int l_iN = std::max(1, m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount() + 4);
         m_iInGameMenuSel = ((m_iInGameMenuSel + l_iDelta) % l_iN + l_iN) % l_iN;
     }
 }
@@ -232,6 +232,9 @@ void Game::f_InGameMenuActivate() {
         m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
     } else if (m_iInGameMenuSel == m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount() + 2) {
         f_CycleBattle3DMode();   // Q95: full -> light -> off
+        m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
+    } else if (m_iInGameMenuSel == m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount() + 3) {
+        f_CycleViewScale();      // docs/gameplay/24: x1 -> x1.5 -> x2 -> x3
         m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
     }
 }

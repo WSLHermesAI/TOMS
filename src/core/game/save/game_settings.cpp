@@ -15,6 +15,7 @@ nlohmann::json f_ToJson(const GameSettings& l_oS) {
     l_jJ["reduceEffects"] = l_oS.m_bReduceEffects;
     l_jJ["battle3d"] = l_oS.m_iBattle3D;
     l_jJ["battleSpeed"] = l_oS.m_fBattleSpeed;
+    l_jJ["viewScale"] = l_oS.m_fViewScale;
     l_jJ["bowTutorialDone"] = l_oS.m_bBowTutorialDone;
     return l_jJ;
 }
@@ -40,6 +41,8 @@ GameSettings f_GameSettingsFromJson(const nlohmann::json& l_jJ) {
     l_oS.m_iBattle3D = std::clamp(l_jJ.value("battle3d", 0), 0, 2);
     const float l_fSpeed = l_jJ.value("battleSpeed", 1.0f);
     l_oS.m_fBattleSpeed = l_fSpeed >= 0.25f && l_fSpeed <= 3.0f ? l_fSpeed : 1.0f;
+    const float l_fView = l_jJ.value("viewScale", 1.5f);
+    l_oS.m_fViewScale = l_fView >= 0.5f && l_fView <= 4.0f ? l_fView : 1.5f;
     l_oS.m_bBowTutorialDone = l_jJ.value("bowTutorialDone", false);
     return l_oS;
 }

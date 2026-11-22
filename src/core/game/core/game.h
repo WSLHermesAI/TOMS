@@ -342,6 +342,7 @@ class Game : public Trackable {
     friend class PlayerObject;
     friend class MapFloor;
     friend class map_detail::RenderLook;
+    friend class map_detail::SwirlLook;
     friend struct map_detail::Builder;
 public:
     bool f_LoadAssets(const std::string& l_strAssetDir);
@@ -747,6 +748,9 @@ public:
     bool f_Walk3DOn() const { return m_bWalk3DOn; }
     // The soft discs under the hero, the monsters and the people: x, y, z their feet, w the radius (metres).
     std::vector<glm::vec4> f_Walk3DShadows() const;
+    // The stairs' lights (stage3d.json "stairLights"): a warm one over each stair up, a cool one in each stair down's pit,
+    // the nearest to the hero first (the renderer takes a few).
+    std::vector<Battle3DLight> f_Walk3DLights() const;
     // The design canvas changed (the screen turned, canvas.h): the camera fits the new one at once, without easing.
     void f_CanvasChanged();
     // Files by key, never by path (assets/media/resources.json; the keys: res_keys.h, made by tools/make_res_keys.py).
@@ -914,6 +918,9 @@ private:
     // ---- the revamp (docs/gameplay/15) ----
     float f_BattleSpeed() const;                          // the player's setting, or a scenario's (17 I10)
     void f_CycleBattleSpeed();                            // Settings: the next of battle.json "battleSpeeds"
+    void f_CycleViewScale();                              // Settings > View size: the next of stage3d.json "viewScales"
+    // the player's setting, or a scenario's ("viewScale", 1 by default: a test never depends on the setting)
+    float f_ViewScale() const { return m_fScenarioViewScale > 0.0f ? m_fScenarioViewScale : m_oSettings.m_fViewScale; }
     int f_BattleFrame(int l_iDtMs);                       // the battle's time this frame (hit stop, slow motion) and its effects
     void f_FeelMoment(const std::string& l_strMoment);      // a moment's hit stop, shake and sound (data/battle.json "feel")
     void f_PopWord(const std::string& l_strText, int l_iWho, const std::string& l_strStyle);   // a word over a fighter, now
@@ -1319,7 +1326,8 @@ private:
     // The next scene is still loading (the host: the floor's or the battle's 3D stage): after a moment a circle turns
     int m_iSceneLoadingMs = -1;                          // -1: not loading
     void f_DrawLoadingCircle();
-    void f_DrawWalk3DStairPointer();                     // an opened stair off the screen: a badge at the edge pointing to it
+    void f_DrawWalk3DStairPointer();
+    bool f_DrawStairSign(const toms::StairLink& l_oS, float l_fX0, float l_fY0, float l_fTs);   // a padlock / gold arrow in a square                     // an opened stair off the screen: a badge at the edge pointing to it
     // The hero as his painted battle character (stage3d.json sprites "paintedHero"), standing on his tile, turned the
     // way he last walked. False: not drawn so (the map's own sprite then).
     bool f_DrawWalk3DHero();
@@ -1503,6 +1511,7 @@ private:
     toms::GuardSettings m_oGuard;          // "guard" (§3.2): the timed button, or the bar
     std::mt19937 m_oShakeRng{20261031u};
     std::string m_strUltimateOverride;       // a scenario's battle "ultimate": a move id instead of the weapon's
+    float m_fScenarioViewScale = 0.0f;       // a scenario's "viewScale" (1 unless it says); 0: the setting
     float m_fScenarioBattleSpeed = 0.0f;     // a scenario's battle "speed" (a test keeps 1 whatever the player chose); 0: the setting
     std::vector<float> m_vBattleSpeeds{0.75f, 1.0f, 1.25f, 1.5f};   // battle.json "battleSpeeds"
     std::string m_strPlayOverride;           // a scenario's battle "play" ("" = the weapon's; scenarios: "track" unless set)

@@ -540,6 +540,9 @@ bool GameSession::f_Frame(int l_iDtMs, const InputState& l_oIn, uint32_t l_uDevi
             l_oCam.m_v3Eye = l_oWc.m_v3Eye;
             l_oCam.m_v3Look = l_oWc.m_v3Look;
             l_oCam.m_fFovYDeg = l_oWc.m_fFovYDeg;
+            l_oCam.m_bLight = l_oG.f_Battle3DLight();   // Settings > 3D battle: light: no point lights here either
+            for (const Game::Battle3DLight& l_oL : l_oG.f_Walk3DLights())   // the stairs' lights, the nearest first
+                l_oCam.m_vPoints.push_back({l_oL.m_v3Pos, l_oL.m_v3Color, l_oL.m_fIntensity, l_oL.m_fRange});
             const glm::mat4 l_mat4Vp = m_upWalkStage->f_Draw(l_iDtMs / 1000.0f, l_uDeviceW, l_uDeviceH, l_oCam, l_oG.f_Walk3DShadows());
             const auto l_oFit = BgfxRenderer::f_ComputeAspectFitViewport(l_uDeviceW, l_uDeviceH, BgfxRenderer::m_uDesignW, BgfxRenderer::m_uDesignH);
             l_oG.f_SetWalk3DView(true, l_mat4Vp, glm::vec2((float)l_uDeviceW, (float)l_uDeviceH),

@@ -115,6 +115,64 @@ private:
     std::vector<Part> m_vParts;
 };
 
+// An event waiting on its tile: a small swirl of light, like a memory or a thought (the owner, 2026-11-22: "a simple swirl
+// animation, like memory thoughts", in place of the old gold plate). Soft motes on two arms spiral in toward a glowing
+// heart and fade there while new ones come from the rim, turning slowly; lavender and pale blue, additive (the effects
+// atlas's "glow" and "dot"). On the idle clock at the tile's own phase, so two events never turn in step.
+class SwirlLook : public MapLook {
+public:
+    explicit SwirlLook(Game& l_oG) {
+        const std::string l_strFx = l_oG.f_PathOf(toms::key::g_pszAtlasFx);   // the effects atlas, by its key
+        m_spGlow = RenderLook::f_RenderObject(l_oG, {{"type", "sprite"}, {"atlas", l_strFx}, {"name", "glow"}, {"blend", "add"}});
+        m_spDot = RenderLook::f_RenderObject(l_oG, {{"type", "sprite"}, {"atlas", l_strFx}, {"name", "dot"}, {"blend", "add"}});
+    }
+    bool f_Draw(Game& l_oG, const MapView& l_oV, const MapRect& l_oR, int l_iTileX, int l_iTileY, float) const override {
+        auto* l_pGlow = dynamic_cast<toms::SpriteObject*>(m_spGlow.get());
+        auto* l_pDot = dynamic_cast<toms::SpriteObject*>(m_spDot.get());
+        if (!l_pGlow || !l_pDot || !l_pGlow->f_Ok() || !l_pDot->f_Ok()) return false;
+        const double l_dPhase = (double)(((unsigned)l_iTileX * 73856093u ^ (unsigned)l_iTileY * 19349663u) % 997u) / 997.0;
+        const float l_fT = (float)(l_oG.m_dIdleClockMs / 1000.0 + l_dPhase * 10.0);
+        // the swirl's middle: the rect's middle, a little above (it floats); its size from the rect
+        const float l_fCx = l_oR.m_fX + l_oR.m_fW * 0.5f, l_fCy = l_oR.m_fY + l_oR.m_fH * 0.5f + std::sin(l_fT * 1.7f) * l_oR.m_fH * 0.03f;
+        const float l_fRad = std::min(l_oR.m_fW, l_oR.m_fH) * 0.75f;
+        const glm::mat3 l_mat3Camera = toms::anim::f_Placement(0.0f, 0.0f);
+        auto l_fnDraw = [&](toms::SpriteObject* l_pS, float l_fX, float l_fY, float l_fSize, float l_fR, float l_fG, float l_fB, float l_fA) {
+            const toms::AtlasRegion* l_pA = l_pS->f_Atlas()->f_Find(l_pS->f_SpriteName());
+            if (!l_pA || l_pA->m_iOrigW <= 0 || l_pA->m_iOrigH <= 0) return;
+            l_pS->f_SetView(l_mat3Camera);
+            l_pS->f_SetPos(l_fX - l_fSize * 0.5f + l_pA->m_arrPivot[0] * l_fSize, l_fY - l_fSize * 0.5f + l_pA->m_arrPivot[1] * l_fSize);
+            l_pS->f_SetScale(l_fSize / (float)l_pA->m_iOrigW, l_fSize / (float)l_pA->m_iOrigH);
+            l_pS->m_arrTint[0] = l_fR; l_pS->m_arrTint[1] = l_fG; l_pS->m_arrTint[2] = l_fB; l_pS->m_arrTint[3] = l_fA;
+            l_pS->f_RenderTree(l_oG.m_pRen);
+        };
+        // the heart: a soft glow, breathing
+        const float l_fBreath = 0.75f + 0.25f * std::sin(l_fT * 2.3f);
+        l_fnDraw(l_pGlow, l_fCx, l_fCy, l_fRad * 1.9f, 0.55f, 0.45f, 0.95f, 0.55f * l_fBreath);
+        l_fnDraw(l_pGlow, l_fCx, l_fCy, l_fRad * 0.8f, 0.85f, 0.85f, 1.0f, 0.75f * l_fBreath);
+        // the motes: two arms of comets; each comet's life takes it from the rim to the heart along a spiral, a fading
+        // tail of smaller dots behind it, so the arms read as curves
+        const int l_iPerArm = 4, l_iTail = 7;
+        for (int l_iArm = 0; l_iArm < 2; l_iArm++)
+            for (int l_iI = 0; l_iI < l_iPerArm; l_iI++)
+                for (int l_iK = l_iTail - 1; l_iK >= 0; l_iK--) {   // the tail first, the head on top
+                    const float l_fLife = std::fmod(l_fT * 0.3f + (float)l_iI / (float)l_iPerArm + 1.0f - 0.022f * (float)l_iK, 1.0f);   // 0 rim .. 1 heart
+                    const float l_fR = l_fRad * (1.0f - l_fLife);
+                    const float l_fA = l_fT * 0.9f + (float)l_iArm * 3.14159265f + l_fLife * 6.0f;   // turns as it falls in
+                    const float l_fX = l_fCx + std::cos(l_fA) * l_fR, l_fY = l_fCy + std::sin(l_fA) * l_fR * 0.85f;
+                    const float l_fFade = std::min(1.0f, l_fLife * 6.0f) * std::min(1.0f, (1.0f - l_fLife) * 4.0f);   // in at the rim, out at the heart
+                    const float l_fTailK = 1.0f - (float)l_iK / (float)l_iTail;
+                    const float l_fSize = l_fRad * (0.10f + 0.12f * (1.0f - l_fLife)) * (0.45f + 0.55f * l_fTailK);
+                    const bool l_bBlue = ((l_iI + l_iArm) % 2) == 0;
+                    l_fnDraw(l_pDot, l_fX, l_fY, l_fSize, l_bBlue ? 0.55f : 0.85f, l_bBlue ? 0.80f : 0.62f, 1.0f, l_fFade * l_fTailK * l_fTailK);
+                }
+        (void)l_oV;
+        return true;
+    }
+
+private:
+    std::shared_ptr<toms::RenderObject> m_spGlow, m_spDot;
+};
+
 bool f_StartsWith(const std::string& l_strS, const char* l_pszP) { return l_strS.rfind(l_pszP, 0) == 0; }
 
 void f_ReadTint(const nlohmann::json& l_jJ, float l_arrOut[4]) {
@@ -491,14 +549,8 @@ static LookChain f_LegacyIdleLook(Game& l_oG, const Entity& l_oE) {
     LookChain l_oC;
     const bool l_bNpc = f_StartsWith(l_oE.m_strKind, "npc:");
     std::string l_strSprite = l_bNpc ? l_oG.f_NpcSprite(l_oE.m_strId) : f_EntSprite(l_oE.m_strId);
-    if (f_StartsWith(l_oE.m_strKind, "event:")) {   // an event's story plate: a gold tile with a darker inset (S3.5 d)
-        static const float l_arrGold[4] = {0.86f, 0.72f, 0.36f, 0.92f};
-        static const float l_arrInner[4] = {0.28f, 0.34f, 0.46f, 0.95f};
-        const int l_iLayer = l_oG.f_SpriteLayer(l_strSprite);
-        auto l_upPlate = std::make_unique<RenderLook>();
-        l_upPlate->f_Add(RenderLook::f_SpriteObject(l_oG, l_strSprite, l_arrGold));
-        if (l_iLayer + 1 < (int)l_oG.m_vSpriteIds.size()) l_upPlate->f_Add(RenderLook::f_SpriteObject(l_oG, l_oG.m_vSpriteIds[(size_t)l_iLayer + 1], l_arrInner), 32, 32, 0.22f);
-        l_oC.m_vLooks.push_back(std::move(l_upPlate));
+    if (f_StartsWith(l_oE.m_strKind, "event:")) {   // an event: a swirl of light on its tile (SwirlLook)
+        l_oC.m_vLooks.push_back(std::make_unique<SwirlLook>(l_oG));
         return l_oC;
     }
     const nlohmann::json l_jLook = l_oG.f_LookOf(l_oE);

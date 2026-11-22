@@ -1351,6 +1351,10 @@
       "zh_TW": "戰鬥速度：{x} 倍",
       "en": "Battle speed: x{x}"
     },
+    "settings.view_scale": {
+      "zh_TW": "畫面範圍：{x} 倍",
+      "en": "View size: x{x}"
+    },
     "store.toast_gear_worn": {
       "zh_TW": "已購買並裝備：{name}（可在「裝備」分頁更換）",
       "en": "Bought and worn: {name} (change it in the Equipment tab)"

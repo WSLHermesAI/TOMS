@@ -49,9 +49,22 @@ the map's objects (MapFloor) ──► one world group each, standing on its til
   rect on its tile, facing the camera and leaning back a little. The ground's marks (stairs, door tiles, the locked
   stairs' padlocks, an opened stair's arrow, the walk target) lie flat on the floor; an opened stair off the screen gets a
   gold badge at the screen's edge pointing to it. Boss and roamer name plates sit over their sprites' heads.
+- **The stairs** are in the model (the owner, 2026-11-22: "2D stair too flat, it is easy to ignore"): four steps walked
+  onto from an open side (south first, facing the camera). **Up** climbs to the walls' top; **down** goes into a pit as
+  deep. Treads in the look's ground texture (lighter than the walls' tops, so they stand out), risers and the pit in its
+  wall texture. Each stair has its own light (`stairLights`: warm over a stair up, cool in a stair down's pit; brighter
+  when just opened, dimmer when locked; the nearest to the hero first). The padlock and the gold arrow stand over the
+  stair (on the top step, or over the pit), no longer flat on the ground.
+- **An event** waiting on its tile is a small swirl of light, "like memory thoughts" (the owner, 2026-11-22; it was a gold
+  plate that stood up as a dark slab in 3D): comet-like motes on two arms spiral in toward a breathing glow, lavender and
+  pale blue, each event at its own phase (`SwirlLook`, map_objects.cpp; the effects atlas's `glow` and `dot`). An event
+  with its own look keeps it.
 - **The hero** is his weapon's painted battle character (its idle clip), turned the way he last walked. The monsters,
   people and things are still their map sprites, larger (step 3).
 - **Clicks** go through the camera: a point on the screen becomes a ray, the ray finds the tile on the ground.
+- **Settings > View size** (the owner, 2026-11-22): ×1, ×1.5, ×2, ×3 (`viewScales`) multiplies the camera's distance:
+  about 12, 18, 24 and 36 tiles across (a 19 × 16 floor fits whole at ×3); **×1.5 by default**. Saved in the settings (`viewScale`). A
+  scenario uses ×1 unless it says `"viewScale"` (the scenario `walk_3d_far`: ×2).
 - **No 2D map.** While the floor loads, nothing is drawn behind the HUD; a load longer than `loadingDelayMs` (250 ms)
   shows the **loading circle** (twelve dots, one turn a second, fading in) at the middle of the screen. The battle's 3D
   stage still on its way shows it too. Scripted runs (tests) wait for the load, so their pictures are the same every time.
@@ -82,7 +95,9 @@ python tools/stage3d/paint_looks.py wood --parts top --seeds 5,8   repaint one p
 | `defaultLook` | the look of a floor whose theme has none (castle) |
 | `wallHeight`, `groundRepeat` | the walls' height (1 m), the ground texture's size (2 m) |
 | `loadingDelayMs` | a scene still loading after this long shows the loading circle (250) |
+| `viewScales` | the steps of Settings > View size, × the camera's distance (1, 1.5, 2, 3) |
 | `shadow` | the soft disc under the hero, the monsters and the people (the battle's) |
+| `stairLights` | each stair's light: `up` / `down` colours, `intensity` (×1.6 just opened, ×0.5 locked), `range`, `off` |
 | `camera` | `pitch` (56°), `distance` (11 m), `fov` (38°), `follow` (how fast it catches up), `lookAhead` |
 | `sprites` | `glow`, `lean` (24°), `shadow` (the disc's radius), `heights` by kind (a one-tile sprite: player, monster, npc, item, door, event, other), `paintedHero`, `paintedHeroHeight` |
 | `looks` | each look's `sky` (lights only: `"background": false`, the tower stands in the dark), `exposure`, `light` (the sun: dir, color, intensity, ambient) |
@@ -92,7 +107,7 @@ python tools/stage3d/paint_looks.py wood --parts top --seeds 5,8   repaint one p
 | Step | What | State |
 |---|---|---|
 | 1. F01 prototype | The look painter, the wood look, `stage3d.json`, the host's second stage, the follow camera, the map's objects standing in the scene, the painted hero turning, clicks on the 3D ground, the scenario `walk_3d` | **built 2026-11-21** |
-| 2. Every floor, no 2D | All 10 looks painted; every floor's model made from its tile map when entered; the 2D map, its camera and its Settings row removed; the loading circle; the browser on | **built 2026-11-21** (still open from the first plan: stairs as steps and doors as frames in the model, a wall in front of the hero fading) |
+| 2. Every floor, no 2D | All 10 looks painted; every floor's model made from its tile map when entered; the 2D map, its camera and its Settings row removed; the loading circle; the browser on; the stairs as steps with their lights (11-22) | **built 2026-11-21/22** (still open from the first plan: doors as frames in the model, a wall in front of the hero fading) |
 | 3. Painted art on the map | Monsters as their battle art (larger, their idle clips), people as painted full-body art, items and keys as painted icons; the hero's walk clip and a smooth step between tiles (today he jumps a tile, as in 2D) | |
 | 4. Atmosphere | Torches (point lights and their fire), light shafts, dust and embers, a little fog, a colour grade per chapter; the floor's banner and entry over a slow camera move | |
 | 5. Polish | The camera's limits at the map's edges, a short shake for events, the speed on slow machines; Android when the owner asks | |
@@ -108,7 +123,8 @@ python tools/stage3d/paint_looks.py wood --parts top --seeds 5,8   repaint one p
 - `src/game/src/game_session.cpp`: `m_upWalkStage`, drawn while the walking scene shows; `Game::f_SetSceneLoading`.
 - `tools/stage3d/paint_looks.py`, `assets/media/stage3d/looks/<look>/` (10 looks × 3 parts: colour and normal map),
   `assets/data/stage3d.json` (key `data.stage3d`).
-- The scenario `walk_3d`: F01 in 3D, and a click on the hero finds his tile.
+- The scenario `walk_3d`: F01 in 3D, and a click on the hero finds his tile; `walk_3d_far`: the same on F05 at view size ×2.
+- Settings > View size (2026-11-22): `Game::f_CycleViewScale`, `GameSettings::m_fViewScale`, the text `settings.view_scale`.
 - **Removed:** the 2D tile drawing, its chapter tint (`f_FloorThemeTint`), the 2D camera (`toms::Camera`,
   `systems/camera.*`, `camera_test`), Settings > Camera (follow / rooms) and its text, the settings' `cameraMode` and
   `viewCols`, the F1 overlay's "visible cells" slider, `--walk-3d`, a scenario's `"walk3d"`, and step 1's prebuilt

@@ -786,6 +786,11 @@ void Game::f_BuildMenuUi(toms::UiMenu& l_oM) const {
                 static const char* const l_arrKeys[3] = {"settings.battle3d_full", "settings.battle3d_light", "settings.battle3d_off"};
                 l_oM.m_vRows.push_back({l_oL.f_Tr(l_arrKeys[std::clamp(m_oSettings.m_iBattle3D, 0, 2)]), "", l_fnSel(l_nCam + 3), true});
             }
+            {   // the view size (docs/gameplay/24): activating the row takes the next step
+                char l_pszView[16];
+                std::snprintf(l_pszView, sizeof l_pszView, "%g", m_oSettings.m_fViewScale);
+                l_oM.m_vRows.push_back({f_TrParam(l_oL.f_Tr("settings.view_scale"), "x", l_pszView), "", l_fnSel(l_nCam + 4), true});
+            }
             break;
         }
         case InGameMenuPage::Skills: {
