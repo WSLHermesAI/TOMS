@@ -398284,6 +398284,25 @@ body.moment #play, body.moment .fhead, body.moment #chain, body.moment #crit, bo
 #boss-intro.hero .bi-label { color: #7fffd8; font-effect: outline(2px #00302a); }
 #boss-intro.hero .bi-name { color: #fffbe0; font-effect: glow(2px 10px 0px 0px #20d0a0); }
 @media (orientation: portrait) { #boss-intro { top: 900px; } }
+
+/* a boss's sequence (docs/gameplay/25): the ladder down the left side, one block a fight, the boss's at the bottom;
+   a fight not reached yet is black (its picture in black, "?"), the one now glows, those won are dimmed */
+#gauntlet { position: absolute; left: 14px; top: 96px; width: 118px; z-index: 5; }
+#gauntlet .gstep { position: relative; width: 104px; height: 92px; margin: 0 auto; border-width: 3px; border-color: #6a5a40;
+    border-radius: 10px; background-color: #120e0ae0; }
+#gauntlet .gstep img { position: absolute; left: 14px; top: 4px; width: 76px; height: 64px; }
+#gauntlet .gstep .gname { position: absolute; left: 0; right: 0; bottom: 2px; text-align: center; font-size: 16px; color: #e8dcc0; }
+#gauntlet .gstep.next { background-color: #000000f0; border-color: #3a3a3a; }
+#gauntlet .gstep.next img { image-color: #000000; }
+#gauntlet .gstep.next .gname { color: #8a8a8a; font-size: 26px; }
+#gauntlet .gstep.now { border-color: #ffd060; background-color: #3a2a10e8; }
+#gauntlet .gstep.done { opacity: 0.55; }
+#gauntlet .gstep.done .gname { color: #a0e090; }
+#gauntlet .gstep.boss { width: 118px; height: 110px; border-radius: 22px; border-color: #b03030; }
+#gauntlet .gstep.boss img { left: 16px; top: 6px; width: 86px; height: 76px; }
+#gauntlet .gstep.boss.next .gname { color: #ff6050; font-size: 22px; }
+#gauntlet .gstep.boss.now { border-color: #ff6050; background-color: #401010e8; }
+#gauntlet .garrow { width: 0; height: 14px; margin: 2px auto; border-left-width: 3px; border-color: #a08a60; }
 <rml>
 <head>
     <title>Battle</title>
@@ -398299,6 +398318,14 @@ body.moment #play, body.moment .fhead, body.moment #chain, body.moment #crit, bo
 <body data-model="game" data-event-click="act('battle_continue')" data-class-moment="battle.focus">
     <!-- no backdrop here: the game draws it (Game::drawBattleRig), under the player and the monster it draws -->
     <div id="title">{{battle.title}}</div>
+    <!-- a boss's sequence (docs/gameplay/25): every fight, top to bottom, the boss's last; black until it is reached -->
+    <div id="gauntlet" data-if="battle.steps.size > 0">
+        <div data-for="s : battle.steps"><div class="gstep" data-class-done="s.state == 'done'" data-class-now="s.state == 'now'"
+             data-class-next="s.state == 'next'" data-class-boss="s.boss">
+            <img data-attr-sprite="s.sprite"/>
+            <div class="gname">{{s.name}}</div>
+        </div><div class="garrow" data-if="!s.boss"></div></div>
+    </div>
     <!-- the fighters' boxes: always there, the game places the animated player and monster in them (GameUi reads
          their layout each frame), or their still pictures fill them -->
     <div id="player" class="fighter"><img data-if="!battle.player_anim" data-attr-sprite="battle.player_sprite"/></div>
@@ -400145,6 +400172,7 @@ body.scene { background-color: transparent; }
     "cells: moving in battle (docs/gameplay/19 §2.1): six cells, 0 1 2 the near row and 3 4 5 the far row; start: where the hero begins; warnMs: the danger lights this long before the hit; shapes: each a list of variants, each the cells it covers (a move names one in moves.json \"shape\"; the variant reaching the hero is chosen); shiftX, shiftNear, shiftY: how far the hero's picture moves.",
     "stages3d: the battle on a 3D stage (docs/gameplay/21_BATTLE_3D.md), by floor like backdrops (from..to); a floor without one keeps its backdrop. sky (an HDR: hdr, intensity, yaw, blur), ground, shadow, sprites (the fighters' and the fires' 2D sprites placed in the scene, lit by it: glow = their own light, off = drawn 2D over the stage), props (model, node: only that root node of it, at, turn, scale), light (dir, color, intensity, ambient), exposure; fires (at, fx, color, intensity, range, flicker, lightHeight, size: a flickering point light + its particles), clouds (min, speed: the moonlight drifting), flash (onMonster, onHero, intensity, range, ms, off: a hit lights the stage); camera (eye, look, fov, aspect it was made for, breathe; danger: a special attack's low close-up on its monster: zoom, height, lookAt, fovAdd, deg, ms, rumble, off), marks (hero, monster, spacing, monsters2 / monsters3), heights (hero, monster, big) in metres. tools/battle3d/make_moonlit_ruins.py writes moonlit_ruins (one .glb per model).",
     "battleSpeeds: the steps of Settings > Battle speed (17 I10).",
+    "gauntlet: a boss's fight as a sequence (docs/gameplay/25): its guards one at a time, then the boss. The guards: a stage object's \"gauntlet\", else the boss's enemies.json \"gauntlet\" or \"party\", else (fromFloor) up to count kinds of the floor's other monsters. step: where the 3D stage moves on to after each win (metres), travelMs: how long that takes (everything waits). A guard beaten goes straight on (no result screen; its pay as a notice); the monsters still to come stand further on as dark shapes (waitingShade, waitingAlpha), each a little to the side (waitingSide metres, left and right in turn) so all show. While the stage travels the hero runs (run: a bounce each step, leaning into it, a puff of dust at his feet). The charge points go on from fight to fight.",
     "training: the training ground (16 §5): cards spent per run, runs per day, fights per run, EXP and weapon EXP x."
   ],
   "bar_slow_speed_scale": 0.5,
@@ -400178,6 +400206,8 @@ body.scene { background-color: transparent; }
              "_comment": "the owner, 2026-11-14: one stage track (walking), a normal battle, and a boss track per enemies.json bossTier",
              "stage": "music.stage_walk", "stageVolume": 0.35, "stageFadeInMs": 1200, "normal": "music.battle_normal",
              "boss": { "mini": "music.boss_mini", "stage": "music.boss_stage", "final": "music.boss_final" } },
+  "gauntlet": { "fromFloor": true, "count": 3, "step": [0.0, 0.0, -3.5], "travelMs": 1500, "waitingShade": 0.0, "waitingAlpha": 0.85, "waitingSide": 0.9,
+                "run": { "stridesPerS": 2.6, "bounce": 0.09, "leanDeg": 9, "dust": "miss_puff", "dustScale": 0.6 } },
   "stages3d": [
     {
       "from": 1, "to": 10,
@@ -400187,7 +400217,7 @@ body.scene { background-color: transparent; }
       "ground": "battle3d/moonlit_ruins/ground.glb",
       "shadow": "battle3d/moonlit_ruins/blob.glb",
       "sprites": { "glow": 0.6 },
-      "shadowBounds": [[-9, 0, -9], [9, 6, 6]],
+      "shadowBounds": [[-9, 0, -20], [9, 6, 6]],
       "props": [
         { "model": "battle3d/moonlit_ruins/fort_pieces.glb", "node": "wall_thin_gate_01", "at": [-7.5, 0, -8.0], "turn": 90, "scale": 0.55 },
         { "model": "battle3d/moonlit_ruins/fort_pieces.glb", "node": "wall_thin_straight_03", "at": [-11.6, 0, -8.0], "turn": 90, "scale": 0.55 },
@@ -400257,7 +400287,7 @@ body.scene { background-color: transparent; }
               "castSound": "sfx.wand_cast" },
     "bow": { "gatherEveryMs": 90, "chargeSound": "sfx.bow_charge", "explodeSound": "sfx.explosion" },
     "heroIntro": { "_comment": "the hero's own introduction of an ultimate (a move's intro beat, docs/gameplay/22 §4): the boss banner from the right; the move's name types in from nameAtMs, a letter every typeMsPerChar", "nameAtMs": 350, "typeMsPerChar": 90 },
-    "bossIntro": { "startDelayMs": 300, "ms": 3400, "nameAtMs": 700, "typeMsPerChar": 110, "zoom": 1.7, "deg": 10, "clip": "special", "fx": "boss_intro", "fxAtMs": 250,
+    "bossIntro": { "startDelayMs": 300, "revealMs": 1400, "dark": 0.97, "ms": 3400, "nameAtMs": 700, "typeMsPerChar": 110, "zoom": 1.7, "deg": 10, "clip": "special", "fx": "boss_intro", "fxAtMs": 250,
                    "sound": "sfx.boss_intro", "off": false },
     "specialAttack": { "powerMs": 3500, "powerFx": "monster_power", "powerSound": "sfx.monster_power",
                        "chargeFx": "monster_charge", "chargeFxEveryMs": 450,
@@ -400346,7 +400376,7 @@ body.scene { background-color: transparent; }
   }
 }
 {
-  "_comment": "Chapter 4 of the story revamp (docs/gameplay/23 §4): the archer scout at home (hub_archer): Grey Mask at night with a child's wooden horse.",
+  "_comment": "Chapter 4 of the story revamp (docs/gameplay/23 §4): the archer scout at home (hub_archer): Grey Mask at night with a child's wooden horse. S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "archer_scout",
   "start": "root",
   "nodes": {
@@ -400362,6 +400392,61 @@ body.scene { background-color: transparent; }
             "en": "\"Where did he go?\""
           },
           "next": "where"
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c4",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c5.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c5",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c5.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
         },
         {
           "label": {
@@ -400382,6 +400467,51 @@ body.scene { background-color: transparent; }
           "label": {
             "zh_TW": "「……木馬。」",
             "en": "\"...A wooden horse.\""
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c4": {
+      "text": {
+        "zh_TW": "弓箭斥候：「我在村子外面放了哨。這次，誰也別想在夜裡偷偷靠近。」",
+        "en": "Archer scout: \"I've posted a watch outside the village. Nobody sneaks up on it at night again.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c5": {
+      "text": {
+        "zh_TW": "弓箭斥候：「灰面……是布蘭。我在塔裡看見他抱著那隻木馬的時候，就該想到的。」",
+        "en": "Archer scout: \"Grey Mask... was Bran. When I saw him in the tower holding that wooden horse, I should have known.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "弓箭斥候：「塔頂的光越來越暗了。你上去的時候，我會一直看著那裡。」",
+        "en": "Archer scout: \"The light at the top of the tower keeps dimming. While you're up there, I'll be watching it the whole time.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
           },
           "next": "root"
         }
@@ -400411,7 +400541,7 @@ body.scene { background-color: transparent; }
   }
 }
 {
-  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): the baker at home (hub_bakery): bread that heals (a red potion) for 8 gold.",
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): the baker at home (hub_bakery): bread that heals (a red potion) for 8 gold. S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "baker",
   "start": "root",
   "nodes": {
@@ -400446,10 +400576,158 @@ body.scene { background-color: transparent; }
         },
         {
           "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c1",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c3.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c5.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c3",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c3.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c5.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c5",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c5.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
+        },
+        {
+          "label": {
             "zh_TW": "「下次再來。」",
             "en": "\"Another time.\""
           },
           "next": null
+        }
+      ]
+    },
+    "news_c1": {
+      "text": {
+        "zh_TW": "麵包師：「村子燒成這樣，第一件事就是要有麵包。肚子飽了，人才站得起來。」",
+        "en": "Baker: \"With the village burned like this, the first thing it needs is bread. Folk stand up again once their bellies are full.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c3": {
+      "text": {
+        "zh_TW": "麵包師：「旅店老闆娘回來以後，我的麵包終於有人配湯吃了！」",
+        "en": "Baker: \"Now the innkeeper is back, my bread finally has soup to go with it!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c5": {
+      "text": {
+        "zh_TW": "麵包師：「牢房裡的大家都回來了！我烤了一整夜，烤箱都快燒穿了。」",
+        "en": "Baker: \"Everyone from the cells is home! I baked all night. The oven nearly burned through.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "麵包師：「你爹娘回來了！宴會的麵包我要烤一座城堡那麼大——等你回來切第一刀。」",
+        "en": "Baker: \"Your Mom and Dad are home! For the feast I'm baking a loaf as big as a castle. You get to cut the first slice when you're back.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
         }
       ]
     }
@@ -400477,7 +400755,7 @@ body.scene { background-color: transparent; }
   }
 }
 {
-  "_comment": "Chapter 2 of the story revamp (docs/gameplay/23 §4): the blacksmith at home (hub_blacksmith): an attack gem for 30 gold.",
+  "_comment": "Chapter 2 of the story revamp (docs/gameplay/23 §4): the blacksmith at home (hub_blacksmith): an attack gem for 30 gold. S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "blacksmith",
   "start": "root",
   "nodes": {
@@ -400512,6 +400790,61 @@ body.scene { background-color: transparent; }
         },
         {
           "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c2",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c4.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c4",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c4.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
+        },
+        {
+          "label": {
             "zh_TW": "「下次再來。」",
             "en": "\"Another time.\""
           },
@@ -400533,11 +400866,56 @@ body.scene { background-color: transparent; }
           "next": "root"
         }
       ]
+    },
+    "news_c2": {
+      "text": {
+        "zh_TW": "鐵匠：「爐子又熱起來了。每打一把刀，我就覺得村子又活過來一點。」",
+        "en": "Blacksmith: \"The forge is hot again. Every blade I hammer out, the village feels a little more alive.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c4": {
+      "text": {
+        "zh_TW": "鐵匠：「矮人來了以後，我學了好幾招。他說我的鎚子『太溫柔』。」",
+        "en": "Blacksmith: \"Since the dwarf arrived I've learned a few tricks. He says my hammer is 'too gentle'.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "鐵匠：「我在替你爹打一把新的犁。舊的那把……就留在塔裡吧。」",
+        "en": "Blacksmith: \"I'm making your Dad a new plough. The old one... let it stay in the tower.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
     }
   }
 }
 {
-  "_comment": "Chapter 5 of the story revamp (docs/gameplay/23 §4): Bran in the village if spared (hub_bran): rebuilding what he burned.",
+  "_comment": "Chapter 5 of the story revamp (docs/gameplay/23 §4): Bran in the village if spared (hub_bran): rebuilding what he burned. S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "villager",
   "start": "root",
   "nodes": {
@@ -400561,10 +400939,64 @@ body.scene { background-color: transparent; }
         },
         {
           "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c5",
+          "requires": {
+            "not": {
+              "type": "runFlagSet",
+              "flag": "c6.done"
+            }
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
+        },
+        {
+          "label": {
             "zh_TW": "……",
             "en": "..."
           },
           "next": null
+        }
+      ]
+    },
+    "news_c5": {
+      "text": {
+        "zh_TW": "布蘭：「今天有人跟我說了早安。第一個。」他沒有抬頭，繼續釘木板。",
+        "en": "Bran: \"Someone said good morning to me today. The first one.\" He doesn't look up, and keeps nailing boards."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "布蘭：「你娘……她來看我了。她什麼都沒說，只是把燉肉放在門口。」他的聲音啞了。",
+        "en": "Bran: \"Your mother... she came to see me. She didn't say anything. She just left some stew at the door.\" His voice cracks."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
         }
       ]
     }
@@ -402995,7 +403427,1034 @@ body.scene { background-color: transparent; }
   }
 }
 {
-  "_comment": "Chapter 2 of the story revamp (docs/gameplay/23 §4): the cartographer at home (hub_cartographer): who is still held; Liora foreshadowed.",
+  "_comment": "Chapter 6 of the story revamp (docs/gameplay/23 §4): F28, a mass rescue: the gifted children from the ledger, asleep in crystal cradles (home.children: the village school; mercy + 1).",
+  "npcId": "villager",
+  "start": "hall",
+  "nodes": {
+    "hall": {
+      "text": {
+        "zh_TW": "搖籃大廳裡排滿了水晶搖籃。每一個搖籃裡都睡著一個孩子——名冊上的那些孩子。凱的聲音很輕：「……他們還在呼吸。」",
+        "en": "The Hall of Cradles is lined with crystal cradles. In each one sleeps a child: the children from the ledger. Kai's voice is very quiet. \"...They're still breathing.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（輕輕地敲碎水晶，一個一個叫醒他們）",
+            "en": "(Break the crystals gently and wake them one by one)"
+          },
+          "next": "wake"
+        }
+      ]
+    },
+    "wake": {
+      "text": {
+        "zh_TW": "孩子們揉著眼睛坐起來。最小的那個抓住你的袖子：「哥哥，你是來帶我們回家的嗎？」",
+        "en": "The children sit up, rubbing their eyes. The smallest one grabs your sleeve. \"Big brother, have you come to take us home?\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「對。米菈在村子裡等你們。」",
+            "en": "\"Yes. Mira's waiting for you in the village.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "rescue",
+              "npc": "children"
+            },
+            {
+              "type": "addCounter",
+              "counter": "mercy",
+              "delta": 1
+            },
+            {
+              "type": "setFlag",
+              "flag": "c6.children"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+{
+  "_comment": "Chapter 6 of the story revamp (docs/gameplay/23 §4): F30, after the Sanctum Warden: the family scene; the parents go home (home.parents: the main quest done; hub_home).",
+  "npcId": "farmer_wife",
+  "start": "cage",
+  "nodes": {
+    "cage": {
+      "text": {
+        "zh_TW": "神殿的最深處，一座發光的籠子裡，兩個人背靠背坐著。你認得那件補丁圍裙，和那頂舊草帽。「……媽？爸？」",
+        "en": "In the very heart of the Sanctum, two people sit back to back inside a glowing cage. You know that patched apron, and that old straw hat. \"...Mom? Dad?\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（打開籠子）",
+            "en": "(Open the cage)"
+          },
+          "next": "hug"
+        }
+      ]
+    },
+    "hug": {
+      "text": {
+        "zh_TW": "媽媽一把抱住你，抱得緊緊的。爸爸的第一句話是：「……你有沒有好好吃飯？」",
+        "en": "Mom throws her arms around you and holds on tight. Dad's first words are: \"...Have you been eating properly?\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……有啦。」（哭了出來）",
+            "en": "\"...I have.\" (The tears come)"
+          },
+          "next": "truth"
+        }
+      ]
+    },
+    "truth": {
+      "text": {
+        "zh_TW": "媽媽：「我們早就知道你是神裔。我們把你藏在村子裡，是因為……我們從來不想要你變成神。我們只想要你有一個快樂的童年。」",
+        "en": "Mom: \"We always knew you were Godborn. We hid you in the village because... we never wanted you to become a god. We just wanted you to have a happy childhood.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「我有啊。我有一個很快樂的童年。」",
+            "en": "\"I did. I had a very happy childhood.\""
+          },
+          "next": "up"
+        }
+      ]
+    },
+    "up": {
+      "text": {
+        "zh_TW": "爸爸看著塔頂：「莉歐拉公主還在上面。那個聲音也是。」他拍拍你的頭。「我們先回家煮燉肉。你把事情做完，就回來吃飯。」",
+        "en": "Dad looks up toward the top of the tower. \"Princess Liora is still up there. So is that voice.\" He pats your head. \"We'll go home first and make stew. Finish what you have to do, then come home for dinner.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「說好了。」",
+            "en": "\"It's a promise.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "rescue",
+              "npc": "farmer"
+            },
+            {
+              "type": "rescue",
+              "npc": "farmer_wife",
+              "text": "village.went_home_alone"
+            },
+            {
+              "type": "setFlag",
+              "flag": "home.parents"
+            },
+            {
+              "type": "setFlag",
+              "flag": "c6.family"
+            },
+            {
+              "type": "addCounter",
+              "counter": "trust",
+              "delta": 1
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+{
+  "_comment": "Chapter 6 of the story revamp (docs/gameplay/23 §4): F29, a choice: the old god's voice for the first time (listen: vengeance + 1, c6.listened; refuse: mercy + 1, c6.refused).",
+  "npcId": "villager",
+  "start": "voice",
+  "nodes": {
+    "voice": {
+      "text": {
+        "zh_TW": "鏡廳裡所有的鏡子都映出你——可是每一個你都在笑，而你沒有笑。一個很老很老的聲音在你腦子裡說：「神裔。回家吧。你的身體，本來就是為我做的。」",
+        "en": "Every mirror in the hall shows you, but every one of you is smiling, and you are not. A very, very old voice speaks inside your head. \"Godborn. Come home. Your body was made for me.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……你是誰？」（聽它說下去）",
+            "en": "\"...Who are you?\" (Let it go on)"
+          },
+          "next": "listen"
+        },
+        {
+          "label": {
+            "zh_TW": "「滾出我的腦袋。」",
+            "en": "\"Get out of my head.\""
+          },
+          "next": "refuse"
+        }
+      ]
+    },
+    "listen": {
+      "text": {
+        "zh_TW": "聲音：「我是讓你不再失去任何人的力量。你的家，被燒過一次。你想讓它再被燒一次嗎？」你的手掌熱得發燙。",
+        "en": "The voice: \"I am the power that means you never lose anyone again. Your home burned once. Do you want it to burn again?\" Your palms burn hot."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "addCounter",
+              "counter": "vengeance",
+              "delta": 1
+            },
+            {
+              "type": "setFlag",
+              "flag": "c6.listened"
+            }
+          ]
+        }
+      ]
+    },
+    "refuse": {
+      "text": {
+        "zh_TW": "鏡子裡的笑臉一個一個碎掉了。聲音輕輕地笑：「……我們會在星星那裡再見的。」",
+        "en": "One by one the smiling faces in the mirrors shatter. The voice laughs softly. \"...We will meet again at the Star.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「我等著。」",
+            "en": "\"I'll be waiting.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "addCounter",
+              "counter": "mercy",
+              "delta": 1
+            },
+            {
+              "type": "setFlag",
+              "flag": "c6.refused"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+{
+  "_comment": "Chapter 6 of the story revamp (docs/gameplay/23 §4): F26, a scene: Liora speaks through a broken mirror; the quest m_c6_mirrors (three shards, mirror_shards).",
+  "npcId": "princess",
+  "start": "glass",
+  "nodes": {
+    "glass": {
+      "text": {
+        "zh_TW": "神殿的階梯旁立著一面裂開的鏡子。鏡子裡的不是你——是一個戴著銀冠的女孩，她敲了敲鏡面。「……里歐？是你嗎？我是 L。莉歐拉。」",
+        "en": "Beside the Sanctum steps stands a cracked mirror. The face in it is not yours: a girl in a silver circlet taps on the glass. \"...Leo? Is that you? It's L. Liora.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「L！寫信的那個 L！」",
+            "en": "\"L! The L from the letters!\""
+          },
+          "next": "seal"
+        }
+      ]
+    },
+    "seal": {
+      "text": {
+        "zh_TW": "莉歐拉：「我被封在塔頂，只能透過鏡子說話。可是鏡子碎了——碎片散在神殿裡。把它們找回來，我就能把一切都告訴你。」她的聲音開始斷斷續續。「你爹娘……就在……神殿的最深處……」",
+        "en": "Liora: \"I'm sealed at the top of the tower. I can only speak through mirrors, but this one is broken, its shards scattered through the Sanctum. Find them and I can tell you everything.\" Her voice begins to break up. \"Your parents... are in... the heart of the Sanctum...\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「我會找到碎片的。」（撿起第一片）",
+            "en": "\"I'll find the shards.\" (Pick up the first one)"
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "startMission",
+              "missionId": "m_c6_mirrors"
+            },
+            {
+              "type": "addVar",
+              "var": "mirror_shards",
+              "delta": 1
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+{
+  "_comment": "Chapter 6 of the story revamp (docs/gameplay/23 §4): the mirror whole (mirror_shards 3): Liora's truth (the Star, the old god, the \"Master\"); c6.mirror: the quest done; trust + 1.",
+  "npcId": "princess",
+  "start": "whole",
+  "nodes": {
+    "whole": {
+      "text": {
+        "zh_TW": "三片碎鏡在你手裡拼成一面完整的小鏡子。莉歐拉的臉清清楚楚地出現了。「終於……我能好好跟你說話了。」",
+        "en": "The three shards fit together in your hand into one small, whole mirror. Liora's face appears, clear at last. \"At last... I can really talk to you.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「告訴我一切。」",
+            "en": "\"Tell me everything.\""
+          },
+          "next": "truth"
+        }
+      ]
+    },
+    "truth": {
+      "text": {
+        "zh_TW": "莉歐拉：「塔頂的安穩之星，是用來關住一個古老的神的。那個神想要一具神裔的身體——你的身體。沃卡司封印了星星，把它擋在外面。而我……我是星星的鑰匙。只有我能重新點亮它。」",
+        "en": "Liora: \"The Star of Peace at the top of the tower is there to keep an old god out. That god wants a Godborn body: yours. Vorkath sealed the Star to hold it back. And I... I am the Star's key. Only I can light it again.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「所以把我爹娘抓走的『主人』……」",
+            "en": "\"So the 'Master' who took my parents...\""
+          },
+          "next": "master"
+        }
+      ]
+    },
+    "master": {
+      "text": {
+        "zh_TW": "莉歐拉：「就是那個神的聲音，從星星的裂縫裡漏出來的。它騙了收集者，騙了布蘭。里歐——不管它對你說什麼，都不要讓它進來。答應我。」",
+        "en": "Liora: \"It is that god's voice, leaking through the crack in the Star. It deceived the Collectors. It deceived Bran. Leo, whatever it tells you, don't let it in. Promise me.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「我答應你。」",
+            "en": "\"I promise.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "setFlag",
+              "flag": "c6.mirror"
+            },
+            {
+              "type": "addCounter",
+              "counter": "trust",
+              "delta": 1
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+{
+  "_comment": "Chapter 6 of the story revamp (docs/gameplay/23 §4): F27, Pip (comic): \"Sanctum holy water\" for 5 gold; it is a red potion with a new label.",
+  "npcId": "chest_peddler",
+  "start": "pip",
+  "nodes": {
+    "pip": {
+      "text": {
+        "zh_TW": "皮普在祈禱廳門口擺了一張桌子：「神殿聖水！神明親手祝福！一瓶只要五枚金幣！」凱：「……那是井水吧。」皮普：「是神明的井！」",
+        "en": "Pip has set up a table at the door of the Hall of Prayers. \"Sanctum holy water! Blessed by the gods themselves! Only five gold a bottle!\" Kai: \"...That's well water.\" Pip: \"It's the gods' well!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「好吧，來一瓶。」（5 金幣）",
+            "en": "\"Fine, one bottle.\" (5 gold)"
+          },
+          "next": "drink",
+          "requires": {
+            "type": "statAtLeast",
+            "stat": "gold",
+            "value": 5
+          },
+          "actions": [
+            {
+              "type": "addStat",
+              "stat": "gold",
+              "delta": -5
+            },
+            {
+              "type": "give",
+              "itemId": "potion_red"
+            }
+          ]
+        },
+        {
+          "label": {
+            "zh_TW": "「不用了。」",
+            "en": "\"No thanks.\""
+          },
+          "next": null
+        }
+      ]
+    },
+    "drink": {
+      "text": {
+        "zh_TW": "你喝了一口。……居然真的有用。瓶底貼著一張小標籤：「紅色藥水（皮普牌）」。",
+        "en": "You take a sip. ...It actually works. A little label is stuck on the bottom: \"Red Potion (Pip brand)\"."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……皮普。」",
+            "en": "\"...Pip.\""
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}
+{
+  "_comment": "Chapter 6 of the story revamp (docs/gameplay/23 §4): F27, the second mirror shard (mirror_shards + 1).",
+  "npcId": "princess",
+  "start": "shard",
+  "nodes": {
+    "shard": {
+      "text": {
+        "zh_TW": "祈禱廳的長椅底下，一片碎鏡在發光。鏡面上浮出幾個字：「……謝謝你，里歐。再一片……」",
+        "en": "Under a pew in the Hall of Prayers, a mirror shard glows. Words float up on its surface: \"...Thank you, Leo. One more...\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（撿起碎片）",
+            "en": "(Pick up the shard)"
+          },
+          "next": null,
+          "action": {
+            "type": "addVar",
+            "var": "mirror_shards",
+            "delta": 1
+          }
+        }
+      ]
+    }
+  }
+}
+{
+  "_comment": "Chapter 6 of the story revamp (docs/gameplay/23 §4): F29, the third mirror shard (mirror_shards + 1: the mirror whole, ev_c6_mirror_whole).",
+  "npcId": "princess",
+  "start": "shard",
+  "nodes": {
+    "shard": {
+      "text": {
+        "zh_TW": "鏡廳的地上，最後一片碎鏡卡在石縫裡。你把它拔出來的時候，所有的鏡子同時亮了起來。",
+        "en": "On the floor of the Mirror Hall, the last shard is wedged in a crack between the stones. As you pull it free, every mirror in the hall lights up at once."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（撿起碎片）",
+            "en": "(Pick up the shard)"
+          },
+          "next": null,
+          "action": {
+            "type": "addVar",
+            "var": "mirror_shards",
+            "delta": 1
+          }
+        }
+      ]
+    }
+  }
+}
+{
+  "_comment": "Chapter 7 of the story revamp (docs/gameplay/23 §4): F31, Kai's last stand (trust 3+: he holds the door, two potions; else one potion).",
+  "npcId": "knight_errant",
+  "start": "door",
+  "nodes": {
+    "door": {
+      "text": {
+        "zh_TW": "王座前室的大門前，凱停下腳步，把劍插在地上。",
+        "en": "At the great door of the throne antechamber, Kai stops and plants his sword in the floor."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「凱？」",
+            "en": "\"Kai?\""
+          },
+          "next": "trust",
+          "requires": {
+            "type": "counterAtLeast",
+            "counter": "trust",
+            "min": 3
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「凱？」",
+            "en": "\"Kai?\""
+          },
+          "next": "plain",
+          "requires": {
+            "not": {
+              "type": "counterAtLeast",
+              "counter": "trust",
+              "min": 3
+            }
+          }
+        }
+      ]
+    },
+    "trust": {
+      "text": {
+        "zh_TW": "凱：「上面的路，你一個人走。下面追上來的，我一個也不放過。」他把兩瓶藥水塞給你。「我說過——我欠你一條命。今天還給你。」",
+        "en": "Kai: \"You take the way up alone. Whatever comes up behind you, none of it gets past me.\" He presses two potions into your hands. \"I told you. I owe you a life. Today I pay it back.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「活著回來，凱。米菈在等你。」",
+            "en": "\"Come back alive, Kai. Mira's waiting for you.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "give",
+              "itemId": "potion_red",
+              "count": 2
+            },
+            {
+              "type": "setFlag",
+              "flag": "c7.kai_holds"
+            }
+          ]
+        }
+      ]
+    },
+    "plain": {
+      "text": {
+        "zh_TW": "凱：「……不管上面有什麼，我都跟著你。」他遞給你一瓶藥水。「別死在我前面。」",
+        "en": "Kai: \"...Whatever is up there, I'm with you.\" He hands you a potion. \"Don't die before I do.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「你也是。」",
+            "en": "\"Same to you.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "give",
+              "itemId": "potion_red"
+            },
+            {
+              "type": "setFlag",
+              "flag": "c7.kai_with"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+{
+  "_comment": "Chapter 7 of the story revamp (docs/gameplay/23 §4): F32, Liora at the Star's door: the plan (c7.plan, trust + 1) if her mirror was made whole (c6.mirror).",
+  "npcId": "princess",
+  "start": "door",
+  "nodes": {
+    "door": {
+      "text": {
+        "zh_TW": "星之門上刻著一隻手的形狀。你把手放上去，門的另一邊傳來莉歐拉的聲音。",
+        "en": "The Star's door bears the carved shape of a hand. You lay your hand on it, and Liora's voice comes from the other side."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「莉歐拉，我來了。」",
+            "en": "\"Liora, I'm here.\""
+          },
+          "next": "plan",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.mirror"
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「有人在嗎？」",
+            "en": "\"Is anyone there?\""
+          },
+          "next": "muffled",
+          "requires": {
+            "not": {
+              "type": "runFlagSet",
+              "flag": "c6.mirror"
+            }
+          }
+        }
+      ]
+    },
+    "plan": {
+      "text": {
+        "zh_TW": "莉歐拉：「聽好。星星裂了，神就從裂縫進來。要重新點亮它，得有一個神裔把那個神的力量倒回星星裡——不是拿走，是還回去。我開門，你倒力量。我們一起。」",
+        "en": "Liora: \"Listen. The Star is cracked, and the god comes in through the crack. To light it again, a Godborn has to pour the god's power back into the Star. Not take it. Give it back. I open the door, you pour the power. Together.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「一起。」",
+            "en": "\"Together.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "setFlag",
+              "flag": "c7.plan"
+            },
+            {
+              "type": "addCounter",
+              "counter": "trust",
+              "delta": 1
+            }
+          ]
+        }
+      ]
+    },
+    "muffled": {
+      "text": {
+        "zh_TW": "門後的聲音斷斷續續：「……不要……讓它……進去……」然後就沒有聲音了。",
+        "en": "The voice behind the door comes in fragments: \"...don't... let it... in...\" Then there is nothing."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}
+{
+  "_comment": "Chapter 7 of the story revamp (docs/gameplay/23 §4): F31, Pip's payoff (comic): his chapter 2 investment pays fifty gold (c2.pip_invested), else a last sale.",
+  "npcId": "chest_peddler",
+  "start": "pip",
+  "nodes": {
+    "pip": {
+      "text": {
+        "zh_TW": "皮普從柱子後面探出頭，抱著一個沉甸甸的錢袋。",
+        "en": "Pip pokes his head out from behind a pillar, hugging a heavy money bag."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「皮普，你怎麼也在這裡？」",
+            "en": "\"Pip, what are you doing up here?\""
+          },
+          "next": "share",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c2.pip_invested"
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「皮普，你怎麼也在這裡？」",
+            "en": "\"Pip, what are you doing up here?\""
+          },
+          "next": "sale",
+          "requires": {
+            "not": {
+              "type": "runFlagSet",
+              "flag": "c2.pip_invested"
+            }
+          }
+        }
+      ]
+    },
+    "share": {
+      "text": {
+        "zh_TW": "皮普：「森林裡你投資了我的攤子，記得嗎？這是你的分紅！」他倒出五十枚金幣。「我就說這孩子會發財——不對，是我會發財，你是順便的！」",
+        "en": "Pip: \"In the forest you invested in my stall, remember? Here's your share!\" He pours out fifty gold. \"I said this kid would be rich. No, wait, I said I would be rich. You're a bonus!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……謝謝你，皮普。」",
+            "en": "\"...Thanks, Pip.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "addStat",
+              "stat": "gold",
+              "delta": 50
+            },
+            {
+              "type": "setFlag",
+              "flag": "c7.pip_paid"
+            }
+          ]
+        }
+      ]
+    },
+    "sale": {
+      "text": {
+        "zh_TW": "皮普：「最後大拍賣！三瓶藥水二十枚金幣！打完最後一場，記得回來當我的常客！」",
+        "en": "Pip: \"Final clearance sale! Three potions for twenty gold! After the last fight, come back and be a regular!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「買了。」（20 金幣）",
+            "en": "\"Deal.\" (20 gold)"
+          },
+          "next": null,
+          "requires": {
+            "type": "statAtLeast",
+            "stat": "gold",
+            "value": 20
+          },
+          "actions": [
+            {
+              "type": "addStat",
+              "stat": "gold",
+              "delta": -20
+            },
+            {
+              "type": "give",
+              "itemId": "potion_red",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "label": {
+            "zh_TW": "「下次吧。」",
+            "en": "\"Next time.\""
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}
+{
+  "_comment": "Chapter 7 of the story revamp (docs/gameplay/23 §4): F35, after the Hollow God: the Star and the last choice (light it with Liora, or keep the power), then the ending (the action \"ending\": e_god, e_secret, e_avenger, e_home; 23 §6).",
+  "npcId": "princess",
+  "start": "star",
+  "nodes": {
+    "star": {
+      "text": {
+        "zh_TW": "空洞之神倒下了，散成一團黑霧，鑽回星星的裂縫裡。巨大的安穩之星懸在你面前，暗暗的，裂成兩半。在它下面，莉歐拉站在那裡——真的莉歐拉，不是鏡子裡的。",
+        "en": "The Hollow God falls, breaking into a black mist that seeps back into the crack in the Star. The great Star of Peace hangs before you, dark and split in two. Beneath it stands Liora: the real Liora, not a face in a mirror."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「莉歐拉！」",
+            "en": "\"Liora!\""
+          },
+          "next": "choice",
+          "requires": {
+            "not": {
+              "type": "runFlagSet",
+              "flag": "c7.took_power"
+            }
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「莉歐拉……」",
+            "en": "\"Liora...\""
+          },
+          "next": "cold",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c7.took_power"
+          }
+        }
+      ]
+    },
+    "choice": {
+      "text": {
+        "zh_TW": "莉歐拉握住你的手：「就是現在。把神的力量倒回星星裡，我來點亮它。或者……」她看著你的手掌，那裡的光在跳動。「或者你可以留著它。它會讓你變成神。」",
+        "en": "Liora takes your hand. \"It has to be now. Pour the god's power back into the Star, and I'll light it. Or...\" She looks at your palms, where the light is pulsing. \"Or you could keep it. It would make you a god.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「我們一起把星星點亮。」",
+            "en": "\"We light the Star together.\""
+          },
+          "next": "light",
+          "action": {
+            "type": "setFlag",
+            "flag": "c7.star_lit"
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「……我要留著它。」",
+            "en": "\"...I'm keeping it.\""
+          },
+          "next": "cold",
+          "action": {
+            "type": "setFlag",
+            "flag": "c7.took_power"
+          }
+        }
+      ]
+    },
+    "light": {
+      "text": {
+        "zh_TW": "你把雙手貼在星星上。所有你打敗過的怪物的力量，一起流了出去——你一點都不覺得可惜。莉歐拉唱起一首很老的歌，星星亮了。整座塔，整個王國，都亮了。",
+        "en": "You press both hands to the Star. The power of every monster you ever defeated flows out of you together, and you don't miss it at all. Liora sings a very old song, and the Star lights. The whole tower, the whole kingdom, lights up."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（回家）",
+            "en": "(Go home)"
+          },
+          "next": null,
+          "action": {
+            "type": "ending",
+            "among": [
+              "e_god",
+              "e_secret",
+              "e_avenger",
+              "e_home"
+            ]
+          }
+        }
+      ]
+    },
+    "cold": {
+      "text": {
+        "zh_TW": "莉歐拉退了一步。你的影子變得很大，大到蓋住了星星。那個很老的聲音從你自己的嘴裡說出來：「……終於。」",
+        "en": "Liora takes a step back. Your shadow grows huge, huge enough to cover the Star. The very old voice speaks from your own mouth. \"...At last.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null,
+          "action": {
+            "type": "ending",
+            "among": [
+              "e_god",
+              "e_secret",
+              "e_avenger",
+              "e_home"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
+{
+  "_comment": "Chapter 7 of the story revamp (docs/gameplay/23 §4): F34, the last temptation (refuse: mercy + 1; take: ATK + 10 and c7.took_power, the way to the god ending).",
+  "npcId": "villager",
+  "start": "voice",
+  "nodes": {
+    "voice": {
+      "text": {
+        "zh_TW": "通往星星的最後一段階梯上，那個聲音又來了。這一次，它用的是你媽媽的聲音。「里歐。拿走我的力量。你就再也不會失去任何人了。」",
+        "en": "On the last stretch of stairs to the Star, the voice comes again. This time it speaks in your mother's voice. \"Leo. Take my power. Then you will never lose anyone again.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「你不是我媽。我媽在家煮燉肉。」",
+            "en": "\"You're not my mom. My mom is home making stew.\""
+          },
+          "next": "refuse"
+        },
+        {
+          "label": {
+            "zh_TW": "「……再也不會失去任何人？」（伸出手）",
+            "en": "\"...Never lose anyone again?\" (Reach out)"
+          },
+          "next": "take"
+        }
+      ]
+    },
+    "refuse": {
+      "text": {
+        "zh_TW": "聲音尖叫起來，整座階梯都在震。然後它安靜了，只剩下你的腳步聲。",
+        "en": "The voice shrieks and the whole stairway shakes. Then it falls silent, and there is only the sound of your footsteps."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（繼續往上走）",
+            "en": "(Keep climbing)"
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "addCounter",
+              "counter": "mercy",
+              "delta": 1
+            },
+            {
+              "type": "setFlag",
+              "flag": "c7.refused"
+            }
+          ]
+        }
+      ]
+    },
+    "take": {
+      "text": {
+        "zh_TW": "一股冰冷的力量從你的指尖流進來，流過你的手臂，流進你的心臟。你從來沒有這麼強過。也從來沒有這麼冷過。",
+        "en": "A cold power flows in through your fingertips, up your arms, into your heart. You have never been this strong. You have never been this cold."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "addStat",
+              "stat": "atk",
+              "delta": 10
+            },
+            {
+              "type": "setFlag",
+              "flag": "c7.took_power"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+{
+  "_comment": "Chapter 7 of the story revamp (docs/gameplay/23 §4): F33, after the Vorkath boss: the truth (he sealed the Star to keep the god out) and a choice (spare: mercy + 1; kill: vengeance + 1).",
+  "npcId": "villager",
+  "start": "down",
+  "nodes": {
+    "down": {
+      "text": {
+        "zh_TW": "巫師王沃卡司單膝跪地，王冠滾到一邊。他抬起頭——他很老了，比你想像的老得多。「……你夠強了，孩子。強到它會更想要你。」",
+        "en": "The Sorcerer King Vorkath kneels on one knee, his crown rolling away across the floor. He looks up. He is old, far older than you imagined. \"...You are strong enough, child. Strong enough that it will want you all the more.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「你為什麼要擋我？」",
+            "en": "\"Why did you stand in my way?\""
+          },
+          "next": "why"
+        }
+      ]
+    },
+    "why": {
+      "text": {
+        "zh_TW": "沃卡司：「一百年前，我封住了星星，把那個神關在外面。我把自己變成你們口中的魔王，好讓沒有人敢上來——因為每一個上來的神裔，都會被它奪走身體。我擋你，是為了救你。」",
+        "en": "Vorkath: \"A hundred years ago I sealed the Star and shut that god out. I made myself the demon king of your stories so that no one would dare climb this tower, because every Godborn who came up here had their body taken by it. I stood in your way to save you.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「回去吧，老人家。剩下的交給我。」",
+            "en": "\"Go and rest, old man. Leave the rest to me.\""
+          },
+          "next": "spare",
+          "actions": [
+            {
+              "type": "addCounter",
+              "counter": "mercy",
+              "delta": 1
+            },
+            {
+              "type": "setFlag",
+              "flag": "c7.vorkath_spared"
+            }
+          ]
+        },
+        {
+          "label": {
+            "zh_TW": "「你讓整座塔的人怕了你一百年。」（舉起武器）",
+            "en": "\"You let a whole tower live in fear of you for a hundred years.\" (Raise your weapon)"
+          },
+          "next": "kill",
+          "actions": [
+            {
+              "type": "addCounter",
+              "counter": "vengeance",
+              "delta": 1
+            },
+            {
+              "type": "setFlag",
+              "flag": "c7.vorkath_killed"
+            }
+          ]
+        }
+      ]
+    },
+    "spare": {
+      "text": {
+        "zh_TW": "沃卡司慢慢站起來，把一枚星形的徽章放在你手裡。「這一百年……我只等到你一個。」他閉上眼睛，像是終於可以睡了。",
+        "en": "Vorkath slowly rises and lays a star-shaped badge in your hand. \"In a hundred years... you are the only one I waited for.\" He closes his eyes, as if at last he may sleep."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null,
+          "action": {
+            "type": "setFlag",
+            "flag": "c7.vorkath_done"
+          }
+        }
+      ]
+    },
+    "kill": {
+      "text": {
+        "zh_TW": "沃卡司沒有躲。「……也好。這個擔子，我也背累了。」他化成灰，灰裡有一枚星形的徽章。",
+        "en": "Vorkath does not move. \"...So be it. I am tired of carrying this too.\" He crumbles to ash, and in the ash lies a star-shaped badge."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null,
+          "action": {
+            "type": "setFlag",
+            "flag": "c7.vorkath_done"
+          }
+        }
+      ]
+    }
+  }
+}
+{
+  "_comment": "Chapter 2 of the story revamp (docs/gameplay/23 §4): the cartographer at home (hub_cartographer): who is still held; Liora foreshadowed. S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "cartographer",
   "start": "root",
   "nodes": {
@@ -403011,6 +404470,61 @@ body.scene { background-color: transparent; }
             "en": "\"Who's still missing?\""
           },
           "next": "missing"
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c2",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c3.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c3",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c3.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
         },
         {
           "label": {
@@ -403031,6 +404545,51 @@ body.scene { background-color: transparent; }
           "label": {
             "zh_TW": "……",
             "en": "..."
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c2": {
+      "text": {
+        "zh_TW": "製圖師：「塔的地圖我畫到一半了。每一層都在變，畫得我頭好痛。」",
+        "en": "Cartographer: \"I've mapped half the tower. Every floor keeps changing. It gives me a headache.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c3": {
+      "text": {
+        "zh_TW": "製圖師：「皮普那張『九十九分正確』的地圖？我看過了，只有一條路是對的——他標成了『危險』。」",
+        "en": "Cartographer: \"Pip's 'ninety-nine percent accurate' map? I've seen it. Exactly one road on it is right, and he marked it 'danger'.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "製圖師：「我把星星畫在地圖的最上面了。等你點亮它，我要畫上一個太陽。」",
+        "en": "Cartographer: \"I've drawn the Star at the very top of the map. When you light it, I'll draw a sun there.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
           },
           "next": "root"
         }
@@ -403071,17 +404630,63 @@ body.scene { background-color: transparent; }
   }
 }
 {
+  "_comment": "Chapter 6 of the story revamp (docs/gameplay/23 §4): the rescued children in the village (hub_children). S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
+  "npcId": "knight_errant",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "村子的新學堂裡，米菈在教孩子們寫自己的名字。她舉起一張紙：「看！他們每一個人都會寫了！以後再也沒有人能把名字從名冊上撕掉！」",
+        "en": "In the village's new schoolroom, Mira is teaching the children to write their own names. She holds up a sheet of paper. \"Look! Every one of them can write it now! Nobody will ever tear a name out of a ledger again!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6"
+        },
+        {
+          "label": {
+            "zh_TW": "（笑）",
+            "en": "(Smile)"
+          },
+          "next": null
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "最小的孩子跑過來：「哥哥！我會寫你的名字了！」她舉起一張紙，上面歪歪扭扭地寫著「里歐」。",
+        "en": "The smallest child runs up. \"Big brother! I can write your name now!\" She holds up a sheet of paper. On it, in wobbly letters: \"Leo\"."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    }
+  }
+}
+{
   "npcId": "crystal_oracle",
   "start": "root",
   "nodes": {
     "root": {
       "text": {
-        "zh_TW": "「旅人，祭壇的光正盛。靜下心，觸碰掠過的光點，水晶自會成形。」"
+        "zh_TW": "「旅人，祭壇的光正盛。靜下心，觸碰掠過的光點，水晶自會成形。」",
+        "en": "\"Traveller, the altar's light is strong. Calm your heart, touch the passing lights, and the crystal will take shape.\""
       },
       "choices": [
         {
           "label": {
-            "zh_TW": "觸碰祭壇。"
+            "zh_TW": "觸碰祭壇。",
+            "en": "Touch the altar."
           },
           "action": {
             "type": "miniGame",
@@ -403091,13 +404696,277 @@ body.scene { background-color: transparent; }
         },
         {
           "label": {
-            "zh_TW": "離開。"
+            "zh_TW": "「水晶裡看見了什麼？」",
+            "en": "\"What do you see in the crystal?\""
+          },
+          "next": "see_c1",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c2.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c3.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c4.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c5.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「水晶裡看見了什麼？」",
+            "en": "\"What do you see in the crystal?\""
+          },
+          "next": "see_c2",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c2.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c3.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c4.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c5.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「水晶裡看見了什麼？」",
+            "en": "\"What do you see in the crystal?\""
+          },
+          "next": "see_c3",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c3.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c4.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c5.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「水晶裡看見了什麼？」",
+            "en": "\"What do you see in the crystal?\""
+          },
+          "next": "see_c4",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c4.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c5.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「水晶裡看見了什麼？」",
+            "en": "\"What do you see in the crystal?\""
+          },
+          "next": "see_c5",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c5.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「水晶裡看見了什麼？」",
+            "en": "\"What do you see in the crystal?\""
+          },
+          "next": "see_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "離開。",
+            "en": "Leave."
           },
           "next": null
         }
       ]
+    },
+    "see_c1": {
+      "text": {
+        "zh_TW": "水晶祭司：「水晶裡……有一盞燈，在一大片火裡沒有熄。那是你，孩子。」",
+        "en": "Crystal oracle: \"In the crystal... a lamp that did not go out in a great fire. That is you, child.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "see_c2": {
+      "text": {
+        "zh_TW": "水晶祭司：「一把騎士的劍，先指著你，後來護著你。」",
+        "en": "Crystal oracle: \"A knight's sword. First it points at you, then it guards you.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "see_c3": {
+      "text": {
+        "zh_TW": "水晶祭司：「一本寫滿名字的書。最後一頁……是空的，等著你寫。」",
+        "en": "Crystal oracle: \"A book full of names. Its last page... is blank, waiting for you to write it.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "see_c4": {
+      "text": {
+        "zh_TW": "水晶祭司：「沉睡的老東西們在低頭。它們認得你的光。」",
+        "en": "Crystal oracle: \"The old sleeping ones bow their heads. They know your light.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "see_c5": {
+      "text": {
+        "zh_TW": "水晶祭司：「一個面具碎了。底下的臉，在哭。」",
+        "en": "Crystal oracle: \"A mask, broken. The face beneath it is weeping.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "see_c6": {
+      "text": {
+        "zh_TW": "水晶祭司：「一顆裂成兩半的星星，和兩隻手。一隻是你的。」",
+        "en": "Crystal oracle: \"A star split in two, and two hands. One of them is yours.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
     }
-  }
+  },
+  "_comment": "The crystal shrine (docs/gameplay/07 phase 6) and, S6 of the story revamp (docs/gameplay/23 §8): what the crystal shows follows the story (see_*: the latest chapter done)."
 }
 {
   "npcId": "duchess",
@@ -403142,7 +405011,7 @@ body.scene { background-color: transparent; }
   }
 }
 {
-  "_comment": "Chapter 4 of the story revamp (docs/gameplay/23 §4): the dwarf at home (hub_dwarf): a DEF gem for 30 gold.",
+  "_comment": "Chapter 4 of the story revamp (docs/gameplay/23 §4): the dwarf at home (hub_dwarf): a DEF gem for 30 gold. S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "dwarf",
   "start": "root",
   "nodes": {
@@ -403177,6 +405046,61 @@ body.scene { background-color: transparent; }
         },
         {
           "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c4",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c5.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c5",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c5.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
+        },
+        {
+          "label": {
             "zh_TW": "「下次吧。」",
             "en": "\"Another time.\""
           },
@@ -403194,6 +405118,51 @@ body.scene { background-color: transparent; }
           "label": {
             "zh_TW": "……",
             "en": "..."
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c4": {
+      "text": {
+        "zh_TW": "矮人：「挖了一輩子的洞，第一次挖到天亮的地方。這村子不錯。」",
+        "en": "Dwarf: \"A lifetime digging holes, and for the first time I've dug my way into the daylight. Nice village.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c5": {
+      "text": {
+        "zh_TW": "矮人：「布蘭那小子在搬木頭？哼……給他一把好鏟子。蓋房子要從挖地基開始。」",
+        "en": "Dwarf: \"That Bran fellow is hauling timber? Hmph... give him a good shovel. A house starts with digging its foundation.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "矮人：「上面的石頭會跟你說話嗎？那些沉睡的傢伙……替我跟它們說聲謝謝。」",
+        "en": "Dwarf: \"Do the stones up there talk to you? Those sleeping ones... tell them thanks from me.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
           },
           "next": "root"
         }
@@ -404299,7 +406268,7 @@ body.scene { background-color: transparent; }
   }
 }
 {
-  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): the healer at home (hub_healer): full HP for 10 gold.",
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): the healer at home (hub_healer): full HP for 10 gold. S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "healer",
   "start": "root",
   "nodes": {
@@ -404322,10 +406291,110 @@ body.scene { background-color: transparent; }
         },
         {
           "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c1",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c4.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c4",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c4.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
+        },
+        {
+          "label": {
             "zh_TW": "「我沒事。」",
             "en": "\"I'm fine.\""
           },
           "next": null
+        }
+      ]
+    },
+    "news_c1": {
+      "text": {
+        "zh_TW": "治療師：「別逞強。受了傷就回來，我這裡的門永遠開著。」",
+        "en": "Healer: \"Don't push yourself. If you're hurt, come back. My door is always open.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c4": {
+      "text": {
+        "zh_TW": "治療師：「你手掌上的光……我從來沒見過這種傷。不，那不是傷，對吧？」",
+        "en": "Healer: \"That light in your palms... I've never seen a wound like it. No, it isn't a wound, is it?\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "治療師：「我替你娘看過了，只是累了，沒事。她一直在問你有沒有吃飯。」",
+        "en": "Healer: \"I've looked your mother over. Just tired, nothing more. She keeps asking whether you're eating.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
         }
       ]
     }
@@ -404353,7 +406422,7 @@ body.scene { background-color: transparent; }
   }
 }
 {
-  "_comment": "Chapter 3 of the story revamp (docs/gameplay/23 §4): the innkeeper at home (hub_inn): stew that heals for 5 gold, and L's letters to read again.",
+  "_comment": "Chapter 3 of the story revamp (docs/gameplay/23 §4): the innkeeper at home (hub_inn): stew that heals for 5 gold, and L's letters to read again. S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "innkeeper",
   "start": "root",
   "nodes": {
@@ -404387,6 +406456,61 @@ body.scene { background-color: transparent; }
         },
         {
           "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c3",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c5.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c5",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c5.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
+        },
+        {
+          "label": {
             "zh_TW": "「下次吧。」",
             "en": "\"Another time.\""
           },
@@ -404404,6 +406528,51 @@ body.scene { background-color: transparent; }
           "label": {
             "zh_TW": "……",
             "en": "..."
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c3": {
+      "text": {
+        "zh_TW": "旅店老闆娘：「床是乾的，湯是熱的。你想住多久都行，不收錢。」",
+        "en": "Innkeeper: \"The beds are dry and the soup is hot. Stay as long as you like. No charge.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c5": {
+      "text": {
+        "zh_TW": "旅店老闆娘：「牢房回來的人全擠在我這裡！我從來沒有這麼累，也從來沒有這麼開心。」",
+        "en": "Innkeeper: \"Everyone from the cells is crammed into my inn! I've never been so tired, or so happy.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "旅店老闆娘：「宴會的湯我已經開始熬了。少一個人都不准開動——包括你。」",
+        "en": "Innkeeper: \"I've started the soup for the feast. Nobody eats until everyone's here. That includes you.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
           },
           "next": "root"
         }
@@ -404589,7 +406758,7 @@ body.scene { background-color: transparent; }
   }
 }
 {
-  "_comment": "Chapter 5 of the story revamp (docs/gameplay/23 §4): Mira in the village (hub_mira).",
+  "_comment": "Chapter 5 of the story revamp (docs/gameplay/23 §4): Mira in the village (hub_mira). S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "knight_errant",
   "start": "root",
   "nodes": {
@@ -404601,10 +406770,64 @@ body.scene { background-color: transparent; }
       "choices": [
         {
           "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c5",
+          "requires": {
+            "not": {
+              "type": "runFlagSet",
+              "flag": "c6.done"
+            }
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
+        },
+        {
+          "label": {
             "zh_TW": "（笑）",
             "en": "(Laugh)"
           },
           "next": null
+        }
+      ]
+    },
+    "news_c5": {
+      "text": {
+        "zh_TW": "米菈：「我哥每天都寫信回來，每一封都問我有沒有吃飯。你們男生都一樣！」",
+        "en": "Mira: \"My brother writes home every day, and every letter asks whether I'm eating. You boys are all the same!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "米菈：「那些孩子叫我『米菈老師』！……哥回來的時候，你要幫我跟他炫耀。」",
+        "en": "Mira: \"The children call me 'Teacher Mira'! ...When my brother comes back, you have to help me show off to him.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
         }
       ]
     }
@@ -404679,20 +406902,170 @@ body.scene { background-color: transparent; }
   "nodes": {
     "root": {
       "text": {
-        "zh_TW": "旅人，你好。我是老婆婆。",
-        "en": "Good day, traveller. I'm the old woman."
+        "zh_TW": "老婆婆縮在牆角，抱著一隻雞。「里歐？你還活著！他們抓走了你爹娘……我躲在這裡，連雞都不敢讓它叫。」",
+        "en": "The old woman is huddled in a corner, hugging a chicken. \"Leo? You're alive! They took your Mom and Dad... I've been hiding here. I don't even dare let the hen cluck.\""
       },
       "choices": [
         {
           "label": {
-            "zh_TW": "再見。",
-            "en": "Goodbye."
+            "zh_TW": "「村子安全了，回去吧。我會把他們帶回來。」",
+            "en": "\"The village is safe now. Go home. I'll bring them back.\""
           },
           "next": null
         }
       ]
+    },
+    "pin": {
+      "text": {
+        "zh_TW": "老婆婆看見你頭上的髮簪：「那是你娘的……她被拖走的時候還在喊：『里歐要好好吃飯！』」她擦擦眼睛。「去吧，孩子。」",
+        "en": "The old woman sees the hairpin you carry. \"That's your mother's... As they dragged her away, she was still shouting, 'Leo, eat properly!'\" She wipes her eyes. \"Go on, child.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「我會的。」",
+            "en": "\"I will.\""
+          },
+          "next": null
+        }
+      ]
+    },
+    "later": {
+      "text": {
+        "zh_TW": "老婆婆：「聽說你在塔上救了好多人！我的雞今天下了兩顆蛋——一顆給你，一顆留給你娘回來吃。」",
+        "en": "The old woman: \"I hear you've saved so many people up the tower! My hen laid two eggs today. One for you, and one for your mother when she's back.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「謝謝婆婆。」",
+            "en": "\"Thank you, Granny.\""
+          },
+          "next": null,
+          "action": {
+            "type": "addStat",
+            "stat": "hp",
+            "delta": 20
+          }
+        }
+      ]
     }
-  }
+  },
+  "_comment": "S6 of the story revamp (docs/gameplay/23 §8): the old woman from the next farm, hiding on F04 since the raid; her line follows the story (npcs/old_woman.json picks the node)."
+}
+{
+  "npcId": "old_woman",
+  "start": "later",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "老婆婆縮在牆角，抱著一隻雞。「里歐？你還活著！他們抓走了你爹娘……我躲在這裡，連雞都不敢讓它叫。」",
+        "en": "The old woman is huddled in a corner, hugging a chicken. \"Leo? You're alive! They took your Mom and Dad... I've been hiding here. I don't even dare let the hen cluck.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「村子安全了，回去吧。我會把他們帶回來。」",
+            "en": "\"The village is safe now. Go home. I'll bring them back.\""
+          },
+          "next": null
+        }
+      ]
+    },
+    "pin": {
+      "text": {
+        "zh_TW": "老婆婆看見你頭上的髮簪：「那是你娘的……她被拖走的時候還在喊：『里歐要好好吃飯！』」她擦擦眼睛。「去吧，孩子。」",
+        "en": "The old woman sees the hairpin you carry. \"That's your mother's... As they dragged her away, she was still shouting, 'Leo, eat properly!'\" She wipes her eyes. \"Go on, child.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「我會的。」",
+            "en": "\"I will.\""
+          },
+          "next": null
+        }
+      ]
+    },
+    "later": {
+      "text": {
+        "zh_TW": "老婆婆：「聽說你在塔上救了好多人！我的雞今天下了兩顆蛋——一顆給你，一顆留給你娘回來吃。」",
+        "en": "The old woman: \"I hear you've saved so many people up the tower! My hen laid two eggs today. One for you, and one for your mother when she's back.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「謝謝婆婆。」",
+            "en": "\"Thank you, Granny.\""
+          },
+          "next": null,
+          "action": {
+            "type": "addStat",
+            "stat": "hp",
+            "delta": 20
+          }
+        }
+      ]
+    }
+  },
+  "_comment": "S6 of the story revamp (docs/gameplay/23 §8): the old woman from the next farm, hiding on F04 since the raid; her line follows the story (npcs/old_woman.json picks the node). (this copy starts at \"later\")"
+}
+{
+  "npcId": "old_woman",
+  "start": "pin",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "老婆婆縮在牆角，抱著一隻雞。「里歐？你還活著！他們抓走了你爹娘……我躲在這裡，連雞都不敢讓它叫。」",
+        "en": "The old woman is huddled in a corner, hugging a chicken. \"Leo? You're alive! They took your Mom and Dad... I've been hiding here. I don't even dare let the hen cluck.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「村子安全了，回去吧。我會把他們帶回來。」",
+            "en": "\"The village is safe now. Go home. I'll bring them back.\""
+          },
+          "next": null
+        }
+      ]
+    },
+    "pin": {
+      "text": {
+        "zh_TW": "老婆婆看見你頭上的髮簪：「那是你娘的……她被拖走的時候還在喊：『里歐要好好吃飯！』」她擦擦眼睛。「去吧，孩子。」",
+        "en": "The old woman sees the hairpin you carry. \"That's your mother's... As they dragged her away, she was still shouting, 'Leo, eat properly!'\" She wipes her eyes. \"Go on, child.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「我會的。」",
+            "en": "\"I will.\""
+          },
+          "next": null
+        }
+      ]
+    },
+    "later": {
+      "text": {
+        "zh_TW": "老婆婆：「聽說你在塔上救了好多人！我的雞今天下了兩顆蛋——一顆給你，一顆留給你娘回來吃。」",
+        "en": "The old woman: \"I hear you've saved so many people up the tower! My hen laid two eggs today. One for you, and one for your mother when she's back.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「謝謝婆婆。」",
+            "en": "\"Thank you, Granny.\""
+          },
+          "next": null,
+          "action": {
+            "type": "addStat",
+            "stat": "hp",
+            "delta": 20
+          }
+        }
+      ]
+    }
+  },
+  "_comment": "S6 of the story revamp (docs/gameplay/23 §8): the old woman from the next farm, hiding on F04 since the raid; her line follows the story (npcs/old_woman.json picks the node). (this copy starts at \"pin\")"
 }
 {
   "npcId": "oracle",
@@ -404710,6 +407083,61 @@ body.scene { background-color: transparent; }
             "en": "Goodbye."
           },
           "next": null
+        }
+      ]
+    }
+  }
+}
+{
+  "_comment": "Chapter 6 of the story revamp (docs/gameplay/23 §4): the parents at home (hub_home): a free full heal. S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
+  "npcId": "farmer_wife",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "家裡的灶上燉著肉，整間屋子都是香味。媽媽：「坐下，先吃一碗再走。」爸爸在門口補屋頂，假裝沒在看你。",
+        "en": "Stew is simmering on the stove and the whole house smells of it. Mom: \"Sit down, have a bowl before you go.\" Dad is patching the roof by the door, pretending not to watch you."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（吃一碗：HP 回滿）",
+            "en": "(Have a bowl: full HP)"
+          },
+          "next": null,
+          "action": {
+            "type": "heal",
+            "cost": 0
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6"
+        },
+        {
+          "label": {
+            "zh_TW": "「我很快就回來。」",
+            "en": "\"I'll be back soon.\""
+          },
+          "next": null
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "爸爸從屋頂上探出頭：「上面那個公主——是不是對你很好？……沒事，爸爸只是問問。」媽媽在廚房笑出聲來。",
+        "en": "Dad leans down from the roof. \"That princess up there, is she... nice to you? Never mind. Just asking.\" Mom laughs out loud in the kitchen."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
         }
       ]
     }
@@ -404758,7 +407186,7 @@ body.scene { background-color: transparent; }
   }
 }
 {
-  "_comment": "Chapter 2 of the story revamp (docs/gameplay/23 §4): Pip in the village (hub_pip): the store, the chest game.",
+  "_comment": "Chapter 2 of the story revamp (docs/gameplay/23 §4): Pip in the village (hub_pip): the store, the chest game. S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "chest_peddler",
   "start": "root",
   "nodes": {
@@ -404802,6 +407230,61 @@ body.scene { background-color: transparent; }
         },
         {
           "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c2",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c4.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c4",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c4.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
+        },
+        {
+          "label": {
             "zh_TW": "「再見。」",
             "en": "\"Bye.\""
           },
@@ -404819,6 +407302,51 @@ body.scene { background-color: transparent; }
           "label": {
             "zh_TW": "……",
             "en": "..."
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c2": {
+      "text": {
+        "zh_TW": "皮普：「生意最重要的是什麼？信用！第二重要的？利息！」",
+        "en": "Pip: \"What matters most in business? Trust! And second most? Interest!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c4": {
+      "text": {
+        "zh_TW": "皮普：「那條石龍說你是神裔？那你的簽名一定很值錢……能不能幫我簽一百張？」",
+        "en": "Pip: \"The stone wyrm says you're Godborn? Then your autograph must be worth a fortune... could you sign a hundred for me?\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "皮普：「最後一戰？那我要先賣『勝利紀念品』……萬一輸了就改賣『悼念紀念品』。開玩笑的！你會贏的！」",
+        "en": "Pip: \"The final battle? Then I'd better start selling victory souvenirs... and if you lose, memorial souvenirs. Kidding! You'll win!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
           },
           "next": "root"
         }
@@ -405227,7 +407755,7 @@ body.scene { background-color: transparent; }
   }
 }
 {
-  "_comment": "Chapter 3 of the story revamp (docs/gameplay/23 §4): the scholar at home (hub_scholar): the Godborn (sets up chapter 4).",
+  "_comment": "Chapter 3 of the story revamp (docs/gameplay/23 §4): the scholar at home (hub_scholar): the Godborn (sets up chapter 4). S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "scholar",
   "start": "root",
   "nodes": {
@@ -405243,6 +407771,61 @@ body.scene { background-color: transparent; }
             "en": "\"What are the Godborn?\""
           },
           "next": "lore"
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c3",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c4.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c4",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c4.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
         },
         {
           "label": {
@@ -405263,6 +407846,51 @@ body.scene { background-color: transparent; }
           "label": {
             "zh_TW": "……",
             "en": "..."
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c3": {
+      "text": {
+        "zh_TW": "學者：「名冊的筆跡，我一頁一頁比對過了。寫字的人，手一直在抖。」",
+        "en": "Scholar: \"I've compared the ledger's handwriting page by page. The hand that wrote it was shaking the whole time.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c4": {
+      "text": {
+        "zh_TW": "學者：「神裔的記載，我在舊書裡找到了三行。三行！整個王國都忘了他們。」",
+        "en": "Scholar: \"I found three lines about the Godborn in the old books. Three lines! The whole kingdom forgot them.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "學者：「安穩之星……原來是一道鎖。我要寫一本新的歷史，第一章就寫你。」",
+        "en": "Scholar: \"The Star of Peace... a lock, all along. I'm going to write a new history, and its first chapter is about you.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
           },
           "next": "root"
         }
@@ -405830,7 +408458,7 @@ body.scene { background-color: transparent; }
   }
 }
 {
-  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): Tobi at home (hub_tobi): hints.",
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): Tobi at home (hub_tobi): hints. S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "village_boy",
   "start": "root",
   "nodes": {
@@ -405842,10 +408470,158 @@ body.scene { background-color: transparent; }
       "choices": [
         {
           "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c1",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c3.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c5.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c3",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c3.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c5.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c5",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c5.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
+        },
+        {
+          "label": {
             "zh_TW": "「謝啦，小托。」",
             "en": "\"Thanks, Tobi.\""
           },
           "next": null
+        }
+      ]
+    },
+    "news_c1": {
+      "text": {
+        "zh_TW": "小托：「我在桶子裡練習躲貓貓！下次收集者來，他們一定找不到我！」",
+        "en": "Tobi: \"I'm practising hide-and-seek in my barrel! Next time the Collectors come, they'll never find me!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c3": {
+      "text": {
+        "zh_TW": "小托：「皮普叔叔教我算錢！一加一等於……要收手續費！」",
+        "en": "Tobi: \"Uncle Pip is teaching me sums! One plus one equals... a handling fee!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c5": {
+      "text": {
+        "zh_TW": "小托：「米菈姊姊說我可以當水桶騎士！我已經有水桶了！」",
+        "en": "Tobi: \"Sister Mira says I can be a bucket knight! I already have the bucket!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "小托：「你爹娘回來了！你娘捏了我的臉，說我長高了！」",
+        "en": "Tobi: \"Your Mom and Dad are back! Your Mom pinched my cheek and said I'd grown!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
         }
       ]
     }
@@ -405873,7 +408649,7 @@ body.scene { background-color: transparent; }
   }
 }
 {
-  "_comment": "Chapter 5 of the story revamp (docs/gameplay/23 §4): the village square (hub_square): everyone home but the parents.",
+  "_comment": "Chapter 5 of the story revamp (docs/gameplay/23 §4): the village square (hub_square): everyone home but the parents. S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "miller",
   "start": "root",
   "nodes": {
@@ -405889,6 +408665,30 @@ body.scene { background-color: transparent; }
             "en": "\"...Everyone's back.\""
           },
           "next": "almost"
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c5",
+          "requires": {
+            "not": {
+              "type": "runFlagSet",
+              "flag": "c6.done"
+            }
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
         }
       ]
     },
@@ -405906,11 +408706,41 @@ body.scene { background-color: transparent; }
           "next": null
         }
       ]
+    },
+    "news_c5": {
+      "text": {
+        "zh_TW": "磨坊主：「水車又轉了！織布女說，等你爹娘回來，要織一面新的村旗。」",
+        "en": "Miller: \"The mill wheel turns again! The weaver says that when your parents are home, she'll weave a new village banner.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "磨坊主：「新的村旗織好了——上面是一碗燉肉。是你娘選的。」",
+        "en": "Miller: \"The new banner is woven. There's a bowl of stew on it. Your mother chose it.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
     }
   }
 }
 {
-  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): the elder in the village (hub_village): the baker's quest claimed, the tower, and the chapter's end after Grey Mask. Chapter 2 (23 §4): its end after F10 (c2.done). Chapter 3: its end after F15 (c3.done; the ledger quest paid). Chapter 4: its end after F20 and the vision (c4.done): Bran, the mother's brother. Chapter 5: its end after F25 and the unmasking (c5.done), one line per choice.",
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): the elder in the village (hub_village): the baker's quest claimed, the tower, and the chapter's end after Grey Mask. Chapter 2 (23 §4): its end after F10 (c2.done). Chapter 3: its end after F15 (c3.done; the ledger quest paid). Chapter 4: its end after F20 and the vision (c4.done): Bran, the mother's brother. Chapter 5: its end after F25 and the unmasking (c5.done), one line per choice. Chapter 6: its end once the parents are home and F31 reached (c6.done).",
   "npcId": "villager_elder",
   "start": "root",
   "nodes": {
@@ -406146,6 +408976,35 @@ body.scene { background-color: transparent; }
               {
                 "type": "runFlagSet",
                 "flag": "c5.bran_justice"
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「爹娘回家了。」",
+            "en": "\"Mom and Dad are home.\""
+          },
+          "next": "c6end",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c5.done"
+              },
+              {
+                "type": "runFlagSet",
+                "flag": "home.parents"
+              },
+              {
+                "type": "stageCleared",
+                "stageId": "F31"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
               }
             ]
           }
@@ -406394,6 +409253,25 @@ body.scene { background-color: transparent; }
           }
         }
       ]
+    },
+    "c6end": {
+      "text": {
+        "zh_TW": "長老坐在你家的門口，手裡端著一碗燉肉。「你娘硬塞給我的。」他看著塔頂。「最後一段路了，里歐。我們都在這裡等你回來吃飯。」",
+        "en": "The elder sits on your doorstep, a bowl of stew in his hands. \"Your mother made me take it.\" He looks up at the top of the tower. \"This is the last stretch, Leo. We'll all be here, waiting for you to come home for dinner.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（第六章 完）",
+            "en": "(End of Chapter 6)"
+          },
+          "next": null,
+          "action": {
+            "type": "setFlag",
+            "flag": "c6.done"
+          }
+        }
+      ]
     }
   }
 }
@@ -406605,7 +409483,7 @@ body.scene { background-color: transparent; }
   }
 }
 {
-  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): the weapon master in the village (hub_weapon_master): his quest (the whetstone on F04).",
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): the weapon master in the village (hub_weapon_master): his quest (the whetstone on F04). S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "weapon_master",
   "start": "root",
   "nodes": {
@@ -406671,6 +409549,94 @@ body.scene { background-color: transparent; }
         },
         {
           "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c1",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c2.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c4.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c2",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c2.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c4.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c4",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c4.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
+        },
+        {
+          "label": {
             "zh_TW": "「再見。」",
             "en": "\"Bye.\""
           },
@@ -406707,6 +409673,66 @@ body.scene { background-color: transparent; }
           "label": {
             "zh_TW": "「謝謝！」",
             "en": "\"Thanks!\""
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c1": {
+      "text": {
+        "zh_TW": "武師：「你選的那把武器，別讓它生鏽了。每天揮一百下。」",
+        "en": "Weapon master: \"The weapon you chose, don't let it rust. A hundred swings every day.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c2": {
+      "text": {
+        "zh_TW": "武師：「聽說有個皇家騎士跟著你？哼，叫他來我的院子，讓我看看王都教了他什麼。」",
+        "en": "Weapon master: \"I hear a royal knight is following you around? Hmph. Send him to my yard and I'll see what the capital taught him.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c4": {
+      "text": {
+        "zh_TW": "武師：「神裔……難怪你學什麼都快。可是記住，力量不會替你做決定。」",
+        "en": "Weapon master: \"Godborn... no wonder you learn everything so fast. But remember: power doesn't make your choices for you.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "武師：「最後一段路了。你已經不需要我教了——去吧，回來的時候，我們再對練一場。」",
+        "en": "Weapon master: \"The last stretch. You don't need my teaching any more. Go, and when you're back, we'll spar once more.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
           },
           "next": "root"
         }
@@ -406844,6 +409870,61 @@ body.scene { background-color: transparent; }
     "moves": [{ "id": "strike", "weight": 2 }, "heavy", "jabs", "spell", "guard", "boss_near", "boss_line", "boss_fan"],
     "break": 16,
     "events": [{ "on": "hpBelow", "value": 50, "do": [{ "say": "battle.event.boss_rage" }, { "stat": "interval", "mul": 0.8 }, { "anim": "special" }] }]
+  },
+  "vorkath_king": {
+    "bossTier": "final",
+    "name": {
+      "zh_TW": "巫師王沃卡司",
+      "en": "Vorkath, the Sorcerer King",
+      "zh_CN": "Vorkath, the Sorcerer King",
+      "ja": "Vorkath, the Sorcerer King",
+      "ko": "Vorkath, the Sorcerer King",
+      "es": "Vorkath, the Sorcerer King"
+    },
+    "sprite": "m_demonlord_vorkath.png",
+    "intro": true,
+    "look": "vorkath",
+    "hp": 980,
+    "body": 5,
+    "atk": 52,
+    "def": 11,
+    "exp": 120,
+    "weaponExp": 10,
+    "gold": 90,
+    "atk_interval_ms": 3000,
+    "moves": [
+      {
+        "id": "strike",
+        "weight": 2
+      },
+      "heavy",
+      "jabs",
+      "spell",
+      "guard",
+      "boss_near",
+      "boss_line",
+      "boss_fan"
+    ],
+    "break": 16,
+    "events": [
+      {
+        "on": "hpBelow",
+        "value": 50,
+        "do": [
+          {
+            "say": "battle.event.boss_rage"
+          },
+          {
+            "stat": "interval",
+            "mul": 0.8
+          },
+          {
+            "anim": "special"
+          }
+        ]
+      }
+    ],
+    "_boss": "chapter 7's F33 boss (docs/gameplay/23 §4): Vorkath, who sealed the Star; not \"boss\": true (that ends the old story)"
   },
   "mossling": {
     "name": { "zh_TW": "苔蘚球", "en": "Mossling" },
@@ -407807,6 +410888,41 @@ body.scene { background-color: transparent; }
     "big": true,
     "_boss": "F05's boss, beside its up stairs (the owner, 2026-11-13)"
   },
+  "hollow_god": {
+    "bossTier": "stage",
+    "name": {
+      "zh_TW": "空洞之神",
+      "en": "The Hollow God",
+      "zh_CN": "The Hollow God",
+      "ja": "The Hollow God",
+      "ko": "The Hollow God",
+      "es": "The Hollow God"
+    },
+    "sprite": "m_gravewarden.png",
+    "look": "gravewarden",
+    "hp": 1300,
+    "body": 3,
+    "atk": 58,
+    "def": 13,
+    "exp": 200,
+    "weaponExp": 4,
+    "gold": 150,
+    "break": 10,
+    "atk_interval_ms": 2600,
+    "moves": [
+      {
+        "id": "strike",
+        "weight": 2
+      },
+      "boss_near",
+      "boss_line",
+      "boss_fan"
+    ],
+    "guardsStairs": true,
+    "intro": true,
+    "big": true,
+    "_boss": "chapter 7's last boss, F35 (docs/gameplay/23 §4): the old god's shape at the Star; the Gravewarden's look for now"
+  },
   "hearthound": {
     "bossTier": "stage",
     "name": { "zh_TW": "爐火狐", "en": "Hearthound", "zh_CN": "炉火狐", "ja": "かまどギツネ", "ko": "화덕여우", "es": "Zorrohogar" },
@@ -407882,6 +410998,42 @@ body.scene { background-color: transparent; }
     "intro": true,
     "big": true,
     "_boss": "F09's boss, beside its up stairs (the owner, 2026-11-13)"
+  },
+  "sanctum_warden": {
+    "bossTier": "stage",
+    "name": {
+      "zh_TW": "神殿守衛",
+      "en": "The Sanctum Warden",
+      "zh_CN": "The Sanctum Warden",
+      "ja": "The Sanctum Warden",
+      "ko": "The Sanctum Warden",
+      "es": "The Sanctum Warden"
+    },
+    "sprite": "m_astrowl.png",
+    "look": "astrowl",
+    "hp": 760,
+    "body": 5,
+    "atk": 46,
+    "def": 9,
+    "exp": 90,
+    "weaponExp": 5,
+    "gold": 70,
+    "break": 12,
+    "atk_interval_ms": 2600,
+    "moves": [
+      {
+        "id": "strike",
+        "weight": 2
+      },
+      "heavy",
+      "boss_near",
+      "boss_line",
+      "boss_fan"
+    ],
+    "guardsStairs": true,
+    "intro": true,
+    "big": true,
+    "_boss": "chapter 6's boss, F30 (the story revamp, docs/gameplay/23 §4): it guards the parents' cage; the Astrowl's look for now"
   },
   "chronoknight": {
     "bossTier": "stage",
@@ -417576,6 +420728,219 @@ body.scene { background-color: transparent; }
 }
 {
   "_comment": [
+    "Chapter 6 of the story revamp (docs/gameplay/23 §4): The Sanctum, F26-F30. Liora's mirror (three shards,",
+    "mirror_shards; whole: ev_c6_mirror_whole, c6.mirror), the children in the cradles, the old god's voice, the family scene",
+    "after the Sanctum Warden (home.parents)."
+  ],
+  "act": "ch_06",
+  "theme": "the sanctum",
+  "events": [
+    {
+      "eventId": "ev_c6_mirror_voice",
+      "kind": "scene",
+      "text": "ev_c6_mirror_voice.text",
+      "title": "ev_c6_mirror_voice.title",
+      "desc": "ev_c6_mirror_voice.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c6_mirror_voice"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c6_shard2",
+      "kind": "quest",
+      "text": "ev_c6_shard2.text",
+      "title": "ev_c6_shard2.title",
+      "desc": "ev_c6_shard2.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c6_shard2"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c6_shard3",
+      "kind": "quest",
+      "text": "ev_c6_shard3.text",
+      "title": "ev_c6_shard3.title",
+      "desc": "ev_c6_shard3.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c6_shard3"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c6_mirror_whole",
+      "kind": "scene",
+      "text": "ev_c6_mirror_whole.text",
+      "title": "ev_c6_mirror_whole.title",
+      "desc": "ev_c6_mirror_whole.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c6_mirror_whole"
+        }
+      ],
+      "trigger": {
+        "on": "varChanged",
+        "var": "mirror_shards"
+      },
+      "requires": {
+        "type": "varAtLeast",
+        "var": "mirror_shards",
+        "value": 3
+      }
+    },
+    {
+      "eventId": "ev_c6_pip_holywater",
+      "kind": "comic",
+      "text": "ev_c6_pip_holywater.text",
+      "title": "ev_c6_pip_holywater.title",
+      "desc": "ev_c6_pip_holywater.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c6_pip_holywater"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c6_cradles",
+      "kind": "rescue",
+      "text": "ev_c6_cradles.text",
+      "title": "ev_c6_cradles.title",
+      "desc": "ev_c6_cradles.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c6_cradles"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c6_god_voice",
+      "kind": "choice",
+      "text": "ev_c6_god_voice.text",
+      "title": "ev_c6_god_voice.title",
+      "desc": "ev_c6_god_voice.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c6_god_voice"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c6_family",
+      "kind": "scene",
+      "text": "ev_c6_family.text",
+      "title": "ev_c6_family.title",
+      "desc": "ev_c6_family.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c6_family"
+        }
+      ]
+    }
+  ]
+}
+{
+  "_comment": [
+    "Chapter 7 of the story revamp (docs/gameplay/23 §4): The Final Choice, F31-F35. Kai's last stand (trust), Pip's",
+    "payoff (c2.pip_invested), Liora at the door (c6.mirror), Vorkath's truth, the last temptation, and the Star after the",
+    "Hollow God: the ending (the action \"ending\", 23 §6)."
+  ],
+  "act": "ch_07",
+  "theme": "the final choice",
+  "events": [
+    {
+      "eventId": "ev_c7_kai",
+      "kind": "scene",
+      "text": "ev_c7_kai.text",
+      "title": "ev_c7_kai.title",
+      "desc": "ev_c7_kai.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c7_kai"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c7_pip_final",
+      "kind": "comic",
+      "text": "ev_c7_pip_final.text",
+      "title": "ev_c7_pip_final.title",
+      "desc": "ev_c7_pip_final.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c7_pip_final"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c7_liora_door",
+      "kind": "scene",
+      "text": "ev_c7_liora_door.text",
+      "title": "ev_c7_liora_door.title",
+      "desc": "ev_c7_liora_door.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c7_liora_door"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c7_vorkath",
+      "kind": "choice",
+      "text": "ev_c7_vorkath.text",
+      "title": "ev_c7_vorkath.title",
+      "desc": "ev_c7_vorkath.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c7_vorkath"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c7_temptation",
+      "kind": "choice",
+      "text": "ev_c7_temptation.text",
+      "title": "ev_c7_temptation.title",
+      "desc": "ev_c7_temptation.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c7_temptation"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c7_star",
+      "kind": "choice",
+      "text": "ev_c7_star.text",
+      "title": "ev_c7_star.title",
+      "desc": "ev_c7_star.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c7_star"
+        }
+      ]
+    }
+  ]
+}
+{
+  "_comment": [
     "S3 — the common pool (docs/SIDE_STORIES.md section 12.1/12.2). Every floor samples",
     "its events from its act pool plus this one; section 5.2's constraints (>=1",
     "relic/whisper, >=1 cache, no repeat within a floor) are enforced by the generator."
@@ -418155,6 +421520,38 @@ body.scene { background-color: transparent; }
     "action": {
       "kind": "talk",
       "npc": "bran_home"
+    }
+  },
+  "hub_home": {
+    "id": "hub_home",
+    "unlockFlag": "home.parents",
+    "name": {
+      "zh_TW": "家",
+      "en": "Home"
+    },
+    "desc": {
+      "zh_TW": "爹娘回來了。灶上燉著肉。",
+      "en": "Mom and Dad are home. There is stew on the stove."
+    },
+    "action": {
+      "kind": "talk",
+      "npc": "parents_home"
+    }
+  },
+  "hub_children": {
+    "id": "hub_children",
+    "unlockFlag": "home.children",
+    "name": {
+      "zh_TW": "新學堂",
+      "en": "The New Schoolroom"
+    },
+    "desc": {
+      "zh_TW": "米菈在教被救回來的孩子們寫字。",
+      "en": "Mira teaches the rescued children to write."
+    },
+    "action": {
+      "kind": "talk",
+      "npc": "children_home"
     }
   }
 }
@@ -419509,6 +422906,22 @@ body.scene { background-color: transparent; }
     "rewardExp": 40,
     "rewardGold": 40,
     "rewardItemId": "gem_atk"
+  },
+  "m_c6_mirrors": {
+    "missionId": "m_c6_mirrors",
+    "title": "mission.m_c6_mirrors.title",
+    "desc": "mission.m_c6_mirrors.desc",
+    "kind": "once",
+    "giver": "princess",
+    "prerequisites": null,
+    "objective": {
+      "type": "flag",
+      "targetId": "c6.mirror",
+      "count": 1
+    },
+    "rewardExp": 60,
+    "rewardGold": 60,
+    "rewardItemId": "gem_def"
   }
 }
 {
@@ -420203,15 +423616,54 @@ body.scene { background-color: transparent; }
   "chat": {
     "lines": [
       {
-        "dialogue": "old_woman"
+        "dialogue": "old_woman",
+        "requires": {
+          "all": [
+            {
+              "not": {
+                "type": "runFlagSet",
+                "flag": "c1.hairpin"
+              }
+            },
+            {
+              "not": {
+                "type": "runFlagSet",
+                "flag": "c1.done"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "dialogue": "old_woman_pin",
+        "requires": {
+          "all": [
+            {
+              "type": "runFlagSet",
+              "flag": "c1.hairpin"
+            },
+            {
+              "not": {
+                "type": "runFlagSet",
+                "flag": "c1.done"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "dialogue": "old_woman_later",
+        "requires": {
+          "type": "runFlagSet",
+          "flag": "c1.done"
+        }
       }
     ],
     "order": "loop"
   },
   "topics": {
     "menu": "auto"
-  },
-  "draft": true
+  }
 }
 {
   "npcId": "oracle",
@@ -420710,7 +424162,7 @@ body.scene { background-color: transparent; }
     "use": "ultimate",
     "prompt": "skill.prompt_draw",
     "damage": 10,
-    "play": {
+    "play": { "around": "monster",
       "kind": "drawShape",
       "minHits": 3,
       "shape": "pentagram",
@@ -420805,7 +424257,7 @@ body.scene { background-color: transparent; }
     ]
   },
   "cyclone_volley": {
-    "_comment": "The bow's ultimate (docs/gameplay/22 §4): a ring on the hero's head (ringY) with sparks going round it; circle it clockwise 3 times, then anticlockwise 3 times, in 6 s. All 6 (or 3 to 5): first his own introduction, as a boss's (the camera low and close on him, the banner with the move's name typed in, his charge; the owner, 2026-11-19); all 6: then he shoots 10 arrows up in 1.5 s that fall on the monster as a meteor shower (each meteor a hit, 2 more round it for show); 3 to 5: 4 meteors (a share of the damage); under 3 it fizzles.",
+    "_comment": "The bow's ultimate (docs/gameplay/22 §4): a ring on the hero's head (ringY) with sparks going round it; circle it clockwise 3 times, then anticlockwise 3 times, in 6 s. All 6 (or 3 to 5): first his own introduction, as a boss's (the camera low and close on him, the banner with the move's name typed in, his charge; the owner, 2026-11-19); all 6: then he shoots 10 arrows up in 1.5 s (the camera from behind him, over his shoulder, toward the monster; the owner, 2026-11-22) that fall on the monster as a meteor shower (the camera cranes up and looks down on it: move \"rain\") (each meteor a hit, 2 more round it for show); 3 to 5: 4 meteors (a share of the damage); under 3 it fizzles.",
     "name": "skill.cyclone_volley",
     "weapon": "bow",
     "use": "ultimate",
@@ -420825,7 +424277,7 @@ body.scene { background-color: transparent; }
       { "at": 350, "do": "fx", "fx": "bow_great", "on": "player", "when": "landed" },
       { "at": 900, "do": "fx", "fx": "volley_charge", "on": "player", "when": "landed" },
       { "at": 900, "do": "sound", "fx": "sfx.bow_charge", "when": "landed" },
-      { "at": 1800, "do": "camera", "zoom": 1.12, "on": "player", "ms": 2200, "when": "full" },
+      { "at": 1800, "do": "camera", "zoom": 1.01, "move": "rain", "ms": 2500, "when": "full" },
       { "at": 1800, "do": "dim", "ms": 2000, "when": "full" },
       { "at": 1800, "do": "hits", "count": 10, "gapMs": 150, "clip": "attack", "speed": 4, "fx": "bow_release_3",
         "projectile": "meteor", "impact": "meteor_impact", "flightMs": 380, "extra": 2, "when": "full" },
@@ -420835,6 +424287,7 @@ body.scene { background-color: transparent; }
       { "at": 3650, "do": "shake", "value": 14, "ms": 500, "when": "full" },
       { "at": 3650, "do": "sound", "fx": "sfx.explosion", "when": "full" },
       { "at": 1800, "do": "banner", "text": "skill.volley_partial", "ms": 800, "when": "partial" },
+      { "at": 1800, "do": "camera", "zoom": 1.01, "move": "rain", "ms": 1900, "when": "partial" },
       { "at": 1800, "do": "hits", "count": 4, "gapMs": 200, "clip": "attack", "speed": 3, "fx": "bow_release_2",
         "projectile": "meteor", "impact": "meteor_impact_small", "flightMs": 380, "when": "partial" },
       { "at": 2180, "do": "shake", "value": 4, "ms": 800, "when": "partial" }
@@ -421063,15 +424516,22 @@ body.scene { background-color: transparent; }
     "stage3d: walking the floors in 3D (docs/gameplay/24_STAGE_3D.md). There is no 2D map: the game makes each floor's walls and ground from its tile map when the floor is entered (src/game/src/floor_mesh.cpp: a wall cell is a block wallHeight metres tall, one tile = one metre; the ground's texture repeats every groundRepeat metres), textured with its look's painted pictures (assets/media/stage3d/looks/<look>/, tools/stage3d/paint_looks.py).",
     "loadingDelayMs: a scene still loading after this long (the floor's or the battle's 3D stage) shows the turning loading circle.",
     "shadow: the soft disc under the hero, the monsters and the people (the battle's).",
-    "camera: pitch (degrees down from level), distance (metres from the hero), fov (degrees, up and down), follow (how fast it catches up with the hero: 1/s), lookAhead (metres north of the hero it looks at).",
+    "stairSign: the sign standing over each stair: chevrons that keep rising (up, gold) or sinking (down, blue), or a padlock while locked; size (metres), speed (steps a second; x1.6 for a stair just opened, which also pulses).",
+    "stairLights: the light of each stair, so it is not missed: up (colour, over its top step), down (colour, in its pit), intensity (x1.6 for a stair just opened, x0.5 for a locked one), range (metres), off. The stairs themselves are four steps in the floor's model (up to the walls' top, or down into a pit); stairShade darkens their treads (the ground's texture times it: 0.35 = about a third as bright as the floor).",
+    "viewScales: the steps of Settings > View size, x the camera's distance (1 = about 12 tiles across, 1.5 = 18, 2 = 24, 3 = 36).",
+    "camera: pitch (degrees down from level), distance (metres from the hero at view size 1), fov (degrees, up and down), follow (how fast it catches up with the hero: 1/s), lookAhead (metres north of the hero it looks at).",
     "sprites: the map's sprites standing in the scene: glow (their own light), lean (degrees they lean back toward the camera; 0 = upright), heights (metres for a one-tile sprite, by kind: player, monster, npc, item, door, event, other), shadow (the soft disc's radius in metres; 0 = none), paintedHero (the hero drawn as his weapon's painted battle character, its idle clip, turned the way he last walked) and paintedHeroHeight (metres).",
     "looks: by the floor's theme (its stage file's \"theme\"); a theme not here uses defaultLook. Each: sky (an HDR or JPG that lights the floor: hdr, intensity, yaw; background false = only light, the tower stands in the dark), exposure, light (the sun: dir, color, intensity, ambient) as battle.json stages3d."
   ],
   "defaultLook": "castle",
   "wallHeight": 1.0,
   "groundRepeat": 2.0,
+  "stairShade": 0.35,
   "loadingDelayMs": 250,
+  "viewScales": [1, 1.5, 2, 3],
   "shadow": "battle3d/moonlit_ruins/blob.glb",
+  "stairSign": { "size": 1.0, "speed": 0.8 },
+  "stairLights": { "up": [1.0, 0.8, 0.45], "down": [0.45, 0.65, 1.0], "intensity": 6.0, "range": 3.5 },
   "camera": { "pitch": 56, "distance": 11.0, "fov": 38, "follow": 7.0, "lookAhead": 0.6 },
   "sprites": {
     "glow": 0.45, "lean": 24, "shadow": 0.32, "paintedHero": true, "paintedHeroHeight": 1.6,
@@ -421181,27 +424641,24 @@ body.scene { background-color: transparent; }
     "H": "item:potion_blue",
     "c": "item:coin",
     "s": "npc:sorcerer",
-    "v": "npc:villager",
     "k": "npc:king",
     "p": "npc:princess",
     "m": "npc:handmaiden",
     "Z": "monster:demonlord_vorkath",
-    "E": "event:ev_village_chapel_dust",
     "F": "event:ev_village_old_plough",
-    "G": "event:ev_common_rescue_lost_soldier",
     "P": "npc:chest_peddler",
     "O": "npc:crystal_oracle"
   },
   "tiles": [
     "###################",
     "#..#..............#",
-    "#..#..........v...#",
+    "#..#..............#",
     "#..#..#..#..####..#",
-    "#E....#........#..#",
+    "#.....#........#..#",
     "#.....#.h......#..#",
     "#############..#..#",
     "#...........#..#.X#",
-    "#...G.......#.2#.U#",
+    "#...........#.2#.U#",
     "#..####..####..####",
     "#...........P.....#",
     "#.......1.........#",
@@ -421554,7 +425011,7 @@ body.scene { background-color: transparent; }
     "c": "item:coin",
     "s": "npc:sorcerer",
     "v": "npc:villager",
-    "k": "npc:king",
+    "k": "event:ev_c6_cradles",
     "p": "npc:princess",
     "m": "npc:handmaiden",
     "1": "monster:slime",
@@ -421629,7 +425086,7 @@ body.scene { background-color: transparent; }
       "uid": "o6"
     }
   },
-  "theme": "crypt"
+  "theme": "crystal"
 }
 {
   "id": "stage_05",
@@ -421662,20 +425119,18 @@ body.scene { background-color: transparent; }
     "r": "door:red",
     "Y": "key:yellow",
     "B": "key:blue",
-    "R": "key:red",
+    "R": "event:ev_c7_star",
     "a": "item:gem_atk",
     "d": "item:gem_def",
     "h": "item:potion_red",
     "H": "item:potion_blue",
     "c": "item:coin",
     "s": "npc:sorcerer",
-    "v": "npc:villager",
     "k": "npc:king",
     "p": "npc:princess",
     "m": "npc:handmaiden",
     "Z": "monster:demonlord_vorkath",
-    "E": "event:ev_common_trap_rubble",
-    "F": "event:ev_common_rescue_lost_soldier"
+    "X": "monster:hollow_god"
   },
   "tiles": [
     "#########################",
@@ -421686,18 +425141,18 @@ body.scene { background-color: transparent; }
     "#.....#....a...#....5#..#",
     "#..#############..#..#..#",
     "#...........#.....#..#..#",
-    "#.v.........#.....#..#..#",
+    "#...........#.....#..#..#",
     "#..#..#..#..#######..#..#",
     "#..#..#...........#.....#",
     "#..#..#...........#....4#",
     "#..##########..#..#..#..#",
-    "#..#......F....#.....#..#",
     "#..#...........#.....#..#",
-    "#..#..#######..#..####..#",
-    "#..#.................#..#",
+    "#..#...........#.....#..#",
+    "##.#..#######..#..####..#",
+    "#RX#.................#..#",
     "#.U#.................#.4#",
     "####..#..####..#..####..#",
-    "#.....#..#..E..#..#.....#",
+    "#.....#..#.....#..#.....#",
     "#.....#..#.....#..#....D#",
     "#########################"
   ],
@@ -422698,8 +426153,8 @@ body.scene { background-color: transparent; }
     { "id": "ch_03", "title": "謊言之門", "seal": "daoji",  "floors": "F11-F15", "bossFloor": "F15", "bossStage": "stage03", "boss": "grimoox_warden" },
     { "id": "ch_04", "title": "沉睡者", "seal": "jindan", "floors": "F16-F20", "bossFloor": "F20", "bossStage": "stage04", "boss": "buried_colossus" },
     { "id": "ch_05", "title": "收集者軍營", "seal": "soul",   "floors": "F21-F25", "bossFloor": "F25", "bossStage": "stage05", "boss": "grey_mask" },
-    { "id": "ch_06", "title": "雙修之石", "seal": "yuanying",   "floors": "F36-F42", "bossFloor": "F42", "bossStage": "stage06", "boss": "twin_golem" },
-    { "id": "ch_07", "title": "王的副官", "seal": "fire",       "floors": "F43-F49", "bossFloor": "F49", "bossStage": "stage07", "boss": "traitor_captain" },
+    { "id": "ch_06", "title": "神殿", "seal": "yuanying", "floors": "F26-F30", "bossFloor": "F30", "bossStage": "stage04", "boss": "sanctum_warden" },
+    { "id": "ch_07", "title": "最後的抉擇", "seal": "fire", "floors": "F31-F35", "bossFloor": "F35", "bossStage": "stage05", "boss": "hollow_god" },
     { "id": "ch_08", "title": "第七次鐘聲", "seal": "shenshi",  "floors": "F50-F56", "bossFloor": "F56", "bossStage": "stage08", "boss": "bell_warden" },
     { "id": "ch_09", "title": "她的託付", "seal": "xinmo",      "floors": "F57-F63", "bossFloor": "F63", "bossStage": "stage09", "boss": "inner_qingxiao" },
     { "id": "ch_10", "title": "師兄", "seal": "digu",           "floors": "F64-F70", "bossFloor": "F70", "bossStage": "stage10", "boss": "demonlord_vorkath" }
@@ -422729,8 +426184,8 @@ body.scene { background-color: transparent; }
     "第三章：謊言之門 — 收集者的名冊、凱的妹妹、會說話的書，以及 L 的第二封信。",
     "第四章：沉睡者 — 古老的怪物認出了神裔；石龍的試煉、十二年前的雪夜，以及下巴有疤的少年。",
     "第五章：收集者軍營 — 被救的士兵、牢房裡的村民、凱的妹妹米菈，以及灰面——布蘭舅舅。殺他、放他、還是交給國王？",
-    "第六幕：雙修之石 — 元嬰之鎖。洞窟的雙首晶獸，問你晶石要獨取還是分予。",
-    "第七幕：王的副官 — 火劫之鎖。軍營的叛將，是你可以坦白前世的對象。",
+    "第六章：神殿 — 莉歐拉的鏡子、水晶搖籃裡的孩子、古老之神的聲音，以及爹娘：「我們只想要你有一個快樂的童年。」",
+    "第七章：最後的抉擇 — 凱守住大門、沃卡司的真相、最後的誘惑，以及星星：和莉歐拉一起點亮它，還是成為神？",
     "第八幕：第七次鐘聲 — 神識之鎖。神殿的鐘樓守衛，逼你選擇替誰承擔。",
     "第九幕：她的託付 — 心魔之鎖。王座前室的心魔·青霄，是你自己的前世。",
     "第十幕：師兄 — 帝骨之鎖。巫師王座的墨無殤，與你並不相同，也並非全然不同。"
@@ -422864,6 +426319,129 @@ body.scene { background-color: transparent; }
   "itemTable": ["potion_red", "potion_blue", "exp_up"]
 }
 {
+  "id": "ch_05",
+  "floors": [
+    "F21",
+    "F22",
+    "F23",
+    "F24",
+    "F25"
+  ],
+  "bossFloor": "F25",
+  "bossStage": "stage03",
+  "title": "story.ch05.title",
+  "desc": "story.ch05.desc",
+  "seal": "",
+  "beats": [
+    {
+      "id": "b_ch_05_boss",
+      "kind": "boss",
+      "floor": "F25",
+      "enemyId": "grey_mask"
+    }
+  ],
+  "grants": {
+    "skillPoints": 1
+  },
+  "choices": [],
+  "sideStoryHooks": [],
+  "exitConditions": {
+    "type": "stageCleared",
+    "stageId": "F26"
+  },
+  "enemyMix": [
+    "skeleton",
+    "wraith"
+  ],
+  "itemTable": [
+    "potion_red",
+    "potion_blue",
+    "exp_up"
+  ]
+}
+{
+  "id": "ch_06",
+  "floors": [
+    "F26",
+    "F27",
+    "F28",
+    "F29",
+    "F30"
+  ],
+  "bossFloor": "F30",
+  "bossStage": "stage04",
+  "title": "story.ch06.title",
+  "desc": "story.ch06.desc",
+  "seal": "",
+  "beats": [
+    {
+      "id": "b_ch_06_boss",
+      "kind": "boss",
+      "floor": "F30",
+      "enemyId": "sanctum_warden"
+    }
+  ],
+  "grants": {
+    "skillPoints": 1
+  },
+  "choices": [],
+  "sideStoryHooks": [],
+  "exitConditions": {
+    "type": "stageCleared",
+    "stageId": "F31"
+  },
+  "enemyMix": [
+    "skeleton",
+    "wraith"
+  ],
+  "itemTable": [
+    "potion_red",
+    "potion_blue",
+    "exp_up"
+  ]
+}
+{
+  "id": "ch_07",
+  "floors": [
+    "F31",
+    "F32",
+    "F33",
+    "F34",
+    "F35"
+  ],
+  "bossFloor": "F35",
+  "bossStage": "stage05",
+  "title": "story.ch07.title",
+  "desc": "story.ch07.desc",
+  "seal": "",
+  "beats": [
+    {
+      "id": "b_ch_07_boss",
+      "kind": "boss",
+      "floor": "F35",
+      "enemyId": "hollow_god"
+    }
+  ],
+  "grants": {
+    "skillPoints": 1
+  },
+  "choices": [],
+  "sideStoryHooks": [],
+  "exitConditions": {
+    "type": "stageCleared",
+    "stageId": "F36"
+  },
+  "enemyMix": [
+    "skeleton",
+    "wraith"
+  ],
+  "itemTable": [
+    "potion_red",
+    "potion_blue",
+    "exp_up"
+  ]
+}
+{
   "_comment": [
     "S3 — accumulator declarations (docs/STORY_DATA_SCHEMA.md section 2.3 / STORY_BIBLE.md 4.2).",
     "`displayAt` is the threshold at which the HUD shows the state WORD (never the number): the",
@@ -422906,6 +426484,26 @@ body.scene { background-color: transparent; }
   "resolutionOrder": "firstMatchWins",
   "fallback": "e_05",
   "endings": [
+    {
+      "id": "e_god", "name": "story.ending.e_god.name", "text": "story.ending.e_god.text",
+      "tone": "dark", "allowsRebirth": false, "unlocksHint": "",
+      "requires": {"all": [{"type": "runFlagSet", "flag": "c7.took_power"}]}
+    },
+    {
+      "id": "e_secret", "name": "story.ending.e_secret.name", "text": "story.ending.e_secret.text",
+      "tone": "secret-good", "allowsRebirth": false, "unlocksHint": "",
+      "requires": {"all": [{"type": "runFlagSet", "flag": "c7.star_lit"}, {"type": "runFlagSet", "flag": "home.parents"}, {"type": "runFlagSet", "flag": "home.children"}, {"type": "runFlagSet", "flag": "home.mira"}, {"type": "runFlagSet", "flag": "home.healer"}, {"type": "runFlagSet", "flag": "home.baker"}, {"type": "runFlagSet", "flag": "c4.slime_king"}, {"type": "runFlagSet", "flag": "c6.mirror"}, {"not": {"type": "runFlagSet", "flag": "c5.bran_killed"}}, {"type": "counterAtLeast", "counter": "mercy", "min": 4}]}
+    },
+    {
+      "id": "e_avenger", "name": "story.ending.e_avenger.name", "text": "story.ending.e_avenger.text",
+      "tone": "good-bittersweet", "allowsRebirth": false, "unlocksHint": "",
+      "requires": {"any": [{"type": "runFlagSet", "flag": "c5.bran_killed"}, {"type": "counterAtLeast", "counter": "vengeance", "min": 4}]}
+    },
+    {
+      "id": "e_home", "name": "story.ending.e_home.name", "text": "story.ending.e_home.text",
+      "tone": "good", "allowsRebirth": false, "unlocksHint": "",
+      "requires": {"type": "always"}
+    },
     {
       "id": "e_01", "name": "story.ending.e01.name", "text": "story.ending.e01.text",
       "tone": "secret-good", "allowsRebirth": true, "unlocksHint": "hint_e01_cycle",
@@ -428539,7 +432137,7 @@ body.scene { background-color: transparent; }
 }
 {
   "id": "F26",
-  "act": "ch_04",
+  "act": "ch_06",
   "indexInAct": 5,
   "name": "story.f26.name",
   "seal": "jindan",
@@ -428679,15 +432277,10 @@ body.scene { background-color: transparent; }
     "a": "item:exp_up",
     "d": "item:potion_blue",
     "h": "item:potion_red",
-    "E": "event:ev_common_whisper_old_road",
+    "E": "event:ev_c6_mirror_voice",
     "F": "event:ev_common_cache_wall_v3",
-    "G": "event:ev_common_merchant_echo_ash_v5",
-    "I": "event:ev_library_torn_page_v4",
-    "J": "event:ev_library_shelf_collapse_v3",
-    "K": "event:ev_library_torn_page_v2",
     "Y": "key:yellow",
     "y": "door:yellow",
-    "S": "npc:skeleton_scholar",
     "A": "monster:bone_archer",
     "C": "monster:grave_rat",
     "H": "monster:zombie",
@@ -428696,13 +432289,13 @@ body.scene { background-color: transparent; }
   "tiles": [
     "###################################",
     "#....................y...........##",
-    "#....2..H..A..2..C..Ey.F..G..I..J##",
+    "#....2..H..A..2..C..Ey.F.........##",
     "####..#..#..#######..#..####..#..##",
     "#..#.....#........#..#.....#..#..##",
-    "#..#.L...#........#..#.....#..#.K##",
+    "#..#.L...#........#..#.....#..#..##",
     "#..#..#..##########..#..#######..##",
     "#.....#.....#.....#.....#........##",
-    "#....1#.....#.....#.....#.......S##",
+    "#....1#.....#.....#.....#........##",
     "#..#..####..####..#..####..#..#..##",
     "#..#.....#...........#.....#.....##",
     "#..#.C...#...........#.....#....a##",
@@ -428819,11 +432412,11 @@ body.scene { background-color: transparent; }
       "uid": "o28"
     }
   },
-  "theme": "crypt"
+  "theme": "crystal"
 }
 {
   "id": "F27",
-  "act": "ch_04",
+  "act": "ch_06",
   "indexInAct": 6,
   "name": "story.f27.name",
   "seal": "jindan",
@@ -428950,19 +432543,15 @@ body.scene { background-color: transparent; }
     "a": "item:exp_up",
     "d": "item:potion_blue",
     "h": "item:potion_red",
-    "E": "event:ev_library_torn_page",
+    "E": "event:ev_c6_pip_holywater",
     "F": "event:ev_common_cache_wall_v3",
-    "G": "event:ev_common_trap_rubble_v4",
-    "I": "event:ev_library_shelf_collapse_v3",
-    "J": "event:ev_library_scholar_whisper_v4",
-    "K": "event:ev_library_torn_page_v4",
+    "I": "event:ev_c6_shard2",
     "Y": "key:yellow",
     "y": "door:yellow",
     "A": "monster:ghoul",
     "C": "monster:grave_rat",
     "H": "monster:zombie",
-    "L": "monster:mummy",
-    "M": "npc:monk"
+    "L": "monster:mummy"
   },
   "tiles": [
     "###################################",
@@ -428973,9 +432562,9 @@ body.scene { background-color: transparent; }
     "#.....#..#..#.....#..#.....#..#..##",
     "#######..#..####..####..#..####..##",
     "#.......................#.....#..##",
-    "#....a..K..J..I..G......#.....#..##",
+    "#....a........I.........#.....#..##",
     "#..#..##########..#######..########",
-    "#..........M#...........#.....#..##",
+    "#...........#...........#.....#..##",
     "#....a..d..d#....F..E..A#.....#..##",
     "#..#..####..#..####..#yy#..#..#..##",
     "#..#..#...........#..#..#........##",
@@ -429094,11 +432683,11 @@ body.scene { background-color: transparent; }
       "uid": "o29"
     }
   },
-  "theme": "crypt"
+  "theme": "crystal"
 }
 {
   "id": "F28",
-  "act": "ch_04",
+  "act": "ch_06",
   "indexInAct": 7,
   "name": "story.f28.name",
   "seal": "jindan",
@@ -429177,7 +432766,7 @@ body.scene { background-color: transparent; }
 }
 {
   "id": "F29",
-  "act": "ch_05",
+  "act": "ch_06",
   "indexInAct": 1,
   "name": "story.f29.name",
   "seal": "soul",
@@ -429309,22 +432898,17 @@ body.scene { background-color: transparent; }
     "d": "item:potion_blue",
     "h": "item:potion_red",
     "H": "item:scroll",
-    "E": "event:ev_crypt_choir_echo_v4",
+    "E": "event:ev_c6_god_voice",
     "F": "event:ev_common_cache_wall_v2",
-    "G": "event:ev_common_trap_rubble",
-    "I": "event:ev_common_cache_wall",
-    "J": "event:ev_common_shard_wandering_v3",
-    "K": "event:ev_common_cache_wall_v4",
-    "L": "event:ev_crypt_choir_echo_v2",
+    "J": "event:ev_c6_shard3",
     "Y": "key:yellow",
     "y": "door:yellow",
-    "A": "monster:ghost_maiden",
-    "C": "npc:oracle"
+    "A": "monster:ghost_maiden"
   },
   "tiles": [
     "####################################",
     "#..............#...........#..#..###",
-    "#.H..H..I..J..K#.L..D..a..a#.d#.d###",
+    "#.H..H.....J...#....D..a..a#.d#.d###",
     "#..####..#..#######..#..#..#..#..###",
     "#.....#.....#........#.....#.....###",
     "#.h..h#.....#....A..Y#.....#.....###",
@@ -429336,10 +432920,10 @@ body.scene { background-color: transparent; }
     "#..........A..A..A...#...........###",
     "#..#######..#######..#..#..#..######",
     "#..#........#..#.....#..#........###",
-    "#..#.......A#..#.....#..#C.......###",
+    "#..#.......A#..#.....#..#........###",
     "#..####..#..#..#..####..############",
     "#.....#..#..#..y..#.....#.....#..###",
-    "#.....#..#.A#.Ay.A#.....#.U..G#..###",
+    "#.....#..#.A#.Ay.A#.....#.U...#..###",
     "#..#######..#..#..##########..#..###",
     "#........#.....#.....#.....#..#..###",
     "#........#.1..A#.A..2#.2..2#.F#..###",
@@ -429473,11 +433057,11 @@ body.scene { background-color: transparent; }
       "uid": "o36"
     }
   },
-  "theme": "shadow"
+  "theme": "crystal"
 }
 {
   "id": "F30",
-  "act": "ch_05",
+  "act": "ch_06",
   "indexInAct": 2,
   "name": "story.f30.name",
   "seal": "soul",
@@ -429610,22 +433194,17 @@ body.scene { background-color: transparent; }
     "d": "item:potion_blue",
     "h": "item:potion_red",
     "H": "item:scroll",
-    "E": "event:ev_common_relic_road_v4",
     "F": "event:ev_common_cache_wall_v2",
-    "G": "event:ev_common_trap_rubble_v2",
-    "I": "event:ev_common_merchant_echo_ash_v2",
-    "J": "event:ev_crypt_ten_year_candle_v4",
-    "K": "event:ev_common_shard_wandering",
-    "L": "event:ev_crypt_nameless_brick_v4",
     "Y": "key:yellow",
     "y": "door:yellow",
     "A": "monster:vampire_bat",
     "C": "monster:ghost_maiden",
-    "M": "npc:fortune_teller"
+    "X": "monster:sanctum_warden",
+    "R": "event:ev_c6_family"
   },
   "tiles": [
     "#####################################",
-    "#...........#.....#.....#........#M.#",
+    "#...........#.....#.....#........#..#",
     "#.a..a..d..d#.h..h#.....#........#..#",
     "####..####..####..####..####..####..#",
     "#..#..#.....#.....#.....#........#..#",
@@ -429644,10 +433223,10 @@ body.scene { background-color: transparent; }
     "#....C..2...#.....#.....#.D.........#",
     "####..################..#..#..#..#..#",
     "#...........#.....#..#........#..#..#",
-    "#....E..F..G#.I..J#.U#........#..#..#",
+    "#.......F...#.....#RU#........#..#..#",
     "#..#######..#..#..#..#..####..#..####",
-    "#........#.....#.....#.....#........#",
-    "#........#.H..H#.K..L#.....#........#",
+    "#........#.....#...X##.....#........#",
+    "#........#.H..H#.....#.....#........#",
     "#####################################",
     "#####################################",
     "#####################################"
@@ -429763,11 +433342,11 @@ body.scene { background-color: transparent; }
       "uid": "o32"
     }
   },
-  "theme": "shadow"
+  "theme": "crystal"
 }
 {
   "id": "F31",
-  "act": "ch_05",
+  "act": "ch_07",
   "indexInAct": 3,
   "name": "story.f31.name",
   "seal": "soul",
@@ -429904,29 +433483,24 @@ body.scene { background-color: transparent; }
     "d": "item:potion_blue",
     "h": "item:potion_red",
     "H": "item:scroll",
-    "E": "event:ev_common_relic_road_v4",
+    "E": "event:ev_c7_kai",
     "F": "event:ev_common_cache_wall_v5",
-    "G": "event:ev_common_trap_rubble",
-    "I": "event:ev_common_shard_wandering_v3",
-    "J": "event:ev_common_rescue_lost_soldier_v2",
-    "K": "event:ev_common_trap_rubble_v3",
-    "L": "event:ev_common_rescue_lost_soldier_v3",
+    "J": "event:ev_c7_pip_final",
     "Y": "key:yellow",
     "y": "door:yellow",
     "A": "monster:shadow_assassin",
-    "C": "monster:ghost_maiden",
-    "M": "npc:pilgrim"
+    "C": "monster:ghost_maiden"
   },
   "tiles": [
     "######################################",
     "#..#..#..#.....#..#...........#.....##",
-    "#.a#.d#.d#.h..h#..#.H..H..I...#.....##",
+    "#.a#.d#.d#.h..h#..#.H..H......#.....##",
     "#..#..#..#..#..#..#..####..####..#####",
     "#...........#..#.....#..#...........##",
-    "#...........#..#....G#..#.J..K..L..a##",
+    "#...........#..#.....#..#.J........a##",
     "#######..#######..#..#..#..#######..##",
     "#...........#........#.....#.....#..##",
-    "#M..........#.A..E..F#.....#.....#.U##",
+    "#...........#.A..E..F#.....#.....#.U##",
     "####..#..#..#..####..#######..#..#####",
     "#..#..#..y.....#.....#..#..#..#..#..##",
     "#..#..#.Cy.C..A#.....#..#..#..#..#..##",
@@ -430064,7 +433638,7 @@ body.scene { background-color: transparent; }
 }
 {
   "id": "F32",
-  "act": "ch_05",
+  "act": "ch_07",
   "indexInAct": 4,
   "name": "story.f32.name",
   "seal": "soul",
@@ -430199,20 +433773,14 @@ body.scene { background-color: transparent; }
     "d": "item:potion_blue",
     "h": "item:potion_red",
     "H": "item:scroll",
-    "E": "event:ev_crypt_ten_year_candle",
+    "E": "event:ev_c7_liora_door",
     "F": "event:ev_common_cache_wall_v4",
-    "G": "event:ev_crypt_choir_echo",
-    "I": "event:ev_crypt_nameless_brick",
-    "J": "event:ev_common_shard_wandering_v2",
-    "K": "event:ev_common_relic_road",
-    "L": "event:ev_crypt_choir_echo_v2",
     "Y": "key:yellow",
     "y": "door:yellow",
     "A": "monster:banshee",
     "C": "monster:ghost_maiden",
     "M": "monster:shadow_assassin",
-    "N": "monster:vampire_bat",
-    "O": "npc:healer"
+    "N": "monster:vampire_bat"
   },
   "tiles": [
     "######################################",
@@ -430229,16 +433797,16 @@ body.scene { background-color: transparent; }
     "#....................#.....#..#.1..A##",
     "#..#..#..#..#######..#..#..####..#..##",
     "#..#..#..#..............#..#........##",
-    "#..#..#O.#..............#..#.......C##",
+    "#..#..#..#..............#..#.......C##",
     "##########..#..####..#############..##",
     "#........#.....#........#..#..#.....##",
-    "#.L..K...#.....#........#..#..#....1##",
+    "#........#.....#........#..#..#....1##",
     "#..#..#..################..#..####..##",
     "#..#..#..#.....#..y..#..#...........##",
-    "#.U#.J#..#.....#.2y.N#..#..........M##",
+    "#.U#..#..#.....#.2y.N#..#..........M##",
     "####..#..#..####..#..#..##########..##",
     "#.....#.....#.......................##",
-    "#....I#.G..F#.C..2..M..2..2..A..M..A##",
+    "#.....#....F#.C..2..M..2..2..A..M..A##",
     "#..#..#..#..#..####..#..####..#..#..##",
     "#..#.....#........#..#..#.....#.....##",
     "#..#.H..H#.E..A...#..#..#.....#.....##",
@@ -430365,7 +433933,7 @@ body.scene { background-color: transparent; }
 }
 {
   "id": "F33",
-  "act": "ch_05",
+  "act": "ch_07",
   "indexInAct": 5,
   "name": "story.f33.name",
   "seal": "soul",
@@ -430514,26 +434082,22 @@ body.scene { background-color: transparent; }
     "d": "item:potion_blue",
     "h": "item:potion_red",
     "H": "item:scroll",
-    "E": "event:ev_common_whisper_old_road",
     "F": "event:ev_common_cache_wall_v2",
-    "G": "event:ev_common_rescue_lost_soldier_v3",
-    "I": "event:ev_common_whisper_old_road_v4",
-    "J": "event:ev_common_shard_wandering_v5",
-    "K": "event:ev_common_merchant_echo_ash_v3",
-    "L": "event:ev_common_trap_rubble_v2",
     "Y": "key:yellow",
     "y": "door:yellow",
     "A": "monster:skull_knight",
     "C": "monster:vampire_bat",
     "M": "monster:banshee",
     "N": "monster:shadow_assassin",
-    "O": "monster:ghost_maiden"
+    "O": "monster:ghost_maiden",
+    "X": "monster:vorkath_king",
+    "R": "event:ev_c7_vorkath"
   },
   "tiles": [
     "#######################################",
     "#...........#..............#........###",
-    "#...........#..............#.U.....h###",
-    "####..#..#############..#..#######..###",
+    "#...........#..............#.U....Rh###",
+    "####..#..#############..#..#######X####",
     "#.......................#.....#..#..###",
     "#.......................#.....#..#.h###",
     "#..####..#..##########..#..#..#..#..###",
@@ -430544,16 +434108,16 @@ body.scene { background-color: transparent; }
     "#.....#.C..M...#.....#.O..A..N#.a..a###",
     "####..#..#..####..####..#..#..####..###",
     "#..#.....#..............#..#..#.....###",
-    "#..#.1..1#.A..1..M..2..A#..#.O#.K..L###",
+    "#..#.1..1#.A..1..M..2..A#..#.O#.....###",
     "#..#..#######..#######..####yy#..######",
     "#........#........#.....#..#..#..#..###",
-    "#....O...#........#.....#..#.2#.J#..###",
+    "#....O...#........#.....#..#.2#..#..###",
     "####..#############..#..#..#..#..#..###",
     "#..#.....#...........#..#.....#.....###",
-    "#.D#.M...#...........#..#.F..E#.I...###",
+    "#.D#.M...#...........#..#.F...#.....###",
     "#..#..#######..#..#..####..####..#..###",
     "#.................#.....#........#..###",
-    "#.Y..1............#.....#.G..H..H#..###",
+    "#.Y..1............#.....#....H..H#..###",
     "#######..#..##########..#..#######..###",
     "#........#..............#..#........###",
     "#........#..............#..#........###",
@@ -430683,7 +434247,7 @@ body.scene { background-color: transparent; }
 }
 {
   "id": "F34",
-  "act": "ch_05",
+  "act": "ch_07",
   "indexInAct": 6,
   "name": "story.f34.name",
   "seal": "soul",
@@ -430820,13 +434384,8 @@ body.scene { background-color: transparent; }
     "d": "item:potion_blue",
     "h": "item:potion_red",
     "H": "item:scroll",
-    "E": "event:ev_common_whisper_old_road_v4",
+    "E": "event:ev_c7_temptation",
     "F": "event:ev_common_cache_wall_v3",
-    "G": "event:ev_crypt_choir_echo",
-    "I": "event:ev_common_trap_rubble_v4",
-    "J": "event:ev_crypt_choir_echo_v2",
-    "K": "event:ev_common_merchant_echo_ash_v3",
-    "L": "event:ev_common_trap_rubble_v5",
     "Y": "key:yellow",
     "y": "door:yellow",
     "A": "monster:lich",
@@ -430834,8 +434393,7 @@ body.scene { background-color: transparent; }
     "M": "monster:ghost_maiden",
     "N": "monster:banshee",
     "O": "monster:skull_knight",
-    "P": "monster:shadow_assassin",
-    "Q": "npc:wandering_mage"
+    "P": "monster:shadow_assassin"
   },
   "tiles": [
     "########################################",
@@ -430852,13 +434410,13 @@ body.scene { background-color: transparent; }
     "#.......E...#.P..1..1..A#.C#..#........#",
     "#######..#############..#..#..#..#..#..#",
     "#..............#...........#..#..#.....#",
-    "#.H..G..F......#.......A..C#..#..#.....#",
+    "#.H.....F......#.......A..C#..#..#.....#",
     "#..#..##########..####..####..#..####..#",
-    "#..#.......Q#.....#.....#.....#..#..#..#",
-    "#.H#.K..L..a#.....#.....#.....#..#..#..#",
+    "#..#........#.....#.....#.....#..#..#..#",
+    "#.H#.......a#.....#.....#.....#..#..#..#",
     "#..#..####..#..##########..####..#..####",
     "#........#..............#........#.....#",
-    "#.I..J...#.a..d..d..h..U#........#.....#",
+    "#........#.a..d..d..h..U#........#.....#",
     "#######..##########..#..#..#..#..####..#",
     "#........#..#.....#.....#.....#........#",
     "#........#..#.....#.....#.....#........#",
@@ -430994,7 +434552,7 @@ body.scene { background-color: transparent; }
 }
 {
   "id": "F35",
-  "act": "ch_05",
+  "act": "ch_07",
   "indexInAct": 7,
   "name": "story.f35.name",
   "seal": "soul",
@@ -442945,7 +446503,15 @@ body.scene { background-color: transparent; }
   "_categories": [
     "elder",
     "chapter3"
-  ]
+  ],
+  "mirror_shards": {
+    "type": "int",
+    "default": 0,
+    "scope": "run",
+    "min": 0,
+    "max": 3,
+    "category": "chapter6"
+  }
 }
 {
   "schemaVersion": 1,
@@ -444300,6 +447866,18 @@ body.scene { background-color: transparent; }
       "zh_TW": "戰鬥速度：{x} 倍",
       "en": "Battle speed: x{x}"
     },
+    "battle.gauntlet_reward": {
+      "zh_TW": "+{gold} 金幣・+{exp} 經驗",
+      "en": "+{gold} gold · +{exp} EXP"
+    },
+    "battle.gauntlet_boss": {
+      "zh_TW": "頭目 ？",
+      "en": "BOSS ?"
+    },
+    "settings.view_scale": {
+      "zh_TW": "畫面範圍：{x} 倍",
+      "en": "View size: x{x}"
+    },
     "store.toast_gear_worn": {
       "zh_TW": "已購買並裝備：{name}（可在「裝備」分頁更換）",
       "en": "Bought and worn: {name} (change it in the Equipment tab)"
@@ -445364,6 +448942,238 @@ body.scene { background-color: transparent; }
       "zh_TW": "面具裂開了。",
       "en": "The mask cracks open."
     },
+    "story.ch05.desc": {
+      "zh_TW": "灰面、牢房裡的村民，以及大抉擇。",
+      "en": "Grey Mask, the villagers in the cells, and the big choice."
+    },
+    "story.ch06.title": {
+      "zh_TW": "神殿",
+      "en": "The Sanctum"
+    },
+    "story.ch06.desc": {
+      "zh_TW": "莉歐拉的鏡子、被抓的孩子，以及爹娘。",
+      "en": "Liora's mirror, the taken children, and Mom and Dad."
+    },
+    "story.ch07.title": {
+      "zh_TW": "最後的抉擇",
+      "en": "The Final Choice"
+    },
+    "story.ch07.desc": {
+      "zh_TW": "沃卡司、古老之神，以及安穩之星。",
+      "en": "Vorkath, the old god, and the Star of Peace."
+    },
+    "npc.children.name": {
+      "zh_TW": "被抓走的孩子們",
+      "en": "The taken children"
+    },
+    "mission.m_c6_mirrors.title": {
+      "zh_TW": "莉歐拉的鏡子",
+      "en": "Liora's Mirror"
+    },
+    "mission.m_c6_mirrors.desc": {
+      "zh_TW": "在神殿裡找回三片碎鏡。",
+      "en": "Find the three mirror shards in the Sanctum."
+    },
+    "ev_c6_mirror_voice.title": {
+      "zh_TW": "鏡子裡的女孩",
+      "en": "The Girl in the Mirror"
+    },
+    "ev_c6_mirror_voice.desc": {
+      "zh_TW": "莉歐拉的聲音。",
+      "en": "Liora's voice."
+    },
+    "ev_c6_mirror_voice.text": {
+      "zh_TW": "鏡子裡有人。",
+      "en": "Someone is in the mirror."
+    },
+    "ev_c6_shard2.title": {
+      "zh_TW": "第二片碎鏡",
+      "en": "The Second Shard"
+    },
+    "ev_c6_shard2.desc": {
+      "zh_TW": "長椅底下有光。",
+      "en": "Light under a pew."
+    },
+    "ev_c6_shard2.text": {
+      "zh_TW": "一片碎鏡。",
+      "en": "A mirror shard."
+    },
+    "ev_c6_shard3.title": {
+      "zh_TW": "最後一片碎鏡",
+      "en": "The Last Shard"
+    },
+    "ev_c6_shard3.desc": {
+      "zh_TW": "卡在石縫裡。",
+      "en": "Wedged between the stones."
+    },
+    "ev_c6_shard3.text": {
+      "zh_TW": "一片碎鏡。",
+      "en": "A mirror shard."
+    },
+    "ev_c6_mirror_whole.title": {
+      "zh_TW": "完整的鏡子",
+      "en": "The Whole Mirror"
+    },
+    "ev_c6_mirror_whole.desc": {
+      "zh_TW": "莉歐拉的真相。",
+      "en": "Liora's truth."
+    },
+    "ev_c6_mirror_whole.text": {
+      "zh_TW": "鏡子完整了。",
+      "en": "The mirror is whole."
+    },
+    "ev_c6_pip_holywater.title": {
+      "zh_TW": "神殿聖水",
+      "en": "Sanctum Holy Water"
+    },
+    "ev_c6_pip_holywater.desc": {
+      "zh_TW": "五枚金幣一瓶。",
+      "en": "Five gold a bottle."
+    },
+    "ev_c6_pip_holywater.text": {
+      "zh_TW": "神明親手祝福！",
+      "en": "Blessed by the gods themselves!"
+    },
+    "ev_c6_cradles.title": {
+      "zh_TW": "水晶搖籃",
+      "en": "The Crystal Cradles"
+    },
+    "ev_c6_cradles.desc": {
+      "zh_TW": "名冊上的孩子們。",
+      "en": "The children from the ledger."
+    },
+    "ev_c6_cradles.text": {
+      "zh_TW": "他們還在呼吸。",
+      "en": "They're still breathing."
+    },
+    "ev_c6_god_voice.title": {
+      "zh_TW": "古老的聲音",
+      "en": "The Old Voice"
+    },
+    "ev_c6_god_voice.desc": {
+      "zh_TW": "聽它說，還是叫它滾？",
+      "en": "Hear it out, or tell it to go?"
+    },
+    "ev_c6_god_voice.text": {
+      "zh_TW": "神裔。回家吧。",
+      "en": "Godborn. Come home."
+    },
+    "ev_c6_family.title": {
+      "zh_TW": "爹娘",
+      "en": "Mom and Dad"
+    },
+    "ev_c6_family.desc": {
+      "zh_TW": "發光的籠子裡。",
+      "en": "Inside the glowing cage."
+    },
+    "ev_c6_family.text": {
+      "zh_TW": "……媽？爸？",
+      "en": "...Mom? Dad?"
+    },
+    "ev_c7_kai.title": {
+      "zh_TW": "凱守住大門",
+      "en": "Kai Holds the Door"
+    },
+    "ev_c7_kai.desc": {
+      "zh_TW": "信任。",
+      "en": "Trust."
+    },
+    "ev_c7_kai.text": {
+      "zh_TW": "凱停下了腳步。",
+      "en": "Kai stops."
+    },
+    "ev_c7_pip_final.title": {
+      "zh_TW": "皮普的分紅",
+      "en": "Pip's Dividend"
+    },
+    "ev_c7_pip_final.desc": {
+      "zh_TW": "還記得森林裡的投資嗎？",
+      "en": "Remember the investment in the forest?"
+    },
+    "ev_c7_pip_final.text": {
+      "zh_TW": "沉甸甸的錢袋。",
+      "en": "A heavy money bag."
+    },
+    "ev_c7_liora_door.title": {
+      "zh_TW": "門後的莉歐拉",
+      "en": "Liora Behind the Door"
+    },
+    "ev_c7_liora_door.desc": {
+      "zh_TW": "一起點亮星星。",
+      "en": "Light the Star together."
+    },
+    "ev_c7_liora_door.text": {
+      "zh_TW": "門上刻著一隻手。",
+      "en": "A hand is carved into the door."
+    },
+    "ev_c7_vorkath.title": {
+      "zh_TW": "沃卡司的真相",
+      "en": "Vorkath's Truth"
+    },
+    "ev_c7_vorkath.desc": {
+      "zh_TW": "放過他，還是不？",
+      "en": "Spare him, or not?"
+    },
+    "ev_c7_vorkath.text": {
+      "zh_TW": "王冠滾到一邊。",
+      "en": "The crown rolls away."
+    },
+    "ev_c7_temptation.title": {
+      "zh_TW": "最後的誘惑",
+      "en": "The Last Temptation"
+    },
+    "ev_c7_temptation.desc": {
+      "zh_TW": "它用媽媽的聲音說話。",
+      "en": "It speaks in your mother's voice."
+    },
+    "ev_c7_temptation.text": {
+      "zh_TW": "里歐。",
+      "en": "Leo."
+    },
+    "ev_c7_star.title": {
+      "zh_TW": "安穩之星",
+      "en": "The Star of Peace"
+    },
+    "ev_c7_star.desc": {
+      "zh_TW": "最後的抉擇。",
+      "en": "The final choice."
+    },
+    "ev_c7_star.text": {
+      "zh_TW": "星星裂成兩半。",
+      "en": "The Star is split in two."
+    },
+    "story.ending.e_home.name": {
+      "zh_TW": "回家",
+      "en": "Home"
+    },
+    "story.ending.e_home.text": {
+      "zh_TW": "星星亮了。你和莉歐拉走下長長的塔，凱在門口等著，滿身是傷，笑得很開心。村子裡的燉肉剛好煮好。爸爸問你有沒有好好吃飯，媽媽沒有問任何問題，只是一直抱著你。燒掉的房子一間一間蓋了回來。你不再是神裔了——你只是里歐。這樣就夠了。",
+      "en": "The Star is lit. You and Liora walk down the long tower, and Kai is waiting at the door, battered and grinning. In the village the stew is just ready. Dad asks if you've been eating properly. Mom asks nothing at all, and just holds on to you. One by one, the burned houses are built again. You are not Godborn any more. You are just Leo. And that is enough."
+    },
+    "story.ending.e_avenger.name": {
+      "zh_TW": "復仇者",
+      "en": "The Avenger"
+    },
+    "story.ending.e_avenger.text": {
+      "zh_TW": "星星亮了，王國得救了。人們叫你英雄。可是你的手掌偶爾還會在夜裡發燙，你記得布蘭閉上眼睛的樣子，記得那份冰冷。村子重建了，爹娘也回家了，你也回家了。只是有時候，你會一個人坐在燒焦的老橡樹下，很久很久。",
+      "en": "The Star is lit and the kingdom is saved. People call you a hero. But sometimes, at night, your palms still burn, and you remember the way Bran closed his eyes, and that coldness. The village is rebuilt, your parents are home, and so are you. Only sometimes you sit alone under the old scorched oak, for a long, long time."
+    },
+    "story.ending.e_god.name": {
+      "zh_TW": "神",
+      "en": "The God"
+    },
+    "story.ending.e_god.text": {
+      "zh_TW": "塔頂的星星永遠暗了。一個新的神坐上了王座，它有一張年輕的臉，一雙發光的手。它再也不會失去任何人——因為它再也不在乎任何人。很遠很遠的地方，一間小小的農舍裡，灶上的燉肉一直放到涼。",
+      "en": "The Star at the top of the tower is dark for ever. A new god sits on the throne. It has a young face and hands that glow. It will never lose anyone again, because it no longer cares for anyone. Far, far away, in a small farmhouse, a pot of stew sits on the stove until it goes cold."
+    },
+    "story.ending.e_secret.name": {
+      "zh_TW": "大家都回家了",
+      "en": "Everyone Home"
+    },
+    "story.ending.e_secret.text": {
+      "zh_TW": "星星亮了。那天晚上，整個村子在廣場上辦了一場宴會：麵包師烤了一座城堡那麼大的麵包，晃晃爵士和史萊姆大軍跳了舞，皮普收了每個人的入場費，米菈和孩子們唱歌，凱終於笑出聲來。布蘭站在人群最後面，媽媽走過去，牽起弟弟的手。莉歐拉坐在你旁邊，問你：「那，接下來要去哪裡？」你咬了一口燉肉，說：「哪裡都不去。我到家了。」",
+      "en": "The Star is lit. That night the whole village throws a feast in the square: the baker bakes a loaf as big as a castle, Sir Wobbles and the slime army dance, Pip charges everyone an entrance fee, Mira and the children sing, and Kai finally laughs out loud. Bran stands at the very back of the crowd, until Mom walks over and takes her little brother's hand. Liora sits beside you and asks, \"So, where to next?\" You take a bite of stew and say: \"Nowhere. I'm home.\""
+    },
     "mission.started": {
       "zh_TW": "接下任務：{title}",
       "en": "Quest started: {title}",
@@ -445545,8 +449355,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "ev_common_relic_chipped_blade.text": {
-      "zh_TW": "缺口的位置，剛好是你腰間那把劍的另一半。",
-      "en": "The notch in the blade is exactly the shape of the other half of the sword at your hip.",
+      "zh_TW": "一把收集者的斷劍，刃口砍在石頭上缺了一塊。有人在這裡反抗過。",
+      "en": "A broken Collector sword, its edge chipped where it struck stone. Someone fought back here.",
       "zh_CN": "缺口的位置，剛好是你腰間那把劍的另一半。",
       "ja": "缺口的位置，剛好是你腰間那把劍的另一半。",
       "ko": "缺口的位置，剛好是你腰間那把劍的另一半。",
@@ -445818,8 +449628,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "ev_forest_hunter_cache.text": {
-      "zh_TW": "獵人藏糧的樹洞裡多了一封信。",
-      "en": "In the tree hollow where the hunter hides food, there is a letter now as well.",
+      "zh_TW": "獵人藏糧的樹洞裡有肉乾和水袋，還有一張字條：「給後面來的人。」",
+      "en": "In the tree hollow where the hunter hides food: dried meat, a waterskin, and a note: \"For whoever comes after.\"",
       "zh_CN": "獵人藏糧的樹洞裡多了一封信。",
       "ja": "獵人藏糧的樹洞裡多了一封信。",
       "ko": "獵人藏糧的樹洞裡多了一封信。",
@@ -445903,8 +449713,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "ev_forest_trap_net.text": {
-      "zh_TW": "網上掛著一件很新的外袍。",
-      "en": "A very new cloak hangs in the net.",
+      "zh_TW": "兩棵樹之間張著一張收集者的網。有什麼東西不久前才從裡面掙脫。",
+      "en": "A Collectors' net is strung between two trees. Something tore its way out of it not long ago.",
       "zh_CN": "網上掛著一件很新的外袍。",
       "ja": "網上掛著一件很新的外袍。",
       "ko": "網上掛著一件很新的外袍。",
@@ -446005,8 +449815,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "ev_gate_quartermaster_cache.text": {
-      "zh_TW": "軍需箱上的封條蓋著你前世的印。",
-      "en": "The seal on the quartermaster's crate bears your stamp from a past life.",
+      "zh_TW": "收集者的軍需箱，封條已經破了。裡面是給士兵的乾糧。",
+      "en": "The Collectors' supply chest. Its seal is already broken; inside are the soldiers' rations.",
       "zh_CN": "軍需箱上的封條蓋著你前世的印。",
       "ja": "軍需箱上的封條蓋著你前世的印。",
       "ko": "軍需箱上的封條蓋著你前世的印。",
@@ -446158,8 +449968,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "ev_village_old_plough.text": {
-      "zh_TW": "犁頭上纏著一段十年前的布。",
-      "en": "A strip of cloth from ten years ago is wound around the ploughshare.",
+      "zh_TW": "爸爸的舊犁，被搶的人拖到了這裡。你摸了摸那根被磨亮的握把。",
+      "en": "Dad's old plough, dragged up here by the raiders. You run your hand along its worn, polished handle.",
       "zh_CN": "犁頭上纏著一段十年前的布。",
       "ja": "犁頭上纏著一段十年前的布。",
       "ko": "犁頭上纏著一段十年前的布。",
@@ -446695,56 +450505,56 @@ body.scene { background-color: transparent; }
       "es": "藏書閣・殘卷架"
     },
     "story.f26.intro": {
-      "zh_TW": "最底層的書庫終年不見光，卻有人替它點著一盞燈。",
-      "en": "The library: the lowest stack",
+      "zh_TW": "白色的階梯一路往上，每一階都刻著祈禱文。",
+      "en": "White steps climb upward, a prayer carved into every one.",
       "zh_CN": "最底層的書庫終年不見光，卻有人替它點著一盞燈。",
       "ja": "最底層的書庫終年不見光，卻有人替它點著一盞燈。",
       "ko": "最底層的書庫終年不見光，卻有人替它點著一盞燈。",
       "es": "最底層的書庫終年不見光，卻有人替它點著一盞燈。"
     },
     "story.f26.name": {
-      "zh_TW": "藏書閣・最底層書庫",
-      "en": "The library: the lowest stack",
+      "zh_TW": "神殿的階梯",
+      "en": "The Sanctum Steps",
       "zh_CN": "藏書閣・最底層書庫",
       "ja": "藏書閣・最底層書庫",
       "ko": "藏書閣・最底層書庫",
       "es": "藏書閣・最底層書庫"
     },
     "story.f27.intro": {
-      "zh_TW": "封存室的門從裡面反鎖著，鑰匙孔還卡著半截骨指。",
-      "en": "The library: the sealed archive",
+      "zh_TW": "長椅上積滿了灰。有人在門口擺了一張桌子。",
+      "en": "Dust lies thick on the pews. Someone has set up a table by the door.",
       "zh_CN": "封存室的門從裡面反鎖著，鑰匙孔還卡著半截骨指。",
       "ja": "封存室的門從裡面反鎖著，鑰匙孔還卡著半截骨指。",
       "ko": "封存室的門從裡面反鎖著，鑰匙孔還卡著半截骨指。",
       "es": "封存室的門從裡面反鎖著，鑰匙孔還卡著半截骨指。"
     },
     "story.f27.name": {
-      "zh_TW": "藏書閣・封存室",
-      "en": "The library: the sealed archive",
+      "zh_TW": "祈禱廳",
+      "en": "The Hall of Prayers",
       "zh_CN": "藏書閣・封存室",
       "ja": "藏書閣・封存室",
       "ko": "藏書閣・封存室",
       "es": "藏書閣・封存室"
     },
     "story.f28.intro": {
-      "zh_TW": "空蕩的座位上，骸骨學者仍保持著批注的姿勢。",
-      "en": "The library: the scribe's own seat",
+      "zh_TW": "水晶搖籃發出微弱的光。",
+      "en": "The crystal cradles give off a faint glow.",
       "zh_CN": "空蕩的座位上，骸骨學者仍保持著批注的姿勢。",
       "ja": "空蕩的座位上，骸骨學者仍保持著批注的姿勢。",
       "ko": "空蕩的座位上，骸骨學者仍保持著批注的姿勢。",
       "es": "空蕩的座位上，骸骨學者仍保持著批注的姿勢。"
     },
     "story.f28.name": {
-      "zh_TW": "藏書閣・執卷人的座位",
-      "en": "The library: the scribe's own seat",
+      "zh_TW": "搖籃大廳",
+      "en": "The Hall of Cradles",
       "zh_CN": "藏書閣・執卷人的座位",
       "ja": "藏書閣・執卷人的座位",
       "ko": "藏書閣・執卷人的座位",
       "es": "藏書閣・執卷人的座位"
     },
     "story.f29.intro": {
-      "zh_TW": "第 29 層（ch_05）的入口。",
-      "en": "The entrance to floor 29.",
+      "zh_TW": "每一面鏡子裡都有你。",
+      "en": "You are in every mirror.",
       "zh_CN": "第 29 層（ch_05）的入口。",
       "ja": "第 29 層（ch_05）的入口。",
       "ko": "第 29 層（ch_05）的入口。",
@@ -446752,8 +450562,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f29.name": {
-      "zh_TW": "第 29 層",
-      "en": "Floor 29",
+      "zh_TW": "鏡廳",
+      "en": "The Mirror Hall",
       "zh_CN": "第 29 層",
       "ja": "第 29 層",
       "ko": "第 29 層",
@@ -446761,8 +450571,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f30.intro": {
-      "zh_TW": "第 30 層（ch_05）的入口。",
-      "en": "The entrance to floor 30.",
+      "zh_TW": "最深處有一座發光的籠子。",
+      "en": "In the very heart stands a glowing cage.",
       "zh_CN": "第 30 層（ch_05）的入口。",
       "ja": "第 30 層（ch_05）的入口。",
       "ko": "第 30 層（ch_05）的入口。",
@@ -446770,8 +450580,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f30.name": {
-      "zh_TW": "第 30 層",
-      "en": "Floor 30",
+      "zh_TW": "神殿之心",
+      "en": "The Heart of the Sanctum",
       "zh_CN": "第 30 層",
       "ja": "第 30 層",
       "ko": "第 30 層",
@@ -446779,8 +450589,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f31.intro": {
-      "zh_TW": "第 31 層（ch_05）的入口。",
-      "en": "The entrance to floor 31.",
+      "zh_TW": "大門後面傳來很低的嗡嗡聲。",
+      "en": "A low hum comes from behind the great door.",
       "zh_CN": "第 31 層（ch_05）的入口。",
       "ja": "第 31 層（ch_05）的入口。",
       "ko": "第 31 層（ch_05）的入口。",
@@ -446788,8 +450598,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f31.name": {
-      "zh_TW": "第 31 層",
-      "en": "Floor 31",
+      "zh_TW": "王座前室",
+      "en": "The Throne Antechamber",
       "zh_CN": "第 31 層",
       "ja": "第 31 層",
       "ko": "第 31 層",
@@ -446797,8 +450607,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f32.intro": {
-      "zh_TW": "第 32 層（ch_05）的入口。",
-      "en": "The entrance to floor 32.",
+      "zh_TW": "門上刻著一隻手。",
+      "en": "A hand is carved into the door.",
       "zh_CN": "第 32 層（ch_05）的入口。",
       "ja": "第 32 層（ch_05）的入口。",
       "ko": "第 32 層（ch_05）的入口。",
@@ -446806,8 +450616,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f32.name": {
-      "zh_TW": "第 32 層",
-      "en": "Floor 32",
+      "zh_TW": "星之門",
+      "en": "The Star's Door",
       "zh_CN": "第 32 層",
       "ja": "第 32 層",
       "ko": "第 32 層",
@@ -446815,8 +450625,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f33.intro": {
-      "zh_TW": "第 33 層（ch_05）的入口。",
-      "en": "The entrance to floor 33.",
+      "zh_TW": "王座上的人，等了你一百年。",
+      "en": "The one on the throne has waited a hundred years for you.",
       "zh_CN": "第 33 層（ch_05）的入口。",
       "ja": "第 33 層（ch_05）的入口。",
       "ko": "第 33 層（ch_05）的入口。",
@@ -446824,8 +450634,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f33.name": {
-      "zh_TW": "第 33 層",
-      "en": "Floor 33",
+      "zh_TW": "巫師王的王座",
+      "en": "The Sorcerer King's Throne",
       "zh_CN": "第 33 層",
       "ja": "第 33 層",
       "ko": "第 33 層",
@@ -446833,8 +450643,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f34.intro": {
-      "zh_TW": "第 34 層（ch_05）的入口。",
-      "en": "The entrance to floor 34.",
+      "zh_TW": "一個很老的聲音在階梯上迴盪。",
+      "en": "A very old voice echoes along the stairs.",
       "zh_CN": "第 34 層（ch_05）的入口。",
       "ja": "第 34 層（ch_05）的入口。",
       "ko": "第 34 層（ch_05）的入口。",
@@ -446842,8 +450652,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f34.name": {
-      "zh_TW": "第 34 層",
-      "en": "Floor 34",
+      "zh_TW": "最後的階梯",
+      "en": "The Last Stairs",
       "zh_CN": "第 34 層",
       "ja": "第 34 層",
       "ko": "第 34 層",
@@ -446851,8 +450661,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f35.intro": {
-      "zh_TW": "第 35 層（ch_05）的入口。",
-      "en": "The entrance to floor 35.",
+      "zh_TW": "星星暗了，裂成兩半。",
+      "en": "The Star is dark, split in two.",
       "zh_CN": "第 35 層（ch_05）的入口。",
       "ja": "第 35 層（ch_05）的入口。",
       "ko": "第 35 層（ch_05）的入口。",
@@ -446860,8 +450670,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f35.name": {
-      "zh_TW": "第 35 層",
-      "en": "Floor 35",
+      "zh_TW": "安穩之星",
+      "en": "The Star of Peace",
       "zh_CN": "第 35 層",
       "ja": "第 35 層",
       "ko": "第 35 層",
@@ -448794,56 +452604,56 @@ body.scene { background-color: transparent; }
       "es": "地上散落的紙頁全被踩得模糊，唯獨一角還算完整。"
     },
     "story.f26.ambient.1": {
-      "zh_TW": "書庫深處那盞燈，火光穩定得不像是自然燃燒。",
-      "en": "The lamp deep in the stacks burns too steadily to be an ordinary flame.",
+      "zh_TW": "白色的階梯一路往上，每一階都刻著祈禱文。",
+      "en": "White steps climb upward, a prayer carved into every one.",
       "zh_CN": "書庫深處那盞燈，火光穩定得不像是自然燃燒。",
       "ja": "書庫深處那盞燈，火光穩定得不像是自然燃燒。",
       "ko": "書庫深處那盞燈，火光穩定得不像是自然燃燒。",
       "es": "書庫深處那盞燈，火光穩定得不像是自然燃燒。"
     },
     "story.f26.ambient.2": {
-      "zh_TW": "空氣裡有股陳舊的墨香，混著一絲若有似無的呼吸聲。",
-      "en": "The air smells of old ink, and something like faint breathing.",
+      "zh_TW": "神殿的階梯",
+      "en": "The Sanctum Steps",
       "zh_CN": "空氣裡有股陳舊的墨香，混著一絲若有似無的呼吸聲。",
       "ja": "空氣裡有股陳舊的墨香，混著一絲若有似無的呼吸聲。",
       "ko": "空氣裡有股陳舊的墨香，混著一絲若有似無的呼吸聲。",
       "es": "空氣裡有股陳舊的墨香，混著一絲若有似無的呼吸聲。"
     },
     "story.f27.ambient.1": {
-      "zh_TW": "封存室外，牆上釘著一張早已褪色的通緝令。",
-      "en": "Outside the sealed archive, a long-faded wanted notice is nailed to the wall.",
+      "zh_TW": "長椅上積滿了灰。有人在門口擺了一張桌子。",
+      "en": "Dust lies thick on the pews. Someone has set up a table by the door.",
       "zh_CN": "封存室外，牆上釘著一張早已褪色的通緝令。",
       "ja": "封存室外，牆上釘著一張早已褪色的通緝令。",
       "ko": "封存室外，牆上釘著一張早已褪色的通緝令。",
       "es": "封存室外，牆上釘著一張早已褪色的通緝令。"
     },
     "story.f27.ambient.2": {
-      "zh_TW": "門縫底下透出微光，像是有人仍在裡面翻閱。",
-      "en": "A faint light shows under the door, as if someone inside is still reading.",
+      "zh_TW": "祈禱廳",
+      "en": "The Hall of Prayers",
       "zh_CN": "門縫底下透出微光，像是有人仍在裡面翻閱。",
       "ja": "門縫底下透出微光，像是有人仍在裡面翻閱。",
       "ko": "門縫底下透出微光，像是有人仍在裡面翻閱。",
       "es": "門縫底下透出微光，像是有人仍在裡面翻閱。"
     },
     "story.f28.ambient.1": {
-      "zh_TW": "執卷人的座位四周，堆疊的書本高得快要頂到天花板。",
-      "en": "Around the scribe's seat, the books are stacked nearly to the ceiling.",
+      "zh_TW": "水晶搖籃發出微弱的光。",
+      "en": "The crystal cradles give off a faint glow.",
       "zh_CN": "執卷人的座位四周，堆疊的書本高得快要頂到天花板。",
       "ja": "執卷人的座位四周，堆疊的書本高得快要頂到天花板。",
       "ko": "執卷人的座位四周，堆疊的書本高得快要頂到天花板。",
       "es": "執卷人的座位四周，堆疊的書本高得快要頂到天花板。"
     },
     "story.f28.ambient.2": {
-      "zh_TW": "空氣安靜得可怕，只有翻頁聲提醒你這裡並非全然死寂。",
-      "en": "The silence is frightening; only the sound of a turning page says this place is not quite dead.",
+      "zh_TW": "搖籃大廳",
+      "en": "The Hall of Cradles",
       "zh_CN": "空氣安靜得可怕，只有翻頁聲提醒你這裡並非全然死寂。",
       "ja": "空氣安靜得可怕，只有翻頁聲提醒你這裡並非全然死寂。",
       "ko": "空氣安靜得可怕，只有翻頁聲提醒你這裡並非全然死寂。",
       "es": "空氣安靜得可怕，只有翻頁聲提醒你這裡並非全然死寂。"
     },
     "story.f29.ambient.1": {
-      "zh_TW": "第 29 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 29 holds the shape of a past life.",
+      "zh_TW": "每一面鏡子裡都有你。",
+      "en": "You are in every mirror.",
       "zh_CN": "第 29 層的空氣裡有前世的形狀。",
       "ja": "第 29 層的空氣裡有前世的形狀。",
       "ko": "第 29 層的空氣裡有前世的形狀。",
@@ -448851,8 +452661,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f29.ambient.2": {
-      "zh_TW": "第 29 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 29 holds the shape of a past life.",
+      "zh_TW": "鏡廳",
+      "en": "The Mirror Hall",
       "zh_CN": "第 29 層的空氣裡有前世的形狀。",
       "ja": "第 29 層的空氣裡有前世的形狀。",
       "ko": "第 29 層的空氣裡有前世的形狀。",
@@ -448860,8 +452670,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f30.ambient.1": {
-      "zh_TW": "第 30 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 30 holds the shape of a past life.",
+      "zh_TW": "最深處有一座發光的籠子。",
+      "en": "In the very heart stands a glowing cage.",
       "zh_CN": "第 30 層的空氣裡有前世的形狀。",
       "ja": "第 30 層的空氣裡有前世的形狀。",
       "ko": "第 30 層的空氣裡有前世的形狀。",
@@ -448869,8 +452679,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f30.ambient.2": {
-      "zh_TW": "第 30 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 30 holds the shape of a past life.",
+      "zh_TW": "神殿之心",
+      "en": "The Heart of the Sanctum",
       "zh_CN": "第 30 層的空氣裡有前世的形狀。",
       "ja": "第 30 層的空氣裡有前世的形狀。",
       "ko": "第 30 層的空氣裡有前世的形狀。",
@@ -448878,8 +452688,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f31.ambient.1": {
-      "zh_TW": "第 31 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 31 holds the shape of a past life.",
+      "zh_TW": "大門後面傳來很低的嗡嗡聲。",
+      "en": "A low hum comes from behind the great door.",
       "zh_CN": "第 31 層的空氣裡有前世的形狀。",
       "ja": "第 31 層的空氣裡有前世的形狀。",
       "ko": "第 31 層的空氣裡有前世的形狀。",
@@ -448887,8 +452697,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f31.ambient.2": {
-      "zh_TW": "第 31 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 31 holds the shape of a past life.",
+      "zh_TW": "王座前室",
+      "en": "The Throne Antechamber",
       "zh_CN": "第 31 層的空氣裡有前世的形狀。",
       "ja": "第 31 層的空氣裡有前世的形狀。",
       "ko": "第 31 層的空氣裡有前世的形狀。",
@@ -448896,8 +452706,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f32.ambient.1": {
-      "zh_TW": "第 32 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 32 holds the shape of a past life.",
+      "zh_TW": "門上刻著一隻手。",
+      "en": "A hand is carved into the door.",
       "zh_CN": "第 32 層的空氣裡有前世的形狀。",
       "ja": "第 32 層的空氣裡有前世的形狀。",
       "ko": "第 32 層的空氣裡有前世的形狀。",
@@ -448905,8 +452715,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f32.ambient.2": {
-      "zh_TW": "第 32 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 32 holds the shape of a past life.",
+      "zh_TW": "星之門",
+      "en": "The Star's Door",
       "zh_CN": "第 32 層的空氣裡有前世的形狀。",
       "ja": "第 32 層的空氣裡有前世的形狀。",
       "ko": "第 32 層的空氣裡有前世的形狀。",
@@ -448914,8 +452724,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f33.ambient.1": {
-      "zh_TW": "第 33 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 33 holds the shape of a past life.",
+      "zh_TW": "王座上的人，等了你一百年。",
+      "en": "The one on the throne has waited a hundred years for you.",
       "zh_CN": "第 33 層的空氣裡有前世的形狀。",
       "ja": "第 33 層的空氣裡有前世的形狀。",
       "ko": "第 33 層的空氣裡有前世的形狀。",
@@ -448923,8 +452733,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f33.ambient.2": {
-      "zh_TW": "第 33 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 33 holds the shape of a past life.",
+      "zh_TW": "巫師王的王座",
+      "en": "The Sorcerer King's Throne",
       "zh_CN": "第 33 層的空氣裡有前世的形狀。",
       "ja": "第 33 層的空氣裡有前世的形狀。",
       "ko": "第 33 層的空氣裡有前世的形狀。",
@@ -448932,8 +452742,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f34.ambient.1": {
-      "zh_TW": "第 34 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 34 holds the shape of a past life.",
+      "zh_TW": "一個很老的聲音在階梯上迴盪。",
+      "en": "A very old voice echoes along the stairs.",
       "zh_CN": "第 34 層的空氣裡有前世的形狀。",
       "ja": "第 34 層的空氣裡有前世的形狀。",
       "ko": "第 34 層的空氣裡有前世的形狀。",
@@ -448941,8 +452751,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f34.ambient.2": {
-      "zh_TW": "第 34 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 34 holds the shape of a past life.",
+      "zh_TW": "最後的階梯",
+      "en": "The Last Stairs",
       "zh_CN": "第 34 層的空氣裡有前世的形狀。",
       "ja": "第 34 層的空氣裡有前世的形狀。",
       "ko": "第 34 層的空氣裡有前世的形狀。",
@@ -448950,8 +452760,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f35.ambient.1": {
-      "zh_TW": "第 35 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 35 holds the shape of a past life.",
+      "zh_TW": "星星暗了，裂成兩半。",
+      "en": "The Star is dark, split in two.",
       "zh_CN": "第 35 層的空氣裡有前世的形狀。",
       "ja": "第 35 層的空氣裡有前世的形狀。",
       "ko": "第 35 層的空氣裡有前世的形狀。",
@@ -448959,8 +452769,8 @@ body.scene { background-color: transparent; }
       "_todo": true
     },
     "story.f35.ambient.2": {
-      "zh_TW": "第 35 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 35 holds the shape of a past life.",
+      "zh_TW": "安穩之星",
+      "en": "The Star of Peace",
       "zh_CN": "第 35 層的空氣裡有前世的形狀。",
       "ja": "第 35 層的空氣裡有前世的形狀。",
       "ko": "第 35 層的空氣裡有前世的形狀。",
@@ -451197,8 +455007,8 @@ body.scene { background-color: transparent; }
       "en": "In the chapel, dust in the light settles into a single word."
     },
     "ev_village_old_plough.title": {
-      "zh_TW": "舊犁",
-      "en": "The Old Plough"
+      "zh_TW": "爸爸的犁",
+      "en": "Dad's Plough"
     },
     "ev_village_old_plough.desc": {
       "zh_TW": "犁頭上纏著一段十年前的布。",
@@ -451229,8 +455039,8 @@ body.scene { background-color: transparent; }
       "en": "Your old master's handwriting is on the bark, dated today."
     },
     "ev_forest_trap_net.title": {
-      "zh_TW": "網中的外袍",
-      "en": "The Robe in the Net"
+      "zh_TW": "收集者的網",
+      "en": "The Collectors' Net"
     },
     "ev_forest_trap_net.desc": {
       "zh_TW": "獵網上掛著一件很新的外袍。",
@@ -451566,18 +455376,21 @@ body.scene { background-color: transparent; }
       "en": "Two ruts are worn deep into the stone. Whatever carts made them stopped coming long ago."
     },
     "ev_common_relic_road_v3.title": {
+      "zh_TW": "磨平的印章",
       "en": "The Worn Seal"
     },
     "ev_common_relic_road_v3.desc": {
       "en": "A seal worn smooth is set into a dip in the road; no one can tell how old it is."
     },
     "ev_common_relic_road_v4.title": {
+      "zh_TW": "被鑿掉的路碑",
       "en": "The Defaced Milestone"
     },
     "ev_common_relic_road_v4.desc": {
       "en": "Half a milestone lies in the grass, its words chiselled off on purpose."
     },
     "ev_common_relic_road_v5.title": {
+      "zh_TW": "乾涸的石燈",
       "en": "The Dry Stone Lantern"
     },
     "ev_common_relic_road_v5.desc": {
@@ -451617,33 +455430,39 @@ body.scene { background-color: transparent; }
       "en": "A whisper warns that the ones above have been waiting longer than you think."
     },
     "ev_common_cache_wall_v2.title": {
+      "zh_TW": "空心的磚",
       "en": "The Hollow Brick"
     },
     "ev_common_cache_wall_v2.desc": {
       "en": "A brick that sounds hollow hides a small cache."
     },
     "ev_common_cache_wall_v2.text": {
+      "zh_TW": "有一塊磚敲起來是空的。後面有人留了一個小包袱。",
       "en": "One brick sounds hollow under your knuckles. Behind it, someone left a small bundle."
     },
     "ev_common_cache_wall_v3.title": {
+      "zh_TW": "油紙包",
       "en": "The Oilpaper Parcel"
     },
     "ev_common_cache_wall_v3.desc": {
       "en": "Half an oilpaper parcel is stuffed into a crack in the wall, still fresh."
     },
     "ev_common_cache_wall_v4.title": {
+      "zh_TW": "有記號的銅釘",
       "en": "The Marked Nail"
     },
     "ev_common_cache_wall_v4.desc": {
       "en": "A copper nail stamped with a mark is hidden between the bricks."
     },
     "ev_common_cache_wall_v5.title": {
+      "zh_TW": "新的灰",
       "en": "Fresh Dust"
     },
     "ev_common_cache_wall_v5.desc": {
       "en": "The hiding place behind a loose brick is empty, but the dust is new."
     },
     "ev_common_trap_rubble_v2.title": {
+      "zh_TW": "被抽走的木樁",
       "en": "Pulled Supports"
     },
     "ev_common_trap_rubble_v2.desc": {
@@ -453085,12 +456904,12 @@ body.scene { background-color: transparent; }
       "en": "It opens only the sun door."
     },
     "npc.farmer.name": {
-      "zh_TW": "農夫",
-      "en": "Farmer"
+      "zh_TW": "爸爸",
+      "en": "Dad"
     },
     "npc.farmer_wife.name": {
-      "zh_TW": "農婦",
-      "en": "Farmer's Wife"
+      "zh_TW": "媽媽",
+      "en": "Mom"
     },
     "npc.fisherman.name": {
       "zh_TW": "漁夫",
@@ -453485,7 +457304,8 @@ body.scene { background-color: transparent; }
       "es": "Buhonero del cofre"
     },
     "npc.crystal_oracle.name": {
-      "zh_TW": "水晶祭司"
+      "zh_TW": "水晶祭司",
+      "en": "Crystal Oracle"
     },
     "minigame.crystals": {
       "zh_TW": "水晶",
@@ -453522,8 +457342,8 @@ body.scene { background-color: transparent; }
   }
 }
 {
-  "number": 18,
-  "sha": "909d5ac"
+  "number": 20,
+  "sha": "1438147"
 }
 {
   "_comment": [
@@ -454313,7 +458133,7 @@ body.scene { background-color: transparent; }
     "levelExp": {
       "first": 5,
       "scale": 2
-    },
+    }, "around": "between",
     "turnBack": true,
     "sweepMs": 1700,
     "chargeMs": 2200,
@@ -454819,14 +458639,14 @@ body.scene { background-color: transparent; }
     "levels": [
       {
         "lv": 1,
-        "points": 10,
+        "points": 6,
         "stats": {
           "int": 10
         }
       },
       {
         "lv": 2,
-        "points": 10,
+        "points": 6,
         "stats": {
           "dex": 5,
           "int": 12
@@ -454834,7 +458654,7 @@ body.scene { background-color: transparent; }
       },
       {
         "lv": 3,
-        "points": 10,
+        "points": 6,
         "stats": {
           "dex": 10,
           "int": 14
@@ -454842,7 +458662,7 @@ body.scene { background-color: transparent; }
       },
       {
         "lv": 4,
-        "points": 10,
+        "points": 6,
         "stats": {
           "dex": 12,
           "int": 16
@@ -454890,7 +458710,7 @@ body.scene { background-color: transparent; }
       },
       {
         "lv": 10,
-        "points": 10,
+        "points": 6,
         "stats": {
           "dex": 25,
           "int": 30
@@ -454979,7 +458799,7 @@ body.scene { background-color: transparent; }
         "feel": "perfect"
       }
     ],
-    "play": "sequenceClick",
+    "play": "sequenceClick", "around": "monster",
     "ultimate": "star_seal",
     "hitWindowMs": 140,
     "lateMs": 80
