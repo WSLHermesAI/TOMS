@@ -50,6 +50,7 @@ void Game::f_StartCombat(const EnemyInst& l_oE, const std::vector<EnemyInst>& l_
     m_oCs.m_iBossIntroMs = m_oCs.m_iBossIntroMsMax = 0;
     m_oCs.m_iHeroIntroMs = m_oCs.m_iHeroIntroMsMax = 0; m_oCs.m_iIntroOwner = -1; m_oCs.m_iIntroFoeFire = -1;
     m_oCs.m_iBossIntroFoe = -1; m_oCs.m_iBossIntroWaitMs = m_oCs.m_iBossIntroFrames = 0;
+    m_oCs.m_iRevealMs = m_oCs.m_iRevealMsMax = 0; m_oCs.m_iRevealFoe = -1;
     m_oCs.m_oResult = CombatState::Result{};
     m_oCs.m_ePace = f_EffectivePace();
     m_oCs.m_fStamina = (float)m_oPaceSettings.m_iStaminaMax;
@@ -174,6 +175,17 @@ int Game::f_BattleFrame(int l_iDtMs) {
         if (m_oCs.m_iBossIntroFrames > 1 && m_oCs.m_iBossIntroWaitMs <= 0) {
             const int l_iFoe = m_oCs.m_iBossIntroFoe;
             m_oCs.m_iBossIntroFoe = -1;
+            // first it comes out of the dark (the owner, 2026-11-23), then its banner (f_BeginBossIntro)
+            const int l_iReveal = std::max(0, f_FeelFx().value("bossIntro", nlohmann::json::object()).value("revealMs", 1400));
+            if (l_iReveal > 0) { m_oCs.m_iRevealMs = m_oCs.m_iRevealMsMax = l_iReveal; m_oCs.m_iRevealFoe = l_iFoe; }
+            else f_BeginBossIntro(l_iFoe);
+        }
+        l_iBdt = 0;
+    } else if (m_oCs.m_iRevealMs > 0) {   // a boss coming out of the dark: everything waits; then its banner
+        m_oCs.m_iRevealMs = std::max(0, m_oCs.m_iRevealMs - l_iDtMs);
+        if (m_oCs.m_iRevealMs == 0) {
+            const int l_iFoe = m_oCs.m_iRevealFoe;
+            m_oCs.m_iRevealFoe = -1;
             f_BeginBossIntro(l_iFoe);
         }
         l_iBdt = 0;
@@ -2356,10 +2368,42 @@ void Game::f_DrawBattle3DFighter(int l_iWho) {
     const glm::vec2 l_v2Feet(l_v4Box.x + l_v4Box.z * 0.5f, l_v4Box.y + l_v4Box.w);
     const glm::vec3 l_v3Feet = l_iWho < 0 ? f_Battle3DHeroFeet() : f_Battle3DMark(l_iWho);
     const glm::mat4 l_mat4M = f_Battle3DSpriteMatrix(l_v2Feet, l_v3Feet, f_Battle3DHeight(l_iWho) / l_v4Box.w);
-    m_pRen->f_BeginWorld(&l_mat4M[0][0], true);
+    glm::mat4 l_mat4Draw = l_mat4M;
+    if (l_iWho < 0 && m_oCs.m_iTravelMs > 0) {   // a boss's sequence: the hero runs on to the next monster (the owner, 2026-11-23)
+        const nlohmann::json l_jRun = m_jBattleJson.value("gauntlet", nlohmann::json::object()).value("run", nlohmann::json::object());
+        const float l_fT = (float)(m_oCs.m_iTravelMsMax - m_oCs.m_iTravelMs) / 1000.0f;
+        const float l_fStride = l_jRun.value("stridesPerS", 2.6f);
+        const float l_fBob = std::fabs(std::sin(l_fT * l_fStride * 3.14159265f)) * l_jRun.value("bounce", 0.09f);   // a bounce each step
+        // leaning into the run: the picture's up tilted a little toward the way he goes (the monster's side of the screen)
+        const float l_fLean = glm::radians(l_jRun.value("leanDeg", 9.0f));
+        const glm::vec3 l_v3Feet = f_Battle3DHeroFeet();
+        const glm::vec3 l_v3Normal = glm::normalize(glm::vec3(l_mat4M[2]));
+        const glm::mat4 l_mat4Tilt = glm::rotate(glm::mat4(1.0f), -l_fLean, l_v3Normal);
+        l_mat4Draw = glm::translate(glm::mat4(1.0f), l_v3Feet + glm::vec3(0.0f, l_fBob, 0.0f)) * l_mat4Tilt * glm::translate(glm::mat4(1.0f), -l_v3Feet) * l_mat4M;
+        // a puff of dust at his feet each step
+        const int l_iStepMs = (int)(1000.0f / std::max(0.5f, l_fStride));
+        const int l_iNow = m_oCs.m_iTravelMsMax - m_oCs.m_iTravelMs;
+        if (l_iNow / l_iStepMs != m_iRunPuffStep) {
+            m_iRunPuffStep = l_iNow / l_iStepMs;
+            bool l_bOk = false;
+            const glm::vec2 l_v2At = f_Battle3DToDesign(l_v3Feet, l_bOk);
+            if (l_bOk) f_PlayBattleFxAt(l_jRun.value("dust", std::string("miss_puff")), l_v2At.x, l_v2At.y, false, 0, l_jRun.value("dustScale", 0.6f));
+        }
+    }
+    m_pRen->f_BeginWorld(&l_mat4Draw[0][0], true);
     if (l_iWho < 0) m_upPlayerView->f_Draw(m_pRen, l_v4Box);
     else m_vFoeRigs[(size_t)l_iWho].m_upView->f_Draw(m_pRen, l_v4Box);
     m_pRen->f_EndWorld();
+    const float l_fDark = l_iWho >= 0 ? f_FoeDarkness(l_iWho) : 0.0f;
+    if (l_fDark > 0.0f) {   // a boss before its banner: drawn again in black over itself, 10 cm nearer the camera (it sorts after the lit one), fading
+        glm::mat4 l_mat4Over = l_mat4M;
+        l_mat4Over[3] += glm::vec4(glm::normalize(glm::vec3(l_mat4M[2])) * 0.1f, 0.0f);
+        const float l_arrBlack[4] = {0.0f, 0.0f, 0.0f, l_fDark};
+        m_pRen->f_BeginWorld(&l_mat4Over[0][0], false);
+        m_pRen->f_SetWorldTint(l_arrBlack);
+        m_vFoeRigs[(size_t)l_iWho].m_upView->f_Draw(m_pRen, l_v4Box);
+        m_pRen->f_EndWorld();
+    }
 }
 
 // The hero's feet: the mark, moved by its step between the cells (m_v2HeroShift, design pixels: made metres where it stands).
@@ -2374,4 +2418,17 @@ glm::vec3 Game::f_Battle3DHeroFeet() const {
     const glm::vec3 l_v3Right = glm::normalize(glm::vec3(m_mat4Battle3DViewProj[0][0], 0.0f, m_mat4Battle3DViewProj[2][0]) + glm::vec3(1e-6f, 0.0f, 0.0f));
     const glm::vec3 l_v3Away(l_v3Right.z, 0.0f, -l_v3Right.x);   // (the camera looks along it: right x up, turned)
     return l_v3Feet + l_v3Right * (m_v2HeroShift.x / l_fPx) + l_v3Away * (-m_v2HeroShift.y / l_fPx * 2.0f);
+}
+
+// A boss before its banner (the owner, 2026-11-23: "half black, then turn to colored, then the Mega Man effect"): dark
+// while its introduction waits to start (bossIntro "dark"), then its colours come in over revealMs, then the banner.
+float Game::f_FoeDarkness(int l_iFoe) const {
+    const float l_fDark = std::clamp(f_FeelFx().value("bossIntro", nlohmann::json::object()).value("dark", 0.85f), 0.0f, 1.0f);
+    if (m_oCs.m_iBossIntroFoe == l_iFoe) return l_fDark;
+    if (m_oCs.m_iRevealFoe == l_iFoe && m_oCs.m_iRevealMsMax > 0) {
+        const float l_fLeft = (float)m_oCs.m_iRevealMs / (float)m_oCs.m_iRevealMsMax;   // 1 .. 0
+        const float l_fK = std::clamp(l_fLeft / 0.7f, 0.0f, 1.0f);                       // dark a moment, then the colours come
+        return l_fDark * l_fK * l_fK;
+    }
+    return 0.0f;
 }

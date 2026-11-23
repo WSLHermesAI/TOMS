@@ -30,5 +30,13 @@
   "_categories": [
     "elder",
     "chapter3"
-  ]
+  ],
+  "mirror_shards": {
+    "type": "int",
+    "default": 0,
+    "scope": "run",
+    "min": 0,
+    "max": 3,
+    "category": "chapter6"
+  }
 }

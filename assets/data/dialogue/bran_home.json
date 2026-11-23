@@ -1,5 +1,5 @@
 {
-  "_comment": "Chapter 5 of the story revamp (docs/gameplay/23 §4): Bran in the village if spared (hub_bran): rebuilding what he burned.",
+  "_comment": "Chapter 5 of the story revamp (docs/gameplay/23 §4): Bran in the village if spared (hub_bran): rebuilding what he burned. S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "villager",
   "start": "root",
   "nodes": {
@@ -23,10 +23,64 @@
         },
         {
           "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c5",
+          "requires": {
+            "not": {
+              "type": "runFlagSet",
+              "flag": "c6.done"
+            }
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
+        },
+        {
+          "label": {
             "zh_TW": "……",
             "en": "..."
           },
           "next": null
+        }
+      ]
+    },
+    "news_c5": {
+      "text": {
+        "zh_TW": "布蘭：「今天有人跟我說了早安。第一個。」他沒有抬頭，繼續釘木板。",
+        "en": "Bran: \"Someone said good morning to me today. The first one.\" He doesn't look up, and keeps nailing boards."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "布蘭：「你娘……她來看我了。她什麼都沒說，只是把燉肉放在門口。」他的聲音啞了。",
+        "en": "Bran: \"Your mother... she came to see me. She didn't say anything. She just left some stew at the door.\" His voice cracks."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
         }
       ]
     }

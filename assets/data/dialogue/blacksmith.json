@@ -1,5 +1,5 @@
 {
-  "_comment": "Chapter 2 of the story revamp (docs/gameplay/23 §4): the blacksmith at home (hub_blacksmith): an attack gem for 30 gold.",
+  "_comment": "Chapter 2 of the story revamp (docs/gameplay/23 §4): the blacksmith at home (hub_blacksmith): an attack gem for 30 gold. S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "blacksmith",
   "start": "root",
   "nodes": {
@@ -34,6 +34,61 @@
         },
         {
           "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c2",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c4.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c4",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c4.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
+        },
+        {
+          "label": {
             "zh_TW": "「下次再來。」",
             "en": "\"Another time.\""
           },
@@ -51,6 +106,51 @@
           "label": {
             "zh_TW": "……",
             "en": "..."
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c2": {
+      "text": {
+        "zh_TW": "鐵匠：「爐子又熱起來了。每打一把刀，我就覺得村子又活過來一點。」",
+        "en": "Blacksmith: \"The forge is hot again. Every blade I hammer out, the village feels a little more alive.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c4": {
+      "text": {
+        "zh_TW": "鐵匠：「矮人來了以後，我學了好幾招。他說我的鎚子『太溫柔』。」",
+        "en": "Blacksmith: \"Since the dwarf arrived I've learned a few tricks. He says my hammer is 'too gentle'.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "鐵匠：「我在替你爹打一把新的犁。舊的那把……就留在塔裡吧。」",
+        "en": "Blacksmith: \"I'm making your Dad a new plough. The old one... let it stay in the tower.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
           },
           "next": "root"
         }

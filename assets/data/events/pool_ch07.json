@@ -1,0 +1,89 @@
+{
+  "_comment": [
+    "Chapter 7 of the story revamp (docs/gameplay/23 §4): The Final Choice, F31-F35. Kai's last stand (trust), Pip's",
+    "payoff (c2.pip_invested), Liora at the door (c6.mirror), Vorkath's truth, the last temptation, and the Star after the",
+    "Hollow God: the ending (the action \"ending\", 23 §6)."
+  ],
+  "act": "ch_07",
+  "theme": "the final choice",
+  "events": [
+    {
+      "eventId": "ev_c7_kai",
+      "kind": "scene",
+      "text": "ev_c7_kai.text",
+      "title": "ev_c7_kai.title",
+      "desc": "ev_c7_kai.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c7_kai"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c7_pip_final",
+      "kind": "comic",
+      "text": "ev_c7_pip_final.text",
+      "title": "ev_c7_pip_final.title",
+      "desc": "ev_c7_pip_final.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c7_pip_final"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c7_liora_door",
+      "kind": "scene",
+      "text": "ev_c7_liora_door.text",
+      "title": "ev_c7_liora_door.title",
+      "desc": "ev_c7_liora_door.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c7_liora_door"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c7_vorkath",
+      "kind": "choice",
+      "text": "ev_c7_vorkath.text",
+      "title": "ev_c7_vorkath.title",
+      "desc": "ev_c7_vorkath.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c7_vorkath"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c7_temptation",
+      "kind": "choice",
+      "text": "ev_c7_temptation.text",
+      "title": "ev_c7_temptation.title",
+      "desc": "ev_c7_temptation.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c7_temptation"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c7_star",
+      "kind": "choice",
+      "text": "ev_c7_star.text",
+      "title": "ev_c7_star.title",
+      "desc": "ev_c7_star.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c7_star"
+        }
+      ]
+    }
+  ]
+}

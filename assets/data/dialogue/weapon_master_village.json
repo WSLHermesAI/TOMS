@@ -1,5 +1,5 @@
 {
-  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): the weapon master in the village (hub_weapon_master): his quest (the whetstone on F04).",
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): the weapon master in the village (hub_weapon_master): his quest (the whetstone on F04). S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "weapon_master",
   "start": "root",
   "nodes": {
@@ -65,6 +65,94 @@
         },
         {
           "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c1",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c2.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c4.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c2",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c2.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c4.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c4",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c4.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
+        },
+        {
+          "label": {
             "zh_TW": "「再見。」",
             "en": "\"Bye.\""
           },
@@ -101,6 +189,66 @@
           "label": {
             "zh_TW": "「謝謝！」",
             "en": "\"Thanks!\""
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c1": {
+      "text": {
+        "zh_TW": "武師：「你選的那把武器，別讓它生鏽了。每天揮一百下。」",
+        "en": "Weapon master: \"The weapon you chose, don't let it rust. A hundred swings every day.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c2": {
+      "text": {
+        "zh_TW": "武師：「聽說有個皇家騎士跟著你？哼，叫他來我的院子，讓我看看王都教了他什麼。」",
+        "en": "Weapon master: \"I hear a royal knight is following you around? Hmph. Send him to my yard and I'll see what the capital taught him.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c4": {
+      "text": {
+        "zh_TW": "武師：「神裔……難怪你學什麼都快。可是記住，力量不會替你做決定。」",
+        "en": "Weapon master: \"Godborn... no wonder you learn everything so fast. But remember: power doesn't make your choices for you.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "武師：「最後一段路了。你已經不需要我教了——去吧，回來的時候，我們再對練一場。」",
+        "en": "Weapon master: \"The last stretch. You don't need my teaching any more. Go, and when you're back, we'll spar once more.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
           },
           "next": "root"
         }

@@ -3,6 +3,7 @@
     "stage3d: walking the floors in 3D (docs/gameplay/24_STAGE_3D.md). There is no 2D map: the game makes each floor's walls and ground from its tile map when the floor is entered (src/game/src/floor_mesh.cpp: a wall cell is a block wallHeight metres tall, one tile = one metre; the ground's texture repeats every groundRepeat metres), textured with its look's painted pictures (assets/media/stage3d/looks/<look>/, tools/stage3d/paint_looks.py).",
     "loadingDelayMs: a scene still loading after this long (the floor's or the battle's 3D stage) shows the turning loading circle.",
     "shadow: the soft disc under the hero, the monsters and the people (the battle's).",
+    "stairSign: the sign standing over each stair: chevrons that keep rising (up, gold) or sinking (down, blue), or a padlock while locked; size (metres), speed (steps a second; x1.6 for a stair just opened, which also pulses).",
     "stairLights: the light of each stair, so it is not missed: up (colour, over its top step), down (colour, in its pit), intensity (x1.6 for a stair just opened, x0.5 for a locked one), range (metres), off. The stairs themselves are four steps in the floor's model (up to the walls' top, or down into a pit); stairShade darkens their treads (the ground's texture times it: 0.35 = about a third as bright as the floor).",
     "viewScales: the steps of Settings > View size, x the camera's distance (1 = about 12 tiles across, 1.5 = 18, 2 = 24, 3 = 36).",
     "camera: pitch (degrees down from level), distance (metres from the hero at view size 1), fov (degrees, up and down), follow (how fast it catches up with the hero: 1/s), lookAhead (metres north of the hero it looks at).",
@@ -16,6 +17,7 @@
   "loadingDelayMs": 250,
   "viewScales": [1, 1.5, 2, 3],
   "shadow": "battle3d/moonlit_ruins/blob.glb",
+  "stairSign": { "size": 1.0, "speed": 0.8 },
   "stairLights": { "up": [1.0, 0.8, 0.45], "down": [0.45, 0.65, 1.0], "intensity": 6.0, "range": 3.5 },
   "camera": { "pitch": 56, "distance": 11.0, "fov": 38, "follow": 7.0, "lookAhead": 0.6 },
   "sprites": {

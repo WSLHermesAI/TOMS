@@ -1,0 +1,17 @@
+{
+  "_comment": "S6 of the story revamp (docs/gameplay/23 §8): the old woman on F04 says something new once chapter 1 is over (old_woman_later: an egg, +20 HP).",
+  "scene": "talk",
+  "flags": [
+    "c1.done"
+  ],
+  "talk": {
+    "npc": "old_woman"
+  },
+  "test": {
+    "frames": 20
+  },
+  "expect": {
+    "scene": "dialogue",
+    "dialogueNode": "later"
+  }
+}

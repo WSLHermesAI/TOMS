@@ -1,0 +1,17 @@
+{
+  "_comment": "Chapter 6, F30 on its map (docs/gameplay/23 §4.6): behind the Sanctum Warden (its tile the only way in), a step up onto the family scene (ev_c6_family).",
+  "scene": "stage",
+  "stage": "F30",
+  "player": {
+    "x": 19,
+    "y": 21
+  },
+  "test": {
+    "frames": 40,
+    "keys": "up@10"
+  },
+  "expect": {
+    "scene": "dialogue",
+    "dialogueNode": "cage"
+  }
+}

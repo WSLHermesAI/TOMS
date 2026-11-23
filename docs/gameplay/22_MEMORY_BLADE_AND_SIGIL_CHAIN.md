@@ -251,3 +251,7 @@ change them.
   camera **cranes up and looks down on the monster** as the meteors land, and settles back (`special_moves.json`
   `cyclone_volley` camera `"move": "rain"`; also `"behind"` alone; battle.json stage camera `behind` (distance 3.8 m,
   height ×1.2 the hero, deg 26) and `rain` (rise 4.5 m, back 1.2 m, holdShare, riseShare)).
+
+- **The bow's target in the middle** (the owner, 2026-11-23): the bow's pull-and-release target is no longer over the
+  hero at the screen's side but halfway between him and the monster he aims at, over their heads (never over a monster;
+  `Game::f_TouchArea`). The other weapons' plays stay over the hero's head.

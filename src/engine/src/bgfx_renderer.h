@@ -83,6 +83,7 @@ public:
     // part with one texture and blending, in drawing order.
     bool f_SupportsWorld() const override { return m_u16Program != m_u16Invalid; }
     void f_BeginWorld(const float* l_pMat4, bool l_bLit) override;
+    void f_SetWorldTint(const float* l_pRgba) override;
     void f_EndWorld() override;
     struct WorldVertex { float m_fX, m_fY, m_fZ, m_fU, m_fV, m_fR, m_fG, m_fB, m_fA; };
     struct WorldRun {
@@ -183,6 +184,7 @@ private:
     };
     std::vector<WorldGroup> m_vWorld;                    // this frame's world groups
     int m_iWorldOpen = -1;                               // the group being drawn into (f_BeginWorld); -1: none
+    float m_arrWorldTint[4] = {1, 1, 1, 1};              // f_SetWorldTint: times every colour of the open group
     int m_iWorldDepth = 0;                               // f_BeginWorld nesting (an inner one joins the outer group)
     int m_iLayersInWorld = 0;                            // layers begun inside a group (drawn straight through)
     void f_WorldTriangles(const float* l_pXy, const float* l_pUv, const float* l_pRgba, uint32_t l_uVerts, const uint16_t* l_pIdx,

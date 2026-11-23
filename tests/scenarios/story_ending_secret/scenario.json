@@ -1,0 +1,27 @@
+{
+  "_comment": "The ending (docs/gameplay/23 §6): everyone home (the parents, the children, Mira, the healer, the baker), the Slime King freed, Liora's mirror whole, Bran not killed, mercy 4 or more, the Star lit: Everyone Home (e_secret).",
+  "scene": "dialogue",
+  "flags": [
+    "home.parents",
+    "home.children",
+    "home.mira",
+    "home.healer",
+    "home.baker",
+    "c4.slime_king",
+    "c6.mirror"
+  ],
+  "counters": {
+    "mercy": 4
+  },
+  "dialogue": {
+    "id": "c7_star"
+  },
+  "test": {
+    "frames": 70,
+    "keys": "enter@10,enter@25,enter@40"
+  },
+  "expect": {
+    "scene": "ending",
+    "ending": "e_secret"
+  }
+}

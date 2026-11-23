@@ -254,5 +254,37 @@
       "kind": "talk",
       "npc": "bran_home"
     }
+  },
+  "hub_home": {
+    "id": "hub_home",
+    "unlockFlag": "home.parents",
+    "name": {
+      "zh_TW": "家",
+      "en": "Home"
+    },
+    "desc": {
+      "zh_TW": "爹娘回來了。灶上燉著肉。",
+      "en": "Mom and Dad are home. There is stew on the stove."
+    },
+    "action": {
+      "kind": "talk",
+      "npc": "parents_home"
+    }
+  },
+  "hub_children": {
+    "id": "hub_children",
+    "unlockFlag": "home.children",
+    "name": {
+      "zh_TW": "新學堂",
+      "en": "The New Schoolroom"
+    },
+    "desc": {
+      "zh_TW": "米菈在教被救回來的孩子們寫字。",
+      "en": "Mira teaches the rescued children to write."
+    },
+    "action": {
+      "kind": "talk",
+      "npc": "children_home"
+    }
   }
 }

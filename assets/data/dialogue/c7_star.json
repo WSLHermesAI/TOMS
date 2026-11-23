@@ -1,0 +1,117 @@
+{
+  "_comment": "Chapter 7 of the story revamp (docs/gameplay/23 §4): F35, after the Hollow God: the Star and the last choice (light it with Liora, or keep the power), then the ending (the action \"ending\": e_god, e_secret, e_avenger, e_home; 23 §6).",
+  "npcId": "princess",
+  "start": "star",
+  "nodes": {
+    "star": {
+      "text": {
+        "zh_TW": "空洞之神倒下了，散成一團黑霧，鑽回星星的裂縫裡。巨大的安穩之星懸在你面前，暗暗的，裂成兩半。在它下面，莉歐拉站在那裡——真的莉歐拉，不是鏡子裡的。",
+        "en": "The Hollow God falls, breaking into a black mist that seeps back into the crack in the Star. The great Star of Peace hangs before you, dark and split in two. Beneath it stands Liora: the real Liora, not a face in a mirror."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「莉歐拉！」",
+            "en": "\"Liora!\""
+          },
+          "next": "choice",
+          "requires": {
+            "not": {
+              "type": "runFlagSet",
+              "flag": "c7.took_power"
+            }
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「莉歐拉……」",
+            "en": "\"Liora...\""
+          },
+          "next": "cold",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c7.took_power"
+          }
+        }
+      ]
+    },
+    "choice": {
+      "text": {
+        "zh_TW": "莉歐拉握住你的手：「就是現在。把神的力量倒回星星裡，我來點亮它。或者……」她看著你的手掌，那裡的光在跳動。「或者你可以留著它。它會讓你變成神。」",
+        "en": "Liora takes your hand. \"It has to be now. Pour the god's power back into the Star, and I'll light it. Or...\" She looks at your palms, where the light is pulsing. \"Or you could keep it. It would make you a god.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「我們一起把星星點亮。」",
+            "en": "\"We light the Star together.\""
+          },
+          "next": "light",
+          "action": {
+            "type": "setFlag",
+            "flag": "c7.star_lit"
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「……我要留著它。」",
+            "en": "\"...I'm keeping it.\""
+          },
+          "next": "cold",
+          "action": {
+            "type": "setFlag",
+            "flag": "c7.took_power"
+          }
+        }
+      ]
+    },
+    "light": {
+      "text": {
+        "zh_TW": "你把雙手貼在星星上。所有你打敗過的怪物的力量，一起流了出去——你一點都不覺得可惜。莉歐拉唱起一首很老的歌，星星亮了。整座塔，整個王國，都亮了。",
+        "en": "You press both hands to the Star. The power of every monster you ever defeated flows out of you together, and you don't miss it at all. Liora sings a very old song, and the Star lights. The whole tower, the whole kingdom, lights up."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（回家）",
+            "en": "(Go home)"
+          },
+          "next": null,
+          "action": {
+            "type": "ending",
+            "among": [
+              "e_god",
+              "e_secret",
+              "e_avenger",
+              "e_home"
+            ]
+          }
+        }
+      ]
+    },
+    "cold": {
+      "text": {
+        "zh_TW": "莉歐拉退了一步。你的影子變得很大，大到蓋住了星星。那個很老的聲音從你自己的嘴裡說出來：「……終於。」",
+        "en": "Liora takes a step back. Your shadow grows huge, huge enough to cover the Star. The very old voice speaks from your own mouth. \"...At last.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null,
+          "action": {
+            "type": "ending",
+            "among": [
+              "e_god",
+              "e_secret",
+              "e_avenger",
+              "e_home"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

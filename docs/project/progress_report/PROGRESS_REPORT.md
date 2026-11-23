@@ -15,6 +15,15 @@
 
 ## ▶ Next Step
 
+**The story revamp complete: chapters 6-7, four endings, every NPC following the story** (2026-11-23; [DAILY_2026-11-23.md](DAILY_2026-11-23.md)):
+- Chapter 6 (the Sanctum: Liora's mirror, the children, the family scene) and chapter 7 (Kai, Vorkath's truth, the last
+  temptation, the Star); the endings The God / Everyone Home / The Avenger / Home; S6: "How are things?" in all 16 village
+  places by chapter, the floor NPCs rewritten, the old text-only events gone. Doc [gameplay/23](../../gameplay/23_STORY_REVAMP.md).
+- Battle: the boss dark, then coloured, then its banner; the hero runs between a sequence's fights; the charge points kept;
+  the bow's target in the middle. 3D floors: an animated sign over every stair.
+- The owner: other 4 languages ignored until release; F36-F70 kept as an extended battle area.
+- Not committed. Changed-only 53 of 340, all passed; naming checker 0 edits. **Owner:** play to an ending; the borrowed boss looks.
+
 **A boss's fight as a sequence; the bow's ultimate camera** (2026-11-22, later; [DAILY_2026-11-22.md](DAILY_2026-11-22.md)):
 - A boss's guards are fought one at a time; after each win the 3D stage travels on to the next monster (no result
   screen, the hero back to idle); the monsters still to come wait further on as dark shapes; a ladder of the fights

@@ -1,5 +1,5 @@
 {
-  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): the baker at home (hub_bakery): bread that heals (a red potion) for 8 gold.",
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): the baker at home (hub_bakery): bread that heals (a red potion) for 8 gold. S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "baker",
   "start": "root",
   "nodes": {
@@ -34,10 +34,158 @@
         },
         {
           "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c1",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c3.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c5.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c3",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c3.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c5.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c5",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c5.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
+        },
+        {
+          "label": {
             "zh_TW": "「下次再來。」",
             "en": "\"Another time.\""
           },
           "next": null
+        }
+      ]
+    },
+    "news_c1": {
+      "text": {
+        "zh_TW": "麵包師：「村子燒成這樣，第一件事就是要有麵包。肚子飽了，人才站得起來。」",
+        "en": "Baker: \"With the village burned like this, the first thing it needs is bread. Folk stand up again once their bellies are full.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c3": {
+      "text": {
+        "zh_TW": "麵包師：「旅店老闆娘回來以後，我的麵包終於有人配湯吃了！」",
+        "en": "Baker: \"Now the innkeeper is back, my bread finally has soup to go with it!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c5": {
+      "text": {
+        "zh_TW": "麵包師：「牢房裡的大家都回來了！我烤了一整夜，烤箱都快燒穿了。」",
+        "en": "Baker: \"Everyone from the cells is home! I baked all night. The oven nearly burned through.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "麵包師：「你爹娘回來了！宴會的麵包我要烤一座城堡那麼大——等你回來切第一刀。」",
+        "en": "Baker: \"Your Mom and Dad are home! For the feast I'm baking a loaf as big as a castle. You get to cut the first slice when you're back.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
         }
       ]
     }

@@ -62,7 +62,10 @@ void Game::f_DismissVictory() {
     const nlohmann::json l_jG = m_jBattleJson.value("gauntlet", nlohmann::json::object());
     m_v3TravelFrom = m_v3BattleTravel;
     m_v3TravelTo = f_GauntletStepVec() * (float)m_oGauntlet.m_iStep;
+    const int l_iSuper = m_oCs.m_iSuperCharge;   // the charge points go on to the next fight (the owner, 2026-11-23)
     f_StartCombat(m_oGauntlet.m_vSteps[(size_t)m_oGauntlet.m_iStep]);
+    m_oCs.m_iSuperCharge = l_iSuper;
+    m_iRunPuffStep = -1;
     // the hero back to his idle pose (the last fight's win pose holds only while its result shows)
     m_strBattleRigState.clear();
     f_SetBattleRigState("idle", true);

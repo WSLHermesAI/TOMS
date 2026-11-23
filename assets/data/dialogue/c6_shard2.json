@@ -1,0 +1,27 @@
+{
+  "_comment": "Chapter 6 of the story revamp (docs/gameplay/23 §4): F27, the second mirror shard (mirror_shards + 1).",
+  "npcId": "princess",
+  "start": "shard",
+  "nodes": {
+    "shard": {
+      "text": {
+        "zh_TW": "祈禱廳的長椅底下，一片碎鏡在發光。鏡面上浮出幾個字：「……謝謝你，里歐。再一片……」",
+        "en": "Under a pew in the Hall of Prayers, a mirror shard glows. Words float up on its surface: \"...Thank you, Leo. One more...\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（撿起碎片）",
+            "en": "(Pick up the shard)"
+          },
+          "next": null,
+          "action": {
+            "type": "addVar",
+            "var": "mirror_shards",
+            "delta": 1
+          }
+        }
+      ]
+    }
+  }
+}

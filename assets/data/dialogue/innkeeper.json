@@ -1,5 +1,5 @@
 {
-  "_comment": "Chapter 3 of the story revamp (docs/gameplay/23 §4): the innkeeper at home (hub_inn): stew that heals for 5 gold, and L's letters to read again.",
+  "_comment": "Chapter 3 of the story revamp (docs/gameplay/23 §4): the innkeeper at home (hub_inn): stew that heals for 5 gold, and L's letters to read again. S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "innkeeper",
   "start": "root",
   "nodes": {
@@ -33,6 +33,61 @@
         },
         {
           "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c3",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c5.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c5",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c5.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
+        },
+        {
+          "label": {
             "zh_TW": "「下次吧。」",
             "en": "\"Another time.\""
           },
@@ -50,6 +105,51 @@
           "label": {
             "zh_TW": "……",
             "en": "..."
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c3": {
+      "text": {
+        "zh_TW": "旅店老闆娘：「床是乾的，湯是熱的。你想住多久都行，不收錢。」",
+        "en": "Innkeeper: \"The beds are dry and the soup is hot. Stay as long as you like. No charge.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c5": {
+      "text": {
+        "zh_TW": "旅店老闆娘：「牢房回來的人全擠在我這裡！我從來沒有這麼累，也從來沒有這麼開心。」",
+        "en": "Innkeeper: \"Everyone from the cells is crammed into my inn! I've never been so tired, or so happy.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "旅店老闆娘：「宴會的湯我已經開始熬了。少一個人都不准開動——包括你。」",
+        "en": "Innkeeper: \"I've started the soup for the feast. Nobody eats until everyone's here. That includes you.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
           },
           "next": "root"
         }

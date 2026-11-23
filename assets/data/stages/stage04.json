@@ -31,7 +31,7 @@
     "c": "item:coin",
     "s": "npc:sorcerer",
     "v": "npc:villager",
-    "k": "npc:king",
+    "k": "event:ev_c6_cradles",
     "p": "npc:princess",
     "m": "npc:handmaiden",
     "1": "monster:slime",
@@ -106,5 +106,5 @@
       "uid": "o6"
     }
   },
-  "theme": "crypt"
+  "theme": "crystal"
 }

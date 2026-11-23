@@ -1,0 +1,80 @@
+{
+  "_comment": "Chapter 7 of the story revamp (docs/gameplay/23 §4): F32, Liora at the Star's door: the plan (c7.plan, trust + 1) if her mirror was made whole (c6.mirror).",
+  "npcId": "princess",
+  "start": "door",
+  "nodes": {
+    "door": {
+      "text": {
+        "zh_TW": "星之門上刻著一隻手的形狀。你把手放上去，門的另一邊傳來莉歐拉的聲音。",
+        "en": "The Star's door bears the carved shape of a hand. You lay your hand on it, and Liora's voice comes from the other side."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「莉歐拉，我來了。」",
+            "en": "\"Liora, I'm here.\""
+          },
+          "next": "plan",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.mirror"
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「有人在嗎？」",
+            "en": "\"Is anyone there?\""
+          },
+          "next": "muffled",
+          "requires": {
+            "not": {
+              "type": "runFlagSet",
+              "flag": "c6.mirror"
+            }
+          }
+        }
+      ]
+    },
+    "plan": {
+      "text": {
+        "zh_TW": "莉歐拉：「聽好。星星裂了，神就從裂縫進來。要重新點亮它，得有一個神裔把那個神的力量倒回星星裡——不是拿走，是還回去。我開門，你倒力量。我們一起。」",
+        "en": "Liora: \"Listen. The Star is cracked, and the god comes in through the crack. To light it again, a Godborn has to pour the god's power back into the Star. Not take it. Give it back. I open the door, you pour the power. Together.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「一起。」",
+            "en": "\"Together.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "setFlag",
+              "flag": "c7.plan"
+            },
+            {
+              "type": "addCounter",
+              "counter": "trust",
+              "delta": 1
+            }
+          ]
+        }
+      ]
+    },
+    "muffled": {
+      "text": {
+        "zh_TW": "門後的聲音斷斷續續：「……不要……讓它……進去……」然後就沒有聲音了。",
+        "en": "The voice behind the door comes in fragments: \"...don't... let it... in...\" Then there is nothing."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

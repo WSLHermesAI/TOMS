@@ -1,0 +1,18 @@
+{
+  "_comment": "Chapter 7, F33 after the Vorkath boss (docs/gameplay/23 §4.7): his truth (he sealed the Star to keep the god out) and the first answer, spare him (mercy + 1).",
+  "scene": "dialogue",
+  "dialogue": {
+    "id": "c7_vorkath"
+  },
+  "test": {
+    "frames": 70,
+    "keys": "enter@10,enter@25,enter@40"
+  },
+  "expect": {
+    "scene": "stage",
+    "flags": [
+      "c7.vorkath_spared",
+      "c7.vorkath_done"
+    ]
+  }
+}

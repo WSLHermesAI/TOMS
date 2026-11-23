@@ -40,7 +40,7 @@
     "cells: moving in battle (docs/gameplay/19 §2.1): six cells, 0 1 2 the near row and 3 4 5 the far row; start: where the hero begins; warnMs: the danger lights this long before the hit; shapes: each a list of variants, each the cells it covers (a move names one in moves.json \"shape\"; the variant reaching the hero is chosen); shiftX, shiftNear, shiftY: how far the hero's picture moves.",
     "stages3d: the battle on a 3D stage (docs/gameplay/21_BATTLE_3D.md), by floor like backdrops (from..to); a floor without one keeps its backdrop. sky (an HDR: hdr, intensity, yaw, blur), ground, shadow, sprites (the fighters' and the fires' 2D sprites placed in the scene, lit by it: glow = their own light, off = drawn 2D over the stage), props (model, node: only that root node of it, at, turn, scale), light (dir, color, intensity, ambient), exposure; fires (at, fx, color, intensity, range, flicker, lightHeight, size: a flickering point light + its particles), clouds (min, speed: the moonlight drifting), flash (onMonster, onHero, intensity, range, ms, off: a hit lights the stage); camera (eye, look, fov, aspect it was made for, breathe; danger: a special attack's low close-up on its monster: zoom, height, lookAt, fovAdd, deg, ms, rumble, off), marks (hero, monster, spacing, monsters2 / monsters3), heights (hero, monster, big) in metres. tools/battle3d/make_moonlit_ruins.py writes moonlit_ruins (one .glb per model).",
     "battleSpeeds: the steps of Settings > Battle speed (17 I10).",
-    "gauntlet: a boss's fight as a sequence (docs/gameplay/25): its guards one at a time, then the boss. The guards: a stage object's \"gauntlet\", else the boss's enemies.json \"gauntlet\" or \"party\", else (fromFloor) up to count kinds of the floor's other monsters. step: where the 3D stage moves on to after each win (metres), travelMs: how long that takes (everything waits). A guard beaten goes straight on (no result screen; its pay as a notice); the monsters still to come stand further on as dark shapes (waitingShade, waitingAlpha), each a little to the side (waitingSide metres, left and right in turn) so all show.",
+    "gauntlet: a boss's fight as a sequence (docs/gameplay/25): its guards one at a time, then the boss. The guards: a stage object's \"gauntlet\", else the boss's enemies.json \"gauntlet\" or \"party\", else (fromFloor) up to count kinds of the floor's other monsters. step: where the 3D stage moves on to after each win (metres), travelMs: how long that takes (everything waits). A guard beaten goes straight on (no result screen; its pay as a notice); the monsters still to come stand further on as dark shapes (waitingShade, waitingAlpha), each a little to the side (waitingSide metres, left and right in turn) so all show. While the stage travels the hero runs (run: a bounce each step, leaning into it, a puff of dust at his feet). The charge points go on from fight to fight.",
     "training: the training ground (16 §5): cards spent per run, runs per day, fights per run, EXP and weapon EXP x."
   ],
   "bar_slow_speed_scale": 0.5,
@@ -74,7 +74,8 @@
              "_comment": "the owner, 2026-11-14: one stage track (walking), a normal battle, and a boss track per enemies.json bossTier",
              "stage": "music.stage_walk", "stageVolume": 0.35, "stageFadeInMs": 1200, "normal": "music.battle_normal",
              "boss": { "mini": "music.boss_mini", "stage": "music.boss_stage", "final": "music.boss_final" } },
-  "gauntlet": { "fromFloor": true, "count": 3, "step": [0.0, 0.0, -3.5], "travelMs": 1500, "waitingShade": 0.0, "waitingAlpha": 0.85, "waitingSide": 0.9 },
+  "gauntlet": { "fromFloor": true, "count": 3, "step": [0.0, 0.0, -3.5], "travelMs": 1500, "waitingShade": 0.0, "waitingAlpha": 0.85, "waitingSide": 0.9,
+                "run": { "stridesPerS": 2.6, "bounce": 0.09, "leanDeg": 9, "dust": "miss_puff", "dustScale": 0.6 } },
   "stages3d": [
     {
       "from": 1, "to": 10,
@@ -154,7 +155,7 @@
               "castSound": "sfx.wand_cast" },
     "bow": { "gatherEveryMs": 90, "chargeSound": "sfx.bow_charge", "explodeSound": "sfx.explosion" },
     "heroIntro": { "_comment": "the hero's own introduction of an ultimate (a move's intro beat, docs/gameplay/22 §4): the boss banner from the right; the move's name types in from nameAtMs, a letter every typeMsPerChar", "nameAtMs": 350, "typeMsPerChar": 90 },
-    "bossIntro": { "startDelayMs": 300, "ms": 3400, "nameAtMs": 700, "typeMsPerChar": 110, "zoom": 1.7, "deg": 10, "clip": "special", "fx": "boss_intro", "fxAtMs": 250,
+    "bossIntro": { "startDelayMs": 300, "revealMs": 1400, "dark": 0.97, "ms": 3400, "nameAtMs": 700, "typeMsPerChar": 110, "zoom": 1.7, "deg": 10, "clip": "special", "fx": "boss_intro", "fxAtMs": 250,
                    "sound": "sfx.boss_intro", "off": false },
     "specialAttack": { "powerMs": 3500, "powerFx": "monster_power", "powerSound": "sfx.monster_power",
                        "chargeFx": "monster_charge", "chargeFxEveryMs": 450,

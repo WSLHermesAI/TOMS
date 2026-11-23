@@ -1,0 +1,104 @@
+{
+  "_comment": "Chapter 7 of the story revamp (docs/gameplay/23 §4): F33, after the Vorkath boss: the truth (he sealed the Star to keep the god out) and a choice (spare: mercy + 1; kill: vengeance + 1).",
+  "npcId": "villager",
+  "start": "down",
+  "nodes": {
+    "down": {
+      "text": {
+        "zh_TW": "巫師王沃卡司單膝跪地，王冠滾到一邊。他抬起頭——他很老了，比你想像的老得多。「……你夠強了，孩子。強到它會更想要你。」",
+        "en": "The Sorcerer King Vorkath kneels on one knee, his crown rolling away across the floor. He looks up. He is old, far older than you imagined. \"...You are strong enough, child. Strong enough that it will want you all the more.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「你為什麼要擋我？」",
+            "en": "\"Why did you stand in my way?\""
+          },
+          "next": "why"
+        }
+      ]
+    },
+    "why": {
+      "text": {
+        "zh_TW": "沃卡司：「一百年前，我封住了星星，把那個神關在外面。我把自己變成你們口中的魔王，好讓沒有人敢上來——因為每一個上來的神裔，都會被它奪走身體。我擋你，是為了救你。」",
+        "en": "Vorkath: \"A hundred years ago I sealed the Star and shut that god out. I made myself the demon king of your stories so that no one would dare climb this tower, because every Godborn who came up here had their body taken by it. I stood in your way to save you.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「回去吧，老人家。剩下的交給我。」",
+            "en": "\"Go and rest, old man. Leave the rest to me.\""
+          },
+          "next": "spare",
+          "actions": [
+            {
+              "type": "addCounter",
+              "counter": "mercy",
+              "delta": 1
+            },
+            {
+              "type": "setFlag",
+              "flag": "c7.vorkath_spared"
+            }
+          ]
+        },
+        {
+          "label": {
+            "zh_TW": "「你讓整座塔的人怕了你一百年。」（舉起武器）",
+            "en": "\"You let a whole tower live in fear of you for a hundred years.\" (Raise your weapon)"
+          },
+          "next": "kill",
+          "actions": [
+            {
+              "type": "addCounter",
+              "counter": "vengeance",
+              "delta": 1
+            },
+            {
+              "type": "setFlag",
+              "flag": "c7.vorkath_killed"
+            }
+          ]
+        }
+      ]
+    },
+    "spare": {
+      "text": {
+        "zh_TW": "沃卡司慢慢站起來，把一枚星形的徽章放在你手裡。「這一百年……我只等到你一個。」他閉上眼睛，像是終於可以睡了。",
+        "en": "Vorkath slowly rises and lays a star-shaped badge in your hand. \"In a hundred years... you are the only one I waited for.\" He closes his eyes, as if at last he may sleep."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null,
+          "action": {
+            "type": "setFlag",
+            "flag": "c7.vorkath_done"
+          }
+        }
+      ]
+    },
+    "kill": {
+      "text": {
+        "zh_TW": "沃卡司沒有躲。「……也好。這個擔子，我也背累了。」他化成灰，灰裡有一枚星形的徽章。",
+        "en": "Vorkath does not move. \"...So be it. I am tired of carrying this too.\" He crumbles to ash, and in the ash lies a star-shaped badge."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null,
+          "action": {
+            "type": "setFlag",
+            "flag": "c7.vorkath_done"
+          }
+        }
+      ]
+    }
+  }
+}

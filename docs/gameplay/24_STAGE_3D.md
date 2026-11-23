@@ -53,8 +53,10 @@ the map's objects (MapFloor) ──► one world group each, standing on its til
   onto from an open side (south first, facing the camera). **Up** climbs to the walls' top; **down** goes into a pit as
   deep. Treads in the look's ground texture darkened (`stairShade` 0.35: the owner, 2026-11-22, "too similar to the floor's
   colour"), risers and the pit in its wall texture. Each stair has its own light (`stairLights`: warm over a stair up, cool in a stair down's pit; brighter
-  when just opened, dimmer when locked; the nearest to the hero first). The padlock and the gold arrow stand over the
-  stair (on the top step, or over the pit), no longer flat on the ground.
+  when just opened, dimmer when locked; the nearest to the hero first). Over each stair stands its **sign** (the owner, 2026-11-23: the 3D steps alone were
+  still hard to read): three chevrons that keep **rising** over a stair up (gold, "^") or **sinking** over a stair down
+  (sky blue, "v"), brighter, quicker and pulsing when the stair has just opened; a padlock instead while it is locked
+  (`stairSign`: `size` 1 m, `speed`).
 - **An event** waiting on its tile is a small swirl of light, "like memory thoughts" (the owner, 2026-11-22; it was a gold
   plate that stood up as a dark slab in 3D): comet-like motes on two arms spiral in toward a breathing glow, lavender and
   pale blue, each event at its own phase (`SwirlLook`, map_objects.cpp; the effects atlas's `glow` and `dot`). An event

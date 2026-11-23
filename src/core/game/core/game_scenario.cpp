@@ -186,6 +186,9 @@ bool Game::f_StartScenarioJson(const nlohmann::json& l_jSc, const std::string& l
     if (l_jSc.contains("vars") && l_jSc["vars"].is_object())   // event variables: { "ledger_pages": 2 } (docs/gameplay/23)
         for (auto l_oIt = l_jSc["vars"].begin(); l_oIt != l_jSc["vars"].end(); ++l_oIt)
             if (l_oIt.value().is_number_integer()) m_oRun.f_SetVar(l_oIt.key(), l_oIt.value().get<int>());
+    if (l_jSc.contains("counters") && l_jSc["counters"].is_object())   // the story's counters: { "mercy": 4 } (docs/gameplay/23 §6)
+        for (auto l_oIt = l_jSc["counters"].begin(); l_oIt != l_jSc["counters"].end(); ++l_oIt)
+            if (l_oIt.value().is_number_integer()) m_oRun.f_SetCounter(l_oIt.key(), l_oIt.value().get<int>());
     if (l_jSc.contains("missions") && l_jSc["missions"].is_object())   // quests and their state: { "m_c3_ledger": "active" }
         for (auto l_oIt = l_jSc["missions"].begin(); l_oIt != l_jSc["missions"].end(); ++l_oIt) {
             if (!l_oIt.value().is_string()) continue;
@@ -430,6 +433,8 @@ bool Game::f_ScenarioCheck(std::string& l_strReport) const {
         l_fnFail("the hero is on cell " + std::to_string(m_oCs.m_iHeroCell) + ", expected " + std::to_string(m_jScenarioExpect["heroCell"].get<int>()));
     if (m_jScenarioExpect.contains("tutorialStep") && m_oArena.m_iTutorialStep != m_jScenarioExpect["tutorialStep"].get<int>())
         l_fnFail("the tutorial is at step " + std::to_string(m_oArena.m_iTutorialStep) + ", expected " + std::to_string(m_jScenarioExpect["tutorialStep"].get<int>()));
+    if (m_jScenarioExpect.contains("ending") && m_strActiveEndingId != m_jScenarioExpect["ending"].get<std::string>())   // the ending shown (23 §6)
+        l_fnFail("the ending shown is \"" + m_strActiveEndingId + "\", expected " + m_jScenarioExpect["ending"].get<std::string>());
     if (m_jScenarioExpect.contains("dialogueNode") && (!m_bInDialogue || m_strDlgNode != m_jScenarioExpect["dialogueNode"].get<std::string>()))
         l_fnFail("the dialogue is not at node \"" + m_jScenarioExpect["dialogueNode"].get<std::string>() + "\"");
     if (m_jScenarioExpect.contains("weaponLevel") && m_jScenarioExpect["weaponLevel"].is_object())   // weapon id -> its level

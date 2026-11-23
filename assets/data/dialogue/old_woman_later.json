@@ -1,0 +1,57 @@
+{
+  "npcId": "old_woman",
+  "start": "later",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "老婆婆縮在牆角，抱著一隻雞。「里歐？你還活著！他們抓走了你爹娘……我躲在這裡，連雞都不敢讓它叫。」",
+        "en": "The old woman is huddled in a corner, hugging a chicken. \"Leo? You're alive! They took your Mom and Dad... I've been hiding here. I don't even dare let the hen cluck.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「村子安全了，回去吧。我會把他們帶回來。」",
+            "en": "\"The village is safe now. Go home. I'll bring them back.\""
+          },
+          "next": null
+        }
+      ]
+    },
+    "pin": {
+      "text": {
+        "zh_TW": "老婆婆看見你頭上的髮簪：「那是你娘的……她被拖走的時候還在喊：『里歐要好好吃飯！』」她擦擦眼睛。「去吧，孩子。」",
+        "en": "The old woman sees the hairpin you carry. \"That's your mother's... As they dragged her away, she was still shouting, 'Leo, eat properly!'\" She wipes her eyes. \"Go on, child.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「我會的。」",
+            "en": "\"I will.\""
+          },
+          "next": null
+        }
+      ]
+    },
+    "later": {
+      "text": {
+        "zh_TW": "老婆婆：「聽說你在塔上救了好多人！我的雞今天下了兩顆蛋——一顆給你，一顆留給你娘回來吃。」",
+        "en": "The old woman: \"I hear you've saved so many people up the tower! My hen laid two eggs today. One for you, and one for your mother when she's back.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「謝謝婆婆。」",
+            "en": "\"Thank you, Granny.\""
+          },
+          "next": null,
+          "action": {
+            "type": "addStat",
+            "stat": "hp",
+            "delta": 20
+          }
+        }
+      ]
+    }
+  },
+  "_comment": "S6 of the story revamp (docs/gameplay/23 §8): the old woman from the next farm, hiding on F04 since the raid; her line follows the story (npcs/old_woman.json picks the node). (this copy starts at \"later\")"
+}

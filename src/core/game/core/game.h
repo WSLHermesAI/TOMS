@@ -247,6 +247,7 @@ struct CombatState : public Trackable {
     int m_iIntroOwner = -1;                          // -1 the hero (his colours, from the right); 0.. that monster (a boss's look, from the left)
     std::string m_strHeroIntroLabel, m_strIntroName; // the label's text key; the attack's name (already in the player's language)
     int m_iIntroFoeFire = -1;                        // a monster's special attack waits for its introduction, then lands (f_StartFoeIntro)
+    int m_iRevealMs = 0, m_iRevealMsMax = 0, m_iRevealFoe = -1;   // a boss's arrival: dark, then its colours come, then its banner
     int m_iTravelMs = 0, m_iTravelMsMax = 0;   // a boss sequence: the stage travelling to the next monster (everything waits)
     int m_iBossIntroMs = 0, m_iBossIntroMsMax = 0;   // a boss's introduction (f_StartBossIntro): time left; everything waits the same way
     // (it is armed first: it waits for the battle's first drawn frame, then startDelayMs, so loading never eats it)
@@ -456,7 +457,7 @@ public:
     bool f_ReduceEffects() const { return m_oSettings.m_bReduceEffects; }
     bool f_BattleCellsOn() const { return m_oCs.m_bActive && m_oCs.m_bCellsOn; }
     // a moment when everything waits and only the monster is shown: the first danger's, or a boss's introduction
-    bool f_CellIntroOn() const { return m_oCs.m_iTravelMs > 0 || m_oCs.m_iCellIntroMs > 0 || m_oCs.m_iBossIntroMs > 0 || m_oCs.m_iBossIntroFoe >= 0 || m_oCs.m_iIntroFoeFire >= 0; }
+    bool f_CellIntroOn() const { return m_oCs.m_iTravelMs > 0 || m_oCs.m_iRevealMs > 0 || m_oCs.m_iCellIntroMs > 0 || m_oCs.m_iBossIntroMs > 0 || m_oCs.m_iBossIntroFoe >= 0 || m_oCs.m_iIntroFoeFire >= 0; }
     // A boss's introduction (the owner, 2026-11-14, Q82: "a special opening to introduce the boss (like Mega Man)"):
     // enemies.json "intro": true; battle.json feelFx "bossIntro". The fight waits; the camera goes low and close on it,
     // it poses, its particles and its sting, a banner slides in and its name types in letter by letter.
@@ -924,7 +925,8 @@ private:
         bool m_bAdvance = false;           // a guard just beaten: on to the next fight (no result screen)
     };
     Gauntlet m_oGauntlet;
-    glm::vec3 m_v3BattleTravel{0.0f}, m_v3TravelFrom{0.0f}, m_v3TravelTo{0.0f};   // the 3D stage's offset: the monster's place now
+    glm::vec3 m_v3BattleTravel{0.0f}, m_v3TravelFrom{0.0f}, m_v3TravelTo{0.0f};
+    int m_iRunPuffStep = -1;                             // the hero running on: the last step that puffed dust   // the 3D stage's offset: the monster's place now
     bool f_IsGauntletBoss(const std::string& l_strId) const;   // enemies.json "intro": a boss
     std::vector<EnemyInst> f_GauntletGuards(const EnemyInst& l_oBoss, const std::vector<std::string>& l_vStageList);
     void f_StartGauntlet(const EnemyInst& l_oBoss, const std::vector<EnemyInst>& l_vGuards);
@@ -932,7 +934,8 @@ private:
     void f_StepGauntletTravel(int l_iDtMs);
     void f_FillGauntletUi(toms::UiBattle& l_oB) const;
     glm::vec3 f_GauntletStepVec() const;                  // battle.json "gauntlet" "step": from one monster's place to the next
-    void f_DrawGauntletWaiting();                         // the monsters still to come, standing further on (dark)
+    void f_DrawGauntletWaiting();
+    float f_FoeDarkness(int l_iFoe) const;                // a boss before its banner: 0 lit .. 1 black (bossIntro "dark")                         // the monsters still to come, standing further on (dark)
     bool f_AfterPlayerHit(const std::string& l_strHitLog, const std::string& l_strWinLog);   // true: the battle was won
     // ---- the revamp (docs/gameplay/15) ----
     float f_BattleSpeed() const;                          // the player's setting, or a scenario's (17 I10)

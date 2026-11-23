@@ -1,5 +1,5 @@
 {
-  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): the elder in the village (hub_village): the baker's quest claimed, the tower, and the chapter's end after Grey Mask. Chapter 2 (23 §4): its end after F10 (c2.done). Chapter 3: its end after F15 (c3.done; the ledger quest paid). Chapter 4: its end after F20 and the vision (c4.done): Bran, the mother's brother. Chapter 5: its end after F25 and the unmasking (c5.done), one line per choice.",
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): the elder in the village (hub_village): the baker's quest claimed, the tower, and the chapter's end after Grey Mask. Chapter 2 (23 §4): its end after F10 (c2.done). Chapter 3: its end after F15 (c3.done; the ledger quest paid). Chapter 4: its end after F20 and the vision (c4.done): Bran, the mother's brother. Chapter 5: its end after F25 and the unmasking (c5.done), one line per choice. Chapter 6: its end once the parents are home and F31 reached (c6.done).",
   "npcId": "villager_elder",
   "start": "root",
   "nodes": {
@@ -235,6 +235,35 @@
               {
                 "type": "runFlagSet",
                 "flag": "c5.bran_justice"
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「爹娘回家了。」",
+            "en": "\"Mom and Dad are home.\""
+          },
+          "next": "c6end",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c5.done"
+              },
+              {
+                "type": "runFlagSet",
+                "flag": "home.parents"
+              },
+              {
+                "type": "stageCleared",
+                "stageId": "F31"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
               }
             ]
           }
@@ -480,6 +509,25 @@
           "action": {
             "type": "setFlag",
             "flag": "c5.done"
+          }
+        }
+      ]
+    },
+    "c6end": {
+      "text": {
+        "zh_TW": "長老坐在你家的門口，手裡端著一碗燉肉。「你娘硬塞給我的。」他看著塔頂。「最後一段路了，里歐。我們都在這裡等你回來吃飯。」",
+        "en": "The elder sits on your doorstep, a bowl of stew in his hands. \"Your mother made me take it.\" He looks up at the top of the tower. \"This is the last stretch, Leo. We'll all be here, waiting for you to come home for dinner.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（第六章 完）",
+            "en": "(End of Chapter 6)"
+          },
+          "next": null,
+          "action": {
+            "type": "setFlag",
+            "flag": "c6.done"
           }
         }
       ]

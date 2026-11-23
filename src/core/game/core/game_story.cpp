@@ -501,6 +501,21 @@ void Game::f_RunDialogueAction(const nlohmann::json& l_jAction) {
         return;
     }
     if (l_strType == "openStore") { f_EndDialogue(); f_OpenStore(); return; }   // a villager's shop (Pip's)
+    if (l_strType == "ending") {   // the story's end (docs/gameplay/23 §6): "id" one ending, or "among": the first whose conditions hold
+        std::vector<std::string> l_vAmong;
+        if (l_jAction.contains("among") && l_jAction["among"].is_array())
+            for (const auto& l_jId : l_jAction["among"]) if (l_jId.is_string()) l_vAmong.push_back(l_jId.get<std::string>());
+        std::string l_strId = l_jAction.value("id", std::string());
+        if (l_strId.empty() && !l_vAmong.empty()) {
+            GameConditionContext l_oCtx(m_oPl, m_oMeta, m_mapMissionTrackers, m_oRun, m_oEquipped);
+            const toms::EndingDefinition* l_pE = toms::f_CheckNamedEndings(m_oEndingsTable, l_vAmong, l_oCtx);
+            if (l_pE) l_strId = l_pE->m_strId;
+        }
+        if (l_strId.empty()) { std::fprintf(stderr, "[story] ending: no ending matched\n"); return; }
+        f_EndDialogue();
+        f_TriggerEnding(l_strId);
+        return;
+    }
     if (l_strType == "heal") {   // a villager's healing: full HP for its cost in gold
         const int l_iCost = std::max(0, l_jAction.value("cost", 0));
         if (m_oPl.m_iGold < l_iCost) { m_vNotifications.push_back({m_oLocale.f_Tr("village.no_gold"), 3200}); return; }

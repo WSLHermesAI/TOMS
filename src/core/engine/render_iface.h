@@ -197,6 +197,9 @@ public:
     virtual bool f_SupportsWorld() const { return false; }
     virtual void f_BeginWorld(const float* l_pMat4, bool l_bLit) { (void)l_pMat4; (void)l_bLit; }
     virtual void f_EndWorld() {}
+    // The open world group's colours multiplied by this (rgba; reset by f_BeginWorld): a fighter drawn again in black over
+    // itself, fading, as it comes out of the dark (a boss's arrival).
+    virtual void f_SetWorldTint(const float* l_pRgba) { (void)l_pRgba; }
     // Diagnostic: if n!=0, only emit quads whose node==n (isolate one subsystem).
     virtual void f_SetNodeFilter(uint8_t l_u8N) { (void)l_u8N; }
     virtual void end() = 0;                       // present to target (offscreen/canvas)

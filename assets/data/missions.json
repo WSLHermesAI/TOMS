@@ -151,5 +151,21 @@
     "rewardExp": 40,
     "rewardGold": 40,
     "rewardItemId": "gem_atk"
+  },
+  "m_c6_mirrors": {
+    "missionId": "m_c6_mirrors",
+    "title": "mission.m_c6_mirrors.title",
+    "desc": "mission.m_c6_mirrors.desc",
+    "kind": "once",
+    "giver": "princess",
+    "prerequisites": null,
+    "objective": {
+      "type": "flag",
+      "targetId": "c6.mirror",
+      "count": 1
+    },
+    "rewardExp": 60,
+    "rewardGold": 60,
+    "rewardItemId": "gem_def"
   }
 }

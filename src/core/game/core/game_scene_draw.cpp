@@ -70,8 +70,7 @@ void Game::f_DrawGroundMarks(const MapView& l_oV) {
 }
 
 // A stair's sign, drawn in the square (x, y, size) that stands over it on the 3D floor (f_DrawWalk3D): Q7, a locked
-// stair's padlock until its event is finished; W38, an opened stair's gold arrow bobbing, pointing down at it, until it
-// is taken. False: nothing to say.
+// stair's padlock until its event is finished; else its way, chevrons rising (up) or sinking (down).
 bool Game::f_DrawStairSign(const toms::StairLink& l_oS, float l_fX0, float l_fY0, float l_fTs) {
     auto l_fnSolid = [&](float l_fX, float l_fY, float l_fW, float l_fH, float l_fR, float l_fG, float l_fB, float l_fA) {
         Quad l_oQ; l_oQ.m_arrRect[0] = l_fX; l_oQ.m_arrRect[1] = l_fY; l_oQ.m_arrRect[2] = l_fW; l_oQ.m_arrRect[3] = l_fH;
@@ -89,15 +88,33 @@ bool Game::f_DrawStairSign(const toms::StairLink& l_oS, float l_fX0, float l_fY0
         l_fnSolid(l_fX0 + 7.5f * l_fU, l_fY0 + 9 * l_fU, 1 * l_fU, 2.5f * l_fU, 0.20f, 0.16f, 0.08f, 1.0f);    // keyhole
         return true;
     }
-    if (!f_StairJustOpened(m_oSt.m_strId, l_oS)) return false;
-    const float l_fBob = std::sin((float)std::fmod(m_dIdleClockMs, 1000.0) / 1000.0f * 6.2831853f) * 1.5f * l_fU;
-    const float l_fCx = l_fX0 + l_fTs * 0.5f, l_fTop = l_fY0 + 2.0f * l_fU + l_fBob;
-    l_fnSolid(l_fCx - 1.5f * l_fU, l_fTop, 3.0f * l_fU, 5.0f * l_fU, 0.20f, 0.16f, 0.08f, 1.0f);                 // shaft outline
-    l_fnSolid(l_fCx - 0.75f * l_fU, l_fTop + 0.5f * l_fU, 1.5f * l_fU, 4.5f * l_fU, 1.0f, 0.85f, 0.3f, 1.0f);       // shaft
-    for (int l_iR = 0; l_iR < 4; l_iR++) {                                                             // the head, row by row
-        const float l_fW = (7.0f - 2.0f * l_iR) * l_fU, l_fY = l_fTop + 5.0f * l_fU + l_iR * l_fU;
-        l_fnSolid(l_fCx - l_fW * 0.5f - 0.5f * l_fU, l_fY, l_fW + l_fU, l_fU, 0.20f, 0.16f, 0.08f, 1.0f);
-        l_fnSolid(l_fCx - l_fW * 0.5f, l_fY, l_fW, l_fU, 1.0f, 0.85f, 0.3f, 1.0f);
+    // Its way, so the steps cannot be misread (the owner, 2026-11-23): three chevrons that keep rising over a stair up
+    // (gold, "^") or keep sinking over a stair down (sky blue, "v"), each fading in at one end and out at the other.
+    // W38: a stair just opened shows them brighter, quicker and pulsing, until it is taken.
+    const bool l_bOpened = f_StairJustOpened(m_oSt.m_strId, l_oS);
+    const nlohmann::json l_jSign = m_jStage3D.is_object() ? m_jStage3D.value("stairSign", nlohmann::json::object()) : nlohmann::json::object();
+    const float l_fSpeed = l_jSign.value("speed", 0.8f) * (l_bOpened ? 1.6f : 1.0f);
+    const float l_fP = (float)std::fmod(m_dIdleClockMs / 1000.0 * l_fSpeed, 1.0);   // the chevrons' march, 0..1 a step
+    const float l_fPulse = l_bOpened ? 0.8f + 0.2f * std::sin((float)std::fmod(m_dIdleClockMs, 600.0) / 600.0f * 6.2831853f) : 1.0f;
+    const float l_arrUp[3] = {1.0f, 0.85f, 0.3f}, l_arrDown[3] = {0.45f, 0.78f, 1.0f};
+    const float* l_pC = l_oS.m_bUp ? l_arrUp : l_arrDown;
+    const float l_fCx = l_fX0 + l_fTs * 0.5f, l_fSq = 1.7f * l_fU, l_fRim = 0.45f * l_fU;
+    const int l_iCount = 3;
+    for (int l_iK = 0; l_iK < l_iCount; l_iK++) {
+        const float l_fK = (float)l_iK + l_fP;                                       // 0 .. 3: along the way
+        const float l_fFade = std::sin(3.14159265f * l_fK / (float)l_iCount) * l_fPulse;
+        // up: from the bottom of the square to its top; down: the other way
+        const float l_fApex = l_oS.m_bUp ? l_fY0 + 13.0f * l_fU - l_fK * 3.6f * l_fU : l_fY0 + 3.0f * l_fU + l_fK * 3.6f * l_fU;
+        for (int l_iPass = 0; l_iPass < 2; l_iPass++)   // a dark rim first, then the colour
+            for (int l_iI = 0; l_iI < 4; l_iI++) {
+                const float l_fDy = (l_oS.m_bUp ? 1.0f : -1.0f) * (float)l_iI * l_fU;   // the arms go away from the apex
+                for (int l_iSide = -1; l_iSide <= 1; l_iSide += 2) {
+                    if (l_iI == 0 && l_iSide > 0) continue;   // (the apex once)
+                    const float l_fX = l_fCx + (float)l_iSide * (float)l_iI * 1.15f * l_fU - l_fSq * 0.5f, l_fY = l_fApex + l_fDy - l_fSq * 0.5f;
+                    if (l_iPass == 0) l_fnSolid(l_fX - l_fRim, l_fY - l_fRim, l_fSq + 2 * l_fRim, l_fSq + 2 * l_fRim, 0.12f, 0.09f, 0.05f, 0.85f * l_fFade);
+                    else l_fnSolid(l_fX, l_fY, l_fSq, l_fSq, l_pC[0], l_pC[1], l_pC[2], l_fFade);
+                }
+            }
     }
     return true;
 }

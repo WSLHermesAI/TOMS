@@ -1,5 +1,5 @@
 {
-  "_comment": "Chapter 2 of the story revamp (docs/gameplay/23 §4): the cartographer at home (hub_cartographer): who is still held; Liora foreshadowed.",
+  "_comment": "Chapter 2 of the story revamp (docs/gameplay/23 §4): the cartographer at home (hub_cartographer): who is still held; Liora foreshadowed. S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "cartographer",
   "start": "root",
   "nodes": {
@@ -15,6 +15,61 @@
             "en": "\"Who's still missing?\""
           },
           "next": "missing"
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c2",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c3.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c3",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c3.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
         },
         {
           "label": {
@@ -35,6 +90,51 @@
           "label": {
             "zh_TW": "……",
             "en": "..."
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c2": {
+      "text": {
+        "zh_TW": "製圖師：「塔的地圖我畫到一半了。每一層都在變，畫得我頭好痛。」",
+        "en": "Cartographer: \"I've mapped half the tower. Every floor keeps changing. It gives me a headache.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c3": {
+      "text": {
+        "zh_TW": "製圖師：「皮普那張『九十九分正確』的地圖？我看過了，只有一條路是對的——他標成了『危險』。」",
+        "en": "Cartographer: \"Pip's 'ninety-nine percent accurate' map? I've seen it. Exactly one road on it is right, and he marked it 'danger'.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "製圖師：「我把星星畫在地圖的最上面了。等你點亮它，我要畫上一個太陽。」",
+        "en": "Cartographer: \"I've drawn the Star at the very top of the map. When you light it, I'll draw a sun there.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
           },
           "next": "root"
         }

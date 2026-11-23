@@ -4,12 +4,14 @@
   "nodes": {
     "root": {
       "text": {
-        "zh_TW": "「旅人，祭壇的光正盛。靜下心，觸碰掠過的光點，水晶自會成形。」"
+        "zh_TW": "「旅人，祭壇的光正盛。靜下心，觸碰掠過的光點，水晶自會成形。」",
+        "en": "\"Traveller, the altar's light is strong. Calm your heart, touch the passing lights, and the crystal will take shape.\""
       },
       "choices": [
         {
           "label": {
-            "zh_TW": "觸碰祭壇。"
+            "zh_TW": "觸碰祭壇。",
+            "en": "Touch the altar."
           },
           "action": {
             "type": "miniGame",
@@ -19,11 +21,275 @@
         },
         {
           "label": {
-            "zh_TW": "離開。"
+            "zh_TW": "「水晶裡看見了什麼？」",
+            "en": "\"What do you see in the crystal?\""
+          },
+          "next": "see_c1",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c2.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c3.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c4.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c5.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「水晶裡看見了什麼？」",
+            "en": "\"What do you see in the crystal?\""
+          },
+          "next": "see_c2",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c2.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c3.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c4.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c5.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「水晶裡看見了什麼？」",
+            "en": "\"What do you see in the crystal?\""
+          },
+          "next": "see_c3",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c3.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c4.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c5.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「水晶裡看見了什麼？」",
+            "en": "\"What do you see in the crystal?\""
+          },
+          "next": "see_c4",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c4.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c5.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「水晶裡看見了什麼？」",
+            "en": "\"What do you see in the crystal?\""
+          },
+          "next": "see_c5",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c5.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「水晶裡看見了什麼？」",
+            "en": "\"What do you see in the crystal?\""
+          },
+          "next": "see_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "離開。",
+            "en": "Leave."
           },
           "next": null
         }
       ]
+    },
+    "see_c1": {
+      "text": {
+        "zh_TW": "水晶祭司：「水晶裡……有一盞燈，在一大片火裡沒有熄。那是你，孩子。」",
+        "en": "Crystal oracle: \"In the crystal... a lamp that did not go out in a great fire. That is you, child.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "see_c2": {
+      "text": {
+        "zh_TW": "水晶祭司：「一把騎士的劍，先指著你，後來護著你。」",
+        "en": "Crystal oracle: \"A knight's sword. First it points at you, then it guards you.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "see_c3": {
+      "text": {
+        "zh_TW": "水晶祭司：「一本寫滿名字的書。最後一頁……是空的，等著你寫。」",
+        "en": "Crystal oracle: \"A book full of names. Its last page... is blank, waiting for you to write it.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "see_c4": {
+      "text": {
+        "zh_TW": "水晶祭司：「沉睡的老東西們在低頭。它們認得你的光。」",
+        "en": "Crystal oracle: \"The old sleeping ones bow their heads. They know your light.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "see_c5": {
+      "text": {
+        "zh_TW": "水晶祭司：「一個面具碎了。底下的臉，在哭。」",
+        "en": "Crystal oracle: \"A mask, broken. The face beneath it is weeping.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "see_c6": {
+      "text": {
+        "zh_TW": "水晶祭司：「一顆裂成兩半的星星，和兩隻手。一隻是你的。」",
+        "en": "Crystal oracle: \"A star split in two, and two hands. One of them is yours.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
     }
-  }
+  },
+  "_comment": "The crystal shrine (docs/gameplay/07 phase 6) and, S6 of the story revamp (docs/gameplay/23 §8): what the crystal shows follows the story (see_*: the latest chapter done)."
 }

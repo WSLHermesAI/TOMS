@@ -1,5 +1,5 @@
 {
-  "_comment": "Chapter 4 of the story revamp (docs/gameplay/23 §4): the dwarf at home (hub_dwarf): a DEF gem for 30 gold.",
+  "_comment": "Chapter 4 of the story revamp (docs/gameplay/23 §4): the dwarf at home (hub_dwarf): a DEF gem for 30 gold. S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "dwarf",
   "start": "root",
   "nodes": {
@@ -34,6 +34,61 @@
         },
         {
           "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c4",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c5.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c5",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c5.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
+        },
+        {
+          "label": {
             "zh_TW": "「下次吧。」",
             "en": "\"Another time.\""
           },
@@ -51,6 +106,51 @@
           "label": {
             "zh_TW": "……",
             "en": "..."
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c4": {
+      "text": {
+        "zh_TW": "矮人：「挖了一輩子的洞，第一次挖到天亮的地方。這村子不錯。」",
+        "en": "Dwarf: \"A lifetime digging holes, and for the first time I've dug my way into the daylight. Nice village.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c5": {
+      "text": {
+        "zh_TW": "矮人：「布蘭那小子在搬木頭？哼……給他一把好鏟子。蓋房子要從挖地基開始。」",
+        "en": "Dwarf: \"That Bran fellow is hauling timber? Hmph... give him a good shovel. A house starts with digging its foundation.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "矮人：「上面的石頭會跟你說話嗎？那些沉睡的傢伙……替我跟它們說聲謝謝。」",
+        "en": "Dwarf: \"Do the stones up there talk to you? Those sleeping ones... tell them thanks from me.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
           },
           "next": "root"
         }

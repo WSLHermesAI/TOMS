@@ -1,5 +1,5 @@
 {
-  "_comment": "Chapter 5 of the story revamp (docs/gameplay/23 §4): the village square (hub_square): everyone home but the parents.",
+  "_comment": "Chapter 5 of the story revamp (docs/gameplay/23 §4): the village square (hub_square): everyone home but the parents. S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "miller",
   "start": "root",
   "nodes": {
@@ -15,6 +15,30 @@
             "en": "\"...Everyone's back.\""
           },
           "next": "almost"
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c5",
+          "requires": {
+            "not": {
+              "type": "runFlagSet",
+              "flag": "c6.done"
+            }
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
         }
       ]
     },
@@ -30,6 +54,36 @@
             "en": "\"Yeah!\""
           },
           "next": null
+        }
+      ]
+    },
+    "news_c5": {
+      "text": {
+        "zh_TW": "磨坊主：「水車又轉了！織布女說，等你爹娘回來，要織一面新的村旗。」",
+        "en": "Miller: \"The mill wheel turns again! The weaver says that when your parents are home, she'll weave a new village banner.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "磨坊主：「新的村旗織好了——上面是一碗燉肉。是你娘選的。」",
+        "en": "Miller: \"The new banner is woven. There's a bowl of stew on it. Your mother chose it.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
         }
       ]
     }

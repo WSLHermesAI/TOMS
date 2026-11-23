@@ -87,6 +87,61 @@
     "break": 16,
     "events": [{ "on": "hpBelow", "value": 50, "do": [{ "say": "battle.event.boss_rage" }, { "stat": "interval", "mul": 0.8 }, { "anim": "special" }] }]
   },
+  "vorkath_king": {
+    "bossTier": "final",
+    "name": {
+      "zh_TW": "巫師王沃卡司",
+      "en": "Vorkath, the Sorcerer King",
+      "zh_CN": "Vorkath, the Sorcerer King",
+      "ja": "Vorkath, the Sorcerer King",
+      "ko": "Vorkath, the Sorcerer King",
+      "es": "Vorkath, the Sorcerer King"
+    },
+    "sprite": "m_demonlord_vorkath.png",
+    "intro": true,
+    "look": "vorkath",
+    "hp": 980,
+    "body": 5,
+    "atk": 52,
+    "def": 11,
+    "exp": 120,
+    "weaponExp": 10,
+    "gold": 90,
+    "atk_interval_ms": 3000,
+    "moves": [
+      {
+        "id": "strike",
+        "weight": 2
+      },
+      "heavy",
+      "jabs",
+      "spell",
+      "guard",
+      "boss_near",
+      "boss_line",
+      "boss_fan"
+    ],
+    "break": 16,
+    "events": [
+      {
+        "on": "hpBelow",
+        "value": 50,
+        "do": [
+          {
+            "say": "battle.event.boss_rage"
+          },
+          {
+            "stat": "interval",
+            "mul": 0.8
+          },
+          {
+            "anim": "special"
+          }
+        ]
+      }
+    ],
+    "_boss": "chapter 7's F33 boss (docs/gameplay/23 §4): Vorkath, who sealed the Star; not \"boss\": true (that ends the old story)"
+  },
   "mossling": {
     "name": { "zh_TW": "苔蘚球", "en": "Mossling" },
     "sprite": "m_mossling.png",
@@ -1049,6 +1104,41 @@
     "big": true,
     "_boss": "F05's boss, beside its up stairs (the owner, 2026-11-13)"
   },
+  "hollow_god": {
+    "bossTier": "stage",
+    "name": {
+      "zh_TW": "空洞之神",
+      "en": "The Hollow God",
+      "zh_CN": "The Hollow God",
+      "ja": "The Hollow God",
+      "ko": "The Hollow God",
+      "es": "The Hollow God"
+    },
+    "sprite": "m_gravewarden.png",
+    "look": "gravewarden",
+    "hp": 1300,
+    "body": 3,
+    "atk": 58,
+    "def": 13,
+    "exp": 200,
+    "weaponExp": 4,
+    "gold": 150,
+    "break": 10,
+    "atk_interval_ms": 2600,
+    "moves": [
+      {
+        "id": "strike",
+        "weight": 2
+      },
+      "boss_near",
+      "boss_line",
+      "boss_fan"
+    ],
+    "guardsStairs": true,
+    "intro": true,
+    "big": true,
+    "_boss": "chapter 7's last boss, F35 (docs/gameplay/23 §4): the old god's shape at the Star; the Gravewarden's look for now"
+  },
   "hearthound": {
     "bossTier": "stage",
     "name": { "zh_TW": "爐火狐", "en": "Hearthound", "zh_CN": "炉火狐", "ja": "かまどギツネ", "ko": "화덕여우", "es": "Zorrohogar" },
@@ -1124,6 +1214,42 @@
     "intro": true,
     "big": true,
     "_boss": "F09's boss, beside its up stairs (the owner, 2026-11-13)"
+  },
+  "sanctum_warden": {
+    "bossTier": "stage",
+    "name": {
+      "zh_TW": "神殿守衛",
+      "en": "The Sanctum Warden",
+      "zh_CN": "The Sanctum Warden",
+      "ja": "The Sanctum Warden",
+      "ko": "The Sanctum Warden",
+      "es": "The Sanctum Warden"
+    },
+    "sprite": "m_astrowl.png",
+    "look": "astrowl",
+    "hp": 760,
+    "body": 5,
+    "atk": 46,
+    "def": 9,
+    "exp": 90,
+    "weaponExp": 5,
+    "gold": 70,
+    "break": 12,
+    "atk_interval_ms": 2600,
+    "moves": [
+      {
+        "id": "strike",
+        "weight": 2
+      },
+      "heavy",
+      "boss_near",
+      "boss_line",
+      "boss_fan"
+    ],
+    "guardsStairs": true,
+    "intro": true,
+    "big": true,
+    "_boss": "chapter 6's boss, F30 (the story revamp, docs/gameplay/23 §4): it guards the parents' cage; the Astrowl's look for now"
   },
   "chronoknight": {
     "bossTier": "stage",

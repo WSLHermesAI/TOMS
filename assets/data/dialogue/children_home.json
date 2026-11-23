@@ -1,0 +1,44 @@
+{
+  "_comment": "Chapter 6 of the story revamp (docs/gameplay/23 §4): the rescued children in the village (hub_children). S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
+  "npcId": "knight_errant",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "村子的新學堂裡，米菈在教孩子們寫自己的名字。她舉起一張紙：「看！他們每一個人都會寫了！以後再也沒有人能把名字從名冊上撕掉！」",
+        "en": "In the village's new schoolroom, Mira is teaching the children to write their own names. She holds up a sheet of paper. \"Look! Every one of them can write it now! Nobody will ever tear a name out of a ledger again!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6"
+        },
+        {
+          "label": {
+            "zh_TW": "（笑）",
+            "en": "(Smile)"
+          },
+          "next": null
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "最小的孩子跑過來：「哥哥！我會寫你的名字了！」她舉起一張紙，上面歪歪扭扭地寫著「里歐」。",
+        "en": "The smallest child runs up. \"Big brother! I can write your name now!\" She holds up a sheet of paper. On it, in wobbly letters: \"Leo\"."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    }
+  }
+}

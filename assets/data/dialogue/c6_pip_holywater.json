@@ -1,0 +1,60 @@
+{
+  "_comment": "Chapter 6 of the story revamp (docs/gameplay/23 §4): F27, Pip (comic): \"Sanctum holy water\" for 5 gold; it is a red potion with a new label.",
+  "npcId": "chest_peddler",
+  "start": "pip",
+  "nodes": {
+    "pip": {
+      "text": {
+        "zh_TW": "皮普在祈禱廳門口擺了一張桌子：「神殿聖水！神明親手祝福！一瓶只要五枚金幣！」凱：「……那是井水吧。」皮普：「是神明的井！」",
+        "en": "Pip has set up a table at the door of the Hall of Prayers. \"Sanctum holy water! Blessed by the gods themselves! Only five gold a bottle!\" Kai: \"...That's well water.\" Pip: \"It's the gods' well!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「好吧，來一瓶。」（5 金幣）",
+            "en": "\"Fine, one bottle.\" (5 gold)"
+          },
+          "next": "drink",
+          "requires": {
+            "type": "statAtLeast",
+            "stat": "gold",
+            "value": 5
+          },
+          "actions": [
+            {
+              "type": "addStat",
+              "stat": "gold",
+              "delta": -5
+            },
+            {
+              "type": "give",
+              "itemId": "potion_red"
+            }
+          ]
+        },
+        {
+          "label": {
+            "zh_TW": "「不用了。」",
+            "en": "\"No thanks.\""
+          },
+          "next": null
+        }
+      ]
+    },
+    "drink": {
+      "text": {
+        "zh_TW": "你喝了一口。……居然真的有用。瓶底貼著一張小標籤：「紅色藥水（皮普牌）」。",
+        "en": "You take a sip. ...It actually works. A little label is stuck on the bottom: \"Red Potion (Pip brand)\"."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……皮普。」",
+            "en": "\"...Pip.\""
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

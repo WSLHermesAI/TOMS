@@ -1,0 +1,23 @@
+{
+  "_comment": "Chapter 7, F31 (docs/gameplay/23 §4.7): with trust 3 or more, Kai holds the door behind Leo (two potions, c7.kai_holds).",
+  "scene": "dialogue",
+  "counters": {
+    "trust": 3
+  },
+  "dialogue": {
+    "id": "c7_kai"
+  },
+  "test": {
+    "frames": 60,
+    "keys": "enter@10,enter@25"
+  },
+  "expect": {
+    "scene": "stage",
+    "flags": [
+      "c7.kai_holds"
+    ],
+    "inventoryHas": [
+      "potion_red"
+    ]
+  }
+}

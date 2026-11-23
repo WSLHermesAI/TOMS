@@ -1,0 +1,18 @@
+{
+  "_comment": "S6 of the story revamp (docs/gameplay/23 §8): the crystal oracle (F07) keeps her shrine game and tells what the crystal shows, by the story: after chapter 4, the old sleeping ones (see_c4).",
+  "scene": "dialogue",
+  "flags": [
+    "c4.done"
+  ],
+  "dialogue": {
+    "id": "crystal_oracle"
+  },
+  "test": {
+    "frames": 40,
+    "keys": "down@10,enter@20"
+  },
+  "expect": {
+    "scene": "dialogue",
+    "dialogueNode": "see_c4"
+  }
+}

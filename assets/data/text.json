@@ -2427,6 +2427,238 @@
       "zh_TW": "面具裂開了。",
       "en": "The mask cracks open."
     },
+    "story.ch05.desc": {
+      "zh_TW": "灰面、牢房裡的村民，以及大抉擇。",
+      "en": "Grey Mask, the villagers in the cells, and the big choice."
+    },
+    "story.ch06.title": {
+      "zh_TW": "神殿",
+      "en": "The Sanctum"
+    },
+    "story.ch06.desc": {
+      "zh_TW": "莉歐拉的鏡子、被抓的孩子，以及爹娘。",
+      "en": "Liora's mirror, the taken children, and Mom and Dad."
+    },
+    "story.ch07.title": {
+      "zh_TW": "最後的抉擇",
+      "en": "The Final Choice"
+    },
+    "story.ch07.desc": {
+      "zh_TW": "沃卡司、古老之神，以及安穩之星。",
+      "en": "Vorkath, the old god, and the Star of Peace."
+    },
+    "npc.children.name": {
+      "zh_TW": "被抓走的孩子們",
+      "en": "The taken children"
+    },
+    "mission.m_c6_mirrors.title": {
+      "zh_TW": "莉歐拉的鏡子",
+      "en": "Liora's Mirror"
+    },
+    "mission.m_c6_mirrors.desc": {
+      "zh_TW": "在神殿裡找回三片碎鏡。",
+      "en": "Find the three mirror shards in the Sanctum."
+    },
+    "ev_c6_mirror_voice.title": {
+      "zh_TW": "鏡子裡的女孩",
+      "en": "The Girl in the Mirror"
+    },
+    "ev_c6_mirror_voice.desc": {
+      "zh_TW": "莉歐拉的聲音。",
+      "en": "Liora's voice."
+    },
+    "ev_c6_mirror_voice.text": {
+      "zh_TW": "鏡子裡有人。",
+      "en": "Someone is in the mirror."
+    },
+    "ev_c6_shard2.title": {
+      "zh_TW": "第二片碎鏡",
+      "en": "The Second Shard"
+    },
+    "ev_c6_shard2.desc": {
+      "zh_TW": "長椅底下有光。",
+      "en": "Light under a pew."
+    },
+    "ev_c6_shard2.text": {
+      "zh_TW": "一片碎鏡。",
+      "en": "A mirror shard."
+    },
+    "ev_c6_shard3.title": {
+      "zh_TW": "最後一片碎鏡",
+      "en": "The Last Shard"
+    },
+    "ev_c6_shard3.desc": {
+      "zh_TW": "卡在石縫裡。",
+      "en": "Wedged between the stones."
+    },
+    "ev_c6_shard3.text": {
+      "zh_TW": "一片碎鏡。",
+      "en": "A mirror shard."
+    },
+    "ev_c6_mirror_whole.title": {
+      "zh_TW": "完整的鏡子",
+      "en": "The Whole Mirror"
+    },
+    "ev_c6_mirror_whole.desc": {
+      "zh_TW": "莉歐拉的真相。",
+      "en": "Liora's truth."
+    },
+    "ev_c6_mirror_whole.text": {
+      "zh_TW": "鏡子完整了。",
+      "en": "The mirror is whole."
+    },
+    "ev_c6_pip_holywater.title": {
+      "zh_TW": "神殿聖水",
+      "en": "Sanctum Holy Water"
+    },
+    "ev_c6_pip_holywater.desc": {
+      "zh_TW": "五枚金幣一瓶。",
+      "en": "Five gold a bottle."
+    },
+    "ev_c6_pip_holywater.text": {
+      "zh_TW": "神明親手祝福！",
+      "en": "Blessed by the gods themselves!"
+    },
+    "ev_c6_cradles.title": {
+      "zh_TW": "水晶搖籃",
+      "en": "The Crystal Cradles"
+    },
+    "ev_c6_cradles.desc": {
+      "zh_TW": "名冊上的孩子們。",
+      "en": "The children from the ledger."
+    },
+    "ev_c6_cradles.text": {
+      "zh_TW": "他們還在呼吸。",
+      "en": "They're still breathing."
+    },
+    "ev_c6_god_voice.title": {
+      "zh_TW": "古老的聲音",
+      "en": "The Old Voice"
+    },
+    "ev_c6_god_voice.desc": {
+      "zh_TW": "聽它說，還是叫它滾？",
+      "en": "Hear it out, or tell it to go?"
+    },
+    "ev_c6_god_voice.text": {
+      "zh_TW": "神裔。回家吧。",
+      "en": "Godborn. Come home."
+    },
+    "ev_c6_family.title": {
+      "zh_TW": "爹娘",
+      "en": "Mom and Dad"
+    },
+    "ev_c6_family.desc": {
+      "zh_TW": "發光的籠子裡。",
+      "en": "Inside the glowing cage."
+    },
+    "ev_c6_family.text": {
+      "zh_TW": "……媽？爸？",
+      "en": "...Mom? Dad?"
+    },
+    "ev_c7_kai.title": {
+      "zh_TW": "凱守住大門",
+      "en": "Kai Holds the Door"
+    },
+    "ev_c7_kai.desc": {
+      "zh_TW": "信任。",
+      "en": "Trust."
+    },
+    "ev_c7_kai.text": {
+      "zh_TW": "凱停下了腳步。",
+      "en": "Kai stops."
+    },
+    "ev_c7_pip_final.title": {
+      "zh_TW": "皮普的分紅",
+      "en": "Pip's Dividend"
+    },
+    "ev_c7_pip_final.desc": {
+      "zh_TW": "還記得森林裡的投資嗎？",
+      "en": "Remember the investment in the forest?"
+    },
+    "ev_c7_pip_final.text": {
+      "zh_TW": "沉甸甸的錢袋。",
+      "en": "A heavy money bag."
+    },
+    "ev_c7_liora_door.title": {
+      "zh_TW": "門後的莉歐拉",
+      "en": "Liora Behind the Door"
+    },
+    "ev_c7_liora_door.desc": {
+      "zh_TW": "一起點亮星星。",
+      "en": "Light the Star together."
+    },
+    "ev_c7_liora_door.text": {
+      "zh_TW": "門上刻著一隻手。",
+      "en": "A hand is carved into the door."
+    },
+    "ev_c7_vorkath.title": {
+      "zh_TW": "沃卡司的真相",
+      "en": "Vorkath's Truth"
+    },
+    "ev_c7_vorkath.desc": {
+      "zh_TW": "放過他，還是不？",
+      "en": "Spare him, or not?"
+    },
+    "ev_c7_vorkath.text": {
+      "zh_TW": "王冠滾到一邊。",
+      "en": "The crown rolls away."
+    },
+    "ev_c7_temptation.title": {
+      "zh_TW": "最後的誘惑",
+      "en": "The Last Temptation"
+    },
+    "ev_c7_temptation.desc": {
+      "zh_TW": "它用媽媽的聲音說話。",
+      "en": "It speaks in your mother's voice."
+    },
+    "ev_c7_temptation.text": {
+      "zh_TW": "里歐。",
+      "en": "Leo."
+    },
+    "ev_c7_star.title": {
+      "zh_TW": "安穩之星",
+      "en": "The Star of Peace"
+    },
+    "ev_c7_star.desc": {
+      "zh_TW": "最後的抉擇。",
+      "en": "The final choice."
+    },
+    "ev_c7_star.text": {
+      "zh_TW": "星星裂成兩半。",
+      "en": "The Star is split in two."
+    },
+    "story.ending.e_home.name": {
+      "zh_TW": "回家",
+      "en": "Home"
+    },
+    "story.ending.e_home.text": {
+      "zh_TW": "星星亮了。你和莉歐拉走下長長的塔，凱在門口等著，滿身是傷，笑得很開心。村子裡的燉肉剛好煮好。爸爸問你有沒有好好吃飯，媽媽沒有問任何問題，只是一直抱著你。燒掉的房子一間一間蓋了回來。你不再是神裔了——你只是里歐。這樣就夠了。",
+      "en": "The Star is lit. You and Liora walk down the long tower, and Kai is waiting at the door, battered and grinning. In the village the stew is just ready. Dad asks if you've been eating properly. Mom asks nothing at all, and just holds on to you. One by one, the burned houses are built again. You are not Godborn any more. You are just Leo. And that is enough."
+    },
+    "story.ending.e_avenger.name": {
+      "zh_TW": "復仇者",
+      "en": "The Avenger"
+    },
+    "story.ending.e_avenger.text": {
+      "zh_TW": "星星亮了，王國得救了。人們叫你英雄。可是你的手掌偶爾還會在夜裡發燙，你記得布蘭閉上眼睛的樣子，記得那份冰冷。村子重建了，爹娘也回家了，你也回家了。只是有時候，你會一個人坐在燒焦的老橡樹下，很久很久。",
+      "en": "The Star is lit and the kingdom is saved. People call you a hero. But sometimes, at night, your palms still burn, and you remember the way Bran closed his eyes, and that coldness. The village is rebuilt, your parents are home, and so are you. Only sometimes you sit alone under the old scorched oak, for a long, long time."
+    },
+    "story.ending.e_god.name": {
+      "zh_TW": "神",
+      "en": "The God"
+    },
+    "story.ending.e_god.text": {
+      "zh_TW": "塔頂的星星永遠暗了。一個新的神坐上了王座，它有一張年輕的臉，一雙發光的手。它再也不會失去任何人——因為它再也不在乎任何人。很遠很遠的地方，一間小小的農舍裡，灶上的燉肉一直放到涼。",
+      "en": "The Star at the top of the tower is dark for ever. A new god sits on the throne. It has a young face and hands that glow. It will never lose anyone again, because it no longer cares for anyone. Far, far away, in a small farmhouse, a pot of stew sits on the stove until it goes cold."
+    },
+    "story.ending.e_secret.name": {
+      "zh_TW": "大家都回家了",
+      "en": "Everyone Home"
+    },
+    "story.ending.e_secret.text": {
+      "zh_TW": "星星亮了。那天晚上，整個村子在廣場上辦了一場宴會：麵包師烤了一座城堡那麼大的麵包，晃晃爵士和史萊姆大軍跳了舞，皮普收了每個人的入場費，米菈和孩子們唱歌，凱終於笑出聲來。布蘭站在人群最後面，媽媽走過去，牽起弟弟的手。莉歐拉坐在你旁邊，問你：「那，接下來要去哪裡？」你咬了一口燉肉，說：「哪裡都不去。我到家了。」",
+      "en": "The Star is lit. That night the whole village throws a feast in the square: the baker bakes a loaf as big as a castle, Sir Wobbles and the slime army dance, Pip charges everyone an entrance fee, Mira and the children sing, and Kai finally laughs out loud. Bran stands at the very back of the crowd, until Mom walks over and takes her little brother's hand. Liora sits beside you and asks, \"So, where to next?\" You take a bite of stew and say: \"Nowhere. I'm home.\""
+    },
     "mission.started": {
       "zh_TW": "接下任務：{title}",
       "en": "Quest started: {title}",
@@ -2608,8 +2840,8 @@
       "_todo": true
     },
     "ev_common_relic_chipped_blade.text": {
-      "zh_TW": "缺口的位置，剛好是你腰間那把劍的另一半。",
-      "en": "The notch in the blade is exactly the shape of the other half of the sword at your hip.",
+      "zh_TW": "一把收集者的斷劍，刃口砍在石頭上缺了一塊。有人在這裡反抗過。",
+      "en": "A broken Collector sword, its edge chipped where it struck stone. Someone fought back here.",
       "zh_CN": "缺口的位置，剛好是你腰間那把劍的另一半。",
       "ja": "缺口的位置，剛好是你腰間那把劍的另一半。",
       "ko": "缺口的位置，剛好是你腰間那把劍的另一半。",
@@ -2881,8 +3113,8 @@
       "_todo": true
     },
     "ev_forest_hunter_cache.text": {
-      "zh_TW": "獵人藏糧的樹洞裡多了一封信。",
-      "en": "In the tree hollow where the hunter hides food, there is a letter now as well.",
+      "zh_TW": "獵人藏糧的樹洞裡有肉乾和水袋，還有一張字條：「給後面來的人。」",
+      "en": "In the tree hollow where the hunter hides food: dried meat, a waterskin, and a note: \"For whoever comes after.\"",
       "zh_CN": "獵人藏糧的樹洞裡多了一封信。",
       "ja": "獵人藏糧的樹洞裡多了一封信。",
       "ko": "獵人藏糧的樹洞裡多了一封信。",
@@ -2966,8 +3198,8 @@
       "_todo": true
     },
     "ev_forest_trap_net.text": {
-      "zh_TW": "網上掛著一件很新的外袍。",
-      "en": "A very new cloak hangs in the net.",
+      "zh_TW": "兩棵樹之間張著一張收集者的網。有什麼東西不久前才從裡面掙脫。",
+      "en": "A Collectors' net is strung between two trees. Something tore its way out of it not long ago.",
       "zh_CN": "網上掛著一件很新的外袍。",
       "ja": "網上掛著一件很新的外袍。",
       "ko": "網上掛著一件很新的外袍。",
@@ -3068,8 +3300,8 @@
       "_todo": true
     },
     "ev_gate_quartermaster_cache.text": {
-      "zh_TW": "軍需箱上的封條蓋著你前世的印。",
-      "en": "The seal on the quartermaster's crate bears your stamp from a past life.",
+      "zh_TW": "收集者的軍需箱，封條已經破了。裡面是給士兵的乾糧。",
+      "en": "The Collectors' supply chest. Its seal is already broken; inside are the soldiers' rations.",
       "zh_CN": "軍需箱上的封條蓋著你前世的印。",
       "ja": "軍需箱上的封條蓋著你前世的印。",
       "ko": "軍需箱上的封條蓋著你前世的印。",
@@ -3221,8 +3453,8 @@
       "_todo": true
     },
     "ev_village_old_plough.text": {
-      "zh_TW": "犁頭上纏著一段十年前的布。",
-      "en": "A strip of cloth from ten years ago is wound around the ploughshare.",
+      "zh_TW": "爸爸的舊犁，被搶的人拖到了這裡。你摸了摸那根被磨亮的握把。",
+      "en": "Dad's old plough, dragged up here by the raiders. You run your hand along its worn, polished handle.",
       "zh_CN": "犁頭上纏著一段十年前的布。",
       "ja": "犁頭上纏著一段十年前的布。",
       "ko": "犁頭上纏著一段十年前的布。",
@@ -3758,56 +3990,56 @@
       "es": "藏書閣・殘卷架"
     },
     "story.f26.intro": {
-      "zh_TW": "最底層的書庫終年不見光，卻有人替它點著一盞燈。",
-      "en": "The library: the lowest stack",
+      "zh_TW": "白色的階梯一路往上，每一階都刻著祈禱文。",
+      "en": "White steps climb upward, a prayer carved into every one.",
       "zh_CN": "最底層的書庫終年不見光，卻有人替它點著一盞燈。",
       "ja": "最底層的書庫終年不見光，卻有人替它點著一盞燈。",
       "ko": "最底層的書庫終年不見光，卻有人替它點著一盞燈。",
       "es": "最底層的書庫終年不見光，卻有人替它點著一盞燈。"
     },
     "story.f26.name": {
-      "zh_TW": "藏書閣・最底層書庫",
-      "en": "The library: the lowest stack",
+      "zh_TW": "神殿的階梯",
+      "en": "The Sanctum Steps",
       "zh_CN": "藏書閣・最底層書庫",
       "ja": "藏書閣・最底層書庫",
       "ko": "藏書閣・最底層書庫",
       "es": "藏書閣・最底層書庫"
     },
     "story.f27.intro": {
-      "zh_TW": "封存室的門從裡面反鎖著，鑰匙孔還卡著半截骨指。",
-      "en": "The library: the sealed archive",
+      "zh_TW": "長椅上積滿了灰。有人在門口擺了一張桌子。",
+      "en": "Dust lies thick on the pews. Someone has set up a table by the door.",
       "zh_CN": "封存室的門從裡面反鎖著，鑰匙孔還卡著半截骨指。",
       "ja": "封存室的門從裡面反鎖著，鑰匙孔還卡著半截骨指。",
       "ko": "封存室的門從裡面反鎖著，鑰匙孔還卡著半截骨指。",
       "es": "封存室的門從裡面反鎖著，鑰匙孔還卡著半截骨指。"
     },
     "story.f27.name": {
-      "zh_TW": "藏書閣・封存室",
-      "en": "The library: the sealed archive",
+      "zh_TW": "祈禱廳",
+      "en": "The Hall of Prayers",
       "zh_CN": "藏書閣・封存室",
       "ja": "藏書閣・封存室",
       "ko": "藏書閣・封存室",
       "es": "藏書閣・封存室"
     },
     "story.f28.intro": {
-      "zh_TW": "空蕩的座位上，骸骨學者仍保持著批注的姿勢。",
-      "en": "The library: the scribe's own seat",
+      "zh_TW": "水晶搖籃發出微弱的光。",
+      "en": "The crystal cradles give off a faint glow.",
       "zh_CN": "空蕩的座位上，骸骨學者仍保持著批注的姿勢。",
       "ja": "空蕩的座位上，骸骨學者仍保持著批注的姿勢。",
       "ko": "空蕩的座位上，骸骨學者仍保持著批注的姿勢。",
       "es": "空蕩的座位上，骸骨學者仍保持著批注的姿勢。"
     },
     "story.f28.name": {
-      "zh_TW": "藏書閣・執卷人的座位",
-      "en": "The library: the scribe's own seat",
+      "zh_TW": "搖籃大廳",
+      "en": "The Hall of Cradles",
       "zh_CN": "藏書閣・執卷人的座位",
       "ja": "藏書閣・執卷人的座位",
       "ko": "藏書閣・執卷人的座位",
       "es": "藏書閣・執卷人的座位"
     },
     "story.f29.intro": {
-      "zh_TW": "第 29 層（ch_05）的入口。",
-      "en": "The entrance to floor 29.",
+      "zh_TW": "每一面鏡子裡都有你。",
+      "en": "You are in every mirror.",
       "zh_CN": "第 29 層（ch_05）的入口。",
       "ja": "第 29 層（ch_05）的入口。",
       "ko": "第 29 層（ch_05）的入口。",
@@ -3815,8 +4047,8 @@
       "_todo": true
     },
     "story.f29.name": {
-      "zh_TW": "第 29 層",
-      "en": "Floor 29",
+      "zh_TW": "鏡廳",
+      "en": "The Mirror Hall",
       "zh_CN": "第 29 層",
       "ja": "第 29 層",
       "ko": "第 29 層",
@@ -3824,8 +4056,8 @@
       "_todo": true
     },
     "story.f30.intro": {
-      "zh_TW": "第 30 層（ch_05）的入口。",
-      "en": "The entrance to floor 30.",
+      "zh_TW": "最深處有一座發光的籠子。",
+      "en": "In the very heart stands a glowing cage.",
       "zh_CN": "第 30 層（ch_05）的入口。",
       "ja": "第 30 層（ch_05）的入口。",
       "ko": "第 30 層（ch_05）的入口。",
@@ -3833,8 +4065,8 @@
       "_todo": true
     },
     "story.f30.name": {
-      "zh_TW": "第 30 層",
-      "en": "Floor 30",
+      "zh_TW": "神殿之心",
+      "en": "The Heart of the Sanctum",
       "zh_CN": "第 30 層",
       "ja": "第 30 層",
       "ko": "第 30 層",
@@ -3842,8 +4074,8 @@
       "_todo": true
     },
     "story.f31.intro": {
-      "zh_TW": "第 31 層（ch_05）的入口。",
-      "en": "The entrance to floor 31.",
+      "zh_TW": "大門後面傳來很低的嗡嗡聲。",
+      "en": "A low hum comes from behind the great door.",
       "zh_CN": "第 31 層（ch_05）的入口。",
       "ja": "第 31 層（ch_05）的入口。",
       "ko": "第 31 層（ch_05）的入口。",
@@ -3851,8 +4083,8 @@
       "_todo": true
     },
     "story.f31.name": {
-      "zh_TW": "第 31 層",
-      "en": "Floor 31",
+      "zh_TW": "王座前室",
+      "en": "The Throne Antechamber",
       "zh_CN": "第 31 層",
       "ja": "第 31 層",
       "ko": "第 31 層",
@@ -3860,8 +4092,8 @@
       "_todo": true
     },
     "story.f32.intro": {
-      "zh_TW": "第 32 層（ch_05）的入口。",
-      "en": "The entrance to floor 32.",
+      "zh_TW": "門上刻著一隻手。",
+      "en": "A hand is carved into the door.",
       "zh_CN": "第 32 層（ch_05）的入口。",
       "ja": "第 32 層（ch_05）的入口。",
       "ko": "第 32 層（ch_05）的入口。",
@@ -3869,8 +4101,8 @@
       "_todo": true
     },
     "story.f32.name": {
-      "zh_TW": "第 32 層",
-      "en": "Floor 32",
+      "zh_TW": "星之門",
+      "en": "The Star's Door",
       "zh_CN": "第 32 層",
       "ja": "第 32 層",
       "ko": "第 32 層",
@@ -3878,8 +4110,8 @@
       "_todo": true
     },
     "story.f33.intro": {
-      "zh_TW": "第 33 層（ch_05）的入口。",
-      "en": "The entrance to floor 33.",
+      "zh_TW": "王座上的人，等了你一百年。",
+      "en": "The one on the throne has waited a hundred years for you.",
       "zh_CN": "第 33 層（ch_05）的入口。",
       "ja": "第 33 層（ch_05）的入口。",
       "ko": "第 33 層（ch_05）的入口。",
@@ -3887,8 +4119,8 @@
       "_todo": true
     },
     "story.f33.name": {
-      "zh_TW": "第 33 層",
-      "en": "Floor 33",
+      "zh_TW": "巫師王的王座",
+      "en": "The Sorcerer King's Throne",
       "zh_CN": "第 33 層",
       "ja": "第 33 層",
       "ko": "第 33 層",
@@ -3896,8 +4128,8 @@
       "_todo": true
     },
     "story.f34.intro": {
-      "zh_TW": "第 34 層（ch_05）的入口。",
-      "en": "The entrance to floor 34.",
+      "zh_TW": "一個很老的聲音在階梯上迴盪。",
+      "en": "A very old voice echoes along the stairs.",
       "zh_CN": "第 34 層（ch_05）的入口。",
       "ja": "第 34 層（ch_05）的入口。",
       "ko": "第 34 層（ch_05）的入口。",
@@ -3905,8 +4137,8 @@
       "_todo": true
     },
     "story.f34.name": {
-      "zh_TW": "第 34 層",
-      "en": "Floor 34",
+      "zh_TW": "最後的階梯",
+      "en": "The Last Stairs",
       "zh_CN": "第 34 層",
       "ja": "第 34 層",
       "ko": "第 34 層",
@@ -3914,8 +4146,8 @@
       "_todo": true
     },
     "story.f35.intro": {
-      "zh_TW": "第 35 層（ch_05）的入口。",
-      "en": "The entrance to floor 35.",
+      "zh_TW": "星星暗了，裂成兩半。",
+      "en": "The Star is dark, split in two.",
       "zh_CN": "第 35 層（ch_05）的入口。",
       "ja": "第 35 層（ch_05）的入口。",
       "ko": "第 35 層（ch_05）的入口。",
@@ -3923,8 +4155,8 @@
       "_todo": true
     },
     "story.f35.name": {
-      "zh_TW": "第 35 層",
-      "en": "Floor 35",
+      "zh_TW": "安穩之星",
+      "en": "The Star of Peace",
       "zh_CN": "第 35 層",
       "ja": "第 35 層",
       "ko": "第 35 層",
@@ -5857,56 +6089,56 @@
       "es": "地上散落的紙頁全被踩得模糊，唯獨一角還算完整。"
     },
     "story.f26.ambient.1": {
-      "zh_TW": "書庫深處那盞燈，火光穩定得不像是自然燃燒。",
-      "en": "The lamp deep in the stacks burns too steadily to be an ordinary flame.",
+      "zh_TW": "白色的階梯一路往上，每一階都刻著祈禱文。",
+      "en": "White steps climb upward, a prayer carved into every one.",
       "zh_CN": "書庫深處那盞燈，火光穩定得不像是自然燃燒。",
       "ja": "書庫深處那盞燈，火光穩定得不像是自然燃燒。",
       "ko": "書庫深處那盞燈，火光穩定得不像是自然燃燒。",
       "es": "書庫深處那盞燈，火光穩定得不像是自然燃燒。"
     },
     "story.f26.ambient.2": {
-      "zh_TW": "空氣裡有股陳舊的墨香，混著一絲若有似無的呼吸聲。",
-      "en": "The air smells of old ink, and something like faint breathing.",
+      "zh_TW": "神殿的階梯",
+      "en": "The Sanctum Steps",
       "zh_CN": "空氣裡有股陳舊的墨香，混著一絲若有似無的呼吸聲。",
       "ja": "空氣裡有股陳舊的墨香，混著一絲若有似無的呼吸聲。",
       "ko": "空氣裡有股陳舊的墨香，混著一絲若有似無的呼吸聲。",
       "es": "空氣裡有股陳舊的墨香，混著一絲若有似無的呼吸聲。"
     },
     "story.f27.ambient.1": {
-      "zh_TW": "封存室外，牆上釘著一張早已褪色的通緝令。",
-      "en": "Outside the sealed archive, a long-faded wanted notice is nailed to the wall.",
+      "zh_TW": "長椅上積滿了灰。有人在門口擺了一張桌子。",
+      "en": "Dust lies thick on the pews. Someone has set up a table by the door.",
       "zh_CN": "封存室外，牆上釘著一張早已褪色的通緝令。",
       "ja": "封存室外，牆上釘著一張早已褪色的通緝令。",
       "ko": "封存室外，牆上釘著一張早已褪色的通緝令。",
       "es": "封存室外，牆上釘著一張早已褪色的通緝令。"
     },
     "story.f27.ambient.2": {
-      "zh_TW": "門縫底下透出微光，像是有人仍在裡面翻閱。",
-      "en": "A faint light shows under the door, as if someone inside is still reading.",
+      "zh_TW": "祈禱廳",
+      "en": "The Hall of Prayers",
       "zh_CN": "門縫底下透出微光，像是有人仍在裡面翻閱。",
       "ja": "門縫底下透出微光，像是有人仍在裡面翻閱。",
       "ko": "門縫底下透出微光，像是有人仍在裡面翻閱。",
       "es": "門縫底下透出微光，像是有人仍在裡面翻閱。"
     },
     "story.f28.ambient.1": {
-      "zh_TW": "執卷人的座位四周，堆疊的書本高得快要頂到天花板。",
-      "en": "Around the scribe's seat, the books are stacked nearly to the ceiling.",
+      "zh_TW": "水晶搖籃發出微弱的光。",
+      "en": "The crystal cradles give off a faint glow.",
       "zh_CN": "執卷人的座位四周，堆疊的書本高得快要頂到天花板。",
       "ja": "執卷人的座位四周，堆疊的書本高得快要頂到天花板。",
       "ko": "執卷人的座位四周，堆疊的書本高得快要頂到天花板。",
       "es": "執卷人的座位四周，堆疊的書本高得快要頂到天花板。"
     },
     "story.f28.ambient.2": {
-      "zh_TW": "空氣安靜得可怕，只有翻頁聲提醒你這裡並非全然死寂。",
-      "en": "The silence is frightening; only the sound of a turning page says this place is not quite dead.",
+      "zh_TW": "搖籃大廳",
+      "en": "The Hall of Cradles",
       "zh_CN": "空氣安靜得可怕，只有翻頁聲提醒你這裡並非全然死寂。",
       "ja": "空氣安靜得可怕，只有翻頁聲提醒你這裡並非全然死寂。",
       "ko": "空氣安靜得可怕，只有翻頁聲提醒你這裡並非全然死寂。",
       "es": "空氣安靜得可怕，只有翻頁聲提醒你這裡並非全然死寂。"
     },
     "story.f29.ambient.1": {
-      "zh_TW": "第 29 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 29 holds the shape of a past life.",
+      "zh_TW": "每一面鏡子裡都有你。",
+      "en": "You are in every mirror.",
       "zh_CN": "第 29 層的空氣裡有前世的形狀。",
       "ja": "第 29 層的空氣裡有前世的形狀。",
       "ko": "第 29 層的空氣裡有前世的形狀。",
@@ -5914,8 +6146,8 @@
       "_todo": true
     },
     "story.f29.ambient.2": {
-      "zh_TW": "第 29 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 29 holds the shape of a past life.",
+      "zh_TW": "鏡廳",
+      "en": "The Mirror Hall",
       "zh_CN": "第 29 層的空氣裡有前世的形狀。",
       "ja": "第 29 層的空氣裡有前世的形狀。",
       "ko": "第 29 層的空氣裡有前世的形狀。",
@@ -5923,8 +6155,8 @@
       "_todo": true
     },
     "story.f30.ambient.1": {
-      "zh_TW": "第 30 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 30 holds the shape of a past life.",
+      "zh_TW": "最深處有一座發光的籠子。",
+      "en": "In the very heart stands a glowing cage.",
       "zh_CN": "第 30 層的空氣裡有前世的形狀。",
       "ja": "第 30 層的空氣裡有前世的形狀。",
       "ko": "第 30 層的空氣裡有前世的形狀。",
@@ -5932,8 +6164,8 @@
       "_todo": true
     },
     "story.f30.ambient.2": {
-      "zh_TW": "第 30 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 30 holds the shape of a past life.",
+      "zh_TW": "神殿之心",
+      "en": "The Heart of the Sanctum",
       "zh_CN": "第 30 層的空氣裡有前世的形狀。",
       "ja": "第 30 層的空氣裡有前世的形狀。",
       "ko": "第 30 層的空氣裡有前世的形狀。",
@@ -5941,8 +6173,8 @@
       "_todo": true
     },
     "story.f31.ambient.1": {
-      "zh_TW": "第 31 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 31 holds the shape of a past life.",
+      "zh_TW": "大門後面傳來很低的嗡嗡聲。",
+      "en": "A low hum comes from behind the great door.",
       "zh_CN": "第 31 層的空氣裡有前世的形狀。",
       "ja": "第 31 層的空氣裡有前世的形狀。",
       "ko": "第 31 層的空氣裡有前世的形狀。",
@@ -5950,8 +6182,8 @@
       "_todo": true
     },
     "story.f31.ambient.2": {
-      "zh_TW": "第 31 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 31 holds the shape of a past life.",
+      "zh_TW": "王座前室",
+      "en": "The Throne Antechamber",
       "zh_CN": "第 31 層的空氣裡有前世的形狀。",
       "ja": "第 31 層的空氣裡有前世的形狀。",
       "ko": "第 31 層的空氣裡有前世的形狀。",
@@ -5959,8 +6191,8 @@
       "_todo": true
     },
     "story.f32.ambient.1": {
-      "zh_TW": "第 32 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 32 holds the shape of a past life.",
+      "zh_TW": "門上刻著一隻手。",
+      "en": "A hand is carved into the door.",
       "zh_CN": "第 32 層的空氣裡有前世的形狀。",
       "ja": "第 32 層的空氣裡有前世的形狀。",
       "ko": "第 32 層的空氣裡有前世的形狀。",
@@ -5968,8 +6200,8 @@
       "_todo": true
     },
     "story.f32.ambient.2": {
-      "zh_TW": "第 32 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 32 holds the shape of a past life.",
+      "zh_TW": "星之門",
+      "en": "The Star's Door",
       "zh_CN": "第 32 層的空氣裡有前世的形狀。",
       "ja": "第 32 層的空氣裡有前世的形狀。",
       "ko": "第 32 層的空氣裡有前世的形狀。",
@@ -5977,8 +6209,8 @@
       "_todo": true
     },
     "story.f33.ambient.1": {
-      "zh_TW": "第 33 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 33 holds the shape of a past life.",
+      "zh_TW": "王座上的人，等了你一百年。",
+      "en": "The one on the throne has waited a hundred years for you.",
       "zh_CN": "第 33 層的空氣裡有前世的形狀。",
       "ja": "第 33 層的空氣裡有前世的形狀。",
       "ko": "第 33 層的空氣裡有前世的形狀。",
@@ -5986,8 +6218,8 @@
       "_todo": true
     },
     "story.f33.ambient.2": {
-      "zh_TW": "第 33 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 33 holds the shape of a past life.",
+      "zh_TW": "巫師王的王座",
+      "en": "The Sorcerer King's Throne",
       "zh_CN": "第 33 層的空氣裡有前世的形狀。",
       "ja": "第 33 層的空氣裡有前世的形狀。",
       "ko": "第 33 層的空氣裡有前世的形狀。",
@@ -5995,8 +6227,8 @@
       "_todo": true
     },
     "story.f34.ambient.1": {
-      "zh_TW": "第 34 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 34 holds the shape of a past life.",
+      "zh_TW": "一個很老的聲音在階梯上迴盪。",
+      "en": "A very old voice echoes along the stairs.",
       "zh_CN": "第 34 層的空氣裡有前世的形狀。",
       "ja": "第 34 層的空氣裡有前世的形狀。",
       "ko": "第 34 層的空氣裡有前世的形狀。",
@@ -6004,8 +6236,8 @@
       "_todo": true
     },
     "story.f34.ambient.2": {
-      "zh_TW": "第 34 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 34 holds the shape of a past life.",
+      "zh_TW": "最後的階梯",
+      "en": "The Last Stairs",
       "zh_CN": "第 34 層的空氣裡有前世的形狀。",
       "ja": "第 34 層的空氣裡有前世的形狀。",
       "ko": "第 34 層的空氣裡有前世的形狀。",
@@ -6013,8 +6245,8 @@
       "_todo": true
     },
     "story.f35.ambient.1": {
-      "zh_TW": "第 35 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 35 holds the shape of a past life.",
+      "zh_TW": "星星暗了，裂成兩半。",
+      "en": "The Star is dark, split in two.",
       "zh_CN": "第 35 層的空氣裡有前世的形狀。",
       "ja": "第 35 層的空氣裡有前世的形狀。",
       "ko": "第 35 層的空氣裡有前世的形狀。",
@@ -6022,8 +6254,8 @@
       "_todo": true
     },
     "story.f35.ambient.2": {
-      "zh_TW": "第 35 層的空氣裡有前世的形狀。",
-      "en": "The air on floor 35 holds the shape of a past life.",
+      "zh_TW": "安穩之星",
+      "en": "The Star of Peace",
       "zh_CN": "第 35 層的空氣裡有前世的形狀。",
       "ja": "第 35 層的空氣裡有前世的形狀。",
       "ko": "第 35 層的空氣裡有前世的形狀。",
@@ -8260,8 +8492,8 @@
       "en": "In the chapel, dust in the light settles into a single word."
     },
     "ev_village_old_plough.title": {
-      "zh_TW": "舊犁",
-      "en": "The Old Plough"
+      "zh_TW": "爸爸的犁",
+      "en": "Dad's Plough"
     },
     "ev_village_old_plough.desc": {
       "zh_TW": "犁頭上纏著一段十年前的布。",
@@ -8292,8 +8524,8 @@
       "en": "Your old master's handwriting is on the bark, dated today."
     },
     "ev_forest_trap_net.title": {
-      "zh_TW": "網中的外袍",
-      "en": "The Robe in the Net"
+      "zh_TW": "收集者的網",
+      "en": "The Collectors' Net"
     },
     "ev_forest_trap_net.desc": {
       "zh_TW": "獵網上掛著一件很新的外袍。",
@@ -8629,18 +8861,21 @@
       "en": "Two ruts are worn deep into the stone. Whatever carts made them stopped coming long ago."
     },
     "ev_common_relic_road_v3.title": {
+      "zh_TW": "磨平的印章",
       "en": "The Worn Seal"
     },
     "ev_common_relic_road_v3.desc": {
       "en": "A seal worn smooth is set into a dip in the road; no one can tell how old it is."
     },
     "ev_common_relic_road_v4.title": {
+      "zh_TW": "被鑿掉的路碑",
       "en": "The Defaced Milestone"
     },
     "ev_common_relic_road_v4.desc": {
       "en": "Half a milestone lies in the grass, its words chiselled off on purpose."
     },
     "ev_common_relic_road_v5.title": {
+      "zh_TW": "乾涸的石燈",
       "en": "The Dry Stone Lantern"
     },
     "ev_common_relic_road_v5.desc": {
@@ -8680,33 +8915,39 @@
       "en": "A whisper warns that the ones above have been waiting longer than you think."
     },
     "ev_common_cache_wall_v2.title": {
+      "zh_TW": "空心的磚",
       "en": "The Hollow Brick"
     },
     "ev_common_cache_wall_v2.desc": {
       "en": "A brick that sounds hollow hides a small cache."
     },
     "ev_common_cache_wall_v2.text": {
+      "zh_TW": "有一塊磚敲起來是空的。後面有人留了一個小包袱。",
       "en": "One brick sounds hollow under your knuckles. Behind it, someone left a small bundle."
     },
     "ev_common_cache_wall_v3.title": {
+      "zh_TW": "油紙包",
       "en": "The Oilpaper Parcel"
     },
     "ev_common_cache_wall_v3.desc": {
       "en": "Half an oilpaper parcel is stuffed into a crack in the wall, still fresh."
     },
     "ev_common_cache_wall_v4.title": {
+      "zh_TW": "有記號的銅釘",
       "en": "The Marked Nail"
     },
     "ev_common_cache_wall_v4.desc": {
       "en": "A copper nail stamped with a mark is hidden between the bricks."
     },
     "ev_common_cache_wall_v5.title": {
+      "zh_TW": "新的灰",
       "en": "Fresh Dust"
     },
     "ev_common_cache_wall_v5.desc": {
       "en": "The hiding place behind a loose brick is empty, but the dust is new."
     },
     "ev_common_trap_rubble_v2.title": {
+      "zh_TW": "被抽走的木樁",
       "en": "Pulled Supports"
     },
     "ev_common_trap_rubble_v2.desc": {
@@ -10148,12 +10389,12 @@
       "en": "It opens only the sun door."
     },
     "npc.farmer.name": {
-      "zh_TW": "農夫",
-      "en": "Farmer"
+      "zh_TW": "爸爸",
+      "en": "Dad"
     },
     "npc.farmer_wife.name": {
-      "zh_TW": "農婦",
-      "en": "Farmer's Wife"
+      "zh_TW": "媽媽",
+      "en": "Mom"
     },
     "npc.fisherman.name": {
       "zh_TW": "漁夫",
@@ -10548,7 +10789,8 @@
       "es": "Buhonero del cofre"
     },
     "npc.crystal_oracle.name": {
-      "zh_TW": "水晶祭司"
+      "zh_TW": "水晶祭司",
+      "en": "Crystal Oracle"
     },
     "minigame.crystals": {
       "zh_TW": "水晶",

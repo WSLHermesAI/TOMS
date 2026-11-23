@@ -1,5 +1,6 @@
 // ending_system_test.cpp — headless verification of the 15-ending resolver (M7, first slice).
 // Exits 0 on success, 1 on any CHECK failure. Run: ./ending_system_test
+#include <algorithm>
 #include "ending_system.h"
 #include <cstdio>
 #include <map>
@@ -54,7 +55,13 @@ int main() {
 
     // 2. loadEndings against the REAL data/story/endings.json (run from the project root).
     EndingsTable l_oTable = f_LoadEndings("data/story/endings.json");
-    CHECK(l_oTable.m_vEndings.size() == 15, "data/story/endings.json has all 15 authored endings");
+    CHECK(l_oTable.m_vEndings.size() == 19, "data/story/endings.json has the story revamp's 4 endings and the 15 older ones");
+    // The story revamp's endings (docs/gameplay/23 §6) come first and end in one that always holds (e_home); the game
+    // asks for them by name (the dialogue action "ending" "among"). The checks below are the older 15's, on their own.
+    CHECK(l_oTable.m_vEndings.size() >= 4 && l_oTable.m_vEndings[0].m_strId == "e_god" && l_oTable.m_vEndings[3].m_strId == "e_home",
+          "the revamp's endings first: e_god, e_secret, e_avenger, e_home");
+    l_oTable.m_vEndings.erase(l_oTable.m_vEndings.begin(), l_oTable.m_vEndings.begin() + std::min<size_t>(4, l_oTable.m_vEndings.size()));
+    CHECK(l_oTable.m_vEndings.size() == 15, "the 15 older endings after them");
     CHECK(l_oTable.m_strFallback == "e_05", "the fallback is e_05, matching STORY_BIBLE.md's neutral ending");
     CHECK(f_LoadEndings("data/does_not_exist.json").m_vEndings.empty(), "a missing file loads to an empty table, not a crash");
 

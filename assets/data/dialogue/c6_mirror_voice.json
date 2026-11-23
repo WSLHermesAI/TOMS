@@ -1,0 +1,48 @@
+{
+  "_comment": "Chapter 6 of the story revamp (docs/gameplay/23 §4): F26, a scene: Liora speaks through a broken mirror; the quest m_c6_mirrors (three shards, mirror_shards).",
+  "npcId": "princess",
+  "start": "glass",
+  "nodes": {
+    "glass": {
+      "text": {
+        "zh_TW": "神殿的階梯旁立著一面裂開的鏡子。鏡子裡的不是你——是一個戴著銀冠的女孩，她敲了敲鏡面。「……里歐？是你嗎？我是 L。莉歐拉。」",
+        "en": "Beside the Sanctum steps stands a cracked mirror. The face in it is not yours: a girl in a silver circlet taps on the glass. \"...Leo? Is that you? It's L. Liora.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「L！寫信的那個 L！」",
+            "en": "\"L! The L from the letters!\""
+          },
+          "next": "seal"
+        }
+      ]
+    },
+    "seal": {
+      "text": {
+        "zh_TW": "莉歐拉：「我被封在塔頂，只能透過鏡子說話。可是鏡子碎了——碎片散在神殿裡。把它們找回來，我就能把一切都告訴你。」她的聲音開始斷斷續續。「你爹娘……就在……神殿的最深處……」",
+        "en": "Liora: \"I'm sealed at the top of the tower. I can only speak through mirrors, but this one is broken, its shards scattered through the Sanctum. Find them and I can tell you everything.\" Her voice begins to break up. \"Your parents... are in... the heart of the Sanctum...\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「我會找到碎片的。」（撿起第一片）",
+            "en": "\"I'll find the shards.\" (Pick up the first one)"
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "startMission",
+              "missionId": "m_c6_mirrors"
+            },
+            {
+              "type": "addVar",
+              "var": "mirror_shards",
+              "delta": 1
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

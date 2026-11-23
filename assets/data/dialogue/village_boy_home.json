@@ -1,5 +1,5 @@
 {
-  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): Tobi at home (hub_tobi): hints.",
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): Tobi at home (hub_tobi): hints. S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "village_boy",
   "start": "root",
   "nodes": {
@@ -11,10 +11,158 @@
       "choices": [
         {
           "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c1",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c3.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c5.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c3",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c3.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c5.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c5",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c5.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
+        },
+        {
+          "label": {
             "zh_TW": "「謝啦，小托。」",
             "en": "\"Thanks, Tobi.\""
           },
           "next": null
+        }
+      ]
+    },
+    "news_c1": {
+      "text": {
+        "zh_TW": "小托：「我在桶子裡練習躲貓貓！下次收集者來，他們一定找不到我！」",
+        "en": "Tobi: \"I'm practising hide-and-seek in my barrel! Next time the Collectors come, they'll never find me!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c3": {
+      "text": {
+        "zh_TW": "小托：「皮普叔叔教我算錢！一加一等於……要收手續費！」",
+        "en": "Tobi: \"Uncle Pip is teaching me sums! One plus one equals... a handling fee!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c5": {
+      "text": {
+        "zh_TW": "小托：「米菈姊姊說我可以當水桶騎士！我已經有水桶了！」",
+        "en": "Tobi: \"Sister Mira says I can be a bucket knight! I already have the bucket!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "小托：「你爹娘回來了！你娘捏了我的臉，說我長高了！」",
+        "en": "Tobi: \"Your Mom and Dad are back! Your Mom pinched my cheek and said I'd grown!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
         }
       ]
     }

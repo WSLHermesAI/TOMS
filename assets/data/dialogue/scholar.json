@@ -1,5 +1,5 @@
 {
-  "_comment": "Chapter 3 of the story revamp (docs/gameplay/23 §4): the scholar at home (hub_scholar): the Godborn (sets up chapter 4).",
+  "_comment": "Chapter 3 of the story revamp (docs/gameplay/23 §4): the scholar at home (hub_scholar): the Godborn (sets up chapter 4). S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "scholar",
   "start": "root",
   "nodes": {
@@ -15,6 +15,61 @@
             "en": "\"What are the Godborn?\""
           },
           "next": "lore"
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c3",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c4.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c4",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c4.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
         },
         {
           "label": {
@@ -35,6 +90,51 @@
           "label": {
             "zh_TW": "……",
             "en": "..."
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c3": {
+      "text": {
+        "zh_TW": "學者：「名冊的筆跡，我一頁一頁比對過了。寫字的人，手一直在抖。」",
+        "en": "Scholar: \"I've compared the ledger's handwriting page by page. The hand that wrote it was shaking the whole time.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c4": {
+      "text": {
+        "zh_TW": "學者：「神裔的記載，我在舊書裡找到了三行。三行！整個王國都忘了他們。」",
+        "en": "Scholar: \"I found three lines about the Godborn in the old books. Three lines! The whole kingdom forgot them.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "學者：「安穩之星……原來是一道鎖。我要寫一本新的歷史，第一章就寫你。」",
+        "en": "Scholar: \"The Star of Peace... a lock, all along. I'm going to write a new history, and its first chapter is about you.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
           },
           "next": "root"
         }

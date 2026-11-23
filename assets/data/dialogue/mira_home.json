@@ -1,5 +1,5 @@
 {
-  "_comment": "Chapter 5 of the story revamp (docs/gameplay/23 §4): Mira in the village (hub_mira).",
+  "_comment": "Chapter 5 of the story revamp (docs/gameplay/23 §4): Mira in the village (hub_mira). S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "knight_errant",
   "start": "root",
   "nodes": {
@@ -11,10 +11,64 @@
       "choices": [
         {
           "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c5",
+          "requires": {
+            "not": {
+              "type": "runFlagSet",
+              "flag": "c6.done"
+            }
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
+        },
+        {
+          "label": {
             "zh_TW": "（笑）",
             "en": "(Laugh)"
           },
           "next": null
+        }
+      ]
+    },
+    "news_c5": {
+      "text": {
+        "zh_TW": "米菈：「我哥每天都寫信回來，每一封都問我有沒有吃飯。你們男生都一樣！」",
+        "en": "Mira: \"My brother writes home every day, and every letter asks whether I'm eating. You boys are all the same!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "米菈：「那些孩子叫我『米菈老師』！……哥回來的時候，你要幫我跟他炫耀。」",
+        "en": "Mira: \"The children call me 'Teacher Mira'! ...When my brother comes back, you have to help me show off to him.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
         }
       ]
     }

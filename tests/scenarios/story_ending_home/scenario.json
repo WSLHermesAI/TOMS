@@ -1,0 +1,18 @@
+{
+  "_comment": "The ending (docs/gameplay/23 §6): the Star lit with Liora, and nothing else special: Home (e_home).",
+  "scene": "dialogue",
+  "dialogue": {
+    "id": "c7_star"
+  },
+  "test": {
+    "frames": 70,
+    "keys": "enter@10,enter@25,enter@40"
+  },
+  "expect": {
+    "scene": "ending",
+    "ending": "e_home",
+    "flags": [
+      "c7.star_lit"
+    ]
+  }
+}

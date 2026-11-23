@@ -1,0 +1,41 @@
+{
+  "id": "ch_05",
+  "floors": [
+    "F21",
+    "F22",
+    "F23",
+    "F24",
+    "F25"
+  ],
+  "bossFloor": "F25",
+  "bossStage": "stage03",
+  "title": "story.ch05.title",
+  "desc": "story.ch05.desc",
+  "seal": "",
+  "beats": [
+    {
+      "id": "b_ch_05_boss",
+      "kind": "boss",
+      "floor": "F25",
+      "enemyId": "grey_mask"
+    }
+  ],
+  "grants": {
+    "skillPoints": 1
+  },
+  "choices": [],
+  "sideStoryHooks": [],
+  "exitConditions": {
+    "type": "stageCleared",
+    "stageId": "F26"
+  },
+  "enemyMix": [
+    "skeleton",
+    "wraith"
+  ],
+  "itemTable": [
+    "potion_red",
+    "potion_blue",
+    "exp_up"
+  ]
+}

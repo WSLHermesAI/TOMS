@@ -1,0 +1,41 @@
+{
+  "id": "ch_07",
+  "floors": [
+    "F31",
+    "F32",
+    "F33",
+    "F34",
+    "F35"
+  ],
+  "bossFloor": "F35",
+  "bossStage": "stage05",
+  "title": "story.ch07.title",
+  "desc": "story.ch07.desc",
+  "seal": "",
+  "beats": [
+    {
+      "id": "b_ch_07_boss",
+      "kind": "boss",
+      "floor": "F35",
+      "enemyId": "hollow_god"
+    }
+  ],
+  "grants": {
+    "skillPoints": 1
+  },
+  "choices": [],
+  "sideStoryHooks": [],
+  "exitConditions": {
+    "type": "stageCleared",
+    "stageId": "F36"
+  },
+  "enemyMix": [
+    "skeleton",
+    "wraith"
+  ],
+  "itemTable": [
+    "potion_red",
+    "potion_blue",
+    "exp_up"
+  ]
+}

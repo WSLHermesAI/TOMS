@@ -1,0 +1,26 @@
+{
+  "_comment": "Chapter 6, Liora's mirror (docs/gameplay/23 §4.6): two shards found, the quest active; the third shard (F29) makes the mirror whole at once (ev_c6_mirror_whole, on mirror_shards reaching 3): Liora's truth (the Star, the old god, the Master). The quest is done (c6.mirror).",
+  "scene": "dialogue",
+  "vars": {
+    "mirror_shards": 2
+  },
+  "missions": {
+    "m_c6_mirrors": "active"
+  },
+  "dialogue": {
+    "id": "c6_shard3"
+  },
+  "test": {
+    "frames": 100,
+    "keys": "enter@10,enter@25,enter@40,enter@55"
+  },
+  "expect": {
+    "scene": "stage",
+    "flags": [
+      "c6.mirror"
+    ],
+    "missions": {
+      "m_c6_mirrors": "completed"
+    }
+  }
+}

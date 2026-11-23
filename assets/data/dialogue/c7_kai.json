@@ -1,0 +1,92 @@
+{
+  "_comment": "Chapter 7 of the story revamp (docs/gameplay/23 §4): F31, Kai's last stand (trust 3+: he holds the door, two potions; else one potion).",
+  "npcId": "knight_errant",
+  "start": "door",
+  "nodes": {
+    "door": {
+      "text": {
+        "zh_TW": "王座前室的大門前，凱停下腳步，把劍插在地上。",
+        "en": "At the great door of the throne antechamber, Kai stops and plants his sword in the floor."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「凱？」",
+            "en": "\"Kai?\""
+          },
+          "next": "trust",
+          "requires": {
+            "type": "counterAtLeast",
+            "counter": "trust",
+            "min": 3
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「凱？」",
+            "en": "\"Kai?\""
+          },
+          "next": "plain",
+          "requires": {
+            "not": {
+              "type": "counterAtLeast",
+              "counter": "trust",
+              "min": 3
+            }
+          }
+        }
+      ]
+    },
+    "trust": {
+      "text": {
+        "zh_TW": "凱：「上面的路，你一個人走。下面追上來的，我一個也不放過。」他把兩瓶藥水塞給你。「我說過——我欠你一條命。今天還給你。」",
+        "en": "Kai: \"You take the way up alone. Whatever comes up behind you, none of it gets past me.\" He presses two potions into your hands. \"I told you. I owe you a life. Today I pay it back.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「活著回來，凱。米菈在等你。」",
+            "en": "\"Come back alive, Kai. Mira's waiting for you.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "give",
+              "itemId": "potion_red",
+              "count": 2
+            },
+            {
+              "type": "setFlag",
+              "flag": "c7.kai_holds"
+            }
+          ]
+        }
+      ]
+    },
+    "plain": {
+      "text": {
+        "zh_TW": "凱：「……不管上面有什麼，我都跟著你。」他遞給你一瓶藥水。「別死在我前面。」",
+        "en": "Kai: \"...Whatever is up there, I'm with you.\" He hands you a potion. \"Don't die before I do.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「你也是。」",
+            "en": "\"Same to you.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "give",
+              "itemId": "potion_red"
+            },
+            {
+              "type": "setFlag",
+              "flag": "c7.kai_with"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

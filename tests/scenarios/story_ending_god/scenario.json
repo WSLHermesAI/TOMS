@@ -1,0 +1,18 @@
+{
+  "_comment": "The ending (docs/gameplay/23 §6): the god's power taken on the last stairs (c7.took_power): at the Star it speaks through Leo: The God (e_god).",
+  "scene": "dialogue",
+  "flags": [
+    "c7.took_power"
+  ],
+  "dialogue": {
+    "id": "c7_star"
+  },
+  "test": {
+    "frames": 60,
+    "keys": "enter@10,enter@25"
+  },
+  "expect": {
+    "scene": "ending",
+    "ending": "e_god"
+  }
+}

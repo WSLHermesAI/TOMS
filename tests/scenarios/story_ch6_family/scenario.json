@@ -1,0 +1,24 @@
+{
+  "_comment": "Chapter 6, F30 after the Sanctum Warden (docs/gameplay/23 §4.6): the family scene; the parents go home (home.parents: the main quest, m_main_parents, done; the village's home opens).",
+  "scene": "dialogue",
+  "missions": {
+    "m_main_parents": "active"
+  },
+  "dialogue": {
+    "id": "c6_family"
+  },
+  "test": {
+    "frames": 90,
+    "keys": "enter@10,enter@25,enter@40,enter@55"
+  },
+  "expect": {
+    "scene": "stage",
+    "flags": [
+      "home.parents",
+      "c6.family"
+    ],
+    "missions": {
+      "m_main_parents": "completed"
+    }
+  }
+}

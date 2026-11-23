@@ -1,0 +1,27 @@
+{
+  "_comment": "Chapter 6 of the story revamp (docs/gameplay/23 §4): F29, the third mirror shard (mirror_shards + 1: the mirror whole, ev_c6_mirror_whole).",
+  "npcId": "princess",
+  "start": "shard",
+  "nodes": {
+    "shard": {
+      "text": {
+        "zh_TW": "鏡廳的地上，最後一片碎鏡卡在石縫裡。你把它拔出來的時候，所有的鏡子同時亮了起來。",
+        "en": "On the floor of the Mirror Hall, the last shard is wedged in a crack between the stones. As you pull it free, every mirror in the hall lights up at once."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（撿起碎片）",
+            "en": "(Pick up the shard)"
+          },
+          "next": null,
+          "action": {
+            "type": "addVar",
+            "var": "mirror_shards",
+            "delta": 1
+          }
+        }
+      ]
+    }
+  }
+}

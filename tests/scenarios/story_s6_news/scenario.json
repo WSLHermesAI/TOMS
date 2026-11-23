@@ -1,0 +1,22 @@
+{
+  "_comment": "S6 of the story revamp (docs/gameplay/23 §8): the villagers' \"How are things?\" follows the story: the baker, after chapter 5 (c5.done), talks about the people from the cells (news_c5).",
+  "scene": "hub",
+  "flags": [
+    "home.baker",
+    "c5.done"
+  ],
+  "player": {
+    "gold": 0
+  },
+  "hub": {
+    "location": "hub_bakery"
+  },
+  "test": {
+    "frames": 30,
+    "keys": "enter@10"
+  },
+  "expect": {
+    "scene": "dialogue",
+    "dialogueNode": "news_c5"
+  }
+}

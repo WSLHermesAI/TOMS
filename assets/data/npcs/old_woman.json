@@ -5,13 +5,52 @@
   "chat": {
     "lines": [
       {
-        "dialogue": "old_woman"
+        "dialogue": "old_woman",
+        "requires": {
+          "all": [
+            {
+              "not": {
+                "type": "runFlagSet",
+                "flag": "c1.hairpin"
+              }
+            },
+            {
+              "not": {
+                "type": "runFlagSet",
+                "flag": "c1.done"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "dialogue": "old_woman_pin",
+        "requires": {
+          "all": [
+            {
+              "type": "runFlagSet",
+              "flag": "c1.hairpin"
+            },
+            {
+              "not": {
+                "type": "runFlagSet",
+                "flag": "c1.done"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "dialogue": "old_woman_later",
+        "requires": {
+          "type": "runFlagSet",
+          "flag": "c1.done"
+        }
       }
     ],
     "order": "loop"
   },
   "topics": {
     "menu": "auto"
-  },
-  "draft": true
+  }
 }

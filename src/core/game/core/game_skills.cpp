@@ -27,6 +27,16 @@ glm::vec4 Game::f_TouchArea() const {
     const float l_fMargin = 12.0f, l_fTop = 8.0f;
     const float l_fAreaW = std::min(420.0f, l_fW - 2.0f * l_fMargin), l_fAreaH = l_fH > l_fW ? 160.0f : 120.0f;   // portrait: a little taller
     const glm::vec4 l_v4Hero = f_FighterBox(-1);
+    // the bow's target (the owner, 2026-11-23: "around the center"): halfway between the hero and the monster he aims at,
+    // over their heads (still never over a monster), not over the hero alone at the screen's side
+    if (f_BattlePlayType() == toms::PlayType::ePULL_RELEASE && !m_oCs.m_vFoes.empty()) {
+        const glm::vec4 l_v4Foe = f_FighterBox(std::clamp(m_oCs.m_iTarget, 0, (int)m_oCs.m_vFoes.size() - 1));
+        const float l_fMid = (l_v4Hero.x + l_v4Hero.z * 0.5f + l_v4Foe.x + l_v4Foe.z * 0.5f) * 0.5f;
+        const float l_fHeads = std::min(l_v4Hero.y, l_v4Foe.y);
+        const float l_fCx = std::clamp(l_fMid - l_fAreaW * 0.5f, l_fMargin, std::max(l_fMargin, l_fW - l_fMargin - l_fAreaW));
+        const float l_fCy = std::clamp(std::min(l_fH * 0.5f - l_fAreaH, l_fHeads - l_fAreaH * 0.5f), l_fTop, std::max(l_fTop, l_fH - 170.0f - l_fAreaH));
+        return glm::vec4(l_fCx, l_fCy, l_fAreaW, l_fAreaH);
+    }
     const float l_fX = std::clamp(l_v4Hero.x + l_v4Hero.z * 0.5f - l_fAreaW * 0.5f, l_fMargin, std::max(l_fMargin, l_fW - l_fMargin - l_fAreaW));
     const float l_fY = std::clamp(l_v4Hero.y - l_v4Hero.w * 0.25f - l_fAreaH, l_fTop, std::max(l_fTop, l_fH - 170.0f - l_fAreaH));
     return glm::vec4(l_fX, l_fY, l_fAreaW, l_fAreaH);

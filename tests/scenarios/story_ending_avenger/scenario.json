@@ -1,0 +1,18 @@
+{
+  "_comment": "The ending (docs/gameplay/23 §6): the Star lit, but Bran was killed (c5.bran_killed): The Avenger (e_avenger).",
+  "scene": "dialogue",
+  "flags": [
+    "c5.bran_killed"
+  ],
+  "dialogue": {
+    "id": "c7_star"
+  },
+  "test": {
+    "frames": 70,
+    "keys": "enter@10,enter@25,enter@40"
+  },
+  "expect": {
+    "scene": "ending",
+    "ending": "e_avenger"
+  }
+}

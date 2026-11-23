@@ -1,0 +1,55 @@
+{
+  "_comment": "Chapter 6 of the story revamp (docs/gameplay/23 §4): the parents at home (hub_home): a free full heal. S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
+  "npcId": "farmer_wife",
+  "start": "root",
+  "nodes": {
+    "root": {
+      "text": {
+        "zh_TW": "家裡的灶上燉著肉，整間屋子都是香味。媽媽：「坐下，先吃一碗再走。」爸爸在門口補屋頂，假裝沒在看你。",
+        "en": "Stew is simmering on the stove and the whole house smells of it. Mom: \"Sit down, have a bowl before you go.\" Dad is patching the roof by the door, pretending not to watch you."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（吃一碗：HP 回滿）",
+            "en": "(Have a bowl: full HP)"
+          },
+          "next": null,
+          "action": {
+            "type": "heal",
+            "cost": 0
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6"
+        },
+        {
+          "label": {
+            "zh_TW": "「我很快就回來。」",
+            "en": "\"I'll be back soon.\""
+          },
+          "next": null
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "爸爸從屋頂上探出頭：「上面那個公主——是不是對你很好？……沒事，爸爸只是問問。」媽媽在廚房笑出聲來。",
+        "en": "Dad leans down from the roof. \"That princess up there, is she... nice to you? Never mind. Just asking.\" Mom laughs out loud in the kitchen."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    }
+  }
+}

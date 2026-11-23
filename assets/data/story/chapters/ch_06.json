@@ -1,0 +1,41 @@
+{
+  "id": "ch_06",
+  "floors": [
+    "F26",
+    "F27",
+    "F28",
+    "F29",
+    "F30"
+  ],
+  "bossFloor": "F30",
+  "bossStage": "stage04",
+  "title": "story.ch06.title",
+  "desc": "story.ch06.desc",
+  "seal": "",
+  "beats": [
+    {
+      "id": "b_ch_06_boss",
+      "kind": "boss",
+      "floor": "F30",
+      "enemyId": "sanctum_warden"
+    }
+  ],
+  "grants": {
+    "skillPoints": 1
+  },
+  "choices": [],
+  "sideStoryHooks": [],
+  "exitConditions": {
+    "type": "stageCleared",
+    "stageId": "F31"
+  },
+  "enemyMix": [
+    "skeleton",
+    "wraith"
+  ],
+  "itemTable": [
+    "potion_red",
+    "potion_blue",
+    "exp_up"
+  ]
+}

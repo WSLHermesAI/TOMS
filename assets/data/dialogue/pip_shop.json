@@ -1,5 +1,5 @@
 {
-  "_comment": "Chapter 2 of the story revamp (docs/gameplay/23 §4): Pip in the village (hub_pip): the store, the chest game.",
+  "_comment": "Chapter 2 of the story revamp (docs/gameplay/23 §4): Pip in the village (hub_pip): the store, the chest game. S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "chest_peddler",
   "start": "root",
   "nodes": {
@@ -43,6 +43,61 @@
         },
         {
           "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c2",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c4.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c4",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c4.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
+        },
+        {
+          "label": {
             "zh_TW": "「再見。」",
             "en": "\"Bye.\""
           },
@@ -60,6 +115,51 @@
           "label": {
             "zh_TW": "……",
             "en": "..."
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c2": {
+      "text": {
+        "zh_TW": "皮普：「生意最重要的是什麼？信用！第二重要的？利息！」",
+        "en": "Pip: \"What matters most in business? Trust! And second most? Interest!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c4": {
+      "text": {
+        "zh_TW": "皮普：「那條石龍說你是神裔？那你的簽名一定很值錢……能不能幫我簽一百張？」",
+        "en": "Pip: \"The stone wyrm says you're Godborn? Then your autograph must be worth a fortune... could you sign a hundred for me?\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "皮普：「最後一戰？那我要先賣『勝利紀念品』……萬一輸了就改賣『悼念紀念品』。開玩笑的！你會贏的！」",
+        "en": "Pip: \"The final battle? Then I'd better start selling victory souvenirs... and if you lose, memorial souvenirs. Kidding! You'll win!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
           },
           "next": "root"
         }

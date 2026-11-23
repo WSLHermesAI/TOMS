@@ -1,0 +1,18 @@
+{
+  "_comment": "Chapter 6, F28 (docs/gameplay/23 §4.6): the children from the ledger asleep in crystal cradles, woken and sent home (home.children: the village schoolroom).",
+  "scene": "dialogue",
+  "dialogue": {
+    "id": "c6_cradles"
+  },
+  "test": {
+    "frames": 60,
+    "keys": "enter@10,enter@25"
+  },
+  "expect": {
+    "scene": "stage",
+    "flags": [
+      "home.children",
+      "c6.children"
+    ]
+  }
+}

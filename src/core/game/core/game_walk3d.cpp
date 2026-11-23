@@ -262,13 +262,13 @@ void Game::f_DrawWalk3D() {
     f_DrawGroundMarks(l_oV);
     m_pRen->f_EndWorld();
     m_oFloor.f_Render(l_oV);   // each object in its own standing group (f_Walk3DBeginObject)
-    // each stair's sign (a padlock, the gold arrow) standing over it: on the top step (up) or over the pit (down)
+    // each stair's sign (a padlock, or chevrons rising / sinking: its way) standing over it: on the top step (up) or over the pit (down)
     const float l_fWallH = m_jStage3D.value("wallHeight", 1.0f);
     for (const toms::StairLink& l_oS : m_oSt.m_vStairs) {
         if (l_oS.m_iX < 0) continue;
         const float l_fBase = l_oS.m_bUp ? l_fWallH : 0.0f;
         const glm::mat4 l_mat4M = f_Walk3DSpriteMatrix(glm::vec2(l_oV.m_fTs * 0.5f, l_oV.m_fTs), glm::vec3(l_oS.m_iX + 0.5f, l_fBase, l_oS.m_iY + 0.5f),
-                                                      0.9f / l_oV.m_fTs);
+                                                      m_jStage3D.value("stairSign", nlohmann::json::object()).value("size", 1.0f) / l_oV.m_fTs);
         m_pRen->f_BeginWorld(&l_mat4M[0][0], false);
         f_DrawStairSign(l_oS, 0.0f, 0.0f, l_oV.m_fTs);
         m_pRen->f_EndWorld();

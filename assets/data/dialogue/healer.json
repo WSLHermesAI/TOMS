@@ -1,5 +1,5 @@
 {
-  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): the healer at home (hub_healer): full HP for 10 gold.",
+  "_comment": "Chapter 1 of the story revamp (docs/gameplay/23 §4): the healer at home (hub_healer): full HP for 10 gold. S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "healer",
   "start": "root",
   "nodes": {
@@ -22,10 +22,110 @@
         },
         {
           "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c1",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c4.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c4",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c4.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
+        },
+        {
+          "label": {
             "zh_TW": "「我沒事。」",
             "en": "\"I'm fine.\""
           },
           "next": null
+        }
+      ]
+    },
+    "news_c1": {
+      "text": {
+        "zh_TW": "治療師：「別逞強。受了傷就回來，我這裡的門永遠開著。」",
+        "en": "Healer: \"Don't push yourself. If you're hurt, come back. My door is always open.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c4": {
+      "text": {
+        "zh_TW": "治療師：「你手掌上的光……我從來沒見過這種傷。不，那不是傷，對吧？」",
+        "en": "Healer: \"That light in your palms... I've never seen a wound like it. No, it isn't a wound, is it?\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "治療師：「我替你娘看過了，只是累了，沒事。她一直在問你有沒有吃飯。」",
+        "en": "Healer: \"I've looked your mother over. Just tired, nothing more. She keeps asking whether you're eating.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
         }
       ]
     }

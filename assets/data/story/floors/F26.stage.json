@@ -19,15 +19,10 @@
     "a": "item:exp_up",
     "d": "item:potion_blue",
     "h": "item:potion_red",
-    "E": "event:ev_common_whisper_old_road",
+    "E": "event:ev_c6_mirror_voice",
     "F": "event:ev_common_cache_wall_v3",
-    "G": "event:ev_common_merchant_echo_ash_v5",
-    "I": "event:ev_library_torn_page_v4",
-    "J": "event:ev_library_shelf_collapse_v3",
-    "K": "event:ev_library_torn_page_v2",
     "Y": "key:yellow",
     "y": "door:yellow",
-    "S": "npc:skeleton_scholar",
     "A": "monster:bone_archer",
     "C": "monster:grave_rat",
     "H": "monster:zombie",
@@ -36,13 +31,13 @@
   "tiles": [
     "###################################",
     "#....................y...........##",
-    "#....2..H..A..2..C..Ey.F..G..I..J##",
+    "#....2..H..A..2..C..Ey.F.........##",
     "####..#..#..#######..#..####..#..##",
     "#..#.....#........#..#.....#..#..##",
-    "#..#.L...#........#..#.....#..#.K##",
+    "#..#.L...#........#..#.....#..#..##",
     "#..#..#..##########..#..#######..##",
     "#.....#.....#.....#.....#........##",
-    "#....1#.....#.....#.....#.......S##",
+    "#....1#.....#.....#.....#........##",
     "#..#..####..####..#..####..#..#..##",
     "#..#.....#...........#.....#.....##",
     "#..#.C...#...........#.....#....a##",
@@ -159,5 +154,5 @@
       "uid": "o28"
     }
   },
-  "theme": "crypt"
+  "theme": "crystal"
 }

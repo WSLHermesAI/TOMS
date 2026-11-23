@@ -1,0 +1,81 @@
+{
+  "_comment": "Chapter 7 of the story revamp (docs/gameplay/23 §4): F34, the last temptation (refuse: mercy + 1; take: ATK + 10 and c7.took_power, the way to the god ending).",
+  "npcId": "villager",
+  "start": "voice",
+  "nodes": {
+    "voice": {
+      "text": {
+        "zh_TW": "通往星星的最後一段階梯上，那個聲音又來了。這一次，它用的是你媽媽的聲音。「里歐。拿走我的力量。你就再也不會失去任何人了。」",
+        "en": "On the last stretch of stairs to the Star, the voice comes again. This time it speaks in your mother's voice. \"Leo. Take my power. Then you will never lose anyone again.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「你不是我媽。我媽在家煮燉肉。」",
+            "en": "\"You're not my mom. My mom is home making stew.\""
+          },
+          "next": "refuse"
+        },
+        {
+          "label": {
+            "zh_TW": "「……再也不會失去任何人？」（伸出手）",
+            "en": "\"...Never lose anyone again?\" (Reach out)"
+          },
+          "next": "take"
+        }
+      ]
+    },
+    "refuse": {
+      "text": {
+        "zh_TW": "聲音尖叫起來，整座階梯都在震。然後它安靜了，只剩下你的腳步聲。",
+        "en": "The voice shrieks and the whole stairway shakes. Then it falls silent, and there is only the sound of your footsteps."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（繼續往上走）",
+            "en": "(Keep climbing)"
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "addCounter",
+              "counter": "mercy",
+              "delta": 1
+            },
+            {
+              "type": "setFlag",
+              "flag": "c7.refused"
+            }
+          ]
+        }
+      ]
+    },
+    "take": {
+      "text": {
+        "zh_TW": "一股冰冷的力量從你的指尖流進來，流過你的手臂，流進你的心臟。你從來沒有這麼強過。也從來沒有這麼冷過。",
+        "en": "A cold power flows in through your fingertips, up your arms, into your heart. You have never been this strong. You have never been this cold."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "addStat",
+              "stat": "atk",
+              "delta": 10
+            },
+            {
+              "type": "setFlag",
+              "flag": "c7.took_power"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

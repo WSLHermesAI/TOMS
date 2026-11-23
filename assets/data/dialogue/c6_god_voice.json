@@ -1,0 +1,81 @@
+{
+  "_comment": "Chapter 6 of the story revamp (docs/gameplay/23 §4): F29, a choice: the old god's voice for the first time (listen: vengeance + 1, c6.listened; refuse: mercy + 1, c6.refused).",
+  "npcId": "villager",
+  "start": "voice",
+  "nodes": {
+    "voice": {
+      "text": {
+        "zh_TW": "鏡廳裡所有的鏡子都映出你——可是每一個你都在笑，而你沒有笑。一個很老很老的聲音在你腦子裡說：「神裔。回家吧。你的身體，本來就是為我做的。」",
+        "en": "Every mirror in the hall shows you, but every one of you is smiling, and you are not. A very, very old voice speaks inside your head. \"Godborn. Come home. Your body was made for me.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……你是誰？」（聽它說下去）",
+            "en": "\"...Who are you?\" (Let it go on)"
+          },
+          "next": "listen"
+        },
+        {
+          "label": {
+            "zh_TW": "「滾出我的腦袋。」",
+            "en": "\"Get out of my head.\""
+          },
+          "next": "refuse"
+        }
+      ]
+    },
+    "listen": {
+      "text": {
+        "zh_TW": "聲音：「我是讓你不再失去任何人的力量。你的家，被燒過一次。你想讓它再被燒一次嗎？」你的手掌熱得發燙。",
+        "en": "The voice: \"I am the power that means you never lose anyone again. Your home burned once. Do you want it to burn again?\" Your palms burn hot."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "……",
+            "en": "..."
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "addCounter",
+              "counter": "vengeance",
+              "delta": 1
+            },
+            {
+              "type": "setFlag",
+              "flag": "c6.listened"
+            }
+          ]
+        }
+      ]
+    },
+    "refuse": {
+      "text": {
+        "zh_TW": "鏡子裡的笑臉一個一個碎掉了。聲音輕輕地笑：「……我們會在星星那裡再見的。」",
+        "en": "One by one the smiling faces in the mirrors shatter. The voice laughs softly. \"...We will meet again at the Star.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「我等著。」",
+            "en": "\"I'll be waiting.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "addCounter",
+              "counter": "mercy",
+              "delta": 1
+            },
+            {
+              "type": "setFlag",
+              "flag": "c6.refused"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

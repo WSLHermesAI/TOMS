@@ -1,0 +1,124 @@
+{
+  "_comment": [
+    "Chapter 6 of the story revamp (docs/gameplay/23 §4): The Sanctum, F26-F30. Liora's mirror (three shards,",
+    "mirror_shards; whole: ev_c6_mirror_whole, c6.mirror), the children in the cradles, the old god's voice, the family scene",
+    "after the Sanctum Warden (home.parents)."
+  ],
+  "act": "ch_06",
+  "theme": "the sanctum",
+  "events": [
+    {
+      "eventId": "ev_c6_mirror_voice",
+      "kind": "scene",
+      "text": "ev_c6_mirror_voice.text",
+      "title": "ev_c6_mirror_voice.title",
+      "desc": "ev_c6_mirror_voice.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c6_mirror_voice"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c6_shard2",
+      "kind": "quest",
+      "text": "ev_c6_shard2.text",
+      "title": "ev_c6_shard2.title",
+      "desc": "ev_c6_shard2.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c6_shard2"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c6_shard3",
+      "kind": "quest",
+      "text": "ev_c6_shard3.text",
+      "title": "ev_c6_shard3.title",
+      "desc": "ev_c6_shard3.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c6_shard3"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c6_mirror_whole",
+      "kind": "scene",
+      "text": "ev_c6_mirror_whole.text",
+      "title": "ev_c6_mirror_whole.title",
+      "desc": "ev_c6_mirror_whole.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c6_mirror_whole"
+        }
+      ],
+      "trigger": {
+        "on": "varChanged",
+        "var": "mirror_shards"
+      },
+      "requires": {
+        "type": "varAtLeast",
+        "var": "mirror_shards",
+        "value": 3
+      }
+    },
+    {
+      "eventId": "ev_c6_pip_holywater",
+      "kind": "comic",
+      "text": "ev_c6_pip_holywater.text",
+      "title": "ev_c6_pip_holywater.title",
+      "desc": "ev_c6_pip_holywater.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c6_pip_holywater"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c6_cradles",
+      "kind": "rescue",
+      "text": "ev_c6_cradles.text",
+      "title": "ev_c6_cradles.title",
+      "desc": "ev_c6_cradles.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c6_cradles"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c6_god_voice",
+      "kind": "choice",
+      "text": "ev_c6_god_voice.text",
+      "title": "ev_c6_god_voice.title",
+      "desc": "ev_c6_god_voice.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c6_god_voice"
+        }
+      ]
+    },
+    {
+      "eventId": "ev_c6_family",
+      "kind": "scene",
+      "text": "ev_c6_family.text",
+      "title": "ev_c6_family.title",
+      "desc": "ev_c6_family.desc",
+      "actions": [
+        {
+          "type": "startDialogue",
+          "dialogue": "c6_family"
+        }
+      ]
+    }
+  ]
+}

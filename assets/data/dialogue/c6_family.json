@@ -1,0 +1,91 @@
+{
+  "_comment": "Chapter 6 of the story revamp (docs/gameplay/23 §4): F30, after the Sanctum Warden: the family scene; the parents go home (home.parents: the main quest done; hub_home).",
+  "npcId": "farmer_wife",
+  "start": "cage",
+  "nodes": {
+    "cage": {
+      "text": {
+        "zh_TW": "神殿的最深處，一座發光的籠子裡，兩個人背靠背坐著。你認得那件補丁圍裙，和那頂舊草帽。「……媽？爸？」",
+        "en": "In the very heart of the Sanctum, two people sit back to back inside a glowing cage. You know that patched apron, and that old straw hat. \"...Mom? Dad?\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（打開籠子）",
+            "en": "(Open the cage)"
+          },
+          "next": "hug"
+        }
+      ]
+    },
+    "hug": {
+      "text": {
+        "zh_TW": "媽媽一把抱住你，抱得緊緊的。爸爸的第一句話是：「……你有沒有好好吃飯？」",
+        "en": "Mom throws her arms around you and holds on tight. Dad's first words are: \"...Have you been eating properly?\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……有啦。」（哭了出來）",
+            "en": "\"...I have.\" (The tears come)"
+          },
+          "next": "truth"
+        }
+      ]
+    },
+    "truth": {
+      "text": {
+        "zh_TW": "媽媽：「我們早就知道你是神裔。我們把你藏在村子裡，是因為……我們從來不想要你變成神。我們只想要你有一個快樂的童年。」",
+        "en": "Mom: \"We always knew you were Godborn. We hid you in the village because... we never wanted you to become a god. We just wanted you to have a happy childhood.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「我有啊。我有一個很快樂的童年。」",
+            "en": "\"I did. I had a very happy childhood.\""
+          },
+          "next": "up"
+        }
+      ]
+    },
+    "up": {
+      "text": {
+        "zh_TW": "爸爸看著塔頂：「莉歐拉公主還在上面。那個聲音也是。」他拍拍你的頭。「我們先回家煮燉肉。你把事情做完，就回來吃飯。」",
+        "en": "Dad looks up toward the top of the tower. \"Princess Liora is still up there. So is that voice.\" He pats your head. \"We'll go home first and make stew. Finish what you have to do, then come home for dinner.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「說好了。」",
+            "en": "\"It's a promise.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "rescue",
+              "npc": "farmer"
+            },
+            {
+              "type": "rescue",
+              "npc": "farmer_wife",
+              "text": "village.went_home_alone"
+            },
+            {
+              "type": "setFlag",
+              "flag": "home.parents"
+            },
+            {
+              "type": "setFlag",
+              "flag": "c6.family"
+            },
+            {
+              "type": "addCounter",
+              "counter": "trust",
+              "delta": 1
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

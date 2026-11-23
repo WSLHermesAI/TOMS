@@ -910,8 +910,13 @@ void BgfxRenderer::f_BeginWorld(const float* l_pMat4, bool l_bLit) {
     WorldGroup l_oG;
     std::memcpy(l_oG.m_arrMat, l_pMat4, sizeof(l_oG.m_arrMat));
     l_oG.m_bLit = l_bLit;
+    m_arrWorldTint[0] = m_arrWorldTint[1] = m_arrWorldTint[2] = m_arrWorldTint[3] = 1.0f;
     m_vWorld.push_back(std::move(l_oG));
     m_iWorldOpen = int(m_vWorld.size() - 1);
+}
+
+void BgfxRenderer::f_SetWorldTint(const float* l_pRgba) {
+    if (l_pRgba) for (int l_iC = 0; l_iC < 4; l_iC++) m_arrWorldTint[l_iC] = l_pRgba[l_iC];
 }
 
 void BgfxRenderer::f_EndWorld() {
@@ -956,7 +961,8 @@ void BgfxRenderer::f_WorldTriangles(const float* l_pXy, const float* l_pUv, cons
         l_oV.m_fZ = l_pM[2] * l_fX + l_pM[6] * l_fY + l_pM[14];
         l_oV.m_fU = l_pUv[l_uI * 2];
         l_oV.m_fV = l_pUv[l_uI * 2 + 1];
-        l_oV.m_fR = l_pRgba[l_uI * 4]; l_oV.m_fG = l_pRgba[l_uI * 4 + 1]; l_oV.m_fB = l_pRgba[l_uI * 4 + 2]; l_oV.m_fA = l_pRgba[l_uI * 4 + 3];
+        l_oV.m_fR = l_pRgba[l_uI * 4] * m_arrWorldTint[0]; l_oV.m_fG = l_pRgba[l_uI * 4 + 1] * m_arrWorldTint[1];
+        l_oV.m_fB = l_pRgba[l_uI * 4 + 2] * m_arrWorldTint[2]; l_oV.m_fA = l_pRgba[l_uI * 4 + 3] * m_arrWorldTint[3];
         l_oG.m_vVerts.push_back(l_oV);
     }
     for (uint32_t l_uI = 0; l_uI < l_uIdx; l_uI++) l_oG.m_vIdx.push_back(uint16_t(l_pIdx[l_uI] + l_u16Base));

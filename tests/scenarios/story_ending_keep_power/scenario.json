@@ -1,0 +1,30 @@
+{
+  "_comment": "The ending (docs/gameplay/23 §6): at the Star, the second answer keeps the power: The God (e_god), whatever came before.",
+  "scene": "dialogue",
+  "flags": [
+    "home.parents",
+    "home.children",
+    "home.mira",
+    "home.healer",
+    "home.baker",
+    "c4.slime_king",
+    "c6.mirror"
+  ],
+  "counters": {
+    "mercy": 6
+  },
+  "dialogue": {
+    "id": "c7_star"
+  },
+  "test": {
+    "frames": 80,
+    "keys": "enter@10,down@25,enter@33,enter@48"
+  },
+  "expect": {
+    "scene": "ending",
+    "ending": "e_god",
+    "flags": [
+      "c7.took_power"
+    ]
+  }
+}

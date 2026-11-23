@@ -19,19 +19,15 @@
     "a": "item:exp_up",
     "d": "item:potion_blue",
     "h": "item:potion_red",
-    "E": "event:ev_library_torn_page",
+    "E": "event:ev_c6_pip_holywater",
     "F": "event:ev_common_cache_wall_v3",
-    "G": "event:ev_common_trap_rubble_v4",
-    "I": "event:ev_library_shelf_collapse_v3",
-    "J": "event:ev_library_scholar_whisper_v4",
-    "K": "event:ev_library_torn_page_v4",
+    "I": "event:ev_c6_shard2",
     "Y": "key:yellow",
     "y": "door:yellow",
     "A": "monster:ghoul",
     "C": "monster:grave_rat",
     "H": "monster:zombie",
-    "L": "monster:mummy",
-    "M": "npc:monk"
+    "L": "monster:mummy"
   },
   "tiles": [
     "###################################",
@@ -42,9 +38,9 @@
     "#.....#..#..#.....#..#.....#..#..##",
     "#######..#..####..####..#..####..##",
     "#.......................#.....#..##",
-    "#....a..K..J..I..G......#.....#..##",
+    "#....a........I.........#.....#..##",
     "#..#..##########..#######..########",
-    "#..........M#...........#.....#..##",
+    "#...........#...........#.....#..##",
     "#....a..d..d#....F..E..A#.....#..##",
     "#..#..####..#..####..#yy#..#..#..##",
     "#..#..#...........#..#..#........##",
@@ -163,5 +159,5 @@
       "uid": "o29"
     }
   },
-  "theme": "crypt"
+  "theme": "crystal"
 }

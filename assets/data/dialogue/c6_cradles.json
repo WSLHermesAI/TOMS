@@ -1,0 +1,52 @@
+{
+  "_comment": "Chapter 6 of the story revamp (docs/gameplay/23 §4): F28, a mass rescue: the gifted children from the ledger, asleep in crystal cradles (home.children: the village school; mercy + 1).",
+  "npcId": "villager",
+  "start": "hall",
+  "nodes": {
+    "hall": {
+      "text": {
+        "zh_TW": "搖籃大廳裡排滿了水晶搖籃。每一個搖籃裡都睡著一個孩子——名冊上的那些孩子。凱的聲音很輕：「……他們還在呼吸。」",
+        "en": "The Hall of Cradles is lined with crystal cradles. In each one sleeps a child: the children from the ledger. Kai's voice is very quiet. \"...They're still breathing.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（輕輕地敲碎水晶，一個一個叫醒他們）",
+            "en": "(Break the crystals gently and wake them one by one)"
+          },
+          "next": "wake"
+        }
+      ]
+    },
+    "wake": {
+      "text": {
+        "zh_TW": "孩子們揉著眼睛坐起來。最小的那個抓住你的袖子：「哥哥，你是來帶我們回家的嗎？」",
+        "en": "The children sit up, rubbing their eyes. The smallest one grabs your sleeve. \"Big brother, have you come to take us home?\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「對。米菈在村子裡等你們。」",
+            "en": "\"Yes. Mira's waiting for you in the village.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "rescue",
+              "npc": "children"
+            },
+            {
+              "type": "addCounter",
+              "counter": "mercy",
+              "delta": 1
+            },
+            {
+              "type": "setFlag",
+              "flag": "c6.children"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

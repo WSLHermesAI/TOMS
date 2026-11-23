@@ -1,0 +1,63 @@
+{
+  "_comment": "Chapter 6 of the story revamp (docs/gameplay/23 §4): the mirror whole (mirror_shards 3): Liora's truth (the Star, the old god, the \"Master\"); c6.mirror: the quest done; trust + 1.",
+  "npcId": "princess",
+  "start": "whole",
+  "nodes": {
+    "whole": {
+      "text": {
+        "zh_TW": "三片碎鏡在你手裡拼成一面完整的小鏡子。莉歐拉的臉清清楚楚地出現了。「終於……我能好好跟你說話了。」",
+        "en": "The three shards fit together in your hand into one small, whole mirror. Liora's face appears, clear at last. \"At last... I can really talk to you.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「告訴我一切。」",
+            "en": "\"Tell me everything.\""
+          },
+          "next": "truth"
+        }
+      ]
+    },
+    "truth": {
+      "text": {
+        "zh_TW": "莉歐拉：「塔頂的安穩之星，是用來關住一個古老的神的。那個神想要一具神裔的身體——你的身體。沃卡司封印了星星，把它擋在外面。而我……我是星星的鑰匙。只有我能重新點亮它。」",
+        "en": "Liora: \"The Star of Peace at the top of the tower is there to keep an old god out. That god wants a Godborn body: yours. Vorkath sealed the Star to hold it back. And I... I am the Star's key. Only I can light it again.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「所以把我爹娘抓走的『主人』……」",
+            "en": "\"So the 'Master' who took my parents...\""
+          },
+          "next": "master"
+        }
+      ]
+    },
+    "master": {
+      "text": {
+        "zh_TW": "莉歐拉：「就是那個神的聲音，從星星的裂縫裡漏出來的。它騙了收集者，騙了布蘭。里歐——不管它對你說什麼，都不要讓它進來。答應我。」",
+        "en": "Liora: \"It is that god's voice, leaking through the crack in the Star. It deceived the Collectors. It deceived Bran. Leo, whatever it tells you, don't let it in. Promise me.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「我答應你。」",
+            "en": "\"I promise.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "setFlag",
+              "flag": "c6.mirror"
+            },
+            {
+              "type": "addCounter",
+              "counter": "trust",
+              "delta": 1
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

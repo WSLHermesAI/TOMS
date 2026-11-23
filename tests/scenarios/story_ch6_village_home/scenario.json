@@ -1,0 +1,21 @@
+{
+  "_comment": "Chapter 6, the village (docs/gameplay/23 §4.6): with the parents home, the village's Home opens: Mom's stew (a free full heal).",
+  "scene": "hub",
+  "flags": [
+    "home.parents"
+  ],
+  "player": {
+    "hp": 10
+  },
+  "hub": {
+    "location": "hub_home"
+  },
+  "test": {
+    "frames": 40,
+    "keys": "enter@10"
+  },
+  "expect": {
+    "scene": "stage",
+    "hp": 120
+  }
+}

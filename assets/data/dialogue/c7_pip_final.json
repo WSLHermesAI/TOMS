@@ -1,0 +1,104 @@
+{
+  "_comment": "Chapter 7 of the story revamp (docs/gameplay/23 §4): F31, Pip's payoff (comic): his chapter 2 investment pays fifty gold (c2.pip_invested), else a last sale.",
+  "npcId": "chest_peddler",
+  "start": "pip",
+  "nodes": {
+    "pip": {
+      "text": {
+        "zh_TW": "皮普從柱子後面探出頭，抱著一個沉甸甸的錢袋。",
+        "en": "Pip pokes his head out from behind a pillar, hugging a heavy money bag."
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「皮普，你怎麼也在這裡？」",
+            "en": "\"Pip, what are you doing up here?\""
+          },
+          "next": "share",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c2.pip_invested"
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「皮普，你怎麼也在這裡？」",
+            "en": "\"Pip, what are you doing up here?\""
+          },
+          "next": "sale",
+          "requires": {
+            "not": {
+              "type": "runFlagSet",
+              "flag": "c2.pip_invested"
+            }
+          }
+        }
+      ]
+    },
+    "share": {
+      "text": {
+        "zh_TW": "皮普：「森林裡你投資了我的攤子，記得嗎？這是你的分紅！」他倒出五十枚金幣。「我就說這孩子會發財——不對，是我會發財，你是順便的！」",
+        "en": "Pip: \"In the forest you invested in my stall, remember? Here's your share!\" He pours out fifty gold. \"I said this kid would be rich. No, wait, I said I would be rich. You're a bonus!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「……謝謝你，皮普。」",
+            "en": "\"...Thanks, Pip.\""
+          },
+          "next": null,
+          "actions": [
+            {
+              "type": "addStat",
+              "stat": "gold",
+              "delta": 50
+            },
+            {
+              "type": "setFlag",
+              "flag": "c7.pip_paid"
+            }
+          ]
+        }
+      ]
+    },
+    "sale": {
+      "text": {
+        "zh_TW": "皮普：「最後大拍賣！三瓶藥水二十枚金幣！打完最後一場，記得回來當我的常客！」",
+        "en": "Pip: \"Final clearance sale! Three potions for twenty gold! After the last fight, come back and be a regular!\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "「買了。」（20 金幣）",
+            "en": "\"Deal.\" (20 gold)"
+          },
+          "next": null,
+          "requires": {
+            "type": "statAtLeast",
+            "stat": "gold",
+            "value": 20
+          },
+          "actions": [
+            {
+              "type": "addStat",
+              "stat": "gold",
+              "delta": -20
+            },
+            {
+              "type": "give",
+              "itemId": "potion_red",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "label": {
+            "zh_TW": "「下次吧。」",
+            "en": "\"Next time.\""
+          },
+          "next": null
+        }
+      ]
+    }
+  }
+}

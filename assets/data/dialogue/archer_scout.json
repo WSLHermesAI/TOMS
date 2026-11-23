@@ -1,5 +1,5 @@
 {
-  "_comment": "Chapter 4 of the story revamp (docs/gameplay/23 §4): the archer scout at home (hub_archer): Grey Mask at night with a child's wooden horse.",
+  "_comment": "Chapter 4 of the story revamp (docs/gameplay/23 §4): the archer scout at home (hub_archer): Grey Mask at night with a child's wooden horse. S6 (docs/gameplay/23 §8): \"How are things?\" changes with the story (news_*: the latest chapter done).",
   "npcId": "archer_scout",
   "start": "root",
   "nodes": {
@@ -15,6 +15,61 @@
             "en": "\"Where did he go?\""
           },
           "next": "where"
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c4",
+          "requires": {
+            "all": [
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c5.done"
+                }
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c5",
+          "requires": {
+            "all": [
+              {
+                "type": "runFlagSet",
+                "flag": "c5.done"
+              },
+              {
+                "not": {
+                  "type": "runFlagSet",
+                  "flag": "c6.done"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "label": {
+            "zh_TW": "「最近怎麼樣？」",
+            "en": "\"How are things?\""
+          },
+          "next": "news_c6",
+          "requires": {
+            "type": "runFlagSet",
+            "flag": "c6.done"
+          }
         },
         {
           "label": {
@@ -35,6 +90,51 @@
           "label": {
             "zh_TW": "「……木馬。」",
             "en": "\"...A wooden horse.\""
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c4": {
+      "text": {
+        "zh_TW": "弓箭斥候：「我在村子外面放了哨。這次，誰也別想在夜裡偷偷靠近。」",
+        "en": "Archer scout: \"I've posted a watch outside the village. Nobody sneaks up on it at night again.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c5": {
+      "text": {
+        "zh_TW": "弓箭斥候：「灰面……是布蘭。我在塔裡看見他抱著那隻木馬的時候，就該想到的。」",
+        "en": "Archer scout: \"Grey Mask... was Bran. When I saw him in the tower holding that wooden horse, I should have known.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
+          },
+          "next": "root"
+        }
+      ]
+    },
+    "news_c6": {
+      "text": {
+        "zh_TW": "弓箭斥候：「塔頂的光越來越暗了。你上去的時候，我會一直看著那裡。」",
+        "en": "Archer scout: \"The light at the top of the tower keeps dimming. While you're up there, I'll be watching it the whole time.\""
+      },
+      "choices": [
+        {
+          "label": {
+            "zh_TW": "（點點頭）",
+            "en": "(Nod)"
           },
           "next": "root"
         }

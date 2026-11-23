@@ -5,7 +5,7 @@
 The owner (2026-11-20): the battle is "6 of 10", the story and events "1 of 10". Most events are a hello and nothing to do.
 The game needs a real RPG feeling: a funny story, someone to save, a reason for revenge, events worth playing. The owner
 asked which pitch of [rpg_story_concept_book.html](rpg_story_concept_book.html) is closest to the game, and chose the
-direction below. **This is a plan; S1 (the tools), chapters 1–5 (§4.1–4.5) are built, chapters 6–7 are not.** The open questions are in §9 and in
+direction below. **S1 (the tools), chapters 1–7 (§4.1–4.7), the endings (§6) and S6 (every NPC rewritten, §8) are built.** The open questions are in §9 and in
 [13_OPEN_DECISIONS.md](../project/13_OPEN_DECISIONS.md).
 
 ## 1. Where the game is now
@@ -165,6 +165,31 @@ The choice is the one §6's endings read (`c5.bran_killed`, `c5.bran_spared`, `c
 5 (the castle look). Tests: `story_ch5_ambush_warned`, `_ambush_nets`, `_guard_key`, `_cells`, `_mira`, `_captain`,
 `_unmask`, `_end`.
 
+### 4.6 Chapter 6 as built (2026-11-23)
+
+| Where | What happens | Data |
+|---|---|---|
+| F26 the Sanctum Steps | **Liora in a broken mirror** ("It's L."): she is sealed at the top and can speak only through mirrors; find the shards: **quest** (`m_c6_mirrors`, three shards, `mirror_shards`) | `ev_c6_mirror_voice` |
+| F27 the Hall of Prayers | **Pip's "Sanctum holy water"** (5 gold; a red potion with a new label): **comic**. The second shard | `ev_c6_pip_holywater`, `ev_c6_shard2` |
+| F28 the Hall of Cradles (the hand-made map) | **The children from the ledger**, asleep in crystal cradles, woken and sent home: **mass rescue** (`home.children`: the village's new schoolroom, Mira teaching them to write their names; mercy + 1) | `ev_c6_cradles`, `hub_children` |
+| F29 the Mirror Hall | **The old god's voice** for the first time ("Your body was made for me"): listen (vengeance + 1) or refuse (mercy + 1): **choice**. The third shard: the mirror whole (`ev_c6_mirror_whole`, on `mirror_shards` 3): **Liora's truth**: the Star keeps an old god out, Vorkath sealed it, she is its key, the "Master" is the god's voice through the crack; "don't let it in" (`c6.mirror`, trust + 1) | `ev_c6_god_voice`, `ev_c6_shard3`, `ev_c6_mirror_whole` |
+| F30 the Heart of the Sanctum | **The Sanctum Warden** (boss; the Astrowl's look for now), then **the family scene**: "Have you been eating properly?" / "We never wanted you to become a god. We just wanted you to have a happy childhood." The parents go home (`home.parents`: the main quest done; **Home** in the village: Mom's stew, a free full heal) | `sanctum_warden`, `ev_c6_family`, `hub_home` |
+| The village | The elder on your doorstep with a bowl of stew: "This is the last stretch" (`c6.done`) | `villager_elder` |
+
+F26–F30 belong to chapter 6 (the crystal look). Tests: `story_ch6_mirror`, `_cradles`, `_family`, `_family_floor`, `_village_home`.
+
+### 4.7 Chapter 7 as built (2026-11-23)
+
+| Where | What happens | Data |
+|---|---|---|
+| F31 the Throne Antechamber | **Kai holds the door** (trust 3 or more: "Today I pay it back", two potions; else he comes along, one potion). **Pip's dividend**: his chapter 2 stall pays fifty gold (`c2.pip_invested`), else a last sale: **comic payoff** | `ev_c7_kai`, `ev_c7_pip_final` |
+| F32 the Star's Door | **Liora behind the door**: with her mirror whole, the plan: pour the god's power back into the Star, she lights it, "together" (`c7.plan`, trust + 1); else only fragments | `ev_c7_liora_door` |
+| F33 the Sorcerer King's Throne | **Vorkath** (boss), then **his truth**: he sealed the Star a hundred years ago and made himself the demon king so no Godborn would climb; spare him (mercy + 1) or not (vengeance + 1) | `vorkath_king`, `ev_c7_vorkath` |
+| F34 the Last Stairs | **The last temptation**, in Mom's voice: "Take my power, and you will never lose anyone again": refuse ("My mom is home making stew"; mercy + 1) or take it (ATK + 10, `c7.took_power`) | `ev_c7_temptation` |
+| F35 the Star of Peace (the hand-made map) | **The Hollow God** (the last boss; the Gravewarden's look for now), then **the Star** with the real Liora: light it together, or keep the power; then **the ending** (§6) | `hollow_god`, `ev_c7_star` |
+
+F31–F35 belong to chapter 7. Tests: `story_ch7_kai_holds`, `_vorkath_spare`, `_star_floor`, and one per ending (§6).
+
 ## 5. Events that do something
 
 **The aim: every floor has at least one real event, and no NPC only says hello** (an aim of the plan, not a project rule: the owner, Q112). Six kinds replace the
@@ -202,6 +227,19 @@ chapter 7 decide the ending, with the counters:
 
 The rebirth cycles of today's story are not part of this plan (Q114).
 
+**As built (2026-11-23):** at the Star (F35, `c7_star`) the dialogue action **`ending`** `{"among": [...]}` shows the first ending
+whose conditions hold (`story/endings.json`, before the older 15; no rebirth: `"allowsRebirth": false`, the ending screen's
+only way is back to the title):
+
+| Ending | When |
+|---|---|
+| **The God** (`e_god`) | the power taken (`c7.took_power`: on the last stairs, F34, or at the Star) |
+| **Everyone Home** (`e_secret`) | the Star lit, and the parents, the children, Mira, the healer and the baker home, the Slime King freed, Liora's mirror whole, Bran not killed, mercy 4 or more |
+| **The Avenger** (`e_avenger`) | Bran killed (`c5.bran_killed`), or vengeance 4 or more |
+| **Home** (`e_home`) | otherwise |
+
+Tests: `story_ending_home`, `_avenger`, `_god`, `_keep_power`, `_secret` (scenarios can set `"counters"` and expect `"ending"`).
+
 ## 7. What the data and the code need
 
 | Exists (keep) | To build |
@@ -224,8 +262,8 @@ each chapter's new content replaces the old floors it covers (Q115).
 | S2 | **Chapter 1 complete**: the morning, the raid, F01–F05, 2 rescues, 1 quest, 1 choice, a comic quest, the boss with scenes | Played from New Game to the chapter's end; every floor has a real event |
 | S3 | Chapters 2–3 | the same check |
 | S4 | Chapters 4–5 (Grey Mask, the big choice) | the same check |
-| S5 | Chapters 6–7, the endings | every ending reachable in a test |
-| S6 | Every NPC rewritten (lines that change with the story); the old text events removed | no greeting-only NPC left |
+| S5 | Chapters 6–7, the endings | every ending reachable in a test (**built 2026-11-23**) |
+| S6 | Every NPC rewritten (lines that change with the story); the old text events removed | no greeting-only NPC left (**built 2026-11-23**) |
 
 **S1, built (2026-11-20):**
 - Dialogue and event actions (`story_actions.h`): **`rescue`** `{npc}` (the run flag `home.<npc>`, the notice "{name} went home to the village!", the quests waiting for it); **`startDialogue`** `{dialogue}` (a floor scene opens a dialogue); **`openStore`**; **`heal`** `{cost}`.
@@ -235,6 +273,22 @@ each chapter's new content replaces the old floors it covers (Q115).
 - A sample quest, `m_rescue_baker` (the elder: bring the baker home; 20 gold, 10 EXP).
 - Tests: `scenario.story_rescue_quest` (take the quest, free the baker, the quest done, claim it, heal: gold 0 → 15), `scenario.story_village_bakery` (the bakery opens with `home.baker`); `unit.save_test` has a quest save round trip (switched off, not run).
 - Not yet: the quest log's own page (quests show in the Events tab as missions did), a village screen with faces (the village is still its menu list), scene portraits.
+
+**S6, built (2026-11-23):**
+- **The village's people follow the story**: each place's dialogue (16: the baker, the weapon master, the healer, Tobi,
+  Pip, the blacksmith, the cartographer, the innkeeper, the scholar, the dwarf, the archer, the square, Mira, Bran, home,
+  the schoolroom) has **"How are things?"**, answered by the latest chapter done (`news_c1` .. `news_c6`; each needs its
+  chapter's `cN.done` and no later one, so exactly one shows): about 45 new lines in zh_TW and en.
+- **The NPCs on the floors**: the old woman on F04 (a neighbour hiding with her hen: her line before and after Mom's
+  hairpin, and after chapter 1 an egg, +20 HP; `npcs/old_woman.json`); the crystal oracle on F07 keeps her shrine game and
+  now says what the crystal shows, by the story (`see_c1` .. `see_c6`; English added). The elder's copy that stood on F07
+  (`npc:villager` speaking his lines) is gone: he lives in the village. Every other NPC on F01–F35 was written in
+  chapters 1–7.
+- **The old events**: the text-only ones on F01–F35 are gone (the chapel dust and the old lost-soldier rescue on F07).
+  The pickups stay (caches, relics: +10 HP, +12 gold; traps: -8 HP), with the old story's lore taken out of their lines
+  (the net, the hunter's hollow, the quartermaster's chest, the chipped blade, Dad's plough) and the missing zh_TW added.
+  Kept as before: the bell chain and the owner's first-boss event.
+- Tests: `story_s6_news` (the baker after chapter 5), `story_s6_old_woman`, `story_s6_oracle`.
 
 Each step: English and Traditional Chinese text first (the other languages after), scenario tests for its rescues,
 quests and choices, and the owner plays it before the next.

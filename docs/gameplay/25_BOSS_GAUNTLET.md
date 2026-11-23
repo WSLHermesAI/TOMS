@@ -25,11 +25,16 @@ fought, then its picture.
   result screen** (the owner, 2026-11-22): its pay is a notice ("+6 gold · +7 EXP"), and the next fight starts at once.
 - **The next fight**: the hero is back in his idle pose (not the win pose), and the 3D stage **travels** to the next
   monster's place (battle.json `"gauntlet"` `"step"`: [0, 0, -3.5] metres a fight, into the stage; `"travelMs"` 1500):
-  the hero and the camera walk up to the monster, which waits at its own place; everything waits while they move.
+  the hero and the camera walk up to the monster, which waits at its own place; everything waits while they move. The
+  hero **runs** on (2026-11-23): a bounce each step, leaning into it, a puff of dust at his feet (`"run"`). The
+  **charge points** (必殺充能) go on from fight to fight; they are not reset.
 - **The monsters still to come stand further on** (Q126, the owner: "show them in the distance"): each at its own place
   along the way, a little to the side (left and right in turn, `waitingSide` 0.9 m), as a dark shape (`waitingShade`,
   `waitingAlpha`): who it is shows when it is reached, as on the ladder.
-- **The boss** is the last fight, with its introduction (the boss banner) as before; its win shows the result screen;
+- **The boss** is the last fight. It **comes out of the dark** first (the owner, 2026-11-23: "half black, then turn to
+  colored, then the Mega Man effect"): dark while it waits (bossIntro `"dark"` 0.97, drawn again in black over itself),
+  its colours come back over `"revealMs"` 1400, then its introduction (the boss banner) as before; it is like this for any boss
+  with an introduction, sequence or not; its win shows the result screen;
   winning it clears its tile, and a floor boss opens the stairs up.
 - **A loss** ends the sequence: the boss stays on its tile; the next try starts again from the first guard. The HP lost
   is not given back between the fights (the guards are the test).

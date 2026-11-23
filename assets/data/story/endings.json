@@ -3,6 +3,26 @@
   "fallback": "e_05",
   "endings": [
     {
+      "id": "e_god", "name": "story.ending.e_god.name", "text": "story.ending.e_god.text",
+      "tone": "dark", "allowsRebirth": false, "unlocksHint": "",
+      "requires": {"all": [{"type": "runFlagSet", "flag": "c7.took_power"}]}
+    },
+    {
+      "id": "e_secret", "name": "story.ending.e_secret.name", "text": "story.ending.e_secret.text",
+      "tone": "secret-good", "allowsRebirth": false, "unlocksHint": "",
+      "requires": {"all": [{"type": "runFlagSet", "flag": "c7.star_lit"}, {"type": "runFlagSet", "flag": "home.parents"}, {"type": "runFlagSet", "flag": "home.children"}, {"type": "runFlagSet", "flag": "home.mira"}, {"type": "runFlagSet", "flag": "home.healer"}, {"type": "runFlagSet", "flag": "home.baker"}, {"type": "runFlagSet", "flag": "c4.slime_king"}, {"type": "runFlagSet", "flag": "c6.mirror"}, {"not": {"type": "runFlagSet", "flag": "c5.bran_killed"}}, {"type": "counterAtLeast", "counter": "mercy", "min": 4}]}
+    },
+    {
+      "id": "e_avenger", "name": "story.ending.e_avenger.name", "text": "story.ending.e_avenger.text",
+      "tone": "good-bittersweet", "allowsRebirth": false, "unlocksHint": "",
+      "requires": {"any": [{"type": "runFlagSet", "flag": "c5.bran_killed"}, {"type": "counterAtLeast", "counter": "vengeance", "min": 4}]}
+    },
+    {
+      "id": "e_home", "name": "story.ending.e_home.name", "text": "story.ending.e_home.text",
+      "tone": "good", "allowsRebirth": false, "unlocksHint": "",
+      "requires": {"type": "always"}
+    },
+    {
       "id": "e_01", "name": "story.ending.e01.name", "text": "story.ending.e01.text",
       "tone": "secret-good", "allowsRebirth": true, "unlocksHint": "hint_e01_cycle",
       "requires": { "all": [
