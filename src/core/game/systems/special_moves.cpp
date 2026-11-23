@@ -83,6 +83,7 @@ SpecialMoveTable f_SpecialMovesFromJson(const nlohmann::json& l_jJ) {
             l_oS.m_oPlay.m_strGuideFx = l_jP.value("guideFx", std::string());
             l_oS.m_oPlay.m_iGuidePeriodMs = std::max(200, l_jP.value("guidePeriodMs", l_oS.m_oPlay.m_iGuidePeriodMs));
             l_oS.m_oPlay.m_fRingY = std::clamp(l_jP.value("ringY", l_oS.m_oPlay.m_fRingY), -1.0f, 1.0f);
+            l_oS.m_oPlay.m_strAround = l_jP.value("around", l_oS.m_oPlay.m_strAround);
             if (l_jP.contains("cues") && l_jP["cues"].is_array())
                 for (const auto& l_jC : l_jP["cues"]) if (l_jC.is_string()) l_oS.m_oPlay.m_vCues.push_back(l_jC.get<std::string>());
         }

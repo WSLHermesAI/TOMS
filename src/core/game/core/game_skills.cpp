@@ -27,9 +27,20 @@ glm::vec4 Game::f_TouchArea() const {
     const float l_fMargin = 12.0f, l_fTop = 8.0f;
     const float l_fAreaW = std::min(420.0f, l_fW - 2.0f * l_fMargin), l_fAreaH = l_fH > l_fW ? 160.0f : 120.0f;   // portrait: a little taller
     const glm::vec4 l_v4Hero = f_FighterBox(-1);
-    // the bow's target (the owner, 2026-11-23: "around the center"): halfway between the hero and the monster he aims at,
-    // over their heads (still never over a monster), not over the hero alone at the screen's side
-    if (f_BattlePlayType() == toms::PlayType::ePULL_RELEASE && !m_oCs.m_vFoes.empty()) {
+    // the weapon's "around" (weapon_play.json): "between": halfway between the hero and the monster he aims at, over their
+    // heads (the bow, the owner 2026-11-23: "around the center"); "monster": round the monster aimed at (the staff, the
+    // owner 2026-11-23: "show around the monster, not above the player"); else over the hero's head
+    const std::string l_strAround = f_WeaponPlayOf(f_WeaponKey()).m_strAround;
+    if (l_strAround == "monster" && !m_oCs.m_vFoes.empty()) {
+        const glm::vec4 l_v4Foe = f_FighterBox(std::clamp(m_oCs.m_iTarget, 0, (int)m_oCs.m_vFoes.size() - 1));
+        // as wide and tall as the monster's picture and a little more, at least 360 x 240 (room for the circles round it)
+        const float l_fAw = std::min(l_fW - 2.0f * l_fMargin, std::max(360.0f, l_v4Foe.z * 1.6f));
+        const float l_fAh = std::min(l_fH - 2.0f * l_fTop, std::max(240.0f, l_v4Foe.w * 1.2f));
+        const float l_fCx = std::clamp(l_v4Foe.x + l_v4Foe.z * 0.5f - l_fAw * 0.5f, l_fMargin, std::max(l_fMargin, l_fW - l_fMargin - l_fAw));
+        const float l_fCy = std::clamp(l_v4Foe.y + l_v4Foe.w * 0.5f - l_fAh * 0.5f, l_fTop, std::max(l_fTop, l_fH - 170.0f - l_fAh));
+        return glm::vec4(l_fCx, l_fCy, l_fAw, l_fAh);
+    }
+    if (l_strAround == "between" && !m_oCs.m_vFoes.empty()) {
         const glm::vec4 l_v4Foe = f_FighterBox(std::clamp(m_oCs.m_iTarget, 0, (int)m_oCs.m_vFoes.size() - 1));
         const float l_fMid = (l_v4Hero.x + l_v4Hero.z * 0.5f + l_v4Foe.x + l_v4Foe.z * 0.5f) * 0.5f;
         const float l_fHeads = std::min(l_v4Hero.y, l_v4Foe.y);
@@ -364,6 +375,11 @@ glm::vec2 Game::f_SkillShapeCentre(const toms::SpecialMove& l_oD) const {
     const glm::vec4 l_v4Hero = f_FighterBox(-1);
     const float l_fR = l_oD.m_oPlay.m_fSize * 0.5f + 6.0f;
     const float l_fW = m_pRen ? (float)m_pRen->f_Width() : 1024.0f, l_fH = m_pRen ? (float)m_pRen->f_Height() : 768.0f;
+    if (l_oD.m_oPlay.m_strAround == "monster" && !m_oCs.m_vFoes.empty()) {   // on the monster aimed at (the staff's Star Seal, 2026-11-23)
+        const glm::vec4 l_v4Foe = f_FighterBox(std::clamp(m_oCs.m_iTarget, 0, (int)m_oCs.m_vFoes.size() - 1));
+        return {std::clamp(l_v4Foe.x + l_v4Foe.z * 0.5f, l_fR, std::max(l_fR, l_fW - l_fR)),
+                std::clamp(l_v4Foe.y + l_v4Foe.w * 0.5f, l_fR, std::max(l_fR, l_fH - l_fR))};
+    }
     return {std::clamp(l_v4Hero.x + l_v4Hero.z * 0.5f, l_fR, std::max(l_fR, l_fW - l_fR)),
             std::clamp(l_v4Hero.y + l_v4Hero.w * l_oD.m_oPlay.m_fRingY, l_fR, std::max(l_fR, l_fH - l_fR))};
 }

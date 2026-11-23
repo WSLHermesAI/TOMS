@@ -255,3 +255,9 @@ change them.
 - **The bow's target in the middle** (the owner, 2026-11-23): the bow's pull-and-release target is no longer over the
   hero at the screen's side but halfway between him and the monster he aims at, over their heads (never over a monster;
   `Game::f_TouchArea`). The other weapons' plays stay over the hero's head.
+
+- **Where a play shows: `"around"`** (2026-11-23): `weapon_play.json` a weapon's `"around"`: `"hero"` (the default: over his
+  head), `"between"` (halfway between him and the monster he aims at, over their heads: the bow), `"monster"` (round the
+  monster aimed at: the staff, the owner: "show around the monster, not above the player"); a special move's play
+  (`special_moves.json`) `"around": "monster"` draws its shape on the monster (the staff's Star Seal). The staff's clicks:
+  6 (Lv 1–4, 10), 5 (Lv 5–9).

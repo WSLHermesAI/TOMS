@@ -106,6 +106,7 @@ WeaponPlay f_WeaponPlayFromJson(const std::string& l_strId, const nlohmann::json
     }
     l_oW.m_strPace = l_jJ.value("pace", std::string());
     l_oW.m_strPlay = l_jJ.value("play", std::string("track"));
+    l_oW.m_strAround = l_jJ.value("around", std::string("hero"));
     l_oW.m_strUltimate = l_jJ.value("ultimate", std::string());
     l_oW.m_bComboKeep = l_jJ.value("comboKeep", false);
     if (l_jJ.contains("comboTiers") && l_jJ["comboTiers"].is_array()) {

@@ -786,7 +786,7 @@
     "levelExp": {
       "first": 5,
       "scale": 2
-    },
+    }, "around": "between",
     "turnBack": true,
     "sweepMs": 1700,
     "chargeMs": 2200,
@@ -1292,14 +1292,14 @@
     "levels": [
       {
         "lv": 1,
-        "points": 10,
+        "points": 6,
         "stats": {
           "int": 10
         }
       },
       {
         "lv": 2,
-        "points": 10,
+        "points": 6,
         "stats": {
           "dex": 5,
           "int": 12
@@ -1307,7 +1307,7 @@
       },
       {
         "lv": 3,
-        "points": 10,
+        "points": 6,
         "stats": {
           "dex": 10,
           "int": 14
@@ -1315,7 +1315,7 @@
       },
       {
         "lv": 4,
-        "points": 10,
+        "points": 6,
         "stats": {
           "dex": 12,
           "int": 16
@@ -1363,7 +1363,7 @@
       },
       {
         "lv": 10,
-        "points": 10,
+        "points": 6,
         "stats": {
           "dex": 25,
           "int": 30
@@ -1452,7 +1452,7 @@
         "feel": "perfect"
       }
     ],
-    "play": "sequenceClick",
+    "play": "sequenceClick", "around": "monster",
     "ultimate": "star_seal",
     "hitWindowMs": 140,
     "lateMs": 80

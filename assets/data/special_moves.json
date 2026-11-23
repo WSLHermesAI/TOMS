@@ -50,7 +50,7 @@
     "use": "ultimate",
     "prompt": "skill.prompt_draw",
     "damage": 10,
-    "play": {
+    "play": { "around": "monster",
       "kind": "drawShape",
       "minHits": 3,
       "shape": "pentagram",

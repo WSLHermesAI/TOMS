@@ -66,6 +66,7 @@ struct SkillPlaySpec {
     int m_iMinHits = 0;                // fewer steps done than this: the move fizzles (no damage; 22 §3, a chain's 6 of 10)
     std::string m_strGuideFx;          // spin: particles going round the ring the way to draw ("guideFx")
     int m_iGuidePeriodMs = 900;        // ...once round in this long ("guidePeriodMs")
+    std::string m_strAround = "hero";  // shape / spin: where it is drawn: "hero" (on his head, ringY) or "monster" (on the one aimed at)
     float m_fRingY = -0.12f;           // spin: the ring's middle this share of the hero's box height down from its top ("ringY"; his picture
                                        // is drawn taller than the box, so his head is above it: -0.12 puts the ring on his head)
 };

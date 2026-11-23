@@ -15,6 +15,11 @@
 
 ## ▶ Next Step
 
+**The magic staff: 6 clicks, its plays round the monster** (2026-11-23, later; [DAILY_2026-11-23.md](DAILY_2026-11-23.md)):
+- The staff's clicks 10 -> 6 (Lv 1-4, 10); its attack's circles and its Star Seal's shape now round the monster aimed at.
+- A new data setting `"around"` (hero / between / monster) for a weapon's play and a special move's; the bow is "between".
+- The owner committed `47cefe4` (chapters 6-7, S6, ...); this is not committed. Changed-only 53 of 340, all passed.
+
 **The story revamp complete: chapters 6-7, four endings, every NPC following the story** (2026-11-23; [DAILY_2026-11-23.md](DAILY_2026-11-23.md)):
 - Chapter 6 (the Sanctum: Liora's mirror, the children, the family scene) and chapter 7 (Kai, Vorkath's truth, the last
   temptation, the Star); the endings The God / Everyone Home / The Avenger / Home; S6: "How are things?" in all 16 village
