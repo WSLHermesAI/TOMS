@@ -88,10 +88,21 @@ emsdk 的 Python 跑本機網頁伺服器。
 |---|---|---|
 | `toms_game.html` | 3 KB | 頁面（來自 `src/game/web/shell.html`） |
 | `toms_game.js` | 0.25 MB | Emscripten 的載入器 |
-| `toms_game.wasm` | 4.2 MB（gzip 1.45 MB） | 遊戲，包含 RmlUi |
-| `toms_game.data` | 0.75 MB（gzip 0.18 MB） | `assets/media`（sprite、音效、UI 文件；沒有字型）+ `assets/data`，掛載在 `/assets` 和 `/data` |
+| `toms_game.wasm` | 7.0 MB | 遊戲，包含 RmlUi 和 WebP 解碼器 |
+| `toms_game.data` | 16.3 MB（2026-11-23） | `assets/media`（sprite、音效、UI 文件；沒有字型）+ `assets/data`，掛載在 `/assets` 和 `/data` |
 
 這四個檔案就是整個遊戲。複製到任何靜態網頁主機即可。
+
+**讓 `.data` 保持小**（擁有者，2026-11-23：「data 檔太大」，43.5 MB → 16.3 MB）：
+
+- **圖集頁是 WebP**（品質 90，保留 alpha：17.5 MB 的 PNG → 3.8 MB）。建置時用 `tools/web/pack_webp.py` 把
+  `assets/media/atlas/*.png` 轉進 `Build/<preset>/web_pack/atlas/`（只轉 PNG 有改的頁），放在 PNG 的位置打包；PNG 不打包。
+  `.atlas` 檔仍寫 `x.png`：找不到 `x.png` 時遊戲讀 `x.webp`（`src/core/engine/vfs.h` `f_VfsWebpTwin`），並由檔案開頭的位元組
+  判斷格式（`image_decode.cpp`，libwebp 的解碼器）。repo 只存 PNG；桌面版和工具永遠不會看到 WebP。
+  手動執行：`python tools/web/pack_webp.py <png 資料夾> <輸出資料夾> [--quality 90] [--skip "brawler*"]`。
+- 3D 樓層的法線貼圖是 JPG（`stage3d/looks/*/<part>_n.jpg`）。
+- 套件用 LZ4 壓縮（`-sLZ4=1`）：動畫和資料的文字縮小很多。
+- 不打包：字型（瀏覽器畫文字）、`env/`、brawler 展示（`atlas/brawler*`、`anim/brawler*`）。
 
 ## 3. 玩它
 

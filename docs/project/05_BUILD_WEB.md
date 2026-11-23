@@ -86,10 +86,22 @@ Set `TOMS_NO_POPUPS=1` before running it to suppress the prerequisite popups (bu
 |---|---|---|
 | `toms_game.html` | 3 KB | the page (from `src/game/web/shell.html`) |
 | `toms_game.js` | 0.25 MB | Emscripten's loader |
-| `toms_game.wasm` | 4.2 MB (1.45 MB gzip) | the game, including RmlUi |
-| `toms_game.data` | 0.75 MB (0.18 MB gzip) | `assets/media` (sprites, sfx, UI documents; no fonts) + `assets/data`, mounted at `/assets` and `/data` |
+| `toms_game.wasm` | 7.0 MB | the game, including RmlUi and the WebP decoder |
+| `toms_game.data` | 16.3 MB (2026-11-23) | `assets/media` (sprites, sfx, UI documents; no fonts) + `assets/data`, mounted at `/assets` and `/data` |
 
 These four files are the whole game. Copy them to any static web host.
+
+**Keeping `.data` small** (the owner, 2026-11-23: "the data file is too large", 43.5 MB → 16.3 MB):
+
+- **The atlas pages are WebP** (quality 90, alpha kept: 17.5 MB of PNG → 3.8 MB). The build converts
+  `assets/media/atlas/*.png` with `tools/web/pack_webp.py` into `Build/<preset>/web_pack/atlas/` (only pages whose PNG
+  changed) and packs them at the PNGs' place; the PNGs are left out. The `.atlas` files still name `x.png`: the game
+  reads `x.webp` when `x.png` is missing (`src/core/engine/vfs.h` `f_VfsWebpTwin`) and tells the format by its bytes
+  (`image_decode.cpp`, libwebp's decoder). The repo keeps only the PNGs; the desktop and the tools never see WebP.
+  By hand: `python tools/web/pack_webp.py <png folder> <out folder> [--quality 90] [--skip "brawler*"]`.
+- The 3D floors' normal maps are JPG (`stage3d/looks/*/<part>_n.jpg`).
+- The package is LZ4-compressed (`-sLZ4=1`): the clips' and data's text shrink a lot.
+- Left out: the fonts (the browser draws text), `env/`, the brawler showcase (`atlas/brawler*`, `anim/brawler*`).
 
 ## 3. Play it
 

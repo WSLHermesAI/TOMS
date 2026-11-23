@@ -7,7 +7,7 @@
 
 Each look has three parts: the ground, the walls' sides and the walls' tops. Each part is painted (SDXL, Juggernaut XL,
 1024 px, the words in LOOKS), made seamless (blended with itself moved by half) and 512 px, with a normal map made from
-its brightness. Writes assets/media/stage3d/looks/<look>/<part>_c.jpg and <part>_n.png.
+its brightness. Writes assets/media/stage3d/looks/<look>/<part>_c.jpg and <part>_n.jpg (JPG, quality 90: a third the size of a PNG).
 
 The game makes each floor's walls and ground from its tile map when the floor is entered (src/game/src/floor_mesh.cpp);
 a floor uses the look of its stage file's "theme" (data/stage3d.json "looks"; one it does not have uses "defaultLook").
@@ -138,7 +138,7 @@ def write_part(look, part, img):
     d.mkdir(parents=True, exist_ok=True)
     c = tileable(img.resize((TEX, TEX), Image.LANCZOS))
     c.save(d / f"{part}_c.jpg", quality=86)
-    normal_map(c).save(d / f"{part}_n.png", optimize=True)
+    normal_map(c).save(d / f"{part}_n.jpg", quality=90, subsampling=0)
 
 
 def main():

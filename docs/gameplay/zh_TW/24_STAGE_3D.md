@@ -32,7 +32,7 @@ and make a loading circle while change to next scene too long」。
 data/stage3d.json（外觀的光、鏡頭、圖的高度）─────────────────────┼─► Game::f_Walk3DStage
                                                                    │     （牆的列、外觀）
 主程式的 BattleStage ◄─ floor_mesh.cpp：牆＋地面，記憶體中的 .glb ◄─┘
-        ▲                  ＋ stage3d/looks/<look>/*.jpg / *_n.png（手繪）
+        ▲                  ＋ stage3d/looks/<look>/*_c.jpg / *_n.jpg（手繪）
 地圖的物件（MapFloor）──► 各自一個 world group，站在自己的格子上 ──► 在同一個場景中受光
 ```
 

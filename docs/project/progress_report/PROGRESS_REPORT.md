@@ -15,6 +15,12 @@
 
 ## ▶ Next Step
 
+**The web build smaller: 43.5 MB -> 16.3 MB of data** (2026-11-23, later; [DAILY_2026-11-23.md](DAILY_2026-11-23.md)):
+- The atlas pages are WebP on the web (quality 90; `tools/web/pack_webp.py` at build time, libwebp's decoder in the game,
+  `x.png` read as `x.webp`); the repo keeps the PNGs. Earlier: normal maps JPG, LZ4, the brawler left out.
+- The owner committed `1438147` (the staff); this is not committed. Changed-only 54 of 341, all passed; web smoke on the GPU passed.
+- **Owner:** play the web build; quality 80 (-1 MB) or drop the web title scene (-3 MB)?
+
 **The magic staff: 6 clicks, its plays round the monster** (2026-11-23, later; [DAILY_2026-11-23.md](DAILY_2026-11-23.md)):
 - The staff's clicks 10 -> 6 (Lv 1-4, 10); its attack's circles and its Star Seal's shape now round the monster aimed at.
 - A new data setting `"around"` (hero / between / monster) for a weapon's play and a special move's; the bow is "between".

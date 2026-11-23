@@ -84,10 +84,17 @@ inline FILE* f_VfsOpen(const std::string& l_strPath) {
 #endif
 }
 
-// Reads a whole file into `out`. Returns false and leaves `out` unchanged on failure.
-// `path` is the path as the game already writes it ("assets/data/story.json"). On Android it is
-// turned into the APK entry name (vfsAssetPath: no leading "assets/", ".." resolved).
-inline bool f_VfsReadAll(const std::string& l_strPath, std::string& l_strOut) {
+// A picture packed in another format: "x.png" missing, "x.webp" read in its place. The web build packs the atlas
+// pages as WebP (tools/web/pack_webp.py) while the .atlas files still name them .png; the decoder
+// (image_decode.h) tells the two apart by their first bytes. Empty when the path is not a .png.
+inline std::string f_VfsWebpTwin(const std::string& l_strPath) {
+    const size_t l_nN = l_strPath.size();
+    if (l_nN < 4 || l_strPath.compare(l_nN - 4, 4, ".png") != 0) return std::string();
+    return l_strPath.substr(0, l_nN - 4) + ".webp";
+}
+
+// Reads a whole file into `out`, the file exactly as named (f_VfsReadAll also tries a .png's WebP twin).
+inline bool f_VfsReadAllExact(const std::string& l_strPath, std::string& l_strOut) {
 #if defined(__ANDROID__)
     if (g_pVfsAssetManager) {
         const std::string l_strAssetPath = f_VfsAssetPath(l_strPath);
@@ -120,6 +127,16 @@ inline bool f_VfsReadAll(const std::string& l_strPath, std::string& l_strOut) {
     return true;
 }
 
+// Reads a whole file into `out`. Returns false and leaves `out` unchanged on failure.
+// `path` is the path as the game already writes it ("assets/data/story.json"). On Android it is
+// turned into the APK entry name (vfsAssetPath: no leading "assets/", ".." resolved). A missing .png
+// is looked for as .webp (f_VfsWebpTwin).
+inline bool f_VfsReadAll(const std::string& l_strPath, std::string& l_strOut) {
+    if (f_VfsReadAllExact(l_strPath, l_strOut)) return true;
+    const std::string l_strTwin = f_VfsWebpTwin(l_strPath);
+    return !l_strTwin.empty() && f_VfsReadAllExact(l_strTwin, l_strOut);
+}
+
 // True when the FILE exists (for a folder, ask vfsListDir: APK folders are not openable entries).
 inline bool f_VfsExists(const std::string& l_strPath) {
 #if defined(__ANDROID__)
@@ -132,6 +149,10 @@ inline bool f_VfsExists(const std::string& l_strPath) {
     }
 #endif
     if (FILE* l_pFp = f_VfsOpen(l_strPath)) { fclose(l_pFp); return true; }
+    const std::string l_strTwin = f_VfsWebpTwin(l_strPath);   // a .png packed as .webp (the web build)
+    if (!l_strTwin.empty()) {
+        if (FILE* l_pFp = f_VfsOpen(l_strTwin)) { fclose(l_pFp); return true; }
+    }
     return false;
 }
 

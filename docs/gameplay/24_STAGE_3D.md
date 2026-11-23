@@ -33,7 +33,7 @@ the floor's tile map (FNN.stage.json / stageNN.json, any stage the editor makes)
 data/stage3d.json (the look's light, the camera, the sprites' heights) ───────────┼─► Game::f_Walk3DStage
                                                                                   │     (the wall rows, the look)
 the host's BattleStage ◄─ floor_mesh.cpp: walls + ground as a .glb in memory ◄────┘
-        ▲                         + stage3d/looks/<look>/*.jpg / *_n.png (painted)
+        ▲                         + stage3d/looks/<look>/*_c.jpg / *_n.jpg (painted)
 the map's objects (MapFloor) ──► one world group each, standing on its tile ──► lit in the same scene
 ```
 

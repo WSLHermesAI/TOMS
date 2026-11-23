@@ -4,7 +4,7 @@
 #include "render_iface.h"
 #include "vfs.h"
 
-#include <stb_image.h>
+#include "image_decode.h"
 
 #include <cstdio>
 
@@ -20,12 +20,12 @@ void TextureRes::f_ReleaseGpu() {
 bool TextureRes::f_Load(ResourceManager& l_oRm, std::string& l_strError) {
     std::string l_strPng;
     if (!toms::f_VfsReadAll(f_Path(), l_strPng)) { l_strError = "cannot read"; return false; }
-    int l_iW = 0, l_iH = 0, l_iCh = 0;
-    stbi_uc* l_pPx = stbi_load_from_memory((const stbi_uc*)l_strPng.data(), (int)l_strPng.size(), &l_iW, &l_iH, &l_iCh, 4);
+    int l_iW = 0, l_iH = 0;
+    unsigned char* l_pPx = toms::f_DecodeImageRgba(l_strPng.data(), l_strPng.size(), &l_iW, &l_iH);   // PNG, or WebP on the web
     if (!l_pPx) { l_strError = "cannot decode the image"; return false; }
     uint16_t l_u16Tex = g_u16SpriteAtlasTexture;
     if (IRenderer* l_pRen = l_oRm.f_Renderer()) l_u16Tex = l_pRen->f_LoadTexture(std::vector<uint8_t>(l_pPx, l_pPx + (size_t)l_iW * l_iH * 4), (uint32_t)l_iW, (uint32_t)l_iH);
-    stbi_image_free(l_pPx);
+    toms::f_ImageFree(l_pPx);
     f_ReleaseGpu();   // a reload: the old texture goes once the new one is up
     m_spLink = l_oRm.f_GpuLink();
     m_u16Tex = l_u16Tex;

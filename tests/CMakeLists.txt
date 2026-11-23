@@ -35,7 +35,7 @@ set(TOMS_UNIT_TESTS
     engine/state_machine_test
     engine/resource_test            engine/render_object_test      engine/render_mesh_test
     engine/safe_timer_test          engine/tween_test              engine/timed_hits_test
-    engine/canvas_test
+    engine/canvas_test              engine/image_decode_test
     game/core/atlas_sprites_test   game/core/res_keys_test
     game/save/save_test
     game/systems/cycle_system_test     game/systems/ending_system_test

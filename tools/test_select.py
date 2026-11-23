@@ -172,6 +172,7 @@ RULES = [
     (['*_test.cpp'], 'SELF', 'a unit test itself'),
     # web
     (['web/*', 'tools/web_smoke_test.mjs', 'tools/build_web.cmd', 'tools/serve_web*'], is_web, 'the web page: web tests'),
+    (['tools/web/*'], is_web, 'the web package (pack_webp.py: the atlas pages as WebP): web tests'),
     # glTF
     (['src/core/engine/gltf*', 'src/engine/src/gltf*', 'src/engine/shaders/*mesh*', 'src/engine/shaders/fs_shadow.sc',
       'tools/gltf_viewer/*'], GLTF, 'glTF: its unit tests and screenshots'),

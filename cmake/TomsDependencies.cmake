@@ -187,6 +187,26 @@ set(RMLUI_PRECOMPILED_HEADERS  OFF CACHE BOOL "" FORCE)
 toms_declare_dep(rmlui https://github.com/mikke89/RmlUi.git 6.3)
 FetchContent_MakeAvailable(rmlui)
 toms_deps_fetched(rmlui)
+# ---- libwebp (BSD): decoding WebP pictures. The web build packs the atlas pages as WebP (quality 90, about a fifth of
+# the PNGs' size; tools/web/pack_webp.py, docs/project: the web build); src/core/engine/image_decode.cpp reads them.
+# Only the decode-only library is built (webpdecoder): EXCLUDE_FROM_ALL, no tools, no encoder.
+foreach(_webp_opt WEBP_BUILD_ANIM_UTILS WEBP_BUILD_CWEBP WEBP_BUILD_DWEBP WEBP_BUILD_GIF2WEBP WEBP_BUILD_IMG2WEBP
+                  WEBP_BUILD_VWEBP WEBP_BUILD_WEBPINFO WEBP_BUILD_LIBWEBPMUX WEBP_BUILD_WEBPMUX WEBP_BUILD_EXTRAS
+                  WEBP_BUILD_WEBP_JS WEBP_BUILD_FUZZTEST WEBP_USE_THREAD)
+    set(${_webp_opt} OFF CACHE BOOL "" FORCE)
+endforeach()
+if(EMSCRIPTEN)
+    set(WEBP_ENABLE_SIMD OFF CACHE BOOL "" FORCE)   # its SSE paths would need Emscripten's SSE headers
+endif()
+toms_declare_dep(libwebp https://github.com/webmproject/libwebp.git v1.5.0 EXCLUDE_FROM_ALL)
+FetchContent_MakeAvailable(libwebp)
+toms_deps_fetched(libwebp)
+foreach(_t webpdecoder webp sharpyuv)
+    if(TARGET ${_t})
+        set_target_properties(${_t} PROPERTIES FOLDER "third_party/libwebp")
+    endif()
+endforeach()
+
 file(LOCK "${TOMS_DEPS_DIR}/.lock" RELEASE)   # downloads done: other configures may go on
 foreach(_t freetype rmlui rmlui_core rmlui_debugger)
     if(TARGET ${_t})

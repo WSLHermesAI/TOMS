@@ -190,7 +190,7 @@ std::string f_MakeFloorGlb(const std::vector<std::string>& l_vWalls, const std::
         const int l_iIdx = l_fnAdd(l_pPart->m_vIdx.data(), l_pPart->m_vIdx.size() * 4, 34963, l_pPart->m_vIdx.size(), "SCALAR", 5125);
         const size_t l_nImg = l_jImages.size();
         l_jImages.push_back({{"uri", "looks/" + l_strLook + "/" + l_oPart.m_pszTex + "_c.jpg"}});
-        l_jImages.push_back({{"uri", "looks/" + l_strLook + "/" + l_oPart.m_pszTex + "_n.png"}});
+        l_jImages.push_back({{"uri", "looks/" + l_strLook + "/" + l_oPart.m_pszTex + "_n.jpg"}});
         l_jTex.push_back({{"source", l_nImg}, {"sampler", 0}});
         l_jTex.push_back({{"source", l_nImg + 1}, {"sampler", 0}});
         const float l_fS = l_oPart.m_fShade;

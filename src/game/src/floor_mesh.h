@@ -3,7 +3,7 @@
 // ('#') is a block `wallHeight` tall: its top, and a side wherever the cell beside it is not a wall (the map's edge
 // too). The ground is a square a cell. Stairs ('U' up, 'D' down) are four steps walked onto from an open side:
 // up to the walls' top, or down into a pit as deep. Three materials (ground, wall, top) use the look's painted
-// textures, stage3d/looks/<look>/<part>_c.jpg and <part>_n.png (tools/stage3d/paint_looks.py).
+// textures, stage3d/looks/<look>/<part>_c.jpg and <part>_n.jpg (tools/stage3d/paint_looks.py).
 //
 // The model is a glTF binary (.glb) in memory, read by the same loader as any model (gltf::f_LoadModelFromMemory with
 // the base folder <assets>/stage3d), so the floor is drawn, lit and shadowed like the battle stage's props.

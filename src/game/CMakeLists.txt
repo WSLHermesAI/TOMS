@@ -11,6 +11,7 @@ add_library(toms_core STATIC
     ${L_ENGINE}/safe_timer.cpp ${L_ENGINE}/tween.cpp ${L_ENGINE}/timed_hits.cpp   # docs/gameplay/07_GAMEPLAY_PLAN.md phase 0
     ${L_ENGINE}/singletons.cpp   # releaseSingletons() at the end of main (docs/engine/15_LEAK_CHECK.md)
     ${L_ENGINE}/anim_clip.cpp ${L_ENGINE}/anim_player.cpp ${L_ENGINE}/sprite_mesh.cpp ${L_ENGINE}/particle_fx.cpp ${L_ENGINE}/gltf_model.cpp ${L_ENGINE}/gltf_anim_texture.cpp ${L_ENGINE}/gltf_environment.cpp ${L_ENGINE}/ocean_sim.cpp ${L_ENGINE}/stb_image_impl.cpp
+    ${L_ENGINE}/image_decode.cpp   # PNG/JPG (stb_image) and WebP (libwebp: the web build's atlas pages)
     ${L_ENGINE}/bitmap_font.cpp   # picture fonts: FontText (docs/engine/09_FONT_TOOL.md)
     ${L_ENGINE}/resource.cpp ${L_ENGINE}/resource_types.cpp ${L_ENGINE}/render_object.cpp   # docs/engine/12_RESOURCE_MANAGER.md
     ${L_GAME}/core/game.cpp ${L_GAME}/core/game_assets.cpp ${L_GAME}/core/game_ui.cpp
@@ -51,6 +52,8 @@ target_include_directories(toms_core PUBLIC
     ${TOMS_SRC_DIR}/engine/src)          # bgfx_renderer.h (through compat/renderer.h), no bgfx headers
 # Only ImGui is linked here; bgfx itself stays out of the core code's compile settings.
 target_link_libraries(toms_core PUBLIC toms_imgui glm::glm)
+target_link_libraries(toms_core PRIVATE webpdecoder)   # image_decode.cpp
+target_include_directories(toms_core PRIVATE ${libwebp_SOURCE_DIR}/src)   # <webp/decode.h>
 if(NOT EMSCRIPTEN)   # the job system's worker threads (the web gets -pthread from the root CMakeLists)
     find_package(Threads REQUIRED)
     target_link_libraries(toms_core PUBLIC Threads::Threads)
@@ -119,9 +122,27 @@ if(MSVC AND TOMS_WINDOWED_EXE)
 endif()
 
 if(EMSCRIPTEN)
+    # The atlas pages as WebP, quality 90 (the owner, 2026-11-23: 17.5 MB of PNG -> 3.8 MB): converted here into the
+    # build folder and packed at the PNGs' place (assets/atlas/*.webp); the PNGs are left out. The game reads "x.png"
+    # as "x.webp" (vfs.h f_VfsWebpTwin, image_decode.cpp). The repo keeps only the PNGs; the desktop never sees WebP.
+    find_package(Python3 COMPONENTS Interpreter REQUIRED)
+    set(_webp_dir "${CMAKE_BINARY_DIR}/web_pack/atlas")
+    set(_webp_stamp "${CMAKE_BINARY_DIR}/web_pack/atlas.stamp")
+    set(_webp_tool "${CMAKE_SOURCE_DIR}/tools/web/pack_webp.py")
+    file(GLOB _atlas_pngs CONFIGURE_DEPENDS "${TOMS_ASSET_DIR}/atlas/*.png")
+    add_custom_command(OUTPUT "${_webp_stamp}"
+        COMMAND Python3::Interpreter "${_webp_tool}" "${TOMS_ASSET_DIR}/atlas" "${_webp_dir}" --quality 90
+                --skip "brawler*" --stamp "${_webp_stamp}"
+        DEPENDS ${_atlas_pngs} "${_webp_tool}"
+        COMMENT "Atlas pages to WebP for the web package"
+        VERBATIM)
+    add_custom_target(toms_web_webp DEPENDS "${_webp_stamp}")
+    set_target_properties(toms_web_webp PROPERTIES FOLDER "toms")
+    add_dependencies(toms_game toms_web_webp)
     set(_shell ${CMAKE_CURRENT_SOURCE_DIR}/web/shell.html)
     # Output: bin/toms_game.html + .js + .wasm + .data (the preset's .js suffix is overridden here).
     set_target_properties(toms_game PROPERTIES SUFFIX ".html" LINK_DEPENDS "${_shell}")
+    set_property(TARGET toms_game APPEND PROPERTY LINK_DEPENDS "${_webp_stamp}")
     target_link_options(toms_game PRIVATE
         "--shell-file=${_shell}"
         "-sMIN_WEBGL_VERSION=2" "-sMAX_WEBGL_VERSION=2"       # bgfx's GLES backend on WebGL2
@@ -136,7 +157,16 @@ if(EMSCRIPTEN)
         "--preload-file=${TOMS_ASSET_DIR}@/assets"
         "--preload-file=${TOMS_DATA_DIR}@/data"
         "--exclude-file=${TOMS_ASSET_DIR}/fonts/*"
-        "--exclude-file=${TOMS_ASSET_DIR}/env/*")
+        "--exclude-file=${TOMS_ASSET_DIR}/env/*"
+        # the brawler showcase (docs/gameplay: node effects): only the editors play it
+        "--exclude-file=${TOMS_ASSET_DIR}/atlas/brawler*"
+        "--exclude-file=${TOMS_ASSET_DIR}/anim/brawler*"
+        # the atlas pages: WebP from the build folder instead of the PNGs (above)
+        "--exclude-file=${TOMS_ASSET_DIR}/atlas/*.png"
+        "--preload-file=${_webp_dir}@/assets/atlas"
+        # the package compressed (LZ4, unpacked file by file as the game reads them): the clips' and data's text shrinks
+        # a lot; pictures and sound are already compressed (the owner, 2026-11-23: "the data file is too large")
+        "-sLZ4=1")
     # The multithreaded web build (preset web-release-mt-windows, docs/engine/02_THREADS.md): Web Workers
     # started before main(), so the job system never has to wait for one to be created. One spare
     # beyond the job system's 4 for anything else that starts a thread.

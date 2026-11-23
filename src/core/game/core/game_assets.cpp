@@ -6,7 +6,7 @@
 #include "vfs.h"
 
 // The stb_image implementation is in engine/stb_image_impl.cpp.
-#include <stb_image.h>
+#include "image_decode.h"
 
 using namespace toms::game_detail;
 
@@ -34,16 +34,16 @@ bool Game::f_LoadPrebuiltSpriteAtlas(int l_iStyle) {
         }
     }
     std::string l_strFile;
-    int l_iW = 0, l_iH = 0, l_iCh = 0;
+    int l_iW = 0, l_iH = 0;
     unsigned char* l_pD = nullptr;
     if (toms::f_VfsReadAll(l_strDir + l_oAtlas.m_vPages[0].m_strFile, l_strFile))
-        l_pD = stbi_load_from_memory((const stbi_uc*)l_strFile.data(), (int)l_strFile.size(), &l_iW, &l_iH, &l_iCh, 4);
+        l_pD = toms::f_DecodeImageRgba(l_strFile.data(), l_strFile.size(), &l_iW, &l_iH);   // PNG, or WebP on the web
     if (!l_pD) {
         std::fprintf(stderr, "[assets] cannot load %s%s\n", l_strDir.c_str(), l_oAtlas.m_vPages[0].m_strFile.c_str());
         return false;
     }
     std::vector<uint8_t> l_vPx(l_pD, l_pD + (size_t)l_iW * l_iH * 4);
-    stbi_image_free(l_pD);
+    toms::f_ImageFree(l_pD);
     if (l_oAtlas.m_vPages[0].m_iW != l_iW || l_oAtlas.m_vPages[0].m_iH != l_iH) {   // the image wins; UVs follow it
         std::fprintf(stderr, "[assets] %s is %dx%d, game.atlas says %dx%d\n", l_oAtlas.m_vPages[0].m_strFile.c_str(), l_iW, l_iH,
                      l_oAtlas.m_vPages[0].m_iW, l_oAtlas.m_vPages[0].m_iH);
