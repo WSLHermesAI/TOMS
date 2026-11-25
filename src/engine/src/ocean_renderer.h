@@ -30,6 +30,7 @@ struct Look {
     float m_fScatterStrength = 0.45f, m_fRoughness = 0.12f, m_fFoam = 1.0f, m_fReflection = 1.0f;
     float m_fFogMetres = 9000.0f;
     float m_fWaveScale = 1.0f;     // scales the waves as drawn: a quick way to try bigger or flatter seas
+    float m_fSunGlint = 0.0f;      // a wide, soft sun path on the water under the sun (0: only the sharp highlight)
     int m_iSkyOctaves = 5, m_iReflectOctaves = 3, m_iFoamOctaves = 3;   // noise per pixel: the costliest part of a pixel
     bool m_bGammaOut = false;      // no sRGB screen (the web): the shaders encode
 };

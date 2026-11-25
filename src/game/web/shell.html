@@ -55,9 +55,17 @@
       setStatus: function (t) {
         var s = document.getElementById('toms-status');
         if (!t) { s.style.display = 'none'; return; }
-        // "Downloading data... (1234/5678)" -> a percentage
+        // "Downloading data... (1234/5678)" -> a percentage. The total can be smaller than what arrives (a server
+        // that compresses the .data reports the compressed size), so it is clamped to 0-100 and never goes back.
         var m = t.match(/\((\d+(\.\d+)?)\/(\d+)\)/);
-        s.textContent = m ? 'Loading… ' + Math.round(100 * m[1] / m[3]) + '%' : t;
+        if (m) {
+          var p = Number(m[3]) > 0 ? Math.floor(100 * Number(m[1]) / Number(m[3])) : 0;
+          p = Math.max(Module.tomsPct || 0, Math.min(100, p));
+          Module.tomsPct = p;
+          s.textContent = 'Loading… ' + p + '%';
+        } else {
+          s.textContent = t;
+        }
       },
       // Calling into C++ (Module.ccall) before this point aborts debug builds, so page code and
       // tests check window.tomsReady first.

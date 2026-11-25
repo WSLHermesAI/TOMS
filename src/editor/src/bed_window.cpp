@@ -406,6 +406,9 @@ QWidget* BattleEditorWindow::f_BuildCentre() {
                          "Switches the running battle too (docs/gameplay/13 §6.3)."));
     auto* l_pWin = new QPushButton(tr("Win now"));
     auto* l_pLose = new QPushButton(tr("Lose now"));
+    auto* l_pUlt = new QPushButton(tr("⚡ Ultimate"));
+    l_pUlt->setToolTip(tr("Fill the ultimate's charge in the running battle; then press G (or its button) to use it. "
+                        "Again after each one, to try it as often as you like."));
     m_pAutoRestart = new QCheckBox(tr("auto restart"));
     m_pAutoRestart->setChecked(true);
     m_pAutoRestart->setToolTip(tr("When the battle ends (every monster down, Win now, or a loss), the same setup starts "
@@ -423,6 +426,7 @@ QWidget* BattleEditorWindow::f_BuildCentre() {
     l_pBar->addWidget(m_pPace);
     l_pBar->addWidget(l_pWin);
     l_pBar->addWidget(l_pLose);
+    l_pBar->addWidget(l_pUlt);
     l_pBar->addWidget(m_pAutoRestart);
     l_pBar->addStretch(1);
     l_pBar->addWidget(m_pShape);
@@ -443,6 +447,12 @@ QWidget* BattleEditorWindow::f_BuildCentre() {
     });
     connect(l_pWin, &QPushButton::clicked, this, [this] { if (Game* l_pG = m_pView->f_Session().f_Game()) l_pG->f_DebugForceWin(); });
     connect(l_pLose, &QPushButton::clicked, this, [this] { if (Game* l_pG = m_pView->f_Session().f_Game()) l_pG->f_DebugForceLose(); });
+    connect(l_pUlt, &QPushButton::clicked, this, [this] {
+        Game* l_pG = m_pView->f_Session().f_Game();
+        if (!l_pG || !l_pG->f_DebugFillUltimate()) { f_Say(tr("Start a battle first (▶ Battle).")); return; }
+        f_Say(tr("The ultimate is ready: press G (or its button) in the battle"));
+        m_pView->setFocus();
+    });
     connect(m_pShape, qOverload<int>(&QComboBox::currentIndexChanged), this, [this] {
         m_pViewBox->f_SetAspect(m_pShape->currentData().toDouble());
     });
@@ -472,6 +482,7 @@ bed::Setup BattleEditorWindow::f_CurrentSetup() const {
     l_oS.m_oPlayer.m_iMaxhp = m_pPMaxHp->value();
     l_oS.m_oPlayer.m_strWeapon = f_Ss(m_pPWeapon->currentData().toString());
     l_oS.m_oPlayer.m_iWeaponLevel = m_pPWeaponLevel->value();
+    l_oS.m_oPlayer.m_bUltimateReady = m_pPUltimate->isChecked();
     l_oS.m_oPlayer.m_iAttrPoints = m_pPPoints->value();
     for (auto l_oIt = m_pPAttrs->begin(); l_oIt != m_pPAttrs->end(); ++l_oIt)
         if (l_oIt.value()->value() > 0) l_oS.m_oPlayer.m_jAttrs[f_Ss(l_oIt.key())] = l_oIt.value()->value();
@@ -881,6 +892,10 @@ QWidget* BattleEditorWindow::f_BuildPlayerTab() {
     l_pF->addRow(tr("max HP"), m_pPMaxHp);
     l_pF->addRow(tr("weapon"), m_pPWeapon);
     l_pF->addRow(tr("weapon level"), m_pPWeaponLevel);
+    m_pPUltimate = new QCheckBox(tr("ultimate ready at the start"));
+    m_pPUltimate->setToolTip(tr("The battle starts with the weapon's ultimate charged: press G (or its button) to use it. "
+                              "In a running battle, \u26A1 Ultimate fills it again."));
+    l_pF->addRow(tr("ultimate"), m_pPUltimate);
     for (const QString& l_oId : m_oAttrIds) {
         auto* l_pS = l_fnSpin(0, 999, 0);
         (*m_pPAttrs)[l_oId] = l_pS;
@@ -1367,6 +1382,7 @@ bool BattleEditorWindow::f_LoadSetup(const QString& l_oName) {
     m_pPHp->setValue(l_oS.m_oPlayer.m_iHp);
     m_pPWeapon->setCurrentIndex(std::max(0, m_pPWeapon->findData(f_Qs(l_oS.m_oPlayer.m_strWeapon))));
     m_pPWeaponLevel->setValue(l_oS.m_oPlayer.m_iWeaponLevel);
+    m_pPUltimate->setChecked(l_oS.m_oPlayer.m_bUltimateReady);
     m_pPPoints->setValue(l_oS.m_oPlayer.m_iAttrPoints);
     for (auto l_oIt = m_pPAttrs->begin(); l_oIt != m_pPAttrs->end(); ++l_oIt) l_oIt.value()->setValue(l_oS.m_oPlayer.m_jAttrs.value(f_Ss(l_oIt.key()), 0));
     f_SetPace(f_Qs(l_oS.m_strPace));

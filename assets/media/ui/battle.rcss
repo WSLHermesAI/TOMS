@@ -40,6 +40,9 @@ body { z-index: 30; }
 .ftext    { position: absolute; left: 0; top: 178px; width: 280px; font-size: 22px; color: #ffffff; white-space: nowrap; overflow: hidden; }
 /* its break gauge, along the bottom of its HP bar (docs/gameplay/13 §6.4) */
 .fbreak   { position: absolute; left: 0; bottom: 0; height: 5px; background-color: #ffe27a; }
+/* its MP under its HP (the owner, 2026-11-25): dim while it cannot pay for its special attack, bright when it can */
+.fmp      { position: absolute; left: 0; top: 100%; margin-top: 2px; height: 4px; background-color: #35619a; }
+.fmp.ready { background-color: #62c8ff; }
 /* its next move over its box (§6.1): the words and how far its wind-up is; the colour says what answers it */
 .intent   { position: absolute; left: 0; top: -24px; width: 100%; height: 22px; }
 .itext    { font-size: 16px; line-height: 18px; color: #f3e0ba; white-space: nowrap; overflow: hidden; }
@@ -410,6 +413,7 @@ body.moment #play, body.moment .fhead, body.moment #chain, body.moment #crit, bo
               background-color: #000000b0; }
 .fhead .fhp .fill-bar { border-radius: 3px; }
 .fhead .fbreak { height: 2px; }
+.fhead .fmp { height: 3px; margin-top: 1px; }
 /* the target, with two or three monsters: its name glows (no line of words under it) */
 .fhead.target .fname { color: #fff3c4; font-effect: glow(1px 6px 0px 0px #ffb21e); }
 .fhead.target .fhpnum { color: #fff3c4; }

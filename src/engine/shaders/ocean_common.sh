@@ -16,7 +16,7 @@ uniform vec4 u_oceanZenith;    // Y, x, y at the zenith, already divided by F(0,
 uniform vec4 u_oceanClouds;    // cover 0..1, scale, speed, how dark their undersides are
 uniform vec4 u_oceanDeep;      // deep water rgb, roughness
 uniform vec4 u_oceanScatter;   // light scattered in the waves rgb, its strength
-uniform vec4 u_oceanFoam;      // foam's brightness, fog distance (m), reflection strength, -
+uniform vec4 u_oceanFoam;      // foam's brightness, fog distance (m), reflection strength, the sun path's strength
 
 float oceanFract(float x) { return x - floor(x); }
 

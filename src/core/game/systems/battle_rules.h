@@ -108,6 +108,7 @@ struct MoveDef {
     int m_iWarnMs = -1;            // the "!" before each hit (-1: battle.json guard.warnMs)
     std::string m_strShape;          // the cells it covers (battle.json "cells" "shapes"; battle_cells.h); "": it always reaches the hero
     std::string m_strGuardPlay;      // a skills.json id: a special guard play instead of the button (16 §4.3)
+    int m_iMp = -1;                  // "mp": the MP it costs (-1: battle.json monsterMp.specialCost for a move with a shape, else 0)
     int f_GapBefore(int l_iHit) const;   // hit 1, 2, ...: the gap before it (0 for the first)
 };
 
@@ -120,11 +121,29 @@ MoveKind f_MoveKindFromString(const std::string& l_strS);
 const char* f_MoveKindName(MoveKind l_eK);
 MovesTable f_MovesFromJson(const nlohmann::json& l_jJ);
 
-// A monster's moves (enemies.json "moves": ["strike", {"id": "heavy", "weight": 2}]); none: a plain strike.
+// A monster's moves (enemies.json "moves": ["strike", {"id": "heavy", "chance": 20}]); none: a plain strike.
+// "chance": its share of the picks, in % (the owner, 2026-11-25: "each attack type should have a probability"); a move
+// without one counts 1 ("weight" is the old name). The shares are of the moves it can pay for: a move costing more MP
+// than it has is left out of the roll (f_PickMove's l_vAllowed), and the rest share it out.
 struct MoveChoice { std::string m_strId; int m_iWeight = 1; };
 std::vector<MoveChoice> f_MoveChoicesFromJson(const nlohmann::json& l_jJ);
-// The move for a roll in [0, 1).
-std::string f_PickMove(const std::vector<MoveChoice>& l_vChoices, float l_fRoll);
+// The move for a roll in [0, 1). l_pAllowed: one flag per choice, false = left out (it cannot pay its MP); all left out:
+// a plain strike.
+std::string f_PickMove(const std::vector<MoveChoice>& l_vChoices, float l_fRoll, const std::vector<bool>* l_pAllowed = nullptr);
+
+// A monster's MP (the owner, 2026-11-25: "monster should have MP too, while MP is not enough monster can't use special
+// attack"). battle.json "monsterMp" gives the defaults; enemies.json "mp" (a number: its max, or {"max", "start",
+// "regen"}) and a battle setup's "mp" override them for one monster. Its MP refills by `regen` a second while its own
+// clock runs (not while it powers up or is stunned); a move's "mp" (moves.json) is paid when the move is chosen.
+struct MonsterMpRules {
+    int m_iMax = 100;           // its MP when full
+    int m_iStart = 50;          // its MP when the fight starts
+    float m_fRegen = 5.0f;      // MP a second
+    int m_iSpecialCost = 50;    // what a move with a danger shape (a special attack) costs when its own "mp" is not set
+};
+MonsterMpRules f_MonsterMpFromJson(const nlohmann::json& l_jBattle);
+// One monster's: the defaults with its own "mp" over them (a number: max; an object: max / start / regen).
+MonsterMpRules f_MonsterMpFor(const MonsterMpRules& l_oDefaults, const nlohmann::json& l_jMp);
 
 // ---- the pace (data/battle.json "pace", a weapon's or a battle setup's "pace") ----
 

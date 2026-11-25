@@ -181,6 +181,9 @@ void f_RegisterTypes(Rml::DataModelConstructor& l_oC) {
         l_oS.RegisterMember("intent_kind", &UiFoe::m_strIntentKind);
         l_oS.RegisterMember("intent_pct", &UiFoe::m_fIntentPct);
         l_oS.RegisterMember("break_pct", &UiFoe::m_fBreakPct);
+        l_oS.RegisterMember("mp_on", &UiFoe::m_bMpOn);
+        l_oS.RegisterMember("mp_pct", &UiFoe::m_fMpPct);
+        l_oS.RegisterMember("mp_ready", &UiFoe::m_bMpReady);
         l_oS.RegisterMember("warn", &UiFoe::m_bWarn);
         l_oS.RegisterMember("head_x", &UiFoe::m_fHeadX);
         l_oS.RegisterMember("head_y", &UiFoe::m_fHeadY);

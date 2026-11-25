@@ -58,6 +58,7 @@ The owner also gave a picture of the main screen for part 3 (§4).
 
 **The trial fight, built (2026-11-06; B2):** fight `thicketoad` alone to try it. A move with `"shape"` in `moves.json` turns the six cells on for that fight; every other fight is unchanged.
 - Tap a cell or use the arrow keys to move. Before a hit, the cells in danger turn red and fill as it comes (`battle.json` `cells.warnMs`, 1.4 s); if the hero is clear when it lands: "Dodged!", no damage. Standing in it, the guard still works.
+- **The cells show only while a special attack is coming** (the owner, 2026-11-25: "only show the UI while boss is going to use special attack, otherwise should be disappear"): they pop up when a monster's danger lights, stay `cells.hideAfterMs` (0.7 s) after the last one goes out, then shrink away.
 - Shapes are data (`cells.shapes`): near, line (aimed at the hero's column), fan (only the far middle is clear). The hero's large picture only shifts a little; a dot on the cell shows where they stand.
 
 ### 2.1 The new shape of a fight

@@ -122,6 +122,9 @@ struct UiFoe {                         // one monster of the battle (docs/gamepl
     std::string m_strIntentKind;           // strike, heavy, jabs, spell, guard; stagger / broken while stunned
     float m_fIntentPct = 0;
     float m_fBreakPct = 0;               // its break gauge (§6.4)
+    bool m_bMpOn = false;                 // it has a move that costs MP: its MP shows under its HP
+    float m_fMpPct = 0;                  // its MP, 0..100 of its max
+    bool m_bMpReady = false;              // enough for its dearest move (its special attack can come)
     bool m_bWarn = false;                 // the "!" over it: its hit comes, guard now (docs/gameplay/16 §4)
     // the top middle of where it stands on the screen (design pixels; on the 3D stage, projected): its name, HP and next
     // move sit there, on its head (battle.rml .fhead)

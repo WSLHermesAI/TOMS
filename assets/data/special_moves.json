@@ -44,27 +44,27 @@
     "finish": [ { "at": 0, "do": "shake", "value": 5, "ms": 300 } ]
   },
   "star_seal": {
-    "_comment": "The staff's ultimate (the owner, 2026-11-20; docs/gameplay/22 §4.1): the pentagram shown by particles, then traced in 6 s. Then the shared rundown: the hero's introduction, then the attack. 5 of 5: the star drawn again, 10 falling stars, a last burst; 3 or 4: 4 hits; fewer: it fizzles.",
+    "_comment": "The staff's ultimate (the owner, 2026-11-20; docs/gameplay/22 §4.1): the pentagram shown by particles, then traced in 6 s; big, in the middle of the screen, with its own stronger effects (seal_*; the owner, 2026-11-25). Then the shared rundown: the hero's introduction, then the attack. 5 of 5: the star drawn again, 10 falling stars, a last burst; 3 or 4: 4 hits; fewer: it fizzles.",
     "name": "skill.star_seal",
     "weapon": "staff",
     "use": "ultimate",
     "prompt": "skill.prompt_draw",
     "damage": 10,
-    "play": { "around": "monster",
+    "play": { "around": "center",
       "kind": "drawShape",
       "minHits": 3,
       "shape": "pentagram",
       "timeMs": 6000,
-      "size": 230,
-      "cornerRadius": 44
+      "size": 360,
+      "cornerRadius": 60
     },
     "demo": [
       {
         "at": 0,
         "do": "pathFx",
         "shape": "pentagram",
-        "fx": "star_trail",
-        "corner": "star_burst",
+        "fx": "seal_trail",
+        "corner": "seal_corner",
         "ms": 2000
       },
       {
@@ -79,7 +79,7 @@
     "step": [
       {
         "do": "fx",
-        "fx": "star_burst_big"
+        "fx": "seal_step"
       },
       {
         "do": "count"
@@ -89,23 +89,25 @@
       { "at": 0, "do": "intro", "text": "battle.ultimate_label", "ms": 1700, "when": "landed" },
       { "at": 0, "do": "camera", "zoom": 1.45, "on": "player", "ms": 1700, "move": "low", "deg": 12, "value": 0.85, "when": "landed" },
       { "at": 0, "do": "clip", "clip": "charge", "speed": 0.75, "when": "landed" },
-      { "at": 0, "do": "fx", "fx": "staff_great", "on": "player", "when": "landed" },
+      { "at": 0, "do": "fx", "fx": "seal_great", "on": "player", "when": "landed" },
       { "at": 0, "do": "sound", "fx": "sfx.boss_intro", "when": "landed" },
-      { "at": 900, "do": "fx", "fx": "staff_great", "on": "player", "when": "landed" },
+      { "at": 900, "do": "fx", "fx": "seal_great", "on": "player", "when": "landed" },
       { "at": 900, "do": "sound", "fx": "sfx.magic_cast", "when": "landed" },
       { "at": 1800, "do": "camera", "zoom": 1.12, "on": "player", "ms": 2100, "when": "full" },
       { "at": 1800, "do": "dim", "ms": 1800, "when": "full" },
-      { "at": 1800, "do": "pathFx", "shape": "pentagram", "fx": "star_trail", "corner": "star_burst", "ms": 700, "when": "full" },
+      { "at": 1800, "do": "pathFx", "shape": "pentagram", "fx": "seal_trail", "corner": "seal_corner", "ms": 700, "when": "full" },
+      { "at": 1800, "do": "fx", "fx": "seal_great", "on": "player", "when": "full" },
       { "at": 2300, "do": "hits", "count": 10, "gapMs": 110, "clip": "attack", "speed": 3, "fx": "staff_great",
-        "projectile": "meteor", "impact": "star_burst", "flightMs": 320, "when": "full" },
+        "projectile": "seal_meteor", "impact": "seal_impact", "flightMs": 320, "when": "full" },
       { "at": 2600, "do": "shake", "value": 7, "ms": 1200, "when": "full" },
       { "at": 3700, "do": "clip", "clip": "attack_big", "when": "full" },
-      { "at": 3800, "do": "fx", "fx": "star_burst_big", "on": "monster", "when": "full" },
-      { "at": 3800, "do": "fx", "fx": "staff_perfect", "on": "monster", "when": "full" },
+      { "at": 3800, "do": "fx", "fx": "seal_finale", "on": "monster", "when": "full" },
+      { "at": 3800, "do": "fx", "fx": "seal_impact", "on": "monster", "when": "full" },
       { "at": 3800, "do": "shake", "value": 13, "ms": 450, "when": "full" },
       { "at": 3800, "do": "sound", "fx": "sfx.explosion", "when": "full" },
       { "at": 1800, "do": "banner", "text": "skill.ultimate_partial", "ms": 800, "when": "partial" },
-      { "at": 1800, "do": "hits", "count": 4, "gapMs": 160, "clip": "attack", "speed": 2.5, "fx": "staff_great", "when": "partial" },
+      { "at": 1800, "do": "hits", "count": 4, "gapMs": 160, "clip": "attack", "speed": 2.5, "fx": "staff_great", "impact": "seal_impact", "when": "partial" },
+      { "at": 1800, "do": "fx", "fx": "seal_great", "on": "player", "when": "partial" },
       { "at": 1850, "do": "shake", "value": 4, "ms": 700, "when": "partial" }
     ]
   },
@@ -145,15 +147,15 @@
     ]
   },
   "cyclone_volley": {
-    "_comment": "The bow's ultimate (docs/gameplay/22 §4): a ring on the hero's head (ringY) with sparks going round it; circle it clockwise 3 times, then anticlockwise 3 times, in 6 s. All 6 (or 3 to 5): first his own introduction, as a boss's (the camera low and close on him, the banner with the move's name typed in, his charge; the owner, 2026-11-19); all 6: then he shoots 10 arrows up in 1.5 s (the camera from behind him, over his shoulder, toward the monster; the owner, 2026-11-22) that fall on the monster as a meteor shower (the camera cranes up and looks down on it: move \"rain\") (each meteor a hit, 2 more round it for show); 3 to 5: 4 meteors (a share of the damage); under 3 it fizzles.",
+    "_comment": "The bow's ultimate (docs/gameplay/22 §4): a big ring in the middle of the screen (\"around\": \"center\"; the owner, 2026-11-25: \"bigger and show on the center\") with sparks going round it; circle it clockwise 3 times, then anticlockwise 3 times, in 6 s. All 6 (or 3 to 5): first his own introduction, as a boss's (the camera low and close on him, the banner with the move's name typed in, his charge; the owner, 2026-11-19); all 6: then he shoots 10 arrows up in 1.5 s (the camera from behind him, over his shoulder, toward the monster; the owner, 2026-11-22) that fall on the monster as a meteor shower (the camera cranes up and looks down on it: move \"rain\") (each meteor a hit, 2 more round it for show); 3 to 5: 4 meteors (a share of the damage); under 3 it fizzles.",
     "name": "skill.cyclone_volley",
     "weapon": "bow",
     "use": "ultimate",
     "prompt": "skill.prompt_spin",
     "damage": 12,
-    "play": { "kind": "spinCircle", "timeMs": 6000, "size": 220, "ringY": -0.12, "minHits": 3, "guideFx": "spin_spark", "guidePeriodMs": 900,
+    "play": { "kind": "spinCircle", "timeMs": 6000, "size": 340, "around": "center", "minHits": 3, "guideFx": "spin_spark", "guidePeriodMs": 900,
               "cues": [ "cw", "cw", "cw", "ccw", "ccw", "ccw" ] },
-    "demo": [ { "at": 0, "do": "name", "ms": 1000 }, { "at": 0, "do": "fx", "fx": "bow_great", "on": "player" },
+    "demo": [ { "at": 0, "do": "name", "ms": 1000 }, { "at": 0, "do": "fx", "fx": "volley_flash", "on": "player" },
               { "at": 0, "do": "sound", "fx": "sfx.battle_ultimate" }, { "at": 900, "do": "dim" } ],
     "step": [ { "do": "fx", "fx": "spin_burst" } ],
     "finish": [
@@ -162,22 +164,24 @@
       { "at": 0, "do": "clip", "clip": "charge", "speed": 0.75, "when": "landed" },
       { "at": 0, "do": "fx", "fx": "volley_charge", "on": "player", "when": "landed" },
       { "at": 0, "do": "sound", "fx": "sfx.boss_intro", "when": "landed" },
-      { "at": 350, "do": "fx", "fx": "bow_great", "on": "player", "when": "landed" },
+      { "at": 350, "do": "fx", "fx": "volley_flash", "on": "player", "when": "landed" },
       { "at": 900, "do": "fx", "fx": "volley_charge", "on": "player", "when": "landed" },
       { "at": 900, "do": "sound", "fx": "sfx.bow_charge", "when": "landed" },
       { "at": 1800, "do": "camera", "zoom": 1.01, "move": "rain", "ms": 2500, "when": "full" },
       { "at": 1800, "do": "dim", "ms": 2000, "when": "full" },
       { "at": 1800, "do": "hits", "count": 10, "gapMs": 150, "clip": "attack", "speed": 4, "fx": "bow_release_3",
-        "projectile": "meteor", "impact": "meteor_impact", "flightMs": 380, "extra": 2, "when": "full" },
+        "projectile": "volley_meteor", "impact": "volley_impact", "flightMs": 380, "extra": 2, "when": "full" },
+      { "at": 1800, "do": "fx", "fx": "volley_flash", "on": "player", "when": "full" },
       { "at": 2180, "do": "shake", "value": 9, "ms": 1500, "when": "full" },
-      { "at": 3650, "do": "fx", "fx": "meteor_impact", "on": "monster", "when": "full" },
-      { "at": 3650, "do": "fx", "fx": "star_burst_big", "on": "monster", "when": "full" },
+      { "at": 3650, "do": "fx", "fx": "volley_impact", "on": "monster", "when": "full" },
+      { "at": 3650, "do": "fx", "fx": "volley_finale", "on": "monster", "when": "full" },
       { "at": 3650, "do": "shake", "value": 14, "ms": 500, "when": "full" },
       { "at": 3650, "do": "sound", "fx": "sfx.explosion", "when": "full" },
       { "at": 1800, "do": "banner", "text": "skill.volley_partial", "ms": 800, "when": "partial" },
       { "at": 1800, "do": "camera", "zoom": 1.01, "move": "rain", "ms": 1900, "when": "partial" },
       { "at": 1800, "do": "hits", "count": 4, "gapMs": 200, "clip": "attack", "speed": 3, "fx": "bow_release_2",
-        "projectile": "meteor", "impact": "meteor_impact_small", "flightMs": 380, "when": "partial" },
+        "projectile": "volley_meteor", "impact": "volley_impact_small", "flightMs": 380, "when": "partial" },
+      { "at": 1800, "do": "fx", "fx": "volley_flash", "on": "player", "when": "partial" },
       { "at": 2180, "do": "shake", "value": 4, "ms": 800, "when": "partial" }
     ]
   },

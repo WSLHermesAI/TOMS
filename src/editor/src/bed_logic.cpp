@@ -101,6 +101,7 @@ ojson f_SetupToScenario(const Setup& l_oS) {
     }
     if (!l_oS.m_strPace.empty()) l_jB["pace"] = l_oS.m_strPace;
     l_jB["play"] = "weapon";   // the weapon's own play (bow, sword, staff), as in the game
+    if (l_oS.m_oPlayer.m_bUltimateReady) l_jB["super"] = true;   // its ultimate ready from the start (G uses it)
     l_jJ["battle"] = l_jB;
     ojson l_jEd = ojson::object();   // the setup as the editor holds it
     l_jEd["name"] = l_oS.m_strName;
@@ -112,6 +113,7 @@ ojson f_SetupToScenario(const Setup& l_oS) {
     l_jPl["lv"] = l_oS.m_oPlayer.m_iLv; l_jPl["hp"] = l_oS.m_oPlayer.m_iHp; l_jPl["maxhp"] = l_oS.m_oPlayer.m_iMaxhp;
     l_jPl["weapon"] = l_oS.m_oPlayer.m_strWeapon; l_jPl["weaponLevel"] = l_oS.m_oPlayer.m_iWeaponLevel;
     l_jPl["attrs"] = l_oS.m_oPlayer.m_jAttrs; l_jPl["attrPoints"] = l_oS.m_oPlayer.m_iAttrPoints;
+    l_jPl["ultimateReady"] = l_oS.m_oPlayer.m_bUltimateReady;
     l_jEd["player"] = l_jPl;
     l_jJ["_editor"] = l_jEd;
     return l_jJ;
@@ -135,6 +137,7 @@ bool f_SetupFromScenario(const ojson& l_jJ, Setup& l_oOut) {
         l_oS.m_oPlayer.m_iWeaponLevel = l_jP.value("weaponLevel", 1);
         if (l_jP.contains("attrs") && l_jP["attrs"].is_object()) l_oS.m_oPlayer.m_jAttrs = l_jP["attrs"];
         l_oS.m_oPlayer.m_iAttrPoints = l_jP.value("attrPoints", 0);
+        l_oS.m_oPlayer.m_bUltimateReady = l_jP.value("ultimateReady", false);
     }
     l_oOut = l_oS;
     return true;
@@ -286,7 +289,7 @@ ojson f_MovesFromText(const std::string& l_strText) {
         if (l_nColon == std::string::npos) { l_jOut.push_back(l_strPart); continue; }
         ojson l_jM = ojson::object();
         l_jM["id"] = f_Trim(l_strPart.substr(0, l_nColon));
-        l_jM["weight"] = std::max(0, std::atoi(l_strPart.substr(l_nColon + 1).c_str()));
+        l_jM["chance"] = std::max(0, std::atoi(l_strPart.substr(l_nColon + 1).c_str()));   // its share in % (the owner, 2026-11-25)
         l_jOut.push_back(l_jM);
     }
     return l_jOut;
@@ -298,7 +301,7 @@ std::string f_MovesToText(const ojson& l_jMoves) {
     for (const auto& l_jM : l_jMoves) {
         if (!l_strS.empty()) l_strS += ", ";
         if (l_jM.is_string()) l_strS += l_jM.get<std::string>();
-        else if (l_jM.is_object()) l_strS += l_jM.value("id", std::string()) + ":" + std::to_string(l_jM.value("weight", 1));
+        else if (l_jM.is_object()) l_strS += l_jM.value("id", std::string()) + ":" + std::to_string(l_jM.contains("chance") ? l_jM.value("chance", 1) : l_jM.value("weight", 1));
     }
     return l_strS;
 }

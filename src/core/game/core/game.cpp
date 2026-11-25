@@ -301,7 +301,9 @@ void Game::f_Update(int l_iDtMs) {
             const bool l_bCanPay = m_oCs.m_ePace != toms::Pace::Stamina || m_oCs.m_fStamina >= (float)m_oPaceSettings.m_iAttackCost;
             const glm::vec4 l_v4Area = f_TouchArea();
             const bool l_bMoved = std::fabs(l_v4Area.x - m_v4TouchArmedArea.x) + std::fabs(l_v4Area.y - m_v4TouchArmedArea.y) > 4.0f;
-            if (m_oCs.m_bActive && !m_oCs.m_bWinPending && l_bCanPay && m_bBattleBoxesKnown && !f_HeroDown() && f_BattlePlayType() != toms::PlayType::eTRACK &&
+            // not before a boss's introduction is over (its arrival from the dark, its banner; the owner, 2026-11-25: the staff's
+            // circles showed before it), nor while a sequence travels or a monster's special attack is introduced
+            if (m_oCs.m_bActive && !m_oCs.m_bWinPending && l_bCanPay && m_bBattleBoxesKnown && !f_HeroDown() && !f_CellIntroOn() && f_BattlePlayType() != toms::PlayType::eTRACK &&
                 (!m_oCs.m_oTouch.f_Running() || (!m_oCs.m_oTouch.f_Started() && l_bMoved)))
                 f_ArmTouchPlay(false, toms::f_ComboSettings(f_WeaponPlayOf(l_strKey), f_WeaponLevel(l_strKey)).m_iPoints);
         }

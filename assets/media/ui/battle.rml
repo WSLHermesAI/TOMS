@@ -50,7 +50,8 @@
         </div>
         <div class="fname">{{f.name}} <span class="fhpnum">{{f.hp_line}}</span></div>
         <div class="fhp"><div class="fill-bar bad" data-style-width="f.hp_pct + '%'"></div>
-            <div class="fbreak" data-style-width="f.break_pct + '%'"></div></div>
+            <div class="fbreak" data-style-width="f.break_pct + '%'"></div>
+            <div class="fmp" data-if="f.mp_on" data-class-ready="f.mp_ready" data-style-width="f.mp_pct + '%'"></div></div>
     </div></div>
     <!-- a boss's introduction (Game::f_StartBossIntro): a banner slides in, its name types in -->
     <div id="boss-intro" data-if="battle.boss_intro" data-class-hero="battle.hero_intro">

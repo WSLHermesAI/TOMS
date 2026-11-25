@@ -101,8 +101,7 @@ DEX 每點為回答時間加 `dexWindowMs`（10 毫秒），與所有玩法相�
 **玩法**（`play.kind` `spinCircle`）：
 
 1. **示範：** 招式名、主角身上的爆發、絕招音效，然後畫面變暗（1 秒）。
-2. **圓環**（`size` 220）在主角頭上（`ringY` -0.12：中心在主角框頂端之上、框高的這個比例，因為他的圖畫得比框高；擁有者，
-   2026-11-19）。三個光點（`guideFx` `spin_spark`）沿著要畫的方向繞圈，每 0.9 秒一圈（`guidePeriodMs`）。
+2. **圓環**（`size` 340）**在畫面正中央**（`"around": "center"`；擁有者，2026-11-25：「要更大並顯示在中央」；原本是 220、在主角頭上，`ringY`）。三個光點（`guideFx` `spin_spark`）沿著要畫的方向繞圈，每 0.9 秒一圈（`guidePeriodMs`）。**它的特效**（2026-11-25，擁有者：「太弱，要更多粒子和光暈」）：自己的、更強的特效，在 `fx/battle.particle`：`spin_spark` 與 `spin_burst`（更大、發光、每圈一陣星雨）、`volley_charge`（薄荷色光環、上升的光點）、`volley_flash`（主角的閃光）、`volley_meteor`（發光尾跡、星星）、`volley_impact`／`volley_impact_small`、`volley_finale`（最後的爆炸：兩層光、兩個環、80 顆星、火星）。
 3. **圓環裡：** 方向（「順時針」／「逆時針」，綠／粉紅）與該方向的計數（「2/3」）；環上 24 個刻度隨著轉動亮起。下方每圈一個點
    （完成綠、失手紅、輪到黃、逆時針的紫），以及時間條。
 4. **一圈：** 手指繞圓環中心的角度；方向對就增加，反方向就扣回（不低於 0）。330°（`spinTurnDeg`）算一圈：結束處一個爆發
@@ -124,6 +123,22 @@ DEX 每點為回答時間加 `dexWindowMs`（10 毫秒），與所有玩法相�
 `"when": "landed"`（完整或部分，不含失敗），且 `"partial"` 現在要招式有命中才算。`fx/battle.particle` 新增 `meteor`、`meteor_small`、
 `meteor_impact`、`meteor_impact_small`。
 
+### 4.0 主角的喊聲（2026-11-25）
+
+擁有者：「特殊攻擊要用人聲，像 Eat this、See my power……成功時更興奮；沒全部對上時來個迷因音效……oh shit 或 Arrr」。主角任何招式的操作
+結束時（每種武器的絕招），依結果隨機喊一句（`Game::f_HeroShout`，戰鬥事件 `shout`）：
+
+| 結果 | 台詞（`battle.json` `"heroVoice"`） |
+|---|---|
+| `full`（全部完成） | 「Eat this!」「See my power!」「This ends now!」「Take that!」（興奮的戰吼） |
+| `partial`（命中但沒全部） | 「Oh shit!」「Arrrgh!」 |
+| `fizzle`（太少） | 「Whoops...」「Aw, man!」「Oh shit!」 |
+
+台詞是 `sfx.voice_*`（`assets/media/sfx/voice_*.ogg`，resources.json），由 ComfyLive 的語音（Qwen3-TTS，講者 Ryan；docs/engine/23）
+以英文說出；配方在 `Build/art_out/voice/recipes/`（每句一個 `.json`：文字、語氣、seed）。`"volume"` 調音量，`"off": true` 關閉。新增一句：
+寫配方、`ComfyLive.exe --make=<配方> --out=<mp3>`、`python tools/audio/mp3_to_ogg.py <資料夾> --sfx`、把 `.ogg` 放進 `assets/media/sfx/`、
+在 resources.json 加 key、把 key 加進 `heroVoice` 的清單。
+
 ### 4.1 劍與法杖的絕招（2026-11-20）
 
 擁有者要求四把武器都用同樣的演出流程，並選擇用資料中已有的兩個招式，取代劍的自由斬與法杖的自由點擊（「越快越好」，命中都在玩法中發生，
@@ -132,7 +147,7 @@ DEX 每點為回答時間加 `dexWindowMs`（10 毫秒），與所有玩法相�
 | 武器 | 絕招 | 玩法 | 完整收招（登場之後） | 部分（5 中 3 或 4） |
 |---|---|---|---|---|
 | 鐵劍 | **虎虎生風**（`tiger_wind`） | 照提示劃 5 次（最後一個是 V；武器等級會加 V） | 8 次快斬（他的 `attack` ×3 速，每斬身上一個爆發），然後他的大招與怪物身上的爆發；×10（原本當技能是 ×4） | 3 斬，「威力未盡……」 |
-| 法杖 | **星之印**（`star_seal`） | 粒子畫出五角星，然後 6 秒內從角到角描出（可以分筆） | 再畫一次星、10 顆落星（`meteor`，落地為 `star_burst`）、他的大施法、大爆發；×10 | 4 次命中，「威力未盡……」 |
+| 法杖 | **星之印**（`star_seal`） | 粒子畫出五角星，然後 6 秒內從角到角描出（可以分筆）；2026-11-25 起變大（`size` 360）並在畫面正中央（`"around": "center"`；擁有者：「也要更大、在中央、更多粒子和光暈」） | 再畫一次星、10 顆落星（`seal_meteor`，落地為 `seal_impact`）、他的大施法、大爆發（`seal_finale`）；×10。自己的特效（`seal_*`：軌跡、角、每筆、蓄力、落星、命中、終結），紫色與金色的光暈、光環和星雨 | 4 次命中，「威力未盡……」 |
 
 兩者 5 中不到 3 就失敗（`minHits` 3）。招式名不再在玩法中一段段組成（登場時整個打出）。圖形現在畫在主角頭上，和弓的圓環一樣（之前在角色
 腳邊，一半在畫面外）。自由斬／點擊／射擊招式仍留在 `special_moves.json`，不屬於任何武器（Q108）。

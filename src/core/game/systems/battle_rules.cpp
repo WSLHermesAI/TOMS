@@ -136,6 +136,7 @@ MovesTable f_MovesFromJson(const nlohmann::json& l_jJ) {
         l_oM.m_iWarnMs = l_jV.value("warnMs", -1);
         l_oM.m_strShape = l_jV.value("shape", std::string());
         l_oM.m_strGuardPlay = l_jV.value("guardPlay", std::string());
+        l_oM.m_iMp = l_jV.contains("mp") ? std::max(0, l_jV.value("mp", 0)) : -1;
         l_oT.m_mapMoves[l_oM.m_strId] = l_oM;
     }
     return l_oT;
@@ -147,22 +148,48 @@ std::vector<MoveChoice> f_MoveChoicesFromJson(const nlohmann::json& l_jJ) {
     for (const auto& l_jM : l_jJ) {
         MoveChoice l_oC;
         if (l_jM.is_string()) l_oC.m_strId = l_jM.get<std::string>();
-        else if (l_jM.is_object()) { l_oC.m_strId = l_jM.value("id", std::string()); l_oC.m_iWeight = std::max(0, l_jM.value("weight", 1)); }
+        else if (l_jM.is_object()) {
+            l_oC.m_strId = l_jM.value("id", std::string());
+            l_oC.m_iWeight = std::max(0, l_jM.contains("chance") ? l_jM.value("chance", 1) : l_jM.value("weight", 1));
+        }
         if (!l_oC.m_strId.empty() && l_oC.m_iWeight > 0) l_vOut.push_back(l_oC);
     }
     return l_vOut;
 }
 
-std::string f_PickMove(const std::vector<MoveChoice>& l_vChoices, float l_fRoll) {
+std::string f_PickMove(const std::vector<MoveChoice>& l_vChoices, float l_fRoll, const std::vector<bool>* l_pAllowed) {
+    const auto l_fnIn = [&](size_t l_nI) { return !l_pAllowed || l_nI >= l_pAllowed->size() || (*l_pAllowed)[l_nI]; };
     int l_iTotal = 0;
-    for (const MoveChoice& l_oC : l_vChoices) l_iTotal += l_oC.m_iWeight;
+    for (size_t l_nI = 0; l_nI < l_vChoices.size(); l_nI++) if (l_fnIn(l_nI)) l_iTotal += l_vChoices[l_nI].m_iWeight;
     if (l_iTotal <= 0) return "strike";
     int l_iAt = std::clamp((int)std::floor(l_fRoll * l_iTotal), 0, l_iTotal - 1);
-    for (const MoveChoice& l_oC : l_vChoices) {
-        if (l_iAt < l_oC.m_iWeight) return l_oC.m_strId;
-        l_iAt -= l_oC.m_iWeight;
+    std::string l_strLast = "strike";
+    for (size_t l_nI = 0; l_nI < l_vChoices.size(); l_nI++) {
+        if (!l_fnIn(l_nI)) continue;
+        if (l_iAt < l_vChoices[l_nI].m_iWeight) return l_vChoices[l_nI].m_strId;
+        l_iAt -= l_vChoices[l_nI].m_iWeight;
+        l_strLast = l_vChoices[l_nI].m_strId;
     }
-    return l_vChoices.back().m_strId;
+    return l_strLast;
+}
+
+MonsterMpRules f_MonsterMpFor(const MonsterMpRules& l_oDefaults, const nlohmann::json& l_jMp) {
+    MonsterMpRules l_oR = l_oDefaults;
+    if (l_jMp.is_number()) {
+        l_oR.m_iMax = std::max(0, l_jMp.get<int>());
+        l_oR.m_iStart = std::min(l_oR.m_iStart, l_oR.m_iMax);
+    } else if (l_jMp.is_object()) {
+        l_oR.m_iMax = std::max(0, l_jMp.value("max", l_oR.m_iMax));
+        l_oR.m_iStart = std::clamp(l_jMp.value("start", std::min(l_oR.m_iStart, l_oR.m_iMax)), 0, l_oR.m_iMax);
+        l_oR.m_fRegen = std::max(0.0f, l_jMp.value("regen", l_oR.m_fRegen));
+        l_oR.m_iSpecialCost = std::max(0, l_jMp.value("specialCost", l_oR.m_iSpecialCost));
+    }
+    return l_oR;
+}
+
+MonsterMpRules f_MonsterMpFromJson(const nlohmann::json& l_jBattle) {
+    if (!l_jBattle.is_object() || !l_jBattle.contains("monsterMp")) return MonsterMpRules{};
+    return f_MonsterMpFor(MonsterMpRules{}, l_jBattle["monsterMp"]);
 }
 
 // ---- the pace ----

@@ -17,6 +17,7 @@ void Game::f_StartCombat(const EnemyInst& l_oE, const std::vector<EnemyInst>& l_
         if (l_oF.m_oEnemy.m_strMapId.empty()) l_oF.m_oEnemy.m_strMapId = l_oM.m_strId;
         l_oF.m_iHp = l_oM.m_iHp;
         l_oF.m_vEvents = toms::f_MonsterEventsFromJson(l_oM.m_jEvents);
+        f_InitFoeMp(l_oF);
         m_oCs.m_vFoes.push_back(l_oF);
     };
     l_fnAdd(l_oE);
@@ -28,7 +29,7 @@ void Game::f_StartCombat(const EnemyInst& l_oE, const std::vector<EnemyInst>& l_
     m_oCs.m_vEvents.clear();
     // the cells (docs/gameplay/19 §2.1): only when a monster here has a move with a danger shape
     m_oCs.m_bCellsOn = false;
-    m_oCs.m_iCellIntroMs = 0; m_oCs.m_bCellIntroStarted = m_oCs.m_bCellsShown = false; m_oCs.m_iCellsPopMs = 0;
+    m_oCs.m_iCellIntroMs = 0; m_oCs.m_bCellIntroStarted = m_oCs.m_bCellsShown = false; m_oCs.m_iCellsPopMs = 0; m_oCs.m_iCellsIdleMs = 1 << 20;
     for (const CombatState::Foe& l_oF : m_oCs.m_vFoes)
         for (const auto& l_oChoice : l_oF.m_oEnemy.m_vMoves)
             if (!m_oMoves.f_Get(l_oChoice.m_strId).m_strShape.empty()) m_oCs.m_bCellsOn = true;
@@ -160,6 +161,14 @@ int Game::f_BattleFrame(int l_iDtMs) {
     }
     m_oCs.m_iCamMs = std::max(0, m_oCs.m_iCamMs - l_iDtMs);
     m_oCs.m_iCellsPopMs += l_iDtMs;
+    {   // the cells show only while a special attack is coming (the owner, 2026-11-25): a lit danger pops them up again
+        bool l_bDanger = false;
+        for (const CombatState::Foe& l_oF : m_oCs.m_vFoes) l_bDanger = l_bDanger || (!l_oF.f_Down() && l_oF.m_uDanger != 0u);
+        if (l_bDanger) {
+            if (!f_BattleCellsVisible()) m_oCs.m_iCellsPopMs = 0;
+            m_oCs.m_iCellsIdleMs = 0;
+        } else m_oCs.m_iCellsIdleMs = std::min(1 << 20, m_oCs.m_iCellsIdleMs + l_iDtMs);
+    }
     m_oArena.m_iTutorialPopMs += l_iDtMs;
     int l_iBdt = l_iDtMs;
     if (m_oCs.m_iTravelMs > 0) {   // a boss sequence: the stage travels to the next monster; everything waits (game_gauntlet.cpp)
@@ -379,11 +388,26 @@ void Game::f_StartCellIntro(int l_iFoe) {
     f_FeelMoment("phase");
 }
 
+void Game::f_InitFoeMp(CombatState::Foe& l_oF) const {
+    l_oF.m_oMp = toms::f_MonsterMpFor(m_oMonsterMp, l_oF.m_oEnemy.m_jMp);
+    l_oF.m_fMp = (float)l_oF.m_oMp.m_iStart;
+}
+
+int Game::f_FoeMoveMp(int l_iFoe, const std::string& l_strMove) const {
+    const toms::MoveDef& l_oM = m_oMoves.f_Get(l_strMove);
+    if (l_oM.m_iMp >= 0) return l_oM.m_iMp;
+    return l_oM.m_strShape.empty() ? 0 : m_oCs.m_vFoes[(size_t)l_iFoe].m_oMp.m_iSpecialCost;
+}
+
 void Game::f_ChooseFoeMove(int l_iFoe) {
     CombatState::Foe& l_oF = m_oCs.m_vFoes[(size_t)l_iFoe];
     const float l_fRoll = std::uniform_real_distribution<float>(0.0f, 1.0f)(m_oMoveRng);
-    l_oF.m_strMove = toms::f_PickMove(l_oF.m_oEnemy.m_vMoves, l_fRoll);
+    // the moves it cannot pay for (its MP: the owner, 2026-11-25) are left out of the roll; each move's "chance" shares the rest
+    std::vector<bool> l_vAllowed;
+    for (const toms::MoveChoice& l_oC : l_oF.m_oEnemy.m_vMoves) l_vAllowed.push_back((float)f_FoeMoveMp(l_iFoe, l_oC.m_strId) <= l_oF.m_fMp + 0.001f);
+    l_oF.m_strMove = toms::f_PickMove(l_oF.m_oEnemy.m_vMoves, l_fRoll, &l_vAllowed);
     if (const toms::TutorialStep* l_pStep = f_TutorialStepNow(); l_pStep && !l_pStep->m_strMove.empty()) l_oF.m_strMove = l_pStep->m_strMove;
+    l_oF.m_fMp = std::max(0.0f, l_oF.m_fMp - (float)f_FoeMoveMp(l_iFoe, l_oF.m_strMove));   // paid now (the tutorial's lesson too, down to 0)
     l_oF.m_uDanger = 0u;
     l_oF.m_iPowerMs = 0;
     l_oF.m_bPowered = false;
@@ -426,6 +450,7 @@ void Game::f_StepFoes(int l_iDtMs) {
             continue;
         }
         l_oF.m_iClockMs += l_iDtMs;
+        l_oF.m_fMp = std::min((float)l_oF.m_oMp.m_iMax, l_oF.m_fMp + l_oF.m_oMp.m_fRegen * (float)l_iDtMs / 1000.0f);   // its MP refills on its own clock
         {   // the cells its hit covers light up, aimed at where the hero is now (docs/gameplay/19 §2.1)
             const toms::MoveDef& l_oMv = m_oMoves.f_Get(l_oF.m_strMove);
             if (!l_oMv.m_strShape.empty() && !l_oF.m_uDanger && l_oF.m_iMoveMs - l_oF.m_iClockMs <= m_oCellRules.m_iWarnMs) {
@@ -559,6 +584,7 @@ void Game::f_RunFoeActions(int l_iFoe, const nlohmann::json& l_jActions) {
                 l_oS.m_oEnemy = l_oN;
                 l_oS.m_iHp = l_oN.m_iHp;
                 l_oS.m_vEvents = toms::f_MonsterEventsFromJson(l_oN.m_jEvents);
+                f_InitFoeMp(l_oS);
                 m_oCs.m_vFoes.push_back(l_oS);
                 m_vFoeRigs.resize(m_oCs.m_vFoes.size());
                 f_ChooseFoeMove((int)m_oCs.m_vFoes.size() - 1);
@@ -615,6 +641,11 @@ void Game::f_DebugUpdateMonster(const std::string& l_strId, const nlohmann::json
         l_oE.m_strLook = l_jM.value("look", std::string("monster"));
         l_oE.m_iBreakPoints = l_jM.value("break", 0);
         l_oE.m_vMoves = toms::f_MoveChoicesFromJson(l_jM.value("moves", nlohmann::json::array()));   // from its next move on
+        if (l_jM.contains("mp")) {   // its MP's rules; it keeps the MP it has (up to the new max)
+            l_oE.m_jMp = l_jM["mp"];
+            l_oF.m_oMp = toms::f_MonsterMpFor(m_oMonsterMp, l_oE.m_jMp);
+            l_oF.m_fMp = std::min(l_oF.m_fMp, (float)l_oF.m_oMp.m_iMax);
+        }
         const int l_iInterval = l_jM.value("atk_interval_ms", 4000);
         if (l_iInterval != l_oE.m_iAtkIntervalMs) {   // the wind-up under way keeps how far along it is
             const double l_dDone = l_oF.m_iMoveMs > 0 ? std::clamp((double)l_oF.m_iClockMs / l_oF.m_iMoveMs, 0.0, 1.0) : 0.0;

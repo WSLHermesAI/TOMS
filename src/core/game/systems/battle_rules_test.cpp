@@ -67,6 +67,23 @@ int main() {
     CHECK(f_PickMove(l_vCh, 0.0f) == "strike" && f_PickMove(l_vCh, 0.24f) == "strike" && f_PickMove(l_vCh, 0.25f) == "heavy" &&
               f_PickMove(l_vCh, 0.999f) == "heavy", "the weights split the roll");
     CHECK(f_PickMove({}, 0.5f) == "strike", "no moves: a strike");
+    {   // "chance" (the owner, 2026-11-25) and the moves it cannot pay for left out
+        const std::vector<MoveChoice> l_vC = f_MoveChoicesFromJson(json::parse(R"([{ "id": "strike", "chance": 70 }, { "id": "boss_near", "chance": 30 }])"));
+        CHECK(l_vC.size() == 2 && l_vC[0].m_iWeight == 70 && l_vC[1].m_iWeight == 30, "chance is read as the share");
+        CHECK(f_PickMove(l_vC, 0.69f) == "strike" && f_PickMove(l_vC, 0.71f) == "boss_near", "70 % strike, 30 % the special");
+        const std::vector<bool> l_vNoSpecial = {true, false};
+        CHECK(f_PickMove(l_vC, 0.99f, &l_vNoSpecial) == "strike", "not enough MP: the special is left out of the roll");
+        const std::vector<bool> l_vNone = {false, false};
+        CHECK(f_PickMove(l_vC, 0.5f, &l_vNone) == "strike", "nothing it can pay for: a plain strike");
+        const MonsterMpRules l_oD = f_MonsterMpFromJson(json::parse(R"({ "monsterMp": { "max": 100, "start": 50, "regen": 5, "specialCost": 40 } })"));
+        CHECK(l_oD.m_iMax == 100 && l_oD.m_iStart == 50 && l_oD.m_fRegen == 5.0f && l_oD.m_iSpecialCost == 40, "battle.json monsterMp");
+        const MonsterMpRules l_oN = f_MonsterMpFor(l_oD, json(30));
+        CHECK(l_oN.m_iMax == 30 && l_oN.m_iStart == 30, "a monster's \"mp\": 30 is its max (its start no more than that)");
+        const MonsterMpRules l_oO = f_MonsterMpFor(l_oD, json::parse(R"({ "max": 200, "start": 0, "regen": 2 })"));
+        CHECK(l_oO.m_iMax == 200 && l_oO.m_iStart == 0 && l_oO.m_fRegen == 2.0f && l_oO.m_iSpecialCost == 40, "its own max / start / regen");
+        const MovesTable l_oT = f_MovesFromJson(json::parse(R"({ "big": { "kind": "heavy", "mp": 25 }, "plain": { "kind": "strike" } })"));
+        CHECK(l_oT.f_Get("big").m_iMp == 25 && l_oT.f_Get("plain").m_iMp == -1, "a move's \"mp\" (unset: -1, the default by its shape)");
+    }
 
     // 4. The pace.
     const PaceSettings l_oP = f_PaceFromJson(json::parse(R"({ "pace": "stamina", "stamina": { "max": 80, "attack": 30 } })"));

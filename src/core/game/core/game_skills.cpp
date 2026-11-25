@@ -375,6 +375,8 @@ glm::vec2 Game::f_SkillShapeCentre(const toms::SpecialMove& l_oD) const {
     const glm::vec4 l_v4Hero = f_FighterBox(-1);
     const float l_fR = l_oD.m_oPlay.m_fSize * 0.5f + 6.0f;
     const float l_fW = m_pRen ? (float)m_pRen->f_Width() : 1024.0f, l_fH = m_pRen ? (float)m_pRen->f_Height() : 768.0f;
+    if (l_oD.m_oPlay.m_strAround == "center")   // the middle of the screen (the bow's Cyclone Volley, the owner, 2026-11-25)
+        return {l_fW * 0.5f, std::clamp(l_fH * 0.45f, l_fR, std::max(l_fR, l_fH - l_fR))};
     if (l_oD.m_oPlay.m_strAround == "monster" && !m_oCs.m_vFoes.empty()) {   // on the monster aimed at (the staff's Star Seal, 2026-11-23)
         const glm::vec4 l_v4Foe = f_FighterBox(std::clamp(m_oCs.m_iTarget, 0, (int)m_oCs.m_vFoes.size() - 1));
         return {std::clamp(l_v4Foe.x + l_v4Foe.z * 0.5f, l_fR, std::max(l_fR, l_fW - l_fR)),
@@ -543,6 +545,7 @@ void Game::f_UpdateSkill(int l_iDtMs) {
             if (l_oS.m_fShare <= 0.0f) f_PopWord(m_oLocale.f_Tr("battle.move.default.miss"), -1, "move-miss");
         }
         const bool l_bFull0 = l_oS.m_fShare >= 1.0f;   // a finish beat may be for the full play only, or the partial one (22 §3)
+        if (l_oS.m_iOwner < 0) f_HeroShout(l_bFull0 ? "full" : l_oS.m_fShare > 0.0f ? "partial" : "fizzle");
         for (const toms::ShowBeat* l_pB : toms::f_BeatsDue(l_oD.m_vFinish, -1, 0)) if (toms::f_BeatOn(*l_pB, l_bFull0, l_oS.m_fShare > 0.0f)) f_SkillBeat(*l_pB, f_SkillCentre());
         return;
     }
@@ -584,6 +587,20 @@ void Game::f_UpdateSkill(int l_iDtMs) {
         }
     }
     if (m_oCs.m_oSkill.m_bOn && l_oS.m_iPhaseMs >= toms::f_ShowLength(l_oD.m_vFinish, l_bFull, l_bLanded) && l_oS.m_iHitsLeft <= 0) f_EndSkill();
+}
+
+// The hero's shout when his move's play is over (the owner, 2026-11-25: "use human speak for the special attack ... Eat
+// this, See my power ... more excited when it succeeds; when not all match a meme sound"): one line at random from
+// battle.json "heroVoice" "full" / "partial" / "fizzle" (sound keys, resources.json), at its "volume".
+void Game::f_HeroShout(const std::string& l_strOutcome) {
+    const nlohmann::json l_jV = m_jBattleJson.value("heroVoice", nlohmann::json::object());
+    if (l_jV.value("off", false)) return;
+    const nlohmann::json l_jPool = l_jV.value(l_strOutcome, nlohmann::json::array());
+    if (!l_jPool.is_array() || l_jPool.empty()) return;
+    const size_t l_nPick = (size_t)std::uniform_int_distribution<int>(0, (int)l_jPool.size() - 1)(m_oPlayRng);
+    if (!l_jPool[l_nPick].is_string()) return;
+    m_oAudio.f_Play(l_jPool[l_nPick].get<std::string>(), 1.0f, std::clamp(l_jV.value("volume", 1.0f), 0.0f, 2.0f));
+    f_BattleEvent("shout", -1, -1, 0, l_strOutcome);   // (a scenario counts it; the runs are silent)
 }
 
 // One falling projectile at the monster, from high up and to its left (the hero's side), its impact where it lands; and

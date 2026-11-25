@@ -342,7 +342,7 @@ void OceanRenderer::Impl::f_Draw(uint16_t l_u16View, const Look& l_oL, double l_
     const glm::vec4 l_v4E(l_oP.m_v3E, l_oL.m_fSkyStrength), l_v4Zenith(l_oP.m_v3Zenith, 0.0f);
     const glm::vec4 l_v4Clouds(l_oL.m_fCloudCover, l_oL.m_fCloudScale, l_oL.m_fCloudSpeed, l_oL.m_fCloudDark);
     const glm::vec4 l_v4Deep(l_oL.m_v3Deep, std::max(l_oL.m_fRoughness, 0.01f)), l_v4Scatter(l_oL.m_v3Scatter, l_oL.m_fScatterStrength);
-    const glm::vec4 l_v4Foam(l_oL.m_fFoam, std::max(l_oL.m_fFogMetres, 1.0f), l_oL.m_fReflection, 0.0f);
+    const glm::vec4 l_v4Foam(l_oL.m_fFoam, std::max(l_oL.m_fFogMetres, 1.0f), l_oL.m_fReflection, std::max(l_oL.m_fSunGlint, 0.0f));
     auto l_fnUniforms = [&]() {
         bgfx::setUniform(m_oUInvVP, glm::value_ptr(l_mat4Inv));
         bgfx::setUniform(m_oUEye, &l_v4Eye);

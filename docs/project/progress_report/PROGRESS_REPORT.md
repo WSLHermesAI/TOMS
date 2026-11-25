@@ -15,6 +15,14 @@
 
 ## ▶ Next Step
 
+**Fights: monster MP and chances, bigger ultimates, the hero's shout** (2026-11-25; [DAILY_2026-11-25.md](DAILY_2026-11-25.md)):
+- Each monster move has a chance, each monster its own MP (enemies.json "mp"); a special attack costs MP; the six cells
+  show only while one is coming. Hivebear: 3 specials of 14 moves (was about 60 %); the trial toad fixed.
+- The bow's and the staff's ultimates big in the middle of the screen with much stronger effects; no play before a boss's
+  introduction; the staff's hint faster; the hero shouts when an ultimate ends; the battle editor can try the ultimates.
+- Not committed (after the owner's `27819e6`). Changed-only 53 of 341, all passed; naming checker 0 edits.
+- **Owner:** `castle/ground_n.jpg` missing from git; listen to the shouts; try the ultimates in the battle editor.
+
 **The web build smaller: 43.5 MB -> 16.3 MB of data** (2026-11-23, later; [DAILY_2026-11-23.md](DAILY_2026-11-23.md)):
 - The atlas pages are WebP on the web (quality 90; `tools/web/pack_webp.py` at build time, libwebp's decoder in the game,
   `x.png` read as `x.webp`); the repo keeps the PNGs. Earlier: normal maps JPG, LZ4, the brawler left out.

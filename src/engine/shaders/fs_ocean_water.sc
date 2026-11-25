@@ -58,6 +58,11 @@ void main()
     float a2 = a * a;
     float d = NdotH * NdotH * (a2 - 1.0) + 1.0;
     float spec = a2 / max(3.14159 * d * d, 0.0001);
+    // The sun path: a second, wider lobe, so the light lies on the water as a long glittering band under the sun.
+    float ag = max(rough, 0.3);
+    float ag2 = ag * ag * ag * ag;
+    float dg = NdotH * NdotH * (ag2 - 1.0) + 1.0;
+    spec += u_oceanFoam.w * ag2 / max(3.14159 * dg * dg, 0.0001);
     spec *= 1.0 - 0.95 * clamp((u_oceanClouds.x - 0.6) / 0.3, 0.0, 1.0);   // no glitter under a closed sky
     color += u_oceanSunColor.xyz * spec * NdotL * (0.02 + 0.98 * pow(1.0 - clamp(dot(V, H), 0.0, 1.0), 5.0)) * 1.2;
 

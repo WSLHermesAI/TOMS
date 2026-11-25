@@ -171,6 +171,11 @@ and sounds, and a **Fire now** button on each card to try it during a test battl
 **Lose now** (to try the endings and the events on death), and the **log**: every battle event with its time
 (attacks, hits with their damage and result tier, guards, events fired, status changes), so a balance question is
 answered from the log rather than by watching.
+**Trying the ultimates** (the owner, 2026-11-25: "I want to try special attack in battle editor"): the Player tab's
+**ultimate ready at the start** tick starts the battle with the weapon's ultimate charged (the scenario's `"super"`),
+and the battle bar's **⚡ Ultimate** fills it again in the running battle (`Game::f_DebugFillUltimate`); press **G**
+(or its button) to use it. Pick the weapon in the Player tab (bow: Cyclone Volley, sword: Tiger Wind, memory blade:
+Sigil Chain, staff: Star Seal).
 
 ### 4.6 Several monsters in one battle (now: the owner, 2026-10-25)
 
@@ -320,6 +325,15 @@ Steps 1–3 are built (2026-10-25, §9), except one `Combatant` for every side (
   "heavy", "weight": 2}]`); without a list it only strikes, exactly as before. Over each monster: its next move and the
   seconds left, with a bar, coloured by what answers it (heavy red, jabs yellow, spell purple, guard blue). Given moves
   now: bat (jabs), golem (heavy, guard), skeleton (heavy), wraith (spell), imp (heavy, spell), Vorkath (all).
+- **Chances and MP** (the owner, 2026-11-25: "the boss use special attack probability is too high ... each attack type
+  should have a probability and monster should have MP too"): a move's `"chance"` in `enemies.json` is its share of the
+  picks in % (`{"id": "boss_near", "chance": 10}`; `"weight"` is still read). A monster has **MP** (`battle.json`
+  `"monsterMp"`: `max` 100, `start` 50, `regen` 5 a second while its own clock runs, `specialCost` 50; its own `"mp"` in
+  `enemies.json`: a number for its max, or `{max, start, regen, specialCost}`). A move costs its `"mp"` (`moves.json`;
+  unset: `specialCost` for a special attack, a move with a danger shape, else 0), paid when it is chosen; a move it cannot
+  pay for is left out of the roll and the others share it. Its MP shows under its HP bar, bright blue when it can pay for
+  its dearest move. The bosses with special attacks now: strike 70 %, each of the three specials 10 % (with heavy: strike
+  55, heavy 15); Vorkath: strike 30, the rest 10 each. A boss fought for 60 s: 3 specials out of 14 moves (before: about 60 %). Each of them has its own `"mp"` (2026-11-25), by strength: the first floor bosses 100 / start 30 / regen 4; Hearthound to Chronoknight 100 / 50 / 5; Grimoire Warden, the Sleeping Colossus, Grey Mask 120 / 60 / 6; the Sanctum Warden and Vorkath 150 / 75 / 7; the Hollow God 150 / 90 / 8; the trial toad 100 / 50 / 4 with a plain strike 85 % and its three specials 5 % each (the owner, 2026-11-25: "in tutorial the thicketoad still use special too often": it had only its specials, so every move it could pay for was one); each `specialCost` 50. `battle.json` `"monsterMp"` is only for a monster without its own.
 - **Answers** (§6.2): a guard of `break.parryPower` (85) or more **parries** a heavy blow (no damage; it staggers
   1.5 s and takes ×2); **jabs** cut a running combo short (guard instead); since 2026-10-26 every monster keeps charging during a combo
   (the owner; `battle.json` `combo_holds_monsters: true` for the old wait), and since 2026-10-30 the combo's marker keeps moving

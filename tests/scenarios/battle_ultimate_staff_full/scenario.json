@@ -1,5 +1,5 @@
 {
-  "_comment": "The staff's ultimate done in full (the owner, 2026-11-20; docs/gameplay/22 §4.1; special_moves.json star_seal): g at frame 10; the pentagram, on the hero's head, traced in five strokes corner to corner (top, bottom right, left, right, bottom left, top). 5 of 5: the hero's introduction, then 10 falling stars, each a hit.",
+  "_comment": "The staff's ultimate done in full (the owner, 2026-11-20; docs/gameplay/22 §4.1; special_moves.json star_seal): g at frame 10; the pentagram, in the middle of the screen (size 360 since 2026-11-25), traced in five strokes corner to corner (top, bottom right, left, right, bottom left, top). 5 of 5: the hero's introduction, then 10 falling stars, each a hit.",
   "scene": "battle",
   "player": {
     "give": [
@@ -19,7 +19,7 @@
   "test": {
     "frames": 600,
     "keys": "g@10",
-    "drags": "142:246:210:454:6@160,210:454:33:326:6@172,33:326:252:326:6@184,252:326:75:454:6@196,75:454:142:246:6@208"
+    "drags": "639:161:746:487:6@160,746:487:469:286:6@172,469:286:811:286:6@184,811:286:534:487:6@196,534:487:639:161:6@208"
   },
   "expect": {
     "battleEvents": {

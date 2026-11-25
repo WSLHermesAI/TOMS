@@ -163,6 +163,7 @@ private:
     QSpinBox* m_pPMaxHp = nullptr;
     QComboBox* m_pPWeapon = nullptr;
     QSpinBox* m_pPWeaponLevel = nullptr;
+    QCheckBox* m_pPUltimate = nullptr;   // the battle starts with the ultimate ready
     QSpinBox* m_pPPoints = nullptr;
     QMap<QString, QSpinBox*>* m_pPAttrs = nullptr;
     QSpinBox* m_pCTotal = nullptr;

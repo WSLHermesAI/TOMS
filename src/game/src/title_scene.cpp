@@ -14,6 +14,10 @@ namespace toms::next {
 namespace {
 
 constexpr double g_dSecondsPerCamera = 10.0;
+// The ocean view turns slowly left and right so the sea is seen from different sides: +-g_fOceanTurnDeg, one
+// swing every g_dOceanTurnSeconds.
+constexpr float g_fOceanTurnDeg = 35.0f;
+constexpr double g_dOceanTurnSeconds = 70.0;
 
 std::string f_DirOf(const std::string& l_strPath) {
     const size_t l_nS = l_strPath.find_last_of("/\\");
@@ -71,6 +75,10 @@ bool TitleScene::f_LoadOcean(std::string& l_strError) {
     // Dark, with few clouds: the title's pale gold letters vanish against a white cloud.
     m_oOceanLook.m_fExposure = 0.4f;
     m_oOceanLook.m_fCloudCover = 0.28f;
+    // A low sun ahead, so its light lies on the water in view (the view's turn sweeps across it), with a wide sun path.
+    m_oOceanLook.m_fSunElevationDeg = 14.0f;
+    m_oOceanLook.m_fSunAzimuthDeg = 12.0f;
+    m_oOceanLook.m_fSunGlint = 3.0f;
     m_iOceanRows = l_oQ.m_iGridRows;
     m_iOceanSimEvery = l_oQ.m_iSimEvery;
     l_upOcean->f_SetWaves(ocean::WaveSettings(), ocean::f_QualityCascades(l_oQ));
@@ -96,7 +104,9 @@ void TitleScene::f_DrawOcean(double l_dDtSeconds, uint32_t l_uWidth, uint32_t l_
         m_fOceanPendingDt = 0.0f;
     }
     m_iOceanFrame++;
-    ocean::f_PlaceBoatCamera(m_oOceanLook, ocean::BoatCamera(), m_dTime, l_uWidth, l_uHeight);
+    ocean::BoatCamera l_oBoat;
+    l_oBoat.m_fYawDeg = g_fOceanTurnDeg * (float)std::sin(m_dTime * 6.283185307179586 / g_dOceanTurnSeconds);
+    ocean::f_PlaceBoatCamera(m_oOceanLook, l_oBoat, m_dTime, l_uWidth, l_uHeight);
     m_upOcean->f_Draw(m_u16FirstView, m_oOceanLook, m_dTime, l_uWidth, l_uHeight);
 }
 

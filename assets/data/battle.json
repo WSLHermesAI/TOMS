@@ -118,9 +118,16 @@
   "backdrops": [
     { "from": 1, "to": 9999, "music": "music.battle_normal", "anim": "anim/battle_forest.anim", "clip": "idle", "size": [1792, 1024], "fx": ["forest_motes", "forest_fireflies"] }
   ],
-  "cells": { "cols": 3, "rows": 2, "areaW": 450, "rowH": 58, "gap": 6, "maxH": 150, "perspective": 0.14, "warnMs": 1400, "shiftX": 55, "shiftNear": 40, "shiftY": 18,
+  "cells": { "cols": 3, "rows": 2, "areaW": 450, "rowH": 58, "gap": 6, "maxH": 150, "perspective": 0.14, "warnMs": 1400, "shiftX": 55, "shiftNear": 40, "shiftY": 18, "hideAfterMs": 700,
              "intro": { "ms": 2200, "uiAtMs": 1200, "popMs": 350, "zoom": 1.25, "clip": "special", "fx": "danger_intro", "text": "battle.cell_intro" },
              "shapes": { "near": [{ "row": 0 }], "line": [{ "cols": "each" }], "fan": [{ "allBut": "start" }] } },
+  "monsterMp": { "_comment": "A monster's MP (the owner, 2026-11-25): a special attack (a move with a danger shape) costs specialCost, or the move's own \"mp\" (moves.json); a move it cannot pay for is left out of its roll. It starts with start, refills regen a second while its own clock runs, up to max. enemies.json \"mp\": a number (its max) or {max, start, regen, specialCost}.",
+                 "max": 100, "start": 50, "regen": 5, "specialCost": 50 },
+  "heroVoice": { "_comment": "The hero's shout when his move's play ends (the owner, 2026-11-25): one at random from full (every step done: excited), partial (landed, not all) or fizzle (too few). Sound keys (resources.json); the recipes: Build/art_out/voice/recipes (ComfyLive speech, docs/engine/23). off: true silences it.",
+                 "volume": 1.0,
+                 "full": ["sfx.voice_eat_this", "sfx.voice_see_my_power", "sfx.voice_this_ends_now", "sfx.voice_take_that"],
+                 "partial": ["sfx.voice_oh_shit", "sfx.voice_argh"],
+                 "fizzle": ["sfx.voice_whoops", "sfx.voice_aw_man", "sfx.voice_oh_shit"] },
   "tutorial": {
     "_comment": "The new game's trial fight (docs/gameplay/19 B6). Each step shows its text until doneOn happens count times; once: not again for the next weapon tried; hideMs: its box goes away that long after it popped up (the step goes on).",
     "enemy": "thicketoad",
@@ -143,7 +150,7 @@
              "cueMs": 1000, "inputMs": 750, "inputAtEnd": true, "cueGapMs": 150,
              "cueExtraMs": { "v": 400, "m": 900, "square": 1100, "triangle": 800, "circle": 800 },
              "dexWayDeg": 1.5, "dexWayMaxDeg": 40, "dexGestureMaxDeg": 15, "dexCornerPct": 1.5, "dexWindowMs": 10, "freeMinSwipe": 25,
-             "circleCountMs": 450, "circleHideMs": 500, "circleWarnMs": 0, "circleReturnMs": 100, "circleTapMs": 900,
+             "circleCountMs": 300, "circleHideMs": 300, "circleWarnMs": 0, "circleReturnMs": 100, "circleTapMs": 900,
              "circlePerfectMs": 500,
              "recallShowMs": 500, "recallGapMs": 80, "recallReadyMs": 250, "recallAnswerMs": 1000, "recallPerCueMs": 0, "recallReverse": 0,
              "chainTimeMs": 5000,

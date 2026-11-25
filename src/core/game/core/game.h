@@ -87,6 +87,7 @@ struct EnemyInst : public Trackable {
     std::string m_strLook = "monster";            // "look": its status map in data/looks.json
     std::vector<toms::MoveChoice> m_vMoves;     // "moves": what it may do next (data/moves.json); none: a plain strike
     int m_iBreakPoints = 0;                     // "break": matched points that break it (0: data/battle.json's)
+    nlohmann::json m_jMp;                       // "mp": its MP (a number: max, or {max, start, regen}); null: battle.json monsterMp
     nlohmann::json m_jEvents = nlohmann::json::array();   // "events": its monster events (13 §4.4)
     TOMS_OBJECT(EnemyInst)
 };
@@ -163,6 +164,8 @@ struct CombatState : public Trackable {
         float m_fStaggerDamage = 1.0f;   // ...and hits on it do this much more
         bool m_bBroken = false;          // the stun came from its break gauge (the intent shows "Broken!")
         float m_fBreakGauge = 0.0f;      // matched points so far (13 §6.4)
+        toms::MonsterMpRules m_oMp;      // its MP's rules (battle.json monsterMp, its own "mp" over them)
+        float m_fMp = 0.0f;              // its MP now: a move costing more is left out of its roll (f_ChooseFoeMove)
         float m_fAtkMul = 1.0f, m_fDefMul = 1.0f, m_fIntervalMul = 1.0f;   // monster events' stat changes
         int m_iAttacks = 0;              // its attacks so far (the "attacks" event)
         bool m_bFled = false;            // left the battle (no reward for it)
@@ -254,6 +257,7 @@ struct CombatState : public Trackable {
     int m_iBossIntroFoe = -1, m_iBossIntroWaitMs = 0, m_iBossIntroFrames = 0;
     bool m_bCellIntroStarted = false, m_bCellsShown = false;   // (the cells stay hidden until it reveals them)
     int m_iCellsPopMs = 0;            // how long since they popped up
+    int m_iCellsIdleMs = 1 << 20;     // how long no monster's danger has been lit (the cells hide: CellRules m_iHideAfterMs)
     bool m_bCellsOn = false;          // a monster here has moves with a danger shape: the hero moves between cells (docs/gameplay/19 §2.1)
     int m_iHeroCell = 4;
     int m_iCellCols = 3, m_iCellRows = 2;   // this fight's grid
@@ -456,6 +460,10 @@ public:
     // strong, no slow motion. Saved in the settings file.
     bool f_ReduceEffects() const { return m_oSettings.m_bReduceEffects; }
     bool f_BattleCellsOn() const { return m_oCs.m_bActive && m_oCs.m_bCellsOn; }
+    // the cells on the screen: revealed, and a special attack coming (or just gone: they linger, then shrink away)
+    bool f_BattleCellsVisible() const {
+        return f_BattleCellsOn() && m_oCs.m_bCellsShown && m_oCs.m_iCellsIdleMs < m_oCellRules.m_iHideAfterMs + m_oCellRules.m_iPopMs;
+    }
     // a moment when everything waits and only the monster is shown: the first danger's, or a boss's introduction
     bool f_CellIntroOn() const { return m_oCs.m_iTravelMs > 0 || m_oCs.m_iRevealMs > 0 || m_oCs.m_iCellIntroMs > 0 || m_oCs.m_iBossIntroMs > 0 || m_oCs.m_iBossIntroFoe >= 0 || m_oCs.m_iIntroFoeFire >= 0; }
     // A boss's introduction (the owner, 2026-11-14, Q82: "a special opening to introduce the boss (like Mega Man)"):
@@ -473,6 +481,9 @@ public:
     void f_CycleBattle3DMode();
     bool f_Battle3DLight() const { return m_oSettings.m_iBattle3D == 1; }
     void f_DebugFireFoeEvent(int l_iFoe, int l_iEvent);
+    // The battle editor: the ultimate's charge full now (the owner, 2026-11-25: "I want to try special attack in battle
+    // editor"); G or its button then uses it. False: no battle running.
+    bool f_DebugFillUltimate() { if (!m_oCs.m_bActive) return false; m_oCs.m_iSuperCharge = m_oRun.f_SuperMax(); return true; }
     int f_BattleFoeCount() const { return m_oCs.m_bActive ? (int)m_oCs.m_vFoes.size() : 0; }
     // The battle editor: a monster's enemies.json record, edited while it fights. Every foe of that id in the running
     // battle takes the new numbers at once: HP (its current HP keeps its share), ATK, DEF, the attack interval (the
@@ -880,6 +891,7 @@ private:
     void f_SkillBeat(const toms::ShowBeat& l_oB, glm::vec2 l_v2At);
     void f_EndSkill();
     glm::vec2 f_SkillCentre() const;                  // between the fighters (a step's burst with no place of its own)
+    void f_HeroShout(const std::string& l_strOutcome);   // his voice when a move's play ends: "full", "partial", "fizzle" (battle.json heroVoice)
     glm::vec2 f_SkillShapeCentre(const toms::SpecialMove& l_oD) const;   // a move's shape or ring: on the hero's head (ringY), on the screen
     std::string f_SkillName() const;                  // the running skill's name, in the language
     // the training ground (16 §5): a monster's card spent for fights in a row with more EXP and weapon wins
@@ -1528,6 +1540,9 @@ private:
     toms::MovesTable m_oMoves;             // data/moves.json: the monsters' moves (docs/gameplay/13 §6.1)
     toms::PaceSettings m_oPaceSettings;    // data/battle.json "pace", "stamina"
     toms::BreakSettings m_oBreakSettings;  // data/battle.json "break"
+    toms::MonsterMpRules m_oMonsterMp;     // data/battle.json "monsterMp": a monster's MP by default
+    int f_FoeMoveMp(int l_iFoe, const std::string& l_strMove) const;   // the MP that move costs that monster
+    void f_InitFoeMp(CombatState::Foe& l_oF) const;
     toms::FeelSettings m_oFeel;            // data/battle.json "feel" (docs/gameplay/15 §3.8)
     toms::GradeSettings m_oGrade;          // "grade" (§3.6)
     toms::GuardSettings m_oGuard;          // "guard" (§3.2): the timed button, or the bar

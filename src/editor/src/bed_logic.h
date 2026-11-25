@@ -37,6 +37,7 @@ struct TestPlayer {
     int m_iWeaponLevel = 1;                 // its level
     ojson m_jAttrs = ojson::object();       // { "str": 3, ... } placed points
     int m_iAttrPoints = 0;                  // points still to place
+    bool m_bUltimateReady = false;          // the battle starts with the ultimate's charge full (scenario "super")
 };
 
 struct Setup {
@@ -65,7 +66,7 @@ std::string f_DumpCompact(const ojson& l_jJ, int l_iInlineFrom = 2, int l_iWidth
 // False (text unchanged) when the file has no such array.
 bool f_ReplaceLevelPoints(std::string& l_strStatsText, const ojson& l_jRows);
 
-// "strike, heavy:2" -> ["strike", { "id": "heavy", "weight": 2 }] (enemies.json "moves") and back.
+// "strike:70, boss_near:30" -> [{ "id": "strike", "chance": 70 }, ...] (enemies.json "moves"; "weight" is read too) and back.
 ojson f_MovesFromText(const std::string& l_strText);
 std::string f_MovesToText(const ojson& l_jMoves);
 // "bat, bat" -> ["bat", "bat"] and back.

@@ -97,6 +97,7 @@ bool Game::f_EnemyFromData(const std::string& l_strId, const nlohmann::json& l_j
     l_oEn.m_strLook = l_jB.value("look", l_jTp.value("look", std::string("monster")));
     l_oEn.m_vMoves = toms::f_MoveChoicesFromJson(l_jB.contains("moves") ? l_jB["moves"] : l_jTp.value("moves", nlohmann::json::array()));
     l_oEn.m_iBreakPoints = l_jB.value("break", l_jTp.value("break", 0));
+    l_oEn.m_jMp = l_jB.contains("mp") ? l_jB["mp"] : l_jTp.value("mp", nlohmann::json());
     l_oEn.m_jEvents = l_jB.contains("events") ? l_jB["events"] : l_jTp.value("events", nlohmann::json::array());
     return true;
 }
@@ -258,6 +259,7 @@ bool Game::f_StartScenarioJson(const nlohmann::json& l_jSc, const std::string& l
             m_oBreakSettings = toms::f_BreakFromJson(l_jRules);
             m_oFeel = toms::f_FeelFromJson(l_jRules);
             m_oCellRules = toms::f_CellRulesFromJson(l_jRules);
+            m_oMonsterMp = toms::f_MonsterMpFromJson(l_jRules);
             m_oTouchSettings = toms::f_TouchPlayFromJson(l_jRules);
             m_jFeelFx = l_jRules.value("feelFx", nlohmann::json::object());   // the attack feel (docs/gameplay/20)
             m_jBodyScale = l_jRules.value("bodyScale", nlohmann::json::object());

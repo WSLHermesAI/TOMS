@@ -353,6 +353,13 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
                 }
                 if (const toms::TutorialStep* l_pStep = f_TutorialStepNow(); l_pStep && l_pStep->m_bHold) { l_oUf.m_strIntent.clear(); l_oUf.m_fIntentPct = 0.0f; }   // it waits: no clock to read
                 l_oUf.m_fBreakPct = f_Pct(l_oF.m_fBreakGauge, (float)f_FoeBreakPoints((int)l_nI));
+                {   // its MP (the owner, 2026-11-25): shown when a move of its costs MP; bright when its dearest can come
+                    int l_iDearest = 0;
+                    for (const toms::MoveChoice& l_oC : l_oF.m_oEnemy.m_vMoves) l_iDearest = std::max(l_iDearest, f_FoeMoveMp((int)l_nI, l_oC.m_strId));
+                    l_oUf.m_bMpOn = l_iDearest > 0 && l_oF.m_oMp.m_iMax > 0;
+                    l_oUf.m_fMpPct = f_Pct(l_oF.m_fMp, (float)std::max(1, l_oF.m_oMp.m_iMax));
+                    l_oUf.m_bMpReady = l_oUf.m_bMpOn && l_oF.m_fMp + 0.001f >= (float)l_iDearest;
+                }
                 l_oUf.m_bWarn = f_FoeWarning((int)l_nI) && !m_oCs.m_oSkill.m_bOn;   // the "!" before its hit (docs/gameplay/16 §4)
             }
             l_oB.m_vFoes.push_back(l_oUf);
@@ -466,9 +473,14 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
                 const float l_fK = std::clamp((float)l_iAgeMs / (float)m_oCellRules.m_iPopMs, 0.0f, 1.0f) - 1.0f;
                 return std::max(0.01f, 1.0f + 2.70158f * l_fK * l_fK * l_fK + 1.70158f * l_fK * l_fK);
             };
-            if (m_oCs.m_bCellsOn && m_oCs.m_bCellsShown) {   // the six cells: where the hero stands, what is in danger and how soon (docs/gameplay/19 §2.1)
+            if (f_BattleCellsVisible()) {   // the six cells: where the hero stands, what is in danger and how soon (docs/gameplay/19 §2.1)
                 l_oB.m_bCellsOn = true;
                 l_oB.m_fCellsScale = l_fnPop(m_oCs.m_iCellsPopMs);
+                const int l_iGoneMs = m_oCs.m_iCellsIdleMs - m_oCellRules.m_iHideAfterMs;   // no danger for a while: they shrink away
+                if (l_iGoneMs > 0) {
+                    const float l_fK = 1.0f - std::clamp((float)l_iGoneMs / (float)m_oCellRules.m_iPopMs, 0.0f, 1.0f);
+                    l_oB.m_fCellsScale = m_oSettings.m_bReduceEffects ? 1.0f : std::max(0.01f, l_fK * l_fK);
+                }
                 if (m_oCs.m_iCellRows <= 2) l_oB.m_strCellHint = l_oL.f_Tr("battle.cell_hint");   // (a tall grid fills that place)
                 // any grid: the width is shared out, the rows grow upward from the bottom of #cells and shrink past maxH
                 const int l_iCols = m_oCs.m_iCellCols, l_iRows = m_oCs.m_iCellRows;
@@ -551,7 +563,7 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
                 // a step with hideMs: its box goes away that long after it popped up (the owner, 2026-11-13: the red cells'
                 // hint "should auto disappear after 3 seconds"); its words stay set, so nothing else takes its place
                 l_oB.m_bTutorialHidden = l_pStep->m_iHideMs > 0 && m_oArena.m_iTutorialPopMs >= l_pStep->m_iHideMs;
-                if (l_pStep->m_strMark == "cells" && !m_oCs.m_bCellsShown) l_oB.m_strTutorial.clear();   // it comes with the cells
+                if (l_pStep->m_strMark == "cells" && !f_BattleCellsVisible()) l_oB.m_strTutorial.clear();   // it comes with the cells
             }
             if (l_ePlayType != toms::PlayType::eTRACK || m_oCs.m_oSkill.m_bOn) f_TouchPlayUi(l_oB);
             if (m_oCs.m_iChain > 1) l_oB.m_strChainText = f_TrParam(l_oL.f_Tr("battle.word_chain"), "n", std::to_string(m_oCs.m_iChain));

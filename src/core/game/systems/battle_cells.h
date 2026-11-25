@@ -31,6 +31,9 @@ struct CellRules {
     int m_iStart = -1;      // where the hero starts (-1: the far row's middle, on any grid)
     float m_fAreaW = 450.0f, m_fRowH = 58.0f, m_fGap = 6.0f, m_fMaxH = 190.0f;   // on screen: the grid's width; a row's height, less when the rows would pass maxH
     float m_fShiftX = 55.0f, m_fShiftNear = 40.0f, m_fShiftY = 18.0f;   // how far the hero's picture moves for a cell
+    // the cells show only while a monster's special attack is coming (its danger lit; the owner, 2026-11-25): after the
+    // last danger goes out they stay this long, then shrink away (popMs); the next danger pops them up again
+    int m_iHideAfterMs = 700;
     // the first danger of a fight stops everything and shows the monster (battle.json cells.intro)
     int m_iIntroMs = 2200, m_iIntroUiMs = 1200, m_iPopMs = 350;   // how long; when the cells pop up; how long the pop takes
     float m_fIntroZoom = 1.25f;
@@ -55,6 +58,7 @@ inline CellRules f_CellRulesFromJson(const nlohmann::json& l_jBattle) {
     l_oR.m_fShiftX = l_jC.value("shiftX", l_oR.m_fShiftX);
     l_oR.m_fShiftNear = l_jC.value("shiftNear", l_oR.m_fShiftNear);
     l_oR.m_fShiftY = l_jC.value("shiftY", l_oR.m_fShiftY);
+    l_oR.m_iHideAfterMs = std::max(0, l_jC.value("hideAfterMs", l_oR.m_iHideAfterMs));
     if (l_jC.contains("intro") && l_jC["intro"].is_object()) {
         const nlohmann::json& l_jI = l_jC["intro"];
         l_oR.m_iIntroMs = std::max(0, l_jI.value("ms", l_oR.m_iIntroMs));

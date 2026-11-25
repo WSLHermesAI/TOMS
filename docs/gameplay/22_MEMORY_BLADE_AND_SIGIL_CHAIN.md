@@ -109,9 +109,9 @@ free shot it replaces stays in `special_moves.json`, Q108).
 **The play** (`play.kind` `spinCircle`):
 
 1. **The demo:** the move's name, a burst on the hero, the ultimate's sound, then the screen dims (1 s).
-2. **The ring** (`size` 220) on the hero's head (`ringY` -0.12: its middle that share of his box's height above the box's
-   top, as his picture is drawn taller than the box; the owner, 2026-11-19). Three sparks (`guideFx` `spin_spark`) go round
-   it the way to draw, once every 0.9 s (`guidePeriodMs`).
+2. **The ring** (`size` 340) **in the middle of the screen** (`"around": "center"`; the owner, 2026-11-25: "should be bigger
+   and show on the center"; it was 220 on the hero's head, `ringY`). Three sparks (`guideFx` `spin_spark`) go round
+   it the way to draw, once every 0.9 s (`guidePeriodMs`). **Its effects** (2026-11-25, the owner: "too weak, make more particle and glow things"): its own, stronger, in `fx/battle.particle`: `spin_spark` and `spin_burst` (bigger, glowing, a star shower each turn), `volley_charge` (a mint aura, sparks rising), `volley_flash` (the hero's flash), `volley_meteor` (a glowing trail, stars), `volley_impact` / `volley_impact_small`, `volley_finale` (the last blast: two glows, two rings, 80 stars, embers).
 3. **In the ring:** the way ("順時針" / "逆時針", green / pink) and the count of that way ("2/3"); 24 ticks round the ring
    light up as the turn goes. Under it, a dot per turn (done green, missed red, due yellow, the anticlockwise ones purple),
    and the time bar.
@@ -137,6 +137,24 @@ way its fighter moves to the screen's middle, a little below it); `"when": "land
 `"partial"` now needs the move to land. `fx/battle.particle` has `meteor`, `meteor_small`, `meteor_impact`,
 `meteor_impact_small`.
 
+### 4.0 The hero's shout (2026-11-25)
+
+The owner: "use human speak for the special attack, something like Eat this, See my power ... more excited when it
+succeeds; if not all match, a meme sound ... oh shit or Arrr". When any of the hero's moves ends its play (every
+weapon's ultimate), he shouts one line at random by the result (`Game::f_HeroShout`, battle event `shout`):
+
+| Result | Lines (`battle.json` `"heroVoice"`) |
+|---|---|
+| `full` (every step done) | "Eat this!", "See my power!", "This ends now!", "Take that!" (excited battle cries) |
+| `partial` (landed, not all) | "Oh shit!", "Arrrgh!" |
+| `fizzle` (too few) | "Whoops...", "Aw, man!", "Oh shit!" |
+
+The lines are `sfx.voice_*` (`assets/media/sfx/voice_*.ogg`, resources.json), spoken in English by ComfyLive's speech
+(Qwen3-TTS, speaker Ryan; docs/engine/23); the recipes are in `Build/art_out/voice/recipes/` (one `.json` a line: text,
+style, seed). `"volume"` sets their loudness, `"off": true` silences them. A new line: a recipe, `ComfyLive.exe
+--make=<recipe> --out=<mp3>`, `python tools/audio/mp3_to_ogg.py <folder> --sfx`, the `.ogg` into `assets/media/sfx/`, its
+key in resources.json, its key in a `heroVoice` list.
+
 ### 4.1 The sword's and the staff's ultimates (2026-11-20)
 
 The owner asked for the same rundown on all four weapons, and chose to replace the sword's free swipe and the staff's free
@@ -145,7 +163,7 @@ tap ("as fast as you can", every hit during the play, no finish to introduce) wi
 | Weapon | Ultimate | The play | Full finish (after the introduction) | Partial (3 or 4 of 5) |
 |---|---|---|---|---|
 | Iron sword | **虎虎生風** Tiger Wind (`tiger_wind`) | 5 prompts swiped as shown (the last a V; weapon level adds V's) | 8 fast cuts (his `attack` ×3 speed, a burst on him each), then his big blow and a burst on the monster; ×10 (it was ×4 as a skill) | 3 cuts, "威力未盡……" |
-| Staff | **星之印** Star Seal (`star_seal`) | the pentagram drawn by particles, then traced in 6 s, corner to corner (strokes may be lifted) | the star drawn again, 10 falling stars (`meteor` with a `star_burst` impact), his big cast, a big burst; ×10 | 4 hits, "威力未盡……" |
+| Staff | **星之印** Star Seal (`star_seal`) | the pentagram drawn by particles, then traced in 6 s, corner to corner (strokes may be lifted); since 2026-11-25 big (`size` 360) in the middle of the screen (`"around": "center"`; the owner: "bigger also in the center and more particle and glow") | the star drawn again, 10 falling stars (`seal_meteor` with a `seal_impact` impact), his big cast, a big burst (`seal_finale`); ×10. Its own effects (`seal_*`: trail, corner, step, great, meteor, impact, finale) with violet and gold glows, rings and star showers | 4 hits, "威力未盡……" |
 
 Both fizzle under 3 of 5 (`minHits` 3). The name is no longer built piece by piece during the play (the introduction types
 it whole). The shape is now drawn on the hero's head, like the bow's ring (before, it sat at the fighters' feet, half off

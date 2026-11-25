@@ -13,7 +13,8 @@
     "Its rhythm (docs/gameplay/16 §4.1): chargeMs (the wind-up in ms, in place of time), hits with gapsMs (one value or one",
     "per gap: the time before each next hit), warnMs (the \"!\" over it before each hit; default battle.json guard.warnMs);",
     "shape: the cells the hit covers (data/battle.json cells.shapes; docs/gameplay/19 §2.1): a hero standing clear takes nothing. Any move with a shape turns the six cells on for that fight.",
-    "guardPlay: a skills.json id: a special guard play (draw a seal, tap fast) in place of the guard button (16 §4.3)."
+    "guardPlay: a skills.json id: a special guard play (draw a seal, tap fast) in place of the guard button (16 §4.3).",
+    "mp: the MP it costs the monster (battle.json monsterMp; default: specialCost for a move with a shape, else 0). Not enough MP: it is left out of the roll. In enemies.json a move's \"chance\" is its share of the picks in % (the moves it can pay for share them)."
   ],
   "strike": { "kind": "strike", "damage": 1.0, "time": 1.0 },
   "heavy":  { "kind": "heavy", "damage": 1.8, "time": 1.3 },
