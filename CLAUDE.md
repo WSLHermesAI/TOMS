@@ -100,6 +100,17 @@
   same way, and `python tools/naming/rename_cpp.py plan` reports names that do not. Never touch third-party code
   (`src/third_party/`, the libraries CMake downloads, `AIGamestyle`).
 
+### C++: no hard-coded name, a constant or the data
+
+- **The game's code never writes a name as a bare string** (the owner, 2026-11-26; docs/project/12_CPP_NAMING.md §7).
+  Each is a constant from `src/core/game/core/`: a file `toms::key` (res_keys.h) and a line of text `toms::text`
+  (text_keys.h), both **generated** (`tools/make_res_keys.py`, `tools/make_text_keys.py`: run after changing
+  resources.json or text.json); a data field `toms::field` (field_keys.h); a UI name `toms::ui` (ui_names.h: bindings,
+  `act('...')` events, ids, RCSS classes); every other name `toms::<kind>` (game_names.h: `toms::state::g_pszIdle`, ...).
+- **A new name goes into its header first**, then the code uses its constant. Only log text and shown text stay strings.
+- **`lint.game_names`** (`tools/naming/check_names.py`) fails on a name written as a string; `data.text_keys_up_to_date`
+  on a stale text_keys.h. A line the checker cannot tell apart carries `// name-ok`.
+
 ### Files: by key, never a path in code
 
 - **Game code names a file by its key** in `assets/media/resources.json` (`toms::key::k…` / `toms::pattern::k…` from

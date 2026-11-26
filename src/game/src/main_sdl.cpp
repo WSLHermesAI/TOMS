@@ -37,6 +37,8 @@
 //   --anim=<file>#<clip>  play one clip of an .anim file over the screen (anim_clip.h; tests)
 //   --ui-scale=<x>        the small-screen UI scale (the web build uses 1.5 on phones), to test it on desktop
 //   --battle-tuning=default  the battle bars' built-in values instead of data/battle.json (tests: smoke.battle)
+//   --perf-dump=on|off|exit  the performance checker's dump when slower than 30 fps for a whole second (perf_dumps/; F4 shows
+//                         it live; docs/engine/25). Default: on, off in scripted runs (--frames / --fixed-dt)
 //   --battle-log          each battle event (hits, falls, the target, the win) as a line on stderr
 //   --window=<W>x<H>      the window's size (default 1280x720; e.g. 540x1200 to see the portrait layout on desktop)
 //   --resize=<frame>:<W>x<H>  resize the window at that frame (tests: the layout switches while the game runs)
@@ -64,6 +66,8 @@
 //   --leak-break=<n>              Windows Debug builds: stop in the debugger at heap allocation n
 //   --scenario-test               also run the scenario's "test" frames and keys, then exit 3 when the scene it
 //                                 expects is not showing (ctest scenario.*)
+#include "perf.h"   // toms::perf: the performance checker (F4)
+#include "field_keys.h"    // toms::field: every data field by its constant
 #include "bgfx_host.h"
 #include "bgfx_renderer.h"
 #include "../../core/engine/vfs.h"   // toms::vfsInit: APK entries need the AAssetManager
@@ -115,6 +119,7 @@ struct Args {
     int m_iRecordFrom = 0, m_iRecordStep = 1;   // --record-from=<n>, --record-step=<n>
     int m_iAnimCrowd = 0;                 // --anim-crowd=N
     bool m_bBench = false;                // --bench
+    std::string m_strPerfDump;            // --perf-dump=on|off (empty: on, off in scripted runs)
     bool m_bVsync = true, m_bStats = false, m_bFps = false;
     bool m_bHotReload = false;   // --hot-reload
     bool m_bSkipStartStory = false;   // --skip-start-story: New Game goes straight to stage 1 (the screenshot tests)
@@ -149,11 +154,11 @@ struct Args {
 
 bool f_KeyFromName(const std::string& l_strN, Key& l_eOut) {
     static const struct { const char* m_pszName; Key m_eKey; } l_arrTable[] = {
-        {"up", Key::Up}, {"down", Key::Down}, {"left", Key::Left}, {"right", Key::Right},
-        {"enter", Key::Enter}, {"space", Key::Space}, {"esc", Key::Escape}, {"tab", Key::Tab},
-        {"f1", Key::F1}, {"f2", Key::F2}, {"f5", Key::F5}, {"f8", Key::F8},
-        {"i", Key::I}, {"b", Key::B}, {"c", Key::C}, {"q", Key::Q}, {"e", Key::E},
-        {"f", Key::F}, {"g", Key::G}, {"h", Key::H},   // the battle: guard, super, the active
+        {toms::field::g_pszUp, Key::Up}, {toms::field::g_pszDown, Key::Down}, {toms::field::g_pszLeft, Key::Left}, {toms::field::g_pszRight, Key::Right},
+        {toms::field::g_pszEnter, Key::Enter}, {toms::field::g_pszSpace, Key::Space}, {toms::field::g_pszEsc, Key::Escape}, {toms::field::g_pszTab, Key::Tab},
+        {toms::field::g_pszF1, Key::F1}, {toms::field::g_pszF2, Key::F2}, {toms::field::g_pszF4, Key::F4}, {toms::field::g_pszCtrl, Key::Ctrl}, {toms::field::g_pszPlus, Key::Plus}, {toms::field::g_pszMinus, Key::Minus}, {toms::field::g_pszF5, Key::F5}, {toms::field::g_pszF8, Key::F8},
+        {toms::field::g_pszI, Key::I}, {toms::field::g_pszB, Key::B}, {toms::field::g_pszC, Key::C}, {toms::field::g_pszQ, Key::Q}, {toms::field::g_pszE, Key::E},
+        {toms::field::g_pszF, Key::F}, {toms::field::g_pszG, Key::G}, {toms::field::g_pszH, Key::H},   // the battle: guard, super, the active
         {"1", Key::Num1}, {"2", Key::Num2}, {"3", Key::Num3},
     };
     for (auto& l_oE : l_arrTable) if (l_strN == l_oE.m_pszName) { l_eOut = l_oE.m_eKey; return true; }
@@ -236,6 +241,7 @@ Args f_ParseArgs(const std::vector<std::string>& l_vArgv) {
         else if (const char* l_pszV = l_fnValue(l_strS, "--anim=")) l_oA.m_strAnim = l_pszV;
         else if (const char* l_pszV = l_fnValue(l_strS, "--anim-crowd=")) l_oA.m_iAnimCrowd = std::atoi(l_pszV);
         else if (l_strS == "--bench") l_oA.m_bBench = true;
+        else if (const char* l_pszV = l_fnValue(l_strS, "--perf-dump=")) l_oA.m_strPerfDump = l_pszV;
         else if (const char* l_pszV = l_fnValue(l_strS, "--fx=")) l_oA.m_strFx = l_pszV;
         else if (const char* l_pszV = l_fnValue(l_strS, "--mesh-test=")) l_oA.m_strMeshTest = l_pszV;
         else if (const char* l_pszV = l_fnValue(l_strS, "--character=")) l_oA.m_strCharacter = l_pszV;
@@ -330,8 +336,11 @@ void f_ReadKeyboard(InputState& l_oIn, const bool* l_pPressed) {
     l_fnSet(Key::W, SDL_SCANCODE_W); l_fnSet(Key::A, SDL_SCANCODE_A); l_fnSet(Key::S, SDL_SCANCODE_S); l_fnSet(Key::D, SDL_SCANCODE_D);
     l_oIn.m_arrDown[(size_t)Key::Enter] = l_arrKs[SDL_SCANCODE_RETURN] || l_arrKs[SDL_SCANCODE_KP_ENTER];
     l_fnSet(Key::Space, SDL_SCANCODE_SPACE); l_fnSet(Key::Escape, SDL_SCANCODE_ESCAPE); l_fnSet(Key::Tab, SDL_SCANCODE_TAB);
-    l_fnSet(Key::F1, SDL_SCANCODE_F1); l_fnSet(Key::F2, SDL_SCANCODE_F2); l_fnSet(Key::F3, SDL_SCANCODE_F3);
+    l_fnSet(Key::F1, SDL_SCANCODE_F1); l_fnSet(Key::F2, SDL_SCANCODE_F2); l_fnSet(Key::F3, SDL_SCANCODE_F3); l_fnSet(Key::F4, SDL_SCANCODE_F4);
     l_fnSet(Key::F5, SDL_SCANCODE_F5); l_fnSet(Key::F8, SDL_SCANCODE_F8);
+    l_oIn.m_arrDown[(size_t)Key::Ctrl] = l_arrKs[SDL_SCANCODE_LCTRL] || l_arrKs[SDL_SCANCODE_RCTRL];
+    l_oIn.m_arrDown[(size_t)Key::Plus] = l_arrKs[SDL_SCANCODE_EQUALS] || l_arrKs[SDL_SCANCODE_KP_PLUS];   // the = / + key
+    l_oIn.m_arrDown[(size_t)Key::Minus] = l_arrKs[SDL_SCANCODE_MINUS] || l_arrKs[SDL_SCANCODE_KP_MINUS];
     l_fnSet(Key::F, SDL_SCANCODE_F); l_fnSet(Key::G, SDL_SCANCODE_G); l_fnSet(Key::H, SDL_SCANCODE_H);
     l_fnSet(Key::I, SDL_SCANCODE_I); l_fnSet(Key::B, SDL_SCANCODE_B);
     l_fnSet(Key::C, SDL_SCANCODE_C); l_fnSet(Key::Q, SDL_SCANCODE_Q); l_fnSet(Key::E, SDL_SCANCODE_E);
@@ -506,6 +515,9 @@ bool f_AppInit(App& l_oApp) {
         f_FatalBox(l_oApp.m_pWindow, "TOMS: the game could not start", l_strErr);
         return false;
     }
+    toms::perf::Profiler::f_Get().f_SetAutoDump(l_oArgs.m_strPerfDump == "on" ||
+        (l_oArgs.m_strPerfDump.empty() && l_oArgs.m_iFrames == 0 && l_oArgs.m_iFixedDtMs == 0));   // a test's slowness is not a dump
+    toms::perf::Profiler::f_Get().f_SetDumpAtExit(l_oArgs.m_strPerfDump == "exit");   // the last 2 s, when the run ends
     std::printf("TOMS on bgfx (%s). Arrows/WASD or click a tile to move, Enter interacts, I inventory, B store, "
                 "Tab stage select, F1 debug, Esc menu.\n", f_BgfxHostRendererName().c_str());
     l_oApp.m_u64LastTicks = SDL_GetTicks();
@@ -654,15 +666,15 @@ bool f_AppFrame(App& l_oApp) {
             const size_t l_nColon = l_oArgs.m_strArena.find(':');
             const std::string l_strList = l_oArgs.m_strArena.substr(0, l_nColon);
             const std::string l_strWeapon = l_nColon == std::string::npos ? std::string() : l_oArgs.m_strArena.substr(l_nColon + 1);
-            nlohmann::json l_jSc = {{"scene", "arena"}, {"battle", {{"enemies", nlohmann::json::array()}}}};
+            nlohmann::json l_jSc = {{toms::field::g_pszScene, "arena"}, {toms::field::g_pszBattle, {{toms::field::g_pszEnemies, nlohmann::json::array()}}}};
             for (size_t l_nPos = 0; l_nPos <= l_strList.size();) {
                 const size_t l_nComma = std::min(l_strList.find(',', l_nPos), l_strList.size());
-                if (l_nComma > l_nPos) l_jSc["battle"]["enemies"].push_back(l_strList.substr(l_nPos, l_nComma - l_nPos));
+                if (l_nComma > l_nPos) l_jSc[toms::field::g_pszBattle][toms::field::g_pszEnemies].push_back(l_strList.substr(l_nPos, l_nComma - l_nPos));
                 l_nPos = l_nComma + 1;
             }
-            if (!l_strWeapon.empty() && l_strWeapon != "unarmed") l_jSc["player"] = {{"equip", {l_strWeapon}}};
-            else l_jSc["player"] = {{"unarmed", true}};   // no weapon named: unarmed (a new game would wear the bow)
-            l_bStarted = l_pG->f_StartScenarioJson(l_jSc, "arena", l_strErr);
+            if (!l_strWeapon.empty() && l_strWeapon != "unarmed") l_jSc[toms::field::g_pszPlayer] = {{toms::field::g_pszEquip, {l_strWeapon}}};
+            else l_jSc[toms::field::g_pszPlayer] = {{toms::field::g_pszUnarmed, true}};   // no weapon named: unarmed (a new game would wear the bow)
+            l_bStarted = l_pG->f_StartScenarioJson(l_jSc, toms::field::g_pszArena, l_strErr);
         }
         if (!l_bStarted) {
             std::fprintf(stderr, "[scenario] %s\n", l_strErr.c_str());
@@ -731,7 +743,8 @@ bool f_AppFrame(App& l_oApp) {
         std::snprintf(l_pszName, sizeof l_pszName, "/frame_%05d.png", l_iRecorded++);
         l_oApp.m_oSession.f_Renderer()->f_SavePNG(l_oArgs.m_strRecord + l_pszName);
     }
-    f_BgfxHostFrame();
+    { toms::perf::Scope l_oP(toms::perf::section::g_pszFramePresent); f_BgfxHostFrame(); }
+    l_oApp.m_oSession.f_EndPerfFrame();   // the frame's numbers to the performance checker (F4; a dump when slow)
     if (l_oArgs.m_bBench && l_oApp.m_oSession.f_Renderer()) {   // every 120 frames: the averages (stderr)
         static double l_dSumFrame = 0, l_dSumAnim = 0, l_dSumCalls = 0, l_dSumGpu = 0;
         static int l_iCount = 0;
@@ -757,6 +770,10 @@ bool f_AppFrame(App& l_oApp) {
 }
 
 void f_AppShutdown(App& l_oApp) {
+    if (toms::perf::Profiler::f_Get().f_DumpAtExit()) {
+        const std::string l_strPath = toms::perf::Profiler::f_Get().f_Dump("the run ended (--perf-dump=exit)", 2.0);
+        std::fprintf(stderr, "[perf] dumped: %s\n", l_strPath.empty() ? "(could not be written)" : l_strPath.c_str());
+    }
     l_oApp.m_oSession.f_Stop();
     toms::JobSystem::f_Stop();   // join the worker threads before the process exits
     f_BgfxHostShutdown();

@@ -17,6 +17,8 @@
 // talk_system_test.cpp), and checkActions() validates data against a catalogue of known names (tests, editors).
 #pragma once
 
+#include "game_names.h"    // toms::state, toms::battle_event, ... (no hard-coded name)
+#include "field_keys.h"    // toms::field: every data field by its constant
 #include <json.hpp>
 
 #include <set>
@@ -56,9 +58,9 @@ RunReport f_RunActions(const nlohmann::json& l_jActions, StoryEffects& l_oFx);
 // The names data may use, for checkActions. An empty set means "do not check that kind of name".
 struct Catalog {
     std::set<std::string> m_setStats, m_setItems, m_setVars, m_setFlags, m_setCounters, m_setEvents;
-    std::set<std::string> m_setOtherVerbs = {"startMission", "claimMission", "makeChoice", "enterBattle", "unlockSkill",
-                                        "setSideStoryState",
-                                        "rescue", "startDialogue", "openStore", "heal"};   // the story revamp's (docs/gameplay/23 §7)
+    std::set<std::string> m_setOtherVerbs = {toms::story_action::g_pszStartMission, toms::story_action::g_pszClaimMission, toms::story_action::g_pszMakeChoice, toms::story_action::g_pszEnterBattle, toms::story_action::g_pszUnlockSkill,
+                                        toms::story_action::g_pszSetSideStoryState,
+                                        toms::story_action::g_pszRescue, toms::story_action::g_pszStartDialogue, toms::story_action::g_pszOpenStore, toms::story_action::g_pszHeal};   // the story revamp's (docs/gameplay/23 §7)
 };
 
 // Problems in `actions` (same shapes as runActions): unknown verbs, missing fields, names not in the catalogue,

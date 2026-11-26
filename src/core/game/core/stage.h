@@ -1,5 +1,6 @@
 // stage.h — stage data structures and JSON loader for Tower of the Sorcerer.
 #pragma once
+#include "field_keys.h"    // toms::field: every data field by its constant
 #include "../../engine/vfs.h"
 #include <string>
 #include <vector>
@@ -91,27 +92,27 @@ inline Stage f_ParseStage(const std::string& l_strPath, const toms::Locale& l_oL
         Stage l_oS; l_oS.m_strId = l_strPath; return l_oS;
     }
     Stage l_oS;
-    l_oS.m_strId = l_jJ["id"]; l_oS.m_strName = l_oLocale.f_Field(l_jJ["name"]); l_oS.m_strSubtitle = l_jJ["subtitle"];
-    l_oS.m_iIndex = l_jJ["index"]; l_oS.m_iWidth = l_jJ["width"]; l_oS.m_iHeight = l_jJ["height"];
-    l_oS.m_vTiles = l_jJ["tiles"].get<std::vector<std::string>>();
-    for (auto& [l_strK,l_strV] : l_jJ["legend"].get<std::map<std::string,std::string>>()) l_oS.m_mapLegend[l_strK] = l_strV;
-    l_oS.m_strUp = l_jJ["connect"]["up"].is_null() ? "" : (std::string)l_jJ["connect"]["up"];
-    l_oS.m_strDown = l_jJ["connect"]["down"].is_null() ? "" : (std::string)l_jJ["connect"]["down"];
-    l_oS.m_strStoryNote = l_oLocale.f_Field(l_jJ["story_note"]);
-    if (l_jJ.contains("theme") && l_jJ["theme"].is_string()) l_oS.m_strTheme = l_jJ["theme"].get<std::string>();
+    l_oS.m_strId = l_jJ[toms::field::g_pszId]; l_oS.m_strName = l_oLocale.f_Field(l_jJ[toms::field::g_pszName]); l_oS.m_strSubtitle = l_jJ[toms::field::g_pszSubtitle];
+    l_oS.m_iIndex = l_jJ[toms::field::g_pszIndex]; l_oS.m_iWidth = l_jJ[toms::field::g_pszWidth]; l_oS.m_iHeight = l_jJ[toms::field::g_pszHeight];
+    l_oS.m_vTiles = l_jJ[toms::field::g_pszTiles].get<std::vector<std::string>>();
+    for (auto& [l_strK,l_strV] : l_jJ[toms::field::g_pszLegend].get<std::map<std::string,std::string>>()) l_oS.m_mapLegend[l_strK] = l_strV;
+    l_oS.m_strUp = l_jJ[toms::field::g_pszConnect][toms::field::g_pszUp].is_null() ? "" : (std::string)l_jJ[toms::field::g_pszConnect][toms::field::g_pszUp];
+    l_oS.m_strDown = l_jJ[toms::field::g_pszConnect][toms::field::g_pszDown].is_null() ? "" : (std::string)l_jJ[toms::field::g_pszConnect][toms::field::g_pszDown];
+    l_oS.m_strStoryNote = l_oLocale.f_Field(l_jJ[toms::field::g_pszStoryNote]);
+    if (l_jJ.contains(toms::field::g_pszTheme) && l_jJ[toms::field::g_pszTheme].is_string()) l_oS.m_strTheme = l_jJ[toms::field::g_pszTheme].get<std::string>();
     // Milestone 4: optional per-tile encounter-kind overrides, keyed by raw tile char. Absent
     // from every shipped stage today -- guarded so existing files parse identically to before.
     const nlohmann::json* l_pEncounterOverrides = nullptr;
-    if (l_jJ.contains("encounter_overrides") && l_jJ["encounter_overrides"].is_object())
-        l_pEncounterOverrides = &l_jJ["encounter_overrides"];
+    if (l_jJ.contains(toms::field::g_pszEncounterOverrides) && l_jJ[toms::field::g_pszEncounterOverrides].is_object())
+        l_pEncounterOverrides = &l_jJ[toms::field::g_pszEncounterOverrides];
     // S1: optional per-tile footprint overrides, keyed by raw tile char (see footprint.h for the
     // accepted forms). Absent from a file -> every entity stays 1x1.
     const nlohmann::json* l_pFootprints = nullptr;
-    if (l_jJ.contains("footprints") && l_jJ["footprints"].is_object())
-        l_pFootprints = &l_jJ["footprints"];
+    if (l_jJ.contains(toms::field::g_pszFootprints) && l_jJ[toms::field::g_pszFootprints].is_object())
+        l_pFootprints = &l_jJ[toms::field::g_pszFootprints];
     const nlohmann::json* l_pObjects = nullptr;   // per-object look and linked events, keyed "x,y"
-    if (l_jJ.contains("objects") && l_jJ["objects"].is_object())
-        l_pObjects = &l_jJ["objects"];
+    if (l_jJ.contains(toms::field::g_pszObjects) && l_jJ[toms::field::g_pszObjects].is_object())
+        l_pObjects = &l_jJ[toms::field::g_pszObjects];
     // parse entities
     for (int l_iY = 0; l_iY < (int)l_oS.m_vTiles.size(); l_iY++) {
         for (int l_iX = 0; l_iX < (int)l_oS.m_vTiles[l_iY].size(); l_iX++) {
@@ -140,14 +141,14 @@ inline Stage f_ParseStage(const std::string& l_strPath, const toms::Locale& l_oL
             if (l_pObjects) {
                 auto l_oO = l_pObjects->find(std::to_string(l_iX) + "," + std::to_string(l_iY));
                 if (l_oO != l_pObjects->end() && l_oO->is_object()) {
-                    if (l_oO->contains("look") && (*l_oO)["look"].is_object()) l_oE.m_jLook = (*l_oO)["look"];
-                    if (l_oO->contains("uid") && (*l_oO)["uid"].is_string()) l_oE.m_strUid = (*l_oO)["uid"].get<std::string>();
-                    if (l_oO->contains("party") && (*l_oO)["party"].is_array())
-                        for (const auto& l_jId : (*l_oO)["party"]) if (l_jId.is_string()) l_oE.m_vParty.push_back(l_jId.get<std::string>());
-                    if (l_oO->contains("gauntlet") && (*l_oO)["gauntlet"].is_array())
-                        for (const auto& l_jId : (*l_oO)["gauntlet"]) if (l_jId.is_string()) l_oE.m_vGauntlet.push_back(l_jId.get<std::string>());
-                    if (l_oO->contains("events") && (*l_oO)["events"].is_array())
-                        for (const auto& l_jId : (*l_oO)["events"]) if (l_jId.is_string()) l_oE.m_vLinks.push_back(l_jId.get<std::string>());
+                    if (l_oO->contains(toms::field::g_pszLook) && (*l_oO)[toms::field::g_pszLook].is_object()) l_oE.m_jLook = (*l_oO)[toms::field::g_pszLook];
+                    if (l_oO->contains(toms::field::g_pszUid) && (*l_oO)[toms::field::g_pszUid].is_string()) l_oE.m_strUid = (*l_oO)[toms::field::g_pszUid].get<std::string>();
+                    if (l_oO->contains(toms::field::g_pszParty) && (*l_oO)[toms::field::g_pszParty].is_array())
+                        for (const auto& l_jId : (*l_oO)[toms::field::g_pszParty]) if (l_jId.is_string()) l_oE.m_vParty.push_back(l_jId.get<std::string>());
+                    if (l_oO->contains(toms::field::g_pszGauntlet) && (*l_oO)[toms::field::g_pszGauntlet].is_array())
+                        for (const auto& l_jId : (*l_oO)[toms::field::g_pszGauntlet]) if (l_jId.is_string()) l_oE.m_vGauntlet.push_back(l_jId.get<std::string>());
+                    if (l_oO->contains(toms::field::g_pszEvents) && (*l_oO)[toms::field::g_pszEvents].is_array())
+                        for (const auto& l_jId : (*l_oO)[toms::field::g_pszEvents]) if (l_jId.is_string()) l_oE.m_vLinks.push_back(l_jId.get<std::string>());
                 }
             }
             l_oS.m_vEntities.push_back(l_oE);

@@ -1,5 +1,7 @@
 // game_session.cpp -- see game_session.h. The input block was ported from the old GLFW main
 // (src/game/core/main.cpp, removed 2026-09-27; GLFW keys -> toms::next::Key).
+#include "perf.h"   // toms::perf: the performance checker (F4)
+#include "ui_names.h"     // toms::ui: the names the .rml / .rcss files use
 #include "game_session.h"
 #include "title_scene.h"
 #include "battle_stage.h"
@@ -134,6 +136,7 @@ bool GameSession::f_Start(const SessionOptions& l_oOpts, std::string& l_strError
         return false;
     }
     m_pRenderer = dynamic_cast<BgfxRenderer*>(m_upGame->f_Renderer());
+    f_NameViews();   // the GPU's time per view, by name (the performance checker, F4)
     m_upGame->f_SetHotReload(l_oOpts.m_bHotReload);
     m_bWatchUi = l_oOpts.m_bHotReload;
     if (!m_pRenderer) {
@@ -302,7 +305,8 @@ bool GameSession::f_Frame(int l_iDtMs, const InputState& l_oIn, uint32_t l_uDevi
     // triggers below take their state (it changes none of it).
     bool l_bAnyKeyPressed = false;
     for (size_t l_nK = 0; l_nK < (size_t)Key::Count; l_nK++)
-        if (l_oIn.f_IsDown((Key)l_nK) && !m_arrKeyWas[l_nK] && (Key)l_nK != Key::F3) l_bAnyKeyPressed = true;
+        if (l_oIn.f_IsDown((Key)l_nK) && !m_arrKeyWas[l_nK] && (Key)l_nK != Key::F3 && (Key)l_nK != Key::F4 &&
+            (Key)l_nK != Key::Ctrl && (Key)l_nK != Key::Plus && (Key)l_nK != Key::Minus) l_bAnyKeyPressed = true;
     // Query each key exactly once per frame (keyPressed is an edge trigger with state).
     const bool l_bUpPressed    = f_KeyPressed(l_oIn, Key::Up)    || f_KeyPressed(l_oIn, Key::W);
     const bool l_bDownPressed  = f_KeyPressed(l_oIn, Key::Down)  || f_KeyPressed(l_oIn, Key::S);
@@ -319,6 +323,11 @@ bool GameSession::f_Frame(int l_iDtMs, const InputState& l_oIn, uint32_t l_uDevi
         if (!l_strChanged.empty()) l_oG.f_ShowNotice("UI reloaded: " + l_strChanged);
     }
     if (f_KeyPressed(l_oIn, Key::F8)) m_upRml->f_ToggleDebugger();     // RmlUi's element/style inspector
+    if (f_KeyPressed(l_oIn, Key::F4)) l_oG.f_SetPerfShown(!l_oG.f_PerfShown());   // the performance checker: anywhere, title included
+    {   // Ctrl + / Ctrl -: its text larger / smaller (each key read once a frame: f_KeyPressed is an edge)
+        const bool l_bPlus = f_KeyPressed(l_oIn, Key::Plus), l_bMinus = f_KeyPressed(l_oIn, Key::Minus);
+        if (l_oG.f_PerfShown() && l_oIn.f_IsDown(Key::Ctrl) && (l_bPlus || l_bMinus)) f_StepPerfFont(l_bPlus ? 1 : -1);
+    }
     if (l_oG.f_TitleOpen()) {
         if (l_bUpPressed)    l_oG.f_TitleMove(0, -1);
         if (l_bDownPressed)  l_oG.f_TitleMove(0,  1);
@@ -420,7 +429,7 @@ bool GameSession::f_Frame(int l_iDtMs, const InputState& l_oIn, uint32_t l_uDevi
             int l_iPhase = l_oIn.m_bMouseLeft ? (m_bMouseWasDown ? 1 : 0) : (m_bMouseWasDown ? 2 : -1);
             if (l_iPhase == 0 && !l_oG.f_FreePlayRunning())   // (a free mode's "anywhere" means a button too: 17 §5)
                 for (Rml::Element* l_pE = l_pCtx->GetHoverElement(); l_pE; l_pE = l_pE->GetParentNode())
-                    if (l_pE->IsClassSet("btn")) { l_iPhase = -1; break; }
+                    if (l_pE->IsClassSet(toms::ui::g_pszBtn)) { l_iPhase = -1; break; }
             if (l_iPhase >= 0) l_oG.f_BattlePointer(l_iPhase, l_fBx, l_fBy);
         }
         // A list follows a drag (RmlUi scrolls by the wheel and the scrollbar only; a finger has neither; 17 I4). A press
@@ -478,10 +487,12 @@ bool GameSession::f_Frame(int l_iDtMs, const InputState& l_oIn, uint32_t l_uDevi
         if (m_bShowDebugOverlay) l_oG.f_DrawDebugOverlay();
         l_oG.f_SetStylingSpikeVisible(false);
         if (m_bShowStylingSpike) l_oG.f_DrawStylingSpike();
+        if (l_oG.f_PerfShown()) f_DrawPerfWindow();
     }
+    toms::perf::Profiler::f_Get().f_SetShown(l_oG.f_PerfShown());
     // The title's 3D scene: its own views, run between the screen clear and the sprites.
     const bool l_bScene = m_upTitleScene && l_oG.f_TitleOpen();
-    if (l_bScene) m_upTitleScene->f_Draw(l_iDtMs / 1000.0, l_uDeviceW, l_uDeviceH);
+    if (l_bScene) { toms::perf::Scope l_oP(toms::perf::section::g_pszRenderTitleScene); m_upTitleScene->f_Draw(l_iDtMs / 1000.0, l_uDeviceW, l_uDeviceH); }
     // The battle's 3D stage (battle_stage.h, docs/gameplay/21): in the same views; the game stands its 2D fighters on it.
     // It is loaded in the background as soon as the floor is entered (BattleStage::f_Request), so a battle opens at once;
     // a battle before it is ready keeps the painted backdrop until it is.
@@ -489,15 +500,18 @@ bool GameSession::f_Frame(int l_iDtMs, const InputState& l_oIn, uint32_t l_uDevi
     const nlohmann::json* l_pStage = l_bScene ? nullptr : l_oG.f_Battle3DStage();
     const nlohmann::json l_jFloorStage = l_oG.f_Battle3DStageForFloor();
     if (l_pStage || !l_jFloorStage.is_null()) {
+        toms::perf::Scope l_oP(toms::perf::section::g_pszUpdateStage3D);
         if (!m_upBattleStage) m_upBattleStage = std::make_unique<BattleStage>();
         m_upBattleStage->f_Request(l_pStage ? *l_pStage : l_jFloorStage, m_strAssetDir, m_bBattle3DWait);
     }
     if (m_upBattleStage) {
+        toms::perf::Scope l_oP(toms::perf::section::g_pszUpdateStage3D);
         std::string l_strWhy;
         if (!m_upBattleStage->f_Poll(l_strWhy)) std::fprintf(stderr, "[battle3d] no 3D stage (the painted backdrop): %s\n", l_strWhy.c_str());
     }
     if (l_pStage && l_uDeviceW > 0 && l_uDeviceH > 0) {
         if (m_upBattleStage->f_ReadyFor(l_pStage->dump())) {
+            toms::perf::Scope l_oP(toms::perf::section::g_pszRenderStageBattle);
             const auto l_oCanvas = BgfxRenderer::f_ComputeAspectFitViewport(l_uDeviceW, l_uDeviceH, BgfxRenderer::m_uDesignW, BgfxRenderer::m_uDesignH);
             const Game::Battle3DCamera l_oGc = l_oG.f_Battle3DCamera(glm::vec2((float)l_uDeviceW, (float)l_uDeviceH),
                                                                      glm::vec4(l_oCanvas.m_fX, l_oCanvas.m_fY, l_oCanvas.m_fWidth, l_oCanvas.m_fHeight));
@@ -531,10 +545,14 @@ bool GameSession::f_Frame(int l_iDtMs, const InputState& l_oIn, uint32_t l_uDevi
     const nlohmann::json l_jWalk = l_bScene ? nlohmann::json() : l_oG.f_Walk3DStage();
     if (!l_jWalk.is_null()) {
         if (!m_upWalkStage) m_upWalkStage = std::make_unique<BattleStage>();
-        m_upWalkStage->f_Request(l_jWalk, m_strAssetDir, m_bBattle3DWait);
+        {
+            toms::perf::Scope l_oP(toms::perf::section::g_pszUpdateStage3D);
+            m_upWalkStage->f_Request(l_jWalk, m_strAssetDir, m_bBattle3DWait);
+        }
         std::string l_strWhy;
         if (!m_upWalkStage->f_Poll(l_strWhy)) std::fprintf(stderr, "[walk3d] the floor cannot load: %s\n", l_strWhy.c_str());
         if (!l_bStage && l_uDeviceW > 0 && l_uDeviceH > 0 && l_oG.f_WalkSceneShown() && m_upWalkStage->f_ReadyFor(l_jWalk.dump())) {
+            toms::perf::Scope l_oP(toms::perf::section::g_pszRenderStageWalk);
             const Game::Walk3DCamera l_oWc = l_oG.f_Walk3DCamera(l_iDtMs / 1000.0f);
             BattleStage::Camera l_oCam;
             l_oCam.m_v3Eye = l_oWc.m_v3Eye;
@@ -559,24 +577,147 @@ bool GameSession::f_Frame(int l_iDtMs, const InputState& l_oIn, uint32_t l_uDevi
     m_pRenderer->f_SetSceneViews(TitleScene::m_u16FirstView, l_bScene ? m_upTitleScene->f_ViewCount() : l_bStage ? m_upBattleStage->f_ViewCount() : l_bWalk ? m_upWalkStage->f_ViewCount() : 0);
     if (m_upUi) m_upUi->f_SetTitleScene(l_bScene);
     l_oG.f_Draw();   // the world -> BgfxRenderer::end(): views kViewClear + kViewGame
-    if (l_bStage) m_upBattleStage->f_DrawSprites(m_pRenderer->f_WorldGroups());   // the fighters' sprites, in the 3D scene
-    if (l_bWalk) m_upWalkStage->f_DrawSprites(m_pRenderer->f_WorldGroups());      // the map's sprites, standing on the floor
+    {
+        toms::perf::Scope l_oP(toms::perf::section::g_pszRenderStageSprites);
+        if (l_bStage) m_upBattleStage->f_DrawSprites(m_pRenderer->f_WorldGroups());   // the fighters' sprites, in the 3D scene
+        if (l_bWalk) m_upWalkStage->f_DrawSprites(m_pRenderer->f_WorldGroups());      // the map's sprites, standing on the floor
+    }
     {           // the UI over it, under ImGui
         const auto l_oVp = BgfxRenderer::f_ComputeAspectFitViewport(l_uDeviceW, l_uDeviceH, BgfxRenderer::m_uDesignW, BgfxRenderer::m_uDesignH);
         m_upRml->f_SetViewport(l_oVp.m_fX, l_oVp.m_fY, l_oVp.m_fWidth, l_oVp.m_fHeight);
-        f_ApplyLanguageFont();
-        m_upUi->f_Sync();
-        m_dUiTime += l_iDtMs / 1000.0;
-        m_upRml->f_Update(m_dUiTime);
+        {
+            toms::perf::Scope l_oP(toms::perf::section::g_pszUpdateUi);
+            f_ApplyLanguageFont();
+            m_upUi->f_Sync();
+            m_dUiTime += l_iDtMs / 1000.0;
+            toms::perf::Scope l_oPr(toms::perf::section::g_pszUpdateUiRml);
+            m_upRml->f_Update(m_dUiTime);
+        }
+        toms::perf::Scope l_oP(toms::perf::section::g_pszRenderUi);
         m_upRml->f_Render(BgfxRenderer::m_u16ViewUi);
     }
-    if (m_bDebugUi) m_oImgui.f_Render(BgfxRenderer::m_u16ViewOverlay);
+    if (m_bDebugUi) { toms::perf::Scope l_oP(toms::perf::section::g_pszRenderImgui); m_oImgui.f_Render(BgfxRenderer::m_u16ViewOverlay); }
     if (f_KeyPressed(l_oIn, Key::F3)) {   // anywhere, title included
         m_bShowHud = !m_bShowHud;
         f_BgfxHostSetHud(m_bShowHud);
     }
     f_DrawHud();
     return l_bKeepRunning;
+}
+
+// ---- the performance checker (docs/engine/25_PERFORMANCE.md) ----
+
+void GameSession::f_NameViews() {
+    using namespace toms::perf::view;
+    f_BgfxHostSetViewName(BgfxRenderer::m_u16ViewClear, g_pszClear);
+    f_BgfxHostSetViewName(BgfxRenderer::m_u16ViewGame, g_pszGame);
+    f_BgfxHostSetViewName(BgfxRenderer::m_u16ViewUi, g_pszUi);
+    f_BgfxHostSetViewName(BgfxRenderer::m_u16ViewTop, g_pszTop);
+    f_BgfxHostSetViewName(BgfxRenderer::m_u16ViewOverlay, g_pszImgui);
+    f_BgfxHostSetViewName(BgfxRenderer::m_u16ViewCapture, g_pszCapture);
+    for (int l_iI = 0; l_iI < GltfRenderer::m_iMaxShadowTiles; l_iI++)   // the 3D scene's views (title, battle, floor)
+        f_BgfxHostSetViewName((uint16_t)(TitleScene::m_u16FirstView + l_iI), g_pszShadow);
+    f_BgfxHostSetViewName((uint16_t)(TitleScene::m_u16FirstView + GltfRenderer::m_iMaxShadowTiles), g_pszOpaque);
+    f_BgfxHostSetViewName((uint16_t)(TitleScene::m_u16FirstView + GltfRenderer::m_iMaxShadowTiles + 1), g_pszBlended);
+    for (uint16_t l_u16I = BgfxRenderer::m_u16ViewLayerFirst; l_u16I < BgfxRenderer::m_u16ViewLayerFirst + 16; l_u16I++)
+        f_BgfxHostSetViewName(l_u16I, g_pszLayer);
+}
+
+// The F4 window's text: a step (10%) larger or smaller, 50% .. 300%.
+void GameSession::f_StepPerfFont(int l_iSteps) {
+    m_fPerfFontScale = std::clamp(std::round((m_fPerfFontScale + 0.1f * (float)l_iSteps) * 10.0f) / 10.0f, 0.5f, 3.0f);
+}
+
+void GameSession::f_EndPerfFrame() {
+    toms::perf::Profiler& l_oP = toms::perf::Profiler::f_Get();
+    if (m_pRenderer) toms::perf::f_Count(toms::perf::counter::g_pszSpriteQuads, (int64_t)m_pRenderer->f_LastDrawnQuads());
+    if (m_upGame) l_oP.f_SetContext(f_BgfxHostRendererName() + ", " + toms::f_ToString(m_upGame->f_CurrentState()) + ", stage " + m_upGame->f_CurrentStageId());
+    BgfxFrameStats l_oS;
+    f_BgfxHostFrameStats(l_oS);
+    toms::perf::GpuFrame l_oGpu;
+    l_oGpu.m_dGpuMs = l_oS.m_dGpuMs;
+    l_oGpu.m_uDrawCalls = l_oS.m_uDrawCalls;
+    l_oGpu.m_uComputeCalls = l_oS.m_uComputeCalls;
+    l_oGpu.m_u64Triangles = l_oS.m_u64Triangles;
+    for (const BgfxViewStats& l_oV : l_oS.m_vViews) l_oGpu.m_vViews.push_back({l_oV.m_pszName ? l_oV.m_pszName : "", l_oV.m_u16Id, l_oV.m_dGpuMs, l_oV.m_dCpuMs});
+    l_oP.f_EndFrame(l_oGpu);
+    f_BgfxHostSetProfiler(l_oP.f_WantGpuViews());
+}
+
+// F4: this second's frame rate and frame time, the GPU's draws and triangles, each section's time (update, render), the
+// counters, the GPU's time per view, the last frames as a graph; a dump on demand.
+void GameSession::f_DrawPerfWindow() {
+    toms::perf::Profiler& l_oP = toms::perf::Profiler::f_Get();
+    const auto& l_vHist = l_oP.f_History();
+    if (l_vHist.empty()) return;
+    const std::vector<const toms::perf::FrameRecord*> l_vSecond = l_oP.f_Recent(1.0);
+    double l_dSum = 0, l_dWorst = 0;
+    for (const toms::perf::FrameRecord* l_pR : l_vSecond) { l_dSum += l_pR->m_dFrameMs; l_dWorst = std::max(l_dWorst, l_pR->m_dFrameMs); }
+    const toms::perf::FrameRecord& l_oLast = l_vHist.back();
+    ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
+    // the window's size follows its text size when that changes (Ctrl + / Ctrl -); in between, drag it to any size
+    if (m_fPerfWindowScale != m_fPerfFontScale) {
+        ImGui::SetNextWindowSize(ImVec2(560.0f * m_fPerfFontScale, 640.0f * m_fPerfFontScale), m_fPerfWindowScale > 0.0f ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
+        m_fPerfWindowScale = m_fPerfFontScale;
+    }
+    bool l_bOpen = true;   // its ✕: a phone closes it there (or in Settings)
+    ImGui::Begin("Performance (F4)", &l_bOpen);
+    if (!l_bOpen && m_upGame) m_upGame->f_SetPerfShown(false);
+    ImGui::SetWindowFontScale(m_fPerfFontScale);
+    if (ImGui::SmallButton("A-")) f_StepPerfFont(-1);
+    ImGui::SameLine();
+    if (ImGui::SmallButton("A+")) f_StepPerfFont(1);
+    ImGui::SameLine();
+    ImGui::TextDisabled("text %.0f%%  (Ctrl + / Ctrl -)", m_fPerfFontScale * 100.0f);
+    const double l_dFps = l_dSum > 0 ? 1000.0 * (double)l_vSecond.size() / l_dSum : 0.0;
+    ImGui::TextColored(l_dFps < toms::perf::Profiler::m_iSlowFps ? ImVec4(1, 0.4f, 0.4f, 1) : ImVec4(0.6f, 1, 0.6f, 1),
+                       "%.1f fps   %.2f ms a frame (worst %.1f)   GPU %.2f ms", l_dFps,
+                       l_vSecond.empty() ? 0.0 : l_dSum / (double)l_vSecond.size(), l_dWorst, l_oLast.m_oGpu.m_dGpuMs);
+    ImGui::Text("draw calls %u   triangles %llu   compute %u", l_oLast.m_oGpu.m_uDrawCalls,
+                (unsigned long long)l_oLast.m_oGpu.m_u64Triangles, l_oLast.m_oGpu.m_uComputeCalls);
+    float l_arrGraph[toms::perf::Profiler::m_nHistory];
+    int l_iN = 0;
+    for (const toms::perf::FrameRecord& l_oR : l_vHist) l_arrGraph[l_iN++] = (float)l_oR.m_dFrameMs;
+    constexpr int l_iSlow = toms::perf::Profiler::m_iSlowFps;
+    char l_pszLine[96];
+    std::snprintf(l_pszLine, sizeof l_pszLine, "%.0f ms = %d fps", 1000.0 / l_iSlow, l_iSlow);
+    ImGui::PlotLines("frame ms", l_arrGraph, l_iN, 0, l_pszLine, 0.0f, 2000.0f / l_iSlow, ImVec2(0, 70 * m_fPerfFontScale));
+    bool l_bAuto = l_oP.f_AutoDump();
+    std::snprintf(l_pszLine, sizeof l_pszLine, "dump when under %d fps for 1 s (then %.0f s quiet)", l_iSlow, toms::perf::Profiler::m_dCooldownS);
+    if (ImGui::Checkbox(l_pszLine, &l_bAuto)) l_oP.f_SetAutoDump(l_bAuto);
+    ImGui::SameLine();
+    if (ImGui::Button("Dump now")) {
+        const std::string l_strPath = l_oP.f_Dump("asked (F4 window)", 2.0);
+        std::fprintf(stderr, "[perf] dumped: %s\n", l_strPath.c_str());
+    }
+    if (!l_oP.f_LastDumpPath().empty()) ImGui::TextDisabled("last dump: %s", l_oP.f_LastDumpPath().c_str());
+    auto l_fnSections = [&](const char* l_pszTitle, const char* l_pszPrefix) {
+        if (!ImGui::CollapsingHeader(l_pszTitle, ImGuiTreeNodeFlags_DefaultOpen)) return;
+        if (!ImGui::BeginTable(l_pszTitle, 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp)) return;
+        ImGui::TableSetupColumn("section"); ImGui::TableSetupColumn("avg ms"); ImGui::TableSetupColumn("max ms"); ImGui::TableSetupColumn("calls");
+        ImGui::TableHeadersRow();
+        for (const auto& l_oS : toms::perf::Profiler::f_Summarize(l_vSecond)) {
+            if (std::strncmp(l_oS.m_pszName, l_pszPrefix, std::strlen(l_pszPrefix)) != 0) continue;
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn(); ImGui::TextUnformatted(l_oS.m_pszName + std::strlen(l_pszPrefix));
+            ImGui::TableNextColumn(); ImGui::Text("%.3f", l_oS.m_dAvgMs);
+            ImGui::TableNextColumn(); ImGui::Text("%.3f", l_oS.m_dMaxMs);
+            ImGui::TableNextColumn(); ImGui::Text("%.1f", l_oS.m_dCallsPerFrame);
+        }
+        ImGui::EndTable();
+    };
+    l_fnSections("Update (CPU, the last second)", "update.");
+    l_fnSections("Render (CPU, the last second)", "render.");
+    l_fnSections("Frame (CPU, the last second)", "frame.");
+    if (ImGui::CollapsingHeader("Counters (a frame)", ImGuiTreeNodeFlags_DefaultOpen))
+        for (const auto& l_oC : toms::perf::Profiler::f_SummarizeCounters(l_vSecond))
+            ImGui::Text("%-24s avg %8.1f   max %lld", l_oC.m_pszName, l_oC.m_dAvg, (long long)l_oC.m_i64Max);
+    if (ImGui::CollapsingHeader("GPU views (the last frame)")) {
+        for (const toms::perf::GpuView& l_oV : l_oLast.m_oGpu.m_vViews)
+            ImGui::Text("%3u %-14s gpu %7.3f ms   cpu %7.3f ms", (unsigned)l_oV.m_u16Id, l_oV.m_strName.c_str(), l_oV.m_dGpuMs, l_oV.m_dCpuMs);
+    }
+    ImGui::TextDisabled("Sections nest: render.particles is inside render.game / render.battle.");
+    ImGui::End();
 }
 
 // FPS 60.0 (16.7 ms) | Direct3D 11 | sprites: GPU instancing | compute: yes | 1234 quads, 3 draws

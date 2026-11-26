@@ -1,4 +1,5 @@
 // gesture.cpp -- see gesture.h.
+#include "game_names.h"    // toms::state, toms::battle_event, ... (no hard-coded name)
 #include "gesture.h"
 
 #include <algorithm>
@@ -59,21 +60,21 @@ float f_TurnDeg(glm::vec2 l_v2A, glm::vec2 l_v2B) {
 }  // namespace
 
 std::vector<glm::vec2> f_ShapeCorners(const std::string& l_strName) {
-    if (l_strName == "pentagram") return f_Ring(5, -90.0f, 2);   // the top, then every second point: a star in one stroke
-    if (l_strName == "triangle") return {{0.5f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, {0.5f, 0.0f}};
-    if (l_strName == "square") return {{0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f}};
-    if (l_strName == "circle") return f_Ring(8, -90.0f, 1);
-    if (l_strName == "line") return {{0.0f, 0.5f}, {1.0f, 0.5f}};
-    if (l_strName == "v") return {{0.0f, 0.45f}, {0.35f, 1.0f}, {1.0f, 0.0f}};
-    if (l_strName == "m") return {{0.0f, 1.0f}, {0.2f, 0.0f}, {0.5f, 0.7f}, {0.8f, 0.0f}, {1.0f, 1.0f}};
+    if (l_strName == toms::gesture::g_pszPentagram) return f_Ring(5, -90.0f, 2);   // the top, then every second point: a star in one stroke
+    if (l_strName == toms::gesture::g_pszTriangle) return {{0.5f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, {0.5f, 0.0f}};
+    if (l_strName == toms::gesture::g_pszSquare) return {{0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f}};
+    if (l_strName == toms::gesture::g_pszCircle) return f_Ring(8, -90.0f, 1);
+    if (l_strName == toms::gesture::g_pszLine) return {{0.0f, 0.5f}, {1.0f, 0.5f}};
+    if (l_strName == toms::gesture::g_pszV) return {{0.0f, 0.45f}, {0.35f, 1.0f}, {1.0f, 0.0f}};
+    if (l_strName == toms::gesture::g_pszM) return {{0.0f, 1.0f}, {0.2f, 0.0f}, {0.5f, 0.7f}, {0.8f, 0.0f}, {1.0f, 1.0f}};
     return {};
 }
 
 int f_GestureTier(const std::string& l_strCue) {
-    if (l_strCue == "way") return 1;
-    if (l_strCue == "v") return 2;
-    if (l_strCue == "m") return 3;
-    if (l_strCue == "square") return 4;
+    if (l_strCue == toms::gesture::g_pszWay) return 1;
+    if (l_strCue == toms::gesture::g_pszV) return 2;
+    if (l_strCue == toms::gesture::g_pszM) return 3;
+    if (l_strCue == toms::gesture::g_pszSquare) return 4;
     return 0;
 }
 
@@ -82,15 +83,15 @@ bool f_MatchGesture(const std::vector<glm::vec2>& l_vStroke, const std::string& 
     const std::vector<glm::vec2> l_vP = f_StrokeParts(l_vStroke);
     std::vector<float> l_vT;
     for (size_t l_nK = 1; l_nK < l_vP.size(); l_nK++) l_vT.push_back(f_TurnDeg(l_vP[l_nK - 1], l_vP[l_nK]));
-    if (l_strCue == "v") {   // not a straight line, and not straight back along itself
+    if (l_strCue == toms::gesture::g_pszV) {   // not a straight line, and not straight back along itself
         return l_vP.size() == 2 && std::fabs(l_vT[0]) >= 50.0f - l_fExtraDeg && std::fabs(l_vT[0]) <= 172.0f + std::max(0.0f, l_fExtraDeg);
     }
-    if (l_strCue == "m") {
+    if (l_strCue == toms::gesture::g_pszM) {
         if (l_vP.size() != 4) return false;
         for (float l_fT : l_vT) if (std::fabs(l_fT) < 60.0f - l_fExtraDeg) return false;
         return l_vT[0] * l_vT[1] < 0.0f && l_vT[1] * l_vT[2] < 0.0f;
     }
-    if (l_strCue == "square") {
+    if (l_strCue == toms::gesture::g_pszSquare) {
         if (l_vP.size() != 4) return false;
         for (float l_fT : l_vT) if (std::fabs(std::fabs(l_fT) - 90.0f) > 35.0f + l_fExtraDeg) return false;
         if (l_vT[0] * l_vT[1] < 0.0f || l_vT[1] * l_vT[2] < 0.0f) return false;
@@ -101,7 +102,7 @@ bool f_MatchGesture(const std::vector<glm::vec2>& l_vStroke, const std::string& 
     return false;
 }
 
-bool f_ShapeClosed(const std::string& l_strName) { return l_strName == "pentagram" || l_strName == "triangle" || l_strName == "square" || l_strName == "circle"; }
+bool f_ShapeClosed(const std::string& l_strName) { return l_strName == toms::gesture::g_pszPentagram || l_strName == toms::gesture::g_pszTriangle || l_strName == toms::gesture::g_pszSquare || l_strName == toms::gesture::g_pszCircle; }
 
 glm::vec2 f_ShapePoint(const std::string& l_strName, glm::vec2 l_v2Centre, float l_fSize, float l_fT) {
     const std::vector<glm::vec2> l_vC = f_ShapeCorners(l_strName);
@@ -157,7 +158,7 @@ bool f_MatchStroke(const std::vector<glm::vec2>& l_vStroke, const std::string& l
         }
         return true;
     };
-    if (l_strShape == "circle")   // round: every point about as far from the middle (a triangle's corners stick out)
+    if (l_strShape == toms::gesture::g_pszCircle)   // round: every point about as far from the middle (a triangle's corners stick out)
         for (glm::vec2 l_v2P : l_vS)
             if (glm::length(l_v2P - glm::vec2(0.5f)) > 0.5f + l_fTolerance || glm::length(l_v2P - glm::vec2(0.5f)) < 0.5f - 1.5f * l_fTolerance) return false;
     if (!f_ShapeClosed(l_strShape)) {

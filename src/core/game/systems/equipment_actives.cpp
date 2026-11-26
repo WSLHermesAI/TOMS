@@ -1,3 +1,4 @@
+#include "field_keys.h"    // toms::field: every data field by its constant
 #include "equipment_actives.h"
 
 #include <algorithm>
@@ -18,12 +19,12 @@ std::map<std::string, ActiveDefinition> f_LoadActiveDefinitions(const std::strin
         for (auto l_oIt = l_jJ.begin(); l_oIt != l_jJ.end(); ++l_oIt) {
             const nlohmann::json& l_jV = l_oIt.value();
             ActiveDefinition l_oD;
-            l_oD.m_strId = l_jV.value("id", l_oIt.key());
-            l_oD.m_strKind = l_jV.value("kind", std::string());
-            l_oD.m_fDamageMultiplier = l_jV.value("damageMultiplier", 1.0f);
-            l_oD.m_iUsesPerBattle = l_jV.value("usesPerBattle", 1);
-            l_oD.m_fCooldownSeconds = l_jV.value("cooldownSeconds", 0.0f);
-            l_oD.m_iVfxFrames = l_jV.value("vfxFrames", 0);
+            l_oD.m_strId = l_jV.value(toms::field::g_pszId, l_oIt.key());
+            l_oD.m_strKind = l_jV.value(toms::field::g_pszKind, std::string());
+            l_oD.m_fDamageMultiplier = l_jV.value(toms::field::g_pszDamageMultiplier, 1.0f);
+            l_oD.m_iUsesPerBattle = l_jV.value(toms::field::g_pszUsesPerBattle, 1);
+            l_oD.m_fCooldownSeconds = l_jV.value(toms::field::g_pszCooldownSeconds, 0.0f);
+            l_oD.m_iVfxFrames = l_jV.value(toms::field::g_pszVfxFrames, 0);
             l_mapOut[l_oD.m_strId] = l_oD;
         }
     } catch (const std::exception&) {
@@ -41,8 +42,8 @@ std::map<std::string, std::vector<std::string>> f_LoadEquipmentActives(const std
         if (!l_jJ.is_object()) return l_mapOut;
         for (auto l_oIt = l_jJ.begin(); l_oIt != l_jJ.end(); ++l_oIt) {
             std::vector<std::string> l_vIds;
-            if (l_oIt.value().contains("actives") && l_oIt.value()["actives"].is_array())
-                for (const auto& l_jA : l_oIt.value()["actives"])
+            if (l_oIt.value().contains(toms::field::g_pszActives) && l_oIt.value()[toms::field::g_pszActives].is_array())
+                for (const auto& l_jA : l_oIt.value()[toms::field::g_pszActives])
                     if (l_jA.is_string()) l_vIds.push_back(l_jA.get<std::string>());
             l_mapOut[l_oIt.key()] = l_vIds;
         }

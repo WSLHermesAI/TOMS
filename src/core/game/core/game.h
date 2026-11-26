@@ -1,6 +1,8 @@
 // game.h — game logic: player, movement, auto combat, talking, stage flow, world drawing.
 // The UI (title, HUD, battle, menus, ...) is RmlUi: buildUiState()/uiEvent() below, ui/ui_state.h.
 #pragma once
+#include "text_keys.h"     // toms::text: every line of text by its key
+#include "game_names.h"   // toms::state, toms::battle_event, ... (no hard-coded name)
 #include <array>
 #include <memory>
 #include <vector>
@@ -143,7 +145,7 @@ struct CombatState : public Trackable {
         int m_iHp = 0;
         int m_iClockMs = 0;       // counts up to moveMs, then it does its move and starts again
         // Its next move (docs/gameplay/13 §6.1): shown over it with the time left (its intent).
-        std::string m_strMove = "strike";
+        std::string m_strMove = toms::move_kind::g_pszStrike;
         int m_iMoveMs = 4000;
         uint32_t m_uDanger = 0u;         // the cells its coming hit covers, lit (battle_cells.h); 0: not yet
         // A special attack's wind-up (battle.json feelFx "specialAttack", when its danger cells light): first its power-up
@@ -237,7 +239,7 @@ struct CombatState : public Trackable {
     // Damage numbers rising over a fighter: added when the hit lands (a safe timer after the attack starts).
     // A damage number or a word rising over a fighter. who: -1 the player, 0.. a foe. style: battle.rcss's .popup.<style>
     // (hit, great, perfect, miss, guard; the words parry, block, early, chain, move-<tier>); lift: words sit higher.
-    struct Popup { std::string m_strText; int m_iWho = 0; std::string m_strStyle = "hit"; int m_iLift = 0; int m_iAgeMs = 0; toms::Tween m_oRise; };
+    struct Popup { std::string m_strText; int m_iWho = 0; std::string m_strStyle = toms::pop_style::g_pszHit; int m_iLift = 0; int m_iAgeMs = 0; toms::Tween m_oRise; };
     std::vector<Popup> m_vPopups;
     // ---- the revamp (docs/gameplay/15_BATTLE_REVAMP.md) ----
     int m_iFrameDt = 0;               // the battle's time this frame: 0 in a hit stop, slower in the last hit's slow motion
@@ -556,6 +558,9 @@ public:
     // not change the existing boot flow (still auto-loads stage01), only adds an in-game hub.
     bool f_StageSelectOpen() const { return m_bStageSelectOpen; }
     void f_OpenStageSelect();
+    // Settings > Test: jump to any floor: the same list with no locks (for testing; the owner, 2026-11-26)
+    void f_OpenStageSelectTest();
+    bool f_StageSelectTest() const { return m_bStageSelectTest; }
     void f_CloseStageSelect();
     // Milestone 9: a maze's dead ends force backtracking through the same corridor
     // (Wilson's algorithm produces a tree -- there's no alternate route around
@@ -800,6 +805,11 @@ public:
     // combat log line). The caller decides when to show it (GameSession, F1); this just builds
     // the ImGui:: window content for the current frame.
     void f_DrawDebugOverlay();
+    void f_EndSprites();                                  // m_pRen->end(), timed (render.sprite_submit)
+    const std::string& f_CurrentStageId() const { return m_strCurStage; }   // the performance checker's "where"
+    // The performance checker's window (docs/engine/25): F4, or Settings > Performance checker (a phone has no F4)
+    bool f_PerfShown() const { return m_bPerfShown; }
+    void f_SetPerfShown(bool l_bOn) { m_bPerfShown = l_bOn; }
     // UI settings: applies uiFontScale_ to ImGui's global font scale. Call once per frame,
     // right after ImGui's NewFrame(), so it's in effect before anything else draws that frame.
     void f_ApplyUiSettings();
@@ -1433,7 +1443,7 @@ private:
         std::vector<std::string> m_vNext;
         nlohmann::json m_jRequires;              // null = none
         nlohmann::json m_jActions;               // null = none: story actions (story_actions.h), run once
-        std::string m_strTrigger = "step";         // "step" / "talk" / "chain" / "varChanged" (06 section 1)
+        std::string m_strTrigger = toms::event_trigger::g_pszStep;         // "step" / "talk" / "chain" / "varChanged" (06 section 1)
         std::string m_strTriggerVar;               // "varChanged": the variable
         bool m_bOnce = true;                     // false: repeatable, until maxTimes (0 = no limit); next wakes once
         int m_iMaxTimes = 0;
@@ -1636,7 +1646,7 @@ private:
     std::string f_MissionTitle(const std::string& l_strId) const;   // its title in the player's language (the id if none)
     // A villager freed in the tower goes home (docs/gameplay/23 §5): the run flag "home.<npc>" (the village's places with
     // that unlockFlag open, hub.json), a notice, and the quests waiting for it.
-    void f_RescueNpc(const std::string& l_strNpc, const std::string& l_strTextKey = "village.rescued");   // (its notice: a text key with {name})
+    void f_RescueNpc(const std::string& l_strNpc, const std::string& l_strTextKey = toms::text::g_pszVillageRescued);   // (its notice: a text key with {name})
     bool m_bDlgReplaced = false;   // a choice's action opened another dialogue (startDialogue): the choice must not close it
     // Milestone 8: grants a Completed mission's reward and flips it to Claimed. Idempotent --
     // a no-op unless the tracker's state is exactly Completed, so re-triggering this (e.g. the
@@ -1662,6 +1672,8 @@ private:
     void f_PushNotification(const std::string& l_strMsg);
     // Milestone 5: Stage Select hub state.
     bool m_bStageSelectOpen = false;
+    bool m_bPerfShown = false;          // the performance checker's window (the host draws it: game_session.cpp)
+    bool m_bStageSelectTest = false;   // opened from Settings > Test: every floor can be picked
     // Milestone 8: `preview` is the recommended-stats blurb shown in Stage Select, authored per
     // stage JSON's optional top-level "preview" string (empty for a file that doesn't set one).
     struct StageInfo { std::string m_strId; std::string m_strName; int m_iIndex = 0; std::string m_strPreview;

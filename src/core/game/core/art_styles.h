@@ -10,6 +10,7 @@
 // tools/art/make_variant.py --install writes both. The original art is always style 0 (id "").
 // The chosen style is GameSettings::artStyle; Game::loadAssets reads it once at startup.
 #pragma once
+#include "field_keys.h"    // toms::field: every data field by its constant
 #include <json.hpp>
 #include <string>
 #include <vector>
@@ -24,16 +25,16 @@ struct ArtStyle {
 // Style 0 is always the original art; styles.json entries follow (bad/duplicate ids are skipped).
 inline std::vector<ArtStyle> f_ArtStylesFromJson(const nlohmann::json& l_jJ) {
     std::vector<ArtStyle> l_vOut{ArtStyle{}};
-    if (!l_jJ.is_object() || !l_jJ.contains("styles") || !l_jJ["styles"].is_array()) return l_vOut;
-    for (const auto& l_jS : l_jJ["styles"]) {
+    if (!l_jJ.is_object() || !l_jJ.contains(toms::field::g_pszStyles) || !l_jJ[toms::field::g_pszStyles].is_array()) return l_vOut;
+    for (const auto& l_jS : l_jJ[toms::field::g_pszStyles]) {
         if (!l_jS.is_object()) continue;
-        std::string l_strId = l_jS.value("id", std::string());
+        std::string l_strId = l_jS.value(toms::field::g_pszId, std::string());
         // a folder name only: no path separators or "..", so a style can never point outside styles/
         if (l_strId.empty() || l_strId.find_first_of("/\\.") != std::string::npos) continue;
         bool l_bDup = false;
         for (const auto& l_oO : l_vOut) l_bDup = l_bDup || l_oO.m_strId == l_strId;
         if (l_bDup) continue;
-        l_vOut.push_back(ArtStyle{l_strId, l_jS.contains("name") ? l_jS["name"] : nlohmann::json(l_strId)});
+        l_vOut.push_back(ArtStyle{l_strId, l_jS.contains(toms::field::g_pszName) ? l_jS[toms::field::g_pszName] : nlohmann::json(l_strId)});
     }
     return l_vOut;
 }

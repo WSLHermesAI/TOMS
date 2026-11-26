@@ -55,6 +55,9 @@ private:
     std::map<std::string, std::filesystem::file_time_type> m_mapStamps;   // reloadIfChanged: each UI file's last write
     bool m_bStamped = false;
     std::string m_strPlayerSelKey;  // the player menu's selection last frame (scroll a new one into view)
+    static constexpr size_t m_nScreens = 16;
+    bool m_arrWasShown[m_nScreens] = {};   // each screen on show last frame (f_Sync dirties a shown or just closed one)
+    bool m_bDirtiedOnce = false;           // the first frame dirties every screen
     int m_iScrollFrames = 0;      // frames left to bring it into view (it is laid out a frame later)
 };
 

@@ -109,6 +109,13 @@ find_package(Python3 COMPONENTS Interpreter QUIET)
 if(Python3_Interpreter_FOUND)
     add_test(NAME data.ui_font_covers_text COMMAND Python3::Interpreter "${CMAKE_SOURCE_DIR}/tools/make_ui_font.py" --check)
     set_tests_properties(data.ui_font_covers_text PROPERTIES LABELS unit TIMEOUT 60 SKIP_RETURN_CODE 77)
+    # No hard-coded name in the game's C++: every status, clip, battle event, ... by its constant in game_names.h
+    # (the owner, 2026-11-26; docs/project/12_CPP_NAMING.md §7).
+    add_test(NAME lint.game_names COMMAND Python3::Interpreter "${CMAKE_SOURCE_DIR}/tools/naming/check_names.py")
+    set_tests_properties(lint.game_names PROPERTIES LABELS unit TIMEOUT 60)
+    # text_keys.h is text.json's (toms::text: every line of text by its key; run tools/make_text_keys.py after changing it)
+    add_test(NAME data.text_keys_up_to_date COMMAND Python3::Interpreter "${CMAKE_SOURCE_DIR}/tools/make_text_keys.py" --check)
+    set_tests_properties(data.text_keys_up_to_date PROPERTIES LABELS unit TIMEOUT 60)
 endif()
 
 # ---- screenshot smoke tests -------------------------------------------------------------------

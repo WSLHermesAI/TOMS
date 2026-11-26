@@ -1,6 +1,9 @@
 // game_inventory.cpp — items: data/items.json lookups (the all-item file), pickup and use effects,
 // level-ups (data/stats.json), the player's attributes and owned gear. The screens that show them
 // are the player menu's tabs (game_player_menu.cpp). Split out of game.cpp 2026-09-13.
+#include "res_keys.h"
+#include "text_keys.h"     // toms::text: every line of text by its key
+#include "field_keys.h"    // toms::field: every data field by its constant
 #include "game_internal.h"
 #include "player_menu_rules.h"   // toms::levelUps
 
@@ -21,47 +24,47 @@ const nlohmann::json* Game::f_ItemDef(const std::string& l_strId) const {
 std::string Game::f_ItemType(const std::string& l_strId) const {
     const nlohmann::json* l_pD = f_ItemDef(l_strId);
     if (!l_pD) return std::string();
-    return l_pD->value("type", l_strId.rfind("key_", 0) == 0 ? std::string("key") : std::string("consumable"));
+    return l_pD->value(toms::field::g_pszType, l_strId.rfind("key_", 0) == 0 ? std::string("key") : std::string("consumable"));
 }
 
 bool Game::f_ItemImportant(const std::string& l_strId) const {
     const nlohmann::json* l_pD = f_ItemDef(l_strId);
-    return l_pD && l_pD->value("important", false);
+    return l_pD && l_pD->value(toms::field::g_pszImportant, false);
 }
 
 int Game::f_ItemPrice(const std::string& l_strId) const {
     const nlohmann::json* l_pD = f_ItemDef(l_strId);
-    return l_pD ? l_pD->value("price", -1) : -1;
+    return l_pD ? l_pD->value(toms::field::g_pszPrice, -1) : -1;
 }
 
 const nlohmann::json& Game::f_ItemStats(const std::string& l_strId) const {
     static const nlohmann::json l_jNone = nlohmann::json::object();
     const nlohmann::json* l_pD = f_ItemDef(l_strId);
     if (!l_pD) return l_jNone;
-    if (l_pD->contains("stats") && (*l_pD)["stats"].is_object()) return (*l_pD)["stats"];
-    if (l_pD->contains("effect") && (*l_pD)["effect"].is_object()) return (*l_pD)["effect"];   // the pre-2026-10 shape
+    if (l_pD->contains(toms::field::g_pszStats) && (*l_pD)[toms::field::g_pszStats].is_object()) return (*l_pD)[toms::field::g_pszStats];
+    if (l_pD->contains(toms::field::g_pszEffect) && (*l_pD)[toms::field::g_pszEffect].is_object()) return (*l_pD)[toms::field::g_pszEffect];   // the pre-2026-10 shape
     return l_jNone;
 }
 
 std::string Game::f_ItemName(const std::string& l_strId) const {
     const nlohmann::json* l_pD = f_ItemDef(l_strId);
-    if (!l_pD || !l_pD->contains("name")) return l_strId;
-    std::string l_strS = f_Txt((*l_pD)["name"]);
+    if (!l_pD || !l_pD->contains(toms::field::g_pszName)) return l_strId;
+    std::string l_strS = f_Txt((*l_pD)[toms::field::g_pszName]);
     return l_strS.empty() ? l_strId : l_strS;
 }
 
 std::string Game::f_ItemDesc(const std::string& l_strId) const {
     const nlohmann::json* l_pD = f_ItemDef(l_strId);
-    if (!l_pD || !l_pD->contains("desc")) return "";
-    return f_Txt((*l_pD)["desc"]);
+    if (!l_pD || !l_pD->contains(toms::field::g_pszDesc)) return "";
+    return f_Txt((*l_pD)[toms::field::g_pszDesc]);
 }
 
 // ---------- effects ----------
 
 void Game::f_ApplyStats(const std::string& l_strId, const nlohmann::json& l_jEff) {
     auto l_fnNum = [&](const char* l_pszK) { return l_jEff.contains(l_pszK) && l_jEff[l_pszK].is_number() ? l_jEff[l_pszK].get<int>() : 0; };
-    if (l_jEff.contains("hp"))    m_oPl.m_iHp    = std::min(f_EffectiveMaxHp(), m_oPl.m_iHp + l_fnNum("hp"));
-    if (l_jEff.contains("maxhp")) { m_oPl.m_iMaxhp += l_fnNum("maxhp"); m_oPl.m_iHp += l_fnNum("maxhp"); }
+    if (l_jEff.contains(toms::field::g_pszHp))    m_oPl.m_iHp    = std::min(f_EffectiveMaxHp(), m_oPl.m_iHp + l_fnNum("hp"));
+    if (l_jEff.contains(toms::field::g_pszMaxhp)) { m_oPl.m_iMaxhp += l_fnNum("maxhp"); m_oPl.m_iHp += l_fnNum("maxhp"); }
     m_oPl.m_iAtk += l_fnNum("atk");
     m_oPl.m_iDef += l_fnNum("def");
     m_oPl.m_iGold += l_fnNum("gold");
@@ -69,10 +72,10 @@ void Game::f_ApplyStats(const std::string& l_strId, const nlohmann::json& l_jEff
     m_oPl.m_iKeyBlue   += l_fnNum("key_blue");
     m_oPl.m_iKeyRed    += l_fnNum("key_red");
     for (const AttrDef& l_oA : m_vAttrDefs) m_oPl.m_mapAttrs[l_oA.m_strId] += l_fnNum(l_oA.m_strId.c_str());
-    if (l_jEff.contains("exp")) f_GainExp(l_fnNum("exp"));
-    if (l_jEff.contains("warp")) {
+    if (l_jEff.contains(toms::field::g_pszExp)) f_GainExp(l_fnNum("exp"));
+    if (l_jEff.contains(toms::field::g_pszWarp)) {
         const nlohmann::json* l_pD = f_ItemDef(l_strId);
-        std::string l_strDst = l_pD ? l_pD->value("warp_to", std::string("")) : std::string("");
+        std::string l_strDst = l_pD ? l_pD->value(toms::field::g_pszWarpTo, std::string("")) : std::string("");
         if (!l_strDst.empty() && toms::f_VfsExists(f_PathFor(toms::pattern::g_pszStage, l_strDst)))
             f_LoadStage(l_strDst);
     }
@@ -88,7 +91,7 @@ void Game::f_ReceiveItem(const std::string& l_strId) {
     const nlohmann::json* l_pD = f_ItemDef(l_strId);
     if (!l_pD) { m_oPl.m_vInv.push_back(l_strId); return; }
     const std::string l_strType = f_ItemType(l_strId);
-    if (l_strType == "key" || l_pD->value("autoUse", false)) f_ApplyItem(l_strId);
+    if (l_strType == "key" || l_pD->value(toms::field::g_pszAutoUse, false)) f_ApplyItem(l_strId);
     else if (f_IsGearType(l_strType)) { f_OwnGear(l_strId, false); m_oAudio.f_Play(toms::key::g_pszSfxGetItem); }
     else m_oPl.m_vInv.push_back(l_strId);
 }
@@ -114,7 +117,7 @@ void Game::f_GainExp(int l_iExp) {
         for (const AttrDef& l_oA : m_vAttrDefs) m_oPl.m_mapAttrs[l_oA.m_strId] += l_oA.m_iPerLevel;
         m_oPl.m_iAttrPoints += toms::f_PointsForLevel(m_oLevelUp.m_vPoints, l_iReached, m_oLevelUp.m_iFreePoints);   // placed on the Status tab
     }
-    if (l_iGained > 0) f_PushNotification(m_oLocale.f_Tr("battle.levelup") + std::to_string(m_oPl.m_iLv));
+    if (l_iGained > 0) f_PushNotification(m_oLocale.f_Tr(toms::text::g_pszBattleLevelup) + std::to_string(m_oPl.m_iLv));
 }
 
 void Game::f_ResetAttrs() {
@@ -164,7 +167,7 @@ void Game::f_ConfirmAttrPoints() {
     m_mapAttrDraft.clear();
     f_MarkProgressDirty();
     f_SaveCurrentRun();   // kept now, not at the next autosave
-    f_PushNotification(m_oLocale.f_Tr("status.points_saved"));
+    f_PushNotification(m_oLocale.f_Tr(toms::text::g_pszStatusPointsSaved));
     m_oAudio.f_Play(toms::key::g_pszSfxGetItem);
 }
 

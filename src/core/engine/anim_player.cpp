@@ -1,4 +1,5 @@
 // anim_player.cpp -- see anim_player.h.
+#include "perf.h"   // toms::perf: the performance checker (F4)
 #include "anim_player.h"
 
 #include <algorithm>
@@ -828,6 +829,8 @@ void AnimPlayer::f_Seek(double l_dSeconds) {
 }
 
 void AnimPlayer::f_Update(int l_iDtMs) {
+    toms::perf::Scope l_oPerf(toms::perf::section::g_pszUpdateAnim);
+    toms::perf::f_Count(toms::perf::counter::g_pszAnimPlayers, 1);
     if (!m_pClip) return;
     const double l_dD = m_pClip->f_Duration();
     const double l_dTot = f_Total();

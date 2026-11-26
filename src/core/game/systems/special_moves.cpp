@@ -1,4 +1,5 @@
 // skills.cpp -- see special_moves.h.
+#include "field_keys.h"    // toms::field: every data field by its constant
 #include "special_moves.h"
 
 #include "gesture.h"
@@ -12,27 +13,27 @@ namespace {
 
 ShowBeat f_BeatFromJson(const nlohmann::json& l_jJ) {
     ShowBeat l_oB;
-    l_oB.m_iAtMs = std::max(0, l_jJ.value("at", 0));
-    l_oB.m_strWhat = l_jJ.value("do", std::string());
-    l_oB.m_strFx = l_jJ.value("fx", std::string());
-    l_oB.m_strCorner = l_jJ.value("corner", std::string());
-    l_oB.m_strShape = l_jJ.value("shape", std::string());
-    l_oB.m_strClip = l_jJ.value("clip", std::string());
-    l_oB.m_strText = l_jJ.value("text", std::string());
-    l_oB.m_strOn = l_jJ.value("on", std::string());
-    l_oB.m_iMs = std::max(0, l_jJ.value("ms", 0));
-    l_oB.m_iCount = std::max(0, l_jJ.value("count", 0));
-    l_oB.m_iGapMs = std::max(0, l_jJ.value("gapMs", 100));
-    l_oB.m_fValue = l_jJ.value("value", 0.0f);
-    l_oB.m_fZoom = std::max(1.0f, l_jJ.value("zoom", 1.0f));
-    l_oB.m_strMove = l_jJ.value("move", std::string());
-    l_oB.m_fDeg = l_jJ.value("deg", 30.0f);
-    l_oB.m_strWhen = l_jJ.value("when", std::string());
-    l_oB.m_fSpeed = std::clamp(l_jJ.value("speed", 1.0f), 0.1f, 10.0f);
-    l_oB.m_strProjectile = l_jJ.value("projectile", std::string());
-    l_oB.m_strImpact = l_jJ.value("impact", std::string());
-    l_oB.m_iFlightMs = std::max(1, l_jJ.value("flightMs", l_oB.m_iFlightMs));
-    l_oB.m_iExtra = std::clamp(l_jJ.value("extra", 0), 0, 8);
+    l_oB.m_iAtMs = std::max(0, l_jJ.value(toms::field::g_pszAt, 0));
+    l_oB.m_strWhat = l_jJ.value(toms::field::g_pszDo, std::string());
+    l_oB.m_strFx = l_jJ.value(toms::field::g_pszFx, std::string());
+    l_oB.m_strCorner = l_jJ.value(toms::field::g_pszCorner, std::string());
+    l_oB.m_strShape = l_jJ.value(toms::field::g_pszShape, std::string());
+    l_oB.m_strClip = l_jJ.value(toms::field::g_pszClip, std::string());
+    l_oB.m_strText = l_jJ.value(toms::field::g_pszText, std::string());
+    l_oB.m_strOn = l_jJ.value(toms::field::g_pszOn, std::string());
+    l_oB.m_iMs = std::max(0, l_jJ.value(toms::field::g_pszMs, 0));
+    l_oB.m_iCount = std::max(0, l_jJ.value(toms::field::g_pszCount, 0));
+    l_oB.m_iGapMs = std::max(0, l_jJ.value(toms::field::g_pszGapMs, 100));
+    l_oB.m_fValue = l_jJ.value(toms::field::g_pszValue, 0.0f);
+    l_oB.m_fZoom = std::max(1.0f, l_jJ.value(toms::field::g_pszZoom, 1.0f));
+    l_oB.m_strMove = l_jJ.value(toms::field::g_pszMove, std::string());
+    l_oB.m_fDeg = l_jJ.value(toms::field::g_pszDeg, 30.0f);
+    l_oB.m_strWhen = l_jJ.value(toms::field::g_pszWhen, std::string());
+    l_oB.m_fSpeed = std::clamp(l_jJ.value(toms::field::g_pszSpeed, 1.0f), 0.1f, 10.0f);
+    l_oB.m_strProjectile = l_jJ.value(toms::field::g_pszProjectile, std::string());
+    l_oB.m_strImpact = l_jJ.value(toms::field::g_pszImpact, std::string());
+    l_oB.m_iFlightMs = std::max(1, l_jJ.value(toms::field::g_pszFlightMs, l_oB.m_iFlightMs));
+    l_oB.m_iExtra = std::clamp(l_jJ.value(toms::field::g_pszExtra, 0), 0, 8);
     return l_oB;
 }
 
@@ -65,36 +66,36 @@ SpecialMoveTable f_SpecialMovesFromJson(const nlohmann::json& l_jJ) {
         const nlohmann::json& l_jE = l_oIt.value();
         SpecialMove l_oS;
         l_oS.m_strId = l_oIt.key();
-        l_oS.m_strName = l_jE.value("name", std::string());
-        l_oS.m_strWeapon = l_jE.value("weapon", std::string());
-        l_oS.m_strUse = l_jE.value("use", l_oS.m_strUse);
-        l_oS.m_strPrompt = l_jE.value("prompt", std::string());
-        l_oS.m_fDamage = std::max(0.0f, l_jE.value("damage", l_oS.m_fDamage));
-        if (l_jE.contains("play") && l_jE["play"].is_object()) {
-            const nlohmann::json& l_jP = l_jE["play"];
-            l_oS.m_oPlay.m_eType = f_PlayTypeFromString(l_jP.value("kind", std::string("drawShape")));
-            l_oS.m_oPlay.m_fHitDamage = std::max(0.0f, l_jP.value("hitDamage", l_oS.m_oPlay.m_fHitDamage));
-            l_oS.m_oPlay.m_strShape = l_jP.value("shape", l_oS.m_oPlay.m_strShape);
-            l_oS.m_oPlay.m_iPoints = std::max(1, l_jP.value("points", l_oS.m_oPlay.m_iPoints));
-            l_oS.m_oPlay.m_iTimeMs = std::max(500, l_jP.value("timeMs", l_oS.m_oPlay.m_iTimeMs));
-            l_oS.m_oPlay.m_fSize = std::max(40.0f, l_jP.value("size", l_oS.m_oPlay.m_fSize));
-            l_oS.m_oPlay.m_fCornerRadius = std::max(8.0f, l_jP.value("cornerRadius", l_oS.m_oPlay.m_fCornerRadius));
-            l_oS.m_oPlay.m_iMinHits = std::max(0, l_jP.value("minHits", 0));
-            l_oS.m_oPlay.m_strGuideFx = l_jP.value("guideFx", std::string());
-            l_oS.m_oPlay.m_iGuidePeriodMs = std::max(200, l_jP.value("guidePeriodMs", l_oS.m_oPlay.m_iGuidePeriodMs));
-            l_oS.m_oPlay.m_fRingY = std::clamp(l_jP.value("ringY", l_oS.m_oPlay.m_fRingY), -1.0f, 1.0f);
-            l_oS.m_oPlay.m_strAround = l_jP.value("around", l_oS.m_oPlay.m_strAround);
-            if (l_jP.contains("cues") && l_jP["cues"].is_array())
-                for (const auto& l_jC : l_jP["cues"]) if (l_jC.is_string()) l_oS.m_oPlay.m_vCues.push_back(l_jC.get<std::string>());
+        l_oS.m_strName = l_jE.value(toms::field::g_pszName, std::string());
+        l_oS.m_strWeapon = l_jE.value(toms::field::g_pszWeapon, std::string());
+        l_oS.m_strUse = l_jE.value(toms::field::g_pszUse, l_oS.m_strUse);
+        l_oS.m_strPrompt = l_jE.value(toms::field::g_pszPrompt, std::string());
+        l_oS.m_fDamage = std::max(0.0f, l_jE.value(toms::field::g_pszDamage, l_oS.m_fDamage));
+        if (l_jE.contains(toms::field::g_pszPlay) && l_jE[toms::field::g_pszPlay].is_object()) {
+            const nlohmann::json& l_jP = l_jE[toms::field::g_pszPlay];
+            l_oS.m_oPlay.m_eType = f_PlayTypeFromString(l_jP.value(toms::field::g_pszKind, std::string("drawShape")));
+            l_oS.m_oPlay.m_fHitDamage = std::max(0.0f, l_jP.value(toms::field::g_pszHitDamage, l_oS.m_oPlay.m_fHitDamage));
+            l_oS.m_oPlay.m_strShape = l_jP.value(toms::field::g_pszShape, l_oS.m_oPlay.m_strShape);
+            l_oS.m_oPlay.m_iPoints = std::max(1, l_jP.value(toms::field::g_pszPoints, l_oS.m_oPlay.m_iPoints));
+            l_oS.m_oPlay.m_iTimeMs = std::max(500, l_jP.value(toms::field::g_pszTimeMs, l_oS.m_oPlay.m_iTimeMs));
+            l_oS.m_oPlay.m_fSize = std::max(40.0f, l_jP.value(toms::field::g_pszSize, l_oS.m_oPlay.m_fSize));
+            l_oS.m_oPlay.m_fCornerRadius = std::max(8.0f, l_jP.value(toms::field::g_pszCornerRadius, l_oS.m_oPlay.m_fCornerRadius));
+            l_oS.m_oPlay.m_iMinHits = std::max(0, l_jP.value(toms::field::g_pszMinHits, 0));
+            l_oS.m_oPlay.m_strGuideFx = l_jP.value(toms::field::g_pszGuideFx, std::string());
+            l_oS.m_oPlay.m_iGuidePeriodMs = std::max(200, l_jP.value(toms::field::g_pszGuidePeriodMs, l_oS.m_oPlay.m_iGuidePeriodMs));
+            l_oS.m_oPlay.m_fRingY = std::clamp(l_jP.value(toms::field::g_pszRingY, l_oS.m_oPlay.m_fRingY), -1.0f, 1.0f);
+            l_oS.m_oPlay.m_strAround = l_jP.value(toms::field::g_pszAround, l_oS.m_oPlay.m_strAround);
+            if (l_jP.contains(toms::field::g_pszCues) && l_jP[toms::field::g_pszCues].is_array())
+                for (const auto& l_jC : l_jP[toms::field::g_pszCues]) if (l_jC.is_string()) l_oS.m_oPlay.m_vCues.push_back(l_jC.get<std::string>());
         }
         if (l_oS.m_oPlay.m_eType == PlayType::eDRAW_SHAPE) {   // a shape's steps: its corners after the first (a pentagram: 5)
             const int l_iN = (int)f_ShapeCorners(l_oS.m_oPlay.m_strShape).size();
             if (l_iN > 1) l_oS.m_oPlay.m_iPoints = l_iN - 1;
         }
         if ((f_IsSwipePlay(l_oS.m_oPlay.m_eType) || l_oS.m_oPlay.m_eType == PlayType::eSPIN_CIRCLE) && !l_oS.m_oPlay.m_vCues.empty()) l_oS.m_oPlay.m_iPoints = (int)l_oS.m_oPlay.m_vCues.size();
-        l_oS.m_vDemo = f_BeatsFromJson(l_jE, "demo");
-        l_oS.m_vStep = f_BeatsFromJson(l_jE, "step");
-        l_oS.m_vFinish = f_BeatsFromJson(l_jE, "finish");
+        l_oS.m_vDemo = f_BeatsFromJson(l_jE, toms::field::g_pszDemo);
+        l_oS.m_vStep = f_BeatsFromJson(l_jE, toms::field::g_pszStep);
+        l_oS.m_vFinish = f_BeatsFromJson(l_jE, toms::field::g_pszFinish);
         l_oT.m_mapSkills[l_oS.m_strId] = std::move(l_oS);
     }
     return l_oT;

@@ -1,3 +1,6 @@
+#include "text_keys.h"     // toms::text: every line of text by its key
+#include "field_keys.h"    // toms::field: every data field by its constant
+#include "game_names.h"   // toms::state, toms::battle_event, ... (no hard-coded name)
 #include <algorithm>
 // game_combat.cpp — battle logic: start/finish, and Battle v2's action resolution
 // (tap-to-freeze attack/defense bars, the enemy clock, super attack). Split out of game.cpp 2026-09-13.
@@ -82,10 +85,10 @@ void Game::f_StartCombat(const EnemyInst& l_oE, const std::vector<EnemyInst>& l_
     m_uBattleFxSeed = 0;
     m_vFoeRigs.clear();        // the new monsters start idle (updateMonsterRig)
     m_vFoeRigs.resize(m_oCs.m_vFoes.size());
-    m_oCs.m_strLog = m_oLocale.f_Tr("battle.start");
+    m_oCs.m_strLog = m_oLocale.f_Tr(toms::text::g_pszBattleStart);
     std::string l_strIds;
     for (const CombatState::Foe& l_oF : m_oCs.m_vFoes) l_strIds += (l_strIds.empty() ? "" : " + ") + l_oF.m_oEnemy.m_strId;
-    f_BattleEvent("start", -1, -1, (int)m_oCs.m_vFoes.size(), l_strIds + " (" + toms::f_PaceName(m_oCs.m_ePace) + ")");
+    f_BattleEvent(toms::battle_event::g_pszStart, -1, -1, (int)m_oCs.m_vFoes.size(), l_strIds + " (" + toms::f_PaceName(m_oCs.m_ePace) + ")");
     for (size_t l_nI = 0; l_nI < m_oCs.m_vFoes.size(); l_nI++) f_ChooseFoeMove((int)l_nI);
     // the monsters' first events: before the battle (its first line), then its start (docs/gameplay/13 §4.4)
     const std::string l_strStartLog = m_oCs.m_strLog;
@@ -101,36 +104,36 @@ void Game::f_StartCombat(const EnemyInst& l_oE, const std::vector<EnemyInst>& l_
         f_RunFoeEvents((int)l_nI, l_oC);
     }
     if (const auto l_itT = m_mapEnemyTpl.find(m_oCs.m_vFoes[0].m_oEnemy.m_strId);   // a boss: its introduction first
-        m_oCs.m_bActive && l_itT != m_mapEnemyTpl.end() && l_itT->second.value("intro", false))
+        m_oCs.m_bActive && l_itT != m_mapEnemyTpl.end() && l_itT->second.value(toms::field::g_pszIntro, false))
         f_StartBossIntro(0);
 }
 
 void Game::f_StartBossIntro(int l_iFoe) {
-    const nlohmann::json l_jC = f_FeelFx().value("bossIntro", nlohmann::json::object());
-    if (l_jC.value("off", false) || l_iFoe < 0 || l_iFoe >= (int)m_oCs.m_vFoes.size()) return;
+    const nlohmann::json l_jC = f_FeelFx().value(toms::field::g_pszBossIntro, nlohmann::json::object());
+    if (l_jC.value(toms::field::g_pszOff, false) || l_iFoe < 0 || l_iFoe >= (int)m_oCs.m_vFoes.size()) return;
     // armed: the battle waits (f_CellIntroOn) until its first frame is drawn, then startDelayMs (the owner, 2026-11-14:
     // loading takes time, so the opening starts 0.3 s after the first frame is on screen; f_BattleFrame counts it)
     m_oCs.m_iBossIntroFoe = l_iFoe;
-    m_oCs.m_iBossIntroWaitMs = std::max(0, l_jC.value("startDelayMs", 300));
+    m_oCs.m_iBossIntroWaitMs = std::max(0, l_jC.value(toms::field::g_pszStartDelayMs, 300));
     m_oCs.m_iBossIntroFrames = 0;
 }
 
 void Game::f_BeginBossIntro(int l_iFoe) {
-    const nlohmann::json l_jC = f_FeelFx().value("bossIntro", nlohmann::json::object());
+    const nlohmann::json l_jC = f_FeelFx().value(toms::field::g_pszBossIntro, nlohmann::json::object());
     if (l_iFoe < 0 || l_iFoe >= (int)m_oCs.m_vFoes.size()) return;
-    const int l_iMs = std::max(800, l_jC.value("ms", 3400));
+    const int l_iMs = std::max(800, l_jC.value(toms::field::g_pszMs, 3400));
     m_oCs.m_iBossIntroMs = m_oCs.m_iBossIntroMsMax = l_iMs;
-    f_BattleEvent("bossIntro", l_iFoe, -1, l_iMs, m_oCs.m_vFoes[(size_t)l_iFoe].m_oEnemy.m_strId);
-    f_FoeLook(l_iFoe, l_jC.value("clip", std::string("special")));   // its pose (its own clip, else the shared one)
-    f_PlayBattleFx(l_jC.value("fx", std::string("boss_intro")), l_iFoe, l_jC.value("fxAtMs", 0));   // (its own: the rule)
-    f_PlayFoeSound(l_iFoe, l_jC.value("sound", std::string("sfx.boss_intro")));
+    f_BattleEvent(toms::battle_event::g_pszBossIntro, l_iFoe, -1, l_iMs, m_oCs.m_vFoes[(size_t)l_iFoe].m_oEnemy.m_strId);
+    f_FoeLook(l_iFoe, l_jC.value(toms::field::g_pszClip, std::string(toms::state::g_pszSpecial)));   // its pose (its own clip, else the shared one)
+    f_PlayBattleFx(l_jC.value(toms::field::g_pszFx, std::string("boss_intro")), l_iFoe, l_jC.value(toms::field::g_pszFxAtMs, 0));   // (its own: the rule)
+    f_PlayFoeSound(l_iFoe, l_jC.value(toms::field::g_pszSound, std::string(toms::key::g_pszSfxBossIntro)));
     const bool l_bReduced = m_oSettings.m_bReduceEffects;   // the camera: low and close on it, for the whole introduction
-    m_oCs.m_fCamZoom = l_bReduced ? 1.0f + (l_jC.value("zoom", 1.7f) - 1.0f) * 0.4f : std::max(1.01f, l_jC.value("zoom", 1.7f));
+    m_oCs.m_fCamZoom = l_bReduced ? 1.0f + (l_jC.value(toms::field::g_pszZoom, 1.7f) - 1.0f) * 0.4f : std::max(1.01f, l_jC.value(toms::field::g_pszZoom, 1.7f));
     m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = l_iMs;
     m_oCs.m_iCamOn = l_iFoe;
     m_oCs.m_strCamMove = "low";
     m_oCs.m_fCamPan = 0.0f;
-    m_oCs.m_fCamDeg = l_jC.value("deg", 10.0f);
+    m_oCs.m_fCamDeg = l_jC.value(toms::field::g_pszDeg, 10.0f);
 }
 
 // ---- the battle's rules (docs/gameplay/13; battle_rules.h) ----
@@ -185,7 +188,7 @@ int Game::f_BattleFrame(int l_iDtMs) {
             const int l_iFoe = m_oCs.m_iBossIntroFoe;
             m_oCs.m_iBossIntroFoe = -1;
             // first it comes out of the dark (the owner, 2026-11-23), then its banner (f_BeginBossIntro)
-            const int l_iReveal = std::max(0, f_FeelFx().value("bossIntro", nlohmann::json::object()).value("revealMs", 1400));
+            const int l_iReveal = std::max(0, f_FeelFx().value(toms::field::g_pszBossIntro, nlohmann::json::object()).value(toms::field::g_pszRevealMs, 1400));
             if (l_iReveal > 0) { m_oCs.m_iRevealMs = m_oCs.m_iRevealMsMax = l_iReveal; m_oCs.m_iRevealFoe = l_iFoe; }
             else f_BeginBossIntro(l_iFoe);
         }
@@ -216,7 +219,7 @@ int Game::f_BattleFrame(int l_iDtMs) {
             m_oCs.m_bCellsShown = true;   // they pop up, and the player has a moment to read them
             m_oCs.m_iCellsPopMs = 0;
             m_oArena.m_iTutorialPopMs = 0;
-            f_FeelMoment("phase");
+            f_FeelMoment(toms::moment::g_pszPhase);
         }
         l_iBdt = 0;
     } else if (m_oCs.m_iHitStopMs > 0) {
@@ -322,7 +325,7 @@ void Game::f_SetBattlePace(const std::string& l_strPace) {
     m_oCs.m_ePace = l_eP;
     m_oCs.m_oAtkBar.m_bCooling = m_oCs.m_oDefBar.m_bCooling = false;   // switching: no wait carried over
     m_oCs.m_fStamina = (float)m_oPaceSettings.m_iStaminaMax;
-    f_BattleEvent("pace", -1, -1, 0, toms::f_PaceName(l_eP));
+    f_BattleEvent(toms::battle_event::g_pszPace, -1, -1, 0, toms::f_PaceName(l_eP));
 }
 
 int Game::f_FoeBreakPoints(int l_iFoe) const {
@@ -361,9 +364,9 @@ void Game::f_TutorialGoTo(int l_iStep) {
 void Game::f_TutorialEvent(const std::string& l_strType, int l_iWho, const std::string& l_strDetail) {
     const toms::TutorialStep* l_pStep = f_TutorialStepNow();
     if (!l_pStep || l_pStep->m_strDoneOn.empty()) return;
-    const bool l_bDone = l_pStep->m_strDoneOn == "heroHit" ? l_strType == "hit" && l_iWho < 0
-                       : l_pStep->m_strDoneOn == "dodge" ? l_strType == "dodge"
-                       : l_pStep->m_strDoneOn == "guarded" ? l_strType == "parry" || (l_strType == "hit" && l_iWho >= 0 && l_strDetail.find(" guarded") != std::string::npos)
+    const bool l_bDone = l_pStep->m_strDoneOn == toms::tutorial_done::g_pszHeroHit ? l_strType == toms::battle_event::g_pszHit && l_iWho < 0
+                       : l_pStep->m_strDoneOn == toms::tutorial_done::g_pszDodge ? l_strType == toms::battle_event::g_pszDodge
+                       : l_pStep->m_strDoneOn == toms::tutorial_done::g_pszGuarded ? l_strType == toms::battle_event::g_pszParry || (l_strType == toms::battle_event::g_pszHit && l_iWho >= 0 && l_strDetail.find(" guarded") != std::string::npos)
                        : false;
     if (!l_bDone || ++m_oArena.m_iTutorialCount < l_pStep->m_iCount) return;
     if (l_pStep->m_bOnce) m_setTutorialSeen.insert(m_oArena.m_iTutorialStep);
@@ -374,7 +377,7 @@ void Game::f_StartCellIntro(int l_iFoe) {
     m_oCs.m_bCellIntroStarted = true;
     m_oCs.m_iCellIntroMs = m_oCellRules.m_iIntroMs;
     if (m_oCellRules.m_iIntroMs <= 0) { m_oCs.m_bCellsShown = true; return; }
-    f_BattleEvent("cellIntro", l_iFoe, -1, m_oCellRules.m_iIntroMs);
+    f_BattleEvent(toms::battle_event::g_pszCellIntro, l_iFoe, -1, m_oCellRules.m_iIntroMs);
     f_FoeLook(l_iFoe, m_oCellRules.m_strIntroClip);
     f_PlayBattleFx(m_oCellRules.m_strIntroFx, l_iFoe);
     const bool l_bReduced = m_oSettings.m_bReduceEffects;
@@ -384,8 +387,8 @@ void Game::f_StartCellIntro(int l_iFoe) {
     m_oCs.m_strCamMove.clear();
     m_oCs.m_fCamPan = 0.0f;
     if (!m_oCellRules.m_strIntroText.empty())
-        f_ShowBanner(f_TrParam(m_oLocale.f_Tr(m_oCellRules.m_strIntroText), "name", m_oCs.m_vFoes[(size_t)l_iFoe].m_oEnemy.m_strName), "line", m_oCellRules.m_iIntroUiMs);
-    f_FeelMoment("phase");
+        f_ShowBanner(f_TrParam(m_oLocale.f_Tr(m_oCellRules.m_strIntroText), toms::field::g_pszName, m_oCs.m_vFoes[(size_t)l_iFoe].m_oEnemy.m_strName), toms::banner::g_pszLine, m_oCellRules.m_iIntroUiMs);
+    f_FeelMoment(toms::moment::g_pszPhase);
 }
 
 void Game::f_InitFoeMp(CombatState::Foe& l_oF) const {
@@ -414,7 +417,7 @@ void Game::f_ChooseFoeMove(int l_iFoe) {
     const toms::MoveDef& l_oM = m_oMoves.f_Get(l_oF.m_strMove);
     l_oF.m_iMoveMs = l_oM.m_iChargeMs > 0 ? std::max(300, (int)std::lround(l_oM.m_iChargeMs * l_oF.m_fIntervalMul))   // its wind-up in ms (16 §4.1)
                               : std::max(300, (int)std::lround(std::max(500, l_oF.m_oEnemy.m_iAtkIntervalMs) * l_oM.m_fTime * l_oF.m_fIntervalMul));
-    if (!l_oF.m_oEnemy.m_vMoves.empty()) f_BattleEvent("intent", l_iFoe, -1, l_oF.m_iMoveMs, l_oF.m_strMove);   // (a plain striker: always the same)
+    if (!l_oF.m_oEnemy.m_vMoves.empty()) f_BattleEvent(toms::battle_event::g_pszIntent, l_iFoe, -1, l_oF.m_iMoveMs, l_oF.m_strMove);   // (a plain striker: always the same)
 }
 
 void Game::f_StepFoes(int l_iDtMs) {
@@ -455,7 +458,7 @@ void Game::f_StepFoes(int l_iDtMs) {
             const toms::MoveDef& l_oMv = m_oMoves.f_Get(l_oF.m_strMove);
             if (!l_oMv.m_strShape.empty() && !l_oF.m_uDanger && l_oF.m_iMoveMs - l_oF.m_iClockMs <= m_oCellRules.m_iWarnMs) {
                 l_oF.m_uDanger = toms::f_PickDanger(m_oCellRules, l_oMv.m_strShape, m_oCs.m_iHeroCell, std::uniform_real_distribution<float>(0.0f, 1.0f)(m_oMoveRng), m_oCs.m_iCellCols, m_oCs.m_iCellRows);
-                f_BattleEvent("danger", l_iFoe, -1, (int)l_oF.m_uDanger, l_oMv.m_strShape);
+                f_BattleEvent(toms::battle_event::g_pszDanger, l_iFoe, -1, (int)l_oF.m_uDanger, l_oMv.m_strShape);
                 const bool l_bIntro = !m_oCs.m_bCellIntroStarted;
                 if (l_bIntro) f_StartCellIntro(l_iFoe);   // the fight's first: a moment of its own
                 f_Battle3DDangerShot(l_iFoe, l_bIntro);
@@ -465,16 +468,16 @@ void Game::f_StepFoes(int l_iDtMs) {
         if (l_oF.m_bPowered && l_oF.m_uDanger) {   // charging: energy drawn in, again and again
             l_oF.m_iChargeFxMs -= l_iDtMs;
             if (l_oF.m_iChargeFxMs <= 0) {
-                const nlohmann::json l_jS = f_FeelFx().value("specialAttack", nlohmann::json::object());
-                l_oF.m_iChargeFxMs = std::max(100, l_jS.value("chargeFxEveryMs", 450));
-                f_PlayBattleFx(l_jS.value("chargeFx", std::string("monster_charge")), l_iFoe);
+                const nlohmann::json l_jS = f_FeelFx().value(toms::field::g_pszSpecialAttack, nlohmann::json::object());
+                l_oF.m_iChargeFxMs = std::max(100, l_jS.value(toms::field::g_pszChargeFxEveryMs, 450));
+                f_PlayBattleFx(l_jS.value(toms::field::g_pszChargeFx, std::string("monster_charge")), l_iFoe);
             }
         }
         if (l_oF.m_iClockMs >= l_oF.m_iMoveMs) {
             l_oF.m_iClockMs = 0;
             const toms::MoveDef& l_oFire = m_oMoves.f_Get(l_oF.m_strMove);
             const bool l_bIntro = l_oF.m_bPowered && l_oFire.m_strGuardPlay.empty() &&   // (a special guard play brings its own, in its move's finish)
-                                  !f_FeelFx().value("specialAttack", nlohmann::json::object()).value("intro", nlohmann::json::object()).value("off", false);
+                                  !f_FeelFx().value(toms::field::g_pszSpecialAttack, nlohmann::json::object()).value(toms::field::g_pszIntro, nlohmann::json::object()).value(toms::field::g_pszOff, false);
             if (l_bIntro) f_StartFoeIntro(l_iFoe);   // its introduction first; it lands after (f_BattleFrame)
             else f_ResolveEnemyClockFire(l_iFoe);
         }
@@ -489,12 +492,12 @@ void Game::f_StunFoe(int l_iFoe, int l_iMs, float l_fDamage, bool l_bBroken) {
     l_oF.m_bBroken = l_oF.m_bBroken || l_bBroken;
     l_oF.m_iPowerMs = 0;          // stunned: its power-up is lost (it powers up again when its danger lights again)
     l_oF.m_bPowered = false;
-    f_BattleEvent(l_bBroken ? "break" : "stagger", l_iFoe, -1, l_iMs);
-    f_FoeLook(l_iFoe, l_bBroken ? "broken" : "parry");
+    f_BattleEvent(l_bBroken ? toms::battle_event::g_pszBreak : toms::battle_event::g_pszStagger, l_iFoe, -1, l_iMs);
+    f_FoeLook(l_iFoe, l_bBroken ? toms::state::g_pszBroken : toms::state::g_pszParry);
     if (l_bBroken) {   // the break is a moment (15 §3.4): the banner, the screen dims, a stop and a shake
-        f_ShowBanner(m_oLocale.f_Tr("battle.word_break"), "break", 1300);
+        f_ShowBanner(m_oLocale.f_Tr(toms::text::g_pszBattleWordBreak), toms::banner::g_pszBreak, 1300);
         m_oCs.m_iDimMs = m_oSettings.m_bReduceEffects ? 0 : 700;
-        f_FeelMoment("break");
+        f_FeelMoment(toms::moment::g_pszBreak);
     }
 }
 
@@ -520,7 +523,7 @@ void Game::f_RunFoeEvents(int l_iFoe, const toms::EventCheck& l_oCheck) {
     std::vector<toms::MonsterEvent>& l_vEvs = m_oCs.m_vFoes[(size_t)l_iFoe].m_vEvents;
     std::vector<nlohmann::json> l_vTodo;   // copied: an action may replace the monster and its events
     for (int l_iIdx : toms::f_FireMonsterEvents(l_vEvs, l_oCheck)) {
-        f_BattleEvent("event", l_iFoe, -1, l_iIdx, l_oCheck.m_strOn);
+        f_BattleEvent(toms::battle_event::g_pszEvent, l_iFoe, -1, l_iIdx, l_oCheck.m_strOn);
         l_vTodo.push_back(l_vEvs[(size_t)l_iIdx].m_jActions);
     }
     for (const nlohmann::json& l_jA : l_vTodo) {
@@ -535,30 +538,30 @@ void Game::f_RunFoeActions(int l_iFoe, const nlohmann::json& l_jActions) {
     for (const nlohmann::json& l_jA : l_jActions) {
         if (!l_jA.is_object() || !m_oCs.m_bActive) continue;
         CombatState::Foe& l_oF = m_oCs.m_vFoes[(size_t)l_iFoe];
-        if (l_jA.contains("say") && l_jA["say"].is_string()) {
-            const std::string l_strS = l_jA["say"].get<std::string>();
+        if (l_jA.contains(toms::field::g_pszSay) && l_jA[toms::field::g_pszSay].is_string()) {
+            const std::string l_strS = l_jA[toms::field::g_pszSay].get<std::string>();
             m_oCs.m_strLog = m_oLocale.f_Has(l_strS) ? m_oLocale.f_Tr(l_strS) : l_strS;
-            f_ShowBanner(m_oCs.m_strLog, "line", 2000);   // a phase change is a moment too (15 §3.5)
-            f_FeelMoment("phase");
-            f_BattleEvent("say", l_iFoe, -1, 0, l_strS);
+            f_ShowBanner(m_oCs.m_strLog, toms::banner::g_pszLine, 2000);   // a phase change is a moment too (15 §3.5)
+            f_FeelMoment(toms::moment::g_pszPhase);
+            f_BattleEvent(toms::battle_event::g_pszSay, l_iFoe, -1, 0, l_strS);
         }
-        if (l_jA.contains("stat") && l_jA["stat"].is_string()) {
-            const std::string l_strSt = l_jA["stat"].get<std::string>();
-            const float l_fMul = l_jA.value("mul", 1.0f);
-            const int l_iAdd = l_jA.value("add", 0);
+        if (l_jA.contains(toms::field::g_pszStat) && l_jA[toms::field::g_pszStat].is_string()) {
+            const std::string l_strSt = l_jA[toms::field::g_pszStat].get<std::string>();
+            const float l_fMul = l_jA.value(toms::field::g_pszMul, 1.0f);
+            const int l_iAdd = l_jA.value(toms::field::g_pszAdd, 0);
             if (l_strSt == "atk") { l_oF.m_fAtkMul *= l_fMul; l_oF.m_oEnemy.m_iAtk += l_iAdd; }
             else if (l_strSt == "def") { l_oF.m_fDefMul *= l_fMul; l_oF.m_oEnemy.m_iDef += l_iAdd; }
             else if (l_strSt == "interval") { l_oF.m_fIntervalMul *= l_fMul; l_oF.m_oEnemy.m_iAtkIntervalMs += l_iAdd; }
-            f_BattleEvent("stat", l_iFoe, -1, l_iAdd, l_strSt + " x" + std::to_string(l_fMul).substr(0, 4));
+            f_BattleEvent(toms::battle_event::g_pszStat, l_iFoe, -1, l_iAdd, l_strSt + " x" + std::to_string(l_fMul).substr(0, 4));
         }
-        if (l_jA.contains("transformInto") && l_jA["transformInto"].is_string()) {
+        if (l_jA.contains(toms::field::g_pszTransformInto) && l_jA[toms::field::g_pszTransformInto].is_string()) {
             EnemyInst l_oN;
-            const std::string l_strId = l_jA["transformInto"].get<std::string>();
+            const std::string l_strId = l_jA[toms::field::g_pszTransformInto].get<std::string>();
             if (f_EnemyFromData(l_strId, nlohmann::json::object(), l_oN)) {
                 const std::string l_strFrom = l_oF.m_oEnemy.m_strName;
                 const float l_fShare = (float)std::max(0, l_oF.m_iHp) / (float)std::max(1, l_oF.m_oEnemy.m_iHp);
                 l_oN.m_iX = l_oF.m_oEnemy.m_iX; l_oN.m_iY = l_oF.m_oEnemy.m_iY; l_oN.m_strMapId = l_oF.m_oEnemy.m_strMapId;
-                l_oF.m_iHp = l_jA.value("hp", std::string("keepShare")) == "full" ? l_oN.m_iHp
+                l_oF.m_iHp = l_jA.value(toms::field::g_pszHp, std::string("keepShare")) == "full" ? l_oN.m_iHp
                                                                         : std::max(1, (int)std::ceil(l_fShare * (float)l_oN.m_iHp));
                 l_oF.m_oEnemy = l_oN;
                 l_oF.m_vEvents = toms::f_MonsterEventsFromJson(l_oN.m_jEvents);
@@ -567,19 +570,19 @@ void Game::f_RunFoeActions(int l_iFoe, const nlohmann::json& l_jActions) {
                 l_oF.m_iClockMs = 0;
                 f_ChooseFoeMove(l_iFoe);
                 if (l_iFoe < (int)m_vFoeRigs.size()) m_vFoeRigs[(size_t)l_iFoe].m_strState.clear();   // the new monster's clips
-                f_FoeLook(l_iFoe, "transform");
-                m_oCs.m_strLog = f_TrParam(f_TrParam(m_oLocale.f_Tr("battle.transform"), "name", l_strFrom), "to", l_oN.m_strName);
-                f_BattleEvent("transform", l_iFoe, -1, l_oF.m_iHp, l_strId);
+                f_FoeLook(l_iFoe, toms::state::g_pszTransform);
+                m_oCs.m_strLog = f_TrParam(f_TrParam(m_oLocale.f_Tr(toms::text::g_pszBattleTransform), toms::field::g_pszName, l_strFrom), toms::field::g_pszTo, l_oN.m_strName);
+                f_BattleEvent(toms::battle_event::g_pszTransform, l_iFoe, -1, l_oF.m_iHp, l_strId);
             }
         }
-        if (l_jA.contains("heal")) {
-            const int l_iHeal = (int)std::lround(l_oF.m_oEnemy.m_iHp * l_jA.value("heal", 0.0f) / 100.0f);
+        if (l_jA.contains(toms::field::g_pszHeal)) {
+            const int l_iHeal = (int)std::lround(l_oF.m_oEnemy.m_iHp * l_jA.value(toms::field::g_pszHeal, 0.0f) / 100.0f);
             l_oF.m_iHp = std::min(l_oF.m_oEnemy.m_iHp, std::max(0, l_oF.m_iHp) + l_iHeal);
-            f_BattleEvent("heal", l_iFoe, -1, l_iHeal);
+            f_BattleEvent(toms::battle_event::g_pszHeal, l_iFoe, -1, l_iHeal);
         }
-        if (l_jA.contains("summon") && l_jA["summon"].is_string() && (int)m_oCs.m_vFoes.size() < toms::g_iMaxFoes) {
+        if (l_jA.contains(toms::field::g_pszSummon) && l_jA[toms::field::g_pszSummon].is_string() && (int)m_oCs.m_vFoes.size() < toms::g_iMaxFoes) {
             EnemyInst l_oN;
-            if (f_EnemyFromData(l_jA["summon"].get<std::string>(), nlohmann::json::object(), l_oN)) {
+            if (f_EnemyFromData(l_jA[toms::field::g_pszSummon].get<std::string>(), nlohmann::json::object(), l_oN)) {
                 CombatState::Foe l_oS;
                 l_oS.m_oEnemy = l_oN;
                 l_oS.m_iHp = l_oN.m_iHp;
@@ -588,23 +591,23 @@ void Game::f_RunFoeActions(int l_iFoe, const nlohmann::json& l_jActions) {
                 m_oCs.m_vFoes.push_back(l_oS);
                 m_vFoeRigs.resize(m_oCs.m_vFoes.size());
                 f_ChooseFoeMove((int)m_oCs.m_vFoes.size() - 1);
-                m_oCs.m_strLog = f_TrParam(m_oLocale.f_Tr("battle.summon"), "name", l_oN.m_strName);
-                f_BattleEvent("summon", l_iFoe, (int)m_oCs.m_vFoes.size() - 1, 0, l_oN.m_strId);
+                m_oCs.m_strLog = f_TrParam(m_oLocale.f_Tr(toms::text::g_pszBattleSummon), toms::field::g_pszName, l_oN.m_strName);
+                f_BattleEvent(toms::battle_event::g_pszSummon, l_iFoe, (int)m_oCs.m_vFoes.size() - 1, 0, l_oN.m_strId);
             }
         }
-        if (l_jA.value("flee", false)) {
+        if (l_jA.value(toms::field::g_pszFlee, false)) {
             CombatState::Foe& l_oG = m_oCs.m_vFoes[(size_t)l_iFoe];
             l_oG.m_bFled = true;
             l_oG.m_iHp = 0;
             l_bFled = true;
-            m_oCs.m_strLog = f_TrParam(m_oLocale.f_Tr("battle.flee"), "name", l_oG.m_oEnemy.m_strName);
-            f_BattleEvent("flee", l_iFoe, -1);
+            m_oCs.m_strLog = f_TrParam(m_oLocale.f_Tr(toms::text::g_pszBattleFlee), toms::field::g_pszName, l_oG.m_oEnemy.m_strName);
+            f_BattleEvent(toms::battle_event::g_pszFlee, l_iFoe, -1);
         }
-        if (l_jA.contains("anim") && l_jA["anim"].is_string()) f_FoeLook(l_iFoe, l_jA["anim"].get<std::string>());
-        if (l_jA.contains("fx") && l_jA["fx"].is_string()) f_PlayBattleFx(l_jA["fx"].get<std::string>(), l_iFoe);
-        if (l_jA.contains("sound") && l_jA["sound"].is_string()) m_oAudio.f_Play(l_jA["sound"].get<std::string>());
-        if (l_jA.contains("flag") && l_jA["flag"].is_string()) toms::f_SetStoryFlag(m_oMeta, l_jA["flag"].get<std::string>());
-        if (l_jA.contains("dialogue"))   // (not yet: a dialogue in the middle of a battle)
+        if (l_jA.contains(toms::field::g_pszAnim) && l_jA[toms::field::g_pszAnim].is_string()) f_FoeLook(l_iFoe, l_jA[toms::field::g_pszAnim].get<std::string>());
+        if (l_jA.contains(toms::field::g_pszFx) && l_jA[toms::field::g_pszFx].is_string()) f_PlayBattleFx(l_jA[toms::field::g_pszFx].get<std::string>(), l_iFoe);
+        if (l_jA.contains(toms::field::g_pszSound) && l_jA[toms::field::g_pszSound].is_string()) m_oAudio.f_Play(l_jA[toms::field::g_pszSound].get<std::string>());
+        if (l_jA.contains(toms::field::g_pszFlag) && l_jA[toms::field::g_pszFlag].is_string()) toms::f_SetStoryFlag(m_oMeta, l_jA[toms::field::g_pszFlag].get<std::string>());
+        if (l_jA.contains(toms::field::g_pszDialogue))   // (not yet: a dialogue in the middle of a battle)
             std::fprintf(stderr, "[battle] %s: a \"dialogue\" action is not supported yet; use \"say\"\n",
                          m_oCs.m_vFoes[(size_t)l_iFoe].m_oEnemy.m_strId.c_str());
     }
@@ -617,7 +620,7 @@ void Game::f_RunFoeActions(int l_iFoe, const nlohmann::json& l_jActions) {
 void Game::f_DebugForceWin() {
     if (!m_oCs.m_bActive) return;
     for (CombatState::Foe& l_oF : m_oCs.m_vFoes) l_oF.m_iHp = std::min(l_oF.m_iHp, 0);
-    f_BattleEvent("win", -1, -1, 0, "by hand");
+    f_BattleEvent(toms::battle_event::g_pszWin, -1, -1, 0, "by hand");
     f_FinishCombatWin();
 }
 
@@ -627,26 +630,26 @@ void Game::f_DebugUpdateMonster(const std::string& l_strId, const nlohmann::json
         CombatState::Foe& l_oF = m_oCs.m_vFoes[l_nI];
         if (l_oF.m_oEnemy.m_strId != l_strId || l_oF.f_Down()) continue;
         EnemyInst& l_oE = l_oF.m_oEnemy;
-        if (l_jM.contains("name")) l_oE.m_strName = m_oLocale.f_Field(l_jM["name"]);
-        const int l_iMaxHp = std::max(1, l_jM.value("hp", l_oE.m_iHp));
+        if (l_jM.contains(toms::field::g_pszName)) l_oE.m_strName = m_oLocale.f_Field(l_jM[toms::field::g_pszName]);
+        const int l_iMaxHp = std::max(1, l_jM.value(toms::field::g_pszHp, l_oE.m_iHp));
         if (l_iMaxHp != l_oE.m_iHp) {   // its HP keeps its share of the new top
             l_oF.m_iHp = std::max(1, (int)std::lround((double)l_oF.m_iHp * l_iMaxHp / std::max(1, l_oE.m_iHp)));
             l_oE.m_iHp = l_iMaxHp;
         }
-        l_oE.m_iAtk = l_jM.value("atk", l_oE.m_iAtk);
-        l_oE.m_iDef = l_jM.value("def", l_oE.m_iDef);
-        l_oE.m_iExp = l_jM.value("exp", l_oE.m_iExp);
-        l_oE.m_iWeaponExp = std::max(0, l_jM.value("weaponExp", l_oE.m_iWeaponExp));
-        l_oE.m_iGold = l_jM.value("gold", l_oE.m_iGold);
-        l_oE.m_strLook = l_jM.value("look", std::string("monster"));
-        l_oE.m_iBreakPoints = l_jM.value("break", 0);
-        l_oE.m_vMoves = toms::f_MoveChoicesFromJson(l_jM.value("moves", nlohmann::json::array()));   // from its next move on
-        if (l_jM.contains("mp")) {   // its MP's rules; it keeps the MP it has (up to the new max)
-            l_oE.m_jMp = l_jM["mp"];
+        l_oE.m_iAtk = l_jM.value(toms::field::g_pszAtk, l_oE.m_iAtk);
+        l_oE.m_iDef = l_jM.value(toms::field::g_pszDef, l_oE.m_iDef);
+        l_oE.m_iExp = l_jM.value(toms::field::g_pszExp, l_oE.m_iExp);
+        l_oE.m_iWeaponExp = std::max(0, l_jM.value(toms::field::g_pszWeaponExp, l_oE.m_iWeaponExp));
+        l_oE.m_iGold = l_jM.value(toms::field::g_pszGold, l_oE.m_iGold);
+        l_oE.m_strLook = l_jM.value(toms::field::g_pszLook, std::string("monster"));
+        l_oE.m_iBreakPoints = l_jM.value(toms::field::g_pszBreak, 0);
+        l_oE.m_vMoves = toms::f_MoveChoicesFromJson(l_jM.value(toms::field::g_pszMoves, nlohmann::json::array()));   // from its next move on
+        if (l_jM.contains(toms::field::g_pszMp)) {   // its MP's rules; it keeps the MP it has (up to the new max)
+            l_oE.m_jMp = l_jM[toms::field::g_pszMp];
             l_oF.m_oMp = toms::f_MonsterMpFor(m_oMonsterMp, l_oE.m_jMp);
             l_oF.m_fMp = std::min(l_oF.m_fMp, (float)l_oF.m_oMp.m_iMax);
         }
-        const int l_iInterval = l_jM.value("atk_interval_ms", 4000);
+        const int l_iInterval = l_jM.value(toms::field::g_pszAtkIntervalMs, 4000);
         if (l_iInterval != l_oE.m_iAtkIntervalMs) {   // the wind-up under way keeps how far along it is
             const double l_dDone = l_oF.m_iMoveMs > 0 ? std::clamp((double)l_oF.m_iClockMs / l_oF.m_iMoveMs, 0.0, 1.0) : 0.0;
             l_oE.m_iAtkIntervalMs = l_iInterval;
@@ -654,9 +657,9 @@ void Game::f_DebugUpdateMonster(const std::string& l_strId, const nlohmann::json
             l_oF.m_iMoveMs = std::max(300, (int)std::lround(std::max(500, l_oE.m_iAtkIntervalMs) * l_oMv.m_fTime * l_oF.m_fIntervalMul));
             if (l_oF.m_iClockMs >= 0) l_oF.m_iClockMs = (int)std::lround(l_dDone * l_oF.m_iMoveMs);
         }
-        const nlohmann::json l_jEv = l_jM.value("events", nlohmann::json::array());
+        const nlohmann::json l_jEv = l_jM.value(toms::field::g_pszEvents, nlohmann::json::array());
         if (l_jEv != l_oE.m_jEvents) { l_oE.m_jEvents = l_jEv; l_oF.m_vEvents = toms::f_MonsterEventsFromJson(l_jEv); }   // fresh: none fired yet
-        f_BattleEvent("edited", (int)l_nI, -1, l_oE.m_iAtkIntervalMs, "by the editor");
+        f_BattleEvent(toms::battle_event::g_pszEdited, (int)l_nI, -1, l_oE.m_iAtkIntervalMs, "by the editor");
     }
 }
 
@@ -664,7 +667,7 @@ void Game::f_DebugFireFoeEvent(int l_iFoe, int l_iEvent) {
     if (!m_oCs.m_bActive || l_iFoe < 0 || l_iFoe >= (int)m_oCs.m_vFoes.size()) return;
     const std::vector<toms::MonsterEvent>& l_vEvs = m_oCs.m_vFoes[(size_t)l_iFoe].m_vEvents;
     if (l_iEvent < 0 || l_iEvent >= (int)l_vEvs.size()) return;
-    f_BattleEvent("event", l_iFoe, -1, l_iEvent, "by hand");
+    f_BattleEvent(toms::battle_event::g_pszEvent, l_iFoe, -1, l_iEvent, "by hand");
     const nlohmann::json l_jActions = l_vEvs[(size_t)l_iEvent].m_jActions;
     f_RunFoeActions(l_iFoe, l_jActions);
 }
@@ -675,7 +678,7 @@ void Game::f_FoeLook(int l_iFoe, const std::string& l_strState) {
         f_PlayFoeSound(l_iFoe, l_pLs->m_strSound);   // (bound to it, as its particles)
         if (!l_pLs->m_strFx.empty()) f_PlayBattleFx(l_pLs->m_strFx, l_iFoe);
     }
-    if (l_strState != "idle" && l_iFoe < (int)m_vFoeRigs.size()) m_vFoeRigs[(size_t)l_iFoe].m_strRequest = l_strState;
+    if (l_strState != toms::state::g_pszIdle && l_iFoe < (int)m_vFoeRigs.size()) m_vFoeRigs[(size_t)l_iFoe].m_strRequest = l_strState;
 }
 
 void Game::f_PlayerLook(const std::string& l_strState) {
@@ -691,9 +694,9 @@ void Game::f_InterruptCombo(int l_iFoe) {
     m_oCs.m_oTouch.f_Stop();
     m_oCs.m_iChargeMs = 0;
     if (m_oCs.m_ePace == toms::Pace::Cooldown) { m_oCs.m_oAtkBar.m_bCooling = true; m_oCs.m_oAtkBar.m_iCooldownMs = f_BarCooldownMs(); }
-    if (f_BattleRigReady()) f_SetBattleRigState("miss", true);
-    m_oCs.m_strLog = f_TrParam(m_oLocale.f_Tr("battle.interrupted"), "name", f_FoeLogName(l_iFoe));
-    f_BattleEvent("interrupt", l_iFoe, -1);
+    if (f_BattleRigReady()) f_SetBattleRigState(toms::state::g_pszMiss, true);
+    m_oCs.m_strLog = f_TrParam(m_oLocale.f_Tr(toms::text::g_pszBattleInterrupted), toms::field::g_pszName, f_FoeLogName(l_iFoe));
+    f_BattleEvent(toms::battle_event::g_pszInterrupt, l_iFoe, -1);
 }
 
 // ---- the battle's log (docs/gameplay/13 §4.5) and its monsters ----
@@ -713,7 +716,7 @@ void Game::f_BattleEvent(const std::string& l_strType, int l_iWho, int l_iWhom, 
 void Game::f_BattleSetTarget(int l_iFoe) {
     if (!m_oCs.m_bActive || l_iFoe < 0 || l_iFoe >= (int)m_oCs.m_vFoes.size() || m_oCs.m_vFoes[(size_t)l_iFoe].f_Down() || l_iFoe == m_oCs.m_iTarget) return;
     m_oCs.m_iTarget = l_iFoe;
-    f_BattleEvent("target", -1, l_iFoe);
+    f_BattleEvent(toms::battle_event::g_pszTarget, -1, l_iFoe);
     m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
 }
 
@@ -726,12 +729,12 @@ void Game::f_BattleCycleTarget(int l_iDir) {
 // A foe fell (the battle goes on: the caller has checked that some still stand): it plays its die clip and stays down,
 // and the target moves to the next one standing.
 void Game::f_FoeDown(int l_iFoe) {
-    f_BattleEvent("down", l_iFoe, -1, 0, m_oCs.m_vFoes[(size_t)l_iFoe].m_oEnemy.m_strId);
+    f_BattleEvent(toms::battle_event::g_pszDown, l_iFoe, -1, 0, m_oCs.m_vFoes[(size_t)l_iFoe].m_oEnemy.m_strId);
     f_FoeEffectsOnDeath(l_iFoe);   // its effects: stopped, faded or kept
-    f_FoeLook(l_iFoe, "die");
+    f_FoeLook(l_iFoe, toms::state::g_pszDie);
     if (l_iFoe == m_oCs.m_iTarget) {
         const int l_iNext = toms::f_NextStanding(m_oCs.f_FoeHp(), l_iFoe, +1);
-        if (l_iNext >= 0) { m_oCs.m_iTarget = l_iNext; f_BattleEvent("target", -1, l_iNext); }
+        if (l_iNext >= 0) { m_oCs.m_iTarget = l_iNext; f_BattleEvent(toms::battle_event::g_pszTarget, -1, l_iNext); }
     }
 }
 
@@ -799,22 +802,22 @@ void Game::f_UpdateBattleRig(int l_iDtMs) {
     }
     f_LoadBattleRig();
     if (!f_BattleRigReady()) { m_oCs.m_bEndClipDone = m_oCs.m_bWinPending; return; }   // no picture: nothing to wait for
-    if (m_strBattleRigState == "win" || m_strBattleRigState == "lose") {   // the end clip: it stays on its last pose
+    if (m_strBattleRigState == toms::state::g_pszWin || m_strBattleRigState == toms::state::g_pszLose) {   // the end clip: it stays on its last pose
         m_upPlayerView->f_Update(l_iDtMs);
         if (m_oCs.m_bWinPending && m_upPlayerView->f_Finished()) m_oCs.m_bEndClipDone = true;
         return;
     }
     // An attack or a miss plays to its end; then the bar decides: waiting for the tap = charge, recovering = idle.
-    const bool l_bShooting = (m_strBattleRigState == "attack" || m_strBattleRigState == "miss" || m_strBattleRigState == "hurt_big") && !m_upPlayerView->f_Finished();
+    const bool l_bShooting = (m_strBattleRigState == toms::state::g_pszAttack || m_strBattleRigState == toms::state::g_pszMiss || m_strBattleRigState == toms::state::g_pszHurtBig) && !m_upPlayerView->f_Finished();
     // the end: a win lets the last attack finish first; a fall starts at once
     if (m_oCs.m_bWinPending && m_oCs.m_iSlowMs <= 0 && (!l_bShooting || m_oCs.m_bLosePending)) {
         const std::string l_strClip = f_EndClip();
-        if (m_upPlayerView->f_Has(l_strClip)) f_SetBattleRigState(m_oCs.m_bLosePending ? "lose" : "win", true, l_strClip);
+        if (m_upPlayerView->f_Has(l_strClip)) f_SetBattleRigState(m_oCs.m_bLosePending ? toms::state::g_pszLose : toms::state::g_pszWin, true, l_strClip);
         else m_oCs.m_bEndClipDone = true;
         m_upPlayerView->f_Update(l_iDtMs);
         return;
     }
-    if (!l_bShooting) f_SetBattleRigState(m_oCs.m_bActive && !m_oCs.m_oAtkBar.m_bCooling ? "charge" : "idle");
+    if (!l_bShooting) f_SetBattleRigState(m_oCs.m_bActive && !m_oCs.m_oAtkBar.m_bCooling ? toms::state::g_pszCharge : toms::state::g_pszIdle);
     m_upPlayerView->f_Update((int)std::lround((float)l_iDtMs * m_fBattleRigSpeed));   // (its events: the battle's own timers place the numbers)
 }
 
@@ -894,13 +897,13 @@ void Game::f_UpdateBattleBackdrop(int l_iDtMs) {
     if (!(m_oCs.m_bActive || m_oCs.m_bWon || m_oCs.m_iResultPauseMs > 0)) {
         // no battle: walking on a stage plays the stage's music (battle.json "music" "stage", the owner, 2026-11-14);
         // anywhere else (the title, a preview) the battle's music fades out
-        const nlohmann::json l_jMusic = m_jBattleJson.value("music", nlohmann::json::object());
-        const std::string l_strStageMusic = l_jMusic.value("stage", std::string());
+        const nlohmann::json l_jMusic = m_jBattleJson.value(toms::field::g_pszMusic, nlohmann::json::object());
+        const std::string l_strStageMusic = l_jMusic.value(toms::field::g_pszStage, std::string());
         if (!m_strCurStage.empty() && !m_oTitle.f_IsOpen() && !l_strStageMusic.empty()) {
             if (m_oAudio.f_MusicKey() != l_strStageMusic)
-                m_oAudio.f_PlayMusic(l_strStageMusic, l_jMusic.value("stageVolume", 0.35f), l_jMusic.value("stageFadeInMs", 1200));
+                m_oAudio.f_PlayMusic(l_strStageMusic, l_jMusic.value(toms::field::g_pszStageVolume, 0.35f), l_jMusic.value(toms::field::g_pszStageFadeInMs, 1200));
         } else if (!m_oAudio.f_MusicKey().empty()) {
-            m_oAudio.f_StopMusic(l_jMusic.value("fadeOutMs", 800));
+            m_oAudio.f_StopMusic(l_jMusic.value(toms::field::g_pszFadeOutMs, 800));
         }
         m_strBackdropAnim.clear();
         m_oBackdrop.f_Stop();
@@ -919,17 +922,17 @@ void Game::f_UpdateBattleBackdrop(int l_iDtMs) {
                                             [](const Battle3DFlash& l_oF) { return l_oF.m_iDelayMs <= 0 && l_oF.m_iMs <= 0; }),
                              m_vBattle3DFlashes.end());
     if (m_strBackdropAnim.empty() && m_upRes) {   // this floor's row: the first whose floors hold it, else the first
-        const nlohmann::json l_jRows = m_jBattleJson.value("backdrops", nlohmann::json::array());
+        const nlohmann::json l_jRows = m_jBattleJson.value(toms::field::g_pszBackdrops, nlohmann::json::array());
         const int l_iFloor = f_BattleFloorNumber();
         m_jBattle3DStage = nullptr;   // the 3D stage of this floor (docs/gameplay/21): the first row whose floors hold it
-        for (const auto& l_jR : m_jBattleJson.value("stages3d", nlohmann::json::array()))
-            if (l_iFloor >= l_jR.value("from", 1) && l_iFloor <= l_jR.value("to", 9999)) { m_jBattle3DStage = l_jR; break; }
+        for (const auto& l_jR : m_jBattleJson.value(toms::field::g_pszStages3d, nlohmann::json::array()))
+            if (l_iFloor >= l_jR.value(toms::field::g_pszFrom, 1) && l_iFloor <= l_jR.value(toms::field::g_pszTo, 9999)) { m_jBattle3DStage = l_jR; break; }
         m_vStageFireFx.clear();
         m_vBattle3DFlashes.clear();
         if (m_jBattle3DStage.is_object()) {   // the braziers' fire: already burning when the battle opens
             f_LoadBattleFxFile();
-            for (const auto& l_jF : m_jBattle3DStage.value("fires", nlohmann::json::array()))
-                if (const toms::fx::Effect* l_pE = m_spBattleFxFile ? m_spBattleFxFile->f_Find(l_jF.value("fx", std::string("stage_fire"))) : nullptr) {
+            for (const auto& l_jF : m_jBattle3DStage.value(toms::field::g_pszFires, nlohmann::json::array()))
+                if (const toms::fx::Effect* l_pE = m_spBattleFxFile ? m_spBattleFxFile->f_Find(l_jF.value(toms::field::g_pszFx, std::string("stage_fire"))) : nullptr) {
                     m_vStageFireFx.emplace_back();
                     m_vStageFireFx.back().f_Play(l_pE, (uint32_t)(m_vStageFireFx.size() * 7919));
                     for (int l_iK = 0; l_iK < 30; l_iK++) m_vStageFireFx.back().f_Update(0.1f);
@@ -937,35 +940,35 @@ void Game::f_UpdateBattleBackdrop(int l_iDtMs) {
         }
         nlohmann::json l_jRow = l_jRows.empty() ? nlohmann::json::object() : l_jRows[0];
         for (const auto& l_jR : l_jRows)
-            if (l_iFloor >= l_jR.value("from", 1) && l_iFloor <= l_jR.value("to", 9999)) { l_jRow = l_jR; break; }
+            if (l_iFloor >= l_jR.value(toms::field::g_pszFrom, 1) && l_iFloor <= l_jR.value(toms::field::g_pszTo, 9999)) { l_jRow = l_jR; break; }
         // the battle's music, by key: a boss's tier (enemies.json "bossTier": mini / stage / final; the highest among the
         // monsters), else this floor's row, else battle.json "music" "normal"
-        const nlohmann::json l_jMusic = m_jBattleJson.value("music", nlohmann::json::object());
+        const nlohmann::json l_jMusic = m_jBattleJson.value(toms::field::g_pszMusic, nlohmann::json::object());
         std::string l_strMusic;
         int l_iTierRank = 0;
         for (const CombatState::Foe& l_oF : m_oCs.m_vFoes) {
             const auto l_itT = m_mapEnemyTpl.find(l_oF.m_oEnemy.m_strId);
-            const std::string l_strTier = l_itT != m_mapEnemyTpl.end() ? l_itT->second.value("bossTier", std::string()) : std::string();
+            const std::string l_strTier = l_itT != m_mapEnemyTpl.end() ? l_itT->second.value(toms::field::g_pszBossTier, std::string()) : std::string();
             const int l_iRank = l_strTier == "final" ? 3 : l_strTier == "stage" ? 2 : l_strTier == "mini" ? 1 : 0;
-            const std::string l_strKey = l_jMusic.value("boss", nlohmann::json::object()).value(l_strTier, std::string());
+            const std::string l_strKey = l_jMusic.value(toms::field::g_pszBoss, nlohmann::json::object()).value(l_strTier, std::string());
             if (l_iRank > l_iTierRank && !l_strKey.empty()) { l_iTierRank = l_iRank; l_strMusic = l_strKey; }
         }
-        if (l_strMusic.empty()) l_strMusic = l_jRow.value("music", l_jMusic.value("normal", std::string()));
-        if (!l_strMusic.empty()) m_oAudio.f_PlayMusic(l_strMusic, l_jMusic.value("volume", 0.5f), l_jMusic.value("fadeInMs", 400));
-        const std::string l_strAnim = l_jRow.value("anim", std::string());
+        if (l_strMusic.empty()) l_strMusic = l_jRow.value(toms::field::g_pszMusic, l_jMusic.value(toms::field::g_pszNormal, std::string()));
+        if (!l_strMusic.empty()) m_oAudio.f_PlayMusic(l_strMusic, l_jMusic.value(toms::field::g_pszVolume, 0.5f), l_jMusic.value(toms::field::g_pszFadeInMs, 400));
+        const std::string l_strAnim = l_jRow.value(toms::field::g_pszAnim, std::string());
         if (l_strAnim.empty()) return;
         m_strBackdropAnim = l_strAnim;
         auto l_spA = m_upRes->f_Get<toms::res::AnimRes>(l_strAnim);
         if (!l_spA->f_Ok()) { std::fprintf(stderr, "[battle] %s: %s\n", l_strAnim.c_str(), l_spA->f_Error().c_str()); return; }
         m_spBackdrop = l_spA;
-        m_oBackdrop.f_Play(l_spA->f_Find(l_jRow.value("clip", std::string("idle"))));
-        const nlohmann::json l_jSize = l_jRow.value("size", nlohmann::json::array({1, 1}));
+        m_oBackdrop.f_Play(l_spA->f_Find(l_jRow.value(toms::field::g_pszClip, std::string(toms::state::g_pszIdle))));
+        const nlohmann::json l_jSize = l_jRow.value(toms::field::g_pszSize, nlohmann::json::array({1, 1}));
         m_fBackdropW = l_jSize[0].get<float>();
         m_fBackdropH = l_jSize[1].get<float>();
         f_LoadBattleFxFile();
         m_vBackdropFx.clear();
         if (m_spBattleFxFile)
-            for (const auto& l_jFx : l_jRow.value("fx", nlohmann::json::array()))
+            for (const auto& l_jFx : l_jRow.value(toms::field::g_pszFx, nlohmann::json::array()))
                 if (const toms::fx::Effect* l_pE = m_spBattleFxFile->f_Find(l_jFx.get<std::string>())) {
                     m_vBackdropFx.emplace_back();
                     m_vBackdropFx.back().f_Play(l_pE, (uint32_t)m_vBackdropFx.size());
@@ -1044,7 +1047,7 @@ void Game::f_FoeEffectsOnDeath(int l_iFoe) {
     CombatState::Foe& l_oF = m_oCs.m_vFoes[(size_t)l_iFoe];
     auto l_fnRule = [this](const char* l_pszKind, const std::string& l_strName) {
         const nlohmann::json l_jK = m_jOnFoeDeath.value(l_pszKind, nlohmann::json::object());
-        return l_jK.value(l_strName, l_jK.value("default", std::string("stop")));
+        return l_jK.value(l_strName, l_jK.value(toms::field::g_pszDefault, std::string("stop")));
     };
     for (CombatState::Foe::OwnedFx& l_oO : l_oF.m_vFx) {
         const std::string l_strRule = l_fnRule("fxRules", l_oO.m_strName);
@@ -1058,7 +1061,7 @@ void Game::f_FoeEffectsOnDeath(int l_iFoe) {
     for (const CombatState::Foe::OwnedSound& l_oS : l_oF.m_vSounds) {
         const std::string l_strRule = l_fnRule("soundRules", l_oS.m_strKey);
         if (l_strRule == "stop") m_oAudio.f_StopOwned(l_oS.m_uId, 60);
-        else if (l_strRule == "fade") m_oAudio.f_StopOwned(l_oS.m_uId, std::max(60, m_jOnFoeDeath.value("fadeMs", 400)));
+        else if (l_strRule == "fade") m_oAudio.f_StopOwned(l_oS.m_uId, std::max(60, m_jOnFoeDeath.value(toms::field::g_pszFadeMs, 400)));
     }
     l_oF.m_vSounds.clear();
     l_oF.m_bPowered = false;
@@ -1124,33 +1127,33 @@ bool Game::f_FoeIsBig(int l_iFoe) const {
     const EnemyInst& l_oE = m_oCs.m_vFoes[(size_t)l_iFoe].m_oEnemy;
     if (l_oE.m_bBoss) return true;
     const auto l_itT = m_mapEnemyTpl.find(l_oE.m_strId);
-    return l_itT != m_mapEnemyTpl.end() && l_itT->second.value("big", false);
+    return l_itT != m_mapEnemyTpl.end() && l_itT->second.value(toms::field::g_pszBig, false);
 }
 
 // A monster's attack (docs/gameplay/20 §5): data/battle.json "feelFx" "foeAttack", by kind. A spell, and any attack of a big
 // monster, flies at the hero; a heavy blow or a special guard's attack is "special"; the rest strike where the hero stands.
 // reaches: false when the hero stood clear (the projectile flies on and fades; no impact).
 void Game::f_FoeAttackFx(int l_iFoe, const toms::MoveDef& l_oMove, bool l_bReaches) {
-    const nlohmann::json l_jAll = f_FeelFx().value("foeAttack", nlohmann::json::object());
-    std::string l_strKind = "strike";
-    if (l_oMove.m_eKind == toms::MoveKind::Spell) l_strKind = "spell";
-    else if (l_oMove.m_eKind == toms::MoveKind::Heavy || !l_oMove.m_strGuardPlay.empty()) l_strKind = f_FoeIsBig(l_iFoe) ? "bigSpecial" : "special";
-    else if (f_FoeIsBig(l_iFoe)) l_strKind = "big";
+    const nlohmann::json l_jAll = f_FeelFx().value(toms::field::g_pszFoeAttack, nlohmann::json::object());
+    std::string l_strKind = toms::foe_attack::g_pszStrike;
+    if (l_oMove.m_eKind == toms::MoveKind::Spell) l_strKind = toms::foe_attack::g_pszSpell;
+    else if (l_oMove.m_eKind == toms::MoveKind::Heavy || !l_oMove.m_strGuardPlay.empty()) l_strKind = f_FoeIsBig(l_iFoe) ? toms::foe_attack::g_pszBigSpecial : toms::foe_attack::g_pszSpecial;
+    else if (f_FoeIsBig(l_iFoe)) l_strKind = toms::foe_attack::g_pszBig;
     const nlohmann::json l_jK = l_jAll.value(l_strKind, nlohmann::json::object());
     // the hero's chest: a third down the box (the box reaches below the drawn feet, so its middle is at the hips)
     const glm::vec4 l_v4Hero = f_FighterBox(-1);
     const glm::vec2 l_v2Foe = f_FighterCentre(l_iFoe), l_v2Hero(l_v4Hero.x + l_v4Hero.z * 0.55f, l_v4Hero.y + l_v4Hero.w * 0.3f);
     std::uniform_real_distribution<float> l_oPitch(0.92f, 1.08f);
-    if (!l_jK.value("cast", std::string()).empty()) f_PlayBattleFx(l_jK.value("cast", std::string()), l_iFoe);
-    if (!l_jK.value("sound", std::string()).empty()) f_PlayFoeSound(l_iFoe, l_jK.value("sound", std::string()), l_oPitch(m_oShakeRng));
-    const std::string l_strImpact = l_bReaches ? l_jK.value("impact", std::string()) : std::string();
-    const std::string l_strImpactSound = l_bReaches ? l_jK.value("impactSound", std::string()) : std::string();
-    const std::string l_strProjectile = l_jK.value("projectile", std::string());
+    if (!l_jK.value(toms::field::g_pszCast, std::string()).empty()) f_PlayBattleFx(l_jK.value(toms::field::g_pszCast, std::string()), l_iFoe);
+    if (!l_jK.value(toms::field::g_pszSound, std::string()).empty()) f_PlayFoeSound(l_iFoe, l_jK.value(toms::field::g_pszSound, std::string()), l_oPitch(m_oShakeRng));
+    const std::string l_strImpact = l_bReaches ? l_jK.value(toms::field::g_pszImpact, std::string()) : std::string();
+    const std::string l_strImpactSound = l_bReaches ? l_jK.value(toms::field::g_pszImpactSound, std::string()) : std::string();
+    const std::string l_strProjectile = l_jK.value(toms::field::g_pszProjectile, std::string());
     if (!l_strProjectile.empty()) {
-        f_LaunchBattleFx(l_strProjectile, l_v2Foe, l_v2Hero, l_jAll.value("flightMs", 180), l_strImpact, l_strImpactSound);
+        f_LaunchBattleFx(l_strProjectile, l_v2Foe, l_v2Hero, l_jAll.value(toms::field::g_pszFlightMs, 180), l_strImpact, l_strImpactSound);
         return;
     }
-    const int l_iDelay = l_jAll.value("impactDelayMs", 150);   // as the lunge lands (the number shows at hit_number_delay_ms)
+    const int l_iDelay = l_jAll.value(toms::field::g_pszImpactDelayMs, 150);   // as the lunge lands (the number shows at hit_number_delay_ms)
     if (!l_strImpact.empty()) f_PlayBattleFxAt(l_strImpact, l_v2Hero.x, l_v2Hero.y, false, l_iDelay, 1.0f, l_oPitch(m_oShakeRng) * 40.0f - 40.0f);
     if (!l_strImpactSound.empty()) {
         const float l_fPitch = l_oPitch(m_oShakeRng);
@@ -1256,9 +1259,16 @@ void Game::f_SetFoeRigState(int l_iFoe, const std::string& l_strState) {
     const toms::LookState* l_pLs = m_oLooks.f_Find(m_oCs.m_vFoes[(size_t)l_iFoe].m_oEnemy.m_strLook, l_strState);
     const std::string l_strClip = l_pLs && !l_pLs->m_strClip.empty() ? l_pLs->m_strClip : l_strState;
     // a look without the special attack's clips: "power" plays its "special", "charge" its idle
-    const std::string l_strFallback = l_strState == "power" ? "special" : l_strState == "charge" ? "idle" : std::string();
-    if (l_oFr.m_upView->f_Play(l_strClip + "_" + l_strId, true) || l_oFr.m_upView->f_Play(l_strClip, true) || l_oFr.m_upView->f_Play(l_strState, true) ||
-        (!l_strFallback.empty() && (l_oFr.m_upView->f_Play(l_strFallback + "_" + l_strId, true) || l_oFr.m_upView->f_Play(l_strFallback, true))))
+    const std::string l_strFallback = l_strState == toms::state::g_pszPower ? toms::state::g_pszSpecial : l_strState == toms::state::g_pszCharge ? toms::state::g_pszIdle : std::string();
+    // A monster borrowing another's look (enemies.json "look": "astrowl" on the sanctum_warden) finds the look's own
+    // clips ("idle_astrowl"): without that it played nothing and stood invisible.
+    const std::string& l_strLook = m_oCs.m_vFoes[(size_t)l_iFoe].m_oEnemy.m_strLook;
+    auto l_fnPlay = [&](const std::string& l_strName) {
+        return l_oFr.m_upView->f_Play(l_strName + "_" + l_strId, true) ||
+               (!l_strLook.empty() && l_strLook != l_strId && l_oFr.m_upView->f_Play(l_strName + "_" + l_strLook, true)) ||
+               l_oFr.m_upView->f_Play(l_strName, true);
+    };
+    if (l_fnPlay(l_strClip) || l_oFr.m_upView->f_Play(l_strState, true) || (!l_strFallback.empty() && l_fnPlay(l_strFallback)))
         l_oFr.m_strClip = l_oFr.m_upView->f_Clip();
     else
         l_oFr.m_upView->f_Stop();
@@ -1277,17 +1287,17 @@ void Game::f_UpdateMonsterRig(int l_iDtMs) {
     for (size_t l_nI = 0; l_nI < m_vFoeRigs.size(); l_nI++) {
         FoeRig& l_oFr = m_vFoeRigs[l_nI];
         const int l_iFoe = (int)l_nI;
-        if (!l_oFr.m_strRequest.empty() && l_oFr.m_strState != "die") {   // an attack, a hit or its fall: from the start
+        if (!l_oFr.m_strRequest.empty() && l_oFr.m_strState != toms::state::g_pszDie) {   // an attack, a hit or its fall: from the start
             const std::string l_strReq = l_oFr.m_strRequest;
             l_oFr.m_strRequest.clear();
             f_SetFoeRigState(l_iFoe, l_strReq);
         } else {
             l_oFr.m_strRequest.clear();
             // every status but idle plays to its end; then the fight decides: down or won = die (it stays gone), else idle
-            const bool l_bOneShot = !l_oFr.m_strState.empty() && l_oFr.m_strState != "idle" && l_oFr.m_strState != "charge";
-            if (l_oFr.m_strState != "die" && !(l_bOneShot && l_oFr.m_upView && !l_oFr.m_upView->f_Finished())) {
+            const bool l_bOneShot = !l_oFr.m_strState.empty() && l_oFr.m_strState != toms::state::g_pszIdle && l_oFr.m_strState != toms::state::g_pszCharge;
+            if (l_oFr.m_strState != toms::state::g_pszDie && !(l_bOneShot && l_oFr.m_upView && !l_oFr.m_upView->f_Finished())) {
                 // a special attack powering up or charging holds "charge" (a hurt plays and comes back to it)
-                const std::string l_strNext = m_oCs.m_bWon || m_oCs.m_vFoes[l_nI].f_Down() ? "die" : f_FoeCharging(l_iFoe) ? "charge" : "idle";
+                const std::string l_strNext = m_oCs.m_bWon || m_oCs.m_vFoes[l_nI].f_Down() ? toms::state::g_pszDie : f_FoeCharging(l_iFoe) ? toms::state::g_pszCharge : toms::state::g_pszIdle;
                 if (l_strNext != l_oFr.m_strState) f_SetFoeRigState(l_iFoe, l_strNext);
             }
         }
@@ -1302,15 +1312,15 @@ void Game::f_StartAttackPause() { m_oCs.m_iAttackPauseMs = std::max(m_oCs.m_iAtt
 void Game::f_PopDamage(int l_iDmg, int l_iWho, const std::string& l_strStyle) {
     m_oTimers.f_After(m_oBattleTimers, m_iHitNumberDelayMs, [this, l_iDmg, l_iWho, l_strStyle] {
         CombatState::Popup l_oP;
-        l_oP.m_strText = l_iDmg > 0 ? std::to_string(l_iDmg) : m_oLocale.f_Tr("battle.popup_guard");
+        l_oP.m_strText = l_iDmg > 0 ? std::to_string(l_iDmg) : m_oLocale.f_Tr(toms::text::g_pszBattlePopupGuard);
         l_oP.m_iWho = l_iWho;
-        l_oP.m_strStyle = l_iDmg > 0 ? l_strStyle : "guard";
+        l_oP.m_strStyle = l_iDmg > 0 ? l_strStyle : toms::pop_style::g_pszGuard;
         l_oP.m_oRise = toms::Tween(0.0f, 1.0f, 900, toms::Ease::OutCubic);
         m_oCs.m_vPopups.push_back(l_oP);
         // the monster flinches as the number appears (a fallen one keeps falling)
         if (l_iWho >= 0 && l_iWho < (int)m_vFoeRigs.size() && l_iWho < (int)m_oCs.m_vFoes.size() && l_iDmg > 0 &&
-            m_vFoeRigs[(size_t)l_iWho].m_strRequest != "die" && !m_oCs.m_vFoes[(size_t)l_iWho].f_Down())
-            f_FoeLook(l_iWho, "hurt");
+            m_vFoeRigs[(size_t)l_iWho].m_strRequest != toms::state::g_pszDie && !m_oCs.m_vFoes[(size_t)l_iWho].f_Down())
+            f_FoeLook(l_iWho, toms::state::g_pszHurt);
     });
 }
 
@@ -1320,7 +1330,7 @@ void Game::f_PopDamage(int l_iDmg, int l_iWho, const std::string& l_strStyle) {
 void Game::f_FinishCombatWin() {
     if (f_ArenaEndFight(true)) return;   // the weapon test arena: no rewards, the next fight follows
     m_oCs.m_bActive = false; m_oCs.m_bWon = true; m_oCs.m_bWinPending = false;
-    f_BattleEvent("win", -1, -1);
+    f_BattleEvent(toms::battle_event::g_pszWin, -1, -1);
     m_oPl.m_iHp = m_oCs.m_iPlayerHP;
     // the grade (docs/gameplay/15 §3.6): the time, the HP lost, the perfects and the chain
     CombatState::Result& l_oRes = m_oCs.m_oResult;
@@ -1336,7 +1346,7 @@ void Game::f_FinishCombatWin() {
         l_oRes.m_strGrade = toms::f_BattleGrade(l_oGi, m_oGrade, &l_oRes.m_iScore);
     }
     const bool l_bGradeS = l_oRes.m_strGrade == "S";
-    const std::string l_strWinSound = m_oFeel.f_Sound("win");
+    const std::string l_strWinSound = m_oFeel.f_Sound(toms::moment::g_pszWin);
     if (!l_strWinSound.empty()) m_oAudio.f_Play(l_strWinSound);
     int l_iGold = 0, l_iExp = 0;   // every monster of the battle pays
     for (const CombatState::Foe& l_oF : m_oCs.m_vFoes)
@@ -1354,8 +1364,8 @@ void Game::f_FinishCombatWin() {
         if (toms::f_RecordCardWin(m_oMeta.m_mapCards, l_oF.m_oEnemy.m_strId, toms::f_CardChanceFromJson(l_itT->second), l_fRoll)) {
             const int l_iN = m_oMeta.m_mapCards[l_oF.m_oEnemy.m_strId].m_iCopies;   // (the result screen says it; no notice over it)
             if (l_oRes.m_strCard.empty())
-                l_oRes.m_strCard = l_iN == 1 ? f_TrParam(m_oLocale.f_Tr("cards.new"), "name", l_oF.m_oEnemy.m_strName)
-                                  : f_TrParam(f_TrParam(m_oLocale.f_Tr("cards.more"), "name", l_oF.m_oEnemy.m_strName), "n", std::to_string(l_iN));
+                l_oRes.m_strCard = l_iN == 1 ? f_TrParam(m_oLocale.f_Tr(toms::text::g_pszCardsNew), toms::field::g_pszName, l_oF.m_oEnemy.m_strName)
+                                  : f_TrParam(f_TrParam(m_oLocale.f_Tr(toms::text::g_pszCardsMore), toms::field::g_pszName, l_oF.m_oEnemy.m_strName), toms::field::g_pszN, std::to_string(l_iN));
             m_bNewsCards = true;
         }
     }
@@ -1367,7 +1377,7 @@ void Game::f_FinishCombatWin() {
         const bool l_bWasGuard = !f_StairGuard().empty();
         for (auto& l_oE : m_oSt.m_vEntities) if (l_oE.m_iX==l_oLead.m_iX && l_oE.m_iY==l_oLead.m_iY && l_oE.m_strId==l_oLead.m_strMapId) { l_oE.m_bConsumed=true; f_FireLinkedEvents(l_oE); }
         if (l_bWasGuard && f_StairGuard().empty())   // the floor's boss beaten: its stair up opens (f_StairGuard)
-            m_vNotifications.push_back({f_TrParam(m_oLocale.f_Tr("stairs.guard_beaten"), "name", l_oLead.m_strName), 4000});
+            m_vNotifications.push_back({f_TrParam(m_oLocale.f_Tr(toms::text::g_pszStairsGuardBeaten), toms::field::g_pszName, l_oLead.m_strName), 4000});
         m_oSt.m_vTiles[l_oLead.m_iY][l_oLead.m_iX] = '.';
         // Milestone 7: persist the clear so it survives a reload of this floor (stairs or the Stage
         // Select hub) -- see entityStatus_'s declaration in game.h.
@@ -1389,11 +1399,11 @@ void Game::f_FinishCombatWin() {
         toms::f_GlobalEventBus().f_Publish(toms::EnemyDefeated{l_oF.m_oEnemy.m_strId, m_strCurStage});
         l_bBoss = l_bBoss || l_oF.m_oEnemy.m_bBoss;
     }
-    if (l_bBoss) { m_oCs.m_strLog = m_oLocale.f_Tr("battle.boss_win"); f_LoadStage("stage_11"); }
+    if (l_bBoss) { m_oCs.m_strLog = m_oLocale.f_Tr(toms::text::g_pszBattleBossWin); f_LoadStage("stage_11"); }
     // a guard of a boss's sequence beaten: no result screen; its pay as a notice, and on to the next fight (game.cpp)
     if (m_oGauntlet.m_bOn && m_oGauntlet.m_iStep + 1 < (int)m_oGauntlet.m_vSteps.size()) {
         m_oGauntlet.m_bAdvance = true;
-        m_vNotifications.push_back({f_TrParam(f_TrParam(m_oLocale.f_Tr("battle.gauntlet_reward"), "gold", std::to_string(l_oRes.m_iGold)),
+        m_vNotifications.push_back({f_TrParam(f_TrParam(m_oLocale.f_Tr(toms::text::g_pszBattleGauntletReward), toms::field::g_pszGold, std::to_string(l_oRes.m_iGold)),
                                               "exp", std::to_string(l_oRes.m_iExp)), 2500});
     }
     f_MarkProgressDirty();   // gold/exp/level/entity-status all changed: autosave will flush it
@@ -1403,7 +1413,7 @@ void Game::f_FinishCombatLose() {
     if (f_ArenaEndFight(false)) return;   // the weapon test arena: no death counted, no respawn
     f_EndGauntlet();   // a boss sequence lost: the boss stays; the next try starts from its first guard
     m_oCs.m_bActive = false; m_oCs.m_bWon = false;
-    f_BattleEvent("lose", -1, -1);
+    f_BattleEvent(toms::battle_event::g_pszLose, -1, -1);
     // M7 (first slice): noteDeath() existed since S3 (schemaVersion 3's deathsTotal/deathsNonBoss)
     // but nothing ever actually called it -- a real, pre-existing gap found while scoping this
     // slice, since e_13's condition depends entirely on this counter being real.
@@ -1418,7 +1428,7 @@ void Game::f_FinishCombatLose() {
     // plain wipe -- never the full 15-ending resolver (see checkNamedEndings's own comment for why:
     // the guaranteed fallback ending would otherwise wrongly end the run on literally every death).
     GameConditionContext l_oEndingCtx(m_oPl, m_oMeta, m_mapMissionTrackers, m_oRun, m_oEquipped);
-    const toms::EndingDefinition* l_pEnding = toms::f_CheckNamedEndings(m_oEndingsTable, {"e_10", "e_13"}, l_oEndingCtx);
+    const toms::EndingDefinition* l_pEnding = toms::f_CheckNamedEndings(m_oEndingsTable, {toms::field::g_pszE10, toms::field::g_pszE13}, l_oEndingCtx);
     if (l_pEnding) {
         f_TriggerEnding(l_pEnding->m_strId);
         return;   // the run is over -- no respawn, no "you fell" pause
@@ -1456,14 +1466,14 @@ void Game::f_ResolveAttackTap() {
         m_oCs.m_fNextAttackCritDamageMult = 1.0f;
     }
 
-    f_BattleEvent("hit", -1, m_oCs.m_iTarget, l_iDmg);
+    f_BattleEvent(toms::battle_event::g_pszHit, -1, m_oCs.m_iTarget, l_iDmg);
     f_DamageFoe(m_oCs.m_iTarget, l_iDmg);
     m_iLastAttackDamage = l_iDmg;   // the battle rig shows attack or miss
     if (l_iDmg > 0) m_oCs.m_iSuperCharge = std::min(m_oRun.f_SuperMax(), m_oCs.m_iSuperCharge + 1);   // M8: superMax is per-run, halved by rebirth()
-    f_PlayerLook("attack");
+    f_PlayerLook(toms::state::g_pszAttack);
     f_StartAttackPause();
-    f_PopDamage(l_iDmg, m_oCs.m_iTarget, "hit");
-    f_AfterPlayerHit(f_TrParam(m_oLocale.f_Tr("battle.hit"), "dmg", std::to_string(l_iDmg)), f_TrParam(m_oLocale.f_Tr("battle.crit_win"), "dmg", std::to_string(l_iDmg)));
+    f_PopDamage(l_iDmg, m_oCs.m_iTarget, toms::pop_style::g_pszHit);
+    f_AfterPlayerHit(f_TrParam(m_oLocale.f_Tr(toms::text::g_pszBattleHit), toms::field::g_pszDmg, std::to_string(l_iDmg)), f_TrParam(m_oLocale.f_Tr(toms::text::g_pszBattleCritWin), toms::field::g_pszDmg, std::to_string(l_iDmg)));
 }
 
 // After the player's hit on the target: it may have fallen. The last one standing falling wins the battle (winLog);
@@ -1473,16 +1483,16 @@ bool Game::f_AfterPlayerHit(const std::string& l_strHitLog, const std::string& l
     const int l_iT = m_oCs.m_iTarget;
     if (!m_oCs.m_vFoes[(size_t)l_iT].f_Down()) { m_oCs.m_strLog = l_strHitLog; return false; }
     if (toms::f_AllDown(m_oCs.f_FoeHp())) {
-        f_BattleEvent("down", l_iT, -1, 0, m_oCs.m_vFoes[(size_t)l_iT].m_oEnemy.m_strId);
+        f_BattleEvent(toms::battle_event::g_pszDown, l_iT, -1, 0, m_oCs.m_vFoes[(size_t)l_iT].m_oEnemy.m_strId);
         f_FoeEffectsOnDeath(l_iT);   // its effects: stopped, faded or kept
         m_oCs.m_strLog = l_strWinLog;
-        f_FoeLook(l_iT, "die");
+        f_FoeLook(l_iT, toms::state::g_pszDie);
         f_StartWinMoment();   // slow motion, then finishCombatWin (15 §3.8)
         return true;
     }
     const std::string l_strName = m_oCs.m_vFoes[(size_t)l_iT].m_oEnemy.m_strName;
     f_FoeDown(l_iT);
-    m_oCs.m_strLog = f_TrParam(m_oLocale.f_Tr("battle.foe_down"), "name", l_strName);
+    m_oCs.m_strLog = f_TrParam(m_oLocale.f_Tr(toms::text::g_pszBattleFoeDown), toms::field::g_pszName, l_strName);
     return false;
 }
 
@@ -1496,7 +1506,7 @@ void Game::f_ResolveDefenseTap() {
     float l_fPower = toms::f_PowerFromPosition(l_oBar, m_oCs.m_oDefBar.m_fPos);
     m_oCs.m_bShieldBanked = true;
     m_oCs.m_fShieldPower = l_fPower;
-    m_oCs.m_strLog = f_TrParam(m_oLocale.f_Tr("battle.shield_log"), "pct", std::to_string((int)std::lround(l_fPower)));
+    m_oCs.m_strLog = f_TrParam(m_oLocale.f_Tr(toms::text::g_pszBattleShieldLog), toms::field::g_pszPct, std::to_string((int)std::lround(l_fPower)));
 }
 
 // The enemy's own real-time clock fired (see update()): spend whatever shield is currently
@@ -1528,17 +1538,17 @@ void Game::f_ResolveEnemyClockFire(int l_iFoe) {
         f_RunFoeEvents(l_iFoe, l_oC);
     };
     if (l_bClear) {   // it strikes where the hero is not
-        f_BattleEvent("dodge", -1, l_iFoe, 0, l_oF.m_strMove);
-        f_FoeLook(l_iFoe, "attack");
+        f_BattleEvent(toms::battle_event::g_pszDodge, -1, l_iFoe, 0, l_oF.m_strMove);
+        f_FoeLook(l_iFoe, toms::state::g_pszAttack);
         f_FoeAttackFx(l_iFoe, l_oM, false);
-        f_PopWord(m_oLocale.f_Tr("battle.word_dodge"), -1, "parry");
+        f_PopWord(m_oLocale.f_Tr(toms::text::g_pszBattleWordDodge), -1, toms::pop_style::g_pszParry);
         m_oCs.m_iGuardAtMs = -1;
         f_StartAttackPause();
         l_fnAfterMove();
         return;
     }
     if (l_oM.m_eKind == toms::MoveKind::Guard) {   // its guard is over: no attack
-        f_BattleEvent("guardEnd", l_iFoe, -1);
+        f_BattleEvent(toms::battle_event::g_pszGuardEnd, l_iFoe, -1);
         l_fnAfterMove();
         return;
     }
@@ -1550,31 +1560,31 @@ void Game::f_ResolveEnemyClockFire(int l_iFoe) {
     bool l_bGuarded = m_oCs.m_bShieldBanked;
     bool l_bParried = l_bGuarded && l_fPower >= (float)m_oBreakSettings.m_iParryPower;
     m_oCs.m_bShieldBanked = false; m_oCs.m_fShieldPower = 0.0f;
-    if (m_oGuard.m_strMode == "timing" || m_oGuard.m_strMode == "warn") {   // one button: just before the hit (15 §3.2), or while its "!" shows (16 §4.2)
+    if (m_oGuard.m_strMode == toms::guard_mode::g_pszTiming || m_oGuard.m_strMode == toms::guard_mode::g_pszWarn) {   // one button: just before the hit (15 §3.2), or while its "!" shows (16 §4.2)
         const int l_iSince = m_oCs.m_iGuardAtMs < 0 ? -1 : m_oCs.m_iClockMs - m_oCs.m_iGuardAtMs;
-        const toms::GuardTiming l_eGt = m_oGuard.m_strMode == "warn" ? toms::f_GuardWarn(l_iSince, f_MoveWarnMs(l_oM), m_oGuard)
+        const toms::GuardTiming l_eGt = m_oGuard.m_strMode == toms::guard_mode::g_pszWarn ? toms::f_GuardWarn(l_iSince, f_MoveWarnMs(l_oM), m_oGuard)
                                                            : toms::f_GuardTiming(l_iSince, m_oGuard);
         m_oCs.m_iGuardAtMs = -1;   // a press answers one move
         l_bGuarded = l_eGt == toms::GuardTiming::Parry || l_eGt == toms::GuardTiming::Block;
         l_bParried = l_eGt == toms::GuardTiming::Parry;
         l_fPower = l_bParried ? 100.0f : l_eGt == toms::GuardTiming::Block ? m_oGuard.m_fBlockPower : 0.0f;
-        if (l_bParried) { f_PopWord(m_oLocale.f_Tr("battle.word_parry"), -1, "parry"); f_FeelMoment("parry"); }
-        else if (l_eGt == toms::GuardTiming::Block) { f_PopWord(m_oLocale.f_Tr("battle.word_block"), -1, "block"); f_FeelMoment("block"); }
-        else if (l_eGt == toms::GuardTiming::Early) f_PopWord(m_oLocale.f_Tr("battle.word_early"), -1, "early");
+        if (l_bParried) { f_PopWord(m_oLocale.f_Tr(toms::text::g_pszBattleWordParry), -1, toms::pop_style::g_pszParry); f_FeelMoment(toms::moment::g_pszParry); }
+        else if (l_eGt == toms::GuardTiming::Block) { f_PopWord(m_oLocale.f_Tr(toms::text::g_pszBattleWordBlock), -1, toms::pop_style::g_pszBlock); f_FeelMoment(toms::moment::g_pszBlock); }
+        else if (l_eGt == toms::GuardTiming::Early) f_PopWord(m_oLocale.f_Tr(toms::text::g_pszBattleWordEarly), -1, toms::pop_style::g_pszEarly);
     }
     if (l_oM.m_eKind == toms::MoveKind::Heavy && l_bGuarded && l_bParried) {
         // a perfect guard parries a heavy blow: no damage, it staggers and takes more (13 §6.2)
-        f_BattleEvent("parry", -1, l_iFoe, (int)std::lround(l_fPower));
+        f_BattleEvent(toms::battle_event::g_pszParry, -1, l_iFoe, (int)std::lround(l_fPower));
         f_FoeAttackFx(l_iFoe, l_oM, true);   // the blow lands on the guard
-        f_PlayerLook("parry");
-        if (m_oGuard.m_strMode == "bar") f_FeelMoment("parry");
+        f_PlayerLook(toms::state::g_pszParry);
+        if (m_oGuard.m_strMode == toms::guard_mode::g_pszBar) f_FeelMoment(toms::moment::g_pszParry);
         l_oF.m_iVolleyHit = 0;
         f_StartAttackPause();
-        f_PopDamage(0, -1, "guard");
+        f_PopDamage(0, -1, toms::pop_style::g_pszGuard);
         f_StunFoe(l_iFoe, m_oBreakSettings.m_iParryMs, m_oBreakSettings.m_fParryDamage, false);
         if (toms::f_AddBreak(m_oCs.m_vFoes[(size_t)l_iFoe].m_fBreakGauge, (float)m_oBreakSettings.m_iParryBreak, f_FoeBreakPoints(l_iFoe)))
             f_StunFoe(l_iFoe, m_oBreakSettings.m_iBrokenMs, m_oBreakSettings.m_fBrokenDamage, true);
-        m_oCs.m_strLog = f_TrParam(m_oLocale.f_Tr("battle.parry"), "name", l_oF.m_oEnemy.m_strName);
+        m_oCs.m_strLog = f_TrParam(m_oLocale.f_Tr(toms::text::g_pszBattleParry), toms::field::g_pszName, l_oF.m_oEnemy.m_strName);
         l_fnAfterMove();
         return;
     }
@@ -1586,7 +1596,7 @@ void Game::f_ResolveEnemyClockFire(int l_iFoe) {
         l_iDmg = (int)std::lround((float)l_iDmg * (1.0f - std::clamp(l_oF.m_fGuardShare, 0.0f, 1.0f)));
         l_bGuarded = l_oF.m_fGuardShare > 0.0f;
         if (l_oF.m_fGuardShare >= 1.0f) {
-            f_PopWord(m_oLocale.f_Tr("battle.word_parry"), -1, "parry");
+            f_PopWord(m_oLocale.f_Tr(toms::text::g_pszBattleWordParry), -1, toms::pop_style::g_pszParry);
             f_StunFoe(l_iFoe, m_oBreakSettings.m_iParryMs, m_oBreakSettings.m_fParryDamage, false);
         }
         l_oF.m_fGuardShare = -1.0f;
@@ -1597,25 +1607,25 @@ void Game::f_ResolveEnemyClockFire(int l_iFoe) {
     m_oCs.m_iPlayerHP -= l_iDmg;
     if (f_TutorialStepNow()) m_oCs.m_iPlayerHP = std::max(1, m_oCs.m_iPlayerHP);   // nobody falls in the tutorial
     m_oCs.m_iDamageTaken += l_iDmg;
-    if (l_iDmg > 0) f_FeelMoment(l_oM.m_eKind == toms::MoveKind::Heavy || l_oM.m_eKind == toms::MoveKind::Spell ? "heavyHurt" : "hurt");
-    f_BattleEvent("hit", l_iFoe, -1, l_iDmg, l_oF.m_strMove + (l_bGuarded ? " guarded " + std::to_string((int)std::lround(l_fPower)) : std::string()));
-    f_FoeLook(l_iFoe, "attack");   // its sound; the lunge lands as the number appears
+    if (l_iDmg > 0) f_FeelMoment(l_oM.m_eKind == toms::MoveKind::Heavy || l_oM.m_eKind == toms::MoveKind::Spell ? toms::moment::g_pszHeavyHurt : toms::moment::g_pszHurt);
+    f_BattleEvent(toms::battle_event::g_pszHit, l_iFoe, -1, l_iDmg, l_oF.m_strMove + (l_bGuarded ? " guarded " + std::to_string((int)std::lround(l_fPower)) : std::string()));
+    f_FoeLook(l_iFoe, toms::state::g_pszAttack);   // its sound; the lunge lands as the number appears
     f_FoeAttackFx(l_iFoe, l_oM, true);   // its strike, or what it throws (docs/gameplay/20 §5)
     f_StartAttackPause();
-    f_PopDamage(l_iDmg, -1, "hurt");
+    f_PopDamage(l_iDmg, -1, toms::pop_style::g_pszHurt);
     if (l_bPoweredHit && l_iDmg > 0 && m_oCs.m_iPlayerHP > 0) f_KnockDownHero();   // the special attack's big hurt
 
     if (m_oCs.m_iPlayerHP <= 0 && m_oCs.m_bSurvivalArmed) {
         // a_sanctuary_echo: once per battle, a lethal hit leaves 1 HP instead of ending the fight.
         m_oCs.m_bSurvivalArmed = false;
         m_oCs.m_iPlayerHP = 1;
-        m_oCs.m_strLog = m_oLocale.f_Tr("battle.sanctuary_survive");
+        m_oCs.m_strLog = m_oLocale.f_Tr(toms::text::g_pszBattleSanctuarySurvive);
     } else if (m_oCs.m_iPlayerHP <= 0) {
-        m_oCs.m_strLog = m_oLocale.f_Tr("battle.player_down");
-        f_BattleEvent("down", -1, -1);
+        m_oCs.m_strLog = m_oLocale.f_Tr(toms::text::g_pszBattlePlayerDown);
+        f_BattleEvent(toms::battle_event::g_pszDown, -1, -1);
         f_StartLoseMoment();
     } else if (!f_AttackRunning() || l_oM.m_eKind != toms::MoveKind::Jabs) {
-        m_oCs.m_strLog = l_iDmg == 0 ? m_oLocale.f_Tr("battle.perfect_guard") : f_TrParam(m_oLocale.f_Tr("battle.guard_hit"), "dmg", std::to_string(l_iDmg));
+        m_oCs.m_strLog = l_iDmg == 0 ? m_oLocale.f_Tr(toms::text::g_pszBattlePerfectGuard) : f_TrParam(m_oLocale.f_Tr(toms::text::g_pszBattleGuardHit), toms::field::g_pszDmg, std::to_string(l_iDmg));
     }
     if (!m_oCs.m_bActive || m_oCs.m_bLosePending) return;
     if (l_bVolley && l_oF.m_iVolleyHit + 1 < l_oM.m_iHits) {   // more hits to come: the next after its gap (its "!" before it)
@@ -1644,7 +1654,7 @@ void Game::f_BattleTapAttack() {
     if (!m_oCs.m_oCombo.f_Running()) {
         if (m_oCs.m_ePace == toms::Pace::Stamina) {   // the stamina pace: starting an attack costs it (docs/gameplay/13 §6.3)
             if (m_oCs.m_fStamina < (float)m_oPaceSettings.m_iAttackCost) {
-                m_oCs.m_strLog = m_oLocale.f_Tr("battle.no_stamina");
+                m_oCs.m_strLog = m_oLocale.f_Tr(toms::text::g_pszBattleNoStamina);
                 m_oAudio.f_Play(toms::key::g_pszSfxDeny);
                 return;
             }
@@ -1652,7 +1662,7 @@ void Game::f_BattleTapAttack() {
         }
         const std::string l_strKey = f_WeaponKey();
         m_oCs.m_oCombo.f_Start(toms::f_ComboSettings(f_WeaponPlayOf(l_strKey), f_WeaponLevel(l_strKey)), f_ComboCharge());
-        m_oCs.m_strLog = m_oLocale.f_Tr("battle.combo_go");
+        m_oCs.m_strLog = m_oLocale.f_Tr(toms::text::g_pszBattleComboGo);
         m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
         return;
     }
@@ -1707,38 +1717,38 @@ void Game::f_ResolveCombo(const toms::ComboResult* l_pPlayed) {
     // the revamp (docs/gameplay/15 §3.3, §3.4): the result's tier, the perfect chain, the ultimate
     const bool l_bUlt = m_oCs.m_bUltimate;
     m_oCs.m_bUltimate = false;
-    std::string l_strTier = l_oR.m_bFailed || l_oR.m_iHits == 0 ? "miss"
-                     : l_pRes && (l_pRes->m_strName == "perfect" || l_pRes->m_strName == "great") ? l_pRes->m_strName : "hit";
-    if (l_oR.m_iPerfects >= 0 && l_strTier != "miss")   // a touch play (16 §3): perfect when all hit and half were perfect
-        l_strTier = l_oR.m_iHits >= l_oR.m_iPoints && l_oR.m_iPerfects * 2 >= l_oR.m_iPoints ? "perfect" : l_oR.m_iHits >= l_oR.m_iPoints || l_oR.m_iHits * 5 >= l_oR.m_iPoints * 3 ? "great" : "hit";
-    if (l_strTier == "perfect") m_oCs.m_iChain = std::min(m_oFeel.m_iChainMax, m_oCs.m_iChain + 1);
-    else if (l_strTier == "miss") m_oCs.m_iChain = 0;
+    std::string l_strTier = l_oR.m_bFailed || l_oR.m_iHits == 0 ? toms::tier::g_pszMiss
+                     : l_pRes && (l_pRes->m_strName == toms::tier::g_pszPerfect || l_pRes->m_strName == toms::tier::g_pszGreat) ? l_pRes->m_strName : toms::tier::g_pszHit;
+    if (l_oR.m_iPerfects >= 0 && l_strTier != toms::tier::g_pszMiss)   // a touch play (16 §3): perfect when all hit and half were perfect
+        l_strTier = l_oR.m_iHits >= l_oR.m_iPoints && l_oR.m_iPerfects * 2 >= l_oR.m_iPoints ? toms::tier::g_pszPerfect : l_oR.m_iHits >= l_oR.m_iPoints || l_oR.m_iHits * 5 >= l_oR.m_iPoints * 3 ? toms::tier::g_pszGreat : toms::tier::g_pszHit;
+    if (l_strTier == toms::tier::g_pszPerfect) m_oCs.m_iChain = std::min(m_oFeel.m_iChainMax, m_oCs.m_iChain + 1);
+    else if (l_strTier == toms::tier::g_pszMiss) m_oCs.m_iChain = 0;
     m_oCs.m_iBestChain = std::max(m_oCs.m_iBestChain, m_oCs.m_iChain);
-    if (l_strTier == "perfect") m_oCs.m_iPerfects++;
+    if (l_strTier == toms::tier::g_pszPerfect) m_oCs.m_iPerfects++;
     m_oCs.m_iAttacksDone++;
     if (m_oCs.m_iChain > 1) l_iDmg = (int)std::lround(l_iDmg * (1.0f + m_oFeel.m_fChainStep * (float)(m_oCs.m_iChain - 1)));
     if (l_bUlt) l_iDmg = (int)std::lround(l_iDmg * (l_oFoe.m_iStaggerMs > 0 ? 4.0f : 2.0f));   // ×2, ×4 in a break
-    f_BattleEvent("combo", -1, l_iT, l_oR.m_iHits, std::to_string(l_oR.m_iHits) + "/" + std::to_string(l_oR.m_iPoints) + (l_oR.m_bFailed ? " failed" : "") +
+    f_BattleEvent(toms::battle_event::g_pszCombo, -1, l_iT, l_oR.m_iHits, std::to_string(l_oR.m_iHits) + "/" + std::to_string(l_oR.m_iPoints) + (l_oR.m_bFailed ? " failed" : "") +
                                           (l_pRes && !l_pRes->m_strName.empty() ? " " + l_pRes->m_strName : std::string()));
     const int l_iDealt = m_oCs.m_iPlayDealt;   // the play's answers already hit (16 §3): this is the rest of the attack
     m_oCs.m_iPlayDealt = 0;
     if (l_iDealt > 0) l_iDmg = std::max(0, l_iDmg - l_iDealt);
-    f_BattleEvent("hit", -1, l_iT, l_iDmg);
+    f_BattleEvent(toms::battle_event::g_pszHit, -1, l_iT, l_iDmg);
     m_iLastAttackDamage = l_oR.m_bFailed || l_oR.m_iHits == 0 ? 0 : std::max(l_iDmg, l_iDealt);   // the battle rig: attack, or miss for a fail
     if (l_iDmg > 0 && !l_oR.m_bFailed) m_oCs.m_iSuperCharge = std::min(m_oRun.f_SuperMax(), m_oCs.m_iSuperCharge + 1);
     if (l_pRes && !l_pRes->m_strSound.empty()) m_oAudio.f_Play(l_pRes->m_strSound);
-    else f_PlayerLook("attack");
+    else f_PlayerLook(toms::state::g_pszAttack);
     f_StartAttackPause();
     // a weapon whose count goes on from attack to attack (the bow): each attack is one hit of its combo (17 §19)
     const bool l_bKeepCombo = l_oWp.m_bComboKeep && !l_bUlt;
     if (l_bKeepCombo) m_oCs.m_iComboCount = l_oR.m_bFailed || l_oR.m_iHits == 0 ? 0 : m_oCs.m_iComboCount + 1;
     const toms::ComboTier* l_pComboTier = l_bKeepCombo ? l_oWp.f_ComboTierAt(m_oCs.m_iComboCount) : nullptr;
     if (l_bKeepCombo) f_ComboWord();
-    f_FeelMoment(l_bUlt ? std::string("ultimate") : l_pComboTier && !l_pComboTier->m_strFeel.empty() ? l_pComboTier->m_strFeel : l_strTier);
-    if (l_iDmg > 0 || l_iDealt == 0) f_PopDamage(l_iDmg, l_iT, l_bUlt ? "perfect" : l_strTier);
+    f_FeelMoment(l_bUlt ? std::string(toms::moment::g_pszUltimate) : l_pComboTier && !l_pComboTier->m_strFeel.empty() ? l_pComboTier->m_strFeel : l_strTier);
+    if (l_iDmg > 0 || l_iDealt == 0) f_PopDamage(l_iDmg, l_iT, l_bUlt ? toms::pop_style::g_pszPerfect : l_strTier);
     // its named move (07 §5.4): the result row's "move", over the monster; the chain by the player
-    if (l_pRes && !l_pRes->m_strMove.empty() && m_oLocale.f_Has(l_pRes->m_strMove)) f_PopWord(m_oLocale.f_Tr(l_pRes->m_strMove), l_iT, "move-" + l_strTier);
-    if (m_oCs.m_iChain > 1) f_PopWord(f_TrParam(m_oLocale.f_Tr("battle.word_chain"), "n", std::to_string(m_oCs.m_iChain)), -1, "chain");
+    if (l_pRes && !l_pRes->m_strMove.empty() && m_oLocale.f_Has(l_pRes->m_strMove)) f_PopWord(m_oLocale.f_Tr(l_pRes->m_strMove), l_iT, toms::pop_style::g_pszMove + l_strTier);
+    if (m_oCs.m_iChain > 1) f_PopWord(f_TrParam(m_oLocale.f_Tr(toms::text::g_pszBattleWordChain), toms::field::g_pszN, std::to_string(m_oCs.m_iChain)), -1, toms::pop_style::g_pszChain);
     if (m_iLastAttackDamage > 0) {   // the weapon's particles for its level (or the result's): off it now, on the monster with the number
         if (const toms::WeaponFx* l_pFx = f_BattleWeaponFx(l_bUlt)) {
             f_PlayBattleFx(l_pFx->m_strRelease, -1);
@@ -1749,30 +1759,30 @@ void Game::f_ResolveCombo(const toms::ComboResult* l_pPlayed) {
         f_PlayBattleFx(l_pRes->m_strFx, -1);   // a miss: the result's effect at the player (weapon_play.json "miss_puff")
     }
     if (f_BattleRigReady()) {
-        const std::string l_strBigClip = l_bUlt ? std::string("attack_big") : l_pComboTier ? l_pComboTier->m_strClip : l_pRes ? l_pRes->m_strAnim : std::string();   // the ultimate: the big clip
+        const std::string l_strBigClip = l_bUlt ? std::string(toms::state::g_pszAttackBig) : l_pComboTier ? l_pComboTier->m_strClip : l_pRes ? l_pRes->m_strAnim : std::string();   // the ultimate: the big clip
         const bool l_bBig = m_iLastAttackDamage > 0 && !l_strBigClip.empty() && m_upPlayerView && m_upPlayerView->f_Has(l_strBigClip);
-        f_SetBattleRigState(m_iLastAttackDamage > 0 ? "attack" : "miss", true, l_bBig ? l_strBigClip : std::string());
+        f_SetBattleRigState(m_iLastAttackDamage > 0 ? toms::state::g_pszAttack : toms::state::g_pszMiss, true, l_bBig ? l_strBigClip : std::string());
     }
     f_DamageFoe(l_iT, l_iDmg);
-    const std::string l_strCombo = f_TrParam(f_TrParam(m_oLocale.f_Tr(l_oR.m_bFailed ? "battle.combo_fail" : "battle.combo_hits"), "hits",
+    const std::string l_strCombo = f_TrParam(f_TrParam(m_oLocale.f_Tr(l_oR.m_bFailed ? toms::text::g_pszBattleComboFail : toms::text::g_pszBattleComboHits), toms::field::g_pszHits,
                                               std::to_string(l_oR.m_iHits)), "n", std::to_string(l_oR.m_iPoints));
-    std::string l_strHitText = f_TrParam(m_oLocale.f_Tr(l_bGuardedHit ? "battle.guarding" : "battle.hit"), "dmg", std::to_string(l_iDmg));
-    l_strHitText = f_TrParam(l_strHitText, "name", f_FoeLogName(l_iT));
+    std::string l_strHitText = f_TrParam(m_oLocale.f_Tr(l_bGuardedHit ? toms::text::g_pszBattleGuarding : toms::text::g_pszBattleHit), toms::field::g_pszDmg, std::to_string(l_iDmg));
+    l_strHitText = f_TrParam(l_strHitText, toms::field::g_pszName, f_FoeLogName(l_iT));
     if (l_pRes && !l_pRes->m_strName.empty() && m_oLocale.f_Has("battle.result." + l_pRes->m_strName))
         l_strHitText = m_oLocale.f_Tr("battle.result." + l_pRes->m_strName) + " " + l_strHitText;
-    if (f_AfterPlayerHit(l_strCombo + " " + l_strHitText, l_strCombo + " " + f_TrParam(m_oLocale.f_Tr("battle.crit_win"), "dmg", std::to_string(l_iDmg))))
+    if (f_AfterPlayerHit(l_strCombo + " " + l_strHitText, l_strCombo + " " + f_TrParam(m_oLocale.f_Tr(toms::text::g_pszBattleCritWin), toms::field::g_pszDmg, std::to_string(l_iDmg))))
         return;
     if (!m_oCs.m_vFoes[(size_t)l_iT].f_Down()) {
         CombatState::Foe& l_oF = m_oCs.m_vFoes[(size_t)l_iT];
         std::string l_strExtra;
         if (l_bGuardBroken) {
-            l_strExtra = f_TrParam(m_oLocale.f_Tr("battle.guard_broken"), "name", l_oF.m_oEnemy.m_strName);
-            f_BattleEvent("guardBreak", -1, l_iT);
+            l_strExtra = f_TrParam(m_oLocale.f_Tr(toms::text::g_pszBattleGuardBroken), toms::field::g_pszName, l_oF.m_oEnemy.m_strName);
+            f_BattleEvent(toms::battle_event::g_pszGuardBreak, -1, l_iT);
             l_oF.m_iClockMs = 0;
             f_ChooseFoeMove(l_iT);
         } else if (l_bSpellBroken) {
-            l_strExtra = f_TrParam(m_oLocale.f_Tr("battle.spell_broken"), "name", l_oF.m_oEnemy.m_strName);
-            f_BattleEvent("spellBreak", -1, l_iT);
+            l_strExtra = f_TrParam(m_oLocale.f_Tr(toms::text::g_pszBattleSpellBroken), toms::field::g_pszName, l_oF.m_oEnemy.m_strName);
+            f_BattleEvent(toms::battle_event::g_pszSpellBreak, -1, l_iT);
             l_oF.m_iClockMs = 0;
             f_ChooseFoeMove(l_iT);
         }
@@ -1786,7 +1796,7 @@ void Game::f_ResolveCombo(const toms::ComboResult* l_pPlayed) {
         if (m_oCs.m_vFoes[(size_t)l_iT].m_iStaggerMs <= 0 || !m_oCs.m_vFoes[(size_t)l_iT].m_bBroken)
             if (toms::f_AddBreak(m_oCs.m_vFoes[(size_t)l_iT].m_fBreakGauge, l_fAdd, f_FoeBreakPoints(l_iT))) {
                 f_StunFoe(l_iT, m_oBreakSettings.m_iBrokenMs, m_oBreakSettings.m_fBrokenDamage, true);
-                l_strExtra = f_TrParam(m_oLocale.f_Tr("battle.break"), "name", m_oCs.m_vFoes[(size_t)l_iT].m_oEnemy.m_strName);
+                l_strExtra = f_TrParam(m_oLocale.f_Tr(toms::text::g_pszBattleBreak), toms::field::g_pszName, m_oCs.m_vFoes[(size_t)l_iT].m_oEnemy.m_strName);
             }
         if (l_oR.m_iHits == l_oR.m_iPoints && !l_oR.m_bFailed) {
             toms::EventCheck l_oC;
@@ -1807,7 +1817,7 @@ void Game::f_BattleMoveToCell(int l_iCell) {
     if (!f_BattleCellsOn() || m_oCs.m_bWinPending || m_oCs.m_oSkill.m_bOn) return;
     if (l_iCell < 0 || l_iCell >= m_oCs.m_iCellCols * m_oCs.m_iCellRows || l_iCell == m_oCs.m_iHeroCell) return;
     m_oCs.m_iHeroCell = l_iCell;
-    f_BattleEvent("move", -1, -1, l_iCell);
+    f_BattleEvent(toms::battle_event::g_pszMove, -1, -1, l_iCell);
     m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
 }
 
@@ -1816,29 +1826,29 @@ void Game::f_BattleStepCell(int l_iDx, int l_iDy) { f_BattleMoveToCell(toms::f_C
 void Game::f_BattleTapDefense() {
     if (f_CellIntroOn()) return;
     if (!m_oCs.m_bActive || m_oCs.m_bWinPending || m_oCs.m_oSkill.m_bOn) return;
-    if (m_oGuard.m_strMode == "warn") {   // only while an "!" shows over a monster (16 §4.2); it stops the player's attack
+    if (m_oGuard.m_strMode == toms::guard_mode::g_pszWarn) {   // only while an "!" shows over a monster (16 §4.2); it stops the player's attack
         if (m_oCs.m_iGuardLockMs > 0 || m_oCs.m_iGuardAtMs >= 0) return;
         f_StopOwnAttack();
         bool l_bWarned = false;
         for (size_t l_nI = 0; l_nI < m_oCs.m_vFoes.size(); l_nI++) l_bWarned = l_bWarned || f_FoeWarning((int)l_nI);
         if (!l_bWarned) {   // no "!": too early; the guard locks a moment
-            f_PopWord(m_oLocale.f_Tr("battle.word_early"), -1, "early");
+            f_PopWord(m_oLocale.f_Tr(toms::text::g_pszBattleWordEarly), -1, toms::pop_style::g_pszEarly);
             m_oCs.m_iGuardLockMs = m_oGuard.m_iMissLockMs;
             m_oAudio.f_Play(toms::key::g_pszSfxDeny);
             return;
         }
         if (m_oCs.m_ePace == toms::Pace::Stamina) {
-            if (m_oCs.m_fStamina < (float)m_oPaceSettings.m_iGuardCost) { m_oCs.m_strLog = m_oLocale.f_Tr("battle.no_stamina"); m_oAudio.f_Play(toms::key::g_pszSfxDeny); return; }
+            if (m_oCs.m_fStamina < (float)m_oPaceSettings.m_iGuardCost) { m_oCs.m_strLog = m_oLocale.f_Tr(toms::text::g_pszBattleNoStamina); m_oAudio.f_Play(toms::key::g_pszSfxDeny); return; }
             m_oCs.m_fStamina -= (float)m_oPaceSettings.m_iGuardCost;
         }
         m_oCs.m_iGuardAtMs = m_oCs.m_iClockMs;
         m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
         return;
     }
-    if (m_oGuard.m_strMode == "timing") {   // one button (docs/gameplay/15 §3.2): it answers the next hit, judged when it lands
+    if (m_oGuard.m_strMode == toms::guard_mode::g_pszTiming) {   // one button (docs/gameplay/15 §3.2): it answers the next hit, judged when it lands
         if (m_oCs.m_iGuardCdMs > 0) return;
         if (m_oCs.m_ePace == toms::Pace::Stamina) {
-            if (m_oCs.m_fStamina < (float)m_oPaceSettings.m_iGuardCost) { m_oCs.m_strLog = m_oLocale.f_Tr("battle.no_stamina"); m_oAudio.f_Play(toms::key::g_pszSfxDeny); return; }
+            if (m_oCs.m_fStamina < (float)m_oPaceSettings.m_iGuardCost) { m_oCs.m_strLog = m_oLocale.f_Tr(toms::text::g_pszBattleNoStamina); m_oAudio.f_Play(toms::key::g_pszSfxDeny); return; }
             m_oCs.m_fStamina -= (float)m_oPaceSettings.m_iGuardCost;
         }
         m_oCs.m_iGuardAtMs = m_oCs.m_iClockMs;
@@ -1848,7 +1858,7 @@ void Game::f_BattleTapDefense() {
     }
     if (m_oCs.m_ePace == toms::Pace::Stamina) {   // each guard tap costs stamina, no wait (docs/gameplay/13 §6.3)
         if (m_oCs.m_fStamina < (float)m_oPaceSettings.m_iGuardCost) {
-            m_oCs.m_strLog = m_oLocale.f_Tr("battle.no_stamina");
+            m_oCs.m_strLog = m_oLocale.f_Tr(toms::text::g_pszBattleNoStamina);
             m_oAudio.f_Play(toms::key::g_pszSfxDeny);
             return;
         }
@@ -1879,16 +1889,16 @@ void Game::f_BattleTapSuper() {
     const std::string l_strBound = !m_strUltimateOverride.empty() ? m_strUltimateOverride : f_WeaponPlayOf(l_strKey).m_strUltimate;
     const toms::SpecialMove* l_pBound = l_strBound.empty() ? nullptr : m_oSpecialMoves.f_Find(l_strBound);
     if (!l_strBound.empty() && !l_pBound) std::fprintf(stderr, "[battle] the ultimate '%s' is not in special_moves.json\n", l_strBound.c_str());
-    if (const toms::SpecialMove* l_pD = l_pBound ? l_pBound : m_oSpecialMoves.f_ForWeapon(l_strKey, "ultimate")) {   // the weapon's own move (16 §6): it cuts in
-        const std::string l_strS = m_oFeel.f_Sound("ultimate");
+    if (const toms::SpecialMove* l_pD = l_pBound ? l_pBound : m_oSpecialMoves.f_ForWeapon(l_strKey, toms::move_use::g_pszUltimate)) {   // the weapon's own move (16 §6): it cuts in
+        const std::string l_strS = m_oFeel.f_Sound(toms::moment::g_pszUltimate);
         if (!l_strS.empty()) m_oAudio.f_Play(l_strS);
         f_StartSkill(*l_pD, -1);
         return;
     }
-    const std::string l_strName = m_mapEquipmentDefs.count(l_strKey) ? f_ItemName(l_strKey) : m_oLocale.f_Tr("battle.unarmed");
-    f_ShowBanner(f_TrParam(m_oLocale.f_Tr("battle.word_ultimate"), "name", l_strName), "ultimate", 900);
+    const std::string l_strName = m_mapEquipmentDefs.count(l_strKey) ? f_ItemName(l_strKey) : m_oLocale.f_Tr(toms::text::g_pszBattleUnarmed);
+    f_ShowBanner(f_TrParam(m_oLocale.f_Tr(toms::text::g_pszBattleWordUltimate), toms::field::g_pszName, l_strName), toms::banner::g_pszUltimate, 900);
     m_oCs.m_iHitStopMs = std::max(m_oCs.m_iHitStopMs, m_oSettings.m_bReduceEffects ? 200 : 600);   // the cut-in holds the fight
-    const std::string l_strS = m_oFeel.f_Sound("ultimate");
+    const std::string l_strS = m_oFeel.f_Sound(toms::moment::g_pszUltimate);
     if (!l_strS.empty()) m_oAudio.f_Play(l_strS);
     toms::ComboSettings l_oCset = toms::f_ComboSettings(f_WeaponPlayOf(l_strKey), f_WeaponLevel(l_strKey));
     l_oCset.m_iPoints += 2;
@@ -1901,8 +1911,8 @@ void Game::f_BattleTapSuper() {
     } else {
         m_oCs.m_oCombo.f_Start(l_oCset, 1.0f);
     }
-    f_BattleEvent("super", -1, m_oCs.m_iTarget, l_oCset.m_iPoints, "ultimate");
-    m_oCs.m_strLog = m_oLocale.f_Tr("battle.combo_go");
+    f_BattleEvent(toms::battle_event::g_pszSuper, -1, m_oCs.m_iTarget, l_oCset.m_iPoints, toms::move_use::g_pszUltimate);
+    m_oCs.m_strLog = m_oLocale.f_Tr(toms::text::g_pszBattleComboGo);
 }
 
 // (each weapon's own play, skills and the training ground: game_skills.cpp)
@@ -1931,8 +1941,8 @@ void Game::f_BattleTapActive() {
         m_oCs.m_fNextAttackCritDamageMult = l_oEff.m_fDamageMultiplier;
     }
     if (l_oEff.m_bSurviveLethal) m_oCs.m_bSurvivalArmed = true;
-    m_oCs.m_strLog = f_TrParam(m_oLocale.f_Tr("battle.active_armed"), "name", l_strId);
-    f_BattleEvent("active", -1, -1, 0, l_strId);
+    m_oCs.m_strLog = f_TrParam(m_oLocale.f_Tr(toms::text::g_pszBattleActiveArmed), toms::field::g_pszName, l_strId);
+    f_BattleEvent(toms::battle_event::g_pszActive, -1, -1, 0, l_strId);
     m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
 }
 
@@ -1953,8 +1963,8 @@ const nlohmann::json* Game::f_Battle3DStage() const {
 nlohmann::json Game::f_Battle3DStageForFloor() const {
     if (!m_bBattle3DAllowed || m_oSettings.m_iBattle3D == 2) return nullptr;   // (Settings > 3D battle: off)
     const int l_iFloor = f_BattleFloorNumber();
-    for (const auto& l_jR : m_jBattleJson.value("stages3d", nlohmann::json::array()))
-        if (l_iFloor >= l_jR.value("from", 1) && l_iFloor <= l_jR.value("to", 9999)) return l_jR;
+    for (const auto& l_jR : m_jBattleJson.value(toms::field::g_pszStages3d, nlohmann::json::array()))
+        if (l_iFloor >= l_jR.value(toms::field::g_pszFrom, 1) && l_iFloor <= l_jR.value(toms::field::g_pszTo, 9999)) return l_jR;
     return nullptr;
 }
 
@@ -1967,22 +1977,22 @@ glm::vec3 f_Vec3Of(const nlohmann::json& l_jA, const glm::vec3& l_v3Default) {
 
 Game::Battle3DCamera Game::f_Battle3DCamera(const glm::vec2& l_v2Device, const glm::vec4& l_v4Canvas) const {
     Battle3DCamera l_oC;
-    const nlohmann::json l_jCam = m_jBattle3DStage.is_object() ? m_jBattle3DStage.value("camera", nlohmann::json::object()) : nlohmann::json::object();
-    l_oC.m_v3Eye = f_Vec3Of(l_jCam.value("eye", nlohmann::json()), l_oC.m_v3Eye);
-    l_oC.m_v3Look = f_Vec3Of(l_jCam.value("look", nlohmann::json()), l_oC.m_v3Look);
+    const nlohmann::json l_jCam = m_jBattle3DStage.is_object() ? m_jBattle3DStage.value(toms::field::g_pszCamera, nlohmann::json::object()) : nlohmann::json::object();
+    l_oC.m_v3Eye = f_Vec3Of(l_jCam.value(toms::field::g_pszEye, nlohmann::json()), l_oC.m_v3Eye);
+    l_oC.m_v3Look = f_Vec3Of(l_jCam.value(toms::field::g_pszLook, nlohmann::json()), l_oC.m_v3Look);
     l_oC.m_v3Eye += m_v3BattleTravel;    // a boss sequence: the shot moved on with everyone (game_gauntlet.cpp)
     l_oC.m_v3Look += m_v3BattleTravel;
-    l_oC.m_fFovYDeg = l_jCam.value("fov", 45.0f);
+    l_oC.m_fFovYDeg = l_jCam.value(toms::field::g_pszFov, 45.0f);
     // The shot (made for a 4:3 screen) must fit the design canvas, where the fighters are drawn, across and up and
     // down: the canvas may be narrower than the screen (a tall window) or only part of it (letterboxed).
-    const float l_fMade = l_jCam.value("aspect", 4.0f / 3.0f);
+    const float l_fMade = l_jCam.value(toms::field::g_pszAspect, 4.0f / 3.0f);
     if (l_v2Device.y > 0.0f && l_v4Canvas.z > 0.0f && l_v4Canvas.w > 0.0f) {
         const float l_fTanMade = std::tan(glm::radians(l_oC.m_fFovYDeg) * 0.5f);
         const float l_fTan = std::max({l_fTanMade, l_fTanMade * l_fMade * l_v2Device.y / l_v4Canvas.z, l_fTanMade * l_v2Device.y / l_v4Canvas.w});
         l_oC.m_fFovYDeg = std::min(110.0f, glm::degrees(2.0f * std::atan(l_fTan)));
     }
     // breathing: a slow sway of a few centimetres, so the picture lives (21 §4.2)
-    const float l_fT = (float)m_iBattle3DTimeMs / 1000.0f, l_fAmp = l_jCam.value("breathe", 0.04f);
+    const float l_fT = (float)m_iBattle3DTimeMs / 1000.0f, l_fAmp = l_jCam.value(toms::field::g_pszBreathe, 0.04f);
     l_oC.m_v3Eye += glm::vec3(std::sin(l_fT * 0.37f) * l_fAmp, std::sin(l_fT * 0.53f + 1.0f) * l_fAmp * 0.6f, std::sin(l_fT * 0.29f + 2.0f) * l_fAmp * 0.5f);
     auto l_fnMiddle = [&](int l_iWho) { return f_Battle3DMark(l_iWho) + glm::vec3(0.0f, f_Battle3DHeight(l_iWho) * 0.55f, 0.0f); };
     // a close-up (a special move's "camera" block, the first danger's intro): a push in on its fighter, eased in and out;
@@ -1993,7 +2003,7 @@ Game::Battle3DCamera Game::f_Battle3DCamera(const glm::vec2& l_v2Device, const g
         const glm::vec3 l_v3Target = l_fnMiddle(m_oCs.m_iCamOn);
         glm::vec3 l_v3Arm = l_oC.m_v3Eye - l_v3Target;
         if (m_oCs.m_strCamMove == "low") {   // a monster's special attack coming (21 §4.2): low and close, looking up at it
-            const nlohmann::json l_jD = l_jCam.value("danger", nlohmann::json::object());
+            const nlohmann::json l_jD = l_jCam.value(toms::field::g_pszDanger, nlohmann::json::object());
             const glm::vec3 l_v3Feet = f_Battle3DMark(m_oCs.m_iCamOn);
             const float l_fH = f_Battle3DHeight(m_oCs.m_iCamOn);
             const float l_fP = 1.0f - (float)m_oCs.m_iCamMs / (float)std::max(1, m_oCs.m_iCamMsMax);
@@ -2002,11 +2012,11 @@ Game::Battle3DCamera Game::f_Battle3DCamera(const glm::vec2& l_v2Device, const g
             l_v3Dir /= l_fFar;
             const float l_fA = glm::radians(m_oCs.m_fCamDeg) * l_fP;   // a slow swing to the side while it holds: the depth shows
             l_v3Dir = glm::vec3(l_v3Dir.x * std::cos(l_fA) + l_v3Dir.z * std::sin(l_fA), 0.0f, -l_v3Dir.x * std::sin(l_fA) + l_v3Dir.z * std::cos(l_fA));
-            const glm::vec3 l_v3LowEye = l_v3Feet + l_v3Dir * (l_fFar / std::max(1.0f, m_oCs.m_fCamZoom)) + glm::vec3(0.0f, l_jD.value("height", 0.35f), 0.0f);
-            const glm::vec3 l_v3LowLook = l_v3Feet + glm::vec3(0.0f, l_fH * l_jD.value("lookAt", 0.75f), 0.0f);
+            const glm::vec3 l_v3LowEye = l_v3Feet + l_v3Dir * (l_fFar / std::max(1.0f, m_oCs.m_fCamZoom)) + glm::vec3(0.0f, l_jD.value(toms::field::g_pszHeight, 0.35f), 0.0f);
+            const glm::vec3 l_v3LowLook = l_v3Feet + glm::vec3(0.0f, l_fH * l_jD.value(toms::field::g_pszLookAt, 0.75f), 0.0f);
             l_oC.m_v3Eye = glm::mix(l_oC.m_v3Eye, l_v3LowEye, l_fK);
             l_oC.m_v3Look = glm::mix(l_oC.m_v3Look, l_v3LowLook, l_fK);
-            l_oC.m_fFovYDeg += l_fK * l_jD.value("fovAdd", 6.0f);   // a little wider: what is near grows more
+            l_oC.m_fFovYDeg += l_fK * l_jD.value(toms::field::g_pszFovAdd, 6.0f);   // a little wider: what is near grows more
             l_v3Arm = glm::vec3(0.0f);
         }
         if (m_oCs.m_strCamMove == "orbit") {
@@ -2018,23 +2028,23 @@ Game::Battle3DCamera Game::f_Battle3DCamera(const glm::vec2& l_v2Device, const g
         // the monster -- the shot goes where he looks. "rain": from there the camera cranes up and looks down on the monster
         // (a meteor shower falling on it), eased back down as it ends. "deg": the shoulder's side offset in degrees.
         if ((m_oCs.m_strCamMove == "behind" || m_oCs.m_strCamMove == "rain") && !m_oCs.m_vFoes.empty()) {
-            const nlohmann::json l_jB = l_jCam.value("behind", nlohmann::json::object());
+            const nlohmann::json l_jB = l_jCam.value(toms::field::g_pszBehind, nlohmann::json::object());
             const int l_iFoe = std::clamp(m_oCs.m_iTarget, 0, (int)m_oCs.m_vFoes.size() - 1);
             const glm::vec3 l_v3Hero = f_Battle3DHeroFeet(), l_v3Foe = f_Battle3DMark(l_iFoe);
             glm::vec3 l_v3Back(l_v3Hero.x - l_v3Foe.x, 0.0f, l_v3Hero.z - l_v3Foe.z);   // from the monster through the hero
             l_v3Back = glm::length(l_v3Back) > 1e-3f ? glm::normalize(l_v3Back) : glm::vec3(0.0f, 0.0f, 1.0f);
-            const float l_fSide = glm::radians(m_oCs.m_fCamDeg != 0.0f ? m_oCs.m_fCamDeg : l_jB.value("deg", 26.0f));
+            const float l_fSide = glm::radians(m_oCs.m_fCamDeg != 0.0f ? m_oCs.m_fCamDeg : l_jB.value(toms::field::g_pszDeg, 26.0f));
             l_v3Back = glm::vec3(l_v3Back.x * std::cos(l_fSide) + l_v3Back.z * std::sin(l_fSide), 0.0f, -l_v3Back.x * std::sin(l_fSide) + l_v3Back.z * std::cos(l_fSide));
             const float l_fHeroH = f_Battle3DHeight(-1), l_fFoeH = f_Battle3DHeight(l_iFoe);
-            glm::vec3 l_v3NewEye = l_v3Hero + l_v3Back * l_jB.value("distance", 3.8f) + glm::vec3(0.0f, l_fHeroH * l_jB.value("height", 1.2f), 0.0f);
+            glm::vec3 l_v3NewEye = l_v3Hero + l_v3Back * l_jB.value(toms::field::g_pszDistance, 3.8f) + glm::vec3(0.0f, l_fHeroH * l_jB.value(toms::field::g_pszHeight, 1.2f), 0.0f);
             glm::vec3 l_v3NewLook = l_v3Foe + glm::vec3(0.0f, l_fFoeH * 0.55f, 0.0f);
             if (m_oCs.m_strCamMove == "rain") {   // up high behind the hero, looking down on the monster as it is struck
-                const nlohmann::json l_jR = l_jCam.value("rain", nlohmann::json::object());
+                const nlohmann::json l_jR = l_jCam.value(toms::field::g_pszRain, nlohmann::json::object());
                 const float l_fP = 1.0f - (float)m_oCs.m_iCamMs / (float)std::max(1, m_oCs.m_iCamMsMax);
                 // behind him while the arrows go up (the first quarter), then up as they fall, holding there
-                const float l_fQ = std::clamp((l_fP - l_jR.value("holdShare", 0.25f)) / std::max(0.05f, l_jR.value("riseShare", 0.35f)), 0.0f, 1.0f);
+                const float l_fQ = std::clamp((l_fP - l_jR.value(toms::field::g_pszHoldShare, 0.25f)) / std::max(0.05f, l_jR.value(toms::field::g_pszRiseShare, 0.35f)), 0.0f, 1.0f);
                 const float l_fUp = l_fQ * l_fQ * (3.0f - 2.0f * l_fQ);
-                l_v3NewEye += glm::vec3(0.0f, l_jR.value("rise", 4.5f) * l_fUp, 0.0f) + l_v3Back * (l_jR.value("back", 1.2f) * l_fUp);
+                l_v3NewEye += glm::vec3(0.0f, l_jR.value(toms::field::g_pszRise, 4.5f) * l_fUp, 0.0f) + l_v3Back * (l_jR.value(toms::field::g_pszBack, 1.2f) * l_fUp);
                 l_v3NewLook = glm::mix(l_v3NewLook, l_v3Foe + glm::vec3(0.0f, l_fFoeH * 0.25f, 0.0f), l_fUp);
             }
             l_oC.m_v3Eye = glm::mix(l_oC.m_v3Eye, l_v3NewEye, l_fK);
@@ -2048,21 +2058,21 @@ Game::Battle3DCamera Game::f_Battle3DCamera(const glm::vec2& l_v2Device, const g
     // slow motion (the last blow): a slow drift in toward the target
     if (m_oCs.m_iSlowMs > 0 && !m_oCs.m_vFoes.empty()) {
         const glm::vec3 l_v3Target = l_fnMiddle(std::clamp(m_oCs.m_iTarget, 0, (int)m_oCs.m_vFoes.size() - 1));
-        const float l_fK = std::min(1.0f, (float)m_oCs.m_iSlowMs / 400.0f) * l_jCam.value("slowPush", 0.18f);
+        const float l_fK = std::min(1.0f, (float)m_oCs.m_iSlowMs / 400.0f) * l_jCam.value(toms::field::g_pszSlowPush, 0.18f);
         l_oC.m_v3Eye = glm::mix(l_oC.m_v3Eye, l_v3Target, l_fK);
         l_oC.m_v3Look = glm::mix(l_oC.m_v3Look, l_v3Target, l_fK);
     }
     l_oC.m_fDim = std::min(1.0f, 0.45f * (float)m_oCs.m_iDimMs / 700.0f);   // as the 2D veil, but as the stage's light
     // clouds passing the moon: its light drifts between "min" and full (two slow waves, so it never repeats plainly)
-    const nlohmann::json l_jClouds = m_jBattle3DStage.is_object() ? m_jBattle3DStage.value("clouds", nlohmann::json::object()) : nlohmann::json::object();
+    const nlohmann::json l_jClouds = m_jBattle3DStage.is_object() ? m_jBattle3DStage.value(toms::field::g_pszClouds, nlohmann::json::object()) : nlohmann::json::object();
     if (!l_jClouds.empty()) {
-        const float l_fSpeed = l_jClouds.value("speed", 0.08f), l_fMin = l_jClouds.value("min", 0.65f);
+        const float l_fSpeed = l_jClouds.value(toms::field::g_pszSpeed, 0.08f), l_fMin = l_jClouds.value(toms::field::g_pszMin, 0.65f);
         const float l_fW = 0.5f + 0.32f * std::sin(l_fT * l_fSpeed * 6.2832f) + 0.18f * std::sin(l_fT * l_fSpeed * 15.1f + 1.3f);
         l_oC.m_fMoon = l_fMin + (1.0f - l_fMin) * glm::clamp(l_fW, 0.0f, 1.0f);
     }
     // a shake: the camera itself, fading out (the 2D one's pixels as centimetres: 8 px ~ 5 cm)
     if (m_oCs.m_iShakeMs > 0 && m_oCs.m_fShakePx > 0.0f) {
-        const float l_fS = m_oCs.m_fShakePx * l_jCam.value("shakeScale", 0.006f) * (float)m_oCs.m_iShakeMs / (float)std::max(1, m_oCs.m_iShakeMsMax);
+        const float l_fS = m_oCs.m_fShakePx * l_jCam.value(toms::field::g_pszShakeScale, 0.006f) * (float)m_oCs.m_iShakeMs / (float)std::max(1, m_oCs.m_iShakeMsMax);
         const float l_fMs = (float)m_iBattle3DTimeMs;
         const glm::vec3 l_v3D(std::sin(l_fMs * 0.091f) * l_fS, std::sin(l_fMs * 0.077f + 1.3f) * l_fS, std::sin(l_fMs * 0.063f + 2.1f) * l_fS * 0.5f);
         l_oC.m_v3Eye += l_v3D;
@@ -2072,33 +2082,33 @@ Game::Battle3DCamera Game::f_Battle3DCamera(const glm::vec2& l_v2Device, const g
 }
 
 glm::vec3 Game::f_Battle3DMark(int l_iWho) const {
-    const nlohmann::json l_jMarks = m_jBattle3DStage.is_object() ? m_jBattle3DStage.value("marks", nlohmann::json::object()) : nlohmann::json::object();
+    const nlohmann::json l_jMarks = m_jBattle3DStage.is_object() ? m_jBattle3DStage.value(toms::field::g_pszMarks, nlohmann::json::object()) : nlohmann::json::object();
     // (a boss sequence: everyone moved on to the next monster's place, m_v3BattleTravel)
-    if (l_iWho < 0) return f_Vec3Of(l_jMarks.value("hero", nlohmann::json()), glm::vec3(-1.2f, 0.0f, 2.0f)) + m_v3BattleTravel;
+    if (l_iWho < 0) return f_Vec3Of(l_jMarks.value(toms::field::g_pszHero, nlohmann::json()), glm::vec3(-1.2f, 0.0f, 2.0f)) + m_v3BattleTravel;
     // the monsters: their own marks for this many (monsters2, monsters3), else spread across from the one mark
     const int l_iCount = std::max(1, (int)m_oCs.m_vFoes.size());
-    const nlohmann::json l_jMany = l_jMarks.value("monsters" + std::to_string(l_iCount), nlohmann::json::array());
+    const nlohmann::json l_jMany = l_jMarks.value(toms::field::g_pszMonsters + std::to_string(l_iCount), nlohmann::json::array());
     if (l_iCount > 1 && l_jMany.is_array() && l_iWho < (int)l_jMany.size()) return f_Vec3Of(l_jMany[(size_t)l_iWho], glm::vec3(0.0f)) + m_v3TravelTo;
-    const glm::vec3 l_v3One = f_Vec3Of(l_jMarks.value("monster", nlohmann::json()), glm::vec3(0.6f, 0.0f, -1.0f));
-    const float l_fGap = l_jMarks.value("spacing", 1.8f);
+    const glm::vec3 l_v3One = f_Vec3Of(l_jMarks.value(toms::field::g_pszMonster, nlohmann::json()), glm::vec3(0.6f, 0.0f, -1.0f));
+    const float l_fGap = l_jMarks.value(toms::field::g_pszSpacing, 1.8f);
     return l_v3One + glm::vec3(((float)l_iWho - (float)(l_iCount - 1) * 0.5f) * l_fGap, 0.0f, 0.0f) + m_v3TravelTo;   // (its own place: the hero travels to it)
 }
 
 float Game::f_Battle3DHeight(int l_iWho) const {
-    const nlohmann::json l_jH = m_jBattle3DStage.is_object() ? m_jBattle3DStage.value("heights", nlohmann::json::object()) : nlohmann::json::object();
-    if (l_iWho < 0) return l_jH.value("hero", 1.8f);
+    const nlohmann::json l_jH = m_jBattle3DStage.is_object() ? m_jBattle3DStage.value(toms::field::g_pszHeights, nlohmann::json::object()) : nlohmann::json::object();
+    if (l_iWho < 0) return l_jH.value(toms::field::g_pszHero, 1.8f);
     // Its body type (the owner, 2026-11-13: "5 body type values (1-5) ... the stronger monster should look bigger but some
     // special monster not"): enemies.json "body" picks battle.json "bodyScale" times the stage's monster height (the
     // thicketoad, body 3: 2 x 1.6 m). Without a body: the stage's monster or big height. "scale3d": a monster's own
     // factor on top. Its picture's size there, its shadow, its head's name and HP all follow.
-    float l_fHeight = f_FoeIsBig(l_iWho) ? l_jH.value("big", 3.0f) : l_jH.value("monster", 1.6f);
+    float l_fHeight = f_FoeIsBig(l_iWho) ? l_jH.value(toms::field::g_pszBig, 3.0f) : l_jH.value(toms::field::g_pszMonster, 1.6f);
     float l_fScale = 1.0f;
     if (l_iWho < (int)m_oCs.m_vFoes.size()) {
         const auto l_itT = m_mapEnemyTpl.find(m_oCs.m_vFoes[(size_t)l_iWho].m_oEnemy.m_strId);
         if (l_itT != m_mapEnemyTpl.end()) {
-            const int l_iBody = l_itT->second.value("body", 0);
-            if (l_iBody >= 1 && l_iBody <= 5) l_fHeight = l_jH.value("monster", 1.6f) * std::clamp(m_jBodyScale.value(std::to_string(l_iBody), 1.0f), 0.1f, 10.0f);
-            l_fScale = std::clamp(l_itT->second.value("scale3d", 1.0f), 0.1f, 10.0f);
+            const int l_iBody = l_itT->second.value(toms::field::g_pszBody, 0);
+            if (l_iBody >= 1 && l_iBody <= 5) l_fHeight = l_jH.value(toms::field::g_pszMonster, 1.6f) * std::clamp(m_jBodyScale.value(std::to_string(l_iBody), 1.0f), 0.1f, 10.0f);
+            l_fScale = std::clamp(l_itT->second.value(toms::field::g_pszScale3d, 1.0f), 0.1f, 10.0f);
         }
     }
     return l_fHeight * l_fScale;
@@ -2181,8 +2191,8 @@ glm::vec2 Game::f_Battle3DToDesign(const glm::vec3& l_v3P, bool& l_bOk, float* l
 // player's blows on a monster and a monster's on the player, the intensity, range and time).
 void Game::f_AddBattle3DFlash(int l_iWho, int l_iDelayMs) {
     if (!m_jBattle3DStage.is_object() || m_oSettings.m_bReduceEffects) return;
-    const nlohmann::json l_jF = m_jBattle3DStage.value("flash", nlohmann::json::object());
-    if (l_jF.value("off", false)) return;
+    const nlohmann::json l_jF = m_jBattle3DStage.value(toms::field::g_pszFlash, nlohmann::json::object());
+    if (l_jF.value(toms::field::g_pszOff, false)) return;
     Battle3DFlash l_oF;
     const int l_iAt = l_iWho < 0 ? -1 : std::min(l_iWho, std::max(0, (int)m_oCs.m_vFoes.size() - 1));
     // a little in front of the fighter, at its middle: the light falls on the ground around it and on the stage near it
@@ -2190,10 +2200,10 @@ void Game::f_AddBattle3DFlash(int l_iWho, int l_iDelayMs) {
     const nlohmann::json l_jC = l_jF.value(l_iAt < 0 ? "onHero" : "onMonster", nlohmann::json());
     l_oF.m_v3Color = l_jC.is_array() && l_jC.size() >= 3 ? glm::vec3(l_jC[0].get<float>(), l_jC[1].get<float>(), l_jC[2].get<float>())
                                                        : (l_iAt < 0 ? glm::vec3(1.0f, 0.45f, 0.35f) : glm::vec3(1.0f, 0.85f, 0.6f));
-    l_oF.m_fIntensity = l_jF.value("intensity", 9.0f);
-    l_oF.m_fRange = l_jF.value("range", 6.0f);
+    l_oF.m_fIntensity = l_jF.value(toms::field::g_pszIntensity, 9.0f);
+    l_oF.m_fRange = l_jF.value(toms::field::g_pszRange, 6.0f);
     l_oF.m_iDelayMs = std::max(0, l_iDelayMs);
-    l_oF.m_iMs = l_oF.m_iMsMax = std::max(60, l_jF.value("ms", 260));
+    l_oF.m_iMs = l_oF.m_iMsMax = std::max(60, l_jF.value(toms::field::g_pszMs, 260));
     if (m_vBattle3DFlashes.size() >= 6) m_vBattle3DFlashes.erase(m_vBattle3DFlashes.begin());
     m_vBattle3DFlashes.push_back(l_oF);
 }
@@ -2203,18 +2213,18 @@ std::vector<Game::Battle3DLight> Game::f_Battle3DLights() const {
     if (!m_jBattle3DStage.is_object()) return l_vOut;
     const float l_fT = (float)m_iBattle3DTimeMs / 1000.0f;
     int l_iN = 0;
-    for (const auto& l_jF : m_jBattle3DStage.value("fires", nlohmann::json::array())) {
+    for (const auto& l_jF : m_jBattle3DStage.value(toms::field::g_pszFires, nlohmann::json::array())) {
         Battle3DLight l_oL;
-        const nlohmann::json l_jAt = l_jF.value("at", nlohmann::json::array());
+        const nlohmann::json l_jAt = l_jF.value(toms::field::g_pszAt, nlohmann::json::array());
         if (l_jAt.is_array() && l_jAt.size() >= 3) l_oL.m_v3Pos = glm::vec3(l_jAt[0].get<float>(), l_jAt[1].get<float>(), l_jAt[2].get<float>());
-        l_oL.m_v3Pos.y += l_jF.value("lightHeight", 0.6f);
-        const nlohmann::json l_jC = l_jF.value("color", nlohmann::json::array({1.0f, 0.55f, 0.22f}));
+        l_oL.m_v3Pos.y += l_jF.value(toms::field::g_pszLightHeight, 0.6f);
+        const nlohmann::json l_jC = l_jF.value(toms::field::g_pszColor, nlohmann::json::array({1.0f, 0.55f, 0.22f}));
         l_oL.m_v3Color = glm::vec3(l_jC[0].get<float>(), l_jC[1].get<float>(), l_jC[2].get<float>());
         // a flame's flicker: a few unrelated waves (each fire its own) and a quick shiver on top
-        const float l_fK = l_jF.value("flicker", 0.35f), l_fP = 1.7f * (float)l_iN++;
+        const float l_fK = l_jF.value(toms::field::g_pszFlicker, 0.35f), l_fP = 1.7f * (float)l_iN++;
         const float l_fWave = 0.5f * std::sin(l_fT * 7.3f + l_fP) + 0.3f * std::sin(l_fT * 13.1f + 2.0f * l_fP) + 0.2f * std::sin(l_fT * 23.7f + 3.0f * l_fP);
-        l_oL.m_fIntensity = l_jF.value("intensity", 7.0f) * (1.0f + l_fK * l_fWave);
-        l_oL.m_fRange = l_jF.value("range", 7.0f);
+        l_oL.m_fIntensity = l_jF.value(toms::field::g_pszIntensity, 7.0f) * (1.0f + l_fK * l_fWave);
+        l_oL.m_fRange = l_jF.value(toms::field::g_pszRange, 7.0f);
         l_oL.m_v3Pos += glm::vec3(0.04f * std::sin(l_fT * 9.0f + l_fP), 0.05f * std::sin(l_fT * 11.0f + l_fP), 0.0f);   // the flame sways: so do its shadows
         l_vOut.push_back(l_oL);
     }
@@ -2236,9 +2246,9 @@ std::vector<Game::Battle3DLight> Game::f_Battle3DLights() const {
 // ambient motes and fireflies (battle.json backdrops "fx") over the whole stage, as they were over the painted one.
 void Game::f_DrawBattle3DStageFx() {
     if (!m_pRen || !m_spBattleFxFile) return;
-    const nlohmann::json l_jFires = m_jBattle3DStage.is_object() ? m_jBattle3DStage.value("fires", nlohmann::json::array()) : nlohmann::json::array();
+    const nlohmann::json l_jFires = m_jBattle3DStage.is_object() ? m_jBattle3DStage.value(toms::field::g_pszFires, nlohmann::json::array()) : nlohmann::json::array();
     for (size_t l_nI = 0; l_nI < m_vStageFireFx.size() && l_nI < l_jFires.size(); l_nI++) {
-        const nlohmann::json l_jAt = l_jFires[l_nI].value("at", nlohmann::json::array());
+        const nlohmann::json l_jAt = l_jFires[l_nI].value(toms::field::g_pszAt, nlohmann::json::array());
         if (!l_jAt.is_array() || l_jAt.size() < 3) continue;
         bool l_bOk = false;
         float l_fPx = 0.0f;
@@ -2246,13 +2256,13 @@ void Game::f_DrawBattle3DStageFx() {
             const glm::vec3 l_v3At(l_jAt[0].get<float>(), l_jAt[1].get<float>(), l_jAt[2].get<float>());
             const glm::mat4 l_mat4M = f_Battle3DSpriteMatrix(glm::vec2(0.0f), l_v3At, 0.01f);
             m_pRen->f_BeginWorld(&l_mat4M[0][0], false);
-            m_vStageFireFx[l_nI].f_Draw(m_pRen, m_spBattleFxFile->f_Atlases(), toms::anim::f_Placement(0.0f, 0.0f, l_jFires[l_nI].value("size", 1.0f)), nullptr);
+            m_vStageFireFx[l_nI].f_Draw(m_pRen, m_spBattleFxFile->f_Atlases(), toms::anim::f_Placement(0.0f, 0.0f, l_jFires[l_nI].value(toms::field::g_pszSize, 1.0f)), nullptr);
             m_pRen->f_EndWorld();
             continue;
         }
         const glm::vec2 l_v2At = f_Battle3DToDesign(glm::vec3(l_jAt[0].get<float>(), l_jAt[1].get<float>(), l_jAt[2].get<float>()), l_bOk, &l_fPx);
         if (!l_bOk || l_fPx <= 0.0f) continue;
-        m_vStageFireFx[l_nI].f_Draw(m_pRen, m_spBattleFxFile->f_Atlases(), toms::anim::f_Placement(l_v2At.x, l_v2At.y, l_fPx / 100.0f * l_jFires[l_nI].value("size", 1.0f)), nullptr);
+        m_vStageFireFx[l_nI].f_Draw(m_pRen, m_spBattleFxFile->f_Atlases(), toms::anim::f_Placement(l_v2At.x, l_v2At.y, l_fPx / 100.0f * l_jFires[l_nI].value(toms::field::g_pszSize, 1.0f)), nullptr);
     }
     if (!m_vBackdropFx.empty()) {
         const float l_fW = (float)m_pRen->f_Width(), l_fH = (float)m_pRen->f_Height();
@@ -2267,15 +2277,15 @@ void Game::f_DrawBattle3DStageFx() {
 // battle.json stage camera "danger" "ms". Never with Reduce effects.
 void Game::f_Battle3DDangerShot(int l_iFoe, bool l_bIntro) {
     if (!m_bBattle3DOn || m_oSettings.m_bReduceEffects || !m_jBattle3DStage.is_object()) return;
-    const nlohmann::json l_jD = m_jBattle3DStage.value("camera", nlohmann::json::object()).value("danger", nlohmann::json::object());
-    if (l_jD.value("off", false)) return;
-    m_oCs.m_fCamZoom = std::max(1.01f, l_jD.value("zoom", 2.2f));
-    if (!l_bIntro) m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = std::max(300, l_jD.value("ms", 1000));   // (the intro keeps its own time)
+    const nlohmann::json l_jD = m_jBattle3DStage.value(toms::field::g_pszCamera, nlohmann::json::object()).value(toms::field::g_pszDanger, nlohmann::json::object());
+    if (l_jD.value(toms::field::g_pszOff, false)) return;
+    m_oCs.m_fCamZoom = std::max(1.01f, l_jD.value(toms::field::g_pszZoom, 2.2f));
+    if (!l_bIntro) m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = std::max(300, l_jD.value(toms::field::g_pszMs, 1000));   // (the intro keeps its own time)
     m_oCs.m_iCamOn = l_iFoe;
     m_oCs.m_strCamMove = "low";
     m_oCs.m_fCamPan = 0.0f;
-    m_oCs.m_fCamDeg = l_jD.value("deg", 14.0f);
-    const float l_fRumble = l_jD.value("rumble", 6.0f);
+    m_oCs.m_fCamDeg = l_jD.value(toms::field::g_pszDeg, 14.0f);
+    const float l_fRumble = l_jD.value(toms::field::g_pszRumble, 6.0f);
     if (l_fRumble > 0.0f) {
         m_oCs.m_fShakePx = std::max(m_oCs.m_fShakePx, l_fRumble);
         m_oCs.m_iShakeMs = m_oCs.m_iShakeMsMax = std::max(m_oCs.m_iShakeMs, 380);
@@ -2288,18 +2298,18 @@ void Game::f_Battle3DDangerShot(int l_iFoe, bool l_bIntro) {
 // waits this long: the "power" clip is made 3.5 s), powerFx, powerSound; chargeFx every chargeFxEveryMs while it
 // charges; at the hit unleashFx, shout, shakePx / shakeMs; off. The cells' warning time (cells warnMs) is the charge.
 void Game::f_StartFoePower(int l_iFoe, bool l_bIntro) {
-    const nlohmann::json l_jS = f_FeelFx().value("specialAttack", nlohmann::json::object());
-    if (l_jS.value("off", false) || l_iFoe < 0 || l_iFoe >= (int)m_oCs.m_vFoes.size()) return;
+    const nlohmann::json l_jS = f_FeelFx().value(toms::field::g_pszSpecialAttack, nlohmann::json::object());
+    if (l_jS.value(toms::field::g_pszOff, false) || l_iFoe < 0 || l_iFoe >= (int)m_oCs.m_vFoes.size()) return;
     CombatState::Foe& l_oF = m_oCs.m_vFoes[(size_t)l_iFoe];
-    const int l_iPower = std::max(0, l_jS.value("powerMs", 3500));
+    const int l_iPower = std::max(0, l_jS.value(toms::field::g_pszPowerMs, 3500));
     // the fight's first: the cells' intro (everything waits) is the start of it
     l_oF.m_iPowerMs = l_bIntro ? std::max(0, l_iPower - m_oCellRules.m_iIntroMs) : l_iPower;
     l_oF.m_bPowered = true;
     l_oF.m_iChargeFxMs = 0;
-    f_BattleEvent("power", l_iFoe, -1, l_iPower);
-    f_FoeLook(l_iFoe, "power");   // its clip (a look's "power" state may add a sound or particles of its own)
-    f_PlayBattleFx(l_jS.value("powerFx", std::string("monster_power")), l_iFoe);
-    f_PlayFoeSound(l_iFoe, l_jS.value("powerSound", std::string("sfx.monster_power")));
+    f_BattleEvent(toms::battle_event::g_pszPower, l_iFoe, -1, l_iPower);
+    f_FoeLook(l_iFoe, toms::state::g_pszPower);   // its clip (a look's "power" state may add a sound or particles of its own)
+    f_PlayBattleFx(l_jS.value(toms::field::g_pszPowerFx, std::string("monster_power")), l_iFoe);
+    f_PlayFoeSound(l_iFoe, l_jS.value(toms::field::g_pszPowerSound, std::string(toms::key::g_pszSfxMonsterPower)));
     if (m_oCs.m_iCamOn == l_iFoe && m_oCs.m_iCamMs > 0)   // the close-up stays on it for the whole power-up
         m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = std::max(m_oCs.m_iCamMsMax, l_iPower);
 }
@@ -2309,40 +2319,40 @@ void Game::f_StartFoePower(int l_iFoe, bool l_bIntro) {
 // the boss banner from the left: "必殺技！" and the attack's name typed in; its power pose, a burst, the boss sting.
 // battle.json feelFx "specialAttack" "intro": ms, zoom, pan, label, fx, sound, off. Then it lands (f_BattleFrame).
 void Game::f_StartFoeIntro(int l_iFoe) {
-    const nlohmann::json l_jI = f_FeelFx().value("specialAttack", nlohmann::json::object()).value("intro", nlohmann::json::object());
+    const nlohmann::json l_jI = f_FeelFx().value(toms::field::g_pszSpecialAttack, nlohmann::json::object()).value(toms::field::g_pszIntro, nlohmann::json::object());
     const CombatState::Foe& l_oF = m_oCs.m_vFoes[(size_t)l_iFoe];
     const toms::MoveDef& l_oM = m_oMoves.f_Get(l_oF.m_strMove);
-    const int l_iMs = std::max(300, l_jI.value("ms", 1700));
+    const int l_iMs = std::max(300, l_jI.value(toms::field::g_pszMs, 1700));
     m_oCs.m_iIntroFoeFire = l_iFoe;
     m_oCs.m_iIntroOwner = l_iFoe;
     m_oCs.m_iHeroIntroMs = m_oCs.m_iHeroIntroMsMax = l_iMs;
-    m_oCs.m_strHeroIntroLabel = l_jI.value("label", std::string("battle.foe_special_label"));
+    m_oCs.m_strHeroIntroLabel = l_jI.value(toms::field::g_pszLabel, std::string(toms::text::g_pszBattleFoeSpecialLabel));
     m_oCs.m_strIntroName = !l_oM.m_strText.empty() && m_oLocale.f_Has(l_oM.m_strText) ? m_oLocale.f_Tr(l_oM.m_strText) : l_oF.m_oEnemy.m_strName;
-    f_BattleEvent("foeIntro", l_iFoe, -1, l_iMs, l_oF.m_strMove);
-    f_FoeLook(l_iFoe, "power");
-    f_PlayBattleFx(l_jI.value("fx", std::string("monster_power")), l_iFoe);
-    f_PlayFoeSound(l_iFoe, l_jI.value("sound", std::string("sfx.boss_intro")));
+    f_BattleEvent(toms::battle_event::g_pszFoeIntro, l_iFoe, -1, l_iMs, l_oF.m_strMove);
+    f_FoeLook(l_iFoe, toms::state::g_pszPower);
+    f_PlayBattleFx(l_jI.value(toms::field::g_pszFx, std::string("monster_power")), l_iFoe);
+    f_PlayFoeSound(l_iFoe, l_jI.value(toms::field::g_pszSound, std::string(toms::key::g_pszSfxBossIntro)));
     const bool l_bReduced = m_oSettings.m_bReduceEffects;
-    const float l_fZoom = l_jI.value("zoom", 1.45f);
+    const float l_fZoom = l_jI.value(toms::field::g_pszZoom, 1.45f);
     m_oCs.m_fCamZoom = l_bReduced ? 1.0f + (l_fZoom - 1.0f) * 0.4f : std::max(1.01f, l_fZoom);
     m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = l_iMs;
     m_oCs.m_iCamOn = l_iFoe;
     m_oCs.m_strCamMove = "low";
-    m_oCs.m_fCamDeg = l_jI.value("deg", 12.0f);
-    m_oCs.m_fCamPan = std::clamp(l_jI.value("pan", 0.85f), 0.0f, 1.0f);
+    m_oCs.m_fCamDeg = l_jI.value(toms::field::g_pszDeg, 12.0f);
+    m_oCs.m_fCamPan = std::clamp(l_jI.value(toms::field::g_pszPan, 0.85f), 0.0f, 1.0f);
 }
 
 void Game::f_UnleashFoePower(int l_iFoe) {
     CombatState::Foe& l_oF = m_oCs.m_vFoes[(size_t)l_iFoe];
     l_oF.m_bPowered = false;
     l_oF.m_iPowerMs = 0;
-    const nlohmann::json l_jS = f_FeelFx().value("specialAttack", nlohmann::json::object());
-    f_BattleEvent("unleash", l_iFoe, -1);
-    f_PlayBattleFx(l_jS.value("unleashFx", std::string("monster_unleash")), l_iFoe);
-    f_PlayFoeSound(l_iFoe, l_jS.value("shout", std::string("sfx.monster_roar")));
+    const nlohmann::json l_jS = f_FeelFx().value(toms::field::g_pszSpecialAttack, nlohmann::json::object());
+    f_BattleEvent(toms::battle_event::g_pszUnleash, l_iFoe, -1);
+    f_PlayBattleFx(l_jS.value(toms::field::g_pszUnleashFx, std::string("monster_unleash")), l_iFoe);
+    f_PlayFoeSound(l_iFoe, l_jS.value(toms::field::g_pszShout, std::string(toms::key::g_pszSfxMonsterRoar)));
     if (!m_oSettings.m_bReduceEffects) {
-        m_oCs.m_fShakePx = std::max(m_oCs.m_fShakePx, l_jS.value("shakePx", 16.0f));
-        m_oCs.m_iShakeMs = m_oCs.m_iShakeMsMax = std::max(m_oCs.m_iShakeMs, l_jS.value("shakeMs", 520));
+        m_oCs.m_fShakePx = std::max(m_oCs.m_fShakePx, l_jS.value(toms::field::g_pszShakePx, 16.0f));
+        m_oCs.m_iShakeMs = m_oCs.m_iShakeMsMax = std::max(m_oCs.m_iShakeMs, l_jS.value(toms::field::g_pszShakeMs, 520));
     }
 }
 
@@ -2351,16 +2361,16 @@ void Game::f_UnleashFoePower(int l_iFoe) {
 // (knocked back, down on a knee, up again: 1.6 s), and no attack starts for "downMs" (the clip's length). Moving between
 // the cells and guarding still work.
 void Game::f_KnockDownHero() {
-    const nlohmann::json l_jS = f_FeelFx().value("specialAttack", nlohmann::json::object());
-    const int l_iMs = std::max(0, l_jS.value("downMs", 1600));
+    const nlohmann::json l_jS = f_FeelFx().value(toms::field::g_pszSpecialAttack, nlohmann::json::object());
+    const int l_iMs = std::max(0, l_jS.value(toms::field::g_pszDownMs, 1600));
     if (l_iMs <= 0) return;
     m_oCs.m_iHeroDownMs = l_iMs;
     m_oCs.m_oCombo = toms::ComboPlay{};   // the attack he was in is lost
     m_oCs.m_oTouch.f_Stop();
     m_oCs.m_iChargeMs = 0;
     m_bTouchHeld = false;
-    f_BattleEvent("heroDown", -1, -1, l_iMs);
-    if (f_BattleRigReady() && m_upPlayerView && m_upPlayerView->f_Has("hurt_big")) f_SetBattleRigState("hurt_big", true, "hurt_big");
+    f_BattleEvent(toms::battle_event::g_pszHeroDown, -1, -1, l_iMs);
+    if (f_BattleRigReady() && m_upPlayerView && m_upPlayerView->f_Has(toms::state::g_pszHurtBig)) f_SetBattleRigState(toms::state::g_pszHurtBig, true, toms::state::g_pszHurtBig);
 }
 
 bool Game::f_FoeCharging(int l_iFoe) const {
@@ -2373,7 +2383,7 @@ bool Game::f_FoeCharging(int l_iFoe) const {
 
 bool Game::f_Battle3DSpritesOn() const {
     if (!m_bBattle3DOn || !m_pRen || !m_pRen->f_SupportsWorld() || !m_jBattle3DStage.is_object()) return false;
-    return !m_jBattle3DStage.value("sprites", nlohmann::json::object()).value("off", false);
+    return !m_jBattle3DStage.value(toms::field::g_pszSprites, nlohmann::json::object()).value(toms::field::g_pszOff, false);
 }
 
 glm::mat4 Game::f_Battle3DSpriteMatrix(const glm::vec2& l_v2Anchor, const glm::vec3& l_v3At, float l_fMetresPerPx) const {
@@ -2401,12 +2411,12 @@ void Game::f_DrawBattle3DFighter(int l_iWho) {
     const glm::mat4 l_mat4M = f_Battle3DSpriteMatrix(l_v2Feet, l_v3Feet, f_Battle3DHeight(l_iWho) / l_v4Box.w);
     glm::mat4 l_mat4Draw = l_mat4M;
     if (l_iWho < 0 && m_oCs.m_iTravelMs > 0) {   // a boss's sequence: the hero runs on to the next monster (the owner, 2026-11-23)
-        const nlohmann::json l_jRun = m_jBattleJson.value("gauntlet", nlohmann::json::object()).value("run", nlohmann::json::object());
+        const nlohmann::json l_jRun = m_jBattleJson.value(toms::field::g_pszGauntlet, nlohmann::json::object()).value(toms::field::g_pszRun, nlohmann::json::object());
         const float l_fT = (float)(m_oCs.m_iTravelMsMax - m_oCs.m_iTravelMs) / 1000.0f;
-        const float l_fStride = l_jRun.value("stridesPerS", 2.6f);
-        const float l_fBob = std::fabs(std::sin(l_fT * l_fStride * 3.14159265f)) * l_jRun.value("bounce", 0.09f);   // a bounce each step
+        const float l_fStride = l_jRun.value(toms::field::g_pszStridesPerS, 2.6f);
+        const float l_fBob = std::fabs(std::sin(l_fT * l_fStride * 3.14159265f)) * l_jRun.value(toms::field::g_pszBounce, 0.09f);   // a bounce each step
         // leaning into the run: the picture's up tilted a little toward the way he goes (the monster's side of the screen)
-        const float l_fLean = glm::radians(l_jRun.value("leanDeg", 9.0f));
+        const float l_fLean = glm::radians(l_jRun.value(toms::field::g_pszLeanDeg, 9.0f));
         const glm::vec3 l_v3Feet = f_Battle3DHeroFeet();
         const glm::vec3 l_v3Normal = glm::normalize(glm::vec3(l_mat4M[2]));
         const glm::mat4 l_mat4Tilt = glm::rotate(glm::mat4(1.0f), -l_fLean, l_v3Normal);
@@ -2418,7 +2428,7 @@ void Game::f_DrawBattle3DFighter(int l_iWho) {
             m_iRunPuffStep = l_iNow / l_iStepMs;
             bool l_bOk = false;
             const glm::vec2 l_v2At = f_Battle3DToDesign(l_v3Feet, l_bOk);
-            if (l_bOk) f_PlayBattleFxAt(l_jRun.value("dust", std::string("miss_puff")), l_v2At.x, l_v2At.y, false, 0, l_jRun.value("dustScale", 0.6f));
+            if (l_bOk) f_PlayBattleFxAt(l_jRun.value(toms::field::g_pszDust, std::string("miss_puff")), l_v2At.x, l_v2At.y, false, 0, l_jRun.value(toms::field::g_pszDustScale, 0.6f));
         }
     }
     m_pRen->f_BeginWorld(&l_mat4Draw[0][0], true);
@@ -2454,7 +2464,7 @@ glm::vec3 Game::f_Battle3DHeroFeet() const {
 // A boss before its banner (the owner, 2026-11-23: "half black, then turn to colored, then the Mega Man effect"): dark
 // while its introduction waits to start (bossIntro "dark"), then its colours come in over revealMs, then the banner.
 float Game::f_FoeDarkness(int l_iFoe) const {
-    const float l_fDark = std::clamp(f_FeelFx().value("bossIntro", nlohmann::json::object()).value("dark", 0.85f), 0.0f, 1.0f);
+    const float l_fDark = std::clamp(f_FeelFx().value(toms::field::g_pszBossIntro, nlohmann::json::object()).value(toms::field::g_pszDark, 0.85f), 0.0f, 1.0f);
     if (m_oCs.m_iBossIntroFoe == l_iFoe) return l_fDark;
     if (m_oCs.m_iRevealFoe == l_iFoe && m_oCs.m_iRevealMsMax > 0) {
         const float l_fLeft = (float)m_oCs.m_iRevealMs / (float)m_oCs.m_iRevealMsMax;   // 1 .. 0

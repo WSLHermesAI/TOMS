@@ -1,4 +1,5 @@
 // battle_party.cpp -- see battle_party.h.
+#include "game_names.h"   // toms::state, toms::battle_event, ... (no hard-coded name)
 #include "battle_party.h"
 
 #include <cstdio>
@@ -32,11 +33,11 @@ std::string f_BattleEventLine(const BattleEvent& l_oE, const std::vector<std::st
     char l_pszT[16];
     std::snprintf(l_pszT, sizeof l_pszT, "%6.2f", l_oE.m_iMs / 1000.0);
     std::string l_strS = std::string(l_pszT) + "  " + l_fnName(l_oE.m_iWho);
-    if (l_oE.m_iWhom != l_oE.m_iWho && (l_oE.m_strType == "hit" || l_oE.m_strType == "combo" || l_oE.m_strType == "super" || l_oE.m_strType == "target" ||
-                             l_oE.m_strType == "parry" || l_oE.m_strType == "guardBreak" || l_oE.m_strType == "spellBreak" || l_oE.m_strType == "summon"))
+    if (l_oE.m_iWhom != l_oE.m_iWho && (l_oE.m_strType == toms::battle_event::g_pszHit || l_oE.m_strType == toms::battle_event::g_pszCombo || l_oE.m_strType == toms::battle_event::g_pszSuper || l_oE.m_strType == toms::battle_event::g_pszTarget ||
+                             l_oE.m_strType == toms::battle_event::g_pszParry || l_oE.m_strType == toms::battle_event::g_pszGuardBreak || l_oE.m_strType == toms::battle_event::g_pszSpellBreak || l_oE.m_strType == toms::battle_event::g_pszSummon))
         l_strS += " -> " + l_fnName(l_oE.m_iWhom);
     l_strS += ": " + l_oE.m_strType;
-    if (l_oE.m_strType == "hit" || l_oE.m_strType == "guard" || l_oE.m_strType == "combo" || l_oE.m_strType == "super") l_strS += " " + std::to_string(l_oE.m_iValue);
+    if (l_oE.m_strType == toms::battle_event::g_pszHit || l_oE.m_strType == toms::battle_event::g_pszGuard || l_oE.m_strType == toms::battle_event::g_pszCombo || l_oE.m_strType == toms::battle_event::g_pszSuper) l_strS += " " + std::to_string(l_oE.m_iValue);
     if (!l_oE.m_strNote.empty()) l_strS += " (" + l_oE.m_strNote + ")";
     return l_strS;
 }

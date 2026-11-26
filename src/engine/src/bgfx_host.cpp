@@ -27,6 +27,7 @@ int g_iMsaa = 0;   // BgfxHostConfig::msaa
 bool g_bFlipAfterRender = false;   // BgfxHostConfig::flipAfterRender
 uint32_t g_uDebug = BGFX_DEBUG_NONE;
 bool g_bStats = false, g_bHud = false;   // --stats overlay, F3 HUD: both make g_debug
+bool g_bProfiler = false;                 // the performance checker's per-view times (BGFX_DEBUG_PROFILER)
 std::atomic<int> g_oScreenshots{0};
 
 // bgfx reports fatal errors, traces and screenshots through this callback.
@@ -195,16 +196,46 @@ double f_BgfxHostGpuMs() {
     return l_pS && l_pS->gpuTimerFreq > 0 ? double(l_pS->gpuTimeEnd - l_pS->gpuTimeBegin) * 1000.0 / double(l_pS->gpuTimerFreq) : 0;
 }
 
+void f_BgfxHostFrameStats(BgfxFrameStats& l_oOut) {
+    l_oOut = BgfxFrameStats();
+    if (!g_bReady) return;
+    const bgfx::Stats* l_pS = bgfx::getStats();
+    if (!l_pS) return;
+    l_oOut.m_dGpuMs = l_pS->gpuTimerFreq > 0 ? double(l_pS->gpuTimeEnd - l_pS->gpuTimeBegin) * 1000.0 / double(l_pS->gpuTimerFreq) : 0;
+    l_oOut.m_uDrawCalls = l_pS->numDraw;
+    l_oOut.m_uComputeCalls = l_pS->numCompute;
+    l_oOut.m_u64Triangles = (uint64_t)l_pS->numPrims[bgfx::Topology::TriList] + (uint64_t)l_pS->numPrims[bgfx::Topology::TriStrip];
+    for (uint16_t l_u16I = 0; l_u16I < l_pS->numViews; l_u16I++) {
+        const bgfx::ViewStats& l_oV = l_pS->viewStats[l_u16I];
+        BgfxViewStats l_oOne;
+        l_oOne.m_pszName = l_oV.name;
+        l_oOne.m_u16Id = l_oV.view;
+        l_oOne.m_dGpuMs = l_pS->gpuTimerFreq > 0 ? double(l_oV.gpuTimeEnd - l_oV.gpuTimeBegin) * 1000.0 / double(l_pS->gpuTimerFreq) : 0;
+        l_oOne.m_dCpuMs = l_pS->cpuTimerFreq > 0 ? double(l_oV.cpuTimeEnd - l_oV.cpuTimeBegin) * 1000.0 / double(l_pS->cpuTimerFreq) : 0;
+        l_oOut.m_vViews.push_back(l_oOne);
+    }
+}
+
+void f_BgfxHostSetViewName(uint16_t l_u16View, const char* l_pszName) {
+    if (g_bReady) bgfx::setViewName(l_u16View, l_pszName);
+}
+
 std::string f_BgfxHostRendererName() {
     return g_bReady ? bgfx::getRendererName(bgfx::getRendererType()) : "(not started)";
 }
 
 namespace {
 void f_ApplyDebug() {
-    g_uDebug = (g_bStats ? BGFX_DEBUG_STATS : 0u) | (g_bHud ? BGFX_DEBUG_TEXT : 0u);
+    g_uDebug = (g_bStats ? BGFX_DEBUG_STATS : 0u) | (g_bHud ? BGFX_DEBUG_TEXT : 0u) | (g_bProfiler ? BGFX_DEBUG_PROFILER : 0u);
     if (g_bReady) bgfx::setDebug(g_uDebug);
 }
 }  // namespace
+
+void f_BgfxHostSetProfiler(bool l_bOn) {
+    if (g_bProfiler == l_bOn) return;
+    g_bProfiler = l_bOn;
+    f_ApplyDebug();
+}
 
 void f_BgfxHostSetDebugText(bool l_bOn) {
     g_bStats = l_bOn;

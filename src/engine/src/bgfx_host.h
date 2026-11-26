@@ -9,6 +9,7 @@
 #pragma once
 #include <cstdint>
 #include <string>
+#include <vector>
 
 namespace toms::next {
 
@@ -50,6 +51,18 @@ void f_BgfxHostSetDebugText(bool l_bOn);
 void f_BgfxHostSetHud(bool l_bOn);
 void f_BgfxHostHudText(const char* l_pszText);   // several lines: a newline between them
 bool f_BgfxHostSupportsCompute();          // BGFX_CAPS_COMPUTE on the active backend
+
+// The performance checker (docs/engine/25_PERFORMANCE.md): what the GPU did in the last frame bgfx finished.
+struct BgfxViewStats { const char* m_pszName = ""; uint16_t m_u16Id = 0; double m_dGpuMs = 0, m_dCpuMs = 0; };
+struct BgfxFrameStats {
+    double m_dGpuMs = 0;
+    uint32_t m_uDrawCalls = 0, m_uComputeCalls = 0;
+    uint64_t m_u64Triangles = 0;                 // triangle lists and strips
+    std::vector<BgfxViewStats> m_vViews;         // per view: only while the profiler is on (f_BgfxHostSetProfiler)
+};
+void f_BgfxHostFrameStats(BgfxFrameStats& l_oOut);
+void f_BgfxHostSetProfiler(bool l_bOn);        // BGFX_DEBUG_PROFILER: each view's GPU and CPU time
+void f_BgfxHostSetViewName(uint16_t l_u16View, const char* l_pszName);
 
 // Number of screenshots written by the bgfx callback (tests wait for this to change).
 int f_BgfxHostScreenshotsWritten();

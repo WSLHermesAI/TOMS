@@ -22,6 +22,8 @@
 //
 // Pure: positions in design pixels, time in ms, a seed for the random places; no Game dependency.
 #pragma once
+#include "game_names.h"    // toms::state, toms::battle_event, ... (no hard-coded name)
+#include "field_keys.h"    // toms::field: every data field by its constant
 #include "combo_play.h"
 #include "cue_track.h"
 #include "gesture.h"
@@ -54,7 +56,7 @@ struct TouchPlaySettings {
     float m_fSliceMinLength = 70.0f;          // a shorter swipe is not a cut
     float m_fSliceTolerance = 0.5f;           // radians off the arrow's way that still cut
     std::vector<std::string> m_vSliceCues;    // each prompt: "way", a gesture ("v", "m", "square") or a shape ("triangle", "circle"); empty: the play's own
-    std::map<std::string, int> m_mapCueExtraMs = {{"v", 400}, {"m", 900}, {"square", 1100}, {"triangle", 800}, {"circle", 800}};   // more time to draw it
+    std::map<std::string, int> m_mapCueExtraMs = {{toms::field::g_pszV, 400}, {toms::field::g_pszM, 900}, {toms::field::g_pszSquare, 1100}, {toms::field::g_pszTriangle, 800}, {toms::field::g_pszCircle, 800}};   // more time to draw it
     float m_fGestureExtraDeg = 0.0f;          // DEX: a gesture's angles are this much wider (Game)
     float m_fShapeTolerance = 0.2f;           // a drawn shape's corners, a share of its box (Game: wider with DEX)
     // recall (the memory blade; a weapon's "recall" rows override these, Game)
@@ -81,7 +83,7 @@ struct TouchPlaySettings {
     int m_iCirclePerfectMs = 500;     // a tap this soon after the last answer is perfect
     float m_fCircleRadius = 34.0f;
     // shape
-    std::string m_strShape = "pentagram";
+    std::string m_strShape = toms::gesture::g_pszPentagram;
     float m_fShapeSize = 220.0f;
     float m_fShapeCornerRadius = 44.0f;
     float m_fCornerBonus = 0.0f;      // DEX: the corners are this share bigger (Game)

@@ -1,5 +1,7 @@
 // map_objects.cpp -- see map_objects.h. The rules here moved from Game::movePlayer / interact / openDoor / bumpGate
 // and the drawing from Game::draw's object pass, unchanged; they now live with the kind of object they belong to.
+#include "field_keys.h"    // toms::field: every data field by its constant
+#include "game_names.h"   // toms::state, toms::battle_event, ... (no hard-coded name)
 #include "map_objects.h"
 
 #include "game_internal.h"
@@ -53,13 +55,13 @@ public:
     static std::shared_ptr<toms::RenderObject> f_SpriteObject(Game& l_oG, std::string l_strName, const float l_arrTint[4], bool l_bSolid = false) {
         if (l_strName.size() > 4 && l_strName.compare(l_strName.size() - 4, 4, ".png") == 0) l_strName.resize(l_strName.size() - 4);
         if (!l_oG.m_mapIdToLayer.count(l_strName)) l_strName = "floor";
-        nlohmann::json l_jJ = {{"type", "sprite"}, {"name", l_strName}, {"tint", {l_arrTint[0], l_arrTint[1], l_arrTint[2], l_arrTint[3]}}};
-        if (l_bSolid) l_jJ["solid"] = true;
+        nlohmann::json l_jJ = {{toms::field::g_pszType, "sprite"}, {toms::field::g_pszName, l_strName}, {toms::field::g_pszTint, {l_arrTint[0], l_arrTint[1], l_arrTint[2], l_arrTint[3]}}};
+        if (l_bSolid) l_jJ[toms::field::g_pszSolid] = true;
         return f_RenderObject(l_oG, l_jJ);
     }
 
     static std::shared_ptr<toms::RenderObject> f_ClipObject(Game& l_oG, const std::string& l_strFile, const std::string& l_strClip, const float l_arrTint[4]) {
-        return f_RenderObject(l_oG, {{"type", "clip"}, {"anim", l_strFile}, {"clip", l_strClip}, {"tint", {l_arrTint[0], l_arrTint[1], l_arrTint[2], l_arrTint[3]}}});
+        return f_RenderObject(l_oG, {{toms::field::g_pszType, "clip"}, {toms::field::g_pszAnim, l_strFile}, {toms::field::g_pszClip, l_strClip}, {toms::field::g_pszTint, {l_arrTint[0], l_arrTint[1], l_arrTint[2], l_arrTint[3]}}});
     }
 
     bool f_Draw(Game& l_oG, const MapView& l_oV, const MapRect& l_oR, int l_iTileX, int l_iTileY, float l_fStatusMs) const override {
@@ -123,8 +125,8 @@ class SwirlLook : public MapLook {
 public:
     explicit SwirlLook(Game& l_oG) {
         const std::string l_strFx = l_oG.f_PathOf(toms::key::g_pszAtlasFx);   // the effects atlas, by its key
-        m_spGlow = RenderLook::f_RenderObject(l_oG, {{"type", "sprite"}, {"atlas", l_strFx}, {"name", "glow"}, {"blend", "add"}});
-        m_spDot = RenderLook::f_RenderObject(l_oG, {{"type", "sprite"}, {"atlas", l_strFx}, {"name", "dot"}, {"blend", "add"}});
+        m_spGlow = RenderLook::f_RenderObject(l_oG, {{toms::field::g_pszType, "sprite"}, {toms::field::g_pszAtlas, l_strFx}, {toms::field::g_pszName, "glow"}, {toms::field::g_pszBlend, "add"}});
+        m_spDot = RenderLook::f_RenderObject(l_oG, {{toms::field::g_pszType, "sprite"}, {toms::field::g_pszAtlas, l_strFx}, {toms::field::g_pszName, "dot"}, {toms::field::g_pszBlend, "add"}});
     }
     bool f_Draw(Game& l_oG, const MapView& l_oV, const MapRect& l_oR, int l_iTileX, int l_iTileY, float) const override {
         auto* l_pGlow = dynamic_cast<toms::SpriteObject*>(m_spGlow.get());
@@ -176,9 +178,9 @@ private:
 bool f_StartsWith(const std::string& l_strS, const char* l_pszP) { return l_strS.rfind(l_pszP, 0) == 0; }
 
 void f_ReadTint(const nlohmann::json& l_jJ, float l_arrOut[4]) {
-    if (l_jJ.is_object() && l_jJ.contains("tint") && l_jJ["tint"].is_array())
-        for (int l_iI = 0; l_iI < 4 && l_iI < (int)l_jJ["tint"].size(); l_iI++)
-            if (l_jJ["tint"][l_iI].is_number()) l_arrOut[l_iI] = l_jJ["tint"][l_iI].get<float>();
+    if (l_jJ.is_object() && l_jJ.contains(toms::field::g_pszTint) && l_jJ[toms::field::g_pszTint].is_array())
+        for (int l_iI = 0; l_iI < 4 && l_iI < (int)l_jJ[toms::field::g_pszTint].size(); l_iI++)
+            if (l_jJ[toms::field::g_pszTint][l_iI].is_number()) l_arrOut[l_iI] = l_jJ[toms::field::g_pszTint][l_iI].get<float>();
 }
 
 }  // namespace map_detail
@@ -206,7 +208,7 @@ const Entity* MapObject::f_Entity() const {
 
 std::string MapObject::f_Status() const {
     const Entity* l_pE = f_Entity();
-    if (m_strStatus == "idle" && l_pE && l_pE->m_bConsumed) return "gone";
+    if (m_strStatus == toms::state::g_pszIdle && l_pE && l_pE->m_bConsumed) return toms::state::g_pszGone;
     return m_strStatus;
 }
 
@@ -247,7 +249,7 @@ void MapObject::f_Update(int l_iDtMs) {
     if (const LookChain* l_pC = f_Look(m_strStatus)) {
         l_pC->f_Update(l_iDtMs / 1000.0f);   // effects in its look move on
         const float l_fOnce = l_pC->f_OnceSeconds();
-        if (l_fOnce > 0 && m_fStatusMs / 1000.0f > l_fOnce) f_SetStatus(l_pC->m_strNext.empty() ? "gone" : l_pC->m_strNext);
+        if (l_fOnce > 0 && m_fStatusMs / 1000.0f > l_fOnce) f_SetStatus(l_pC->m_strNext.empty() ? toms::state::g_pszGone : l_pC->m_strNext);
     }
 }
 
@@ -274,9 +276,9 @@ int MapObject::f_TieX() const {
 
 void MapObject::f_Render(const MapView& l_oV) {
     const std::string l_strS = f_Status();
-    if (l_strS == "gone") return;
+    if (l_strS == toms::state::g_pszGone) return;
     const LookChain* l_pC = f_Look(l_strS);
-    if (!l_pC) l_pC = f_Look("idle");   // a status with no look of its own looks idle
+    if (!l_pC) l_pC = f_Look(toms::state::g_pszIdle);   // a status with no look of its own looks idle
     const Entity* l_pE = f_Entity();
     if (l_pC) l_pC->f_Draw(m_oG, l_oV, f_Rect(l_oV), l_pE ? l_pE->m_iX : 0, l_pE ? l_pE->m_iY : 0, m_fStatusMs);
 }
@@ -291,18 +293,18 @@ MapObject::Touch MapObject::f_OnTouch(int l_iX, int l_iY) { return m_oG.f_StepOn
 
 nlohmann::json MapObject::f_Details() const {
     nlohmann::json l_jJ = nlohmann::json::object();
-    l_jJ["class"] = f_Type();
-    l_jJ["status"] = f_Status();
+    l_jJ[toms::field::g_pszClass] = f_Type();
+    l_jJ[toms::field::g_pszStatus] = f_Status();
     if (const Entity* l_pE = f_Entity()) {
-        l_jJ["kind"] = l_pE->m_strKind;
-        l_jJ["id"] = l_pE->m_strId;
-        l_jJ["cell"] = {l_pE->m_iX, l_pE->m_iY};
-        if (l_pE->m_oFp.m_iW != 1 || l_pE->m_oFp.m_iH != 1) l_jJ["footprint"] = {l_pE->m_oFp.m_iW, l_pE->m_oFp.m_iH};
-        if (l_pE->m_bRoamer) l_jJ["roamer"] = true;
-        if (!l_pE->m_vLinks.empty()) l_jJ["events"] = l_pE->m_vLinks;
-        if (l_pE->m_jLook.is_object()) l_jJ["ownLook"] = l_pE->m_jLook;
+        l_jJ[toms::field::g_pszKind] = l_pE->m_strKind;
+        l_jJ[toms::field::g_pszId] = l_pE->m_strId;
+        l_jJ[toms::field::g_pszCell] = {l_pE->m_iX, l_pE->m_iY};
+        if (l_pE->m_oFp.m_iW != 1 || l_pE->m_oFp.m_iH != 1) l_jJ[toms::field::g_pszFootprint] = {l_pE->m_oFp.m_iW, l_pE->m_oFp.m_iH};
+        if (l_pE->m_bRoamer) l_jJ[toms::field::g_pszRoamer] = true;
+        if (!l_pE->m_vLinks.empty()) l_jJ[toms::field::g_pszEvents] = l_pE->m_vLinks;
+        if (l_pE->m_jLook.is_object()) l_jJ[toms::field::g_pszOwnLook] = l_pE->m_jLook;
     }
-    l_jJ["looks"] = f_LookStatuses();
+    l_jJ[toms::field::g_pszLooks] = f_LookStatuses();
     return l_jJ;
 }
 
@@ -314,11 +316,11 @@ nlohmann::json MapObject::f_Details() const {
 void MonsterObject::f_Render(const MapView& l_oV) {
     MapObject::f_Render(l_oV);
     const Entity* l_pE = f_Entity();
-    if (!l_pE || f_Status() == "gone") return;
+    if (!l_pE || f_Status() == toms::state::g_pszGone) return;
     bool l_bParty = !l_pE->m_vParty.empty();
     if (!l_bParty) {
         auto l_itT = m_oG.m_mapEnemyTpl.find(l_pE->m_strId);
-        l_bParty = l_itT != m_oG.m_mapEnemyTpl.end() && l_itT->second.contains("party") && l_itT->second["party"].is_array() && !l_itT->second["party"].empty();
+        l_bParty = l_itT != m_oG.m_mapEnemyTpl.end() && l_itT->second.contains(toms::field::g_pszParty) && l_itT->second[toms::field::g_pszParty].is_array() && !l_itT->second[toms::field::g_pszParty].empty();
     }
     if (!l_bParty || !m_oG.m_upRes) return;
     if (!m_bPartyHintMade) {
@@ -353,7 +355,7 @@ nlohmann::json MonsterObject::f_Details() const {
     if (const Entity* l_pE = f_Entity()) {
         auto l_itT = m_oG.m_mapEnemyTpl.find(l_pE->m_strId);
         if (l_itT != m_oG.m_mapEnemyTpl.end())
-            for (const char* l_pszK : {"hp", "atk", "def", "exp", "gold"})
+            for (const char* l_pszK : {toms::field::g_pszHp, toms::field::g_pszAtk, toms::field::g_pszDef, toms::field::g_pszExp, toms::field::g_pszGold})
                 if (l_itT->second.contains(l_pszK)) l_jJ[l_pszK] = l_itT->second[l_pszK];
     }
     return l_jJ;
@@ -449,13 +451,13 @@ bool GateObject::f_BumpBeforeStep(int l_iX, int l_iY) {
     const Entity* l_pE = f_Entity();
     if (!l_pE || l_pE->m_bConsumed || l_pE->m_iX != l_iX || l_pE->m_iY != l_iY) return false;
     m_oG.f_BumpGate(*f_Entity());
-    if (f_Entity()->m_bConsumed) f_Play("opening");   // the key went in: the door-opening clip plays on its tile
+    if (f_Entity()->m_bConsumed) f_Play(toms::state::g_pszOpening);   // the key went in: the door-opening clip plays on its tile
     return true;
 }
 
 void GateObject::f_RenderUnderlay(const MapView& l_oV) {
-    if (m_strStatus != "opening") return;
-    if (const LookChain* l_pC = f_Look("opening")) l_pC->f_Draw(m_oG, l_oV, f_Rect(l_oV), f_Entity()->m_iX, f_Entity()->m_iY, m_fStatusMs);
+    if (m_strStatus != toms::state::g_pszOpening) return;
+    if (const LookChain* l_pC = f_Look(toms::state::g_pszOpening)) l_pC->f_Draw(m_oG, l_oV, f_Rect(l_oV), f_Entity()->m_iX, f_Entity()->m_iY, m_fStatusMs);
 }
 
 MapRect DoorObject::f_Rect(const MapView& l_oV) const {   // the full tile
@@ -466,8 +468,8 @@ MapRect DoorObject::f_Rect(const MapView& l_oV) const {   // the full tile
 }
 
 void DoorObject::f_RenderUnderlay(const MapView& l_oV) {
-    if (m_strStatus != "opening") return;
-    if (const LookChain* l_pC = f_Look("opening")) l_pC->f_Draw(m_oG, l_oV, f_Rect(l_oV), f_Entity()->m_iX, f_Entity()->m_iY, m_fStatusMs);
+    if (m_strStatus != toms::state::g_pszOpening) return;
+    if (const LookChain* l_pC = f_Look(toms::state::g_pszOpening)) l_pC->f_Draw(m_oG, l_oV, f_Rect(l_oV), f_Entity()->m_iX, f_Entity()->m_iY, m_fStatusMs);
 }
 
 MapRect PlayerObject::f_Rect(const MapView& l_oV) const {
@@ -484,11 +486,11 @@ int PlayerObject::f_TieX() const { return m_oG.m_oPl.m_iX; }
 
 nlohmann::json PlayerObject::f_Details() const {
     nlohmann::json l_jJ = MapObject::f_Details();
-    l_jJ["cell"] = {m_oG.m_oPl.m_iX, m_oG.m_oPl.m_iY};
-    l_jJ["hp"] = m_oG.m_oPl.m_iHp;
-    l_jJ["atk"] = m_oG.m_oPl.m_iAtk;
-    l_jJ["def"] = m_oG.m_oPl.m_iDef;
-    l_jJ["gold"] = m_oG.m_oPl.m_iGold;
+    l_jJ[toms::field::g_pszCell] = {m_oG.m_oPl.m_iX, m_oG.m_oPl.m_iY};
+    l_jJ[toms::field::g_pszHp] = m_oG.m_oPl.m_iHp;
+    l_jJ[toms::field::g_pszAtk] = m_oG.m_oPl.m_iAtk;
+    l_jJ[toms::field::g_pszDef] = m_oG.m_oPl.m_iDef;
+    l_jJ[toms::field::g_pszGold] = m_oG.m_oPl.m_iGold;
     return l_jJ;
 }
 
@@ -521,20 +523,20 @@ static std::shared_ptr<MapObject> f_MakeObject(Game& l_oG, int l_iIndex, const E
 static LookChain f_LookFromJson(Game& l_oG, const nlohmann::json& l_jD) {
     LookChain l_oC;
     if (!l_jD.is_object() || !l_oG.m_upRes) return l_oC;
-    l_oC.m_strNext = l_jD.value("next", std::string());
+    l_oC.m_strNext = l_jD.value(toms::field::g_pszNext, std::string());
     float l_arrTint[4] = {1, 1, 1, 1};
     f_ReadTint(l_jD, l_arrTint);
-    const std::string l_strType = l_jD.value("type", std::string());
-    auto l_upLook = std::make_unique<RenderLook>(l_strType == "clip" && !l_jD.value("loop", false) ? RenderLook::Clock::Status
+    const std::string l_strType = l_jD.value(toms::field::g_pszType, std::string());
+    auto l_upLook = std::make_unique<RenderLook>(l_strType == "clip" && !l_jD.value(toms::field::g_pszLoop, false) ? RenderLook::Clock::Status
                                                                                      : RenderLook::Clock::Idle);
     float l_fSw = 32, l_fSh = 32;
-    if (l_jD.contains("size") && l_jD["size"].is_array() && l_jD["size"].size() == 2) { l_fSw = l_jD["size"][0].get<float>(); l_fSh = l_jD["size"][1].get<float>(); }
+    if (l_jD.contains(toms::field::g_pszSize) && l_jD[toms::field::g_pszSize].is_array() && l_jD[toms::field::g_pszSize].size() == 2) { l_fSw = l_jD[toms::field::g_pszSize][0].get<float>(); l_fSh = l_jD[toms::field::g_pszSize][1].get<float>(); }
     if (l_strType == "sprite") {
-        l_upLook->f_Add(RenderLook::f_SpriteObject(l_oG, l_jD.value("name", std::string()), l_arrTint));
+        l_upLook->f_Add(RenderLook::f_SpriteObject(l_oG, l_jD.value(toms::field::g_pszName, std::string()), l_arrTint));
     } else {
         nlohmann::json l_jJ = l_jD;
-        l_jJ.erase("next"); l_jJ.erase("size");
-        if (l_strType == "clip") l_jJ.erase("loop");   // the floor's clock plays it (RenderLook)
+        l_jJ.erase(toms::field::g_pszNext); l_jJ.erase(toms::field::g_pszSize);
+        if (l_strType == "clip") l_jJ.erase(toms::field::g_pszLoop);   // the floor's clock plays it (RenderLook)
         std::string l_strErr;
         l_upLook->f_Add(l_oG.m_oRenderFactory.f_MakeOrMissing(l_jJ, *l_oG.m_upRes, &l_strErr), l_fSw, l_fSh);
         if (!l_strErr.empty()) std::fprintf(stderr, "[map] look %s: %s\n", l_jD.dump().c_str(), l_strErr.c_str());
@@ -555,11 +557,11 @@ static LookChain f_LegacyIdleLook(Game& l_oG, const Entity& l_oE) {
     }
     const nlohmann::json l_jLook = l_oG.f_LookOf(l_oE);
     bool l_bOwnSprite = false;
-    if (l_jLook.contains("sprite") && l_jLook["sprite"].is_string()) {
-        std::string l_strS = l_jLook["sprite"].get<std::string>();
+    if (l_jLook.contains(toms::field::g_pszSprite) && l_jLook[toms::field::g_pszSprite].is_string()) {
+        std::string l_strS = l_jLook[toms::field::g_pszSprite].get<std::string>();
         if (l_strS.size() > 4 && l_strS.compare(l_strS.size() - 4, 4, ".png") == 0) l_strS.resize(l_strS.size() - 4);
         // only a placed object's own sprite replaces the idle clip (a type's sprite is what its clip is made of)
-        if (l_oG.m_oSpriteAtlas.f_Find(l_strS)) { l_strSprite = l_strS; l_bOwnSprite = l_oE.m_jLook.is_object() && l_oE.m_jLook.contains("sprite"); }
+        if (l_oG.m_oSpriteAtlas.f_Find(l_strS)) { l_strSprite = l_strS; l_bOwnSprite = l_oE.m_jLook.is_object() && l_oE.m_jLook.contains(toms::field::g_pszSprite); }
     }
     float l_arrTint[4] = {1, 1, 1, 1};
     f_ReadTint(l_jLook, l_arrTint);
@@ -568,18 +570,18 @@ static LookChain f_LegacyIdleLook(Game& l_oG, const Entity& l_oE) {
         // a gate is a full-tile door with its key item's "tint" (data/items.json) washed over it, so it reads as no
         // colour of key door (yellow / blue / red)
         const nlohmann::json* l_pD = l_oG.f_ItemDef(l_oE.m_strId);
-        const std::string l_strDoor = l_pD && l_pD->contains("door") && (*l_pD)["door"].is_string() ? (*l_pD)["door"].get<std::string>() : std::string();
+        const std::string l_strDoor = l_pD && l_pD->contains(toms::field::g_pszDoor) && (*l_pD)[toms::field::g_pszDoor].is_string() ? (*l_pD)[toms::field::g_pszDoor].get<std::string>() : std::string();
         if (!l_strDoor.empty() && l_oG.m_mapIdToLayer.count(l_strDoor)) {   // its own door picture (docs/engine/14_AI_SPRITES.md)
             l_strSprite = l_strDoor;
         } else {
             l_strSprite = "door_yellow";
             l_arrWash[0] = 0.6f; l_arrWash[1] = 0.3f; l_arrWash[2] = 0.9f; l_arrWash[3] = 0.6f;
-            if (l_pD && l_pD->contains("tint") && (*l_pD)["tint"].is_array())
-                for (int l_iI = 0; l_iI < 3 && l_iI < (int)(*l_pD)["tint"].size(); l_iI++) l_arrWash[l_iI] = (*l_pD)["tint"][l_iI].get<float>();
+            if (l_pD && l_pD->contains(toms::field::g_pszTint) && (*l_pD)[toms::field::g_pszTint].is_array())
+                for (int l_iI = 0; l_iI < 3 && l_iI < (int)(*l_pD)[toms::field::g_pszTint].size(); l_iI++) l_arrWash[l_iI] = (*l_pD)[toms::field::g_pszTint][l_iI].get<float>();
         }
     }
-    if (l_jLook.contains("anim") && l_jLook["anim"].is_string() && l_oG.m_upRes) {
-        const std::string l_strRef = l_jLook["anim"].get<std::string>();
+    if (l_jLook.contains(toms::field::g_pszAnim) && l_jLook[toms::field::g_pszAnim].is_string() && l_oG.m_upRes) {
+        const std::string l_strRef = l_jLook[toms::field::g_pszAnim].get<std::string>();
         const size_t l_nH = l_strRef.find('#');
         if (l_nH != std::string::npos) {
             auto l_upOwn = std::make_unique<RenderLook>();
@@ -618,7 +620,7 @@ static LookChain f_LegacyIdleLook(Game& l_oG, const Entity& l_oE) {
 // A door's / gate's opening clip (assets/media/anim/door_open.anim), on the full tile, once.
 static LookChain f_OpeningLook(Game& l_oG, const std::string& l_strColour) {
     LookChain l_oC;
-    l_oC.m_strNext = "gone";
+    l_oC.m_strNext = toms::state::g_pszGone;
     if (!l_oG.m_upRes) return l_oC;
     std::shared_ptr<toms::res::AnimRes> l_spDoor = l_oG.m_upRes->f_Get<toms::res::AnimRes>(toms::key::g_pszAnimDoorOpen);
     if (!l_spDoor->f_Ok() || !l_spDoor->f_Find("door_open_" + l_strColour)) return l_oC;
@@ -662,12 +664,12 @@ void map_detail::Builder::f_Build(Game& l_oG, MapFloor& l_oF, toms::Node& l_oRoo
         std::shared_ptr<MapObject> l_spO = f_MakeObject(l_oG, l_iI, l_oE);
         l_spO->f_SetName(l_oE.m_strKind + " (" + std::to_string(l_oE.m_iX) + "," + std::to_string(l_oE.m_iY) + ")");
         if (f_StartsWith(l_oE.m_strKind, "door:")) {
-            l_spO->f_SetLook("opening", f_OpeningLook(l_oG, l_oE.m_strId));
+            l_spO->f_SetLook(toms::state::g_pszOpening, f_OpeningLook(l_oG, l_oE.m_strId));
         } else {
-            l_spO->f_SetLook("idle", f_LegacyIdleLook(l_oG, l_oE));
+            l_spO->f_SetLook(toms::state::g_pszIdle, f_LegacyIdleLook(l_oG, l_oE));
             // the yellow door's opening clip, for a gate drawn as the yellow door (one with its own door just opens)
             const nlohmann::json* l_pKey = f_StartsWith(l_oE.m_strKind, "gate:") ? l_oG.f_ItemDef(l_oE.m_strId) : nullptr;
-            if (l_pKey && !(l_pKey->contains("door") && (*l_pKey)["door"].is_string())) l_spO->f_SetLook("opening", f_OpeningLook(l_oG, "yellow"));
+            if (l_pKey && !(l_pKey->contains(toms::field::g_pszDoor) && (*l_pKey)[toms::field::g_pszDoor].is_string())) l_spO->f_SetLook(toms::state::g_pszOpening, f_OpeningLook(l_oG, "yellow"));
         }
         // the data's own looks per status: the type's record, then the placed object's
         const size_t l_nColon = l_oE.m_strKind.find(':');
@@ -675,8 +677,8 @@ void map_detail::Builder::f_Build(Game& l_oG, MapFloor& l_oF, toms::Node& l_oRoo
         const nlohmann::json* l_pRec = nullptr;
         if (l_strCat == "monster") { auto l_itT = l_oG.m_mapEnemyTpl.find(l_oE.m_strId); if (l_itT != l_oG.m_mapEnemyTpl.end()) l_pRec = &l_itT->second; }
         else if (l_strCat == "item") l_pRec = l_oG.f_ItemDef(l_oE.m_strId);
-        if (l_pRec && l_pRec->contains("looks")) f_TableLooks(l_oG, *l_spO, &(*l_pRec)["looks"]);
-        if (l_oE.m_jLook.is_object() && l_oE.m_jLook.contains("looks")) f_TableLooks(l_oG, *l_spO, &l_oE.m_jLook["looks"]);
+        if (l_pRec && l_pRec->contains(toms::field::g_pszLooks)) f_TableLooks(l_oG, *l_spO, &(*l_pRec)[toms::field::g_pszLooks]);
+        if (l_oE.m_jLook.is_object() && l_oE.m_jLook.contains(toms::field::g_pszLooks)) f_TableLooks(l_oG, *l_spO, &l_oE.m_jLook[toms::field::g_pszLooks]);
         l_oRoot.f_AddChildToLast(l_spO.get(), false);
         l_vObjects.push_back(std::move(l_spO));
     }
@@ -687,7 +689,7 @@ void map_detail::Builder::f_Build(Game& l_oG, MapFloor& l_oF, toms::Node& l_oRoo
         auto l_upStill = std::make_unique<RenderLook>();
         l_upStill->f_Add(RenderLook::f_SpriteObject(l_oG, l_oG.f_PlayerSprite(), g_arrWhite));
         l_oC.m_vLooks.push_back(std::move(l_upStill));
-        l_spPlayer->f_SetLook("idle", std::move(l_oC));
+        l_spPlayer->f_SetLook(toms::state::g_pszIdle, std::move(l_oC));
     }
     l_oRoot.f_AddChildToLast(l_spPlayer.get(), false);
 }
@@ -717,7 +719,7 @@ void MapFloor::f_Render(const MapView& l_oV) {
     }
     m_vDrawList.clear();
     for (const auto& l_spO : m_vObjects)
-        if (l_spO->f_Sorted() && l_spO->f_Status() != "gone") m_vDrawList.push_back(l_spO.get());
+        if (l_spO->f_Sorted() && l_spO->f_Status() != toms::state::g_pszGone) m_vDrawList.push_back(l_spO.get());
     if (m_spPlayer) m_vDrawList.push_back(m_spPlayer.get());
     std::stable_sort(m_vDrawList.begin(), m_vDrawList.end(), [](const MapObject* l_pA, const MapObject* l_pB) {
         const int l_iKa = l_pA->f_SortKey(), l_iKb = l_pB->f_SortKey();

@@ -1,3 +1,4 @@
+#include "field_keys.h"    // toms::field: every data field by its constant
 #include "save_slots.h"
 #include <cstdio>
 #include <cstdlib>
@@ -97,9 +98,9 @@ static nlohmann::json f_ReadSlotJson(const std::string& l_strSaveDir, int l_iSlo
 
 static bool f_JsonIsNewer(const nlohmann::json& l_jJ) {
     if (!l_jJ.is_object()) return false;
-    if (l_jJ.value("saveVersion", 0) > g_iSlotSaveVersion) return true;
+    if (l_jJ.value(toms::field::g_pszSaveVersion, 0) > g_iSlotSaveVersion) return true;
     const auto l_fnVer = [&](const char* l_pszPart) {
-        return l_jJ.contains(l_pszPart) && l_jJ[l_pszPart].is_object() ? l_jJ[l_pszPart].value("schemaVersion", 0) : 0;
+        return l_jJ.contains(l_pszPart) && l_jJ[l_pszPart].is_object() ? l_jJ[l_pszPart].value(toms::field::g_pszSchemaVersion, 0) : 0;
     };
     return l_fnVer("meta") > g_iMetaSaveSchemaVersion || l_fnVer("run") > g_iRunSaveSchemaVersion;
 }
@@ -117,12 +118,12 @@ bool f_WriteSlotSave(const std::string& l_strSaveDir, int l_iSlot,
         return false;
     }
     nlohmann::json l_jJ;
-    l_jJ["saveVersion"] = g_iSlotSaveVersion;
-    l_jJ["savedAt"] = l_strSavedAt.empty() ? f_NowStamp() : l_strSavedAt;
-    l_jJ["playTimeSec"] = l_iPlayTimeSec;
-    l_jJ["stageName"] = l_strStageName;
-    l_jJ["meta"] = f_ToJson(l_oMeta);
-    l_jJ["run"] = f_ToJson(l_oRun);
+    l_jJ[toms::field::g_pszSaveVersion] = g_iSlotSaveVersion;
+    l_jJ[toms::field::g_pszSavedAt] = l_strSavedAt.empty() ? f_NowStamp() : l_strSavedAt;
+    l_jJ[toms::field::g_pszPlayTimeSec] = l_iPlayTimeSec;
+    l_jJ[toms::field::g_pszStageName] = l_strStageName;
+    l_jJ[toms::field::g_pszMeta] = f_ToJson(l_oMeta);
+    l_jJ[toms::field::g_pszRun] = f_ToJson(l_oRun);
     bool l_bOk = f_WriteJsonAtomic(f_SlotPath(l_strSaveDir, l_iSlot), l_jJ, /*keepBackup=*/true);
     if (l_bOk) f_FlushSaveDir();
     return l_bOk;
@@ -135,19 +136,19 @@ bool f_ReadSlotSave(const std::string& l_strSaveDir, int l_iSlot,
     nlohmann::json l_jJ = f_ReadSlotJson(l_strSaveDir, l_iSlot, &l_bFromBackup);
     if (l_jJ.is_null() || !l_jJ.is_object()) return false;
     if (l_pInfo) { l_pInfo->m_bFromBackup = l_bFromBackup; l_pInfo->m_bNewer = f_JsonIsNewer(l_jJ); }
-    l_oMetaOut = f_MetaFromJson(l_jJ.value("meta", nlohmann::json::object()));
-    l_oRunOut  = f_RunFromJson(l_jJ.value("run", nlohmann::json::object()));
-    if (l_pPlayTimeSec) *l_pPlayTimeSec = l_jJ.value("playTimeSec", 0);
-    if (l_pSavedAt) *l_pSavedAt = l_jJ.value("savedAt", std::string());
+    l_oMetaOut = f_MetaFromJson(l_jJ.value(toms::field::g_pszMeta, nlohmann::json::object()));
+    l_oRunOut  = f_RunFromJson(l_jJ.value(toms::field::g_pszRun, nlohmann::json::object()));
+    if (l_pPlayTimeSec) *l_pPlayTimeSec = l_jJ.value(toms::field::g_pszPlayTimeSec, 0);
+    if (l_pSavedAt) *l_pSavedAt = l_jJ.value(toms::field::g_pszSavedAt, std::string());
     return true;
 }
 
 bool f_ReadSaveFile(const std::string& l_strPath, MetaSaveData& l_oMetaOut, RunSaveData& l_oRunOut, int* l_pPlayTimeSec) {
     nlohmann::json l_jJ = f_ReadJsonFileSafe(l_strPath);
     if (!l_jJ.is_object()) return false;
-    l_oMetaOut = f_MetaFromJson(l_jJ.value("meta", nlohmann::json::object()));
-    l_oRunOut  = f_RunFromJson(l_jJ.value("run", nlohmann::json::object()));
-    if (l_pPlayTimeSec) *l_pPlayTimeSec = l_jJ.value("playTimeSec", 0);
+    l_oMetaOut = f_MetaFromJson(l_jJ.value(toms::field::g_pszMeta, nlohmann::json::object()));
+    l_oRunOut  = f_RunFromJson(l_jJ.value(toms::field::g_pszRun, nlohmann::json::object()));
+    if (l_pPlayTimeSec) *l_pPlayTimeSec = l_jJ.value(toms::field::g_pszPlayTimeSec, 0);
     return true;
 }
 
@@ -165,19 +166,19 @@ SlotSummary f_SummarizeSlot(const std::string& l_strSaveDir, int l_iSlot, int /*
     }
     l_oS.m_bExists = true;
     l_oS.m_bNewer = f_JsonIsNewer(l_jJ);
-    l_oS.m_strSavedAt = l_jJ.value("savedAt", std::string());
-    l_oS.m_iPlayTimeSec = l_jJ.value("playTimeSec", 0);
-    l_oS.m_strStageName = l_jJ.value("stageName", std::string());
-    const nlohmann::json& l_jRun = l_jJ.contains("run") ? l_jJ["run"] : nlohmann::json::object();
-    l_oS.m_strStageId = l_jRun.value("currentStageId", std::string());
-    if (l_jRun.contains("player") && l_jRun["player"].is_object()) {
-        const auto& l_jP = l_jRun["player"];
-        l_oS.m_iLv = l_jP.value("lv", 1);
-        l_oS.m_iHp = l_jP.value("hp", 0);
-        l_oS.m_iMaxhp = l_jP.value("maxhp", 0);
-        l_oS.m_iAtk = l_jP.value("atk", 0);
-        l_oS.m_iDef = l_jP.value("def", 0);
-        l_oS.m_iGold = l_jP.value("gold", 0);
+    l_oS.m_strSavedAt = l_jJ.value(toms::field::g_pszSavedAt, std::string());
+    l_oS.m_iPlayTimeSec = l_jJ.value(toms::field::g_pszPlayTimeSec, 0);
+    l_oS.m_strStageName = l_jJ.value(toms::field::g_pszStageName, std::string());
+    const nlohmann::json& l_jRun = l_jJ.contains(toms::field::g_pszRun) ? l_jJ[toms::field::g_pszRun] : nlohmann::json::object();
+    l_oS.m_strStageId = l_jRun.value(toms::field::g_pszCurrentStageId, std::string());
+    if (l_jRun.contains(toms::field::g_pszPlayer) && l_jRun[toms::field::g_pszPlayer].is_object()) {
+        const auto& l_jP = l_jRun[toms::field::g_pszPlayer];
+        l_oS.m_iLv = l_jP.value(toms::field::g_pszLv, 1);
+        l_oS.m_iHp = l_jP.value(toms::field::g_pszHp, 0);
+        l_oS.m_iMaxhp = l_jP.value(toms::field::g_pszMaxhp, 0);
+        l_oS.m_iAtk = l_jP.value(toms::field::g_pszAtk, 0);
+        l_oS.m_iDef = l_jP.value(toms::field::g_pszDef, 0);
+        l_oS.m_iGold = l_jP.value(toms::field::g_pszGold, 0);
     }
     return l_oS;
 }
@@ -194,7 +195,7 @@ int f_NewestSlot(const std::string& l_strSaveDir, int l_iSlotCount) {
     for (int l_iI = 1; l_iI <= l_iSlotCount; l_iI++) {
         nlohmann::json l_jJ = f_ReadSlotJson(l_strSaveDir, l_iI, nullptr);
         if (l_jJ.is_null() || !l_jJ.is_object()) continue;
-        std::string l_strStamp = l_jJ.value("savedAt", std::string());
+        std::string l_strStamp = l_jJ.value(toms::field::g_pszSavedAt, std::string());
         // Timestamps are fixed-width "YYYY-MM-DD HH:MM:SS", so a string compare is chronological.
         if (l_iBest == -1 || l_strStamp > l_strBestStamp) { l_iBest = l_iI; l_strBestStamp = l_strStamp; }
     }

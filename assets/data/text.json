@@ -1359,6 +1359,38 @@
       "zh_TW": "頭目 ？",
       "en": "BOSS ?"
     },
+    "settings.test_jump": {
+      "zh_TW": "測試：跳到任一樓層",
+      "en": "Test: jump to any floor",
+      "zh_CN": "测试：跳到任一楼层",
+      "ja": "テスト：好きな階へ移動",
+      "ko": "테스트: 아무 층으로 이동",
+      "es": "Prueba: ir a cualquier planta"
+    },
+    "settings.perf_on": {
+      "zh_TW": "效能檢查：開（F4）",
+      "en": "Performance checker: on (F4)",
+      "zh_CN": "性能检查：开（F4）",
+      "ja": "パフォーマンス確認：オン（F4）",
+      "ko": "성능 검사: 켬 (F4)",
+      "es": "Comprobación de rendimiento: activada (F4)"
+    },
+    "settings.perf_off": {
+      "zh_TW": "效能檢查：關（F4）",
+      "en": "Performance checker: off (F4)",
+      "zh_CN": "性能检查：关（F4）",
+      "ja": "パフォーマンス確認：オフ（F4）",
+      "ko": "성능 검사: 끔 (F4)",
+      "es": "Comprobación de rendimiento: desactivada (F4)"
+    },
+    "stageselect.test_hint": {
+      "zh_TW": "測試模式：所有樓層都可選，不需解鎖。",
+      "en": "Test mode: every floor can be picked, locked or not.",
+      "zh_CN": "测试模式：所有楼层都可选，不需解锁。",
+      "ja": "テストモード：ロックに関係なく、すべての階を選べます。",
+      "ko": "테스트 모드: 잠금과 관계없이 모든 층을 고를 수 있습니다.",
+      "es": "Modo de prueba: puedes elegir cualquier planta, bloqueada o no."
+    },
     "settings.view_scale": {
       "zh_TW": "畫面範圍：{x} 倍",
       "en": "View size: x{x}"

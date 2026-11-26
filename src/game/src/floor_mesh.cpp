@@ -1,4 +1,5 @@
 // floor_mesh.cpp -- see floor_mesh.h.
+#include "field_keys.h"    // toms::field: every data field by its constant
 #include "floor_mesh.h"
 
 #include <glm/glm.hpp>
@@ -165,15 +166,15 @@ std::string f_MakeFloorGlb(const std::vector<std::string>& l_vWalls, const std::
                    l_jMats = nlohmann::json::array(), l_jImages = nlohmann::json::array(), l_jTex = nlohmann::json::array();
     auto l_fnAdd = [&](const void* l_pData, size_t l_nBytes, int l_iTarget, size_t l_nCount, const char* l_pszType, int l_iComp) {
         while (l_strBin.size() % 4) l_strBin.push_back('\0');
-        l_jViews.push_back({{"buffer", 0}, {"byteOffset", l_strBin.size()}, {"byteLength", l_nBytes}, {"target", l_iTarget}});
+        l_jViews.push_back({{toms::field::g_pszBuffer, 0}, {toms::field::g_pszByteOffset, l_strBin.size()}, {toms::field::g_pszByteLength, l_nBytes}, {toms::field::g_pszTarget, l_iTarget}});
         l_strBin.append((const char*)l_pData, l_nBytes);
-        l_jAcc.push_back({{"bufferView", l_jViews.size() - 1}, {"componentType", l_iComp}, {"count", l_nCount}, {"type", l_pszType}});
+        l_jAcc.push_back({{toms::field::g_pszBufferView, l_jViews.size() - 1}, {toms::field::g_pszComponentType, l_iComp}, {toms::field::g_pszCount, l_nCount}, {toms::field::g_pszType, l_pszType}});
         return (int)l_jAcc.size() - 1;
     };
     // (name, its texture, its part, its colour's shade): the stairs' treads are the ground's boards, darkened
     struct PartOut { const char* m_pszName; const char* m_pszTex; const Part* m_pPart; float m_fShade; };
-    const PartOut l_arrParts[4] = {{"ground", "ground", &l_oGround, 1.0f}, {"wall", "wall", &l_oSide, 1.0f}, {"top", "top", &l_oTop, 1.0f},
-                                   {"stair", "ground", &l_oStair, std::clamp(l_fStairShade, 0.05f, 1.0f)}};
+    const PartOut l_arrParts[4] = {{toms::field::g_pszGround, "ground", &l_oGround, 1.0f}, {toms::field::g_pszWall, "wall", &l_oSide, 1.0f}, {toms::field::g_pszTop, "top", &l_oTop, 1.0f},
+                                   {toms::field::g_pszStair, "ground", &l_oStair, std::clamp(l_fStairShade, 0.05f, 1.0f)}};
     for (const PartOut& l_oPart : l_arrParts) {
         const char* const l_pszName = l_oPart.m_pszName;
         const Part* const l_pPart = l_oPart.m_pPart;
@@ -182,34 +183,34 @@ std::string f_MakeFloorGlb(const std::vector<std::string>& l_vWalls, const std::
         for (const glm::vec3& l_v3P : l_pPart->m_vPos) { l_v3Min = glm::min(l_v3Min, l_v3P); l_v3Max = glm::max(l_v3Max, l_v3P); }
         const size_t l_nN = l_pPart->m_vPos.size();
         const int l_iPos = l_fnAdd(l_pPart->m_vPos.data(), l_nN * sizeof(glm::vec3), 34962, l_nN, "VEC3", 5126);
-        l_jAcc[(size_t)l_iPos]["min"] = {l_v3Min.x, l_v3Min.y, l_v3Min.z};
-        l_jAcc[(size_t)l_iPos]["max"] = {l_v3Max.x, l_v3Max.y, l_v3Max.z};
+        l_jAcc[(size_t)l_iPos][toms::field::g_pszMin] = {l_v3Min.x, l_v3Min.y, l_v3Min.z};
+        l_jAcc[(size_t)l_iPos][toms::field::g_pszMax] = {l_v3Max.x, l_v3Max.y, l_v3Max.z};
         const int l_iNor = l_fnAdd(l_pPart->m_vNor.data(), l_nN * sizeof(glm::vec3), 34962, l_nN, "VEC3", 5126);
         const int l_iTan = l_fnAdd(l_pPart->m_vTan.data(), l_nN * sizeof(glm::vec4), 34962, l_nN, "VEC4", 5126);
         const int l_iUv = l_fnAdd(l_pPart->m_vUv.data(), l_nN * sizeof(glm::vec2), 34962, l_nN, "VEC2", 5126);
         const int l_iIdx = l_fnAdd(l_pPart->m_vIdx.data(), l_pPart->m_vIdx.size() * 4, 34963, l_pPart->m_vIdx.size(), "SCALAR", 5125);
         const size_t l_nImg = l_jImages.size();
-        l_jImages.push_back({{"uri", "looks/" + l_strLook + "/" + l_oPart.m_pszTex + "_c.jpg"}});
-        l_jImages.push_back({{"uri", "looks/" + l_strLook + "/" + l_oPart.m_pszTex + "_n.jpg"}});
-        l_jTex.push_back({{"source", l_nImg}, {"sampler", 0}});
-        l_jTex.push_back({{"source", l_nImg + 1}, {"sampler", 0}});
+        l_jImages.push_back({{toms::field::g_pszUri, "looks/" + l_strLook + "/" + l_oPart.m_pszTex + "_c.jpg"}});
+        l_jImages.push_back({{toms::field::g_pszUri, "looks/" + l_strLook + "/" + l_oPart.m_pszTex + "_n.jpg"}});
+        l_jTex.push_back({{toms::field::g_pszSource, l_nImg}, {toms::field::g_pszSampler, 0}});
+        l_jTex.push_back({{toms::field::g_pszSource, l_nImg + 1}, {toms::field::g_pszSampler, 0}});
         const float l_fS = l_oPart.m_fShade;
-        l_jMats.push_back({{"name", l_strLook + "_" + l_pszName},
-                           {"pbrMetallicRoughness", {{"baseColorTexture", {{"index", l_nImg}}}, {"baseColorFactor", {l_fS, l_fS, l_fS, 1.0f}}, {"metallicFactor", 0.0},
-                                                     {"roughnessFactor", std::strcmp(l_pszName, "top") == 0 ? 0.95 : 0.85}}},
-                           {"normalTexture", {{"index", l_nImg + 1}}}});
-        l_jPrims.push_back({{"attributes", {{"POSITION", l_iPos}, {"NORMAL", l_iNor}, {"TANGENT", l_iTan}, {"TEXCOORD_0", l_iUv}}},
-                            {"indices", l_iIdx}, {"material", l_jMats.size() - 1}});
+        l_jMats.push_back({{toms::field::g_pszName, l_strLook + "_" + l_pszName},
+                           {toms::field::g_pszPbrMetallicRoughness, {{toms::field::g_pszBaseColorTexture, {{toms::field::g_pszIndex, l_nImg}}}, {toms::field::g_pszBaseColorFactor, {l_fS, l_fS, l_fS, 1.0f}}, {toms::field::g_pszMetallicFactor, 0.0},
+                                                     {toms::field::g_pszRoughnessFactor, std::strcmp(l_pszName, "top") == 0 ? 0.95 : 0.85}}},
+                           {toms::field::g_pszNormalTexture, {{toms::field::g_pszIndex, l_nImg + 1}}}});
+        l_jPrims.push_back({{toms::field::g_pszAttributes, {{toms::field::g_pszPOSITION, l_iPos}, {toms::field::g_pszNORMAL, l_iNor}, {toms::field::g_pszTANGENT, l_iTan}, {toms::field::g_pszTEXCOORD0, l_iUv}}},
+                            {toms::field::g_pszIndices, l_iIdx}, {toms::field::g_pszMaterial, l_jMats.size() - 1}});
     }
     while (l_strBin.size() % 4) l_strBin.push_back('\0');
     const nlohmann::json l_jG = {
-        {"asset", {{"version", "2.0"}, {"generator", "TOMS floor_mesh.cpp"}}},
-        {"scene", 0}, {"scenes", {{{"nodes", {0}}}}}, {"nodes", {{{"mesh", 0}, {"name", "floor"}}}},
-        {"meshes", {{{"name", "floor"}, {"primitives", l_jPrims}}}},
-        {"buffers", {{{"byteLength", l_strBin.size()}}}},
-        {"bufferViews", l_jViews}, {"accessors", l_jAcc}, {"materials", l_jMats},
-        {"samplers", {{{"magFilter", 9729}, {"minFilter", 9987}, {"wrapS", 10497}, {"wrapT", 10497}}}},
-        {"images", l_jImages}, {"textures", l_jTex}};
+        {toms::field::g_pszAsset, {{toms::field::g_pszVersion, "2.0"}, {toms::field::g_pszGenerator, "TOMS floor_mesh.cpp"}}},
+        {toms::field::g_pszScene, 0}, {toms::field::g_pszScenes, {{{toms::field::g_pszNodes, {0}}}}}, {toms::field::g_pszNodes, {{{toms::field::g_pszMesh, 0}, {toms::field::g_pszName, "floor"}}}},
+        {toms::field::g_pszMeshes, {{{toms::field::g_pszName, "floor"}, {toms::field::g_pszPrimitives, l_jPrims}}}},
+        {toms::field::g_pszBuffers, {{{toms::field::g_pszByteLength, l_strBin.size()}}}},
+        {toms::field::g_pszBufferViews, l_jViews}, {toms::field::g_pszAccessors, l_jAcc}, {toms::field::g_pszMaterials, l_jMats},
+        {toms::field::g_pszSamplers, {{{toms::field::g_pszMagFilter, 9729}, {toms::field::g_pszMinFilter, 9987}, {toms::field::g_pszWrapS, 10497}, {toms::field::g_pszWrapT, 10497}}}},
+        {toms::field::g_pszImages, l_jImages}, {toms::field::g_pszTextures, l_jTex}};
     std::string l_strJson = l_jG.dump();
     while (l_strJson.size() % 4) l_strJson.push_back(' ');
     // .glb: the header, the JSON chunk, the BIN chunk (little-endian)

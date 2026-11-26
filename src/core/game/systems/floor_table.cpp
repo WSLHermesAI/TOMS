@@ -1,4 +1,5 @@
 // floor_table.cpp — see floor_table.h.
+#include "field_keys.h"    // toms::field: every data field by its constant
 #include "../../engine/vfs.h"
 #include "floor_table.h"
 
@@ -41,32 +42,32 @@ FloorTable FloorTable::f_FromSpecs(const std::vector<nlohmann::json>& l_vSpecs) 
     std::vector<std::string> l_vOrder;              // chain order, filled while walking nextFloor
 
     for (const auto& l_jJ : l_vSpecs) {
-        if (!l_jJ.is_object() || !l_jJ.contains("id")) continue;
+        if (!l_jJ.is_object() || !l_jJ.contains(toms::field::g_pszId)) continue;
         FloorInfo l_oF;
-        l_oF.m_strId = l_jJ.value("id", std::string());
+        l_oF.m_strId = l_jJ.value(toms::field::g_pszId, std::string());
         if (l_oF.m_strId.empty()) continue;
-        l_oF.m_strAct = l_jJ.value("act", std::string());
+        l_oF.m_strAct = l_jJ.value(toms::field::g_pszAct, std::string());
         l_oF.m_iActIndex = f_ActOrdinal(l_oF.m_strAct);
         for (char l_cCh : l_oF.m_strAct) if (l_cCh != '_') l_oF.m_strActKey += l_cCh;   // "ch_01" -> "ch01"
-        l_oF.m_iIndexInAct = l_jJ.value("indexInAct", 1);
-        l_oF.m_strRole = l_jJ.value("role", std::string("normal"));
-        l_oF.m_strSeal = l_jJ.value("seal", std::string());
-        l_oF.m_strHandAuthoredStage = l_jJ.value("handAuthoredStage", std::string());
-        if (l_jJ.contains("nextFloor") && l_jJ["nextFloor"].is_string()) l_oF.m_strNextFloor = l_jJ["nextFloor"].get<std::string>();
-        if (l_jJ.contains("name")) l_oF.m_strNameKey = l_jJ["name"].is_string() ? l_jJ["name"].get<std::string>() : std::string();
-        if (l_jJ.contains("events") && l_jJ["events"].is_array()) {
-            l_oF.m_iEventCount = (int)l_jJ["events"].size();
-            for (const auto& l_jEv : l_jJ["events"]) if (l_jEv.is_string()) l_oF.m_vEventIds.push_back(l_jEv.get<std::string>());
+        l_oF.m_iIndexInAct = l_jJ.value(toms::field::g_pszIndexInAct, 1);
+        l_oF.m_strRole = l_jJ.value(toms::field::g_pszRole, std::string("normal"));
+        l_oF.m_strSeal = l_jJ.value(toms::field::g_pszSeal, std::string());
+        l_oF.m_strHandAuthoredStage = l_jJ.value(toms::field::g_pszHandAuthoredStage, std::string());
+        if (l_jJ.contains(toms::field::g_pszNextFloor) && l_jJ[toms::field::g_pszNextFloor].is_string()) l_oF.m_strNextFloor = l_jJ[toms::field::g_pszNextFloor].get<std::string>();
+        if (l_jJ.contains(toms::field::g_pszName)) l_oF.m_strNameKey = l_jJ[toms::field::g_pszName].is_string() ? l_jJ[toms::field::g_pszName].get<std::string>() : std::string();
+        if (l_jJ.contains(toms::field::g_pszEvents) && l_jJ[toms::field::g_pszEvents].is_array()) {
+            l_oF.m_iEventCount = (int)l_jJ[toms::field::g_pszEvents].size();
+            for (const auto& l_jEv : l_jJ[toms::field::g_pszEvents]) if (l_jEv.is_string()) l_oF.m_vEventIds.push_back(l_jEv.get<std::string>());
         }
-        if (l_jJ.contains("stairs") && l_jJ["stairs"].is_array()) {
-            l_oF.m_vStairs = f_StairLinksFromJson(l_jJ["stairs"]);
+        if (l_jJ.contains(toms::field::g_pszStairs) && l_jJ[toms::field::g_pszStairs].is_array()) {
+            l_oF.m_vStairs = f_StairLinksFromJson(l_jJ[toms::field::g_pszStairs]);
             l_oF.m_bHasStairs = true;
         }
-        if (l_jJ.contains("story") && l_jJ["story"].is_object()) {
-            const auto& l_jSt = l_jJ["story"];
-            if (l_jSt.contains("intro") && l_jSt["intro"].is_string()) l_oF.m_strIntroKey = l_jSt["intro"].get<std::string>();
-            if (l_jSt.contains("ambient") && l_jSt["ambient"].is_array())
-                for (const auto& l_jA : l_jSt["ambient"]) if (l_jA.is_string()) l_oF.m_vAmbientKeys.push_back(l_jA.get<std::string>());
+        if (l_jJ.contains(toms::field::g_pszStory) && l_jJ[toms::field::g_pszStory].is_object()) {
+            const auto& l_jSt = l_jJ[toms::field::g_pszStory];
+            if (l_jSt.contains(toms::field::g_pszIntro) && l_jSt[toms::field::g_pszIntro].is_string()) l_oF.m_strIntroKey = l_jSt[toms::field::g_pszIntro].get<std::string>();
+            if (l_jSt.contains(toms::field::g_pszAmbient) && l_jSt[toms::field::g_pszAmbient].is_array())
+                for (const auto& l_jA : l_jSt[toms::field::g_pszAmbient]) if (l_jA.is_string()) l_oF.m_vAmbientKeys.push_back(l_jA.get<std::string>());
         }
         l_mapById[l_oF.m_strId] = l_oF;
     }

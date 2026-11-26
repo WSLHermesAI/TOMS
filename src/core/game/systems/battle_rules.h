@@ -8,6 +8,7 @@
 //
 // Pure content + pure functions, no Game dependency (the same shape as weapon_play.h); Game runs what they decide.
 #pragma once
+#include "game_names.h"   // toms::state, toms::battle_event, ... (no hard-coded name)
 #include <json.hpp>
 #include <map>
 #include <string>
@@ -193,7 +194,7 @@ struct FeelSettings {
     int m_iSlowMoMs = 450;                        // the last hit of a battle: this long...
     float m_fSlowMoScale = 0.3f;                  // ...at this speed
     // the fight's end (docs/gameplay/17 §19): the last attack clip plays out, then one of these, then the result
-    std::string m_strWinClip = "win", m_strWinBigClip = "win_big", m_strWinParClip = "win_par", m_strLoseClip = "lose";
+    std::string m_strWinClip = toms::state::g_pszWin, m_strWinBigClip = toms::state::g_pszWinBig, m_strWinParClip = toms::state::g_pszWinPar, m_strLoseClip = toms::state::g_pszLose;
     float m_fWinParHp = 0.25f;                    // a win with this share of HP or less, after taking damage: the par win
     int m_iEndMaxMs = 2500;                       // the longest the end may wait for its clips
     float m_fReducedScale = 0.25f;                // "Reduce shaking and flashes": stops and shakes times this, no slow motion
@@ -224,7 +225,7 @@ struct GuardSettings {
     // "warn" (docs/gameplay/16 §4.2): only while the "!" shows over the monster (warnMs before each hit); the first
     // parryShare of it is a parry, the rest a block; a press with no "!" locks the guard missLockMs. A press stops the
     // player's own attack. "timing": pressed just before the hit (15 §3.2). "bar": the five-zone bar.
-    std::string m_strMode = "timing";
+    std::string m_strMode = toms::guard_mode::g_pszTiming;
     int m_iWarnMs = 500;
     float m_fParryShare = 0.4f;
     int m_iMissLockMs = 400;

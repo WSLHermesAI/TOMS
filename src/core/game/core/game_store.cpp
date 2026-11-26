@@ -1,5 +1,7 @@
 // game_store.cpp — the shop and the pause menu: store data/UI/purchase, stage select,
 // stairs confirm, and the in-game menu (save / settings / back to title). Split out of game.cpp 2026-09-13.
+#include "text_keys.h"     // toms::text: every line of text by its key
+#include "field_keys.h"    // toms::field: every data field by its constant
 #include "game_internal.h"
 #include <algorithm>
 
@@ -11,14 +13,14 @@ void Game::f_LoadStore() {
     // price (loadAssets reads items.json first). An entry naming no known item is skipped.
     nlohmann::json l_jJ = f_ReadJsonFile(f_PathOf(toms::key::g_pszDataStore));
     if (l_jJ.is_null() || l_jJ.empty()) { return; }
-    if (l_jJ.contains("store_title")) m_jStoreTitle = l_jJ["store_title"];
-    if (l_jJ.contains("unlockstage")) m_iStoreUnlockStage = l_jJ["unlockstage"].get<int>();
-    for (auto& l_jIt : l_jJ["items"]) {
+    if (l_jJ.contains(toms::field::g_pszStoreTitle)) m_jStoreTitle = l_jJ[toms::field::g_pszStoreTitle];
+    if (l_jJ.contains(toms::field::g_pszUnlockstage)) m_iStoreUnlockStage = l_jJ[toms::field::g_pszUnlockstage].get<int>();
+    for (auto& l_jIt : l_jJ[toms::field::g_pszItems]) {
         StoreItemDef l_oD;
-        l_oD.m_strId = l_jIt.value("item", std::string());
+        l_oD.m_strId = l_jIt.value(toms::field::g_pszItem, std::string());
         if (!f_ItemDef(l_oD.m_strId)) { fprintf(stderr, "[store] '%s' is not in data/items.json, skipped\n", l_oD.m_strId.c_str()); continue; }
         l_oD.m_iPrice = std::max(0, f_ItemPrice(l_oD.m_strId));
-        l_oD.m_iGrowth = std::max(1, l_jIt.value("growth", 2));
+        l_oD.m_iGrowth = std::max(1, l_jIt.value(toms::field::g_pszGrowth, 2));
         l_oD.m_iPurchases = 0;
         m_vStoreItems.push_back(l_oD);
     }
@@ -54,15 +56,15 @@ void Game::f_EnsureStageListLoaded() {
             l_oInfo.m_iIndex = l_oF.m_iSeq;
             l_oInfo.m_strFileStem = l_oF.m_strId;
             std::string l_strResolved = l_oF.m_strNameKey;
-            if (l_strResolved.rfind("story.", 0) == 0) {
+            if (l_strResolved.rfind(toms::key_prefix::g_pszStory, 0) == 0) {
                 std::string l_strTr = m_oLocale.f_Tr(l_strResolved);
                 l_strResolved = (!l_strTr.empty() && l_strTr != l_strResolved) ? l_strTr : l_oF.m_strId;
             }
             l_oInfo.m_strName = l_strResolved.empty() ? l_oF.m_strId : l_strResolved;
             // The act title is already authored (S3: story.chNN.title), so a hub row can say which
             // act it belongs to without inventing another key; falls back to the act id.
-            std::string l_strActTitle = m_oLocale.f_Tr("story." + l_oF.m_strActKey + ".title");
-            l_oInfo.m_strPreview = (l_strActTitle.empty() || l_strActTitle.rfind("story.", 0) == 0) ? l_oF.m_strAct : l_strActTitle;
+            std::string l_strActTitle = m_oLocale.f_Tr(toms::key_prefix::g_pszStory + l_oF.m_strActKey + ".title");
+            l_oInfo.m_strPreview = (l_strActTitle.empty() || l_strActTitle.rfind(toms::key_prefix::g_pszStory, 0) == 0) ? l_oF.m_strAct : l_strActTitle;
             m_vStageList.push_back(l_oInfo);
         }
         return;
@@ -72,15 +74,15 @@ void Game::f_EnsureStageListLoaded() {
         if (l_strName.size() < 5 || l_strName.compare(l_strName.size() - 5, 5, ".json") != 0) continue;
         try {
             nlohmann::json l_jJ = f_ReadJsonFile(l_strDir + l_strName);
-            if (l_jJ.is_null() || !l_jJ.contains("id")) continue;
+            if (l_jJ.is_null() || !l_jJ.contains(toms::field::g_pszId)) continue;
             StageInfo l_oInfo;
-            l_oInfo.m_strId = l_jJ.value("id", std::string());
-            l_oInfo.m_strName = l_jJ.contains("name") ? m_oLocale.f_Field(l_jJ["name"]) : l_oInfo.m_strId;
-            l_oInfo.m_iIndex = l_jJ.value("index", 0);
+            l_oInfo.m_strId = l_jJ.value(toms::field::g_pszId, std::string());
+            l_oInfo.m_strName = l_jJ.contains(toms::field::g_pszName) ? m_oLocale.f_Field(l_jJ[toms::field::g_pszName]) : l_oInfo.m_strId;
+            l_oInfo.m_iIndex = l_jJ.value(toms::field::g_pszIndex, 0);
             l_oInfo.m_strFileStem = l_strName.substr(0, l_strName.size() - 5);
             // Milestone 8: recommended-stats blurb, authored per stage JSON's optional top-level
             // "preview" string -- empty for a file that doesn't set one (none did before M8).
-            l_oInfo.m_strPreview = l_jJ.contains("preview") ? m_oLocale.f_Field(l_jJ["preview"]) : std::string();
+            l_oInfo.m_strPreview = l_jJ.contains(toms::field::g_pszPreview) ? m_oLocale.f_Field(l_jJ[toms::field::g_pszPreview]) : std::string();
             if (!l_oInfo.m_strId.empty()) m_vStageList.push_back(l_oInfo);
         } catch (...) {}
     }
@@ -91,11 +93,21 @@ void Game::f_EnsureStageListLoaded() {
 void Game::f_OpenStageSelect() {
     f_EnsureStageListLoaded();
     m_bStageSelectOpen = true;
+    m_bStageSelectTest = false;
+    m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
+}
+
+void Game::f_OpenStageSelectTest() {
+    if (m_bInGameMenuOpen) f_CloseInGameMenu();
+    f_EnsureStageListLoaded();
+    m_bStageSelectOpen = true;
+    m_bStageSelectTest = true;
     m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
 }
 
 void Game::f_CloseStageSelect() {
     m_bStageSelectOpen = false;
+    m_bStageSelectTest = false;
     m_oAudio.f_Play(toms::key::g_pszSfxCloseUi);
 }
 
@@ -128,7 +140,7 @@ void Game::f_InGameMenuMove(int l_iDelta) {
         m_iInGameMenuSel = ((m_iInGameMenuSel + l_iDelta) % l_iN + l_iN) % l_iN;
     } else {
         // languages, the art style rows (none when only the original exists), reduce effects, battle speed, 3D battle, view size
-        int l_iN = std::max(1, m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount() + 4);
+        int l_iN = std::max(1, m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount() + 6);   // + reduce effects, speed, 3D, view size, test jump, performance
         m_iInGameMenuSel = ((m_iInGameMenuSel + l_iDelta) % l_iN + l_iN) % l_iN;
     }
 }
@@ -236,6 +248,11 @@ void Game::f_InGameMenuActivate() {
     } else if (m_iInGameMenuSel == m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount() + 3) {
         f_CycleViewScale();      // docs/gameplay/24: x1 -> x1.5 -> x2 -> x3
         m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
+    } else if (m_iInGameMenuSel == m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount() + 4) {
+        f_OpenStageSelectTest(); // Test: jump to any floor (closes the menu, opens the list with no locks)
+    } else if (m_iInGameMenuSel == m_oLocale.f_LanguageCount() + f_SettingsStyleRowCount() + 5) {
+        m_bPerfShown = !m_bPerfShown;   // the performance checker's window (docs/engine/25): the way in on a phone
+        m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
     }
 }
 
@@ -309,7 +326,7 @@ void Game::f_BuyStoreItem(int l_iIdx) {
     // Gear the player already owns is not bought twice: tapping it wears it.
     if (f_IsGearType(f_ItemType(l_oD.m_strId)) && std::find(m_vGearOwned.begin(), m_vGearOwned.end(), l_oD.m_strId) != m_vGearOwned.end()) {
         f_EquipGear(l_oD.m_strId);
-        m_strToastMsg = f_TrParam(m_oLocale.f_Tr("store.toast_purchase_success"), "name", f_ItemName(l_oD.m_strId));
+        m_strToastMsg = f_TrParam(m_oLocale.f_Tr(toms::text::g_pszStoreToastPurchaseSuccess), toms::field::g_pszName, f_ItemName(l_oD.m_strId));
         m_iToastTimer = 1200;
         m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
         f_MarkProgressDirty();
@@ -318,7 +335,7 @@ void Game::f_BuyStoreItem(int l_iIdx) {
     int l_iCost = l_oD.f_LiveCost();
     if (m_oPl.m_iGold < l_iCost) {
         // not enough gold -> toast + shake (simple effect), no purchase
-        m_strToastMsg = f_TrParam(m_oLocale.f_Tr("store.toast_insufficient_gold"), "cost", std::to_string(l_iCost));
+        m_strToastMsg = f_TrParam(m_oLocale.f_Tr(toms::text::g_pszStoreToastInsufficientGold), toms::field::g_pszCost, std::to_string(l_iCost));
         m_iToastTimer = 1600;
         m_iShakeTimer = 350;
         m_oAudio.f_Play(toms::key::g_pszSfxDeny);
@@ -332,7 +349,7 @@ void Game::f_BuyStoreItem(int l_iIdx) {
     else f_ApplyStats(l_oD.m_strId, f_ItemStats(l_oD.m_strId));
     l_oD.m_iPurchases++;
     // gear is worn at once: say so, and where to change it (docs/gameplay/17 I7)
-    m_strToastMsg = f_TrParam(m_oLocale.f_Tr(l_bGear ? "store.toast_gear_worn" : "store.toast_purchase_success"), "name", f_ItemName(l_oD.m_strId));
+    m_strToastMsg = f_TrParam(m_oLocale.f_Tr(l_bGear ? toms::text::g_pszStoreToastGearWorn : toms::text::g_pszStoreToastPurchaseSuccess), toms::field::g_pszName, f_ItemName(l_oD.m_strId));
     m_iToastTimer = l_bGear ? 2600 : 1400;
     m_oAudio.f_Play(toms::key::g_pszSfxGetItem);
     f_MarkProgressDirty();   // a purchase changes gold/stats/equipment: autosave will flush it

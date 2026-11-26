@@ -15,6 +15,17 @@
 
 ## ▶ Next Step
 
+**Every floor 3D, no hard-coded names, the performance checker (F4)** (2026-11-26; [DAILY_2026-11-26.md](DAILY_2026-11-26.md)):
+- Every floor's battle 3D; Settings > Test: jump to any floor; the F30 / F25 bosses visible again (borrowed looks' clips).
+- No name as a string in the game's C++: game_names.h, field_keys.h, text_keys.h (generated, tools/make_text_keys.py),
+  ui_names.h, res_keys.h; `lint.game_names` checks it (doc project/12 §7).
+- F4 on every screen (and Settings > Performance checker, for a phone): each update and render timed, draw calls, triangles, GPU per view; Ctrl + / Ctrl − text; a dump
+  under 30 fps for a whole second (30 s quiet, not the same cause twice). The UI no longer re-checks hidden screens:
+  F30's map Debug 48 -> 60 fps (doc engine/25).
+- Not committed (after the owner's `c7bc57e`). Changed-only 57 of 344, all passed.
+- **Owner:** the 13 ms UI was the Debug build; open the menus / store / battle once (hidden screens no longer refresh);
+  look at `render.walk3d` next?; the fallback-numbers row in doc 13.
+
 **Fights: monster MP and chances, bigger ultimates, the hero's shout** (2026-11-25; [DAILY_2026-11-25.md](DAILY_2026-11-25.md)):
 - Each monster move has a chance, each monster its own MP (enemies.json "mp"); a special attack costs MP; the six cells
   show only while one is coming. Hivebear: 3 specials of 14 moves (was about 60 %); the trial toad fixed.

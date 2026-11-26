@@ -1,6 +1,7 @@
 // game_title_glue.cpp — title phase + save slots glue: title menu state, slot summaries,
 // new game / continue, autosave, language switching, and the title pages' drawing.
 // Split out of game.cpp 2026-09-13.
+#include "text_keys.h"     // toms::text: every line of text by its key
 #include "game_internal.h"
 
 using namespace toms::game_detail;
@@ -148,8 +149,8 @@ bool Game::f_ContinueFromSlot(int l_iSlot) {
     }
     f_ApplyLoadedRun(l_oM, l_oR, l_iSlot, l_iPlaySec);
     m_bSlotReadOnly = l_oInfo.m_bNewer;
-    if (l_oInfo.m_bFromBackup) m_vNotifications.push_back({m_oLocale.f_Tr("save.restored"), 5000});
-    if (l_oInfo.m_bNewer) m_vNotifications.push_back({m_oLocale.f_Tr("save.newer"), 6000});
+    if (l_oInfo.m_bFromBackup) m_vNotifications.push_back({m_oLocale.f_Tr(toms::text::g_pszSaveRestored), 5000});
+    if (l_oInfo.m_bNewer) m_vNotifications.push_back({m_oLocale.f_Tr(toms::text::g_pszSaveNewer), 6000});
     return true;
 }
 

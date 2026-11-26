@@ -12,6 +12,8 @@
 //
 // Pure data, no Game: unit-tested in stair_links_test.cpp.
 #pragma once
+#include "field_keys.h"    // toms::field: every data field by its constant
+#include "game_names.h"   // toms::state, toms::battle_event, ... (no hard-coded name)
 #include <json.hpp>
 #include <cctype>
 #include <map>
@@ -36,9 +38,9 @@ inline std::vector<std::string> f_UnlockEventsFromJson(const nlohmann::json& l_j
         l_vOut.push_back(l_jV.get<std::string>());
     };
     if (!l_jUnlock.is_object()) return l_vOut;
-    if (l_jUnlock.contains("eventDone")) l_fnAdd(l_jUnlock["eventDone"]);
-    if (l_jUnlock.contains("eventsDone") && l_jUnlock["eventsDone"].is_array())
-        for (const auto& l_jV : l_jUnlock["eventsDone"]) l_fnAdd(l_jV);
+    if (l_jUnlock.contains(toms::field::g_pszEventDone)) l_fnAdd(l_jUnlock[toms::field::g_pszEventDone]);
+    if (l_jUnlock.contains(toms::field::g_pszEventsDone) && l_jUnlock[toms::field::g_pszEventsDone].is_array())
+        for (const auto& l_jV : l_jUnlock[toms::field::g_pszEventsDone]) l_fnAdd(l_jV);
     return l_vOut;
 }
 
@@ -47,11 +49,11 @@ inline std::vector<StairLink> f_StairLinksFromJson(const nlohmann::json& l_jArr)
     std::vector<StairLink> l_vOut;
     if (!l_jArr.is_array()) return l_vOut;
     for (const auto& l_jJ : l_jArr) {
-        if (!l_jJ.is_object() || !l_jJ.contains("to") || !l_jJ["to"].is_string()) continue;
+        if (!l_jJ.is_object() || !l_jJ.contains(toms::field::g_pszTo) || !l_jJ[toms::field::g_pszTo].is_string()) continue;
         StairLink l_oS;
-        l_oS.m_bUp = l_jJ.value("dir", std::string("up")) != "down";
-        l_oS.m_strTo = l_jJ["to"].get<std::string>();
-        if (l_jJ.contains("unlock") && l_jJ["unlock"].is_object()) l_oS.m_vUnlockEvents = f_UnlockEventsFromJson(l_jJ["unlock"]);
+        l_oS.m_bUp = l_jJ.value(toms::field::g_pszDir, std::string(toms::stair_dir::g_pszUp)) != toms::stair_dir::g_pszDown;
+        l_oS.m_strTo = l_jJ[toms::field::g_pszTo].get<std::string>();
+        if (l_jJ.contains(toms::field::g_pszUnlock) && l_jJ[toms::field::g_pszUnlock].is_object()) l_oS.m_vUnlockEvents = f_UnlockEventsFromJson(l_jJ[toms::field::g_pszUnlock]);
         l_vOut.push_back(l_oS);
     }
     return l_vOut;

@@ -78,7 +78,7 @@
                 "run": { "stridesPerS": 2.6, "bounce": 0.09, "leanDeg": 9, "dust": "miss_puff", "dustScale": 0.6 } },
   "stages3d": [
     {
-      "from": 1, "to": 10,
+      "from": 1, "to": 9999,
       "sky": { "hdr": "battle3d/moonlit_ruins/sky.jpg", "intensity": 0.5, "yaw": 0, "blur": 0 },
       "exposure": 0.25,
       "light": { "dir": [-0.35, -0.75, -0.55], "color": [0.72, 0.8, 1.0], "intensity": 4.0, "ambient": 0.35 },

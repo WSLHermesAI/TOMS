@@ -2,6 +2,11 @@
 // Esc) opens five tabs -- Status, Equipment, Items, Events, System. This file keeps its state, its
 // keyboard and mouse handling, and builds its part of the UI (UiPlayer; the System tab's rows are
 // UiMenu, built by buildMenuUi in game_ui.cpp). The screen itself is assets/media/ui/player.rml.
+#include "ui_names.h"     // toms::ui: the names the .rml / .rcss files use
+#include "res_keys.h"
+#include "text_keys.h"     // toms::text: every line of text by its key
+#include "field_keys.h"    // toms::field: every data field by its constant
+#include "game_names.h"   // toms::state, toms::battle_event, ... (no hard-coded name)
 #include "game_internal.h"
 #include "player_menu_rules.h"   // stacking, the grid cursor, dropping (unit-tested)
 
@@ -73,7 +78,7 @@ std::vector<Game::ItemCell> Game::f_ItemCells() const {
     if (l_bAll || m_iItemFilter == 1)                       // the backpack, copies stacked
         for (const toms::StackedItem& l_oS : toms::f_StackItems(m_oPl.m_vInv)) l_vOut.push_back({ItemCell::Inv, l_oS.m_strId, l_oS.m_iCount});
     if (l_bAll || m_iItemFilter == 3) {                     // keys are counters on the player, not backpack items
-        const std::pair<const char*, int> l_arrKeys[] = {{"key_yellow", m_oPl.m_iKeyYellow}, {"key_blue", m_oPl.m_iKeyBlue}, {"key_red", m_oPl.m_iKeyRed}};
+        const std::pair<const char*, int> l_arrKeys[] = {{toms::field::g_pszKeyYellow, m_oPl.m_iKeyYellow}, {toms::field::g_pszKeyBlue, m_oPl.m_iKeyBlue}, {toms::field::g_pszKeyRed, m_oPl.m_iKeyRed}};
         for (const auto& l_pairK : l_arrKeys)
             if (l_pairK.second > 0) l_vOut.push_back({ItemCell::Key, l_pairK.first, l_pairK.second});
     }
@@ -181,9 +186,9 @@ std::vector<Game::LogEntry> Game::f_EventLog(bool l_bAll) const {
             LogEntry l_oE;
             l_oE.m_iKind = 0;
             l_oE.m_strId = l_strAct;
-            l_oE.m_strTitle = l_fnText("story." + l_strKey + ".title");
+            l_oE.m_strTitle = l_fnText(toms::key_prefix::g_pszStory + l_strKey + ".title");
             if (l_oE.m_strTitle.empty()) l_oE.m_strTitle = l_strAct;
-            l_oE.m_strDesc = l_fnText("story." + l_strKey + ".desc");
+            l_oE.m_strDesc = l_fnText(toms::key_prefix::g_pszStory + l_strKey + ".desc");
             l_oE.m_bDone = m_oRun.f_FloorCleared(l_strLast);
             (l_oE.m_bDone ? l_vDone : l_vOpen).push_back(l_oE);
         }
@@ -194,15 +199,15 @@ std::vector<Game::LogEntry> Game::f_EventLog(bool l_bAll) const {
     auto l_fnEventName = [&](const std::string& l_strId) {
         auto l_itD = m_mapEventDefs.find(l_strId);
         if (l_itD != m_mapEventDefs.end() && !l_itD->second.m_strStairsFrom.empty())   // Q7: "Go to the stairs on floor 3"
-            return toms::f_FillText(m_oLocale.f_Tr("stairs.go.title"), {{"from", toms::f_FloorLabel(l_itD->second.m_strStairsFrom)},
-                                                                  {"to", toms::f_FloorLabel(l_itD->second.m_strStairsTo)}});
+            return toms::f_FillText(m_oLocale.f_Tr(toms::text::g_pszStairsGoTitle), {{toms::field::g_pszFrom, toms::f_FloorLabel(l_itD->second.m_strStairsFrom)},
+                                                                  {toms::field::g_pszTo, toms::f_FloorLabel(l_itD->second.m_strStairsTo)}});
         std::string l_strT = l_itD == m_mapEventDefs.end() ? std::string() : l_fnText(l_itD->second.m_strTitleKey);
         return l_strT.empty() ? l_strId : l_strT;
     };
     auto l_fnConnectedNames = [&](const std::vector<std::string>& l_vIds) {
         std::vector<std::string> l_vOut;
         for (const std::string& l_strC : l_vIds) {
-            if (!m_oRun.f_EventStarted(l_strC)) l_vOut.push_back(m_oLocale.f_Tr("events.unknown"));   // not met yet: no spoilers
+            if (!m_oRun.f_EventStarted(l_strC)) l_vOut.push_back(m_oLocale.f_Tr(toms::text::g_pszEventsUnknown));   // not met yet: no spoilers
             else l_vOut.push_back(l_fnEventName(l_strC) + (m_oRun.f_EventFinished(l_strC) ? "  ✓" : ""));
         }
         return l_vOut;
@@ -217,18 +222,18 @@ std::vector<Game::LogEntry> Game::f_EventLog(bool l_bAll) const {
         l_oE.m_strTitle = l_fnEventName(l_strId);
         const EventDef& l_oDef = m_mapEventDefs.at(l_strId);
         if (!l_oDef.m_strStairsFrom.empty()) {
-            l_oE.m_strDesc = toms::f_FillText(m_oLocale.f_Tr("stairs.go.desc"), {{"from", toms::f_FloorLabel(l_oDef.m_strStairsFrom)},
-                                                                   {"to", toms::f_FloorLabel(l_oDef.m_strStairsTo)}});
+            l_oE.m_strDesc = toms::f_FillText(m_oLocale.f_Tr(toms::text::g_pszStairsGoDesc), {{toms::field::g_pszFrom, toms::f_FloorLabel(l_oDef.m_strStairsFrom)},
+                                                                   {toms::field::g_pszTo, toms::f_FloorLabel(l_oDef.m_strStairsTo)}});
             // W38: where they are -- on this floor the arrow marks them; elsewhere, the floor and the spot
             if (!l_bIsDone) {
                 const auto l_itSpot = m_mapStairSpots.find(l_oDef.m_strStairsFrom + ">" + l_oDef.m_strStairsTo);
-                if (l_oDef.m_strStairsFrom == m_oSt.m_strId) l_oE.m_strDesc += " " + m_oLocale.f_Tr("stairs.go.here");
+                if (l_oDef.m_strStairsFrom == m_oSt.m_strId) l_oE.m_strDesc += " " + m_oLocale.f_Tr(toms::text::g_pszStairsGoHere);
                 else if (l_itSpot != m_mapStairSpots.end())
-                    l_oE.m_strDesc += " " + toms::f_FillText(m_oLocale.f_Tr("stairs.go.where"), {{"from", toms::f_FloorLabel(l_oDef.m_strStairsFrom)},
-                                                                                {"x", std::to_string(l_itSpot->second.first)},
-                                                                                {"y", std::to_string(l_itSpot->second.second)}});
+                    l_oE.m_strDesc += " " + toms::f_FillText(m_oLocale.f_Tr(toms::text::g_pszStairsGoWhere), {{toms::field::g_pszFrom, toms::f_FloorLabel(l_oDef.m_strStairsFrom)},
+                                                                                {toms::field::g_pszX, std::to_string(l_itSpot->second.first)},
+                                                                                {toms::field::g_pszY, std::to_string(l_itSpot->second.second)}});
                 else
-                    l_oE.m_strDesc += " " + toms::f_FillText(m_oLocale.f_Tr("stairs.go.floor"), {{"from", toms::f_FloorLabel(l_oDef.m_strStairsFrom)}});
+                    l_oE.m_strDesc += " " + toms::f_FillText(m_oLocale.f_Tr(toms::text::g_pszStairsGoFloor), {{toms::field::g_pszFrom, toms::f_FloorLabel(l_oDef.m_strStairsFrom)}});
             }
         } else
             l_oE.m_strDesc = l_fnText(l_oDef.m_strDescKey);
@@ -237,13 +242,13 @@ std::vector<Game::LogEntry> Game::f_EventLog(bool l_bAll) const {
             for (const StairUnlock& l_oS : l_itU->second)
             {
                 l_oE.m_strDesc += (l_oE.m_strDesc.empty() ? "" : " ") +
-                          toms::f_FillText(m_oLocale.f_Tr("stairs.unlocks"), {{"from", toms::f_FloorLabel(l_oS.m_strFloor)}, {"to", toms::f_FloorLabel(l_oS.m_strTo)}});
+                          toms::f_FillText(m_oLocale.f_Tr(toms::text::g_pszStairsUnlocks), {{toms::field::g_pszFrom, toms::f_FloorLabel(l_oS.m_strFloor)}, {toms::field::g_pszTo, toms::f_FloorLabel(l_oS.m_strTo)}});
                 // W38: a stair that waits for several events says how many are done
                 if (const toms::StairLink* l_pLink = f_FindStair(l_oS.m_strFloor, l_oS.m_strTo); l_pLink && l_pLink->m_vUnlockEvents.size() > 1) {
                     int l_iDone = 0;
                     for (const std::string& l_strEv : l_pLink->m_vUnlockEvents) if (m_oRun.f_EventFinished(l_strEv)) l_iDone++;
-                    l_oE.m_strDesc += " " + toms::f_FillText(m_oLocale.f_Tr("stairs.unlocks.count"), {{"done", std::to_string(l_iDone)},
-                                                                                       {"all", std::to_string(l_pLink->m_vUnlockEvents.size())}});
+                    l_oE.m_strDesc += " " + toms::f_FillText(m_oLocale.f_Tr(toms::text::g_pszStairsUnlocksCount), {{toms::field::g_pszDone, std::to_string(l_iDone)},
+                                                                                       {toms::field::g_pszAll, std::to_string(l_pLink->m_vUnlockEvents.size())}});
                 }
             }
         l_oE.m_bDone = l_bIsDone;
@@ -267,9 +272,9 @@ std::vector<Game::LogEntry> Game::f_EventLog(bool l_bAll) const {
         LogEntry l_oE;
         l_oE.m_iKind = 1;
         l_oE.m_strId = l_strId;
-        l_oE.m_strTitle = l_fnText("mission." + l_strId + ".title");
+        l_oE.m_strTitle = l_fnText(toms::key_prefix::g_pszMission + l_strId + ".title");
         if (l_oE.m_strTitle.empty()) l_oE.m_strTitle = l_strId;
-        l_oE.m_strDesc = l_fnText("mission." + l_strId + ".desc");
+        l_oE.m_strDesc = l_fnText(toms::key_prefix::g_pszMission + l_strId + ".desc");
         l_oE.m_bDone = l_oT.m_eState == toms::MissionState::Claimed;
         (l_oE.m_bDone ? l_vDone : l_vOpen).push_back(l_oE);
     }
@@ -282,11 +287,11 @@ std::vector<Game::LogEntry> Game::f_EventLog(bool l_bAll) const {
 static void f_EventsWaitedFor(const nlohmann::json& l_jJ, std::vector<std::string>& l_vOut) {
     if (l_jJ.is_array()) { for (const auto& l_jX : l_jJ) f_EventsWaitedFor(l_jX, l_vOut); return; }
     if (!l_jJ.is_object()) return;
-    for (const char* l_pszGroup : {"all", "any", "not"})
+    for (const char* l_pszGroup : {toms::field::g_pszAll, toms::field::g_pszAny, toms::field::g_pszNot})
         if (l_jJ.contains(l_pszGroup)) f_EventsWaitedFor(l_jJ[l_pszGroup], l_vOut);
-    const std::string l_strFlag = l_jJ.value("flag", std::string());
-    if (l_jJ.value("type", std::string()) == "runFlagSet" && l_strFlag.rfind("event_", 0) == 0) l_vOut.push_back(l_strFlag.substr(6));
-    if (l_jJ.contains("eventDone") && l_jJ["eventDone"].is_string()) l_vOut.push_back(l_jJ["eventDone"].get<std::string>());
+    const std::string l_strFlag = l_jJ.value(toms::field::g_pszFlag, std::string());
+    if (l_jJ.value(toms::field::g_pszType, std::string()) == "runFlagSet" && l_strFlag.rfind(toms::key_prefix::g_pszEvent, 0) == 0) l_vOut.push_back(l_strFlag.substr(6));
+    if (l_jJ.contains(toms::field::g_pszEventDone) && l_jJ[toms::field::g_pszEventDone].is_string()) l_vOut.push_back(l_jJ[toms::field::g_pszEventDone].get<std::string>());
 }
 
 std::vector<std::string> Game::f_ConnectedEvents(const std::string& l_strEventId) const {
@@ -323,35 +328,35 @@ void Game::f_LoadEventDefs() {
     nlohmann::json l_jKinds = f_ReadJsonFile(f_PathOf(toms::key::g_pszDataEventKinds));
     if (l_jKinds.is_object())
         for (auto& [l_strK, l_jV] : l_jKinds.items())
-            if (l_jV.is_object() && l_jV.contains("inLog")) l_mapKindInLog[l_strK] = l_jV.value("inLog", true);
+            if (l_jV.is_object() && l_jV.contains(toms::field::g_pszInLog)) l_mapKindInLog[l_strK] = l_jV.value(toms::field::g_pszInLog, true);
     std::vector<std::string> l_vPoolNames = toms::f_VfsListDir(l_strDir);
     std::sort(l_vPoolNames.begin(), l_vPoolNames.end());   // pool order = file-name order (the NPC topic menu's order)
     std::vector<nlohmann::json> l_vPoolEvents;
     for (const std::string& l_strName : l_vPoolNames) {
-        if (l_strName.rfind("pool_", 0) != 0 || l_strName.size() < 5 || l_strName.compare(l_strName.size() - 5, 5, ".json") != 0) continue;
+        if (l_strName.rfind(toms::key_prefix::g_pszPool, 0) != 0 || l_strName.size() < 5 || l_strName.compare(l_strName.size() - 5, 5, ".json") != 0) continue;
         nlohmann::json l_jPool = f_ReadJsonFile(l_strDir + l_strName);
-        if (!l_jPool.contains("events") || !l_jPool["events"].is_array()) continue;
-        l_vPoolEvents.push_back(l_jPool["events"]);
-        for (const auto& l_jE : l_jPool["events"]) {
-            const std::string l_strId = l_jE.value("eventId", std::string());
+        if (!l_jPool.contains(toms::field::g_pszEvents) || !l_jPool[toms::field::g_pszEvents].is_array()) continue;
+        l_vPoolEvents.push_back(l_jPool[toms::field::g_pszEvents]);
+        for (const auto& l_jE : l_jPool[toms::field::g_pszEvents]) {
+            const std::string l_strId = l_jE.value(toms::field::g_pszEventId, std::string());
             if (l_strId.empty()) continue;
             EventDef l_oD;
-            l_oD.m_strKind = l_jE.value("kind", std::string());
-            l_oD.m_strTitleKey = l_jE.value("title", l_strId + ".title");
-            l_oD.m_strDescKey = l_jE.value("desc", l_strId + ".desc");
-            if (l_jE.contains("next") && l_jE["next"].is_array())
-                for (const auto& l_jN : l_jE["next"]) if (l_jN.is_string()) l_oD.m_vNext.push_back(l_jN.get<std::string>());
-            if (l_jE.contains("requires")) l_oD.m_jRequires = l_jE["requires"];
-            if (l_jE.contains("actions") && l_jE["actions"].is_array()) l_oD.m_jActions = l_jE["actions"];
-            if (l_jE.contains("trigger") && l_jE["trigger"].is_object()) {
-                l_oD.m_strTrigger = l_jE["trigger"].value("on", std::string("step"));
-                l_oD.m_strTriggerVar = l_jE["trigger"].value("var", std::string());
+            l_oD.m_strKind = l_jE.value(toms::field::g_pszKind, std::string());
+            l_oD.m_strTitleKey = l_jE.value(toms::field::g_pszTitle, l_strId + ".title");
+            l_oD.m_strDescKey = l_jE.value(toms::field::g_pszDesc, l_strId + ".desc");
+            if (l_jE.contains(toms::field::g_pszNext) && l_jE[toms::field::g_pszNext].is_array())
+                for (const auto& l_jN : l_jE[toms::field::g_pszNext]) if (l_jN.is_string()) l_oD.m_vNext.push_back(l_jN.get<std::string>());
+            if (l_jE.contains(toms::field::g_pszRequires)) l_oD.m_jRequires = l_jE[toms::field::g_pszRequires];
+            if (l_jE.contains(toms::field::g_pszActions) && l_jE[toms::field::g_pszActions].is_array()) l_oD.m_jActions = l_jE[toms::field::g_pszActions];
+            if (l_jE.contains(toms::field::g_pszTrigger) && l_jE[toms::field::g_pszTrigger].is_object()) {
+                l_oD.m_strTrigger = l_jE[toms::field::g_pszTrigger].value(toms::field::g_pszOn, std::string(toms::event_trigger::g_pszStep));
+                l_oD.m_strTriggerVar = l_jE[toms::field::g_pszTrigger].value(toms::field::g_pszVar, std::string());
             }
-            l_oD.m_bOnce = l_jE.value("once", true);
-            l_oD.m_iMaxTimes = std::max(0, l_jE.value("maxTimes", 0));
-            l_oD.m_strTextKey = l_jE.value("text", l_strId + ".text");
+            l_oD.m_bOnce = l_jE.value(toms::field::g_pszOnce, true);
+            l_oD.m_iMaxTimes = std::max(0, l_jE.value(toms::field::g_pszMaxTimes, 0));
+            l_oD.m_strTextKey = l_jE.value(toms::field::g_pszText, l_strId + ".text");
             auto l_itK = l_mapKindInLog.find(l_oD.m_strKind);
-            l_oD.m_bInLog = l_jE.value("inLog", l_itK == l_mapKindInLog.end() ? true : l_itK->second);
+            l_oD.m_bInLog = l_jE.value(toms::field::g_pszInLog, l_itK == l_mapKindInLog.end() ? true : l_itK->second);
             m_mapEventDefs[l_strId] = l_oD;
         }
     }
@@ -362,10 +367,10 @@ void Game::f_LoadEventDefs() {
     for (const std::string& l_strName : toms::f_VfsListDir(l_strChDir)) {
         if (l_strName.size() < 5 || l_strName.compare(l_strName.size() - 5, 5, ".json") != 0) continue;
         nlohmann::json l_jCh = f_ReadJsonFile(l_strChDir + l_strName);
-        const std::string l_strId = l_jCh.value("id", std::string());
-        if (l_strId.empty() || !l_jCh.contains("beats") || !l_jCh["beats"].is_array()) continue;
-        for (const auto& l_jB : l_jCh["beats"])
-            if (l_jB.value("kind", std::string()) == "event" && l_jB.contains("eventId")) m_mapChapterEvents[l_strId].push_back(l_jB.value("eventId", std::string()));
+        const std::string l_strId = l_jCh.value(toms::field::g_pszId, std::string());
+        if (l_strId.empty() || !l_jCh.contains(toms::field::g_pszBeats) || !l_jCh[toms::field::g_pszBeats].is_array()) continue;
+        for (const auto& l_jB : l_jCh[toms::field::g_pszBeats])
+            if (l_jB.value(toms::field::g_pszKind, std::string()) == toms::story_beat::g_pszEvent && l_jB.contains(toms::field::g_pszEventId)) m_mapChapterEvents[l_strId].push_back(l_jB.value(toms::field::g_pszEventId, std::string()));
     }
     fprintf(stderr, "[assets] events: %zu in the pools, %zu chapters with story events\n", m_mapEventDefs.size(), m_mapChapterEvents.size());
 }
@@ -423,7 +428,7 @@ void Game::f_PlayerMenuMove(int l_iDx, int l_iDy) {
 void Game::f_PlayerMenuActivate() {
     if (!m_bInGameMenuOpen) return;
     if (m_bSaveLoadOpen) { if (m_bSaveLoadConfirm) f_SaveLoadAnswer(m_bSaveLoadConfirmYes); else f_SaveLoadAsk(m_iSaveLoadSel); return; }
-    if (m_bDropConfirmOpen) { f_PlayerMenuEvent("pm_confirm", m_bDropConfirmYes ? 1 : 0); return; }
+    if (m_bDropConfirmOpen) { f_PlayerMenuEvent(toms::ui::g_pszPmConfirm, m_bDropConfirmYes ? 1 : 0); return; }
     switch (m_eMenuTab) {
         case MenuTab::Status:   // Enter places a point on the selected attribute (in the draft: Confirm keeps it)
             if (m_iAttrSel == (int)m_vAttrDefs.size() && !m_mapAttrDraft.empty()) f_ConfirmAttrPoints();
@@ -445,11 +450,11 @@ void Game::f_PlayerMenuActivate() {
             const ItemCell l_oC = l_vCells[f_ClampSel(m_iItemSel, (int)l_vCells.size())];
             const auto l_vButtons = f_ItemButtons(l_oC);
             for (size_t l_nI = 0; l_nI < l_vButtons.size(); l_nI++)
-                if (l_vButtons[l_nI].m_bEnabled) { f_PlayerMenuEvent("pm_btn", (int)l_nI); return; }
+                if (l_vButtons[l_nI].m_bEnabled) { f_PlayerMenuEvent(toms::ui::g_pszPmBtn, (int)l_nI); return; }
             return;
         }
         case MenuTab::Cards:   // Enter: Train with the selected card (docs/gameplay/16 §5)
-            f_PlayerMenuEvent("pm_btn", 0);
+            f_PlayerMenuEvent(toms::ui::g_pszPmBtn, 0);
             return;
         case MenuTab::System:
             f_InGameMenuActivate();
@@ -476,18 +481,18 @@ void Game::f_PlayerMenuBack() {
 
 void Game::f_PlayerMenuEvent(const std::string& l_strName, int l_iArg) {
     if (!m_bInGameMenuOpen) return;
-    if (l_strName == "pm_close") { f_ClosePlayerMenu(); return; }
+    if (l_strName == toms::ui::g_pszPmClose) { f_ClosePlayerMenu(); return; }
     // ---- Save / Load ----
-    if (l_strName == "pm_sl_close") { if (m_bSaveLoadOpen) { m_bSaveLoadOpen = m_bSaveLoadConfirm = false; m_oAudio.f_Play(toms::key::g_pszSfxCloseUi); } return; }
-    if (l_strName == "pm_sl_confirm") { f_SaveLoadAnswer(l_iArg != 0); return; }
+    if (l_strName == toms::ui::g_pszPmSlClose) { if (m_bSaveLoadOpen) { m_bSaveLoadOpen = m_bSaveLoadConfirm = false; m_oAudio.f_Play(toms::key::g_pszSfxCloseUi); } return; }
+    if (l_strName == toms::ui::g_pszPmSlConfirm) { f_SaveLoadAnswer(l_iArg != 0); return; }
     if (m_bSaveLoadOpen) {   // the screen is modal over the menu
         if (m_bSaveLoadConfirm) return;
-        if (l_strName == "pm_sl_mode" && (l_iArg == 0 || l_iArg == 1) && l_iArg != m_iSaveLoadMode) { m_iSaveLoadMode = l_iArg; m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick); }
-        if (l_strName == "pm_sl_slot") f_SaveLoadAsk(l_iArg);
-        if (l_strName == "pm_sl_hover" && l_iArg >= 0 && l_iArg < (int)m_vSaveLoadSlots.size()) m_iSaveLoadSel = l_iArg;
+        if (l_strName == toms::ui::g_pszPmSlMode && (l_iArg == 0 || l_iArg == 1) && l_iArg != m_iSaveLoadMode) { m_iSaveLoadMode = l_iArg; m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick); }
+        if (l_strName == toms::ui::g_pszPmSlSlot) f_SaveLoadAsk(l_iArg);
+        if (l_strName == toms::ui::g_pszPmSlHover && l_iArg >= 0 && l_iArg < (int)m_vSaveLoadSlots.size()) m_iSaveLoadSel = l_iArg;
         return;
     }
-    if (l_strName == "pm_confirm") {
+    if (l_strName == toms::ui::g_pszPmConfirm) {
         if (!m_bDropConfirmOpen) return;
         m_bDropConfirmOpen = false;
         if (l_iArg && m_eMenuTab == MenuTab::Items) {
@@ -504,29 +509,29 @@ void Game::f_PlayerMenuEvent(const std::string& l_strName, int l_iArg) {
         return;
     }
     if (m_bDropConfirmOpen) return;   // the dialog is modal
-    if (l_strName == "pm_tab") {
+    if (l_strName == toms::ui::g_pszPmTab) {
         if (l_iArg >= 0 && l_iArg < m_iMenuTabs && l_iArg != (int)m_eMenuTab) { m_eMenuTab = (MenuTab)l_iArg; f_PlayerMenuTab(0); m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick); }
         return;
     }
-    if (l_strName == "pm_attr") { if (l_iArg >= 0 && l_iArg < (int)m_vAttrDefs.size()) m_iAttrSel = l_iArg; return; }
-    if (l_strName == "pm_attr_add") { if (l_iArg >= 0 && l_iArg < (int)m_vAttrDefs.size()) { m_iAttrSel = l_iArg; f_SpendAttrPoint(l_iArg); } return; }
-    if (l_strName == "pm_attr_sub") { if (l_iArg >= 0 && l_iArg < (int)m_vAttrDefs.size()) { m_iAttrSel = l_iArg; f_UnspendAttrPoint(l_iArg); } return; }
-    if (l_strName == "pm_attr_confirm") { f_ConfirmAttrPoints(); return; }
-    if (l_strName == "pm_attr_reset") { f_ResetAttrDraft(); return; }
-    if (l_strName == "pm_slot") { if (l_iArg >= 0 && l_iArg <= 2 && l_iArg != m_iGearSlot) { m_iGearSlot = l_iArg; m_iGearSel = 0; } return; }
-    if (l_strName == "pm_filter") {
+    if (l_strName == toms::ui::g_pszPmAttr) { if (l_iArg >= 0 && l_iArg < (int)m_vAttrDefs.size()) m_iAttrSel = l_iArg; return; }
+    if (l_strName == toms::ui::g_pszPmAttrAdd) { if (l_iArg >= 0 && l_iArg < (int)m_vAttrDefs.size()) { m_iAttrSel = l_iArg; f_SpendAttrPoint(l_iArg); } return; }
+    if (l_strName == toms::ui::g_pszPmAttrSub) { if (l_iArg >= 0 && l_iArg < (int)m_vAttrDefs.size()) { m_iAttrSel = l_iArg; f_UnspendAttrPoint(l_iArg); } return; }
+    if (l_strName == toms::ui::g_pszPmAttrConfirm) { f_ConfirmAttrPoints(); return; }
+    if (l_strName == toms::ui::g_pszPmAttrReset) { f_ResetAttrDraft(); return; }
+    if (l_strName == toms::ui::g_pszPmSlot) { if (l_iArg >= 0 && l_iArg <= 2 && l_iArg != m_iGearSlot) { m_iGearSlot = l_iArg; m_iGearSel = 0; } return; }
+    if (l_strName == toms::ui::g_pszPmFilter) {
         if (m_eMenuTab == MenuTab::Items && l_iArg >= 0 && l_iArg < 4 && l_iArg != m_iItemFilter) { m_iItemFilter = l_iArg; m_iItemSel = 0; }
         if (m_eMenuTab == MenuTab::Gear && l_iArg >= 0 && l_iArg <= 2 && l_iArg != m_iGearSlot) { m_iGearSlot = l_iArg; m_iGearSel = 0; }
         if (m_eMenuTab == MenuTab::Events && (l_iArg == 0 || l_iArg == 1) && l_iArg != m_iEventFilter) { m_iEventFilter = l_iArg; m_iEventSel = 0; }
         return;
     }
-    if (l_strName == "pm_cell") {
+    if (l_strName == toms::ui::g_pszPmCell) {
         if (m_eMenuTab == MenuTab::Items) m_iItemSel = f_ClampSel(l_iArg, (int)f_ItemCells().size());
         if (m_eMenuTab == MenuTab::Gear) m_iGearSel = f_ClampSel(l_iArg, (int)f_GearCells().size());
         if (m_eMenuTab == MenuTab::Cards) m_iCardSel = f_ClampSel(l_iArg, (int)f_CardCells().size());
         return;
     }
-    if (l_strName == "pm_btn") {
+    if (l_strName == toms::ui::g_pszPmBtn) {
         ItemCell l_oC;
         if (m_eMenuTab == MenuTab::Items) {
             const auto l_vCells = f_ItemCells();
@@ -550,15 +555,15 @@ void Game::f_PlayerMenuEvent(const std::string& l_strName, int l_iArg) {
         if (m_eMenuTab == MenuTab::Items) m_iItemSel = f_ClampSel(m_iItemSel, (int)f_ItemCells().size());
         return;
     }
-    if (l_strName == "pm_event") { m_iEventSel = f_ClampSel(l_iArg, (int)f_EventLog(m_iEventFilter == 1).size()); return; }
-    if (l_strName == "pm_sys") {   // a row of the System tab's left list (a page may be open on the right)
+    if (l_strName == toms::ui::g_pszPmEvent) { m_iEventSel = f_ClampSel(l_iArg, (int)f_EventLog(m_iEventFilter == 1).size()); return; }
+    if (l_strName == toms::ui::g_pszPmSys) {   // a row of the System tab's left list (a page may be open on the right)
         if (m_bInGameLangConfirmOpen) return;
         m_eInGameMenuPage = InGameMenuPage::Main;
         m_iInGameMenuSel = l_iArg;
         f_InGameMenuActivate();
         return;
     }
-    if (l_strName == "pm_sys_hover") { if (m_eInGameMenuPage == InGameMenuPage::Main && !m_bInGameLangConfirmOpen) m_iInGameMenuSel = l_iArg; return; }
+    if (l_strName == toms::ui::g_pszPmSysHover) { if (m_eInGameMenuPage == InGameMenuPage::Main && !m_bInGameLangConfirmOpen) m_iInGameMenuSel = l_iArg; return; }
 }
 
 // ---------- the UI ----------
@@ -568,13 +573,13 @@ void Game::f_BuildPlayerUi(toms::UiState& l_oU) const {
     toms::UiPlayer& l_oP = l_oU.m_oPlayer;
     l_oP.m_bVisible = true;
     l_oP.m_iTab = (int)m_eMenuTab;
-    l_oP.m_strHint = l_oL.f_Tr("player.hint");
-    l_oP.m_strCloseLabel = l_oL.f_Tr("inventory.close");
-    static const char* l_arrTabKeys[m_iMenuTabs] = {"player.tab.status", "player.tab.gear", "player.tab.items", "player.tab.events",
-                                              "player.tab.cards", "player.tab.system"};
+    l_oP.m_strHint = l_oL.f_Tr(toms::text::g_pszPlayerHint);
+    l_oP.m_strCloseLabel = l_oL.f_Tr(toms::text::g_pszInventoryClose);
+    static const char* l_arrTabKeys[m_iMenuTabs] = {toms::text::g_pszPlayerTabStatus, toms::text::g_pszPlayerTabGear, toms::text::g_pszPlayerTabItems, toms::text::g_pszPlayerTabEvents,
+                                              toms::text::g_pszPlayerTabCards, toms::text::g_pszPlayerTabSystem};
     const bool l_arrTabNews[m_iMenuTabs] = {false, m_bNewsGear, false, m_bNewsEvents, m_bNewsCards, m_bNewsStore || m_oRun.f_SkillPoints() > 0};
     for (int l_iI = 0; l_iI < m_iMenuTabs; l_iI++) l_oP.m_vTabs.push_back({l_oL.f_Tr(l_arrTabKeys[l_iI]), l_iI == (int)m_eMenuTab, l_arrTabNews[l_iI] && l_iI != (int)m_eMenuTab});
-    const std::string l_strNone = l_oL.f_Tr("gear.none");
+    const std::string l_strNone = l_oL.f_Tr(toms::text::g_pszGearNone);
     auto l_fnSignedNum = [](int l_iV) { return (l_iV >= 0 ? "+" : "") + std::to_string(l_iV); };
 
     // The gear comparison: a piece against what its slot wears now.
@@ -587,8 +592,8 @@ void Game::f_BuildPlayerUi(toms::UiState& l_oU) const {
         const toms::EquipmentDefinition* l_pCur = nullptr;
         if (auto l_itW = m_mapEquipmentDefs.find(l_strWornId); l_itW != m_mapEquipmentDefs.end()) l_pCur = &l_itW->second;
         l_oP.m_bDCompare = true;
-        l_oP.m_strDNowLabel = l_oL.f_Tr("gear.now");
-        l_oP.m_strDWithLabel = l_oL.f_Tr("gear.with");
+        l_oP.m_strDNowLabel = l_oL.f_Tr(toms::text::g_pszGearNow);
+        l_oP.m_strDWithLabel = l_oL.f_Tr(toms::text::g_pszGearWith);
         auto l_fnLine = [&](const std::string& l_strLabel, double l_dNow, double l_dWith, bool l_bHigherBetter, int l_iDecimals, const std::string& l_strUnit) {
             char l_pszA[32], l_pszB[32];
             std::snprintf(l_pszA, sizeof l_pszA, "%.*f%s", l_iDecimals, l_dNow, l_strUnit.c_str());
@@ -606,9 +611,9 @@ void Game::f_BuildPlayerUi(toms::UiState& l_oU) const {
             l_fnLine("DEF", f_EffectiveDef(), l_iBase + l_oD.m_iStatDef, true, 0, "");
         }
         const toms::PowerBarParams l_oNowBar = l_pCur ? l_pCur->m_oBar : toms::PowerBarParams{};
-        l_fnLine(l_oL.f_Tr("gear.ramp"), l_oNowBar.m_fRampTime, l_oD.m_oBar.m_fRampTime, false, 1, "s");
-        l_fnLine(l_oL.f_Tr("gear.zone"), l_oNowBar.m_fGreenHalf, l_oD.m_oBar.m_fGreenHalf, true, 0, "");
-        if (l_bWeapon) l_fnLine(l_oL.f_Tr("gear.mult"), l_pCur ? l_pCur->m_fMaxMult : 2.0f, l_oD.m_fMaxMult, true, 1, "x");
+        l_fnLine(l_oL.f_Tr(toms::text::g_pszGearRamp), l_oNowBar.m_fRampTime, l_oD.m_oBar.m_fRampTime, false, 1, "s");
+        l_fnLine(l_oL.f_Tr(toms::text::g_pszGearZone), l_oNowBar.m_fGreenHalf, l_oD.m_oBar.m_fGreenHalf, true, 0, "");
+        if (l_bWeapon) l_fnLine(l_oL.f_Tr(toms::text::g_pszGearMult), l_pCur ? l_pCur->m_fMaxMult : 2.0f, l_oD.m_fMaxMult, true, 1, "x");   // name-ok ("x3": shown text)
         for (const AttrDef& l_oA : m_vAttrDefs) {
             const int l_iNowBonus = l_pCur && l_pCur->m_mapStats.count(l_oA.m_strId) ? l_pCur->m_mapStats.at(l_oA.m_strId) : 0;
             const int l_iNewBonus = l_oD.m_mapStats.count(l_oA.m_strId) ? l_oD.m_mapStats.at(l_oA.m_strId) : 0;
@@ -622,7 +627,7 @@ void Game::f_BuildPlayerUi(toms::UiState& l_oU) const {
             return l_strS.empty() ? l_strNone : l_strS;
         };
         const std::string l_strNa = l_fnActiveNames(l_pCur), l_strNb = l_fnActiveNames(&l_oD);
-        if (l_strNa != l_strNone || l_strNb != l_strNone) l_oP.m_vDCompareLines.push_back({l_oL.f_Tr("gear.skill"), l_strNa, l_strNb, 0});
+        if (l_strNa != l_strNone || l_strNb != l_strNone) l_oP.m_vDCompareLines.push_back({l_oL.f_Tr(toms::text::g_pszGearSkill), l_strNa, l_strNb, 0});
     };
     // A weapon's detail (docs/gameplay/17 I6): its level, its combo, the EXP to the next level, how it plays.
     auto l_fnWeaponLines = [&](const std::string& l_strId) {
@@ -632,17 +637,17 @@ void Game::f_BuildPlayerUi(toms::UiState& l_oU) const {
         const int l_iLv = f_WeaponLevel(l_strId), l_iNext = toms::f_ExpToNextLevel(l_oWp, l_iLv);
         auto l_itExp = m_mapWeaponExp.find(l_strId);
         const int l_iLeft = std::max(0, toms::f_WeaponExpForLevel(l_oWp, l_iLv + 1) - (l_itExp == m_mapWeaponExp.end() ? 0 : l_itExp->second));
-        l_oP.m_vDLines.push_back({l_oL.f_Tr("gear.weapon_level"), "Lv " + std::to_string(l_iLv) + " / " + std::to_string(toms::f_WeaponMaxLevel(l_oWp)), "", 0});
-        l_oP.m_vDLines.push_back({l_oL.f_Tr("gear.combo"), std::to_string(toms::f_WeaponLevelEntry(l_oWp, l_iLv).m_iPoints), "", 0});
-        l_oP.m_vDLines.push_back({l_oL.f_Tr("gear.to_next"), l_iNext > 0 ? f_TrParam(l_oL.f_Tr("gear.wins"), "n", std::to_string(l_iLeft)) : l_oL.f_Tr("gear.max_level"), "", 0});
+        l_oP.m_vDLines.push_back({l_oL.f_Tr(toms::text::g_pszGearWeaponLevel), "Lv " + std::to_string(l_iLv) + " / " + std::to_string(toms::f_WeaponMaxLevel(l_oWp)), "", 0});
+        l_oP.m_vDLines.push_back({l_oL.f_Tr(toms::text::g_pszGearCombo), std::to_string(toms::f_WeaponLevelEntry(l_oWp, l_iLv).m_iPoints), "", 0});
+        l_oP.m_vDLines.push_back({l_oL.f_Tr(toms::text::g_pszGearToNext), l_iNext > 0 ? f_TrParam(l_oL.f_Tr(toms::text::g_pszGearWins), toms::field::g_pszN, std::to_string(l_iLeft)) : l_oL.f_Tr(toms::text::g_pszGearMaxLevel), "", 0});
         const toms::PlayType l_eType = toms::f_PlayTypeFromString(l_oWp.m_strPlay);
-        const std::string l_strHint = l_oL.f_Tr(l_eType == toms::PlayType::eTRACK ? std::string("battle.attack_ready_hint") : std::string("battle.play_hint_") + toms::f_PlayTypeName(l_eType));
-        l_oP.m_strDNote = (l_oP.m_strDNote.empty() ? std::string() : l_oP.m_strDNote + "  ·  ") + l_oL.f_Tr("gear.play") + l_strHint;
+        const std::string l_strHint = l_oL.f_Tr(l_eType == toms::PlayType::eTRACK ? std::string(toms::text::g_pszBattleAttackReadyHint) : std::string(toms::key_prefix::g_pszBattlePlayHint) + toms::f_PlayTypeName(l_eType));
+        l_oP.m_strDNote = (l_oP.m_strDNote.empty() ? std::string() : l_oP.m_strDNote + "  ·  ") + l_oL.f_Tr(toms::text::g_pszGearPlay) + l_strHint;
     };
     auto l_fnButtonsUi = [&](const std::vector<ItemButton>& l_vBs) {
         for (const ItemButton& l_oB : l_vBs) {
-            const char* l_pszKey = l_oB.m_eAction == ItemAction::Use ? "inventory.use" : l_oB.m_eAction == ItemAction::Equip ? "gear.equip"
-                            : l_oB.m_eAction == ItemAction::Unequip ? "gear.unequip" : "inventory.drop";
+            const char* l_pszKey = l_oB.m_eAction == ItemAction::Use ? toms::text::g_pszInventoryUse : l_oB.m_eAction == ItemAction::Equip ? toms::text::g_pszGearEquip
+                            : l_oB.m_eAction == ItemAction::Unequip ? toms::text::g_pszGearUnequip : toms::text::g_pszInventoryDrop;
             l_oP.m_vDButtons.push_back({l_oL.f_Tr(l_pszKey), l_oB.m_bEnabled});
         }
     };
@@ -651,15 +656,15 @@ void Game::f_BuildPlayerUi(toms::UiState& l_oU) const {
         l_oP.m_strDIcon = f_ItemSprite(l_oC.m_strId);
         l_oP.m_strDName = f_ItemName(l_oC.m_strId);
         l_oP.m_strDDesc = f_ItemDesc(l_oC.m_strId);
-        l_oP.m_vDLines.push_back({l_oL.f_Tr("store.effect_label"), f_ItemEffectSummary(l_oC.m_strId), "", 0});
+        l_oP.m_vDLines.push_back({l_oL.f_Tr(toms::text::g_pszStoreEffectLabel), f_ItemEffectSummary(l_oC.m_strId), "", 0});
         const int l_iPrice = f_ItemPrice(l_oC.m_strId);
-        l_oP.m_vDLines.push_back({l_oL.f_Tr("store.price_label"),
-                             l_iPrice >= 0 ? f_TrParam(l_oL.f_Tr("items.price_value"), "n", std::to_string(l_iPrice)) : l_oL.f_Tr("items.not_sold"), "", 0});
-        l_oP.m_vDLines.push_back({l_oL.f_Tr("items.have"), std::to_string(l_oC.m_iCount), "", 0});
+        l_oP.m_vDLines.push_back({l_oL.f_Tr(toms::text::g_pszStorePriceLabel),
+                             l_iPrice >= 0 ? f_TrParam(l_oL.f_Tr(toms::text::g_pszItemsPriceValue), toms::field::g_pszN, std::to_string(l_iPrice)) : l_oL.f_Tr(toms::text::g_pszItemsNotSold), "", 0});
+        l_oP.m_vDLines.push_back({l_oL.f_Tr(toms::text::g_pszItemsHave), std::to_string(l_oC.m_iCount), "", 0});
         if (l_oC.m_eKind == ItemCell::Gear && !f_Worn(m_oEquipped, l_oC.m_strId)) l_fnCompare(l_oC.m_strId);
         l_fnButtonsUi(f_ItemButtons(l_oC));
-        if (l_oC.m_eKind == ItemCell::Key || f_ItemImportant(l_oC.m_strId)) l_oP.m_strDNote = l_oL.f_Tr("items.important");
-        else if (l_oC.m_eKind == ItemCell::Gear && f_Worn(m_oEquipped, l_oC.m_strId)) l_oP.m_strDNote = l_oL.f_Tr("items.worn");
+        if (l_oC.m_eKind == ItemCell::Key || f_ItemImportant(l_oC.m_strId)) l_oP.m_strDNote = l_oL.f_Tr(toms::text::g_pszItemsImportant);
+        else if (l_oC.m_eKind == ItemCell::Gear && f_Worn(m_oEquipped, l_oC.m_strId)) l_oP.m_strDNote = l_oL.f_Tr(toms::text::g_pszItemsWorn);
         if (l_oC.m_eKind == ItemCell::Gear) l_fnWeaponLines(l_oC.m_strId);
     };
 
@@ -674,31 +679,31 @@ void Game::f_BuildPlayerUi(toms::UiState& l_oU) const {
             l_oP.m_fHpPct = std::max(0.0f, std::min(100.0f, 100.0f * m_oPl.m_iHp / l_iMaxHp));
             l_oP.m_strExpText = "EXP " + std::to_string(m_oPl.m_iExp) + " / " + std::to_string(l_iNeed);
             l_oP.m_fExpPct = std::max(0.0f, std::min(100.0f, 100.0f * m_oPl.m_iExp / l_iNeed));
-            l_oP.m_strCombatTitle = l_oL.f_Tr("status.combat");
+            l_oP.m_strCombatTitle = l_oL.f_Tr(toms::text::g_pszStatusCombat);
             auto l_fnWithBonus = [&](int l_iEff, int l_iBase) { return std::to_string(l_iEff) + (l_iEff != l_iBase ? "  (" + l_fnSignedNum(l_iEff - l_iBase) + ")" : ""); };
-            l_oP.m_vCombat.push_back({"ATK", l_fnWithBonus(f_EffectiveAtk(), m_oPl.m_iAtk), "", 0});
-            l_oP.m_vCombat.push_back({"DEF", l_fnWithBonus(f_EffectiveDef(), m_oPl.m_iDef), "", 0});
-            l_oP.m_vCombat.push_back({l_oL.f_Tr("status.gold"), std::to_string(m_oPl.m_iGold), "", 0});
-            l_oP.m_vCombat.push_back({l_oL.f_Tr("hud.keys"), "Y " + std::to_string(m_oPl.m_iKeyYellow) + "   B " + std::to_string(m_oPl.m_iKeyBlue) +
+            l_oP.m_vCombat.push_back({toms::field::g_pszATK, l_fnWithBonus(f_EffectiveAtk(), m_oPl.m_iAtk), "", 0});
+            l_oP.m_vCombat.push_back({toms::field::g_pszDEF, l_fnWithBonus(f_EffectiveDef(), m_oPl.m_iDef), "", 0});
+            l_oP.m_vCombat.push_back({l_oL.f_Tr(toms::text::g_pszStatusGold), std::to_string(m_oPl.m_iGold), "", 0});
+            l_oP.m_vCombat.push_back({l_oL.f_Tr(toms::text::g_pszHudKeys), "Y " + std::to_string(m_oPl.m_iKeyYellow) + "   B " + std::to_string(m_oPl.m_iKeyBlue) +
                                 "   R " + std::to_string(m_oPl.m_iKeyRed), "", 0});
-            l_oP.m_vCombat.push_back({l_oL.f_Tr("status.floor"), m_oSt.m_strName + " (" + std::to_string(m_oSt.m_iIndex) + "/" + std::to_string(m_iTotalStages) + ")", "", 0});
+            l_oP.m_vCombat.push_back({l_oL.f_Tr(toms::text::g_pszStatusFloor), m_oSt.m_strName + " (" + std::to_string(m_oSt.m_iIndex) + "/" + std::to_string(m_iTotalStages) + ")", "", 0});
             for (const LogEntry& l_oE : f_EventLog(false))
-                if (l_oE.m_iKind == 0) { l_oP.m_vCombat.push_back({l_oL.f_Tr("status.chapter"), l_oE.m_strTitle, "", 0}); break; }
+                if (l_oE.m_iKind == 0) { l_oP.m_vCombat.push_back({l_oL.f_Tr(toms::text::g_pszStatusChapter), l_oE.m_strTitle, "", 0}); break; }
             auto l_fnGearName = [&](const std::string& l_strId) { return l_strId.empty() ? l_strNone : f_ItemName(l_strId); };
-            l_oP.m_vMore.push_back({l_oL.f_Tr("status.weapon"), l_fnGearName(m_oEquipped.m_strWeaponId), "", 0});
-            l_oP.m_vMore.push_back({l_oL.f_Tr("status.armor"), l_fnGearName(m_oEquipped.m_strArmorId), "", 0});
+            l_oP.m_vMore.push_back({l_oL.f_Tr(toms::text::g_pszStatusWeapon), l_fnGearName(m_oEquipped.m_strWeaponId), "", 0});
+            l_oP.m_vMore.push_back({l_oL.f_Tr(toms::text::g_pszStatusArmor), l_fnGearName(m_oEquipped.m_strArmorId), "", 0});
             std::string l_strSkills;
             for (const std::string& l_strId : m_oRun.f_SkillsOwned()) {
                 auto l_itIt = m_mapSkillDefs.find(l_strId);
                 l_strSkills += (l_strSkills.empty() ? "" : " · ") + (l_itIt == m_mapSkillDefs.end() ? l_strId : l_oL.f_Field(l_itIt->second.m_jName));
             }
-            l_oP.m_vMore.push_back({l_oL.f_Tr("ingame_menu.skills"), l_strSkills.empty() ? l_strNone : l_strSkills, "", 0});
-            l_oP.m_vMore.push_back({l_oL.f_Tr("status.shards"), std::to_string(m_oRun.f_ShardCount()), "", 0});
+            l_oP.m_vMore.push_back({l_oL.f_Tr(toms::text::g_pszIngameMenuSkills), l_strSkills.empty() ? l_strNone : l_strSkills, "", 0});
+            l_oP.m_vMore.push_back({l_oL.f_Tr(toms::text::g_pszStatusShards), std::to_string(m_oRun.f_ShardCount()), "", 0});
             std::string l_strMind;
             for (const auto& [l_strName, l_jLabel] : m_mapCounterLabels)
                 if (m_oRun.f_CounterVisible(l_strName)) l_strMind += (l_strMind.empty() ? "" : " · ") + l_oL.f_Field(l_jLabel);
-            if (!l_strMind.empty()) l_oP.m_vMore.push_back({l_oL.f_Tr("status.story"), l_strMind, "", 0});
-            l_oP.m_strAttrTitle = l_oL.f_Tr("status.attributes");
+            if (!l_strMind.empty()) l_oP.m_vMore.push_back({l_oL.f_Tr(toms::text::g_pszStatusStory), l_strMind, "", 0});
+            l_oP.m_strAttrTitle = l_oL.f_Tr(toms::text::g_pszStatusAttributes);
             for (size_t l_nI = 0; l_nI < m_vAttrDefs.size(); l_nI++) {
                 const AttrDef& l_oA = m_vAttrDefs[l_nI];
                 const int l_iBase = m_oPl.m_mapAttrs.count(l_oA.m_strId) ? m_oPl.m_mapAttrs.at(l_oA.m_strId) : 0, l_iV = f_AttrValue(l_oA.m_strId);
@@ -711,7 +716,7 @@ void Game::f_BuildPlayerUi(toms::UiState& l_oU) const {
                 l_oR.m_bSelected = (int)l_nI == m_iAttrSel;
                 l_oP.m_vAttrs.push_back(l_oR);
             }
-            l_oP.m_strAttrDesc = (m_iAttrSel >= 0 && m_iAttrSel < (int)m_vAttrDefs.size()) ? l_oL.f_Tr(m_vAttrDefs[m_iAttrSel].m_strDescKey) : l_oL.f_Tr("status.attr_hint");
+            l_oP.m_strAttrDesc = (m_iAttrSel >= 0 && m_iAttrSel < (int)m_vAttrDefs.size()) ? l_oL.f_Tr(m_vAttrDefs[m_iAttrSel].m_strDescKey) : l_oL.f_Tr(toms::text::g_pszStatusAttrHint);
             if (m_iAttrSel >= 0 && m_iAttrSel < (int)m_vAttrDefs.size()) {   // what it does: per point, and in total now
                 const AttrDef& l_oA = m_vAttrDefs[m_iAttrSel];
                 auto l_fnFmt = [&](const std::string& l_strStat, float l_fV, bool l_bTotal) {
@@ -720,7 +725,7 @@ void Game::f_BuildPlayerUi(toms::UiState& l_oU) const {
                     if (l_bTotal && (l_strStat == "atk" || l_strStat == "def" || l_strStat == "maxhp")) l_fV = std::floor(l_fV);
                     if (std::fabs(l_fV - std::round(l_fV)) < 0.001f) std::snprintf(l_pszB, sizeof l_pszB, "%+d", (int)std::lround(l_fV));
                     else std::snprintf(l_pszB, sizeof l_pszB, "%+.1f", l_fV);
-                    return std::string(l_pszB) + (l_bPct ? "% " : " ") + l_oL.f_Tr("stat.effect." + l_strStat);
+                    return std::string(l_pszB) + (l_bPct ? "% " : " ") + l_oL.f_Tr(toms::key_prefix::g_pszStatEffect + l_strStat);
                 };
                 std::string l_strPer, l_strNow;
                 for (const auto& [l_strStat, l_fK] : l_oA.m_vEffects) {
@@ -729,68 +734,68 @@ void Game::f_BuildPlayerUi(toms::UiState& l_oU) const {
                     const int l_iDraft = m_mapAttrDraft.count(l_oA.m_strId) ? m_mapAttrDraft.at(l_oA.m_strId) : 0;   // as it will be after Confirm
                     l_strNow += (l_strNow.empty() ? "" : " · ") + l_fnFmt(l_strStat, (float)(f_AttrValue(l_oA.m_strId) + l_iDraft - l_oA.m_iBase) * l_fK, true);
                 }
-                l_oP.m_strAttrPer = l_strPer.empty() ? l_oL.f_Tr("status.attr_none") : f_TrParam(l_oL.f_Tr("status.attr_per"), "x", l_strPer);
-                l_oP.m_strAttrNow = l_strPer.empty() ? "" : f_TrParam(l_oL.f_Tr("status.attr_now"), "x", l_strNow);
+                l_oP.m_strAttrPer = l_strPer.empty() ? l_oL.f_Tr(toms::text::g_pszStatusAttrNone) : f_TrParam(l_oL.f_Tr(toms::text::g_pszStatusAttrPer), toms::field::g_pszX, l_strPer);
+                l_oP.m_strAttrNow = l_strPer.empty() ? "" : f_TrParam(l_oL.f_Tr(toms::text::g_pszStatusAttrNow), toms::field::g_pszX, l_strNow);
             }
             const int l_iLeft = m_oPl.m_iAttrPoints - f_AttrDraftTotal();
             if (m_oPl.m_iAttrPoints > 0) {
                 l_oP.m_bAttrCanAdd = l_iLeft > 0;
-                l_oP.m_strAttrPoints = f_TrParam(l_oL.f_Tr("status.points"), "n", std::to_string(l_iLeft));
-                l_oP.m_strAttrPointsHint = l_oL.f_Tr(m_mapAttrDraft.empty() ? "status.points_hint" : "status.points_confirm_hint");
+                l_oP.m_strAttrPoints = f_TrParam(l_oL.f_Tr(toms::text::g_pszStatusPoints), toms::field::g_pszN, std::to_string(l_iLeft));
+                l_oP.m_strAttrPointsHint = l_oL.f_Tr(m_mapAttrDraft.empty() ? toms::text::g_pszStatusPointsHint : toms::text::g_pszStatusPointsConfirmHint);
             }
             l_oP.m_bAttrDraft = !m_mapAttrDraft.empty();
             l_oP.m_bAttrConfirmSel = l_oP.m_bAttrDraft && m_iAttrSel == (int)m_vAttrDefs.size();
             l_oP.m_bAttrResetSel = l_oP.m_bAttrDraft && m_iAttrSel == (int)m_vAttrDefs.size() + 1;
-            l_oP.m_strAttrConfirm = l_oL.f_Tr("status.confirm");
-            l_oP.m_strAttrReset = l_oL.f_Tr("status.reset");
+            l_oP.m_strAttrConfirm = l_oL.f_Tr(toms::text::g_pszStatusConfirm);
+            l_oP.m_strAttrReset = l_oL.f_Tr(toms::text::g_pszStatusReset);
         }
         {
-            auto l_fnKindKey = [](int l_iK) { return l_iK == 0 ? "events.kind.chapter" : l_iK == 1 ? "events.kind.mission" : "events.kind.event"; };
+            auto l_fnKindKey = [](int l_iK) { return l_iK == 0 ? toms::text::g_pszEventsKindChapter : l_iK == 1 ? toms::text::g_pszEventsKindMission : toms::text::g_pszEventsKindEvent; };
             const auto l_vUnfinished = f_EventLog(false), l_vAll = f_EventLog(true);
-            l_oP.m_vEvFilters.push_back({l_oL.f_Tr("events.unfinished") + " (" + std::to_string(l_vUnfinished.size()) + ")", m_iEventFilter == 0, false});
-            l_oP.m_vEvFilters.push_back({l_oL.f_Tr("events.all") + " (" + std::to_string(l_vAll.size()) + ")", m_iEventFilter == 1, false});
+            l_oP.m_vEvFilters.push_back({l_oL.f_Tr(toms::text::g_pszEventsUnfinished) + " (" + std::to_string(l_vUnfinished.size()) + ")", m_iEventFilter == 0, false});
+            l_oP.m_vEvFilters.push_back({l_oL.f_Tr(toms::text::g_pszEventsAll) + " (" + std::to_string(l_vAll.size()) + ")", m_iEventFilter == 1, false});
             const auto& l_vLog = m_iEventFilter == 1 ? l_vAll : l_vUnfinished;
             const int l_iSel = f_ClampSel(m_iEventSel, (int)l_vLog.size());
             for (size_t l_nI = 0; l_nI < l_vLog.size(); l_nI++) {
                 const LogEntry& l_oE = l_vLog[l_nI];
                 toms::UiRow l_oR;
                 l_oR.m_strLabel = std::string(l_oE.m_bDone ? "✓ " : (l_oE.m_iKind == 0 ? "★ " : l_oE.m_iKind == 1 ? "◆ " : "● ")) + l_oE.m_strTitle;
-                l_oR.m_strSub = l_oE.m_bDone ? l_oL.f_Tr("events.done") : l_oL.f_Tr(l_fnKindKey(l_oE.m_iKind));
+                l_oR.m_strSub = l_oE.m_bDone ? l_oL.f_Tr(toms::text::g_pszEventsDone) : l_oL.f_Tr(l_fnKindKey(l_oE.m_iKind));
                 l_oR.m_bEnabled = !l_oE.m_bDone;
                 l_oR.m_bSelected = (int)l_nI == l_iSel;
                 l_oP.m_vEvRows.push_back(l_oR);
             }
-            l_oP.m_strEvEmpty = l_oL.f_Tr(m_iEventFilter == 1 ? "events.empty_all" : "events.empty_unfinished");
-            l_oP.m_strEvHint = l_oL.f_Tr("events.select");
+            l_oP.m_strEvEmpty = l_oL.f_Tr(m_iEventFilter == 1 ? toms::text::g_pszEventsEmptyAll : toms::text::g_pszEventsEmptyUnfinished);
+            l_oP.m_strEvHint = l_oL.f_Tr(toms::text::g_pszEventsSelect);
             if (!l_vLog.empty()) {
                 const LogEntry& l_oE = l_vLog[l_iSel];
                 l_oP.m_bEvDetail = true;
-                l_oP.m_strEvKind = l_oL.f_Tr(l_fnKindKey(l_oE.m_iKind)) + (l_oE.m_bDone ? "  ·  " + l_oL.f_Tr("events.done") : "");
+                l_oP.m_strEvKind = l_oL.f_Tr(l_fnKindKey(l_oE.m_iKind)) + (l_oE.m_bDone ? "  ·  " + l_oL.f_Tr(toms::text::g_pszEventsDone) : "");
                 l_oP.m_strEvTitle = l_oE.m_strTitle;
                 l_oP.m_strEvDesc = l_oE.m_strDesc;
-                l_oP.m_strEvConnectedTitle = l_oL.f_Tr("events.connected");   // shown only when there are connected events
+                l_oP.m_strEvConnectedTitle = l_oL.f_Tr(toms::text::g_pszEventsConnected);   // shown only when there are connected events
                 l_oP.m_vEvConnected = l_oE.m_vConnected;
             }
         }
         f_BuildMenuUi(l_oU.m_oMenu);
-        l_oP.m_strSysHint = l_oL.f_Tr("system.select");
+        l_oP.m_strSysHint = l_oL.f_Tr(toms::text::g_pszSystemSelect);
         if (m_bSaveLoadOpen) f_BuildSaveLoadUi(l_oU.m_oSaveload);
     }
     switch (m_eMenuTab) {
         case MenuTab::Gear: {
-            l_oP.m_vFilters.push_back({l_oL.f_Tr("status.weapon"), m_iGearSlot == 0, false});
-            l_oP.m_vFilters.push_back({l_oL.f_Tr("status.armor"), m_iGearSlot == 1, false});
-            l_oP.m_vFilters.push_back({l_oL.f_Tr("store.tab.talent"), m_iGearSlot == 2, false});
-            l_oP.m_strWornTitle = l_oL.f_Tr("gear.worn");
-            l_oP.m_vWorn.push_back({l_oL.f_Tr("status.weapon"), m_oEquipped.m_strWeaponId.empty() ? l_strNone : f_ItemName(m_oEquipped.m_strWeaponId), "", m_iGearSlot == 0 ? 1 : 0});
-            l_oP.m_vWorn.push_back({l_oL.f_Tr("status.armor"), m_oEquipped.m_strArmorId.empty() ? l_strNone : f_ItemName(m_oEquipped.m_strArmorId), "", m_iGearSlot == 1 ? 1 : 0});
-            l_oP.m_vWorn.push_back({l_oL.f_Tr("store.tab.talent"), m_oEquipped.m_strTalentId.empty() ? l_strNone : f_ItemName(m_oEquipped.m_strTalentId), "", m_iGearSlot == 2 ? 1 : 0});
+            l_oP.m_vFilters.push_back({l_oL.f_Tr(toms::text::g_pszStatusWeapon), m_iGearSlot == 0, false});
+            l_oP.m_vFilters.push_back({l_oL.f_Tr(toms::text::g_pszStatusArmor), m_iGearSlot == 1, false});
+            l_oP.m_vFilters.push_back({l_oL.f_Tr(toms::text::g_pszStoreTabTalent), m_iGearSlot == 2, false});
+            l_oP.m_strWornTitle = l_oL.f_Tr(toms::text::g_pszGearWorn);
+            l_oP.m_vWorn.push_back({l_oL.f_Tr(toms::text::g_pszStatusWeapon), m_oEquipped.m_strWeaponId.empty() ? l_strNone : f_ItemName(m_oEquipped.m_strWeaponId), "", m_iGearSlot == 0 ? 1 : 0});
+            l_oP.m_vWorn.push_back({l_oL.f_Tr(toms::text::g_pszStatusArmor), m_oEquipped.m_strArmorId.empty() ? l_strNone : f_ItemName(m_oEquipped.m_strArmorId), "", m_iGearSlot == 1 ? 1 : 0});
+            l_oP.m_vWorn.push_back({l_oL.f_Tr(toms::text::g_pszStoreTabTalent), m_oEquipped.m_strTalentId.empty() ? l_strNone : f_ItemName(m_oEquipped.m_strTalentId), "", m_iGearSlot == 2 ? 1 : 0});
             const auto l_vCells = f_GearCells();
             const int l_iSel = f_ClampSel(m_iGearSel, (int)l_vCells.size());
             for (size_t l_nI = 0; l_nI < l_vCells.size(); l_nI++)
                 l_oP.m_vCells.push_back({f_ItemSprite(l_vCells[l_nI]), f_ItemName(l_vCells[l_nI]), "", (int)l_nI == l_iSel, f_Worn(m_oEquipped, l_vCells[l_nI]), false});
-            if (l_vCells.empty()) l_oP.m_strEmptyText = f_TrParam(l_oL.f_Tr("gear.empty"), "slot", l_oL.f_Tr(m_iGearSlot == 0 ? "status.weapon" : m_iGearSlot == 1 ? "status.armor" : "store.tab.talent"));
-            l_oP.m_strSelectHint = l_oL.f_Tr("gear.select");
+            if (l_vCells.empty()) l_oP.m_strEmptyText = f_TrParam(l_oL.f_Tr(toms::text::g_pszGearEmpty), toms::field::g_pszSlot, l_oL.f_Tr(m_iGearSlot == 0 ? toms::text::g_pszStatusWeapon : m_iGearSlot == 1 ? toms::text::g_pszStatusArmor : toms::text::g_pszStoreTabTalent));
+            l_oP.m_strSelectHint = l_oL.f_Tr(toms::text::g_pszGearSelect);
             if (!l_vCells.empty()) {
                 const ItemCell l_oC{ItemCell::Gear, l_vCells[l_iSel], 1};
                 l_oP.m_bDetail = true;
@@ -798,7 +803,7 @@ void Game::f_BuildPlayerUi(toms::UiState& l_oU) const {
                 l_oP.m_strDName = f_ItemName(l_oC.m_strId);
                 l_oP.m_strDDesc = f_ItemDesc(l_oC.m_strId);
                 if (!f_Worn(m_oEquipped, l_oC.m_strId)) l_fnCompare(l_oC.m_strId);
-                else l_oP.m_strDNote = l_oL.f_Tr("gear.worn");
+                else l_oP.m_strDNote = l_oL.f_Tr(toms::text::g_pszGearWorn);
                 l_fnWeaponLines(l_oC.m_strId);
                 std::vector<ItemButton> l_vBs;
                 for (const ItemButton& l_oB : f_ItemButtons(l_oC)) if (l_oB.m_eAction != ItemAction::Drop) l_vBs.push_back(l_oB);
@@ -807,23 +812,23 @@ void Game::f_BuildPlayerUi(toms::UiState& l_oU) const {
             break;
         }
         case MenuTab::Items: {
-            static const char* l_arrFilters[4] = {"items.all", "items.use", "player.tab.gear", "hud.keys"};
+            static const char* l_arrFilters[4] = {toms::text::g_pszItemsAll, toms::text::g_pszItemsUse, toms::text::g_pszPlayerTabGear, toms::text::g_pszHudKeys};
             for (int l_iI = 0; l_iI < 4; l_iI++) l_oP.m_vFilters.push_back({l_oL.f_Tr(l_arrFilters[l_iI]), l_iI == m_iItemFilter, false});
             const auto l_vCells = f_ItemCells();
             const int l_iSel = f_ClampSel(m_iItemSel, (int)l_vCells.size());
             for (size_t l_nI = 0; l_nI < l_vCells.size(); l_nI++) {
                 const ItemCell& l_oC = l_vCells[l_nI];
-                l_oP.m_vCells.push_back({f_ItemSprite(l_oC.m_strId), f_ItemName(l_oC.m_strId), l_oC.m_iCount > 1 ? "x" + std::to_string(l_oC.m_iCount) : "", (int)l_nI == l_iSel,
+                l_oP.m_vCells.push_back({f_ItemSprite(l_oC.m_strId), f_ItemName(l_oC.m_strId), l_oC.m_iCount > 1 ? "x" + std::to_string(l_oC.m_iCount) : "", (int)l_nI == l_iSel,   // name-ok ("x3": shown text)
                                    l_oC.m_eKind == ItemCell::Gear && f_Worn(m_oEquipped, l_oC.m_strId), l_oC.m_eKind == ItemCell::Key || f_ItemImportant(l_oC.m_strId)});
             }
-            if (l_vCells.empty()) l_oP.m_strEmptyText = l_oL.f_Tr("inventory.empty_title");
-            l_oP.m_strSelectHint = l_oL.f_Tr("items.select");
+            if (l_vCells.empty()) l_oP.m_strEmptyText = l_oL.f_Tr(toms::text::g_pszInventoryEmptyTitle);
+            l_oP.m_strSelectHint = l_oL.f_Tr(toms::text::g_pszItemsSelect);
             if (!l_vCells.empty()) l_fnItemDetail(l_vCells[l_iSel]);
             if (m_bDropConfirmOpen && !l_vCells.empty()) {
                 l_oP.m_bConfirmOpen = true;
-                l_oP.m_strConfirmQuestion = f_TrParam(l_oL.f_Tr("items.drop_confirm"), "name", f_ItemName(l_vCells[l_iSel].m_strId));
-                l_oP.m_strYesLabel = l_oL.f_Tr("inventory.drop");
-                l_oP.m_strNoLabel = l_oL.f_Tr("menu.back");
+                l_oP.m_strConfirmQuestion = f_TrParam(l_oL.f_Tr(toms::text::g_pszItemsDropConfirm), toms::field::g_pszName, f_ItemName(l_vCells[l_iSel].m_strId));
+                l_oP.m_strYesLabel = l_oL.f_Tr(toms::text::g_pszInventoryDrop);
+                l_oP.m_strNoLabel = l_oL.f_Tr(toms::text::g_pszMenuBack);
                 l_oP.m_bConfirmYes = m_bDropConfirmYes;
             }
             break;
@@ -833,32 +838,32 @@ void Game::f_BuildPlayerUi(toms::UiState& l_oU) const {
             const int l_iSel = f_ClampSel(m_iCardSel, (int)l_vCells.size());
             int l_iHeld = 0;
             for (const auto& [l_strId, l_oR] : m_oMeta.m_mapCards) if (l_oR.m_iCopies > 0 && m_mapEnemyTpl.count(l_strId)) l_iHeld++;
-            l_oP.m_strWornTitle = f_TrParam(f_TrParam(l_oL.f_Tr("cards.count"), "n", std::to_string(l_iHeld)), "all", std::to_string(m_mapEnemyTpl.size()));
+            l_oP.m_strWornTitle = f_TrParam(f_TrParam(l_oL.f_Tr(toms::text::g_pszCardsCount), toms::field::g_pszN, std::to_string(l_iHeld)), toms::field::g_pszAll, std::to_string(m_mapEnemyTpl.size()));
             for (size_t l_nI = 0; l_nI < l_vCells.size(); l_nI++) {
                 const toms::CardRecord& l_oR = m_oMeta.m_mapCards.at(l_vCells[l_nI]);
                 const auto& l_jT = m_mapEnemyTpl.at(l_vCells[l_nI]);
-                l_oP.m_vCells.push_back({f_UiSprite(f_TypeSprite("monster", l_vCells[l_nI])), m_oLocale.f_Field(l_jT["name"]),
-                                   l_oR.m_iCopies > 1 ? "x" + std::to_string(l_oR.m_iCopies) : "", (int)l_nI == l_iSel, false, l_oR.m_iCopies == 0});
+                l_oP.m_vCells.push_back({f_UiSprite(f_TypeSprite("monster", l_vCells[l_nI])), m_oLocale.f_Field(l_jT[toms::field::g_pszName]),
+                                   l_oR.m_iCopies > 1 ? "x" + std::to_string(l_oR.m_iCopies) : "", (int)l_nI == l_iSel, false, l_oR.m_iCopies == 0});   // name-ok ("x3": shown text)
             }
-            if (l_vCells.empty()) l_oP.m_strEmptyText = l_oL.f_Tr("cards.empty");
-            l_oP.m_strSelectHint = l_oL.f_Tr("cards.select");
+            if (l_vCells.empty()) l_oP.m_strEmptyText = l_oL.f_Tr(toms::text::g_pszCardsEmpty);
+            l_oP.m_strSelectHint = l_oL.f_Tr(toms::text::g_pszCardsSelect);
             if (!l_vCells.empty()) {
                 const std::string& l_strId = l_vCells[l_iSel];
                 const toms::CardRecord& l_oR = m_oMeta.m_mapCards.at(l_strId);
                 const auto& l_jT = m_mapEnemyTpl.at(l_strId);
                 l_oP.m_bDetail = true;
                 l_oP.m_strDIcon = f_UiSprite(f_TypeSprite("monster", l_strId));
-                l_oP.m_strDName = m_oLocale.f_Field(l_jT["name"]);
-                l_oP.m_strDDesc = l_oR.m_iCopies > 0 ? l_oL.f_Tr("cards.have") : l_oL.f_Tr("cards.not_yet");
-                l_oP.m_vDLines.push_back({l_oL.f_Tr("cards.copies"), std::to_string(l_oR.m_iCopies), "", 0});
-                l_oP.m_vDLines.push_back({l_oL.f_Tr("cards.defeated"), std::to_string(l_oR.m_iDefeated), "", 0});
-                l_oP.m_vDLines.push_back({l_oL.f_Tr("cards.defeated_by"), std::to_string(l_oR.m_iDefeatedBy), "", 0});
-                l_oP.m_vDLines.push_back({"HP", std::to_string(l_jT.value("hp", 0)), "", 0});
-                l_oP.m_vDLines.push_back({"ATK", std::to_string(l_jT.value("atk", 0)), "", 0});
-                l_oP.m_vDLines.push_back({"DEF", std::to_string(l_jT.value("def", 0)), "", 0});
+                l_oP.m_strDName = m_oLocale.f_Field(l_jT[toms::field::g_pszName]);
+                l_oP.m_strDDesc = l_oR.m_iCopies > 0 ? l_oL.f_Tr(toms::text::g_pszCardsHave) : l_oL.f_Tr(toms::text::g_pszCardsNotYet);
+                l_oP.m_vDLines.push_back({l_oL.f_Tr(toms::text::g_pszCardsCopies), std::to_string(l_oR.m_iCopies), "", 0});
+                l_oP.m_vDLines.push_back({l_oL.f_Tr(toms::text::g_pszCardsDefeated), std::to_string(l_oR.m_iDefeated), "", 0});
+                l_oP.m_vDLines.push_back({l_oL.f_Tr(toms::text::g_pszCardsDefeatedBy), std::to_string(l_oR.m_iDefeatedBy), "", 0});
+                l_oP.m_vDLines.push_back({toms::field::g_pszHP, std::to_string(l_jT.value(toms::field::g_pszHp, 0)), "", 0});
+                l_oP.m_vDLines.push_back({toms::field::g_pszATK, std::to_string(l_jT.value(toms::field::g_pszAtk, 0)), "", 0});
+                l_oP.m_vDLines.push_back({toms::field::g_pszDEF, std::to_string(l_jT.value(toms::field::g_pszDef, 0)), "", 0});
                 // the training ground (docs/gameplay/16 §5): spend its card for fights in a row, a few runs a day
                 const int l_iLeft = f_TrainingRunsLeft();
-                l_oP.m_vDButtons.push_back({f_TrParam(l_oL.f_Tr(l_iLeft > 0 ? "cards.train" : "cards.train_none"), "n", std::to_string(l_iLeft)),
+                l_oP.m_vDButtons.push_back({f_TrParam(l_oL.f_Tr(l_iLeft > 0 ? toms::text::g_pszCardsTrain : toms::text::g_pszCardsTrainNone), toms::field::g_pszN, std::to_string(l_iLeft)),
                                        l_oR.m_iCopies > 0 && l_iLeft > 0});
             }
             break;
@@ -874,7 +879,7 @@ std::vector<std::string> Game::f_CardCells() const {
     for (const auto& [l_strId, l_oR] : m_oMeta.m_mapCards) if (m_mapEnemyTpl.count(l_strId)) l_vOut.push_back(l_strId);
     auto l_fnKey = [&](const std::string& l_strId) {
         const auto& l_jT = m_mapEnemyTpl.at(l_strId);
-        return std::make_tuple(l_jT.value("hp", 0), l_jT.value("atk", 0), l_strId);
+        return std::make_tuple(l_jT.value(toms::field::g_pszHp, 0), l_jT.value(toms::field::g_pszAtk, 0), l_strId);
     };
     std::sort(l_vOut.begin(), l_vOut.end(), [&](const std::string& l_strA, const std::string& l_strB) { return l_fnKey(l_strA) < l_fnKey(l_strB); });
     return l_vOut;
@@ -918,7 +923,7 @@ void Game::f_SaveLoadAnswer(bool l_bYes) {
         m_bSlotReadOnly = false;   // the Save tab never offers a newer game's slot (saveLoadAsk)
         f_SaveCurrentRun();
         m_vSaveLoadSlots[m_iSaveLoadSel] = toms::f_SummarizeSlot(toms::f_DefaultSaveDir(), l_iSlot);
-        m_strToastMsg = f_TrParam(m_oLocale.f_Tr("saveload.saved"), "slot", std::to_string(l_iSlot));
+        m_strToastMsg = f_TrParam(m_oLocale.f_Tr(toms::text::g_pszSaveloadSaved), toms::field::g_pszSlot, std::to_string(l_iSlot));
         m_iToastTimer = 1600;
         m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
     } else if (!f_ContinueFromSlot(l_iSlot)) {   // loading closes the menu (applyLoadedRun)
@@ -929,31 +934,31 @@ void Game::f_SaveLoadAnswer(bool l_bYes) {
 void Game::f_BuildSaveLoadUi(toms::UiSaveLoad& l_oV) const {
     const toms::Locale& l_oL = m_oLocale;
     l_oV.m_bVisible = true;
-    l_oV.m_strTitle = l_oL.f_Tr("saveload.title");
-    l_oV.m_strHint = l_oL.f_Tr("saveload.hint");
-    l_oV.m_strCloseLabel = l_oL.f_Tr("menu.back");
-    l_oV.m_vModes.push_back({l_oL.f_Tr("saveload.save"), m_iSaveLoadMode == 0, false});
-    l_oV.m_vModes.push_back({l_oL.f_Tr("saveload.load"), m_iSaveLoadMode == 1, false});
+    l_oV.m_strTitle = l_oL.f_Tr(toms::text::g_pszSaveloadTitle);
+    l_oV.m_strHint = l_oL.f_Tr(toms::text::g_pszSaveloadHint);
+    l_oV.m_strCloseLabel = l_oL.f_Tr(toms::text::g_pszMenuBack);
+    l_oV.m_vModes.push_back({l_oL.f_Tr(toms::text::g_pszSaveloadSave), m_iSaveLoadMode == 0, false});
+    l_oV.m_vModes.push_back({l_oL.f_Tr(toms::text::g_pszSaveloadLoad), m_iSaveLoadMode == 1, false});
     for (size_t l_nI = 0; l_nI < m_vSaveLoadSlots.size(); l_nI++) {
         const toms::SlotSummary& l_oS = m_vSaveLoadSlots[l_nI];
         toms::UiSlot l_oC;
-        l_oC.m_strTitle = l_oL.f_Tr("continue.slot") + " " + std::to_string(l_nI + 1);
+        l_oC.m_strTitle = l_oL.f_Tr(toms::text::g_pszContinueSlot) + " " + std::to_string(l_nI + 1);
         l_oC.m_bEmpty = !l_oS.m_bExists;
         if (l_oS.m_bExists) {
             const int l_iSec = std::max(0, l_oS.m_iPlayTimeSec);
             char l_pszT[32];
             std::snprintf(l_pszT, sizeof l_pszT, "%02d:%02d:%02d", l_iSec / 3600, (l_iSec / 60) % 60, l_iSec % 60);
-            l_oC.m_strLine1 = (l_oS.m_strStageName.empty() ? l_oS.m_strStageId : l_oS.m_strStageName) + "   " + l_oL.f_Tr("hud.level") + " " + std::to_string(l_oS.m_iLv) +
+            l_oC.m_strLine1 = (l_oS.m_strStageName.empty() ? l_oS.m_strStageId : l_oS.m_strStageName) + "   " + l_oL.f_Tr(toms::text::g_pszHudLevel) + " " + std::to_string(l_oS.m_iLv) +
                       "   HP " + std::to_string(l_oS.m_iHp) + "/" + std::to_string(l_oS.m_iMaxhp) + "   " + std::to_string(l_oS.m_iGold) + "G";
-            l_oC.m_strLine2 = l_oL.f_Tr("continue.saved_at") + " " + l_oS.m_strSavedAt + "    " + l_oL.f_Tr("continue.play_time") + " " + l_pszT;
-            if (l_oS.m_bFromBackup) l_oC.m_strLine2 += "    [" + l_oL.f_Tr("continue.from_backup") + "]";
-            if (l_oS.m_bNewer) l_oC.m_strLine2 += "    [" + l_oL.f_Tr("continue.newer") + "]";
+            l_oC.m_strLine2 = l_oL.f_Tr(toms::text::g_pszContinueSavedAt) + " " + l_oS.m_strSavedAt + "    " + l_oL.f_Tr(toms::text::g_pszContinuePlayTime) + " " + l_pszT;
+            if (l_oS.m_bFromBackup) l_oC.m_strLine2 += "    [" + l_oL.f_Tr(toms::text::g_pszContinueFromBackup) + "]";
+            if (l_oS.m_bNewer) l_oC.m_strLine2 += "    [" + l_oL.f_Tr(toms::text::g_pszContinueNewer) + "]";
         } else if (l_oS.m_bDamaged) {
-            l_oC.m_strLine1 = "[" + l_oL.f_Tr("continue.damaged") + "]";
+            l_oC.m_strLine1 = "[" + l_oL.f_Tr(toms::text::g_pszContinueDamaged) + "]";
         } else {
-            l_oC.m_strLine1 = m_iSaveLoadMode == 1 ? l_oL.f_Tr("saveload.load_empty") : "[" + l_oL.f_Tr("continue.empty") + "]";
+            l_oC.m_strLine1 = m_iSaveLoadMode == 1 ? l_oL.f_Tr(toms::text::g_pszSaveloadLoadEmpty) : "[" + l_oL.f_Tr(toms::text::g_pszContinueEmpty) + "]";
         }
-        if ((int)l_nI + 1 == m_iActiveSlot) l_oC.m_strTag = l_oL.f_Tr("saveload.current");
+        if ((int)l_nI + 1 == m_iActiveSlot) l_oC.m_strTag = l_oL.f_Tr(toms::text::g_pszSaveloadCurrent);
         l_oC.m_bSelected = (int)l_nI == m_iSaveLoadSel;
         l_oC.m_bEnabled = m_iSaveLoadMode == 0 ? !l_oS.m_bNewer : l_oS.m_bExists;
         l_oV.m_vCards.push_back(l_oC);
@@ -963,15 +968,15 @@ void Game::f_BuildSaveLoadUi(toms::UiSaveLoad& l_oV) const {
         const bool l_bExists = m_vSaveLoadSlots[m_iSaveLoadSel].m_bExists;
         l_oV.m_bConfirmOpen = true;
         if (m_iSaveLoadMode == 1) {
-            l_oV.m_strConfirmQuestion = f_TrParam(l_oL.f_Tr("saveload.load_confirm"), "slot", l_strSlot);
-            l_oV.m_strConfirmBody = l_oL.f_Tr("saveload.load_body");
-            l_oV.m_strYesLabel = l_oL.f_Tr("saveload.load");
+            l_oV.m_strConfirmQuestion = f_TrParam(l_oL.f_Tr(toms::text::g_pszSaveloadLoadConfirm), toms::field::g_pszSlot, l_strSlot);
+            l_oV.m_strConfirmBody = l_oL.f_Tr(toms::text::g_pszSaveloadLoadBody);
+            l_oV.m_strYesLabel = l_oL.f_Tr(toms::text::g_pszSaveloadLoad);
         } else {
-            l_oV.m_strConfirmQuestion = f_TrParam(l_oL.f_Tr(l_bExists ? "saveload.overwrite_confirm" : "saveload.save_confirm"), "slot", l_strSlot);
-            l_oV.m_strConfirmBody = l_bExists ? l_oL.f_Tr("saveload.overwrite_body") : "";
-            l_oV.m_strYesLabel = l_oL.f_Tr("saveload.save");
+            l_oV.m_strConfirmQuestion = f_TrParam(l_oL.f_Tr(l_bExists ? toms::text::g_pszSaveloadOverwriteConfirm : toms::text::g_pszSaveloadSaveConfirm), toms::field::g_pszSlot, l_strSlot);
+            l_oV.m_strConfirmBody = l_bExists ? l_oL.f_Tr(toms::text::g_pszSaveloadOverwriteBody) : "";
+            l_oV.m_strYesLabel = l_oL.f_Tr(toms::text::g_pszSaveloadSave);
         }
-        l_oV.m_strNoLabel = l_oL.f_Tr("saveload.cancel");
+        l_oV.m_strNoLabel = l_oL.f_Tr(toms::text::g_pszSaveloadCancel);
         l_oV.m_bConfirmYes = m_bSaveLoadConfirmYes;
     }
 }

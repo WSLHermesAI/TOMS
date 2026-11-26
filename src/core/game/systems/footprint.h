@@ -15,6 +15,7 @@
 // see footprint_test.cpp.
 #pragma once
 
+#include "field_keys.h"    // toms::field: every data field by its constant
 #include <cstdio>
 #include <string>
 #include <json.hpp>
@@ -65,10 +66,10 @@ inline FootprintSpec f_FootprintSpecFromJson(const nlohmann::json& l_jJ, const s
         l_oSpec.m_oFp.m_iH = l_jJ[1].get<int>();
         l_bSized = true;
     } else if (l_jJ.is_object()) {
-        if (l_jJ.contains("w") && l_jJ["w"].is_number_integer()) l_oSpec.m_oFp.m_iW = l_jJ["w"].get<int>();
-        if (l_jJ.contains("h") && l_jJ["h"].is_number_integer()) l_oSpec.m_oFp.m_iH = l_jJ["h"].get<int>();
-        if (l_jJ.contains("roamer") && l_jJ["roamer"].is_boolean()) l_oSpec.m_bRoamer = l_jJ["roamer"].get<bool>();
-        if (l_jJ.contains("name") && l_jJ["name"].is_string()) l_oSpec.m_strName = l_jJ["name"].get<std::string>();
+        if (l_jJ.contains(toms::field::g_pszW) && l_jJ[toms::field::g_pszW].is_number_integer()) l_oSpec.m_oFp.m_iW = l_jJ[toms::field::g_pszW].get<int>();
+        if (l_jJ.contains(toms::field::g_pszH) && l_jJ[toms::field::g_pszH].is_number_integer()) l_oSpec.m_oFp.m_iH = l_jJ[toms::field::g_pszH].get<int>();
+        if (l_jJ.contains(toms::field::g_pszRoamer) && l_jJ[toms::field::g_pszRoamer].is_boolean()) l_oSpec.m_bRoamer = l_jJ[toms::field::g_pszRoamer].get<bool>();
+        if (l_jJ.contains(toms::field::g_pszName) && l_jJ[toms::field::g_pszName].is_string()) l_oSpec.m_strName = l_jJ[toms::field::g_pszName].get<std::string>();
         l_bSized = true;
     }
     if (!l_bSized) return l_oSpec;   // absent / unrecognised -> 1x1, exactly the pre-S1 behavior

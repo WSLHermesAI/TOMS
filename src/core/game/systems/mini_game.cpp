@@ -1,4 +1,5 @@
 // mini_game.cpp -- see mini_game.h.
+#include "field_keys.h"    // toms::field: every data field by its constant
 #include "mini_game.h"
 #include "save_system.h"   // readJsonFileSafe
 
@@ -10,18 +11,18 @@ MiniGameDef f_MiniGameFromJson(const std::string& l_strId, const nlohmann::json&
     MiniGameDef l_oG;
     l_oG.m_strId = l_strId;
     if (!l_jJ.is_object()) return l_oG;
-    l_oG.m_jTitle = l_jJ.value("title", nlohmann::json());
-    l_oG.m_jText = l_jJ.value("text", nlohmann::json());
-    const std::string l_strCur = l_jJ.value("currency", std::string("gold"));
+    l_oG.m_jTitle = l_jJ.value(toms::field::g_pszTitle, nlohmann::json());
+    l_oG.m_jText = l_jJ.value(toms::field::g_pszText, nlohmann::json());
+    const std::string l_strCur = l_jJ.value(toms::field::g_pszCurrency, std::string("gold"));
     l_oG.m_strCurrency = l_strCur == "crystals" ? l_strCur : "gold";
-    l_oG.m_iPerHit = std::max(0, l_jJ.value("perHit", l_oG.m_iPerHit));
-    l_oG.m_iBonusAll = std::max(0, l_jJ.value("bonusAll", l_oG.m_iBonusAll));
-    l_oG.m_iLimit = std::max(0, l_jJ.value("limit", l_oG.m_iLimit));
-    l_oG.m_oPlay.m_iPoints = std::max(1, l_jJ.value("points", 4));
-    l_oG.m_oPlay.m_iSweepMs = std::max(200, l_jJ.value("sweepMs", 1600));
-    l_oG.m_oPlay.m_bTurnBack = l_jJ.value("turnBack", true);
-    l_oG.m_oPlay.m_iMaxSweeps = std::max(1, l_jJ.value("maxSweeps", 2));
-    l_oG.m_oPlay.m_fHitWindow = std::clamp(l_jJ.value("hitWindow", 0.07f), 0.01f, 0.25f);
+    l_oG.m_iPerHit = std::max(0, l_jJ.value(toms::field::g_pszPerHit, l_oG.m_iPerHit));
+    l_oG.m_iBonusAll = std::max(0, l_jJ.value(toms::field::g_pszBonusAll, l_oG.m_iBonusAll));
+    l_oG.m_iLimit = std::max(0, l_jJ.value(toms::field::g_pszLimit, l_oG.m_iLimit));
+    l_oG.m_oPlay.m_iPoints = std::max(1, l_jJ.value(toms::field::g_pszPoints, 4));
+    l_oG.m_oPlay.m_iSweepMs = std::max(200, l_jJ.value(toms::field::g_pszSweepMs, 1600));
+    l_oG.m_oPlay.m_bTurnBack = l_jJ.value(toms::field::g_pszTurnBack, true);
+    l_oG.m_oPlay.m_iMaxSweeps = std::max(1, l_jJ.value(toms::field::g_pszMaxSweeps, 2));
+    l_oG.m_oPlay.m_fHitWindow = std::clamp(l_jJ.value(toms::field::g_pszHitWindow, 0.07f), 0.01f, 0.25f);
     l_oG.m_oPlay.m_fSpeedUp = 0;     // no charge in a mini-game
     l_oG.m_oPlay.m_iMissBack = 0;    // a miss loses nothing already hit (two in a row still end it)
     l_oG.m_oPlay.m_iMissWaitMs = 0;

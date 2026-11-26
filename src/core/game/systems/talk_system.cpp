@@ -1,4 +1,6 @@
 // talk_system.cpp -- see talk_system.h.
+#include "field_keys.h"    // toms::field: every data field by its constant
+#include "game_names.h"   // toms::state, toms::battle_event, ... (no hard-coded name)
 #include "talk_system.h"
 
 #include <algorithm>
@@ -17,28 +19,28 @@ bool f_ParseNpc(const nlohmann::json& l_jJ, NpcDef& l_oOut, std::string* l_pErr)
     auto l_fnFail = [&](const char* l_pszWhy) { if (l_pErr) *l_pErr = l_pszWhy; return false; };
     if (!l_jJ.is_object()) return l_fnFail("not an object");
     l_oOut = NpcDef{};
-    l_oOut.m_strId = f_Str(l_jJ, "npcId");
+    l_oOut.m_strId = f_Str(l_jJ, toms::field::g_pszNpcId);
     if (l_oOut.m_strId.empty()) return l_fnFail("no npcId");
-    l_oOut.m_strNameKey = f_Str(l_jJ, "name");
-    l_oOut.m_strGreetingKey = f_Str(l_jJ, "greeting");
-    l_oOut.m_strSprite = f_Str(l_jJ, "sprite");
-    if (l_jJ.contains("look") && l_jJ["look"].is_object()) l_oOut.m_jLook = l_jJ["look"];
-    const nlohmann::json l_jChat = l_jJ.value("chat", nlohmann::json::object());
-    if (l_jChat.contains("lines") && l_jChat["lines"].is_array())
-        for (const auto& l_jL : l_jChat["lines"]) {
+    l_oOut.m_strNameKey = f_Str(l_jJ, toms::field::g_pszName);
+    l_oOut.m_strGreetingKey = f_Str(l_jJ, toms::field::g_pszGreeting);
+    l_oOut.m_strSprite = f_Str(l_jJ, toms::field::g_pszSprite);
+    if (l_jJ.contains(toms::field::g_pszLook) && l_jJ[toms::field::g_pszLook].is_object()) l_oOut.m_jLook = l_jJ[toms::field::g_pszLook];
+    const nlohmann::json l_jChat = l_jJ.value(toms::field::g_pszChat, nlohmann::json::object());
+    if (l_jChat.contains(toms::field::g_pszLines) && l_jChat[toms::field::g_pszLines].is_array())
+        for (const auto& l_jL : l_jChat[toms::field::g_pszLines]) {
             ChatLine l_oLine;
             if (l_jL.is_string()) l_oLine.m_strDialogue = l_jL.get<std::string>();
             else if (l_jL.is_object()) {
-                l_oLine.m_strDialogue = f_Str(l_jL, "dialogue");
-                if (l_jL.contains("requires")) l_oLine.m_jRequires = l_jL["requires"];
-                if (l_jL.contains("actions")) l_oLine.m_jActions = l_jL["actions"];
+                l_oLine.m_strDialogue = f_Str(l_jL, toms::field::g_pszDialogue);
+                if (l_jL.contains(toms::field::g_pszRequires)) l_oLine.m_jRequires = l_jL[toms::field::g_pszRequires];
+                if (l_jL.contains(toms::field::g_pszActions)) l_oLine.m_jActions = l_jL[toms::field::g_pszActions];
             }
             if (!l_oLine.m_strDialogue.empty()) l_oOut.m_vLines.push_back(l_oLine);
         }
     if (l_oOut.m_vLines.empty()) return l_fnFail("no chat line");
-    const std::string l_strOrder = f_Str(l_jChat, "order");
+    const std::string l_strOrder = f_Str(l_jChat, toms::field::g_pszOrder);
     l_oOut.m_eOrder = l_strOrder == "stay" ? ChatOrder::Stay : l_strOrder == "random" ? ChatOrder::Random : ChatOrder::Loop;
-    if (l_jJ.contains("topics") && l_jJ["topics"].is_object()) l_oOut.m_bMenuAlways = f_Str(l_jJ["topics"], "menu") == "always";
+    if (l_jJ.contains(toms::field::g_pszTopics) && l_jJ[toms::field::g_pszTopics].is_object()) l_oOut.m_bMenuAlways = f_Str(l_jJ[toms::field::g_pszTopics], "menu") == "always";
     return true;
 }
 
@@ -55,27 +57,27 @@ std::map<std::string, std::vector<Topic>> f_CollectTopics(const std::vector<nloh
     for (const auto& l_jPool : l_vPools)
         if (l_jPool.is_array())
             for (const auto& l_jE : l_jPool)
-                if (l_jE.is_object() && l_jE.contains("next") && l_jE["next"].is_array())
-                    for (const auto& l_jN : l_jE["next"]) if (l_jN.is_string()) l_setWoken.insert(l_jN.get<std::string>());
+                if (l_jE.is_object() && l_jE.contains(toms::field::g_pszNext) && l_jE[toms::field::g_pszNext].is_array())
+                    for (const auto& l_jN : l_jE[toms::field::g_pszNext]) if (l_jN.is_string()) l_setWoken.insert(l_jN.get<std::string>());
     int l_iSeq = 0;
     for (const auto& l_jPool : l_vPools) {
         if (!l_jPool.is_array()) continue;
         for (const auto& l_jE : l_jPool) {
             if (!l_jE.is_object()) continue;
             ++l_iSeq;
-            const nlohmann::json l_jTrig = l_jE.value("trigger", nlohmann::json());
-            if (!l_jTrig.is_object() || f_Str(l_jTrig, "on") != "talk") continue;
+            const nlohmann::json l_jTrig = l_jE.value(toms::field::g_pszTrigger, nlohmann::json());
+            if (!l_jTrig.is_object() || f_Str(l_jTrig, toms::field::g_pszOn) != toms::event_trigger::g_pszTalk) continue;
             Topic l_oT;
-            l_oT.m_strEventId = f_Str(l_jE, "eventId");
-            l_oT.m_strNpc = f_Str(l_jTrig, "npc");
+            l_oT.m_strEventId = f_Str(l_jE, toms::field::g_pszEventId);
+            l_oT.m_strNpc = f_Str(l_jTrig, toms::field::g_pszNpc);
             if (l_oT.m_strEventId.empty() || l_oT.m_strNpc.empty()) continue;
-            l_oT.m_strTitleKey = l_jE.value("title", l_oT.m_strEventId + ".title");
-            l_oT.m_strDialogue = f_Str(l_jE, "dialogue");
-            l_oT.m_strAfterDialogue = f_Str(l_jE, "afterDialogue");
-            if (l_jE.contains("requires")) l_oT.m_jRequires = l_jE["requires"];
-            if (l_jE.contains("topicOrder") && l_jE["topicOrder"].is_number_integer()) l_oT.m_iOrder = l_jE["topicOrder"].get<int>();
-            l_oT.m_bRepeatable = !l_jE.value("once", true);
-            if (l_jE.contains("maxTimes") && l_jE["maxTimes"].is_number_integer()) l_oT.m_iMaxTimes = std::max(0, l_jE["maxTimes"].get<int>());
+            l_oT.m_strTitleKey = l_jE.value(toms::field::g_pszTitle, l_oT.m_strEventId + ".title");
+            l_oT.m_strDialogue = f_Str(l_jE, toms::field::g_pszDialogue);
+            l_oT.m_strAfterDialogue = f_Str(l_jE, toms::field::g_pszAfterDialogue);
+            if (l_jE.contains(toms::field::g_pszRequires)) l_oT.m_jRequires = l_jE[toms::field::g_pszRequires];
+            if (l_jE.contains(toms::field::g_pszTopicOrder) && l_jE[toms::field::g_pszTopicOrder].is_number_integer()) l_oT.m_iOrder = l_jE[toms::field::g_pszTopicOrder].get<int>();
+            l_oT.m_bRepeatable = !l_jE.value(toms::field::g_pszOnce, true);
+            if (l_jE.contains(toms::field::g_pszMaxTimes) && l_jE[toms::field::g_pszMaxTimes].is_number_integer()) l_oT.m_iMaxTimes = std::max(0, l_jE[toms::field::g_pszMaxTimes].get<int>());
             l_oT.m_iSeq = l_iSeq;
             l_oT.m_bNeedsWake = l_setWoken.count(l_oT.m_strEventId) > 0;
             l_mapOut[l_oT.m_strNpc].push_back(l_oT);
@@ -149,12 +151,12 @@ TalkPlan f_PlanTalk(const NpcDef& l_oNpc, const std::vector<Topic>& l_vTopics, N
 }
 
 std::string f_StartNode(const nlohmann::json& l_jDialogue, const TalkQuery& l_oQ) {
-    if (!l_jDialogue.is_object() || !l_jDialogue.contains("start")) return std::string();
-    const nlohmann::json& l_jS = l_jDialogue["start"];
+    if (!l_jDialogue.is_object() || !l_jDialogue.contains(toms::field::g_pszStart)) return std::string();
+    const nlohmann::json& l_jS = l_jDialogue[toms::field::g_pszStart];
     if (l_jS.is_string()) return l_jS.get<std::string>();
     if (l_jS.is_array())
         for (const auto& l_jC : l_jS)
-            if (l_jC.is_object() && l_oQ.f_Holds(l_jC.value("requires", nlohmann::json()))) return f_Str(l_jC, "node");
+            if (l_jC.is_object() && l_oQ.f_Holds(l_jC.value(toms::field::g_pszRequires, nlohmann::json()))) return f_Str(l_jC, toms::field::g_pszNode);
     return std::string();
 }
 

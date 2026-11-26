@@ -1,5 +1,8 @@
 // game_input.cpp — input: map clicks (click-to-move), held-direction
 // movement, world interaction, and bump-to-fight. Split out of game.cpp 2026-09-13.
+#include "text_keys.h"     // toms::text: every line of text by its key
+#include "field_keys.h"    // toms::field: every data field by its constant
+#include "game_names.h"   // toms::state, toms::battle_event, ... (no hard-coded name)
 #include "game_internal.h"
 
 using namespace toms::game_detail;
@@ -117,7 +120,7 @@ void Game::f_OpenDoor(int l_iX, int l_iY, char l_cC) {
     for (const auto& l_oE : m_oSt.m_vEntities) if (l_oE.m_iX == l_iX && l_oE.m_iY == l_iY && l_oE.m_strKind.rfind("door:", 0) == 0) f_FireLinkedEvents(l_oE);
     m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
     (void)l_cC;
-    if (MapObject* l_pDoor = m_oFloor.f_ObjectAt(l_iX, l_iY, "door:")) l_pDoor->f_Play("opening");   // its clip plays on the tile
+    if (MapObject* l_pDoor = m_oFloor.f_ObjectAt(l_iX, l_iY, "door:")) l_pDoor->f_Play(toms::state::g_pszOpening);   // its clip plays on the tile
 }
 
 void Game::f_MovePlayer(int l_iDx, int l_iDy) {
@@ -133,7 +136,7 @@ void Game::f_MovePlayer(int l_iDx, int l_iDy) {
         {'y', "key_yellow"}, {'b', "key_blue"}, {'r', "key_red"}
     };
     if (auto l_itDoorIt = l_mapDoorKeyItem.find(l_cC); l_itDoorIt != l_mapDoorKeyItem.end()) {
-        nlohmann::json l_jReq = { {"type", "itemHeld"}, {"itemId", l_itDoorIt->second}, {"count", 1} };
+        nlohmann::json l_jReq = { {toms::field::g_pszType, "itemHeld"}, {toms::field::g_pszItemId, l_itDoorIt->second}, {toms::field::g_pszCount, 1} };
         if (!toms::f_Evaluate(l_jReq, GameConditionContext(m_oPl, m_oMeta, m_mapMissionTrackers, m_oRun, m_oEquipped))) return;
         f_OpenDoor(l_iNx, l_iNy, l_cC);   // uses the key; the door opens and vanishes; the player stays put this turn
         return;
@@ -147,7 +150,7 @@ void Game::f_MovePlayer(int l_iDx, int l_iDy) {
         bool l_bEventsDone = true;
         for (const std::string& l_strE : l_pS->m_vUnlockEvents) l_bEventsDone = l_bEventsDone && m_oRun.f_EventFinished(l_strE);
         if (!l_strGuard.empty() && l_bEventsDone) {   // its boss first (f_StairGuard)
-            const std::string l_strMsg = f_TrParam(m_oLocale.f_Tr("stairs.guarded"), "name", f_EnemyDisplayName(l_strGuard));
+            const std::string l_strMsg = f_TrParam(m_oLocale.f_Tr(toms::text::g_pszStairsGuarded), toms::field::g_pszName, f_EnemyDisplayName(l_strGuard));
             if (m_vNotifications.empty() || m_vNotifications.back().first != l_strMsg) m_vNotifications.push_back({l_strMsg, 3200});
             m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
             return;
@@ -191,14 +194,14 @@ std::string Game::f_StairGuard() const {
     for (const Entity& l_oE : m_oSt.m_vEntities) {
         if (l_oE.m_bConsumed || l_oE.m_strKind.rfind("monster:", 0) != 0) continue;
         const auto l_itT = m_mapEnemyTpl.find(l_oE.m_strId);
-        if (l_itT != m_mapEnemyTpl.end() && l_itT->second.value("guardsStairs", false)) return l_oE.m_strId;
+        if (l_itT != m_mapEnemyTpl.end() && l_itT->second.value(toms::field::g_pszGuardsStairs, false)) return l_oE.m_strId;
     }
     return std::string();
 }
 
 std::string Game::f_EnemyDisplayName(const std::string& l_strId) const {
     const auto l_itT = m_mapEnemyTpl.find(l_strId);
-    return l_itT != m_mapEnemyTpl.end() && l_itT->second.contains("name") ? m_oLocale.f_Field(l_itT->second["name"]) : l_strId;
+    return l_itT != m_mapEnemyTpl.end() && l_itT->second.contains(toms::field::g_pszName) ? m_oLocale.f_Field(l_itT->second[toms::field::g_pszName]) : l_strId;
 }
 
 void Game::f_BumpLockedStairs(const toms::StairLink& l_oS) {
@@ -210,13 +213,13 @@ void Game::f_BumpLockedStairs(const toms::StairLink& l_oS) {
         auto l_itD = m_mapEventDefs.find(l_strEv);
         std::string l_strName = l_itD == m_mapEventDefs.end() ? std::string() : m_oLocale.f_Tr(l_itD->second.m_strTitleKey);
         if (l_strName.empty() || (l_itD != m_mapEventDefs.end() && l_strName == l_itD->second.m_strTitleKey)) l_strName = l_strEv;
-        if (!m_oRun.f_EventStarted(l_strEv)) l_strName = m_oLocale.f_Tr("events.unknown");
+        if (!m_oRun.f_EventStarted(l_strEv)) l_strName = m_oLocale.f_Tr(toms::text::g_pszEventsUnknown);
         l_strNames += (l_strNames.empty() ? "" : ", ") + ("\"" + l_strName + "\"");
         l_iLeft++;
     }
     const std::string l_strMsg = l_iLeft > 1
-        ? toms::f_FillText(m_oLocale.f_Tr("stairs.locked.many"), {{"events", l_strNames}, {"n", std::to_string(l_iLeft)}})
-        : toms::f_FillText(m_oLocale.f_Tr("stairs.locked"), {{"event", l_strNames.size() >= 2 ? l_strNames.substr(1, l_strNames.size() - 2) : l_strNames}});
+        ? toms::f_FillText(m_oLocale.f_Tr(toms::text::g_pszStairsLockedMany), {{toms::field::g_pszEvents, l_strNames}, {toms::field::g_pszN, std::to_string(l_iLeft)}})
+        : toms::f_FillText(m_oLocale.f_Tr(toms::text::g_pszStairsLocked), {{toms::field::g_pszEvent, l_strNames.size() >= 2 ? l_strNames.substr(1, l_strNames.size() - 2) : l_strNames}});
     if (m_vNotifications.empty() || m_vNotifications.back().first != l_strMsg) m_vNotifications.push_back({l_strMsg, 3200});
     m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
 }
@@ -237,7 +240,7 @@ bool Game::f_StairJustOpened(const std::string& l_strFloor, const toms::StairLin
 
 void Game::f_FinishEvent(const std::string& l_strEvId, int l_iDepth) {
     const bool l_bAlready = m_oRun.f_EventFinished(l_strEvId);
-    m_oRun.f_SetFlag("event_" + l_strEvId, true);
+    m_oRun.f_SetFlag(toms::key_prefix::g_pszEvent + l_strEvId, true);
     m_oRun.f_MarkEventFinished(l_strEvId);
     auto l_itDef = m_mapEventDefs.find(l_strEvId);
     if (l_itDef != m_mapEventDefs.end() && !l_bAlready)
@@ -250,16 +253,16 @@ void Game::f_FinishEvent(const std::string& l_strEvId, int l_iDepth) {
             const toms::StairLink* l_pLink = f_FindStair(l_oS.m_strFloor, l_oS.m_strTo);
             int l_iLeft = 0;
             if (l_pLink) for (const std::string& l_strE : l_pLink->m_vUnlockEvents) if (!m_oRun.f_EventFinished(l_strE)) l_iLeft++;
-            const std::map<std::string, std::string> l_mapVars = {{"from", toms::f_FloorLabel(l_oS.m_strFloor)}, {"to", toms::f_FloorLabel(l_oS.m_strTo)},
-                                                             {"n", std::to_string(l_iLeft)}};
+            const std::map<std::string, std::string> l_mapVars = {{toms::field::g_pszFrom, toms::f_FloorLabel(l_oS.m_strFloor)}, {toms::field::g_pszTo, toms::f_FloorLabel(l_oS.m_strTo)},
+                                                             {toms::field::g_pszN, std::to_string(l_iLeft)}};
             if (l_iLeft > 0) {
-                m_vNotifications.push_back({toms::f_FillText(m_oLocale.f_Tr("stairs.progress"), l_mapVars), 4000});
+                m_vNotifications.push_back({toms::f_FillText(m_oLocale.f_Tr(toms::text::g_pszStairsProgress), l_mapVars), 4000});
                 continue;
             }
             m_oRun.f_MarkEventStarted(toms::f_GoStairsEventId(l_oS.m_strFloor, l_oS.m_strTo));
-            std::string l_strBody = toms::f_FillText(m_oLocale.f_Tr("stairs.unlocked.body"), l_mapVars);
-            l_strBody += " " + toms::f_FillText(m_oLocale.f_Tr(l_oS.m_strFloor == m_oSt.m_strId ? "stairs.unlocked.here" : "stairs.unlocked.there"), l_mapVars);
-            m_vNotices.push_back({m_oLocale.f_Tr("stairs.unlocked.title"), l_strBody});
+            std::string l_strBody = toms::f_FillText(m_oLocale.f_Tr(toms::text::g_pszStairsUnlockedBody), l_mapVars);
+            l_strBody += " " + toms::f_FillText(m_oLocale.f_Tr(l_oS.m_strFloor == m_oSt.m_strId ? toms::text::g_pszStairsUnlockedHere : toms::text::g_pszStairsUnlockedThere), l_mapVars);
+            m_vNotices.push_back({m_oLocale.f_Tr(toms::text::g_pszStairsUnlockedTitle), l_strBody});
         }
     f_MarkProgressDirty();
 }
@@ -267,9 +270,9 @@ void Game::f_FinishEvent(const std::string& l_strEvId, int l_iDepth) {
 void Game::f_BumpGate(Entity& l_oGate) {
     const std::string& l_strKeyId = l_oGate.m_strId;
     auto l_itIt = std::find(m_oPl.m_vInv.begin(), m_oPl.m_vInv.end(), l_strKeyId);
-    const std::map<std::string, std::string> l_mapVars = {{"item", f_ItemName(l_strKeyId)}};
+    const std::map<std::string, std::string> l_mapVars = {{toms::field::g_pszItem, f_ItemName(l_strKeyId)}};
     if (l_itIt == m_oPl.m_vInv.end()) {
-        const std::string l_strMsg = toms::f_FillText(m_oLocale.f_Tr("gate.locked"), l_mapVars);
+        const std::string l_strMsg = toms::f_FillText(m_oLocale.f_Tr(toms::text::g_pszGateLocked), l_mapVars);
         if (m_vNotifications.empty() || m_vNotifications.back().first != l_strMsg) m_vNotifications.push_back({l_strMsg, 3200});
         m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
         return;
@@ -279,7 +282,7 @@ void Game::f_BumpGate(Entity& l_oGate) {
     m_oSt.m_vTiles[l_oGate.m_iY][l_oGate.m_iX] = '.';
     toms::f_SetEntityStatus(m_mapEntityStatus, f_StatusKeyAt(l_oGate.m_iX, l_oGate.m_iY), toms::EntityStatus::Opened);
     f_FireLinkedEvents(l_oGate);
-    m_vNotifications.push_back({toms::f_FillText(m_oLocale.f_Tr("gate.opened"), l_mapVars), 3200});
+    m_vNotifications.push_back({toms::f_FillText(m_oLocale.f_Tr(toms::text::g_pszGateOpened), l_mapVars), 3200});
     m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick);
     f_MarkProgressDirty();   // (GateObject plays its opening clip)
 }
@@ -407,8 +410,8 @@ std::vector<EnemyInst> Game::f_PartyOf(const EnemyInst& l_oLead) {
         return l_vParty;
     }
     auto l_itT = m_mapEnemyTpl.find(l_oLead.m_strId);
-    if (l_itT == m_mapEnemyTpl.end() || !l_itT->second.contains("party") || !l_itT->second["party"].is_array()) return l_vParty;
-    for (const auto& l_jId : l_itT->second["party"]) {
+    if (l_itT == m_mapEnemyTpl.end() || !l_itT->second.contains(toms::field::g_pszParty) || !l_itT->second[toms::field::g_pszParty].is_array()) return l_vParty;
+    for (const auto& l_jId : l_itT->second[toms::field::g_pszParty]) {
         EnemyInst l_oM;
         if (l_jId.is_string() && f_EnemyFromData(l_jId.get<std::string>(), nlohmann::json::object(), l_oM)) l_vParty.push_back(l_oM);
         if ((int)l_vParty.size() + 1 >= toms::g_iMaxFoes) break;

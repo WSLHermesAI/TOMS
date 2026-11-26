@@ -10,6 +10,7 @@
 //
 // Naming: members are snake_case because they are the names used inside the .rml files
 // ({{hud.hp_text}}, data-if="battle.active", ...).
+#include "game_names.h"   // toms::state, toms::battle_event, ... (no hard-coded name)
 #include <string>
 #include <vector>
 
@@ -96,7 +97,7 @@ struct UiPopup {                       // a damage number rising over a fighter 
     std::string m_strText;
     float m_fX = 0, m_fY = 0;                // design px: its box's left / top
     float m_fOpacity = 1;
-    std::string m_strStyle = "hit";         // battle.rcss .popup.<style>: hit great perfect miss guard hurt, and the words
+    std::string m_strStyle = toms::pop_style::g_pszHit;         // battle.rcss .popup.<style>: hit great perfect miss guard hurt, and the words
                                        // parry block early chain move-<tier> (docs/gameplay/15 §3.8)
 };
 

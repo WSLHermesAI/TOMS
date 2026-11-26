@@ -1,4 +1,5 @@
 // battle_stage.cpp -- see battle_stage.h.
+#include "field_keys.h"    // toms::field: every data field by its constant
 #include "battle_stage.h"
 #include "floor_mesh.h"
 #include "color_space.h"   // TOMS_GAMMA_SPACE: web and Android blend in gamma space
@@ -123,16 +124,16 @@ std::shared_ptr<BattleStage::Loaded> BattleStage::f_LoadCpu(nlohmann::json l_jRo
     };
 
     // the sky: what is behind everything, and the light the models get from it
-    const nlohmann::json l_jSky = l_jRow.value("sky", nlohmann::json::object());
-    const std::string l_strHdr = l_jSky.value("hdr", std::string());
+    const nlohmann::json l_jSky = l_jRow.value(toms::field::g_pszSky, nlohmann::json::object());
+    const std::string l_strHdr = l_jSky.value(toms::field::g_pszHdr, std::string());
     if (!l_strHdr.empty()) {
 #if defined(__EMSCRIPTEN__)
         // the browser: a smaller sky (4 times quicker to prefilter, on the main thread without threads) and no cache
         // (it would be 17 MB in the browser's storage)
-        const int l_iFace = std::min(256, l_jSky.value("faceSize", 512)), l_iSamples = std::min(16, l_jSky.value("samples", 32));
+        const int l_iFace = std::min(256, l_jSky.value(toms::field::g_pszFaceSize, 512)), l_iSamples = std::min(16, l_jSky.value(toms::field::g_pszSamples, 32));
         const std::string l_strCache;
 #else
-        const int l_iFace = l_jSky.value("faceSize", 512), l_iSamples = l_jSky.value("samples", 32);
+        const int l_iFace = l_jSky.value(toms::field::g_pszFaceSize, 512), l_iSamples = l_jSky.value(toms::field::g_pszSamples, 32);
         const std::string l_strCache = f_SkyCachePath(l_fnPath(l_strHdr), l_iFace, l_iSamples);
 #endif
         if (!l_strCache.empty() && f_ReadSkyCache(l_strCache, l_oL.m_oEnv)) {
@@ -152,29 +153,29 @@ std::shared_ptr<BattleStage::Loaded> BattleStage::f_LoadCpu(nlohmann::json l_jRo
     }
     GltfRenderer::Frame& l_oLook = l_oL.m_oLook;
     l_oLook.m_bEnvironment = l_oL.m_bSky;
-    l_oLook.m_bBackground = l_oL.m_bSky && l_jSky.value("background", true);   // false: it only lights (the floors in 3D, docs/gameplay/24)
-    l_oLook.m_fEnvironmentIntensity = l_jSky.value("intensity", 1.0f);
-    l_oLook.m_fEnvironmentYaw = glm::radians(l_jSky.value("yaw", 0.0f));
-    l_oLook.m_fBackgroundBlur = l_jSky.value("blur", 0.0f);
-    l_oLook.m_fExposure = l_jRow.value("exposure", 1.0f);
+    l_oLook.m_bBackground = l_oL.m_bSky && l_jSky.value(toms::field::g_pszBackground, true);   // false: it only lights (the floors in 3D, docs/gameplay/24)
+    l_oLook.m_fEnvironmentIntensity = l_jSky.value(toms::field::g_pszIntensity, 1.0f);
+    l_oLook.m_fEnvironmentYaw = glm::radians(l_jSky.value(toms::field::g_pszYaw, 0.0f));
+    l_oLook.m_fBackgroundBlur = l_jSky.value(toms::field::g_pszBlur, 0.0f);
+    l_oLook.m_fExposure = l_jRow.value(toms::field::g_pszExposure, 1.0f);
     // the moon: one directional light with shadows
-    const nlohmann::json l_jLight = l_jRow.value("light", nlohmann::json::object());
+    const nlohmann::json l_jLight = l_jRow.value(toms::field::g_pszLight, nlohmann::json::object());
     GltfRenderer::Light l_oMoon;
     l_oMoon.m_eType = GltfRenderer::Light::Type::Directional;
-    l_oMoon.m_v3Direction = glm::normalize(f_Vec3(l_jLight.value("dir", nlohmann::json()), glm::vec3(0.3f, -1.0f, -0.4f)));
-    l_oMoon.m_v3Color = f_Vec3(l_jLight.value("color", nlohmann::json()), glm::vec3(0.7f, 0.78f, 1.0f));
-    l_oMoon.m_fIntensity = l_jLight.value("intensity", 2.0f);
+    l_oMoon.m_v3Direction = glm::normalize(f_Vec3(l_jLight.value(toms::field::g_pszDir, nlohmann::json()), glm::vec3(0.3f, -1.0f, -0.4f)));
+    l_oMoon.m_v3Color = f_Vec3(l_jLight.value(toms::field::g_pszColor, nlohmann::json()), glm::vec3(0.7f, 0.78f, 1.0f));
+    l_oMoon.m_fIntensity = l_jLight.value(toms::field::g_pszIntensity, 2.0f);
     l_oLook.m_vLights = {l_oMoon};
-    l_oLook.m_fAmbient = l_jLight.value("ambient", 0.4f);
+    l_oLook.m_fAmbient = l_jLight.value(toms::field::g_pszAmbient, 0.4f);
 
-    if (!l_jRow.value("ground", std::string()).empty() && !(l_oL.m_spGround = l_fnModel(l_jRow["ground"].get<std::string>()))) return l_spL;
-    if (!l_jRow.value("shadow", std::string()).empty() && !(l_oL.m_spShadow = l_fnModel(l_jRow["shadow"].get<std::string>()))) return l_spL;
+    if (!l_jRow.value(toms::field::g_pszGround, std::string()).empty() && !(l_oL.m_spGround = l_fnModel(l_jRow[toms::field::g_pszGround].get<std::string>()))) return l_spL;
+    if (!l_jRow.value(toms::field::g_pszShadow, std::string()).empty() && !(l_oL.m_spShadow = l_fnModel(l_jRow[toms::field::g_pszShadow].get<std::string>()))) return l_spL;
     // a floor walked in 3D (docs/gameplay/24): its walls and ground made here from its wall rows (floor_mesh.h)
     auto l_fnFloor = [&](const nlohmann::json& l_jF) -> std::shared_ptr<Model> {
         std::vector<std::string> l_vWalls;
-        for (const auto& l_jRowS : l_jF.value("walls", nlohmann::json::array())) if (l_jRowS.is_string()) l_vWalls.push_back(l_jRowS.get<std::string>());
-        const std::string l_strGlb = f_MakeFloorGlb(l_vWalls, l_jF.value("look", std::string("castle")), l_jF.value("wallHeight", 1.0f),
-                                                    l_jF.value("groundRepeat", 2.0f), l_jF.value("stairShade", 0.5f));
+        for (const auto& l_jRowS : l_jF.value(toms::field::g_pszWalls, nlohmann::json::array())) if (l_jRowS.is_string()) l_vWalls.push_back(l_jRowS.get<std::string>());
+        const std::string l_strGlb = f_MakeFloorGlb(l_vWalls, l_jF.value(toms::field::g_pszLook, std::string("castle")), l_jF.value(toms::field::g_pszWallHeight, 1.0f),
+                                                    l_jF.value(toms::field::g_pszGroundRepeat, 2.0f), l_jF.value(toms::field::g_pszStairShade, 0.5f));
         auto l_spM = std::make_shared<Model>();
         std::string l_strWhy;
         if (!gltf::f_LoadModelFromMemory(l_strGlb.data(), l_strGlb.size(), l_fnPath("stage3d"), l_spM->m_oModel, &l_strWhy)) {
@@ -186,12 +187,12 @@ std::shared_ptr<BattleStage::Loaded> BattleStage::f_LoadCpu(nlohmann::json l_jRo
         l_oL.m_mapModels["floor:" + l_jF.dump()] = l_spM;
         return l_spM;
     };
-    for (const auto& l_jP : l_jRow.value("props", nlohmann::json::array())) {
+    for (const auto& l_jP : l_jRow.value(toms::field::g_pszProps, nlohmann::json::array())) {
         Prop l_oP;
-        if (l_jP.contains("floor")) {
-            if (!(l_oP.m_spModel = l_fnFloor(l_jP["floor"]))) return l_spL;
-        } else if (!(l_oP.m_spModel = l_fnModel(l_jP.value("model", std::string())))) return l_spL;
-        const std::string l_strNode = l_jP.value("node", std::string());
+        if (l_jP.contains(toms::field::g_pszFloor)) {
+            if (!(l_oP.m_spModel = l_fnFloor(l_jP[toms::field::g_pszFloor]))) return l_spL;
+        } else if (!(l_oP.m_spModel = l_fnModel(l_jP.value(toms::field::g_pszModel, std::string())))) return l_spL;
+        const std::string l_strNode = l_jP.value(toms::field::g_pszNode, std::string());
         if (!l_strNode.empty()) {   // one piece of a kit: every other root node hidden, this one at the origin
             const gltf::Model& l_oM = l_oP.m_spModel->m_oModel;
             auto l_spPose = std::make_shared<gltf::Pose>();
@@ -205,23 +206,23 @@ std::shared_ptr<BattleStage::Loaded> BattleStage::f_LoadCpu(nlohmann::json l_jRo
                                      l_bThis ? l_spPose->f_Scale(l_iN) : glm::vec3(0.0f));
             }
             if (!l_bFound) {
-                l_oL.m_strError = l_jP.value("model", std::string()) + " has no root node \"" + l_strNode + "\"";
+                l_oL.m_strError = l_jP.value(toms::field::g_pszModel, std::string()) + " has no root node \"" + l_strNode + "\"";
                 return l_spL;
             }
             l_spPose->f_UpdateWorld();
             l_oP.m_spPose = l_spPose;
         }
-        glm::mat4 l_mat4M = glm::translate(glm::mat4(1.0f), f_Vec3(l_jP.value("at", nlohmann::json()), glm::vec3(0.0f)));
-        l_mat4M = glm::rotate(l_mat4M, glm::radians(l_jP.value("turn", 0.0f)), glm::vec3(0, 1, 0));
-        const nlohmann::json l_jS = l_jP.value("scale", nlohmann::json(1.0f));
+        glm::mat4 l_mat4M = glm::translate(glm::mat4(1.0f), f_Vec3(l_jP.value(toms::field::g_pszAt, nlohmann::json()), glm::vec3(0.0f)));
+        l_mat4M = glm::rotate(l_mat4M, glm::radians(l_jP.value(toms::field::g_pszTurn, 0.0f)), glm::vec3(0, 1, 0));
+        const nlohmann::json l_jS = l_jP.value(toms::field::g_pszScale, nlohmann::json(1.0f));
         l_mat4M = glm::scale(l_mat4M, l_jS.is_array() ? f_Vec3(l_jS, glm::vec3(1.0f)) : glm::vec3(l_jS.get<float>()));
         l_oP.m_mat4Place = l_mat4M;
         l_oL.m_vProps.push_back(std::move(l_oP));
     }
     // the fighters' sprites (docs/gameplay/21 §4.3): their own light, x 1 / exposure ("glow")
-    l_oL.m_fSpriteGlow = l_jRow.value("sprites", nlohmann::json::object()).value("glow", 0.6f);
+    l_oL.m_fSpriteGlow = l_jRow.value(toms::field::g_pszSprites, nlohmann::json::object()).value(toms::field::g_pszGlow, 0.6f);
     // what the moon's shadow must cover: the stage's middle (the fighters, the props near them)
-    const nlohmann::json l_jB = l_jRow.value("shadowBounds", nlohmann::json::array());
+    const nlohmann::json l_jB = l_jRow.value(toms::field::g_pszShadowBounds, nlohmann::json::array());
     if (l_jB.is_array() && l_jB.size() == 2) {
         l_oL.m_v3BoundsMin = f_Vec3(l_jB[0], l_oL.m_v3BoundsMin);
         l_oL.m_v3BoundsMax = f_Vec3(l_jB[1], l_oL.m_v3BoundsMax);

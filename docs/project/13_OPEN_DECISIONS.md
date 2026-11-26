@@ -55,6 +55,7 @@ An empty **Answer** means not decided: nothing happens for that row, and its rec
 | **Q99 Qwen Image 2.1 Turbo pictures in the game:** its licence allows research and evaluation only; a commercial use needs a separate licence from its maker. Use it only for trials, ask for a commercial licence, or repaint what it makes with the SDXL models already used? | trials only; nothing made with it goes into the game | trials only, and use its pictures as references that the SDXL workflow repaints, until a licence is asked for | | the hero's side-on reference pose for the video clips | [engine 24](../engine/24_VIDEO_TO_SKELETON.md) §2.1 |
 | **Q106** Which new weapon or skill idea next (22 §6)? | none | the parry shield, then Blade Storm |  | the next plays | [22](../gameplay/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §6 |
 | **Q107** Keyboard for the direction plays on the desktop? | mouse only | arrow keys / WASD, diagonals with two keys |  | desktop input | [22](../gameplay/22_MEMORY_BLADE_AND_SIGIL_CHAIN.md) §6 |
+| **Hard-coded names: fallback numbers.** A field's fallback in code (`value(toms::field::g_pszDark, 0.85f)`: `0.85f` is used when battle.json has no `dark`). Make each one a named constant too, or put every default in the data file so the code has none? | Fallbacks stay numbers in the code | Put the defaults in the data files (battle.json already holds most); the code keeps one safe fallback per field |  | the no-hard-coded-names rule | [12](12_CPP_NAMING.md) §7 |
 
 ## 2. Already in the game with my proposal: answer only to change it
 

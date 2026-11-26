@@ -1,4 +1,5 @@
 // particle_fx.cpp -- see particle_fx.h.
+#include "perf.h"   // toms::perf: the performance checker (F4)
 #include "particle_fx.h"
 
 #include <json.hpp>
@@ -579,6 +580,7 @@ void EffectInstance::f_Stop(bool l_bClear) {
 
 void EffectInstance::f_Update(float l_fDt) {
     if (!m_pEffect || l_fDt <= 0) return;
+    toms::perf::Scope l_oPerf(toms::perf::section::g_pszUpdateParticles);
     m_fCarry += l_fDt;
     int l_iSteps = int(m_fCarry / m_fStep + 1e-3f);   // 60 x (1/60) is 60 steps despite float error
     if (l_iSteps > m_iMaxSteps) {   // a long hitch: simulate a little, drop the rest
@@ -883,6 +885,10 @@ void EffectInstance::f_AppendEmitterQuads(size_t l_nEi, const toms::anim::AtlasS
 void EffectInstance::f_Draw(IRenderer* l_pRen, const toms::anim::AtlasSet& l_oAtlases, const glm::mat3& l_mat3Placement, const float l_arrTint[4],
                           std::vector<std::string>* l_pMissing) {
     if (!m_pEffect || !l_pRen) return;
+    toms::perf::Scope l_oPerf(toms::perf::section::g_pszRenderParticles);
+    toms::perf::f_Count(toms::perf::counter::g_pszParticleEffects, 1);
+    toms::perf::f_Count(toms::perf::counter::g_pszParticlesLive, f_LiveCount());
+    toms::perf::f_Count(toms::perf::counter::g_pszParticlesGpu, f_GpuEmitters());
     const glm::vec4 l_v4TintV = l_arrTint ? glm::vec4(l_arrTint[0], l_arrTint[1], l_arrTint[2], l_arrTint[3]) : glm::vec4(1.0f);
     std::vector<Quad> l_vQuads;
     for (size_t l_nEi : m_vDrawOrder) {

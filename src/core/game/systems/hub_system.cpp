@@ -1,3 +1,4 @@
+#include "field_keys.h"    // toms::field: every data field by its constant
 #include "hub_system.h"
 #include "save_system.h"   // toms::readJsonFileSafe
 
@@ -5,23 +6,23 @@ namespace toms {
 
 nlohmann::json f_ToJson(const HubLocationDefinition& l_oD) {
     nlohmann::json l_jJ;
-    l_jJ["id"] = l_oD.m_strId; l_jJ["unlockFlag"] = l_oD.m_strUnlockFlag;
-    l_jJ["name"] = l_oD.m_jName; l_jJ["desc"] = l_oD.m_jDesc;
-    l_jJ["action"] = { {"kind", l_oD.m_strActionKind}, {"npc", l_oD.m_strActionNpc} };
+    l_jJ[toms::field::g_pszId] = l_oD.m_strId; l_jJ[toms::field::g_pszUnlockFlag] = l_oD.m_strUnlockFlag;
+    l_jJ[toms::field::g_pszName] = l_oD.m_jName; l_jJ[toms::field::g_pszDesc] = l_oD.m_jDesc;
+    l_jJ[toms::field::g_pszAction] = { {toms::field::g_pszKind, l_oD.m_strActionKind}, {toms::field::g_pszNpc, l_oD.m_strActionNpc} };
     return l_jJ;
 }
 
 HubLocationDefinition f_HubLocationFromJson(const nlohmann::json& l_jJ) {
     HubLocationDefinition l_oD;
     if (!l_jJ.is_object()) return l_oD;
-    l_oD.m_strId = l_jJ.value("id", std::string());
-    l_oD.m_strUnlockFlag = l_jJ.value("unlockFlag", std::string());
-    l_oD.m_jName = l_jJ.contains("name") ? l_jJ["name"] : nlohmann::json(l_oD.m_strId);
-    l_oD.m_jDesc = l_jJ.contains("desc") ? l_jJ["desc"] : nlohmann::json("");
-    if (l_jJ.contains("action") && l_jJ["action"].is_object()) {
-        const auto& l_jA = l_jJ["action"];
-        l_oD.m_strActionKind = l_jA.value("kind", std::string());
-        l_oD.m_strActionNpc = l_jA.value("npc", std::string());
+    l_oD.m_strId = l_jJ.value(toms::field::g_pszId, std::string());
+    l_oD.m_strUnlockFlag = l_jJ.value(toms::field::g_pszUnlockFlag, std::string());
+    l_oD.m_jName = l_jJ.contains(toms::field::g_pszName) ? l_jJ[toms::field::g_pszName] : nlohmann::json(l_oD.m_strId);
+    l_oD.m_jDesc = l_jJ.contains(toms::field::g_pszDesc) ? l_jJ[toms::field::g_pszDesc] : nlohmann::json("");
+    if (l_jJ.contains(toms::field::g_pszAction) && l_jJ[toms::field::g_pszAction].is_object()) {
+        const auto& l_jA = l_jJ[toms::field::g_pszAction];
+        l_oD.m_strActionKind = l_jA.value(toms::field::g_pszKind, std::string());
+        l_oD.m_strActionNpc = l_jA.value(toms::field::g_pszNpc, std::string());
     }
     return l_oD;
 }

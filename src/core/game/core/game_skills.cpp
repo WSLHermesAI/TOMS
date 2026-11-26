@@ -5,6 +5,10 @@
 //   - the "warn" guard and the monsters' rhythm: the "!" (foeWarning), a guard press stops the player's attack;
 //   - skills (special_moves.json): a weapon's ultimate or a monster's special guard play, run as demo -> play -> finish;
 //   - the training ground: a card spent for fights in a row with more EXP and weapon wins.
+#include "res_keys.h"
+#include "text_keys.h"     // toms::text: every line of text by its key
+#include "field_keys.h"    // toms::field: every data field by its constant
+#include "game_names.h"   // toms::state, toms::battle_event, ... (no hard-coded name)
 #include "game_internal.h"
 
 #include <ctime>
@@ -81,7 +85,7 @@ void Game::f_ArmTouchPlay(bool l_bUltimate, int l_iPoints) {
     if (toms::f_IsSwipePlay(l_eType)) {   // the level's gesture prompts take the last places (17 §4.2)
         const std::string l_strKey = f_WeaponKey();
         const std::vector<std::string> l_vShapes = f_WeaponPlayOf(l_strKey).f_SwipeCuesAt(f_WeaponLevel(l_strKey));
-        l_oS.m_vSliceCues.assign((size_t)l_iPoints, l_eType == toms::PlayType::eSWIPE_GESTURE ? "v" : "way");
+        l_oS.m_vSliceCues.assign((size_t)l_iPoints, l_eType == toms::PlayType::eSWIPE_GESTURE ? toms::gesture::g_pszV : toms::gesture::g_pszWay);
         for (size_t l_nK = 0; l_nK < l_vShapes.size() && l_nK < l_oS.m_vSliceCues.size(); l_nK++) l_oS.m_vSliceCues[l_oS.m_vSliceCues.size() - l_vShapes.size() + l_nK] = l_vShapes[l_nK];
         if (l_eType == toms::PlayType::eSWIPE_RECALL) {   // the memory blade's timing by its level (weapon_play.json "recall", 22 §2)
             const toms::WeaponPlay::Recall l_oR = f_WeaponPlayOf(l_strKey).f_RecallAt(f_WeaponLevel(l_strKey));
@@ -112,7 +116,7 @@ void Game::f_BattlePointer(int l_iPhase, float l_fX, float l_fY) {
     if (!m_oCs.m_bActive || m_oCs.m_bWinPending || !m_oCs.m_oTouch.f_Running()) { m_bTouchHeld = false; return; }
     if (m_oCs.m_oSkill.m_bOn && m_oCs.m_oSkill.m_ePhase != CombatState::SkillRun::Phase::Play) return;   // a move's show: watch it
     if (l_iPhase == 0 && !m_oCs.m_oTouch.f_Started() && m_oCs.m_ePace == toms::Pace::Stamina && m_oCs.m_fStamina < (float)m_oPaceSettings.m_iAttackCost) {
-        m_oCs.m_strLog = m_oLocale.f_Tr("battle.no_stamina");   // the stamina pace: starting an attack costs it (13 §6.3)
+        m_oCs.m_strLog = m_oLocale.f_Tr(toms::text::g_pszBattleNoStamina);   // the stamina pace: starting an attack costs it (13 §6.3)
         m_oAudio.f_Play(toms::key::g_pszSfxDeny);
         return;
     }
@@ -146,9 +150,9 @@ void Game::f_WandCues() {
     m_oWandSeen.m_iClockMs = l_oP.f_ClockMs();
     const auto& l_vC = l_oP.f_Circles();
     const int l_iN = (int)l_vC.size();
-    const nlohmann::json l_jW = f_FeelFx().value("wand", nlohmann::json::object());
-    const float l_fStep = l_jW.value("pitchStep", 2.0f);   // semitones up per hint
-    const int l_iTiers = std::max(1, l_jW.value("tiers", 4));
+    const nlohmann::json l_jW = f_FeelFx().value(toms::field::g_pszWand, nlohmann::json::object());
+    const float l_fStep = l_jW.value(toms::field::g_pszPitchStep, 2.0f);   // semitones up per hint
+    const int l_iTiers = std::max(1, l_jW.value(toms::field::g_pszTiers, 4));
     auto l_fnPitch = [l_fStep](int l_iK) { return std::pow(2.0f, (float)l_iK * l_fStep / 12.0f); };
     const int l_iPhase = (int)l_oP.f_CirclePhase();
     if (l_oP.f_CirclePhase() == toms::TouchPlay::CirclePhase::Count) {
@@ -156,18 +160,18 @@ void Game::f_WandCues() {
         for (int l_iK = m_oWandSeen.m_iLit; l_iK < l_iLit && l_iK < l_iN; l_iK++) {
             const int l_iTier = 1 + (l_iN > 1 ? l_iK * (l_iTiers - 1) / (l_iN - 1) : 0);
             f_PlayBattleFxAt("wand_hint_" + std::to_string(l_iTier), l_vC[(size_t)l_iK].m_fX, l_vC[(size_t)l_iK].m_fY, true, 0, 1.0f + 0.08f * (float)l_iK);
-            m_oAudio.f_Play(l_jW.value("hintSound", std::string("sfx.wand_hint")), l_fnPitch(l_iK), 0.8f);
+            m_oAudio.f_Play(l_jW.value(toms::field::g_pszHintSound, std::string(toms::key::g_pszSfxWandHint)), l_fnPitch(l_iK), 0.8f);
         }
         m_oWandSeen.m_iLit = std::max(m_oWandSeen.m_iLit, l_iLit);
     } else if (m_oWandSeen.m_iPhase == (int)toms::TouchPlay::CirclePhase::Count) {   // the count is over: all go at once
         for (const toms::TouchPlay::Circle& l_oC : l_vC) f_PlayBattleFxAt("wand_vanish", l_oC.m_fX, l_oC.m_fY, true);
-        m_oAudio.f_Play(l_jW.value("vanishSound", std::string("sfx.wand_vanish")));
+        m_oAudio.f_Play(l_jW.value(toms::field::g_pszVanishSound, std::string(toms::key::g_pszSfxWandVanish)));
     }
     if (l_oP.f_CirclePhase() == toms::TouchPlay::CirclePhase::Tap) {
         const int l_iShown = l_oP.f_CirclesShown();
         for (int l_iK = m_oWandSeen.m_iShown; l_iK < l_iShown && l_iK < l_iN; l_iK++) {
             f_PlayBattleFxAt("wand_return", l_vC[(size_t)l_iK].m_fX, l_vC[(size_t)l_iK].m_fY, true);
-            m_oAudio.f_Play(l_jW.value("hintSound", std::string("sfx.wand_hint")), l_fnPitch(l_iK) * 2.0f, 0.35f);
+            m_oAudio.f_Play(l_jW.value(toms::field::g_pszHintSound, std::string(toms::key::g_pszSfxWandHint)), l_fnPitch(l_iK) * 2.0f, 0.35f);
         }
         m_oWandSeen.m_iShown = std::max(m_oWandSeen.m_iShown, l_iShown);
     }
@@ -178,8 +182,8 @@ void Game::f_WandCues() {
 void Game::f_BowGather(int l_iDtMs) {
     const toms::TouchPlay& l_oP = m_oCs.m_oTouch;
     if (l_oP.f_Type() != toms::PlayType::ePULL_RELEASE || !l_oP.f_Aiming() || m_oCs.m_oSkill.m_bOn) { m_iBowGatherMs = 0; m_iBowGatherBeats = 0; return; }
-    const nlohmann::json l_jB = f_FeelFx().value("bow", nlohmann::json::object());
-    const int l_iEvery = std::max(30, l_jB.value("gatherEveryMs", 90));
+    const nlohmann::json l_jB = f_FeelFx().value(toms::field::g_pszBow, nlohmann::json::object());
+    const int l_iEvery = std::max(30, l_jB.value(toms::field::g_pszGatherEveryMs, 90));
     m_iBowGatherMs += l_iDtMs;
     while (m_iBowGatherMs >= l_iEvery) {
         m_iBowGatherMs -= l_iEvery;
@@ -187,7 +191,7 @@ void Game::f_BowGather(int l_iDtMs) {
         const int l_iTier = l_fCh < 0.34f ? 1 : l_fCh < 0.67f ? 2 : 3;
         const glm::vec2 l_v2W = f_WeaponPoint();
         f_PlayBattleFxAt("bow_gather_" + std::to_string(l_iTier), l_v2W.x, l_v2W.y, false, 0, 0.8f + 0.6f * l_fCh);
-        if (m_iBowGatherBeats++ % 3 == 0) m_oAudio.f_Play(l_jB.value("chargeSound", std::string("sfx.bow_charge")), 0.8f + 0.9f * l_fCh, 0.5f);
+        if (m_iBowGatherBeats++ % 3 == 0) m_oAudio.f_Play(l_jB.value(toms::field::g_pszChargeSound, std::string(toms::key::g_pszSfxBowCharge)), 0.8f + 0.9f * l_fCh, 0.5f);
     }
 }
 
@@ -197,15 +201,15 @@ void Game::f_HitSpray(int l_iFoe, const toms::TouchPlay::Hit& l_oH) {
     const nlohmann::json l_jF = f_FeelFx();
     const int l_iCombo = std::max(1, m_oCs.m_iComboCount);
     const bool l_bStaff = m_oCs.m_oTouch.f_Type() == toms::PlayType::eSEQUENCE_CLICK;
-    const int l_iTiers = std::max(1, l_jF.value("sprayTiers", 5));
-    const int l_iTier = std::clamp(1 + (l_iCombo - 1) / std::max(1, l_jF.value("sprayComboStep", 2)) + (l_bStaff ? 1 : 0), 1, l_iTiers);
+    const int l_iTiers = std::max(1, l_jF.value(toms::field::g_pszSprayTiers, 5));
+    const int l_iTier = std::clamp(1 + (l_iCombo - 1) / std::max(1, l_jF.value(toms::field::g_pszSprayComboStep, 2)) + (l_bStaff ? 1 : 0), 1, l_iTiers);
     const glm::vec2 l_v2C = f_FighterCentre(l_iFoe);
     f_PlayBattleFxAt("combo_spray_" + std::to_string(l_iTier), l_v2C.x, l_v2C.y, false, 0, 1.0f + 0.04f * (float)std::min(l_iCombo, 12));
     if (toms::f_IsSwipePlay(m_oCs.m_oTouch.f_Type())) {
         f_PlayBattleFxAt("sword_slash", l_v2C.x, l_v2C.y, false, 0, 1.0f + 0.03f * (float)std::min(l_iCombo, 10), l_oH.m_fAngle);
-        m_oAudio.f_Play(l_jF.value("swordSound", std::string("sfx.sword_slash")), 0.95f + 0.04f * (float)std::min(l_iCombo, 8));
+        m_oAudio.f_Play(l_jF.value(toms::field::g_pszSwordSound, std::string(toms::key::g_pszSfxSwordSlash)), 0.95f + 0.04f * (float)std::min(l_iCombo, 8));
     }
-    if (l_bStaff) m_oAudio.f_Play(l_jF.value("wand", nlohmann::json::object()).value("castSound", std::string("sfx.wand_cast")),
+    if (l_bStaff) m_oAudio.f_Play(l_jF.value(toms::field::g_pszWand, nlohmann::json::object()).value(toms::field::g_pszCastSound, std::string(toms::key::g_pszSfxWandCast)),
                                 std::pow(2.0f, (float)l_oH.m_iOrder * 2.0f / 12.0f), 0.8f);
 }
 
@@ -230,7 +234,7 @@ void Game::f_TouchPlayed(int l_iIndexBefore, int l_iHitsBefore) {
         } else if (l_eType == toms::PlayType::ePULL_RELEASE && l_oH.m_bOk) {   // the arrow bursts where it hits (20 §4)
             const float l_fCh = m_oCs.m_oTouch.f_ShotCharge();
             f_PlayBattleFxAt("bow_explode", l_oH.m_fX, l_oH.m_fY, false, 0, 0.8f + 0.8f * l_fCh);
-            m_oAudio.f_Play(f_FeelFx().value("bow", nlohmann::json::object()).value("explodeSound", std::string("sfx.explosion")), 1.15f - 0.3f * l_fCh, 0.85f);
+            m_oAudio.f_Play(f_FeelFx().value(toms::field::g_pszBow, nlohmann::json::object()).value(toms::field::g_pszExplodeSound, std::string(toms::key::g_pszSfxExplosion)), 1.15f - 0.3f * l_fCh, 0.85f);
         }
     }
     if (!l_bSkillPlay && !toms::f_IsSwipePlay(l_eType) && l_eType != toms::PlayType::eSEQUENCE_CLICK && m_oCs.m_oTouch.f_Index() > l_iIndexBefore)
@@ -262,13 +266,13 @@ void Game::f_PlayAnswerClip() {
     if (!f_BattleRigReady()) return;
     const toms::ComboTier* l_pTier = f_ComboTier();
     const bool l_bHas = l_pTier && m_upPlayerView && !l_pTier->m_strClip.empty() && m_upPlayerView->f_Has(l_pTier->m_strClip);
-    f_SetBattleRigState("attack", true, l_bHas ? l_pTier->m_strClip : std::string());
+    f_SetBattleRigState(toms::state::g_pszAttack, true, l_bHas ? l_pTier->m_strClip : std::string());
 }
 
 const toms::ComboTier* Game::f_ComboTier() const { return f_WeaponPlayOf(f_WeaponKey()).f_ComboTierAt(m_oCs.m_iComboCount); }
 
 void Game::f_ComboWord() {
-    if (m_oCs.m_iComboCount >= 2) f_PopWord(f_TrParam(m_oLocale.f_Tr("battle.word_combo"), "n", std::to_string(m_oCs.m_iComboCount)), -1, "chain");
+    if (m_oCs.m_iComboCount >= 2) f_PopWord(f_TrParam(m_oLocale.f_Tr(toms::text::g_pszBattleWordCombo), toms::field::g_pszN, std::to_string(m_oCs.m_iComboCount)), -1, toms::pop_style::g_pszChain);
 }
 
 // One swipe or tap of a free mode (17 §5): a hit at once, of the move's hitDamage times a normal attack. True: the fight is won.
@@ -276,16 +280,16 @@ bool Game::f_FreeHit(const toms::TouchPlay::Hit& l_oH) {
     const int l_iT = m_oCs.m_iTarget;
     if (l_iT < 0 || l_iT >= (int)m_oCs.m_vFoes.size() || m_oCs.m_vFoes[(size_t)l_iT].f_Down() || !m_oCs.m_oSkill.m_pDef) return false;
     const int l_iDmg = std::max(1, (int)std::lround((float)f_NormalHitDamage(l_iT) * m_oCs.m_oSkill.m_pDef->m_oPlay.m_fHitDamage * m_oCs.m_vFoes[(size_t)l_iT].m_fStaggerDamage));
-    f_BattleEvent("hit", -1, l_iT, l_iDmg, "free");
+    f_BattleEvent(toms::battle_event::g_pszHit, -1, l_iT, l_iDmg, "free");
     const toms::ComboTier* l_pTier = f_ComboTier();
     if (l_pTier && !l_pTier->m_strFx.empty()) f_PlayBattleFx(l_pTier->m_strFx, l_iT);
     else if (const toms::WeaponFx* l_pFx = f_BattleWeaponFx(true)) f_PlayBattleFx(l_pFx->m_strHit, l_iT);
-    f_FeelMoment(l_pTier && !l_pTier->m_strFeel.empty() ? l_pTier->m_strFeel : std::string("hit"));
-    f_PopDamage(l_iDmg, l_iT, "hit");
+    f_FeelMoment(l_pTier && !l_pTier->m_strFeel.empty() ? l_pTier->m_strFeel : std::string(toms::moment::g_pszHit));
+    f_PopDamage(l_iDmg, l_iT, toms::pop_style::g_pszHit);
     f_DamageFoe(l_iT, l_iDmg);
     if (!m_oCs.m_bActive) return true;
     if (!m_oCs.m_vFoes[(size_t)l_iT].f_Down()) return false;
-    const std::string l_strWin = f_TrParam(m_oLocale.f_Tr("battle.crit_win"), "dmg", std::to_string(l_iDmg));
+    const std::string l_strWin = f_TrParam(m_oLocale.f_Tr(toms::text::g_pszBattleCritWin), toms::field::g_pszDmg, std::to_string(l_iDmg));
     if (!toms::f_AllDown(m_oCs.f_FoeHp())) {   // another stands: the target moves on and the move goes on
         f_AfterPlayerHit(std::string(), l_strWin);
         return false;
@@ -307,7 +311,7 @@ void Game::f_PlayHit(const toms::TouchPlay::Hit& l_oH) {
     const int l_iPoints = std::max(1, m_oCs.m_oTouch.f_Points());
     float l_fShare = 1.0f / (float)l_iPoints;
     if (m_oCs.m_oTouch.f_Type() == toms::PlayType::eSEQUENCE_CLICK) {
-        const float l_fRamp = std::max(0.0f, f_FeelFx().value("wand", nlohmann::json::object()).value("damageRamp", 1.6f));
+        const float l_fRamp = std::max(0.0f, f_FeelFx().value(toms::field::g_pszWand, nlohmann::json::object()).value(toms::field::g_pszDamageRamp, 1.6f));
         float l_fSum = 0.0f;
         for (int l_iK = 1; l_iK <= l_iPoints; l_iK++) l_fSum += std::pow((float)l_iK, l_fRamp);
         l_fShare = std::pow((float)std::clamp(l_oH.m_iOrder + 1, 1, l_iPoints), l_fRamp) / std::max(l_fSum, 1e-6f);
@@ -315,7 +319,7 @@ void Game::f_PlayHit(const toms::TouchPlay::Hit& l_oH) {
     int l_iDmg = (int)std::lround((float)f_NormalHitDamage(l_iT) * 0.5f * l_fShare * (l_oH.m_bPerfect ? 1.3f : 1.0f) * l_oF.m_fStaggerDamage);
     l_iDmg = std::max(1, l_iDmg);
     m_oCs.m_iPlayDealt += l_iDmg;
-    f_BattleEvent("hit", -1, l_iT, l_iDmg, "answer");
+    f_BattleEvent(toms::battle_event::g_pszHit, -1, l_iT, l_iDmg, "answer");
     if (const toms::WeaponFx* l_pFx = f_BattleWeaponFx()) {
         if (m_oCs.m_oTouch.f_Type() == toms::PlayType::eSEQUENCE_CLICK) f_PlayBattleFxAt(l_pFx->m_strRelease, l_oH.m_fX, l_oH.m_fY, true);   // the spell leaves the circle
         const toms::ComboTier* l_pHitTier = f_WeaponPlayOf(f_WeaponKey()).f_ComboTierAt(m_oCs.m_iComboCount + 1);
@@ -325,13 +329,13 @@ void Game::f_PlayHit(const toms::TouchPlay::Hit& l_oH) {
     m_oCs.m_iComboCount++;
     {   // the feel grows with the combo too; a perfect answer is at least "great"
         const toms::ComboTier* l_pTier = f_ComboTier();
-        const std::string l_strFeel = l_pTier && !l_pTier->m_strFeel.empty() ? l_pTier->m_strFeel : std::string("hit");
-        f_FeelMoment(l_oH.m_bPerfect && l_strFeel == "hit" ? std::string("great") : l_strFeel);
+        const std::string l_strFeel = l_pTier && !l_pTier->m_strFeel.empty() ? l_pTier->m_strFeel : std::string(toms::moment::g_pszHit);
+        f_FeelMoment(l_oH.m_bPerfect && l_strFeel == toms::moment::g_pszHit ? std::string(toms::moment::g_pszGreat) : l_strFeel);
     }
     f_PlayAnswerClip();
     f_HitSpray(l_iT, l_oH);
     f_ComboWord();
-    f_PopDamage(l_iDmg, l_iT, l_oH.m_bPerfect ? "great" : "hit");
+    f_PopDamage(l_iDmg, l_iT, l_oH.m_bPerfect ? toms::pop_style::g_pszGreat : toms::pop_style::g_pszHit);
     f_DamageFoe(l_iT, l_iDmg);
 }
 
@@ -343,7 +347,7 @@ void Game::f_StopOwnAttack() {
     m_oCs.m_iPlayDealt = 0;
     m_oCs.m_iChargeMs = 0;
     if (m_oCs.m_ePace == toms::Pace::Cooldown) { m_oCs.m_oAtkBar.m_bCooling = true; m_oCs.m_oAtkBar.m_iCooldownMs = f_BarCooldownMs(); }
-    f_BattleEvent("interrupt", -1, -1, 0, "guard");
+    f_BattleEvent(toms::battle_event::g_pszInterrupt, -1, -1, 0, toms::battle_event::g_pszGuard);
 }
 
 // ---- the monsters' rhythm and the "!" (16 §4) ----
@@ -399,7 +403,7 @@ void Game::f_StartSkill(const toms::SpecialMove& l_oDef, int l_iOwner) {
     m_oCs.m_oSkill.m_pDef = &l_oDef;
     m_oCs.m_oSkill.m_iOwner = l_iOwner;
     if (l_iOwner < 0) m_oCs.m_iComboCount = 0;   // a move builds its own combo
-    f_BattleEvent("skill", l_iOwner, m_oCs.m_iTarget, 0, l_oDef.m_strId);
+    f_BattleEvent(toms::battle_event::g_pszSkill, l_iOwner, m_oCs.m_iTarget, 0, l_oDef.m_strId);
     for (const toms::ShowBeat* l_pB : toms::f_BeatsDue(l_oDef.m_vDemo, -1, 0)) f_SkillBeat(*l_pB, f_SkillCentre());
 }
 
@@ -431,18 +435,18 @@ void Game::f_SkillBeat(const toms::ShowBeat& l_oB, glm::vec2 l_v2At) {
     } else if (l_oB.m_strWhat == "dim") {
         m_oCs.m_iDimMs = m_oSettings.m_bReduceEffects ? 0 : std::max(700, l_oB.m_iMs > 0 ? l_oB.m_iMs : 60000);   // until the move ends (endSkill)
     } else if (l_oB.m_strWhat == "banner") {
-        f_ShowBanner(m_oLocale.f_Has(l_oB.m_strText) ? m_oLocale.f_Tr(l_oB.m_strText) : l_oB.m_strText, m_oCs.m_oSkill.m_iOwner >= 0 ? "line" : "ultimate", l_oB.m_iMs > 0 ? l_oB.m_iMs : 1500);
+        f_ShowBanner(m_oLocale.f_Has(l_oB.m_strText) ? m_oLocale.f_Tr(l_oB.m_strText) : l_oB.m_strText, m_oCs.m_oSkill.m_iOwner >= 0 ? toms::banner::g_pszLine : toms::banner::g_pszUltimate, l_oB.m_iMs > 0 ? l_oB.m_iMs : 1500);
     } else if (l_oB.m_strWhat == "intro") {   // the special attack's introduction (22 §4.2): its maker's banner, the label, the name typed in
         m_oCs.m_iHeroIntroMs = m_oCs.m_iHeroIntroMsMax = l_oB.m_iMs > 0 ? l_oB.m_iMs : 1600;
         m_oCs.m_iIntroOwner = m_oCs.m_oSkill.m_iOwner;
-        m_oCs.m_strHeroIntroLabel = !l_oB.m_strText.empty() ? l_oB.m_strText : m_oCs.m_oSkill.m_iOwner < 0 ? std::string("battle.ultimate_label") : std::string("battle.foe_special_label");
+        m_oCs.m_strHeroIntroLabel = !l_oB.m_strText.empty() ? l_oB.m_strText : m_oCs.m_oSkill.m_iOwner < 0 ? std::string(toms::text::g_pszBattleUltimateLabel) : std::string(toms::text::g_pszBattleFoeSpecialLabel);
         m_oCs.m_strIntroName = f_SkillName();
     } else if (l_oB.m_strWhat == "name") {
-        f_ShowBanner(f_SkillName(), "ultimate", l_oB.m_iMs > 0 ? l_oB.m_iMs : 1400);
+        f_ShowBanner(f_SkillName(), toms::banner::g_pszUltimate, l_oB.m_iMs > 0 ? l_oB.m_iMs : 1400);
     } else if (l_oB.m_strWhat == "namePart") {
-        f_ShowBanner(toms::f_NamePart(f_SkillName(), m_oCs.m_oSkill.m_iSteps, l_oD.m_oPlay.m_iPoints), "ultimate", l_oB.m_iMs > 0 ? l_oB.m_iMs : 900);
+        f_ShowBanner(toms::f_NamePart(f_SkillName(), m_oCs.m_oSkill.m_iSteps, l_oD.m_oPlay.m_iPoints), toms::banner::g_pszUltimate, l_oB.m_iMs > 0 ? l_oB.m_iMs : 900);
     } else if (l_oB.m_strWhat == "count") {
-        f_PopWord(std::to_string(m_oCs.m_oSkill.m_iSteps) + "/" + std::to_string(l_oD.m_oPlay.m_iPoints), -1, "chain");
+        f_PopWord(std::to_string(m_oCs.m_oSkill.m_iSteps) + "/" + std::to_string(l_oD.m_oPlay.m_iPoints), -1, toms::pop_style::g_pszChain);
     } else if (l_oB.m_strWhat == "camera") {
         m_oCs.m_fCamZoom = m_oSettings.m_bReduceEffects ? 1.0f + (l_oB.m_fZoom - 1.0f) * 0.4f : l_oB.m_fZoom;
         m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = std::max(300, l_oB.m_iMs);
@@ -454,7 +458,7 @@ void Game::f_SkillBeat(const toms::ShowBeat& l_oB, glm::vec2 l_v2At) {
         if (m_oCs.m_oSkill.m_iOwner >= 0) f_FoeLook(l_iT, l_oB.m_strClip);   // a monster's move: its own look's state (its clip, else the shared one)
         else if (f_BattleRigReady()) {
             const bool l_bHas = m_upPlayerView && !l_oB.m_strClip.empty() && m_upPlayerView->f_Has(l_oB.m_strClip);
-            f_SetBattleRigState("attack", true, l_bHas ? l_oB.m_strClip : std::string(), l_oB.m_fSpeed);
+            f_SetBattleRigState(toms::state::g_pszAttack, true, l_bHas ? l_oB.m_strClip : std::string(), l_oB.m_fSpeed);
         }
     } else if (l_oB.m_strWhat == "hits") {   // the finish's hits share the move's damage (set when the finish began)
         if (m_oCs.m_oSkill.m_ePhase == P::Finish && m_oCs.m_oSkill.m_iOwner < 0 && m_oCs.m_oSkill.m_iHitDmg > 0) {
@@ -542,7 +546,7 @@ void Game::f_UpdateSkill(int l_iDtMs) {
             const int l_iT = m_oCs.m_iTarget;
             const float l_fStagger = l_iT < (int)m_oCs.m_vFoes.size() ? m_oCs.m_vFoes[(size_t)l_iT].m_fStaggerDamage : 1.0f;
             l_oS.m_iHitDmg = (int)std::lround((float)f_NormalHitDamage(l_iT) * l_oD.m_fDamage * l_oS.m_fShare * l_fStagger);
-            if (l_oS.m_fShare <= 0.0f) f_PopWord(m_oLocale.f_Tr("battle.move.default.miss"), -1, "move-miss");
+            if (l_oS.m_fShare <= 0.0f) f_PopWord(m_oLocale.f_Tr(toms::text::g_pszBattleMoveDefaultMiss), -1, toms::pop_style::g_pszMoveMiss);
         }
         const bool l_bFull0 = l_oS.m_fShare >= 1.0f;   // a finish beat may be for the full play only, or the partial one (22 §3)
         if (l_oS.m_iOwner < 0) f_HeroShout(l_bFull0 ? "full" : l_oS.m_fShare > 0.0f ? "partial" : "fizzle");
@@ -556,7 +560,7 @@ void Game::f_UpdateSkill(int l_iDtMs) {
         for (l_oS.m_iRainMs -= l_iDtMs; l_oS.m_iRainMs <= 0 && l_oS.m_iRainLeft > 0; l_oS.m_iRainMs += std::max(30, l_oS.m_iHitGapMs)) {
             l_oS.m_iRainLeft--;
             if (!l_oS.m_strHitClip.empty() && f_BattleRigReady() && l_oS.m_iOwner < 0 && m_upPlayerView && m_upPlayerView->f_Has(l_oS.m_strHitClip))
-                f_SetBattleRigState("attack", true, l_oS.m_strHitClip, l_oS.m_fHitClipSpeed);
+                f_SetBattleRigState(toms::state::g_pszAttack, true, l_oS.m_strHitClip, l_oS.m_fHitClipSpeed);
             if (!l_oS.m_strHitFx.empty()) f_PlayBattleFx(l_oS.m_strHitFx, -1);
             f_LaunchRain(*l_oS.m_pRain, m_oCs.m_iTarget);
         }
@@ -570,18 +574,18 @@ void Game::f_UpdateSkill(int l_iDtMs) {
             if (l_iT < 0 || l_iT >= (int)m_oCs.m_vFoes.size() || m_oCs.m_vFoes[(size_t)l_iT].f_Down()) { l_oS.m_iHitsLeft = 0; break; }
             if (!l_oS.m_pRain) {   // (with projectiles, the shot went up at its launch)
                 if (!l_oS.m_strHitClip.empty() && f_BattleRigReady() && l_oS.m_iOwner < 0 && m_upPlayerView && m_upPlayerView->f_Has(l_oS.m_strHitClip))
-                    f_SetBattleRigState("attack", true, l_oS.m_strHitClip, l_oS.m_fHitClipSpeed);   // a shot per hit, from its start
+                    f_SetBattleRigState(toms::state::g_pszAttack, true, l_oS.m_strHitClip, l_oS.m_fHitClipSpeed);   // a shot per hit, from its start
                 if (!l_oS.m_strHitFx.empty()) f_PlayBattleFx(l_oS.m_strHitFx, -1);
             }
-            f_BattleEvent("hit", -1, l_iT, l_oS.m_iHitDmg, "skill");
-            f_PopDamage(l_oS.m_iHitDmg, l_iT, "perfect");
-            f_FeelMoment("hit");
+            f_BattleEvent(toms::battle_event::g_pszHit, -1, l_iT, l_oS.m_iHitDmg, toms::battle_event::g_pszSkill);
+            f_PopDamage(l_oS.m_iHitDmg, l_iT, toms::pop_style::g_pszPerfect);
+            f_FeelMoment(toms::moment::g_pszHit);
             if (const toms::WeaponFx* l_pFx = f_BattleWeaponFx(true)) f_PlayBattleFx(l_pFx->m_strHit, l_iT);
             f_DamageFoe(l_iT, l_oS.m_iHitDmg);
             if (m_oCs.m_vFoes[(size_t)l_iT].f_Down()) {   // it fell: the rest of the show is cut short
                 const int l_iDmg = l_oS.m_iHitDmg;
                 f_EndSkill();   // (resets cs.skill, so s with it)
-                f_AfterPlayerHit(std::string(), f_TrParam(m_oLocale.f_Tr("battle.crit_win"), "dmg", std::to_string(l_iDmg)));
+                f_AfterPlayerHit(std::string(), f_TrParam(m_oLocale.f_Tr(toms::text::g_pszBattleCritWin), toms::field::g_pszDmg, std::to_string(l_iDmg)));
                 return;
             }
         }
@@ -593,14 +597,14 @@ void Game::f_UpdateSkill(int l_iDtMs) {
 // this, See my power ... more excited when it succeeds; when not all match a meme sound"): one line at random from
 // battle.json "heroVoice" "full" / "partial" / "fizzle" (sound keys, resources.json), at its "volume".
 void Game::f_HeroShout(const std::string& l_strOutcome) {
-    const nlohmann::json l_jV = m_jBattleJson.value("heroVoice", nlohmann::json::object());
-    if (l_jV.value("off", false)) return;
+    const nlohmann::json l_jV = m_jBattleJson.value(toms::field::g_pszHeroVoice, nlohmann::json::object());
+    if (l_jV.value(toms::field::g_pszOff, false)) return;
     const nlohmann::json l_jPool = l_jV.value(l_strOutcome, nlohmann::json::array());
     if (!l_jPool.is_array() || l_jPool.empty()) return;
     const size_t l_nPick = (size_t)std::uniform_int_distribution<int>(0, (int)l_jPool.size() - 1)(m_oPlayRng);
     if (!l_jPool[l_nPick].is_string()) return;
-    m_oAudio.f_Play(l_jPool[l_nPick].get<std::string>(), 1.0f, std::clamp(l_jV.value("volume", 1.0f), 0.0f, 2.0f));
-    f_BattleEvent("shout", -1, -1, 0, l_strOutcome);   // (a scenario counts it; the runs are silent)
+    m_oAudio.f_Play(l_jPool[l_nPick].get<std::string>(), 1.0f, std::clamp(l_jV.value(toms::field::g_pszVolume, 1.0f), 0.0f, 2.0f));
+    f_BattleEvent(toms::battle_event::g_pszShout, -1, -1, 0, l_strOutcome);   // (a scenario counts it; the runs are silent)
 }
 
 // One falling projectile at the monster, from high up and to its left (the hero's side), its impact where it lands; and
@@ -667,15 +671,15 @@ std::string f_TodayString() {
 }  // namespace
 
 int Game::f_TrainingRunsLeft() const {
-    const nlohmann::json l_jTr = m_jBattleJson.value("training", nlohmann::json::object());
-    const int l_iPerDay = std::max(0, l_jTr.value("runsPerDay", 3));
+    const nlohmann::json l_jTr = m_jBattleJson.value(toms::field::g_pszTraining, nlohmann::json::object());
+    const int l_iPerDay = std::max(0, l_jTr.value(toms::field::g_pszRunsPerDay, 3));
     const int l_iUsed = m_oMeta.m_strTrainDay == f_TodayString() ? m_oMeta.m_iTrainRuns : 0;
     return std::max(0, l_iPerDay - l_iUsed);
 }
 
 bool Game::f_StartTraining(const std::string& l_strMonster) {
-    const nlohmann::json l_jTr = m_jBattleJson.value("training", nlohmann::json::object());
-    const int l_iCost = std::max(0, l_jTr.value("cards", 1));
+    const nlohmann::json l_jTr = m_jBattleJson.value(toms::field::g_pszTraining, nlohmann::json::object());
+    const int l_iCost = std::max(0, l_jTr.value(toms::field::g_pszCards, 1));
     auto l_itIt = m_oMeta.m_mapCards.find(l_strMonster);
     EnemyInst l_oProbe;
     if (l_itIt == m_oMeta.m_mapCards.end() || l_itIt->second.m_iCopies < l_iCost || f_TrainingRunsLeft() <= 0 ||
@@ -695,10 +699,10 @@ bool Game::f_StartTraining(const std::string& l_strMonster) {
     m_oArena.m_bTraining = true;
     m_oArena.m_vEnemies = {l_strMonster};
     m_oArena.m_jOverrides = nlohmann::json::object();   // (the monster as it is; a null here would throw in enemyFromData)
-    m_oArena.m_iFightsMax = std::max(1, l_jTr.value("fights", 3));
+    m_oArena.m_iFightsMax = std::max(1, l_jTr.value(toms::field::g_pszFights, 3));
     m_oArena.m_iHpBefore = l_iHp;
     f_ArenaNextFight();
-    m_oCs.m_strLog = f_TrParam(f_TrParam(m_oLocale.f_Tr("training.start"), "name", l_oProbe.m_strName), "n", std::to_string(m_oArena.m_iFightsMax));
+    m_oCs.m_strLog = f_TrParam(f_TrParam(m_oLocale.f_Tr(toms::text::g_pszTrainingStart), toms::field::g_pszName, l_oProbe.m_strName), toms::field::g_pszN, std::to_string(m_oArena.m_iFightsMax));
     return true;
 }
 
@@ -707,7 +711,7 @@ void Game::f_EndTraining() {
     m_oArena = Arena{};
     m_oCs = CombatState{};
     m_oPl.m_iHp = l_oA.m_iHpBefore;
-    f_ShowNotice(f_TrParam(f_TrParam(f_TrParam(m_oLocale.f_Tr("training.done"), "w", std::to_string(l_oA.m_iWins)), "exp", std::to_string(l_oA.m_iExpGained)),
+    f_ShowNotice(f_TrParam(f_TrParam(f_TrParam(m_oLocale.f_Tr(toms::text::g_pszTrainingDone), toms::field::g_pszW, std::to_string(l_oA.m_iWins)), toms::field::g_pszExp, std::to_string(l_oA.m_iExpGained)),
                        "uses", std::to_string(l_oA.m_iWeaponExpGained)));
     f_MarkProgressDirty();
 }

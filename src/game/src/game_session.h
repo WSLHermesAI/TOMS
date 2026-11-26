@@ -24,11 +24,12 @@ class GameUi;
 
 enum class Key : uint8_t {
     Up, Down, Left, Right, W, A, S, D,
-    Enter, Space, Escape, Tab, F1, F2, F3,
+    Enter, Space, Escape, Tab, F1, F2, F3, F4,   // F4: the performance checker (docs/engine/25)
     F5, F8,                                  // reload the UI files, RmlUi debugger
     F, G, H, I, B,
     C, Q, E,                                 // the player menu: Status, previous / next tab
     Num1, Num2, Num3, Num4, Num5, Num6, Num7, Num8, Num9,
+    Ctrl, Plus, Minus,                       // Ctrl + / Ctrl -: the F4 window's text size
     Count
 };
 
@@ -103,6 +104,8 @@ public:
 
     bool m_bShowDebugOverlay = false;     // F1
     bool m_bShowStylingSpike = false;     // F2
+    float m_fPerfFontScale = 1.0f;        // its text size: Ctrl + / Ctrl -, or its A- / A+ buttons
+    float m_fPerfWindowScale = 0.0f;      // the text size the window was last sized for (0: never)
     bool m_bShowHud = false;              // F3: FPS, backend, sprite batch path (--fps starts with it on)
 
     // Asset folder resolution: env ASSET_DIR, else assets/media (baked in at build time).
@@ -123,6 +126,13 @@ private:
     double m_dHudClock = -1, m_dHudFps = 0, m_dHudMs = 0;
     int m_iHudFrames = 0;
     void f_DrawHud();
+    void f_DrawPerfWindow();              // F4 (ImGui)
+    void f_StepPerfFont(int l_iSteps);    // its text: +1 a step larger, -1 smaller
+    void f_NameViews();                   // bgfx view names, for the GPU's per-view times
+public:
+    // The host, after bgfx::frame(): the frame's GPU numbers to the performance checker (docs/engine/25).
+    void f_EndPerfFrame();
+private:
     std::string m_strAssetDir;
     bool m_bWatchUi = false;   // hot reload: the UI files are watched and reloaded when saved (GameUi::reloadIfChanged)
     int m_iUiWatchMs = 0;

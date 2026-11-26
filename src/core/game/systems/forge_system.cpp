@@ -1,3 +1,4 @@
+#include "field_keys.h"    // toms::field: every data field by its constant
 #include "forge_system.h"
 #include "save_system.h"   // toms::readJsonFileSafe
 
@@ -7,24 +8,24 @@ namespace toms {
 
 nlohmann::json f_ToJson(const ForgeRecipeDefinition& l_oD) {
     nlohmann::json l_jJ;
-    l_jJ["id"] = l_oD.m_strId; l_jJ["resultEquipmentId"] = l_oD.m_strResultEquipmentId;
-    l_jJ["name"] = l_oD.m_jName; l_jJ["desc"] = l_oD.m_jDesc;
-    l_jJ["cost"] = { {"gold", l_oD.m_iCostGold}, {"materials", l_oD.m_mapMaterials} };
+    l_jJ[toms::field::g_pszId] = l_oD.m_strId; l_jJ[toms::field::g_pszResultEquipmentId] = l_oD.m_strResultEquipmentId;
+    l_jJ[toms::field::g_pszName] = l_oD.m_jName; l_jJ[toms::field::g_pszDesc] = l_oD.m_jDesc;
+    l_jJ[toms::field::g_pszCost] = { {toms::field::g_pszGold, l_oD.m_iCostGold}, {toms::field::g_pszMaterials, l_oD.m_mapMaterials} };
     return l_jJ;
 }
 
 ForgeRecipeDefinition f_ForgeRecipeFromJson(const nlohmann::json& l_jJ) {
     ForgeRecipeDefinition l_oD;
     if (!l_jJ.is_object()) return l_oD;
-    l_oD.m_strId = l_jJ.value("id", std::string());
-    l_oD.m_strResultEquipmentId = l_jJ.value("resultEquipmentId", std::string());
-    l_oD.m_jName = l_jJ.contains("name") ? l_jJ["name"] : nlohmann::json(l_oD.m_strId);
-    l_oD.m_jDesc = l_jJ.contains("desc") ? l_jJ["desc"] : nlohmann::json("");
-    if (l_jJ.contains("cost") && l_jJ["cost"].is_object()) {
-        const auto& l_jC = l_jJ["cost"];
-        l_oD.m_iCostGold = l_jC.value("gold", 0);
-        if (l_jC.contains("materials") && l_jC["materials"].is_object())
-            for (auto& [l_strItemId, l_jCount] : l_jC["materials"].items())
+    l_oD.m_strId = l_jJ.value(toms::field::g_pszId, std::string());
+    l_oD.m_strResultEquipmentId = l_jJ.value(toms::field::g_pszResultEquipmentId, std::string());
+    l_oD.m_jName = l_jJ.contains(toms::field::g_pszName) ? l_jJ[toms::field::g_pszName] : nlohmann::json(l_oD.m_strId);
+    l_oD.m_jDesc = l_jJ.contains(toms::field::g_pszDesc) ? l_jJ[toms::field::g_pszDesc] : nlohmann::json("");
+    if (l_jJ.contains(toms::field::g_pszCost) && l_jJ[toms::field::g_pszCost].is_object()) {
+        const auto& l_jC = l_jJ[toms::field::g_pszCost];
+        l_oD.m_iCostGold = l_jC.value(toms::field::g_pszGold, 0);
+        if (l_jC.contains(toms::field::g_pszMaterials) && l_jC[toms::field::g_pszMaterials].is_object())
+            for (auto& [l_strItemId, l_jCount] : l_jC[toms::field::g_pszMaterials].items())
                 if (l_jCount.is_number_integer()) l_oD.m_mapMaterials[l_strItemId] = l_jCount.get<int>();
     }
     return l_oD;

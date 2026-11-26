@@ -1,6 +1,8 @@
 // game_scene_draw.cpp — the per-frame world: draw() (the map, its entities and the player; the UI
 // on top is RmlUi -- see game_ui.cpp) and the two ImGui developer tools (F1 debug overlay, F2
 // styling spike). Split out of game.cpp 2026-09-13; UI drawing moved to RmlUi 2026-09-27.
+#include "perf.h"   // toms::perf: the performance checker (F4)
+#include "field_keys.h"    // toms::field: every data field by its constant
 #include "game_internal.h"
 
 #include <stb_image.h>   // declarations only (game_assets.cpp has the implementation)
@@ -12,14 +14,15 @@
 using namespace toms::game_detail;
 
 void Game::f_Draw() {
+    toms::perf::Scope l_oPerf(toms::perf::section::g_pszRenderGame);
     m_pRen->begin();
     // Title phase (Boot screen): drawn INSTEAD of the world, then nothing else. There is
     // nothing meaningful to show behind it yet, and skipping the world draw keeps the title's
     // layout independent of whatever stage happens to be loaded underneath it.
-    if (m_oTitle.f_IsOpen()) { f_DrawPreviewAnim(); m_pRen->end(); return; }
+    if (m_oTitle.f_IsOpen()) { f_DrawPreviewAnim(); f_EndSprites(); return; }
     // M7 (first slice): an active ending takes over the whole screen the same way the title does
     // -- nothing behind it is meaningful once a run has actually ended (see triggerEnding()).
-    if (f_EndingActive()) { f_DrawPreviewAnim(); m_pRen->end(); return; }
+    if (f_EndingActive()) { f_DrawPreviewAnim(); f_EndSprites(); return; }
     const bool l_bShowStore = f_StoreModal();
     // Milestone 7 bugfix (still relevant under Battle System v2): this used to fall back to
     // scanning cs.log for the substring "倒下" to keep the overlay open during the brief post-lose
@@ -37,14 +40,20 @@ void Game::f_Draw() {
     // objects stand on it (each draws itself by status: map_objects.h). Still loading: nothing, the loading circle ----
     if (l_bShowWalk && m_bWalk3DOn) {
         m_pRen->f_SetNode(NODE_STAGE);
-        f_DrawWalk3D();
+        { toms::perf::Scope l_oP(toms::perf::section::g_pszRenderWalk3D); f_DrawWalk3D(); }
         f_DrawStylingSpikeBackdrop();
     }
     // Battle / dialogue / inventory / store: the RmlUi documents fill the screen, no world behind. A weapon with battle
     // clips draws the player's character and the weapon where the battle screen's player picture would be.
-    if (l_bShowBattle) f_DrawBattleRig();
+    if (l_bShowBattle) { toms::perf::Scope l_oP(toms::perf::section::g_pszRenderBattle); f_DrawBattleRig(); }
     f_DrawLoadingCircle();
-    f_DrawPreviewAnim(); m_pRen->end();
+    f_DrawPreviewAnim(); f_EndSprites();
+}
+
+// The frame's sprites to bgfx (their batches), timed (docs/engine/25).
+void Game::f_EndSprites() {
+    toms::perf::Scope l_oPerf(toms::perf::section::g_pszRenderSpriteSubmit);
+    m_pRen->end();
 }
 
 // The ground's marks, drawn on the map's pixels (the 3D floor lays them on its ground, game_walk3d.cpp): the door tiles
@@ -92,8 +101,8 @@ bool Game::f_DrawStairSign(const toms::StairLink& l_oS, float l_fX0, float l_fY0
     // (gold, "^") or keep sinking over a stair down (sky blue, "v"), each fading in at one end and out at the other.
     // W38: a stair just opened shows them brighter, quicker and pulsing, until it is taken.
     const bool l_bOpened = f_StairJustOpened(m_oSt.m_strId, l_oS);
-    const nlohmann::json l_jSign = m_jStage3D.is_object() ? m_jStage3D.value("stairSign", nlohmann::json::object()) : nlohmann::json::object();
-    const float l_fSpeed = l_jSign.value("speed", 0.8f) * (l_bOpened ? 1.6f : 1.0f);
+    const nlohmann::json l_jSign = m_jStage3D.is_object() ? m_jStage3D.value(toms::field::g_pszStairSign, nlohmann::json::object()) : nlohmann::json::object();
+    const float l_fSpeed = l_jSign.value(toms::field::g_pszSpeed, 0.8f) * (l_bOpened ? 1.6f : 1.0f);
     const float l_fP = (float)std::fmod(m_dIdleClockMs / 1000.0 * l_fSpeed, 1.0);   // the chevrons' march, 0..1 a step
     const float l_fPulse = l_bOpened ? 0.8f + 0.2f * std::sin((float)std::fmod(m_dIdleClockMs, 600.0) / 600.0f * 6.2831853f) : 1.0f;
     const float l_arrUp[3] = {1.0f, 0.85f, 0.3f}, l_arrDown[3] = {0.45f, 0.78f, 1.0f};
@@ -187,7 +196,7 @@ toms::anim::Clip Game::f_FitClipToCharacter(const toms::anim::Clip& l_oClip, con
     };
     glm::vec2 l_v2Nudge(0.0f);
     if (m_jCharacterFit.is_object() && m_jCharacterFit.contains(l_strSprite)) {
-        const nlohmann::json& l_jHand = m_jCharacterFit[l_strSprite].value("hand", nlohmann::json::array());
+        const nlohmann::json& l_jHand = m_jCharacterFit[l_strSprite].value(toms::field::g_pszHand, nlohmann::json::array());
         if (l_jHand.is_array() && l_jHand.size() == 2) l_v2Nudge = {l_jHand[0].get<float>(), l_jHand[1].get<float>()};
     }
     return toms::anim::f_FitCharacter(l_oClip, l_strSprite, l_fnBoxOf, l_v2Nudge);
@@ -239,13 +248,13 @@ nlohmann::json Game::f_TypeLook(const std::string& l_strKind, const std::string&
     else if (l_strK == "npc") {
         auto l_itIt = m_mapNpcDefs.find(l_strId);
         if (l_itIt != m_mapNpcDefs.end()) { nlohmann::json l_jL = l_itIt->second.m_jLook.is_object() ? l_itIt->second.m_jLook : nlohmann::json::object();
-            if (!l_jL.contains("sprite") && !l_itIt->second.m_strSprite.empty()) l_jL["sprite"] = l_itIt->second.m_strSprite;
+            if (!l_jL.contains(toms::field::g_pszSprite) && !l_itIt->second.m_strSprite.empty()) l_jL[toms::field::g_pszSprite] = l_itIt->second.m_strSprite;
             return l_jL; }
     }
     // a monster's / item's "sprite" (enemies.json / items.json, "slime.png"), then its "look" (anim, tint, ...)
     nlohmann::json l_jL = nlohmann::json::object();
-    if (l_pSrc && l_pSrc->contains("sprite") && (*l_pSrc)["sprite"].is_string()) l_jL["sprite"] = (*l_pSrc)["sprite"];
-    if (l_pSrc && l_pSrc->contains("look") && (*l_pSrc)["look"].is_object()) for (auto& [l_strK, l_jV] : (*l_pSrc)["look"].items()) l_jL[l_strK] = l_jV;
+    if (l_pSrc && l_pSrc->contains(toms::field::g_pszSprite) && (*l_pSrc)[toms::field::g_pszSprite].is_string()) l_jL[toms::field::g_pszSprite] = (*l_pSrc)[toms::field::g_pszSprite];
+    if (l_pSrc && l_pSrc->contains(toms::field::g_pszLook) && (*l_pSrc)[toms::field::g_pszLook].is_object()) for (auto& [l_strK, l_jV] : (*l_pSrc)[toms::field::g_pszLook].items()) l_jL[l_strK] = l_jV;
     return l_jL;
 }
 
@@ -257,8 +266,8 @@ nlohmann::json Game::f_LookOf(const Entity& l_oE) const {
 
 std::string Game::f_TypeSprite(const std::string& l_strKind, const std::string& l_strId) const {
     const nlohmann::json l_jL = f_TypeLook(l_strKind, l_strId);
-    if (l_jL.contains("sprite") && l_jL["sprite"].is_string()) {
-        std::string l_strS = l_jL["sprite"].get<std::string>();
+    if (l_jL.contains(toms::field::g_pszSprite) && l_jL[toms::field::g_pszSprite].is_string()) {
+        std::string l_strS = l_jL[toms::field::g_pszSprite].get<std::string>();
         if (l_strS.size() > 4 && l_strS.compare(l_strS.size() - 4, 4, ".png") == 0) l_strS.resize(l_strS.size() - 4);
         if (m_oSpriteAtlas.f_Find(l_strS)) return l_strS;
     }

@@ -161,3 +161,46 @@ python tools/naming/rename_cpp.py apply                applies the plan
 - **Two names that differ only in case** become one (`setName` and `SetName` both `f_SetName`). `Node`'s
   `name()`/`setName()`, which only called `Object`'s `Name()`/`SetName()`, would have called themselves; they were
   removed. The report's collisions section checks one scope; check a class and its base by hand.
+
+## 7. No hard-coded names: a constant, or the data
+
+The owner, 2026-11-26: the game's code never writes a name as a bare string. Every name it shares with data or with the UI
+is a constant, from one of four headers in `src/core/game/core/`:
+
+| Header | Holds | Made | Example |
+|---|---|---|---|
+| [res_keys.h](../../src/core/game/core/res_keys.h) | a file, by its key in `assets/media/resources.json` | generated: `python tools/make_res_keys.py` | `toms::key::g_pszSfxBossIntro`, not `"sfx.boss_intro"` |
+| [text_keys.h](../../src/core/game/core/text_keys.h) | a line of text, by its key in `assets/data/text.json` `"strings"` | generated: `python tools/make_text_keys.py` | `f_Tr(toms::text::g_pszBattleWordParry)`, not `f_Tr("battle.word_parry")` |
+| [field_keys.h](../../src/core/game/core/field_keys.h) | a data file's field (battle.json, a save, a scenario, the glTF the game writes, a text's `{placeholder}`) | by hand, sorted | `l_jJ.value(toms::field::g_pszDark, 0.85f)`, not `value("dark", 0.85f)` |
+| [ui_names.h](../../src/core/game/core/ui_names.h) | a name the UI files use: the data model and its bindings, the events the .rml sends with `act('...')`, element ids and selectors, the RCSS classes the code puts on what it draws | by hand, sorted | `toms::ui::g_pszStagePick`, not `"stage_pick"` |
+| [game_names.h](../../src/core/game/core/game_names.h) | every other name the code says, one namespace per kind: `toms::state` (statuses and clips), `battle_event`, `moment`, `pop_style`, `story_action`, `gesture`, `key_prefix` (`"story."` + an id), ... | by hand | `toms::state::g_pszPower`, not `"power"` |
+
+The two generated headers follow their files: after adding, renaming or removing a key in resources.json or text.json,
+run its script (`unit.res_keys_test` and `data.text_keys_up_to_date` fail while one is out of date). A key that is gone
+then no longer compiles where the code used it. The same text in two kinds is two constants (a pop-up's `"hit"` style
+is not the battle event `"hit"`). A name that only data uses needs none (a clip a weapon names in its data).
+
+```cpp
+f_FoeLook(l_iFoe, toms::state::g_pszPower);                  // not f_FoeLook(l_iFoe, "power")
+f_PopWord(m_oLocale.f_Tr(toms::text::g_pszBattleWordParry), -1, toms::pop_style::g_pszParry);
+if (l_strName == toms::ui::g_pszStagePick) { ... }           // the .rml keeps act('stage_pick')
+```
+
+A new name: add its line to the right header first (or run the generator), then use it.
+
+**What stays a string:** log and error text, and shown text (`"x3"`). A line the checker cannot tell from a name carries
+the comment `// name-ok`.
+
+**The check:** `python tools/naming/check_names.py` (the test `lint.game_names`, picked by `tools\test.cmd` for any game
+C++ change) reports, outside comments: a field written as a string where a field is read or written (`.value("k"`,
+`["k"]`, `->contains("k")`, `f_Str(l_jA, "k")`, a `{"k", v}` pair, `f_TrParam(text, "k", v)`); a string handed to RmlUi
+(`RegisterMember`, `Bind`, `GetElementById`, `IsClassSet`, ...); any literal equal to a name in game_names.h, text_keys.h
+or res_keys.h (its `key` namespace); and, in the UI code (`game_ui.cpp`, `game_player_menu.cpp`), one equal to a name in
+ui_names.h. A name in none of the headers is not caught: add it when the code first needs it.
+
+**Done (2026-11-26):** the battle, the map objects, missions, events, stairs, story actions, gestures; every data field
+(about 770), every text key the code names (about 320), the UI's names (about 350), the sound keys written as strings.
+**Not yet:** a few names data and code share that are still compared as strings (scene names in `game_scenario.cpp`
+besides "talk", condition types such as `"runFlagSet"`, the `".title"` / `".desc"` ends of built text keys), and the
+fallback numbers of a field (`0.85f` above): docs/project/13 asks about the numbers; the names move to `game_names.h`
+as each area is next changed.

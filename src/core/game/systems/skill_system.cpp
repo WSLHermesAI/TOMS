@@ -1,3 +1,4 @@
+#include "field_keys.h"    // toms::field: every data field by its constant
 #include "skill_system.h"
 #include "save_system.h"   // toms::readJsonFileSafe
 
@@ -8,27 +9,27 @@ namespace toms {
 
 nlohmann::json f_ToJson(const SkillDefinition& l_oD) {
     nlohmann::json l_jJ;
-    l_jJ["id"] = l_oD.m_strId; l_jJ["lineage"] = l_oD.m_strLineage; l_jJ["tier"] = l_oD.m_iTier; l_jJ["cost"] = l_oD.m_iCost;
-    l_jJ["requires"] = l_oD.m_vRequires;
-    l_jJ["name"] = l_oD.m_jName; l_jJ["desc"] = l_oD.m_jDesc;
-    l_jJ["effect"] = { {"atk", l_oD.m_iStatAtk}, {"def", l_oD.m_iStatDef} };
+    l_jJ[toms::field::g_pszId] = l_oD.m_strId; l_jJ[toms::field::g_pszLineage] = l_oD.m_strLineage; l_jJ[toms::field::g_pszTier] = l_oD.m_iTier; l_jJ[toms::field::g_pszCost] = l_oD.m_iCost;
+    l_jJ[toms::field::g_pszRequires] = l_oD.m_vRequires;
+    l_jJ[toms::field::g_pszName] = l_oD.m_jName; l_jJ[toms::field::g_pszDesc] = l_oD.m_jDesc;
+    l_jJ[toms::field::g_pszEffect] = { {toms::field::g_pszAtk, l_oD.m_iStatAtk}, {toms::field::g_pszDef, l_oD.m_iStatDef} };
     return l_jJ;
 }
 
 SkillDefinition f_SkillFromJson(const nlohmann::json& l_jJ) {
     SkillDefinition l_oD;
     if (!l_jJ.is_object()) return l_oD;
-    l_oD.m_strId = l_jJ.value("id", std::string());
-    l_oD.m_strLineage = l_jJ.value("lineage", std::string());
-    l_oD.m_iTier = l_jJ.value("tier", 0);
-    l_oD.m_iCost = l_jJ.value("cost", 0);
-    if (l_jJ.contains("requires") && l_jJ["requires"].is_array())
-        for (auto& l_jR : l_jJ["requires"]) if (l_jR.is_string()) l_oD.m_vRequires.push_back(l_jR.get<std::string>());
-    l_oD.m_jName = l_jJ.contains("name") ? l_jJ["name"] : nlohmann::json(l_oD.m_strId);
-    l_oD.m_jDesc = l_jJ.contains("desc") ? l_jJ["desc"] : nlohmann::json("");
-    if (l_jJ.contains("effect") && l_jJ["effect"].is_object()) {
-        l_oD.m_iStatAtk = l_jJ["effect"].value("atk", 0);
-        l_oD.m_iStatDef = l_jJ["effect"].value("def", 0);
+    l_oD.m_strId = l_jJ.value(toms::field::g_pszId, std::string());
+    l_oD.m_strLineage = l_jJ.value(toms::field::g_pszLineage, std::string());
+    l_oD.m_iTier = l_jJ.value(toms::field::g_pszTier, 0);
+    l_oD.m_iCost = l_jJ.value(toms::field::g_pszCost, 0);
+    if (l_jJ.contains(toms::field::g_pszRequires) && l_jJ[toms::field::g_pszRequires].is_array())
+        for (auto& l_jR : l_jJ[toms::field::g_pszRequires]) if (l_jR.is_string()) l_oD.m_vRequires.push_back(l_jR.get<std::string>());
+    l_oD.m_jName = l_jJ.contains(toms::field::g_pszName) ? l_jJ[toms::field::g_pszName] : nlohmann::json(l_oD.m_strId);
+    l_oD.m_jDesc = l_jJ.contains(toms::field::g_pszDesc) ? l_jJ[toms::field::g_pszDesc] : nlohmann::json("");
+    if (l_jJ.contains(toms::field::g_pszEffect) && l_jJ[toms::field::g_pszEffect].is_object()) {
+        l_oD.m_iStatAtk = l_jJ[toms::field::g_pszEffect].value(toms::field::g_pszAtk, 0);
+        l_oD.m_iStatDef = l_jJ[toms::field::g_pszEffect].value(toms::field::g_pszDef, 0);
     }
     return l_oD;
 }

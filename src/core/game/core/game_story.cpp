@@ -1,5 +1,8 @@
 // game_story.cpp — narrative systems glue: dialogue nodes/choices/actions, missions,
 // notifications and the game-state query. Split out of game.cpp 2026-09-13.
+#include "text_keys.h"     // toms::text: every line of text by its key
+#include "field_keys.h"    // toms::field: every data field by its constant
+#include "game_names.h"   // toms::state, toms::battle_event, ... (no hard-coded name)
 #include "game_internal.h"
 #include "stair_links.h"   // toms::fillText
 #include "story_actions.h"
@@ -48,7 +51,7 @@ bool Game::f_OpenDialogue(const nlohmann::json& l_jData, DlgMode l_eMode) {
     m_jDlgData = l_jData;
     m_eDlgMode = l_eMode;
     if (l_eMode != DlgMode::Topic && l_eMode != DlgMode::After) m_strDlgEvent.clear();
-    m_bDlgFinishOnClose = l_eMode == DlgMode::Topic && l_jData.is_object() && l_jData.value("finishOnClose", false);
+    m_bDlgFinishOnClose = l_eMode == DlgMode::Topic && l_jData.is_object() && l_jData.value(toms::field::g_pszFinishOnClose, false);
     GameTalkQuery l_oQ([this](const nlohmann::json& l_jC) { return f_Holds(l_jC); }, m_oRun, m_oTalkRng);
     const std::string l_strStart = toms::talk::f_StartNode(l_jData, l_oQ);
     if (l_strStart.empty()) { m_bInDialogue = false; return false; }
@@ -62,25 +65,25 @@ bool Game::f_OpenDialogue(const nlohmann::json& l_jData, DlgMode l_eMode) {
 
 void Game::f_EnterNode(const std::string& l_strNode) {
     m_vDlgChoices.clear();
-    if (!m_jDlgData.contains("nodes") || !m_jDlgData["nodes"].contains(l_strNode)) {
+    if (!m_jDlgData.contains(toms::field::g_pszNodes) || !m_jDlgData[toms::field::g_pszNodes].contains(l_strNode)) {
         f_EndDialogue(); return;   // missing node -> close safely (no nlohmann throw / abort)
     }
-    const auto& l_jN = m_jDlgData["nodes"][l_strNode];
-    if (!l_jN.is_object() || !l_jN.contains("choices")) return;
-    for (auto& l_jC : l_jN["choices"]) {
+    const auto& l_jN = m_jDlgData[toms::field::g_pszNodes][l_strNode];
+    if (!l_jN.is_object() || !l_jN.contains(toms::field::g_pszChoices)) return;
+    for (auto& l_jC : l_jN[toms::field::g_pszChoices]) {
         if (!l_jC.is_object()) continue;
         // Milestone 3: a choice's optional `requires` gates whether it appears at all, evaluated
         // via the shared Condition Evaluator (condition.h).
-        if (l_jC.contains("requires") && !f_Holds(l_jC["requires"])) continue;
+        if (l_jC.contains(toms::field::g_pszRequires) && !f_Holds(l_jC[toms::field::g_pszRequires])) continue;
         DialogueChoice l_oCh;
-        l_oCh.m_strLabel = l_jC.contains("label") ? m_oLocale.f_Field(l_jC["label"]) : "";
-        l_oCh.m_strNext  = l_jC.contains("next") && l_jC["next"].is_string() ? l_jC["next"].get<std::string>() : "";
-        if (l_jC.contains("action")) l_oCh.m_jAction = l_jC["action"];
-        if (l_jC.contains("actions")) l_oCh.m_jActions = l_jC["actions"];
-        l_oCh.m_bFinish = l_jC.value("finish", false);
-        if (l_jC.contains("fire") && l_jC["fire"].is_array())
-            for (const auto& l_jF : l_jC["fire"]) if (l_jF.is_string()) l_oCh.m_vFire.push_back(l_jF.get<std::string>());
-        l_oCh.m_strId = l_jC.value("id", std::string());
+        l_oCh.m_strLabel = l_jC.contains(toms::field::g_pszLabel) ? m_oLocale.f_Field(l_jC[toms::field::g_pszLabel]) : "";
+        l_oCh.m_strNext  = l_jC.contains(toms::field::g_pszNext) && l_jC[toms::field::g_pszNext].is_string() ? l_jC[toms::field::g_pszNext].get<std::string>() : "";
+        if (l_jC.contains(toms::field::g_pszAction)) l_oCh.m_jAction = l_jC[toms::field::g_pszAction];
+        if (l_jC.contains(toms::field::g_pszActions)) l_oCh.m_jActions = l_jC[toms::field::g_pszActions];
+        l_oCh.m_bFinish = l_jC.value(toms::field::g_pszFinish, false);
+        if (l_jC.contains(toms::field::g_pszFire) && l_jC[toms::field::g_pszFire].is_array())
+            for (const auto& l_jF : l_jC[toms::field::g_pszFire]) if (l_jF.is_string()) l_oCh.m_vFire.push_back(l_jF.get<std::string>());
+        l_oCh.m_strId = l_jC.value(toms::field::g_pszId, std::string());
         m_vDlgChoices.push_back(l_oCh);
     }
     m_iDlgSel = 0;
@@ -94,9 +97,9 @@ void Game::f_ChooseDialogue(int l_iIdx) {
     auto l_oCh = m_vDlgChoices[l_iIdx];   // copy: runDialogueAction (e.g. enterBattle) may resize dlgChoices
     toms::f_GlobalEventBus().f_Publish(toms::ChoiceMade{m_strDlgNpc, l_oCh.m_strLabel});
     if (m_eDlgMode == DlgMode::Menu) {   // the topic menu: the action says which line (openTopicMenu)
-        const std::string l_strPick = l_oCh.m_jAction.value("menu", std::string());
+        const std::string l_strPick = l_oCh.m_jAction.value(toms::field::g_pszMenu, std::string());
         const std::string l_strNpc = m_strDlgTalkNpc;
-        if (l_strPick == "topic") f_OpenTopic(l_oCh.m_jAction.value("eventId", std::string()), l_oCh.m_jAction.value("finished", false));
+        if (l_strPick == "topic") f_OpenTopic(l_oCh.m_jAction.value(toms::field::g_pszEventId, std::string()), l_oCh.m_jAction.value(toms::field::g_pszFinished, false));
         else if (l_strPick == "chat") {
             GameTalkQuery l_oQ([this](const nlohmann::json& l_jC) { return f_Holds(l_jC); }, m_oRun, m_oTalkRng);
             const int l_iLine = toms::talk::f_NextChatLine(f_NpcDef(l_strNpc), m_oRun.f_NpcTalk(l_strNpc), l_oQ);
@@ -149,10 +152,10 @@ void Game::f_LoadNpcs() {
         for (auto& [l_strK, l_jV] : l_jVj.items()) {
             if (l_strK.empty() || l_strK[0] == '_' || !l_jV.is_object()) continue;
             toms::VarDecl l_oD;
-            l_oD.m_iDef = toms::f_VarNumber(l_jV.value("default", nlohmann::json(0)));
-            if (l_jV.value("type", std::string()) == "bool") { l_oD.m_iLo = 0; l_oD.m_iHi = 1; }
-            if (l_jV.contains("min") && l_jV["min"].is_number_integer()) l_oD.m_iLo = l_jV["min"].get<int>();
-            if (l_jV.contains("max") && l_jV["max"].is_number_integer()) l_oD.m_iHi = l_jV["max"].get<int>();
+            l_oD.m_iDef = toms::f_VarNumber(l_jV.value(toms::field::g_pszDefault, nlohmann::json(0)));
+            if (l_jV.value(toms::field::g_pszType, std::string()) == "bool") { l_oD.m_iLo = 0; l_oD.m_iHi = 1; }
+            if (l_jV.contains(toms::field::g_pszMin) && l_jV[toms::field::g_pszMin].is_number_integer()) l_oD.m_iLo = l_jV[toms::field::g_pszMin].get<int>();
+            if (l_jV.contains(toms::field::g_pszMax) && l_jV[toms::field::g_pszMax].is_number_integer()) l_oD.m_iHi = l_jV[toms::field::g_pszMax].get<int>();
             l_mapDecls[l_strK] = l_oD;
         }
     m_oRun.f_SetVarDecls(l_mapDecls);
@@ -211,9 +214,9 @@ void Game::f_OpenTopic(const std::string& l_strEventId, bool l_bFinished) {
         // No dialogue file: the event's text as one page; OK finishes it (an after-view just closes).
         std::string l_strText = m_oLocale.f_Tr(l_itDef->second.m_strTextKey);
         if (l_strText == l_itDef->second.m_strTextKey) l_strText = l_strEventId;
-        nlohmann::json l_jOk = {{"label", m_oLocale.f_Tr("talk.ok")}, {"next", nullptr}};
-        if (!l_bFinished) l_jOk["finish"] = true;
-        l_jData = {{"start", "root"}, {"nodes", {{"root", {{"text", l_strText}, {"choices", nlohmann::json::array({l_jOk})}}}}}};
+        nlohmann::json l_jOk = {{toms::field::g_pszLabel, m_oLocale.f_Tr(toms::text::g_pszTalkOk)}, {toms::field::g_pszNext, nullptr}};
+        if (!l_bFinished) l_jOk[toms::field::g_pszFinish] = true;
+        l_jData = {{toms::field::g_pszStart, "root"}, {toms::field::g_pszNodes, {{toms::field::g_pszRoot, {{toms::field::g_pszText, l_strText}, {toms::field::g_pszChoices, nlohmann::json::array({l_jOk})}}}}}};
     }
     m_strDlgNpc = l_strFile.empty() ? l_strEventId : l_strFile;
     if (!f_OpenDialogue(l_jData, l_bFinished ? DlgMode::After : DlgMode::Topic)) f_EndDialogue();
@@ -228,13 +231,13 @@ void Game::f_OpenTopicMenu(const std::string& l_strNpcId, const std::vector<toms
         std::string l_strTitle = l_itD == m_mapEventDefs.end() ? l_oM.m_strEventId : m_oLocale.f_Tr(l_itD->second.m_strTitleKey);
         if (l_itD != m_mapEventDefs.end() && l_strTitle == l_itD->second.m_strTitleKey) l_strTitle = l_oM.m_strEventId;
         const std::string l_strMark = l_oM.m_bFinished ? std::string("\xE2\x9C\x93 ") : std::string();   // a check mark: done
-        l_jChoices.push_back({{"label", l_strMark + l_strTitle}, {"next", nullptr},
-                           {"action", {{"menu", "topic"}, {"eventId", l_oM.m_strEventId}, {"finished", l_oM.m_bFinished}}}});
+        l_jChoices.push_back({{toms::field::g_pszLabel, l_strMark + l_strTitle}, {toms::field::g_pszNext, nullptr},
+                           {toms::field::g_pszAction, {{toms::field::g_pszMenu, "topic"}, {toms::field::g_pszEventId, l_oM.m_strEventId}, {toms::field::g_pszFinished, l_oM.m_bFinished}}}});
     }
-    l_jChoices.push_back({{"label", m_oLocale.f_Tr("talk.just_chat")}, {"next", nullptr}, {"action", {{"menu", "chat"}}}});
-    l_jChoices.push_back({{"label", m_oLocale.f_Tr("talk.leave")}, {"next", nullptr}, {"action", {{"menu", "leave"}}}});
+    l_jChoices.push_back({{toms::field::g_pszLabel, m_oLocale.f_Tr(toms::text::g_pszTalkJustChat)}, {toms::field::g_pszNext, nullptr}, {toms::field::g_pszAction, {{toms::field::g_pszMenu, "chat"}}}});
+    l_jChoices.push_back({{toms::field::g_pszLabel, m_oLocale.f_Tr(toms::text::g_pszTalkLeave)}, {toms::field::g_pszNext, nullptr}, {toms::field::g_pszAction, {{toms::field::g_pszMenu, "leave"}}}});
     const std::string l_strGreeting = l_oNpc.m_strGreetingKey.empty() ? std::string() : m_oLocale.f_Tr(l_oNpc.m_strGreetingKey);
-    nlohmann::json l_jData = {{"start", "menu"}, {"nodes", {{"menu", {{"text", l_strGreeting}, {"choices", l_jChoices}}}}}};
+    nlohmann::json l_jData = {{toms::field::g_pszStart, "menu"}, {toms::field::g_pszNodes, {{toms::field::g_pszMenu, {{toms::field::g_pszText, l_strGreeting}, {toms::field::g_pszChoices, l_jChoices}}}}}};
     m_strDlgNpc = l_strNpcId;
     f_OpenDialogue(l_jData, DlgMode::Menu);
 }
@@ -271,7 +274,7 @@ void Game::f_WakeEvent(const std::string& l_strEventId, int l_iDepth) {
     if (l_strEventId.empty() || (m_oRun.f_EventFinished(l_strEventId) && !f_CanRepeat(l_strEventId))) return;
     m_oRun.f_MarkEventStarted(l_strEventId);
     auto l_itDef = m_mapEventDefs.find(l_strEventId);
-    if (l_itDef == m_mapEventDefs.end() || l_itDef->second.m_strTrigger != "chain" || l_iDepth > 32) return;   // 32: a loop in the data
+    if (l_itDef == m_mapEventDefs.end() || l_itDef->second.m_strTrigger != toms::event_trigger::g_pszChain || l_iDepth > 32) return;   // 32: a loop in the data
     if (!f_Holds(l_itDef->second.m_jRequires)) return;
     f_NoticeEventTitle(l_strEventId);   // no tile, no NPC: the player sees its title (decision, 2026-10-16)
     f_CompleteEvent(l_strEventId, l_iDepth + 1);
@@ -281,7 +284,7 @@ void Game::f_FireLinkedEvents(const Entity& l_oE) {
     for (const std::string& l_strId : l_oE.m_vLinks) {
         auto l_itDef = m_mapEventDefs.find(l_strId);
         if (m_oRun.f_EventFinished(l_strId) && !f_CanRepeat(l_strId)) continue;
-        if (l_itDef != m_mapEventDefs.end() && l_itDef->second.m_strTrigger == "talk") { m_oRun.f_MarkEventStarted(l_strId); continue; }   // a topic
+        if (l_itDef != m_mapEventDefs.end() && l_itDef->second.m_strTrigger == toms::event_trigger::g_pszTalk) { m_oRun.f_MarkEventStarted(l_strId); continue; }   // a topic
         if (l_itDef != m_mapEventDefs.end() && !f_Holds(l_itDef->second.m_jRequires)) { m_oRun.f_MarkEventStarted(l_strId); continue; }
         f_NoticeEventTitle(l_strId);
         f_CompleteEvent(l_strId);
@@ -294,7 +297,7 @@ void Game::f_VarChanged(const std::string& l_strVar) {
     ++m_iVarChangeDepth;
     std::vector<std::string> l_vFire;
     for (const auto& [l_strId, l_oD] : m_mapEventDefs)
-        if (l_oD.m_strTrigger == "varChanged" && l_oD.m_strTriggerVar == l_strVar) l_vFire.push_back(l_strId);
+        if (l_oD.m_strTrigger == toms::event_trigger::g_pszVarChanged && l_oD.m_strTriggerVar == l_strVar) l_vFire.push_back(l_strId);
     for (const std::string& l_strId : l_vFire) {
         if (m_oRun.f_EventFinished(l_strId) && !f_CanRepeat(l_strId)) continue;
         if (!f_Holds(m_mapEventDefs[l_strId].m_jRequires)) continue;
@@ -356,7 +359,7 @@ void Game::f_RunStoryActions(const nlohmann::json& l_jActions) {
             for (int l_iI = 0; l_iI < l_iCount; ++l_iI) m_oG.f_ReceiveItem(l_strItem);
             std::string l_strName = m_oG.f_ItemName(l_strItem);
             if (l_iCount > 1) l_strName += " x" + std::to_string(l_iCount);
-            m_oG.m_vNotifications.push_back({toms::f_FillText(m_oG.m_oLocale.f_Tr("event.gotItem"), {{"item", l_strName}}), 3800});
+            m_oG.m_vNotifications.push_back({toms::f_FillText(m_oG.m_oLocale.f_Tr(toms::text::g_pszEventGotItem), {{toms::field::g_pszItem, l_strName}}), 3800});
             return true;
         }
         bool f_Take(const std::string& l_strItem, int l_iCount) override {
@@ -365,7 +368,7 @@ void Game::f_RunStoryActions(const nlohmann::json& l_jActions) {
             if (l_pKey) { if (*l_pKey < l_iCount) return false; *l_pKey -= l_iCount; return true; }
             if ((int)std::count(l_oP.m_vInv.begin(), l_oP.m_vInv.end(), l_strItem) < l_iCount) return false;
             for (int l_iI = 0; l_iI < l_iCount; ++l_iI) l_oP.m_vInv.erase(std::find(l_oP.m_vInv.begin(), l_oP.m_vInv.end(), l_strItem));
-            m_oG.m_vNotifications.push_back({toms::f_FillText(m_oG.m_oLocale.f_Tr("event.gaveItem"), {{"item", m_oG.f_ItemName(l_strItem)}}), 3200});
+            m_oG.m_vNotifications.push_back({toms::f_FillText(m_oG.m_oLocale.f_Tr(toms::text::g_pszEventGaveItem), {{toms::field::g_pszItem, m_oG.f_ItemName(l_strItem)}}), 3200});
             return true;
         }
         void f_SetVar(const std::string& l_strV, int l_iValue) override {
@@ -378,8 +381,8 @@ void Game::f_RunStoryActions(const nlohmann::json& l_jActions) {
             m_oG.m_oRun.f_AddVar(l_strV, l_iDelta);
             if (m_oG.m_oRun.f_Var(l_strV) != l_iBefore) m_oG.f_VarChanged(l_strV);
         }
-        void f_SetFlag(const std::string& l_strF) override { if (!l_strF.empty()) { m_oG.m_oRun.f_SetFlag(l_strF, true); m_oG.f_MissionProgress("flag", l_strF); } }
-        void f_SetStoryFlag(const std::string& l_strF) override { if (!l_strF.empty()) { toms::f_SetStoryFlag(m_oG.m_oMeta, l_strF); m_oG.f_MissionProgress("flag", l_strF); } }
+        void f_SetFlag(const std::string& l_strF) override { if (!l_strF.empty()) { m_oG.m_oRun.f_SetFlag(l_strF, true); m_oG.f_MissionProgress(toms::mission::g_pszFlag, l_strF); } }
+        void f_SetStoryFlag(const std::string& l_strF) override { if (!l_strF.empty()) { toms::f_SetStoryFlag(m_oG.m_oMeta, l_strF); m_oG.f_MissionProgress(toms::mission::g_pszFlag, l_strF); } }
         void f_AddCounter(const std::string& l_strC, int l_iDelta) override { if (!l_strC.empty() && l_iDelta != 0) m_oG.m_oRun.f_AddCounter(l_strC, l_iDelta); }
         void f_FireEvent(const std::string& l_strId) override { m_oG.f_WakeEvent(l_strId); }
         void f_Message(const std::string& l_strKey) override { m_oG.m_vNotifications.push_back({m_oG.m_oLocale.f_Tr(l_strKey), 3800}); }
@@ -400,7 +403,7 @@ void Game::f_OpenMiniGame(const std::string& l_strId) {
     const toms::MiniGameDef* l_pDef = m_oMiniGames.f_Find(l_strId);
     if (!l_pDef) { std::fprintf(stderr, "[minigame] no \"%s\" in data/minigames.json\n", l_strId.c_str()); return; }
     if (l_pDef->m_iLimit > 0 && m_oRun.f_Counter("minigame." + l_strId) >= l_pDef->m_iLimit) {   // played out for this run
-        m_vNotifications.push_back({m_oLocale.f_Tr("minigame.used_up"), 3000});
+        m_vNotifications.push_back({m_oLocale.f_Tr(toms::text::g_pszMinigameUsedUp), 3000});
         return;
     }
     m_oMiniGame = MiniGameState{};
@@ -465,7 +468,7 @@ void Game::f_TryWeapon(const std::string& l_strWeaponId) {
     m_oArena.m_jOverrides = m_oTutorial.m_jOverrides;
     f_ArenaNextFight();
     f_TutorialGoTo(0);
-    m_oCs.m_strLog = m_oLocale.f_Tr("trial.fight_log");
+    m_oCs.m_strLog = m_oLocale.f_Tr(toms::text::g_pszTrialFightLog);
 }
 
 void Game::f_EndWeaponTrialFight() {
@@ -483,29 +486,29 @@ void Game::f_ChooseWeapon() {
     m_bNewsGear = false;
     m_oRun.f_SetFlag("start.weapon." + l_strChosen);
     f_EndDialogue();
-    m_vNotifications.push_back({f_TrParam(m_oLocale.f_Tr("trial.chosen"), "name", f_ItemName(l_strChosen)), 3500});
+    m_vNotifications.push_back({f_TrParam(m_oLocale.f_Tr(toms::text::g_pszTrialChosen), toms::field::g_pszName, f_ItemName(l_strChosen)), 3500});
     f_MarkProgressDirty();
 }
 
 void Game::f_RunDialogueAction(const nlohmann::json& l_jAction) {
     if (!l_jAction.is_object()) return;
-    std::string l_strType = l_jAction.value("type", std::string());
-    if (l_strType == "tryWeapon") { f_TryWeapon(l_jAction.value("weapon", std::string())); return; }   // docs/gameplay/07 phase 3
+    std::string l_strType = l_jAction.value(toms::field::g_pszType, std::string());
+    if (l_strType == "tryWeapon") { f_TryWeapon(l_jAction.value(toms::field::g_pszWeapon, std::string())); return; }   // docs/gameplay/07 phase 3
     if (l_strType == "chooseWeapon") { f_ChooseWeapon(); return; }
-    if (l_strType == "miniGame") { f_EndDialogue(); f_OpenMiniGame(l_jAction.value("id", std::string())); return; }   // docs/gameplay/07 phase 6
+    if (l_strType == "miniGame") { f_EndDialogue(); f_OpenMiniGame(l_jAction.value(toms::field::g_pszId, std::string())); return; }   // docs/gameplay/07 phase 6
     // the story revamp's verbs (docs/gameplay/23 §5, §7): a rescue, a scene, the village's services
-    if (l_strType == "rescue") { f_RescueNpc(l_jAction.value("npc", std::string()), l_jAction.value("text", std::string("village.rescued"))); return; }
-    if (l_strType == "startDialogue") {   // a story scene: a floor event (or a talk) opens a dialogue file
-        const std::string l_strId = l_jAction.value("dialogue", std::string());
+    if (l_strType == toms::story_action::g_pszRescue) { f_RescueNpc(l_jAction.value(toms::field::g_pszNpc, std::string()), l_jAction.value(toms::field::g_pszText, std::string(toms::text::g_pszVillageRescued))); return; }
+    if (l_strType == toms::story_action::g_pszStartDialogue) {   // a story scene: a floor event (or a talk) opens a dialogue file
+        const std::string l_strId = l_jAction.value(toms::field::g_pszDialogue, std::string());
         if (!l_strId.empty() && f_ReadDialogue(l_strId).is_object()) { f_StartDialogue(l_strId); m_bDlgReplaced = true; }
         return;
     }
-    if (l_strType == "openStore") { f_EndDialogue(); f_OpenStore(); return; }   // a villager's shop (Pip's)
+    if (l_strType == toms::story_action::g_pszOpenStore) { f_EndDialogue(); f_OpenStore(); return; }   // a villager's shop (Pip's)
     if (l_strType == "ending") {   // the story's end (docs/gameplay/23 §6): "id" one ending, or "among": the first whose conditions hold
         std::vector<std::string> l_vAmong;
-        if (l_jAction.contains("among") && l_jAction["among"].is_array())
-            for (const auto& l_jId : l_jAction["among"]) if (l_jId.is_string()) l_vAmong.push_back(l_jId.get<std::string>());
-        std::string l_strId = l_jAction.value("id", std::string());
+        if (l_jAction.contains(toms::field::g_pszAmong) && l_jAction[toms::field::g_pszAmong].is_array())
+            for (const auto& l_jId : l_jAction[toms::field::g_pszAmong]) if (l_jId.is_string()) l_vAmong.push_back(l_jId.get<std::string>());
+        std::string l_strId = l_jAction.value(toms::field::g_pszId, std::string());
         if (l_strId.empty() && !l_vAmong.empty()) {
             GameConditionContext l_oCtx(m_oPl, m_oMeta, m_mapMissionTrackers, m_oRun, m_oEquipped);
             const toms::EndingDefinition* l_pE = toms::f_CheckNamedEndings(m_oEndingsTable, l_vAmong, l_oCtx);
@@ -516,82 +519,82 @@ void Game::f_RunDialogueAction(const nlohmann::json& l_jAction) {
         f_TriggerEnding(l_strId);
         return;
     }
-    if (l_strType == "heal") {   // a villager's healing: full HP for its cost in gold
-        const int l_iCost = std::max(0, l_jAction.value("cost", 0));
-        if (m_oPl.m_iGold < l_iCost) { m_vNotifications.push_back({m_oLocale.f_Tr("village.no_gold"), 3200}); return; }
+    if (l_strType == toms::story_action::g_pszHeal) {   // a villager's healing: full HP for its cost in gold
+        const int l_iCost = std::max(0, l_jAction.value(toms::field::g_pszCost, 0));
+        if (m_oPl.m_iGold < l_iCost) { m_vNotifications.push_back({m_oLocale.f_Tr(toms::text::g_pszVillageNoGold), 3200}); return; }
         m_oPl.m_iGold -= l_iCost;
         m_oPl.m_iHp = f_EffectiveMaxHp();
-        m_vNotifications.push_back({m_oLocale.f_Tr("village.healed"), 3200});
+        m_vNotifications.push_back({m_oLocale.f_Tr(toms::text::g_pszVillageHealed), 3200});
         f_MarkProgressDirty();
         return;
     }
-    if (l_strType == "give") {
-        std::string l_strItemId = l_jAction.value("itemId", std::string());
+    if (l_strType == toms::story_action::g_pszGive) {
+        std::string l_strItemId = l_jAction.value(toms::field::g_pszItemId, std::string());
         if (!l_strItemId.empty()) f_ReceiveItem(l_strItemId);
-    } else if (l_strType == "setStoryFlag") {
-        std::string l_strFlag = l_jAction.value("flag", std::string());
-        if (!l_strFlag.empty()) { toms::f_SetStoryFlag(m_oMeta, l_strFlag); f_MissionProgress("flag", l_strFlag); }
-    } else if (l_strType == "enterBattle") {
+    } else if (l_strType == toms::story_action::g_pszSetStoryFlag) {
+        std::string l_strFlag = l_jAction.value(toms::field::g_pszFlag, std::string());
+        if (!l_strFlag.empty()) { toms::f_SetStoryFlag(m_oMeta, l_strFlag); f_MissionProgress(toms::mission::g_pszFlag, l_strFlag); }
+    } else if (l_strType == toms::story_action::g_pszEnterBattle) {
         // Only meaningful after a dialogue_gate encounter (movePlayer) stashed an enemy.
         if (m_bHasPendingEncounter) {
             m_bInDialogue = false;
             m_bHasPendingEncounter = false;
             f_StartCombat(m_oPendingEncounterEnemy, f_PartyOf(m_oPendingEncounterEnemy));
         }
-    } else if (l_strType == "startMission") {
-        std::string l_strMissionId = l_jAction.value("missionId", std::string());
+    } else if (l_strType == toms::story_action::g_pszStartMission) {
+        std::string l_strMissionId = l_jAction.value(toms::field::g_pszMissionId, std::string());
         if (!l_strMissionId.empty()) f_StartMission(l_strMissionId);
-    } else if (l_strType == "claimMission") {
-        std::string l_strMissionId = l_jAction.value("missionId", std::string());
+    } else if (l_strType == toms::story_action::g_pszClaimMission) {
+        std::string l_strMissionId = l_jAction.value(toms::field::g_pszMissionId, std::string());
         if (!l_strMissionId.empty()) f_ClaimMission(l_strMissionId);
-    } else if (l_strType == "makeChoice") {
+    } else if (l_strType == toms::story_action::g_pszMakeChoice) {
         // S3: record a main-line decision (docs/story/STORY_DATA_SCHEMA.md section 4.1). Main-line choices
         // are irreversible, so the first answer sticks even if the node is reached again.
-        std::string l_strChoiceId = l_jAction.value("choiceId", std::string());
-        std::string l_strOptionId = l_jAction.value("optionId", std::string());
+        std::string l_strChoiceId = l_jAction.value(toms::field::g_pszChoiceId, std::string());
+        std::string l_strOptionId = l_jAction.value(toms::field::g_pszOptionId, std::string());
         if (!l_strChoiceId.empty() && !l_strOptionId.empty()) {
-            m_oRun.f_MakeChoice(l_strChoiceId, l_strOptionId, l_jAction.value("reversible", false));
+            m_oRun.f_MakeChoice(l_strChoiceId, l_strOptionId, l_jAction.value(toms::field::g_pszReversible, false));
             // The option's effects travel with the action: the chapter file is the authority
             // (section 4.1's option entry) and the dialogue node mirrors it, the same way every other
             // data-driven effect in this project is declared where it is used.
-            if (l_jAction.contains("setFlags") && l_jAction["setFlags"].is_array())
-                for (auto& l_jF : l_jAction["setFlags"])
+            if (l_jAction.contains(toms::field::g_pszSetFlags) && l_jAction[toms::field::g_pszSetFlags].is_array())
+                for (auto& l_jF : l_jAction[toms::field::g_pszSetFlags])
                     if (l_jF.is_string()) m_oRun.f_SetFlag(l_jF.get<std::string>());
-            if (l_jAction.contains("counters") && l_jAction["counters"].is_object())
-                for (auto& [l_strName, l_jDelta] : l_jAction["counters"].items())
+            if (l_jAction.contains(toms::field::g_pszCounters) && l_jAction[toms::field::g_pszCounters].is_object())
+                for (auto& [l_strName, l_jDelta] : l_jAction[toms::field::g_pszCounters].items())
                     if (l_jDelta.is_number_integer()) m_oRun.f_AddCounter(l_strName, l_jDelta.get<int>());
             // M9: a main-line choice that's also a side story's payoff (e.g. ss_04's return/study
             // split) can bundle the skill grant and the side-story completion right here, reusing
             // the two verbs below instead of inventing a second action per dialogue choice.
-            if (l_jAction.contains("grantSkill") && l_jAction["grantSkill"].is_string())
-                f_RunDialogueAction({{"type", "unlockSkill"}, {"skillId", l_jAction["grantSkill"]}});
-            if (l_jAction.contains("completeSideStory") && l_jAction["completeSideStory"].is_string())
-                f_RunDialogueAction({{"type", "setSideStoryState"},
-                                    {"sideStoryId", l_jAction["completeSideStory"]}, {"state", "completed"}});
+            if (l_jAction.contains(toms::field::g_pszGrantSkill) && l_jAction[toms::field::g_pszGrantSkill].is_string())
+                f_RunDialogueAction({{toms::field::g_pszType, toms::story_action::g_pszUnlockSkill}, {toms::field::g_pszSkillId, l_jAction[toms::field::g_pszGrantSkill]}});
+            if (l_jAction.contains(toms::field::g_pszCompleteSideStory) && l_jAction[toms::field::g_pszCompleteSideStory].is_string())
+                f_RunDialogueAction({{toms::field::g_pszType, toms::story_action::g_pszSetSideStoryState},
+                                    {toms::field::g_pszSideStoryId, l_jAction[toms::field::g_pszCompleteSideStory]}, {toms::field::g_pszState, toms::mission::g_pszCompleted}});
         }
-    } else if (l_strType == "addCounter") {
+    } else if (l_strType == toms::story_action::g_pszAddCounter) {
         // S3: the three accumulators (insight / resolve / humanity). Clamped by RunStoryState to the
         // range declared in data/story/counters.json.
-        std::string l_strName = l_jAction.value("counter", std::string());
-        int l_iDelta = l_jAction.value("delta", 0);
+        std::string l_strName = l_jAction.value(toms::field::g_pszCounter, std::string());
+        int l_iDelta = l_jAction.value(toms::field::g_pszDelta, 0);
         if (!l_strName.empty() && l_iDelta != 0) m_oRun.f_AddCounter(l_strName, l_iDelta);
-    } else if (l_strType == "unlockSkill") {
+    } else if (l_strType == toms::story_action::g_pszUnlockSkill) {
         // M9: a dialogue-granted skill (e.g. a side story's reward) -- same free-grant path as
         // Game::applyChapterGrants' own "skills" loop, just reachable from a choice instead of a
         // chapter's grants block.
-        std::string l_strSkillId = l_jAction.value("skillId", std::string());
+        std::string l_strSkillId = l_jAction.value(toms::field::g_pszSkillId, std::string());
         if (!l_strSkillId.empty() && !m_oRun.f_HasSkill(l_strSkillId)) {
             auto l_itIt = m_mapSkillDefs.find(l_strSkillId);
             int l_iCost = (l_itIt != m_mapSkillDefs.end()) ? l_itIt->second.m_iCost : 0;
             m_oRun.f_UnlockSkill(l_strSkillId, l_iCost);
             std::string l_strName = l_itIt != m_mapSkillDefs.end() ? m_oLocale.f_Field(l_itIt->second.m_jName) : l_strSkillId;
-            f_PushNotification(m_oLocale.f_Tr("skill.unlocked_prefix") + l_strName);
+            f_PushNotification(m_oLocale.f_Tr(toms::text::g_pszSkillUnlockedPrefix) + l_strName);
         }
-    } else if (l_strType == "setSideStoryState") {
+    } else if (l_strType == toms::story_action::g_pszSetSideStoryState) {
         // M9: side-story progress was tracked in RunStoryState (S3) but nothing ever wrote to it
         // until now -- a dialogue choice is the natural place a side story actually resolves.
-        std::string l_strSideStoryId = l_jAction.value("sideStoryId", std::string());
-        std::string l_strState = l_jAction.value("state", std::string());
+        std::string l_strSideStoryId = l_jAction.value(toms::field::g_pszSideStoryId, std::string());
+        std::string l_strState = l_jAction.value(toms::field::g_pszState, std::string());
         if (!l_strSideStoryId.empty() && !l_strState.empty()) m_oRun.f_SetSideStoryState(l_strSideStoryId, l_strState);
     }
 }
@@ -603,18 +606,18 @@ void Game::f_ApplyChapterGrants(const std::string& l_strChapterId) {
     std::string l_strGrantedFlag = "_chapter_granted." + l_strChapterId;
     if (m_oRun.f_Flag(l_strGrantedFlag)) return;   // idempotent: revisiting ch_01's floors must not re-grant
     nlohmann::json l_jCh = f_ReadJsonFile(f_PathFor(toms::pattern::g_pszChapter, l_strChapterId));
-    if (!l_jCh.is_object() || !l_jCh.contains("grants") || !l_jCh["grants"].is_object()) {
+    if (!l_jCh.is_object() || !l_jCh.contains(toms::field::g_pszGrants) || !l_jCh[toms::field::g_pszGrants].is_object()) {
         // No chapter file yet (ch_04+, per S3's own scope) -- mark it granted anyway so the moment
         // that content DOES land, its grants apply from a fresh chapter entry, not retroactively
         // mid-chapter the session it happens to be authored.
         m_oRun.f_SetFlag(l_strGrantedFlag);
         return;
     }
-    auto& l_jGrants = l_jCh["grants"];
-    if (l_jGrants.contains("skillPoints") && l_jGrants["skillPoints"].is_number_integer())
-        m_oRun.f_AddSkillPoints(l_jGrants["skillPoints"].get<int>());
-    if (l_jGrants.contains("skills") && l_jGrants["skills"].is_array()) {
-        for (auto& l_jS : l_jGrants["skills"]) {
+    auto& l_jGrants = l_jCh[toms::field::g_pszGrants];
+    if (l_jGrants.contains(toms::field::g_pszSkillPoints) && l_jGrants[toms::field::g_pszSkillPoints].is_number_integer())
+        m_oRun.f_AddSkillPoints(l_jGrants[toms::field::g_pszSkillPoints].get<int>());
+    if (l_jGrants.contains(toms::field::g_pszSkills) && l_jGrants[toms::field::g_pszSkills].is_array()) {
+        for (auto& l_jS : l_jGrants[toms::field::g_pszSkills]) {
             if (!l_jS.is_string()) continue;
             std::string l_strSkillId = l_jS.get<std::string>();
             auto l_itIt = m_mapSkillDefs.find(l_strSkillId);
@@ -622,7 +625,7 @@ void Game::f_ApplyChapterGrants(const std::string& l_strChapterId) {
             if (!m_oRun.f_HasSkill(l_strSkillId)) {
                 m_oRun.f_UnlockSkill(l_strSkillId, l_iCost);
                 std::string l_strName = l_itIt != m_mapSkillDefs.end() ? m_oLocale.f_Field(l_itIt->second.m_jName) : l_strSkillId;
-                f_PushNotification(m_oLocale.f_Tr("skill.unlocked_prefix") + l_strName);
+                f_PushNotification(m_oLocale.f_Tr(toms::text::g_pszSkillUnlockedPrefix) + l_strName);
             }
         }
     }
@@ -631,8 +634,8 @@ void Game::f_ApplyChapterGrants(const std::string& l_strChapterId) {
     // matching the shape section 8's rebirth table already implies for it (a small, append-mostly
     // list), and applyChapterGrants can't assume it will only ever run once per recipe across a
     // whole *cycle* the way run flags can.
-    if (l_jGrants.contains("forgeRecipes") && l_jGrants["forgeRecipes"].is_array()) {
-        for (auto& l_jR : l_jGrants["forgeRecipes"]) {
+    if (l_jGrants.contains(toms::field::g_pszForgeRecipes) && l_jGrants[toms::field::g_pszForgeRecipes].is_array()) {
+        for (auto& l_jR : l_jGrants[toms::field::g_pszForgeRecipes]) {
             if (!l_jR.is_string()) continue;
             std::string l_strRecipeId = l_jR.get<std::string>();
             if (std::find(m_oMeta.m_vForgeRecipesKnown.begin(), m_oMeta.m_vForgeRecipesKnown.end(), l_strRecipeId)
@@ -640,14 +643,14 @@ void Game::f_ApplyChapterGrants(const std::string& l_strChapterId) {
                 m_oMeta.m_vForgeRecipesKnown.push_back(l_strRecipeId);
                 auto l_itFit = m_mapForgeDefs.find(l_strRecipeId);
                 std::string l_strName = l_itFit != m_mapForgeDefs.end() ? m_oLocale.f_Field(l_itFit->second.m_jName) : l_strRecipeId;
-                f_PushNotification(m_oLocale.f_Tr("forge.recipe_learned_prefix") + l_strName);
+                f_PushNotification(m_oLocale.f_Tr(toms::text::g_pszForgeRecipeLearnedPrefix) + l_strName);
             }
         }
     }
     // hub/unlocks: recorded as run flags so a later phase (the hub NPC, the forge, gated dialogue)
     // can read them the moment it exists, same "wire the data even if nothing consumes it yet"
     // pattern this project used for mission/equipment content before their own UIs landed.
-    for (const char* l_pszKey : {"hub", "unlocks"}) {
+    for (const char* l_pszKey : {toms::field::g_pszHub, toms::field::g_pszUnlocks}) {
         if (l_jGrants.contains(l_pszKey) && l_jGrants[l_pszKey].is_array())
             for (auto& l_jU : l_jGrants[l_pszKey]) if (l_jU.is_string()) m_oRun.f_SetFlag(l_jU.get<std::string>());
     }
@@ -665,7 +668,7 @@ bool Game::f_TryUnlockSkill(const std::string& l_strSkillId) {
 }
 
 std::vector<std::string> Game::f_SkillMenuOrder() const {
-    static const std::map<std::string, int> l_mapLineageOrder = { {"yinqi", 0}, {"yuqi", 1}, {"faqi", 2} };
+    static const std::map<std::string, int> l_mapLineageOrder = { {toms::field::g_pszYinqi, 0}, {toms::field::g_pszYuqi, 1}, {toms::field::g_pszFaqi, 2} };
     std::vector<std::string> l_vIds;
     l_vIds.reserve(m_mapSkillDefs.size());
     for (auto& [l_strId, l_oDef] : m_mapSkillDefs) l_vIds.push_back(l_strId);
@@ -734,7 +737,7 @@ bool Game::f_ActivateHubLocation(const std::string& l_strLocationId) {
     auto l_fnHasFlag = [this](const std::string& l_strF) { return m_oRun.f_Flag(l_strF); };
     if (!toms::f_HubLocationUnlocked(m_mapHubDefs, l_fnHasFlag, l_strLocationId)) return false;
     const toms::HubLocationDefinition& l_oDef = m_mapHubDefs.at(l_strLocationId);
-    if (l_oDef.m_strActionKind == "talk" && !l_oDef.m_strActionNpc.empty()) {
+    if (l_oDef.m_strActionKind == toms::hub_action::g_pszTalk && !l_oDef.m_strActionNpc.empty()) {
         f_CloseInGameMenu();       // the dialogue UI and the pause menu were never designed to overlap
         f_StartDialogue(l_oDef.m_strActionNpc);
         return true;
@@ -768,12 +771,12 @@ void Game::f_StartMission(const std::string& l_strId) {
     if (l_oT.m_strMissionId.empty()) l_oT.m_strMissionId = l_strId;
     if (l_oT.m_eState == toms::MissionState::Completed || l_oT.m_eState == toms::MissionState::Claimed) return;   // (asked again: no restart)
     l_oT.m_eState = toms::MissionState::Active;
-    m_vNotifications.push_back({toms::f_FillText(m_oLocale.f_Tr("mission.started"), {{"title", f_MissionTitle(l_strId)}}), 3200});
+    m_vNotifications.push_back({toms::f_FillText(m_oLocale.f_Tr(toms::text::g_pszMissionStarted), {{toms::field::g_pszTitle, f_MissionTitle(l_strId)}}), 3200});
     // a "flag" quest whose flag is already set (the villager already home) is done at once (23 §7)
     auto l_itDef = m_mapMissionDefs.find(l_strId);
-    if (l_itDef != m_mapMissionDefs.end() && l_itDef->second.m_oObjective.m_strType == "flag" &&
+    if (l_itDef != m_mapMissionDefs.end() && l_itDef->second.m_oObjective.m_strType == toms::mission::g_pszFlag &&
         (m_oRun.f_Flag(l_itDef->second.m_oObjective.m_strTargetId) || toms::f_HasStoryFlag(m_oMeta, l_itDef->second.m_oObjective.m_strTargetId)))
-        f_MissionProgress("flag", l_itDef->second.m_oObjective.m_strTargetId);
+        f_MissionProgress(toms::mission::g_pszFlag, l_itDef->second.m_oObjective.m_strTargetId);
     f_MarkProgressDirty();
 }
 
@@ -784,14 +787,14 @@ void Game::f_MissionProgress(const std::string& l_strType, const std::string& l_
         const toms::MissionState l_eBefore = l_oTracker.m_eState;
         toms::f_ApplyProgressEvent(l_oTracker, l_itIt->second, l_strType, l_strTarget);
         if (l_eBefore != toms::MissionState::Completed && l_oTracker.m_eState == toms::MissionState::Completed) {   // done: go back to its giver
-            m_vNotifications.push_back({toms::f_FillText(m_oLocale.f_Tr("mission.ready"), {{"title", f_MissionTitle(l_strId)}}), 4200});
+            m_vNotifications.push_back({toms::f_FillText(m_oLocale.f_Tr(toms::text::g_pszMissionReady), {{toms::field::g_pszTitle, f_MissionTitle(l_strId)}}), 4200});
             f_MarkProgressDirty();
         }
     }
 }
 
 std::string Game::f_MissionTitle(const std::string& l_strId) const {
-    const std::string l_strKey = "mission." + l_strId + ".title";
+    const std::string l_strKey = toms::key_prefix::g_pszMission + l_strId + ".title";
     return m_oLocale.f_Has(l_strKey) ? m_oLocale.f_Tr(l_strKey) : l_strId;
 }
 
@@ -808,8 +811,8 @@ void Game::f_RescueNpc(const std::string& l_strNpc, const std::string& l_strText
     }
     const std::string l_strKey = "npc." + l_strNpc + ".name";
     const std::string l_strName = m_oLocale.f_Has(l_strKey) ? m_oLocale.f_Tr(l_strKey) : l_strNpc;
-    m_vNotifications.push_back({toms::f_FillText(m_oLocale.f_Tr(l_strTextKey.empty() ? std::string("village.rescued") : l_strTextKey), {{"name", l_strName}}), 4200});
-    f_MissionProgress("flag", "home." + l_strNpc);
+    m_vNotifications.push_back({toms::f_FillText(m_oLocale.f_Tr(l_strTextKey.empty() ? std::string(toms::text::g_pszVillageRescued) : l_strTextKey), {{toms::field::g_pszName, l_strName}}), 4200});
+    f_MissionProgress(toms::mission::g_pszFlag, "home." + l_strNpc);
     f_MarkProgressDirty();
 }
 
@@ -831,7 +834,7 @@ void Game::f_ClaimMission(const std::string& l_strId) {
         f_GainExp(l_oDef.m_iRewardExp);
     }
     l_itTrackerIt->second.m_eState = toms::MissionState::Claimed;
-    f_PushNotification(toms::f_FillText(m_oLocale.f_Tr("mission.claimed"), {{"title", f_MissionTitle(l_strId)}}));
+    f_PushNotification(toms::f_FillText(m_oLocale.f_Tr(toms::text::g_pszMissionClaimed), {{toms::field::g_pszTitle, f_MissionTitle(l_strId)}}));
     f_MarkProgressDirty();
 }
 
@@ -851,7 +854,7 @@ void Game::f_RollDailyMissions() {
         toms::MissionState l_eBefore = l_oTracker.m_eState;
         toms::f_RollDailyReset(l_oTracker, l_itIt->second, l_strToday);
         if (l_oTracker.m_eState == toms::MissionState::Available && l_eBefore != toms::MissionState::Available)
-            f_PushNotification(m_oLocale.f_Tr("mission.daily_reset_prefix") + l_strId);
+            f_PushNotification(m_oLocale.f_Tr(toms::text::g_pszMissionDailyResetPrefix) + l_strId);
     }
 }
 

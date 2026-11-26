@@ -1,3 +1,4 @@
+#include "field_keys.h"    // toms::field: every data field by its constant
 #include "save_system.h"
 #include <algorithm>
 #include <cstdio>
@@ -30,7 +31,7 @@ static_assert(g_iMetaSaveSchemaVersion == 3 && g_iRunSaveSchemaVersion == 3,
 
 static void f_Migrate(nlohmann::json& l_jJ, const std::vector<Migration>& l_vSteps, int l_iCurrent) {
     if (!l_jJ.is_object()) return;
-    int l_iVer = std::max(1, l_jJ.value("schemaVersion", 1));
+    int l_iVer = std::max(1, l_jJ.value(toms::field::g_pszSchemaVersion, 1));
     while (l_iVer < l_iCurrent && l_iVer - 1 < (int)l_vSteps.size()) {
         l_vSteps[(size_t)l_iVer - 1](l_jJ);
         ++l_iVer;
@@ -43,167 +44,167 @@ void f_MigrateRunJson(nlohmann::json& l_jJ) { f_Migrate(l_jJ, g_vRunMigrations, 
 
 nlohmann::json f_ToJson(const MetaSaveData& l_oM) {
     nlohmann::json l_jJ;
-    l_jJ["schemaVersion"] = l_oM.m_iSchemaVersion;
-    l_jJ["storyFlags"] = std::vector<std::string>(l_oM.m_setStoryFlags.begin(), l_oM.m_setStoryFlags.end());
-    l_jJ["currentBeat"] = l_oM.m_iCurrentBeat;
-    l_jJ["unlockedStages"] = l_oM.m_vUnlockedStages;
-    l_jJ["missionsClaimed"] = l_oM.m_vMissionsClaimed;
-    l_jJ["permanentAtkBonus"] = l_oM.m_iPermanentAtkBonus;
-    l_jJ["permanentDefBonus"] = l_oM.m_iPermanentDefBonus;
-    l_jJ["permanentHpBonus"] = l_oM.m_iPermanentHpBonus;
+    l_jJ[toms::field::g_pszSchemaVersion] = l_oM.m_iSchemaVersion;
+    l_jJ[toms::field::g_pszStoryFlags] = std::vector<std::string>(l_oM.m_setStoryFlags.begin(), l_oM.m_setStoryFlags.end());
+    l_jJ[toms::field::g_pszCurrentBeat] = l_oM.m_iCurrentBeat;
+    l_jJ[toms::field::g_pszUnlockedStages] = l_oM.m_vUnlockedStages;
+    l_jJ[toms::field::g_pszMissionsClaimed] = l_oM.m_vMissionsClaimed;
+    l_jJ[toms::field::g_pszPermanentAtkBonus] = l_oM.m_iPermanentAtkBonus;
+    l_jJ[toms::field::g_pszPermanentDefBonus] = l_oM.m_iPermanentDefBonus;
+    l_jJ[toms::field::g_pszPermanentHpBonus] = l_oM.m_iPermanentHpBonus;
     // S3 (schemaVersion 3)
-    l_jJ["cycleIndex"] = l_oM.m_iCycleIndex;
-    l_jJ["endingsSeen"] = l_oM.m_vEndingsSeen;
-    l_jJ["hintsUnlocked"] = l_oM.m_vHintsUnlocked;
+    l_jJ[toms::field::g_pszCycleIndex] = l_oM.m_iCycleIndex;
+    l_jJ[toms::field::g_pszEndingsSeen] = l_oM.m_vEndingsSeen;
+    l_jJ[toms::field::g_pszHintsUnlocked] = l_oM.m_vHintsUnlocked;
     // S5: forging blueprints known -- meta-scope, survives rebirth (see the field's own comment).
-    l_jJ["forgeRecipesKnown"] = l_oM.m_vForgeRecipesKnown;
-    if (!l_oM.m_mapCards.empty()) l_jJ["cards"] = f_CardBookToJson(l_oM.m_mapCards);   // monster cards (optional: an older file has none)
-    if (!l_oM.m_strTrainDay.empty()) { l_jJ["trainDay"] = l_oM.m_strTrainDay; l_jJ["trainRuns"] = l_oM.m_iTrainRuns; }   // the training ground
+    l_jJ[toms::field::g_pszForgeRecipesKnown] = l_oM.m_vForgeRecipesKnown;
+    if (!l_oM.m_mapCards.empty()) l_jJ[toms::field::g_pszCards] = f_CardBookToJson(l_oM.m_mapCards);   // monster cards (optional: an older file has none)
+    if (!l_oM.m_strTrainDay.empty()) { l_jJ[toms::field::g_pszTrainDay] = l_oM.m_strTrainDay; l_jJ[toms::field::g_pszTrainRuns] = l_oM.m_iTrainRuns; }   // the training ground
     return l_jJ;
 }
 
 MetaSaveData f_MetaFromJson(const nlohmann::json& l_jIn, bool* l_pVersionMismatch) {
     MetaSaveData l_oM;
     if (!l_jIn.is_object()) { if (l_pVersionMismatch) *l_pVersionMismatch = true; return l_oM; }
-    int l_iVer = l_jIn.value("schemaVersion", 0);
+    int l_iVer = l_jIn.value(toms::field::g_pszSchemaVersion, 0);
     nlohmann::json l_jJ = l_jIn;
     f_MigrateMetaJson(l_jJ);
     if (l_pVersionMismatch) *l_pVersionMismatch = (l_iVer != g_iMetaSaveSchemaVersion);
     l_oM.m_iSchemaVersion = l_iVer;
-    if (l_jJ.contains("storyFlags") && l_jJ["storyFlags"].is_array())
-        for (auto& l_jF : l_jJ["storyFlags"]) if (l_jF.is_string()) l_oM.m_setStoryFlags.insert(l_jF.get<std::string>());
-    l_oM.m_iCurrentBeat = l_jJ.value("currentBeat", 0);
-    l_oM.m_vUnlockedStages  = l_jJ.value("unlockedStages", std::vector<std::string>{});
-    l_oM.m_vMissionsClaimed = l_jJ.value("missionsClaimed", std::vector<std::string>{});
-    l_oM.m_iPermanentAtkBonus = l_jJ.value("permanentAtkBonus", 0);
-    l_oM.m_iPermanentDefBonus = l_jJ.value("permanentDefBonus", 0);
-    l_oM.m_iPermanentHpBonus  = l_jJ.value("permanentHpBonus", 0);
+    if (l_jJ.contains(toms::field::g_pszStoryFlags) && l_jJ[toms::field::g_pszStoryFlags].is_array())
+        for (auto& l_jF : l_jJ[toms::field::g_pszStoryFlags]) if (l_jF.is_string()) l_oM.m_setStoryFlags.insert(l_jF.get<std::string>());
+    l_oM.m_iCurrentBeat = l_jJ.value(toms::field::g_pszCurrentBeat, 0);
+    l_oM.m_vUnlockedStages  = l_jJ.value(toms::field::g_pszUnlockedStages, std::vector<std::string>{});
+    l_oM.m_vMissionsClaimed = l_jJ.value(toms::field::g_pszMissionsClaimed, std::vector<std::string>{});
+    l_oM.m_iPermanentAtkBonus = l_jJ.value(toms::field::g_pszPermanentAtkBonus, 0);
+    l_oM.m_iPermanentDefBonus = l_jJ.value(toms::field::g_pszPermanentDefBonus, 0);
+    l_oM.m_iPermanentHpBonus  = l_jJ.value(toms::field::g_pszPermanentHpBonus, 0);
     // S3: absent in a pre-v3 file -> the declared defaults (cycleIndex 1, empty lists). This is the
     // "must not refuse an old save" rule from docs/story/STORY_DATA_SCHEMA.md section 9; the caller sees
     // *versionMismatch so it can log/migrate, but loading never fails because of it.
-    l_oM.m_iCycleIndex = std::max(1, l_jJ.value("cycleIndex", 1));
-    l_oM.m_vEndingsSeen    = l_jJ.value("endingsSeen", std::vector<std::string>{});
-    l_oM.m_vHintsUnlocked  = l_jJ.value("hintsUnlocked", std::vector<std::string>{});
+    l_oM.m_iCycleIndex = std::max(1, l_jJ.value(toms::field::g_pszCycleIndex, 1));
+    l_oM.m_vEndingsSeen    = l_jJ.value(toms::field::g_pszEndingsSeen, std::vector<std::string>{});
+    l_oM.m_vHintsUnlocked  = l_jJ.value(toms::field::g_pszHintsUnlocked, std::vector<std::string>{});
     // S5: a pre-S5 file simply has none -- empty list is the documented migration default, same
     // rule as every other field above.
-    l_oM.m_vForgeRecipesKnown = l_jJ.value("forgeRecipesKnown", std::vector<std::string>{});
-    l_oM.m_mapCards = f_CardBookFromJson(l_jJ.value("cards", nlohmann::json::object()));
-    l_oM.m_strTrainDay = l_jJ.value("trainDay", std::string());
-    l_oM.m_iTrainRuns = std::max(0, l_jJ.value("trainRuns", 0));
+    l_oM.m_vForgeRecipesKnown = l_jJ.value(toms::field::g_pszForgeRecipesKnown, std::vector<std::string>{});
+    l_oM.m_mapCards = f_CardBookFromJson(l_jJ.value(toms::field::g_pszCards, nlohmann::json::object()));
+    l_oM.m_strTrainDay = l_jJ.value(toms::field::g_pszTrainDay, std::string());
+    l_oM.m_iTrainRuns = std::max(0, l_jJ.value(toms::field::g_pszTrainRuns, 0));
     return l_oM;
 }
 
 nlohmann::json f_ToJson(const RunSaveData& l_oR) {
     nlohmann::json l_jJ;
-    l_jJ["schemaVersion"] = l_oR.m_iSchemaVersion;
-    l_jJ["currentStageId"] = l_oR.m_strCurrentStageId;
+    l_jJ[toms::field::g_pszSchemaVersion] = l_oR.m_iSchemaVersion;
+    l_jJ[toms::field::g_pszCurrentStageId] = l_oR.m_strCurrentStageId;
     nlohmann::json l_jP;
-    l_jP["hp"] = l_oR.m_oPlayer.m_iHp; l_jP["maxhp"] = l_oR.m_oPlayer.m_iMaxhp;
-    l_jP["atk"] = l_oR.m_oPlayer.m_iAtk; l_jP["def"] = l_oR.m_oPlayer.m_iDef;
-    l_jP["gold"] = l_oR.m_oPlayer.m_iGold; l_jP["exp"] = l_oR.m_oPlayer.m_iExp; l_jP["lv"] = l_oR.m_oPlayer.m_iLv;
-    l_jP["key_yellow"] = l_oR.m_oPlayer.m_iKeyYellow; l_jP["key_blue"] = l_oR.m_oPlayer.m_iKeyBlue; l_jP["key_red"] = l_oR.m_oPlayer.m_iKeyRed;
-    l_jP["inv"] = l_oR.m_oPlayer.m_vInv;
-    l_jP["attrs"] = l_oR.m_oPlayer.m_mapAttrs;
-    l_jP["gear"] = l_oR.m_oPlayer.m_vGear;
-    l_jP["weapon"] = l_oR.m_oPlayer.m_strWeapon; l_jP["armor"] = l_oR.m_oPlayer.m_strArmor; l_jP["talent"] = l_oR.m_oPlayer.m_strTalent;
-    l_jP["attrPoints"] = l_oR.m_oPlayer.m_iAttrPoints;
-    l_jP["weaponExp"] = l_oR.m_oPlayer.m_mapWeaponExp;
-    l_jP["crystals"] = l_oR.m_oPlayer.m_iCrystals;
-    l_jJ["player"] = l_jP;
-    l_jJ["entityStatus"] = l_oR.m_mapEntityStatus;
+    l_jP[toms::field::g_pszHp] = l_oR.m_oPlayer.m_iHp; l_jP[toms::field::g_pszMaxhp] = l_oR.m_oPlayer.m_iMaxhp;
+    l_jP[toms::field::g_pszAtk] = l_oR.m_oPlayer.m_iAtk; l_jP[toms::field::g_pszDef] = l_oR.m_oPlayer.m_iDef;
+    l_jP[toms::field::g_pszGold] = l_oR.m_oPlayer.m_iGold; l_jP[toms::field::g_pszExp] = l_oR.m_oPlayer.m_iExp; l_jP[toms::field::g_pszLv] = l_oR.m_oPlayer.m_iLv;
+    l_jP[toms::field::g_pszKeyYellow] = l_oR.m_oPlayer.m_iKeyYellow; l_jP[toms::field::g_pszKeyBlue] = l_oR.m_oPlayer.m_iKeyBlue; l_jP[toms::field::g_pszKeyRed] = l_oR.m_oPlayer.m_iKeyRed;
+    l_jP[toms::field::g_pszInv] = l_oR.m_oPlayer.m_vInv;
+    l_jP[toms::field::g_pszAttrs] = l_oR.m_oPlayer.m_mapAttrs;
+    l_jP[toms::field::g_pszGear] = l_oR.m_oPlayer.m_vGear;
+    l_jP[toms::field::g_pszWeapon] = l_oR.m_oPlayer.m_strWeapon; l_jP[toms::field::g_pszArmor] = l_oR.m_oPlayer.m_strArmor; l_jP[toms::field::g_pszTalent] = l_oR.m_oPlayer.m_strTalent;
+    l_jP[toms::field::g_pszAttrPoints] = l_oR.m_oPlayer.m_iAttrPoints;
+    l_jP[toms::field::g_pszWeaponExp] = l_oR.m_oPlayer.m_mapWeaponExp;
+    l_jP[toms::field::g_pszCrystals] = l_oR.m_oPlayer.m_iCrystals;
+    l_jJ[toms::field::g_pszPlayer] = l_jP;
+    l_jJ[toms::field::g_pszEntityStatus] = l_oR.m_mapEntityStatus;
     // S3 (schemaVersion 3): the run's story state -- see RunStoryState for what writes/reads it.
-    l_jJ["choices"] = l_oR.m_mapChoices;
-    l_jJ["counters"] = l_oR.m_mapCounters;
-    l_jJ["sideStories"] = l_oR.m_mapSideStories;
-    l_jJ["flags"] = l_oR.m_mapFlags;
-    l_jJ["floor"] = l_oR.m_strFloor;
-    l_jJ["clearedFloors"] = l_oR.m_vClearedFloors;
-    l_jJ["shards"] = l_oR.m_vShards;
-    l_jJ["deathsTotal"] = l_oR.m_iDeathsTotal;
-    l_jJ["deathsNonBoss"] = l_oR.m_iDeathsNonBoss;
+    l_jJ[toms::field::g_pszChoices] = l_oR.m_mapChoices;
+    l_jJ[toms::field::g_pszCounters] = l_oR.m_mapCounters;
+    l_jJ[toms::field::g_pszSideStories] = l_oR.m_mapSideStories;
+    l_jJ[toms::field::g_pszFlags] = l_oR.m_mapFlags;
+    l_jJ[toms::field::g_pszFloor] = l_oR.m_strFloor;
+    l_jJ[toms::field::g_pszClearedFloors] = l_oR.m_vClearedFloors;
+    l_jJ[toms::field::g_pszShards] = l_oR.m_vShards;
+    l_jJ[toms::field::g_pszDeathsTotal] = l_oR.m_iDeathsTotal;
+    l_jJ[toms::field::g_pszDeathsNonBoss] = l_oR.m_iDeathsNonBoss;
     // S4: the skill tree's run-scoped progress -- see RunStoryState for what writes/reads it.
-    l_jJ["skillPoints"] = l_oR.m_iSkillPoints;
-    l_jJ["skillsOwned"] = l_oR.m_vSkillsOwned;
-    l_jJ["eventsStarted"] = l_oR.m_vEventsStarted;
-    l_jJ["eventsFinished"] = l_oR.m_vEventsFinished;
-    if (!l_oR.m_mapVars.empty()) l_jJ["vars"] = l_oR.m_mapVars;
-    if (!l_oR.m_mapNpcTalk.empty()) l_jJ["npcTalk"] = l_oR.m_mapNpcTalk;
-    if (!l_oR.m_mapEventCounts.empty()) l_jJ["eventCounts"] = l_oR.m_mapEventCounts;
-    l_jJ["superMax"] = l_oR.m_iSuperMax;
-    if (l_oR.m_jMissions.is_object() && !l_oR.m_jMissions.empty()) l_jJ["missions"] = l_oR.m_jMissions;
+    l_jJ[toms::field::g_pszSkillPoints] = l_oR.m_iSkillPoints;
+    l_jJ[toms::field::g_pszSkillsOwned] = l_oR.m_vSkillsOwned;
+    l_jJ[toms::field::g_pszEventsStarted] = l_oR.m_vEventsStarted;
+    l_jJ[toms::field::g_pszEventsFinished] = l_oR.m_vEventsFinished;
+    if (!l_oR.m_mapVars.empty()) l_jJ[toms::field::g_pszVars] = l_oR.m_mapVars;
+    if (!l_oR.m_mapNpcTalk.empty()) l_jJ[toms::field::g_pszNpcTalk] = l_oR.m_mapNpcTalk;
+    if (!l_oR.m_mapEventCounts.empty()) l_jJ[toms::field::g_pszEventCounts] = l_oR.m_mapEventCounts;
+    l_jJ[toms::field::g_pszSuperMax] = l_oR.m_iSuperMax;
+    if (l_oR.m_jMissions.is_object() && !l_oR.m_jMissions.empty()) l_jJ[toms::field::g_pszMissions] = l_oR.m_jMissions;
     return l_jJ;
 }
 
 RunSaveData f_RunFromJson(const nlohmann::json& l_jIn, bool* l_pVersionMismatch) {
     RunSaveData l_oR;
     if (!l_jIn.is_object()) { if (l_pVersionMismatch) *l_pVersionMismatch = true; return l_oR; }
-    int l_iVer = l_jIn.value("schemaVersion", 0);
+    int l_iVer = l_jIn.value(toms::field::g_pszSchemaVersion, 0);
     nlohmann::json l_jJ = l_jIn;
     f_MigrateRunJson(l_jJ);
     if (l_pVersionMismatch) *l_pVersionMismatch = (l_iVer != g_iRunSaveSchemaVersion);
     l_oR.m_iSchemaVersion = l_iVer;
-    l_oR.m_strCurrentStageId = l_jJ.value("currentStageId", std::string());
-    if (l_jJ.contains("player") && l_jJ["player"].is_object()) {
-        auto& l_jP = l_jJ["player"];
-        l_oR.m_oPlayer.m_iHp = l_jP.value("hp", 120);
-        l_oR.m_oPlayer.m_iMaxhp = l_jP.value("maxhp", 120);
-        l_oR.m_oPlayer.m_iAtk = l_jP.value("atk", 12);
-        l_oR.m_oPlayer.m_iDef = l_jP.value("def", 4);
-        l_oR.m_oPlayer.m_iGold = l_jP.value("gold", 0);
-        l_oR.m_oPlayer.m_iExp = l_jP.value("exp", 0);
-        l_oR.m_oPlayer.m_iLv = l_jP.value("lv", 1);
-        l_oR.m_oPlayer.m_iKeyYellow = l_jP.value("key_yellow", 0);
-        l_oR.m_oPlayer.m_iKeyBlue = l_jP.value("key_blue", 0);
-        l_oR.m_oPlayer.m_iKeyRed = l_jP.value("key_red", 0);
-        l_oR.m_oPlayer.m_vInv = l_jP.value("inv", std::vector<std::string>{});
-        if (l_jP.contains("attrs") && l_jP["attrs"].is_object())
-            for (auto& [l_strK, l_jV] : l_jP["attrs"].items())
+    l_oR.m_strCurrentStageId = l_jJ.value(toms::field::g_pszCurrentStageId, std::string());
+    if (l_jJ.contains(toms::field::g_pszPlayer) && l_jJ[toms::field::g_pszPlayer].is_object()) {
+        auto& l_jP = l_jJ[toms::field::g_pszPlayer];
+        l_oR.m_oPlayer.m_iHp = l_jP.value(toms::field::g_pszHp, 120);
+        l_oR.m_oPlayer.m_iMaxhp = l_jP.value(toms::field::g_pszMaxhp, 120);
+        l_oR.m_oPlayer.m_iAtk = l_jP.value(toms::field::g_pszAtk, 12);
+        l_oR.m_oPlayer.m_iDef = l_jP.value(toms::field::g_pszDef, 4);
+        l_oR.m_oPlayer.m_iGold = l_jP.value(toms::field::g_pszGold, 0);
+        l_oR.m_oPlayer.m_iExp = l_jP.value(toms::field::g_pszExp, 0);
+        l_oR.m_oPlayer.m_iLv = l_jP.value(toms::field::g_pszLv, 1);
+        l_oR.m_oPlayer.m_iKeyYellow = l_jP.value(toms::field::g_pszKeyYellow, 0);
+        l_oR.m_oPlayer.m_iKeyBlue = l_jP.value(toms::field::g_pszKeyBlue, 0);
+        l_oR.m_oPlayer.m_iKeyRed = l_jP.value(toms::field::g_pszKeyRed, 0);
+        l_oR.m_oPlayer.m_vInv = l_jP.value(toms::field::g_pszInv, std::vector<std::string>{});
+        if (l_jP.contains(toms::field::g_pszAttrs) && l_jP[toms::field::g_pszAttrs].is_object())
+            for (auto& [l_strK, l_jV] : l_jP[toms::field::g_pszAttrs].items())
                 if (l_jV.is_number_integer()) l_oR.m_oPlayer.m_mapAttrs[l_strK] = l_jV.get<int>();
-        l_oR.m_oPlayer.m_vGear = l_jP.value("gear", std::vector<std::string>{});
-        l_oR.m_oPlayer.m_strWeapon = l_jP.value("weapon", std::string());
-        l_oR.m_oPlayer.m_strArmor = l_jP.value("armor", std::string());
-        l_oR.m_oPlayer.m_strTalent = l_jP.value("talent", std::string());
-        l_oR.m_oPlayer.m_iAttrPoints = l_jP.value("attrPoints", 0);
-        l_oR.m_oPlayer.m_iCrystals = std::max(0, l_jP.value("crystals", 0));
+        l_oR.m_oPlayer.m_vGear = l_jP.value(toms::field::g_pszGear, std::vector<std::string>{});
+        l_oR.m_oPlayer.m_strWeapon = l_jP.value(toms::field::g_pszWeapon, std::string());
+        l_oR.m_oPlayer.m_strArmor = l_jP.value(toms::field::g_pszArmor, std::string());
+        l_oR.m_oPlayer.m_strTalent = l_jP.value(toms::field::g_pszTalent, std::string());
+        l_oR.m_oPlayer.m_iAttrPoints = l_jP.value(toms::field::g_pszAttrPoints, 0);
+        l_oR.m_oPlayer.m_iCrystals = std::max(0, l_jP.value(toms::field::g_pszCrystals, 0));
         // (a save from before weapon EXP has "weaponUses": its wins count as EXP)
-        const char* l_pszWeaponKey = l_jP.contains("weaponExp") ? "weaponExp" : "weaponUses";
+        const char* l_pszWeaponKey = l_jP.contains(toms::field::g_pszWeaponExp) ? "weaponExp" : "weaponUses";
         if (l_jP.contains(l_pszWeaponKey) && l_jP[l_pszWeaponKey].is_object())   // optional: an older save has none (every weapon Lv 1)
             for (auto& [l_strK, l_jV] : l_jP[l_pszWeaponKey].items())
                 if (l_jV.is_number_integer()) l_oR.m_oPlayer.m_mapWeaponExp[l_strK] = std::max(0, l_jV.get<int>());
     }
-    if (l_jJ.contains("entityStatus") && l_jJ["entityStatus"].is_object())
-        for (auto& [l_strK, l_jV] : l_jJ["entityStatus"].items())
+    if (l_jJ.contains(toms::field::g_pszEntityStatus) && l_jJ[toms::field::g_pszEntityStatus].is_object())
+        for (auto& [l_strK, l_jV] : l_jJ[toms::field::g_pszEntityStatus].items())
             if (l_jV.is_string()) l_oR.m_mapEntityStatus[l_strK] = l_jV.get<std::string>();
     // S3: a pre-v3 run file simply has none of these; defaults above (floor F01, everything empty)
     // are the documented migration. Loading must never be refused for a version difference.
-    if (l_jJ.contains("choices") && l_jJ["choices"].is_object())
-        for (auto& [l_strK, l_jV] : l_jJ["choices"].items()) if (l_jV.is_string()) l_oR.m_mapChoices[l_strK] = l_jV.get<std::string>();
-    if (l_jJ.contains("counters") && l_jJ["counters"].is_object())
-        for (auto& [l_strK, l_jV] : l_jJ["counters"].items()) if (l_jV.is_number_integer()) l_oR.m_mapCounters[l_strK] = l_jV.get<int>();
-    if (l_jJ.contains("sideStories") && l_jJ["sideStories"].is_object())
-        for (auto& [l_strK, l_jV] : l_jJ["sideStories"].items()) if (l_jV.is_string()) l_oR.m_mapSideStories[l_strK] = l_jV.get<std::string>();
-    if (l_jJ.contains("flags") && l_jJ["flags"].is_object())
-        for (auto& [l_strK, l_jV] : l_jJ["flags"].items()) if (l_jV.is_boolean()) l_oR.m_mapFlags[l_strK] = l_jV.get<bool>();
-    l_oR.m_strFloor = l_jJ.value("floor", std::string("F01"));
-    l_oR.m_vClearedFloors = l_jJ.value("clearedFloors", std::vector<std::string>{});
-    l_oR.m_vShards = l_jJ.value("shards", std::vector<std::string>{});
-    l_oR.m_iDeathsTotal = l_jJ.value("deathsTotal", 0);
-    l_oR.m_iDeathsNonBoss = l_jJ.value("deathsNonBoss", 0);
+    if (l_jJ.contains(toms::field::g_pszChoices) && l_jJ[toms::field::g_pszChoices].is_object())
+        for (auto& [l_strK, l_jV] : l_jJ[toms::field::g_pszChoices].items()) if (l_jV.is_string()) l_oR.m_mapChoices[l_strK] = l_jV.get<std::string>();
+    if (l_jJ.contains(toms::field::g_pszCounters) && l_jJ[toms::field::g_pszCounters].is_object())
+        for (auto& [l_strK, l_jV] : l_jJ[toms::field::g_pszCounters].items()) if (l_jV.is_number_integer()) l_oR.m_mapCounters[l_strK] = l_jV.get<int>();
+    if (l_jJ.contains(toms::field::g_pszSideStories) && l_jJ[toms::field::g_pszSideStories].is_object())
+        for (auto& [l_strK, l_jV] : l_jJ[toms::field::g_pszSideStories].items()) if (l_jV.is_string()) l_oR.m_mapSideStories[l_strK] = l_jV.get<std::string>();
+    if (l_jJ.contains(toms::field::g_pszFlags) && l_jJ[toms::field::g_pszFlags].is_object())
+        for (auto& [l_strK, l_jV] : l_jJ[toms::field::g_pszFlags].items()) if (l_jV.is_boolean()) l_oR.m_mapFlags[l_strK] = l_jV.get<bool>();
+    l_oR.m_strFloor = l_jJ.value(toms::field::g_pszFloor, std::string("F01"));
+    l_oR.m_vClearedFloors = l_jJ.value(toms::field::g_pszClearedFloors, std::vector<std::string>{});
+    l_oR.m_vShards = l_jJ.value(toms::field::g_pszShards, std::vector<std::string>{});
+    l_oR.m_iDeathsTotal = l_jJ.value(toms::field::g_pszDeathsTotal, 0);
+    l_oR.m_iDeathsNonBoss = l_jJ.value(toms::field::g_pszDeathsNonBoss, 0);
     // S4: a pre-S4 file simply has neither -- defaults (0 points, no skills) are the documented
     // migration, same rule as every other S3/S4 field above.
-    l_oR.m_iSkillPoints = l_jJ.value("skillPoints", 0);
-    l_oR.m_vSkillsOwned = l_jJ.value("skillsOwned", std::vector<std::string>{});
-    l_oR.m_vEventsStarted = l_jJ.value("eventsStarted", std::vector<std::string>{});
-    l_oR.m_vEventsFinished = l_jJ.value("eventsFinished", std::vector<std::string>{});
-    if (l_jJ.contains("vars") && l_jJ["vars"].is_object())
-        for (auto& [l_strK, l_jV] : l_jJ["vars"].items()) if (l_jV.is_number_integer()) l_oR.m_mapVars[l_strK] = l_jV.get<int>();
-    if (l_jJ.contains("eventCounts") && l_jJ["eventCounts"].is_object())
-        for (auto& [l_strK, l_jV] : l_jJ["eventCounts"].items()) if (l_jV.is_number_integer()) l_oR.m_mapEventCounts[l_strK] = l_jV.get<int>();
-    if (l_jJ.contains("npcTalk") && l_jJ["npcTalk"].is_object())
-        for (auto& [l_strK, l_jV] : l_jJ["npcTalk"].items())
+    l_oR.m_iSkillPoints = l_jJ.value(toms::field::g_pszSkillPoints, 0);
+    l_oR.m_vSkillsOwned = l_jJ.value(toms::field::g_pszSkillsOwned, std::vector<std::string>{});
+    l_oR.m_vEventsStarted = l_jJ.value(toms::field::g_pszEventsStarted, std::vector<std::string>{});
+    l_oR.m_vEventsFinished = l_jJ.value(toms::field::g_pszEventsFinished, std::vector<std::string>{});
+    if (l_jJ.contains(toms::field::g_pszVars) && l_jJ[toms::field::g_pszVars].is_object())
+        for (auto& [l_strK, l_jV] : l_jJ[toms::field::g_pszVars].items()) if (l_jV.is_number_integer()) l_oR.m_mapVars[l_strK] = l_jV.get<int>();
+    if (l_jJ.contains(toms::field::g_pszEventCounts) && l_jJ[toms::field::g_pszEventCounts].is_object())
+        for (auto& [l_strK, l_jV] : l_jJ[toms::field::g_pszEventCounts].items()) if (l_jV.is_number_integer()) l_oR.m_mapEventCounts[l_strK] = l_jV.get<int>();
+    if (l_jJ.contains(toms::field::g_pszNpcTalk) && l_jJ[toms::field::g_pszNpcTalk].is_object())
+        for (auto& [l_strK, l_jV] : l_jJ[toms::field::g_pszNpcTalk].items())
             if (l_jV.is_array()) { std::vector<int>& l_vT = l_oR.m_mapNpcTalk[l_strK]; for (auto& l_jN : l_jV) if (l_jN.is_number_integer()) l_vT.push_back(l_jN.get<int>()); }
-    l_oR.m_iSuperMax = l_jJ.value("superMax", 0);   // 0: battle.json "superPoints"
-    if (l_jJ.contains("missions") && l_jJ["missions"].is_object()) l_oR.m_jMissions = l_jJ["missions"];
+    l_oR.m_iSuperMax = l_jJ.value(toms::field::g_pszSuperMax, 0);   // 0: battle.json "superPoints"
+    if (l_jJ.contains(toms::field::g_pszMissions) && l_jJ[toms::field::g_pszMissions].is_object()) l_oR.m_jMissions = l_jJ[toms::field::g_pszMissions];
     return l_oR;
 }
 

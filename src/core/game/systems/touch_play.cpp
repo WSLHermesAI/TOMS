@@ -1,4 +1,6 @@
 // touch_play.cpp -- see touch_play.h.
+#include "game_names.h"    // toms::state, toms::battle_event, ... (no hard-coded name)
+#include "field_keys.h"    // toms::field: every data field by its constant
 #include "touch_play.h"
 
 #include <algorithm>
@@ -20,14 +22,14 @@ void TouchPlay::f_Start(PlayType l_eType, int l_iPoints, bool l_bUltimate, const
     std::uniform_real_distribution<float> l_oU(0.0f, 1.0f);
     if (m_eType == PlayType::ePULL_RELEASE) f_NextTarget();
     if (f_IsSwipePlay(m_eType)) {
-        const char* l_pszDefault = m_eType == PlayType::eSWIPE_GESTURE ? "v" : "way";
+        const char* l_pszDefault = m_eType == PlayType::eSWIPE_GESTURE ? toms::gesture::g_pszV : toms::gesture::g_pszWay;
         std::vector<int> l_vExtra;
         for (int l_iK = 0; l_iK < m_iPoints; l_iK++) {
             m_vCueKinds.push_back(l_iK < (int)m_oS.m_vSliceCues.size() && !m_oS.m_vSliceCues[(size_t)l_iK].empty() ? m_oS.m_vSliceCues[(size_t)l_iK] : l_pszDefault);
             int l_iDir = std::uniform_int_distribution<int>(0, 7)(m_oRng);
             if (m_eType == PlayType::eSWIPE_RECALL && l_iK > 0 && l_iDir == m_vCueDirs.back()) l_iDir = (l_iDir + 1 + std::uniform_int_distribution<int>(0, 6)(m_oRng)) % 8;   // never the same way twice in a row: it would read as one
             m_vCueDirs.push_back(l_iDir);
-            m_vCueReversed.push_back(m_eType == PlayType::eSWIPE_RECALL && m_vCueKinds.back() == "way" && l_oU(m_oRng) < m_oS.m_fRecallReverse ? 1 : 0);
+            m_vCueReversed.push_back(m_eType == PlayType::eSWIPE_RECALL && m_vCueKinds.back() == toms::gesture::g_pszWay && l_oU(m_oRng) < m_oS.m_fRecallReverse ? 1 : 0);
             const auto l_itExtra = m_oS.m_mapCueExtraMs.find(m_vCueKinds.back());
             l_vExtra.push_back(l_itExtra == m_oS.m_mapCueExtraMs.end() ? 0 : l_itExtra->second);
         }
@@ -126,7 +128,7 @@ void TouchPlay::f_JudgeStroke() {
     const float l_fLen = std::sqrt(l_v2D.x * l_v2D.x + l_v2D.y * l_v2D.y);
     m_fStrokeAngle = std::atan2(l_v2D.y, l_v2D.x) * 180.0f / g_fPi;
     bool l_bOk = false, l_bPerfect = false;
-    if (m_vCueKinds[(size_t)l_iK] == "way") {
+    if (m_vCueKinds[(size_t)l_iK] == toms::gesture::g_pszWay) {
         if (l_fLen < m_oS.m_fSliceMinLength) return;   // not a cut
         const float l_fWant = (float)(m_vCueDirs[(size_t)l_iK] + (f_CueReversed(l_iK) ? 4 : 0)) * g_fPi / 4.0f, l_fGot = std::atan2(l_v2D.y, l_v2D.x);
         const float l_fDiff = std::fabs(std::fmod(l_fGot - l_fWant + 3.0f * g_fPi, 2.0f * g_fPi) - g_fPi);
@@ -422,48 +424,48 @@ void TouchPlay::f_Update(int l_iDtMs) {
 
 TouchPlaySettings f_TouchPlayFromJson(const nlohmann::json& l_jB) {
     TouchPlaySettings l_oS;
-    if (!l_jB.is_object() || !l_jB.contains("plays") || !l_jB["plays"].is_object()) return l_oS;
-    const nlohmann::json& l_jJ = l_jB["plays"];
-    l_oS.m_iBowTimeMs = std::max(500, l_jJ.value("bowTimeMs", l_oS.m_iBowTimeMs));
-    l_oS.m_fBowRadius = std::max(8.0f, l_jJ.value("bowRadius", l_oS.m_fBowRadius));
-    l_oS.m_fBowPull = std::max(0.1f, l_jJ.value("bowPull", l_oS.m_fBowPull));
-    l_oS.m_iBowMoveMs = std::max(0, l_jJ.value("bowMoveMs", l_oS.m_iBowMoveMs));
-    l_oS.m_fBowMoveDist = std::max(0.0f, l_jJ.value("bowMoveDist", l_oS.m_fBowMoveDist));
-    l_oS.m_iBowHoldMs = std::max(200, l_jJ.value("bowHoldMs", l_oS.m_iBowHoldMs));
-    l_oS.m_fBowShakePx = std::max(0.0f, l_jJ.value("bowShakePx", l_oS.m_fBowShakePx));
-    l_oS.m_iBowHoldPerStr = std::max(0, l_jJ.value("bowHoldPerStr", l_oS.m_iBowHoldPerStr));
-    l_oS.m_fBowShakePerDex = std::max(0.0f, l_jJ.value("bowShakePerDex", l_oS.m_fBowShakePerDex));
-    l_oS.m_oSliceCue.m_iCueMs = std::max(200, l_jJ.value("cueMs", l_oS.m_oSliceCue.m_iCueMs));
-    l_oS.m_oSliceCue.m_iInputMs = std::clamp(l_jJ.value("inputMs", l_oS.m_oSliceCue.m_iInputMs), 50, l_oS.m_oSliceCue.m_iCueMs);
-    l_oS.m_oSliceCue.m_bWindowAtEnd = l_jJ.value("inputAtEnd", l_oS.m_oSliceCue.m_bWindowAtEnd);
-    l_oS.m_oSliceCue.m_iGapMs = std::max(0, l_jJ.value("cueGapMs", l_oS.m_oSliceCue.m_iGapMs));
-    l_oS.m_iRecallShowMs = std::max(100, l_jJ.value("recallShowMs", l_oS.m_iRecallShowMs));
-    l_oS.m_iRecallGapMs = std::max(0, l_jJ.value("recallGapMs", l_oS.m_iRecallGapMs));
-    l_oS.m_iRecallReadyMs = std::max(0, l_jJ.value("recallReadyMs", l_oS.m_iRecallReadyMs));
-    l_oS.m_iRecallAnswerMs = std::max(200, l_jJ.value("recallAnswerMs", l_oS.m_iRecallAnswerMs));
-    l_oS.m_iRecallPerCueMs = std::max(0, l_jJ.value("recallPerCueMs", l_oS.m_iRecallPerCueMs));
-    l_oS.m_fRecallReverse = std::clamp(l_jJ.value("recallReverse", l_oS.m_fRecallReverse), 0.0f, 1.0f);
-    l_oS.m_iChainTimeMs = std::max(500, l_jJ.value("chainTimeMs", l_oS.m_iChainTimeMs));
-    l_oS.m_iSpinTimeMs = std::max(500, l_jJ.value("spinTimeMs", l_oS.m_iSpinTimeMs));
-    l_oS.m_fSpinRadius = std::max(30.0f, l_jJ.value("spinRadius", l_oS.m_fSpinRadius));
-    l_oS.m_fSpinMinRadius = std::max(0.0f, l_jJ.value("spinMinRadius", l_oS.m_fSpinMinRadius));
-    l_oS.m_fSpinTurnDeg = std::clamp(l_jJ.value("spinTurnDeg", l_oS.m_fSpinTurnDeg), 90.0f, 720.0f);
-    l_oS.m_iSpinPerfectMs = std::max(0, l_jJ.value("spinPerfectMs", l_oS.m_iSpinPerfectMs));
-    l_oS.m_iCircleCountMs = std::max(100, l_jJ.value("circleCountMs", l_oS.m_iCircleCountMs));
-    l_oS.m_iCircleHideMs = std::max(0, l_jJ.value("circleHideMs", l_oS.m_iCircleHideMs));
-    l_oS.m_iCircleWarnMs = std::max(0, l_jJ.value("circleWarnMs", l_oS.m_iCircleWarnMs));
-    l_oS.m_iCircleReturnMs = std::max(0, l_jJ.value("circleReturnMs", l_oS.m_iCircleReturnMs));
-    l_oS.m_iCircleTapMs = std::max(200, l_jJ.value("circleTapMs", l_oS.m_iCircleTapMs));
-    l_oS.m_iCirclePerfectMs = std::max(0, l_jJ.value("circlePerfectMs", l_oS.m_iCirclePerfectMs));
-    if (l_jJ.contains("cueExtraMs") && l_jJ["cueExtraMs"].is_object())
-        for (auto l_oIt = l_jJ["cueExtraMs"].begin(); l_oIt != l_jJ["cueExtraMs"].end(); ++l_oIt)
+    if (!l_jB.is_object() || !l_jB.contains(toms::field::g_pszPlays) || !l_jB[toms::field::g_pszPlays].is_object()) return l_oS;
+    const nlohmann::json& l_jJ = l_jB[toms::field::g_pszPlays];
+    l_oS.m_iBowTimeMs = std::max(500, l_jJ.value(toms::field::g_pszBowTimeMs, l_oS.m_iBowTimeMs));
+    l_oS.m_fBowRadius = std::max(8.0f, l_jJ.value(toms::field::g_pszBowRadius, l_oS.m_fBowRadius));
+    l_oS.m_fBowPull = std::max(0.1f, l_jJ.value(toms::field::g_pszBowPull, l_oS.m_fBowPull));
+    l_oS.m_iBowMoveMs = std::max(0, l_jJ.value(toms::field::g_pszBowMoveMs, l_oS.m_iBowMoveMs));
+    l_oS.m_fBowMoveDist = std::max(0.0f, l_jJ.value(toms::field::g_pszBowMoveDist, l_oS.m_fBowMoveDist));
+    l_oS.m_iBowHoldMs = std::max(200, l_jJ.value(toms::field::g_pszBowHoldMs, l_oS.m_iBowHoldMs));
+    l_oS.m_fBowShakePx = std::max(0.0f, l_jJ.value(toms::field::g_pszBowShakePx, l_oS.m_fBowShakePx));
+    l_oS.m_iBowHoldPerStr = std::max(0, l_jJ.value(toms::field::g_pszBowHoldPerStr, l_oS.m_iBowHoldPerStr));
+    l_oS.m_fBowShakePerDex = std::max(0.0f, l_jJ.value(toms::field::g_pszBowShakePerDex, l_oS.m_fBowShakePerDex));
+    l_oS.m_oSliceCue.m_iCueMs = std::max(200, l_jJ.value(toms::field::g_pszCueMs, l_oS.m_oSliceCue.m_iCueMs));
+    l_oS.m_oSliceCue.m_iInputMs = std::clamp(l_jJ.value(toms::field::g_pszInputMs, l_oS.m_oSliceCue.m_iInputMs), 50, l_oS.m_oSliceCue.m_iCueMs);
+    l_oS.m_oSliceCue.m_bWindowAtEnd = l_jJ.value(toms::field::g_pszInputAtEnd, l_oS.m_oSliceCue.m_bWindowAtEnd);
+    l_oS.m_oSliceCue.m_iGapMs = std::max(0, l_jJ.value(toms::field::g_pszCueGapMs, l_oS.m_oSliceCue.m_iGapMs));
+    l_oS.m_iRecallShowMs = std::max(100, l_jJ.value(toms::field::g_pszRecallShowMs, l_oS.m_iRecallShowMs));
+    l_oS.m_iRecallGapMs = std::max(0, l_jJ.value(toms::field::g_pszRecallGapMs, l_oS.m_iRecallGapMs));
+    l_oS.m_iRecallReadyMs = std::max(0, l_jJ.value(toms::field::g_pszRecallReadyMs, l_oS.m_iRecallReadyMs));
+    l_oS.m_iRecallAnswerMs = std::max(200, l_jJ.value(toms::field::g_pszRecallAnswerMs, l_oS.m_iRecallAnswerMs));
+    l_oS.m_iRecallPerCueMs = std::max(0, l_jJ.value(toms::field::g_pszRecallPerCueMs, l_oS.m_iRecallPerCueMs));
+    l_oS.m_fRecallReverse = std::clamp(l_jJ.value(toms::field::g_pszRecallReverse, l_oS.m_fRecallReverse), 0.0f, 1.0f);
+    l_oS.m_iChainTimeMs = std::max(500, l_jJ.value(toms::field::g_pszChainTimeMs, l_oS.m_iChainTimeMs));
+    l_oS.m_iSpinTimeMs = std::max(500, l_jJ.value(toms::field::g_pszSpinTimeMs, l_oS.m_iSpinTimeMs));
+    l_oS.m_fSpinRadius = std::max(30.0f, l_jJ.value(toms::field::g_pszSpinRadius, l_oS.m_fSpinRadius));
+    l_oS.m_fSpinMinRadius = std::max(0.0f, l_jJ.value(toms::field::g_pszSpinMinRadius, l_oS.m_fSpinMinRadius));
+    l_oS.m_fSpinTurnDeg = std::clamp(l_jJ.value(toms::field::g_pszSpinTurnDeg, l_oS.m_fSpinTurnDeg), 90.0f, 720.0f);
+    l_oS.m_iSpinPerfectMs = std::max(0, l_jJ.value(toms::field::g_pszSpinPerfectMs, l_oS.m_iSpinPerfectMs));
+    l_oS.m_iCircleCountMs = std::max(100, l_jJ.value(toms::field::g_pszCircleCountMs, l_oS.m_iCircleCountMs));
+    l_oS.m_iCircleHideMs = std::max(0, l_jJ.value(toms::field::g_pszCircleHideMs, l_oS.m_iCircleHideMs));
+    l_oS.m_iCircleWarnMs = std::max(0, l_jJ.value(toms::field::g_pszCircleWarnMs, l_oS.m_iCircleWarnMs));
+    l_oS.m_iCircleReturnMs = std::max(0, l_jJ.value(toms::field::g_pszCircleReturnMs, l_oS.m_iCircleReturnMs));
+    l_oS.m_iCircleTapMs = std::max(200, l_jJ.value(toms::field::g_pszCircleTapMs, l_oS.m_iCircleTapMs));
+    l_oS.m_iCirclePerfectMs = std::max(0, l_jJ.value(toms::field::g_pszCirclePerfectMs, l_oS.m_iCirclePerfectMs));
+    if (l_jJ.contains(toms::field::g_pszCueExtraMs) && l_jJ[toms::field::g_pszCueExtraMs].is_object())
+        for (auto l_oIt = l_jJ[toms::field::g_pszCueExtraMs].begin(); l_oIt != l_jJ[toms::field::g_pszCueExtraMs].end(); ++l_oIt)
             if (l_oIt.value().is_number()) l_oS.m_mapCueExtraMs[l_oIt.key()] = std::max(0, l_oIt.value().get<int>());
-    l_oS.m_fFreeMinSwipe = std::max(1.0f, l_jJ.value("freeMinSwipe", l_oS.m_fFreeMinSwipe));
-    l_oS.m_fDexWayDeg = std::max(0.0f, l_jJ.value("dexWayDeg", l_oS.m_fDexWayDeg));
-    l_oS.m_fDexWayMaxDeg = std::max(0.0f, l_jJ.value("dexWayMaxDeg", l_oS.m_fDexWayMaxDeg));
-    l_oS.m_fDexGestureMaxDeg = std::max(0.0f, l_jJ.value("dexGestureMaxDeg", l_oS.m_fDexGestureMaxDeg));
-    l_oS.m_fDexCornerPct = std::max(0.0f, l_jJ.value("dexCornerPct", l_oS.m_fDexCornerPct));
-    l_oS.m_iDexWindowMs = std::max(0, l_jJ.value("dexWindowMs", l_oS.m_iDexWindowMs));
+    l_oS.m_fFreeMinSwipe = std::max(1.0f, l_jJ.value(toms::field::g_pszFreeMinSwipe, l_oS.m_fFreeMinSwipe));
+    l_oS.m_fDexWayDeg = std::max(0.0f, l_jJ.value(toms::field::g_pszDexWayDeg, l_oS.m_fDexWayDeg));
+    l_oS.m_fDexWayMaxDeg = std::max(0.0f, l_jJ.value(toms::field::g_pszDexWayMaxDeg, l_oS.m_fDexWayMaxDeg));
+    l_oS.m_fDexGestureMaxDeg = std::max(0.0f, l_jJ.value(toms::field::g_pszDexGestureMaxDeg, l_oS.m_fDexGestureMaxDeg));
+    l_oS.m_fDexCornerPct = std::max(0.0f, l_jJ.value(toms::field::g_pszDexCornerPct, l_oS.m_fDexCornerPct));
+    l_oS.m_iDexWindowMs = std::max(0, l_jJ.value(toms::field::g_pszDexWindowMs, l_oS.m_iDexWindowMs));
     return l_oS;
 }
 

@@ -13,6 +13,8 @@
 //
 // Pure: no Game dependency.
 #pragma once
+#include "field_keys.h"    // toms::field: every data field by its constant
+#include "game_names.h"   // toms::state, toms::battle_event, ... (no hard-coded name)
 #include <json.hpp>
 
 #include <algorithm>
@@ -38,39 +40,39 @@ struct CellRules {
     int m_iIntroMs = 2200, m_iIntroUiMs = 1200, m_iPopMs = 350;   // how long; when the cells pop up; how long the pop takes
     float m_fIntroZoom = 1.25f;
     float m_fPerspective = 0.14f;   // how much narrower the near row is than the far one
-    std::string m_strIntroClip = "special", m_strIntroFx, m_strIntroText;
+    std::string m_strIntroClip = toms::state::g_pszSpecial, m_strIntroFx, m_strIntroText;
     std::map<std::string, nlohmann::json> m_mapShapes;   // a shape: its variants, each the cells it covers
 };
 
 inline CellRules f_CellRulesFromJson(const nlohmann::json& l_jBattle) {
     CellRules l_oR;
-    if (!l_jBattle.is_object() || !l_jBattle.contains("cells") || !l_jBattle["cells"].is_object()) return l_oR;
-    const nlohmann::json& l_jC = l_jBattle["cells"];
-    l_oR.m_iWarnMs = std::max(100, l_jC.value("warnMs", l_oR.m_iWarnMs));
-    l_oR.m_iCols = std::clamp(l_jC.value("cols", l_oR.m_iCols), 1, g_iCellMaxCount);
-    l_oR.m_iRows = std::clamp(l_jC.value("rows", l_oR.m_iRows), 1, g_iCellMaxCount / l_oR.m_iCols);
-    l_oR.m_iStart = l_jC.value("start", l_oR.m_iStart);
-    l_oR.m_fAreaW = l_jC.value("areaW", l_oR.m_fAreaW);
-    l_oR.m_fRowH = l_jC.value("rowH", l_oR.m_fRowH);
-    l_oR.m_fGap = l_jC.value("gap", l_oR.m_fGap);
-    l_oR.m_fMaxH = l_jC.value("maxH", l_oR.m_fMaxH);
-    l_oR.m_fPerspective = std::clamp(l_jC.value("perspective", l_oR.m_fPerspective), 0.0f, 0.6f);
-    l_oR.m_fShiftX = l_jC.value("shiftX", l_oR.m_fShiftX);
-    l_oR.m_fShiftNear = l_jC.value("shiftNear", l_oR.m_fShiftNear);
-    l_oR.m_fShiftY = l_jC.value("shiftY", l_oR.m_fShiftY);
-    l_oR.m_iHideAfterMs = std::max(0, l_jC.value("hideAfterMs", l_oR.m_iHideAfterMs));
-    if (l_jC.contains("intro") && l_jC["intro"].is_object()) {
-        const nlohmann::json& l_jI = l_jC["intro"];
-        l_oR.m_iIntroMs = std::max(0, l_jI.value("ms", l_oR.m_iIntroMs));
-        l_oR.m_iIntroUiMs = std::clamp(l_jI.value("uiAtMs", l_oR.m_iIntroUiMs), 0, l_oR.m_iIntroMs);
-        l_oR.m_iPopMs = std::max(1, l_jI.value("popMs", l_oR.m_iPopMs));
-        l_oR.m_fIntroZoom = l_jI.value("zoom", l_oR.m_fIntroZoom);
-        l_oR.m_strIntroClip = l_jI.value("clip", l_oR.m_strIntroClip);
-        l_oR.m_strIntroFx = l_jI.value("fx", l_oR.m_strIntroFx);
-        l_oR.m_strIntroText = l_jI.value("text", l_oR.m_strIntroText);
+    if (!l_jBattle.is_object() || !l_jBattle.contains(toms::field::g_pszCells) || !l_jBattle[toms::field::g_pszCells].is_object()) return l_oR;
+    const nlohmann::json& l_jC = l_jBattle[toms::field::g_pszCells];
+    l_oR.m_iWarnMs = std::max(100, l_jC.value(toms::field::g_pszWarnMs, l_oR.m_iWarnMs));
+    l_oR.m_iCols = std::clamp(l_jC.value(toms::field::g_pszCols, l_oR.m_iCols), 1, g_iCellMaxCount);
+    l_oR.m_iRows = std::clamp(l_jC.value(toms::field::g_pszRows, l_oR.m_iRows), 1, g_iCellMaxCount / l_oR.m_iCols);
+    l_oR.m_iStart = l_jC.value(toms::field::g_pszStart, l_oR.m_iStart);
+    l_oR.m_fAreaW = l_jC.value(toms::field::g_pszAreaW, l_oR.m_fAreaW);
+    l_oR.m_fRowH = l_jC.value(toms::field::g_pszRowH, l_oR.m_fRowH);
+    l_oR.m_fGap = l_jC.value(toms::field::g_pszGap, l_oR.m_fGap);
+    l_oR.m_fMaxH = l_jC.value(toms::field::g_pszMaxH, l_oR.m_fMaxH);
+    l_oR.m_fPerspective = std::clamp(l_jC.value(toms::field::g_pszPerspective, l_oR.m_fPerspective), 0.0f, 0.6f);
+    l_oR.m_fShiftX = l_jC.value(toms::field::g_pszShiftX, l_oR.m_fShiftX);
+    l_oR.m_fShiftNear = l_jC.value(toms::field::g_pszShiftNear, l_oR.m_fShiftNear);
+    l_oR.m_fShiftY = l_jC.value(toms::field::g_pszShiftY, l_oR.m_fShiftY);
+    l_oR.m_iHideAfterMs = std::max(0, l_jC.value(toms::field::g_pszHideAfterMs, l_oR.m_iHideAfterMs));
+    if (l_jC.contains(toms::field::g_pszIntro) && l_jC[toms::field::g_pszIntro].is_object()) {
+        const nlohmann::json& l_jI = l_jC[toms::field::g_pszIntro];
+        l_oR.m_iIntroMs = std::max(0, l_jI.value(toms::field::g_pszMs, l_oR.m_iIntroMs));
+        l_oR.m_iIntroUiMs = std::clamp(l_jI.value(toms::field::g_pszUiAtMs, l_oR.m_iIntroUiMs), 0, l_oR.m_iIntroMs);
+        l_oR.m_iPopMs = std::max(1, l_jI.value(toms::field::g_pszPopMs, l_oR.m_iPopMs));
+        l_oR.m_fIntroZoom = l_jI.value(toms::field::g_pszZoom, l_oR.m_fIntroZoom);
+        l_oR.m_strIntroClip = l_jI.value(toms::field::g_pszClip, l_oR.m_strIntroClip);
+        l_oR.m_strIntroFx = l_jI.value(toms::field::g_pszFx, l_oR.m_strIntroFx);
+        l_oR.m_strIntroText = l_jI.value(toms::field::g_pszText, l_oR.m_strIntroText);
     }
-    if (l_jC.contains("shapes") && l_jC["shapes"].is_object())
-        for (auto l_oIt = l_jC["shapes"].begin(); l_oIt != l_jC["shapes"].end(); ++l_oIt)
+    if (l_jC.contains(toms::field::g_pszShapes) && l_jC[toms::field::g_pszShapes].is_object())
+        for (auto l_oIt = l_jC[toms::field::g_pszShapes].begin(); l_oIt != l_jC[toms::field::g_pszShapes].end(); ++l_oIt)
             if (l_oIt.value().is_array()) l_oR.m_mapShapes[l_oIt.key()] = l_oIt.value();
     return l_oR;
 }
@@ -95,17 +97,17 @@ inline std::vector<std::vector<int>> f_ShapeVariants(const CellRules& l_oR, cons
             for (const nlohmann::json& l_jN : l_jV) if (l_jN.is_number_integer() && l_jN.get<int>() >= 0 && l_jN.get<int>() < l_iCount) l_vV.push_back(l_jN.get<int>());
             if (!l_vV.empty()) l_vOut.push_back(l_vV);
         } else if (l_jV.is_object()) {
-            if (l_jV.contains("row") && l_jV["row"].is_number_integer()) {
-                const int l_iR = l_jV["row"].get<int>() < 0 ? l_iRows + l_jV["row"].get<int>() : l_jV["row"].get<int>();
+            if (l_jV.contains(toms::field::g_pszRow) && l_jV[toms::field::g_pszRow].is_number_integer()) {
+                const int l_iR = l_jV[toms::field::g_pszRow].get<int>() < 0 ? l_iRows + l_jV[toms::field::g_pszRow].get<int>() : l_jV[toms::field::g_pszRow].get<int>();
                 if (l_iR >= 0 && l_iR < l_iRows) l_vOut.push_back(l_fnRow(l_iR));
             }
-            if (l_jV.contains("col") && l_jV["col"].is_number_integer()) {
-                const int l_iC = l_jV["col"].get<int>() < 0 ? l_iCols + l_jV["col"].get<int>() : l_jV["col"].get<int>();
+            if (l_jV.contains(toms::field::g_pszCol) && l_jV[toms::field::g_pszCol].is_number_integer()) {
+                const int l_iC = l_jV[toms::field::g_pszCol].get<int>() < 0 ? l_iCols + l_jV[toms::field::g_pszCol].get<int>() : l_jV[toms::field::g_pszCol].get<int>();
                 if (l_iC >= 0 && l_iC < l_iCols) l_vOut.push_back(l_fnCol(l_iC));
             }
-            if (l_jV.value("rows", std::string()) == "each") for (int l_iR = 0; l_iR < l_iRows; l_iR++) l_vOut.push_back(l_fnRow(l_iR));
-            if (l_jV.value("cols", std::string()) == "each") for (int l_iC = 0; l_iC < l_iCols; l_iC++) l_vOut.push_back(l_fnCol(l_iC));
-            if (l_jV.value("allBut", std::string()) == "start") {
+            if (l_jV.value(toms::field::g_pszRows, std::string()) == "each") for (int l_iR = 0; l_iR < l_iRows; l_iR++) l_vOut.push_back(l_fnRow(l_iR));
+            if (l_jV.value(toms::field::g_pszCols, std::string()) == "each") for (int l_iC = 0; l_iC < l_iCols; l_iC++) l_vOut.push_back(l_fnCol(l_iC));
+            if (l_jV.value(toms::field::g_pszAllBut, std::string()) == toms::place::g_pszStart) {
                 std::vector<int> l_vV;
                 const int l_iSafe = f_CellStart(l_oR, l_iCols, l_iRows);
                 for (int l_iN = 0; l_iN < l_iCount; l_iN++) if (l_iN != l_iSafe) l_vV.push_back(l_iN);

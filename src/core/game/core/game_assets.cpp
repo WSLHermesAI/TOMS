@@ -1,5 +1,7 @@
+#include "text_keys.h"     // toms::text: every line of text by its key
 // game_assets.cpp — asset/sprite/stage loading: texture atlas, sprite id order lookups,
 // and stage JSON -> Stage grid (+entity placement). Split out of game.cpp 2026-09-13.
+#include "field_keys.h"    // toms::field: every data field by its constant
 #include "game_internal.h"
 #include "job_system.h"
 #include "version_label.h"
@@ -179,31 +181,31 @@ bool Game::f_LoadAssets(const std::string& l_strAssetDir) {
     {
         nlohmann::json l_jBj = f_ReadJsonFile(f_PathOf(toms::key::g_pszDataBattle));
         if (l_jBj.is_object()) {
-            m_fBarSlowScale = std::max(0.0f, l_jBj.value("bar_slow_speed_scale", 1.0f));
-            m_fBarFastScale = std::max(0.05f, l_jBj.value("bar_fast_speed_scale", 1.0f));
-            m_iBarCooldownMs = std::max(0, l_jBj.value("bar_cooldown_ms", (int)CombatState::m_iBarCooldownMs));
-            m_iAttackPauseMs = std::max(0, l_jBj.value("attack_pause_ms", m_iAttackPauseMs));
-            m_iHitNumberDelayMs = std::max(0, l_jBj.value("hit_number_delay_ms", m_iHitNumberDelayMs));
+            m_fBarSlowScale = std::max(0.0f, l_jBj.value(toms::field::g_pszBarSlowSpeedScale, 1.0f));
+            m_fBarFastScale = std::max(0.05f, l_jBj.value(toms::field::g_pszBarFastSpeedScale, 1.0f));
+            m_iBarCooldownMs = std::max(0, l_jBj.value(toms::field::g_pszBarCooldownMs, (int)CombatState::m_iBarCooldownMs));
+            m_iAttackPauseMs = std::max(0, l_jBj.value(toms::field::g_pszAttackPauseMs, m_iAttackPauseMs));
+            m_iHitNumberDelayMs = std::max(0, l_jBj.value(toms::field::g_pszHitNumberDelayMs, m_iHitNumberDelayMs));
             m_jBattleJson = l_jBj;
             m_oPaceSettings = toms::f_PaceFromJson(l_jBj);     // docs/gameplay/13 §6.3
             m_oFeel = toms::f_FeelFromJson(l_jBj);             // docs/gameplay/15 §3.8
-            if (l_jBj.contains("battleSpeeds") && l_jBj["battleSpeeds"].is_array()) {
+            if (l_jBj.contains(toms::field::g_pszBattleSpeeds) && l_jBj[toms::field::g_pszBattleSpeeds].is_array()) {
                 m_vBattleSpeeds.clear();
-                for (const auto& l_jS : l_jBj["battleSpeeds"]) if (l_jS.is_number() && l_jS.get<float>() > 0.0f) m_vBattleSpeeds.push_back(l_jS.get<float>());
+                for (const auto& l_jS : l_jBj[toms::field::g_pszBattleSpeeds]) if (l_jS.is_number() && l_jS.get<float>() > 0.0f) m_vBattleSpeeds.push_back(l_jS.get<float>());
                 std::sort(m_vBattleSpeeds.begin(), m_vBattleSpeeds.end());
             }
             m_oCellRules = toms::f_CellRulesFromJson(l_jBj);
             m_oMonsterMp = toms::f_MonsterMpFromJson(l_jBj);   // a monster's MP (its special attacks cost it)
-            m_oRun.f_SetBaseSuperMax(l_jBj.value("superPoints", toms::RunStoryState::m_iDefaultSuperMax));   // the ultimate's points
+            m_oRun.f_SetBaseSuperMax(l_jBj.value(toms::field::g_pszSuperPoints, toms::RunStoryState::m_iDefaultSuperMax));   // the ultimate's points
             m_oTutorial = toms::f_TutorialFromJson(l_jBj);     // the new game's trial fight (docs/gameplay/19 B6)
             m_oTouchSettings = toms::f_TouchPlayFromJson(l_jBj);   // the plays' numbers (docs/gameplay/16 §3)
-            m_jFeelFx = l_jBj.value("feelFx", nlohmann::json::object());   // the attack feel (docs/gameplay/20)
-            m_jBodyScale = l_jBj.value("bodyScale", nlohmann::json::object());   // a monster's body type -> its size
-            m_jOnFoeDeath = l_jBj.value("onFoeDeath", nlohmann::json::object());   // what its effects do when a monster falls
+            m_jFeelFx = l_jBj.value(toms::field::g_pszFeelFx, nlohmann::json::object());   // the attack feel (docs/gameplay/20)
+            m_jBodyScale = l_jBj.value(toms::field::g_pszBodyScale, nlohmann::json::object());   // a monster's body type -> its size
+            m_jOnFoeDeath = l_jBj.value(toms::field::g_pszOnFoeDeath, nlohmann::json::object());   // what its effects do when a monster falls
             m_oGrade = toms::f_GradeFromJson(l_jBj);           // §3.6
             m_oGuard = toms::f_GuardFromJson(l_jBj);           // §3.2
-            m_bComboHoldsMonsters = l_jBj.value("combo_holds_monsters", false);
-            m_bComboRunsThroughAttacks = l_jBj.value("combo_runs_through_attacks", true);
+            m_bComboHoldsMonsters = l_jBj.value(toms::field::g_pszComboHoldsMonsters, false);
+            m_bComboRunsThroughAttacks = l_jBj.value(toms::field::g_pszComboRunsThroughAttacks, true);
             m_oBreakSettings = toms::f_BreakFromJson(l_jBj);   // §6.4
             fprintf(stderr, "[assets] battle.json: bars start x%.2f, top speed x%.2f, %d ms after a tap\n", m_fBarSlowScale,
                     m_fBarFastScale, m_iBarCooldownMs);
@@ -229,7 +231,7 @@ bool Game::f_LoadAssets(const std::string& l_strAssetDir) {
     for (auto& [l_strK,l_jV] : l_jIj.items()) {
         if (l_strK.empty() || l_strK[0] == '_' || !l_jV.is_object()) continue;
         m_mapItemDefs[l_strK] = l_jV;
-        if (f_IsGearType(l_jV.value("type", std::string()))) {
+        if (f_IsGearType(l_jV.value(toms::field::g_pszType, std::string()))) {
             toms::EquipmentDefinition l_oD = toms::f_EquipmentFromJson(l_jV);
             l_oD.m_strId = l_strK;
             m_mapEquipmentDefs[l_strK] = l_oD;
@@ -241,7 +243,7 @@ bool Game::f_LoadAssets(const std::string& l_strAssetDir) {
         nlohmann::json l_jCj = f_ReadJsonFile(f_PathOf(toms::key::g_pszDataStoryCounters));
         if (l_jCj.is_object())
             for (auto& [l_strK, l_jV] : l_jCj.items())
-                if (!l_strK.empty() && l_strK[0] != '_' && l_jV.is_object() && l_jV.contains("label")) m_mapCounterLabels[l_strK] = l_jV["label"];
+                if (!l_strK.empty() && l_strK[0] != '_' && l_jV.is_object() && l_jV.contains(toms::field::g_pszLabel)) m_mapCounterLabels[l_strK] = l_jV[toms::field::g_pszLabel];
     }
     f_LoadEventDefs();
     f_LoadNpcs();   // NPC files and event variables (docs/gameplay/event_editor/08_NPC_DIALOGUE.md)
@@ -250,32 +252,32 @@ bool Game::f_LoadAssets(const std::string& l_strAssetDir) {
     // data/stats.json: the player's attributes and the level-up numbers (docs/gameplay/03_PLAYER_MENU.md section 3).
     {
         nlohmann::json l_jSj = f_ReadJsonFile(f_PathOf(toms::key::g_pszDataStats));
-        if (l_jSj.contains("attributes") && l_jSj["attributes"].is_array())
-            for (const auto& l_jA : l_jSj["attributes"]) {
+        if (l_jSj.contains(toms::field::g_pszAttributes) && l_jSj[toms::field::g_pszAttributes].is_array())
+            for (const auto& l_jA : l_jSj[toms::field::g_pszAttributes]) {
                 AttrDef l_oD;
-                l_oD.m_strId = l_jA.value("id", std::string());
+                l_oD.m_strId = l_jA.value(toms::field::g_pszId, std::string());
                 if (l_oD.m_strId.empty()) continue;
-                l_oD.m_strShortName = l_jA.value("short", l_oD.m_strId);
-                l_oD.m_strNameKey = l_jA.value("name", l_oD.m_strId);
-                l_oD.m_strDescKey = l_jA.value("desc", std::string());
-                l_oD.m_iBase = l_jA.value("base", 5);
-                l_oD.m_iPerLevel = l_jA.value("perLevel", 1);
-                if (l_jA.contains("effects") && l_jA["effects"].is_array())
-                    for (const auto& l_jE : l_jA["effects"])
-                        if (l_jE.is_object() && l_jE.contains("stat")) l_oD.m_vEffects.push_back({l_jE.value("stat", std::string()), l_jE.value("per", 0.0f)});
+                l_oD.m_strShortName = l_jA.value(toms::field::g_pszShort, l_oD.m_strId);
+                l_oD.m_strNameKey = l_jA.value(toms::field::g_pszName, l_oD.m_strId);
+                l_oD.m_strDescKey = l_jA.value(toms::field::g_pszDesc, std::string());
+                l_oD.m_iBase = l_jA.value(toms::field::g_pszBase, 5);
+                l_oD.m_iPerLevel = l_jA.value(toms::field::g_pszPerLevel, 1);
+                if (l_jA.contains(toms::field::g_pszEffects) && l_jA[toms::field::g_pszEffects].is_array())
+                    for (const auto& l_jE : l_jA[toms::field::g_pszEffects])
+                        if (l_jE.is_object() && l_jE.contains(toms::field::g_pszStat)) l_oD.m_vEffects.push_back({l_jE.value(toms::field::g_pszStat, std::string()), l_jE.value(toms::field::g_pszPer, 0.0f)});
                 m_vAttrDefs.push_back(l_oD);
             }
-        if (l_jSj.contains("levelUp") && l_jSj["levelUp"].is_object()) {
-            const auto& l_jL = l_jSj["levelUp"];
-            m_oLevelUp.m_iExpPerLevel = std::max(1, l_jL.value("expPerLevel", m_oLevelUp.m_iExpPerLevel));
-            m_oLevelUp.m_iAtk = l_jL.value("atk", m_oLevelUp.m_iAtk);
-            m_oLevelUp.m_iDef = l_jL.value("def", m_oLevelUp.m_iDef);
-            m_oLevelUp.m_iMaxhp = l_jL.value("maxhp", m_oLevelUp.m_iMaxhp);
-            m_oLevelUp.m_iFreePoints = l_jL.value("freePoints", m_oLevelUp.m_iFreePoints);
-            m_oLevelUp.m_iMaxLevel = std::max(1, l_jL.value("maxLevel", m_oLevelUp.m_iMaxLevel));
-            if (l_jL.contains("points") && l_jL["points"].is_array())
-                for (const auto& l_jR : l_jL["points"])
-                    if (l_jR.is_object()) m_oLevelUp.m_vPoints.push_back({std::max(2, l_jR.value("from", 2)), l_jR.value("points", 0)});
+        if (l_jSj.contains(toms::field::g_pszLevelUp) && l_jSj[toms::field::g_pszLevelUp].is_object()) {
+            const auto& l_jL = l_jSj[toms::field::g_pszLevelUp];
+            m_oLevelUp.m_iExpPerLevel = std::max(1, l_jL.value(toms::field::g_pszExpPerLevel, m_oLevelUp.m_iExpPerLevel));
+            m_oLevelUp.m_iAtk = l_jL.value(toms::field::g_pszAtk, m_oLevelUp.m_iAtk);
+            m_oLevelUp.m_iDef = l_jL.value(toms::field::g_pszDef, m_oLevelUp.m_iDef);
+            m_oLevelUp.m_iMaxhp = l_jL.value(toms::field::g_pszMaxhp, m_oLevelUp.m_iMaxhp);
+            m_oLevelUp.m_iFreePoints = l_jL.value(toms::field::g_pszFreePoints, m_oLevelUp.m_iFreePoints);
+            m_oLevelUp.m_iMaxLevel = std::max(1, l_jL.value(toms::field::g_pszMaxLevel, m_oLevelUp.m_iMaxLevel));
+            if (l_jL.contains(toms::field::g_pszPoints) && l_jL[toms::field::g_pszPoints].is_array())
+                for (const auto& l_jR : l_jL[toms::field::g_pszPoints])
+                    if (l_jR.is_object()) m_oLevelUp.m_vPoints.push_back({std::max(2, l_jR.value(toms::field::g_pszFrom, 2)), l_jR.value(toms::field::g_pszPoints, 0)});
         }
     }
     // Milestone 8: load the Mission System's content (schema/logic built in Milestone 4 --
@@ -301,7 +303,7 @@ bool Game::f_LoadAssets(const std::string& l_strAssetDir) {
     m_oCyclesConfig = toms::f_LoadCyclesConfig(f_PathOf(toms::key::g_pszDataStoryCycles));
     // init player
     m_oPl.m_iMaxhp = m_iStartingHp; m_oPl.m_iHp = m_iStartingHp; m_oPl.m_iAtk = m_iStartingAtk; m_oPl.m_iDef = m_iStartingDef; m_oPl.m_iGold = 0; m_oPl.m_iExp = 0; m_oPl.m_iLv = 1;
-    m_oPl.m_vInv = {"potion_red", "potion_blue", "exp_up"};
+    m_oPl.m_vInv = {toms::field::g_pszPotionRed, toms::field::g_pszPotionBlue, toms::field::g_pszExpUp};
     f_ResetAttrs();
 
     // S3.5: the 70-floor tower (data/story/floors/*.json) as the run's progression source. Loaded
@@ -351,8 +353,8 @@ bool Game::f_LoadAssets(const std::string& l_strAssetDir) {
 
 void Game::f_ResourceMissing(const std::string& l_strName, const std::string& l_strPath, const std::string& l_strError) {
     std::fprintf(stderr, "[res] missing: %s (%s): %s\n", l_strName.c_str(), l_strPath.c_str(), l_strError.c_str());
-    std::string l_strMsg = m_oLocale.f_Tr("res.missing");
-    l_strMsg = l_strMsg == "res.missing" || l_strMsg.empty() ? "Missing file: " + l_strName : toms::f_FillText(l_strMsg, {{"file", l_strName}});
+    std::string l_strMsg = m_oLocale.f_Tr(toms::text::g_pszResMissing);
+    l_strMsg = l_strMsg == toms::text::g_pszResMissing || l_strMsg.empty() ? "Missing file: " + l_strName : toms::f_FillText(l_strMsg, {{toms::field::g_pszFile, l_strName}});
     if (std::find(m_vResourceMessages.begin(), m_vResourceMessages.end(), l_strMsg) == m_vResourceMessages.end()) m_vResourceMessages.push_back(l_strMsg);
 }
 
@@ -445,7 +447,7 @@ void Game::f_LoadStage(const std::string& l_strId, StageArrival l_eArrival) {
         m_oSt.m_strId = l_pFloor->m_strId;
         m_oSt.m_iIndex = l_pFloor->m_iSeq;                       // 1..70 -> the HUD's "n/totalStages"
         std::string l_strResolved = l_pFloor->m_strNameKey;
-        if (l_strResolved.rfind("story.", 0) == 0) {
+        if (l_strResolved.rfind(toms::key_prefix::g_pszStory, 0) == 0) {
             std::string l_strTr = m_oLocale.f_Tr(l_strResolved);
             if (!l_strTr.empty() && l_strTr != l_strResolved) l_strResolved = l_strTr;   // missing key -> keep the map's name
             else l_strResolved = m_oSt.m_strName;
@@ -462,8 +464,8 @@ void Game::f_LoadStage(const std::string& l_strId, StageArrival l_eArrival) {
         m_iStoryTurns = 0;
         m_fChapterCardMs = 0.0f;
         if (l_pFloor->m_iIndexInAct == 1 && !l_pFloor->m_strAct.empty()) {   // first floor of an act -> act card
-            std::string l_strTitle = m_oLocale.f_Tr("story." + l_pFloor->m_strActKey + ".title");
-            if (l_strTitle.rfind("story.", 0) != 0) {               // resolved (missing key -> the key)
+            std::string l_strTitle = m_oLocale.f_Tr(toms::key_prefix::g_pszStory + l_pFloor->m_strActKey + ".title");
+            if (l_strTitle.rfind(toms::key_prefix::g_pszStory, 0) != 0) {               // resolved (missing key -> the key)
                 m_strChapterCardTitle = l_strTitle;
                 m_fChapterCardMs = 2600.0f;
             }
@@ -498,7 +500,7 @@ void Game::f_LoadStage(const std::string& l_strId, StageArrival l_eArrival) {
     for (const toms::StairLink& l_oS : m_oSt.m_vStairs)   // W38: remembered, so the Events tab can say where a stair is from any floor
         if (l_oS.m_iX >= 0) m_mapStairSpots[m_oSt.m_strId + ">" + l_oS.m_strTo] = {l_oS.m_iX, l_oS.m_iY};
     for (auto& l_oE : m_oSt.m_vEntities)   // a "stairs_up:F96" tile is a plain stair tile now
-        for (const char* l_pszK : {"stairs_up", "stairs_down"})
+        for (const char* l_pszK : {toms::field::g_pszStairsUp, toms::field::g_pszStairsDown})
             if (l_oE.m_strKind.rfind(std::string(l_pszK) + ":", 0) == 0) l_oE.m_strKind = l_pszK;
     // Milestone 7: parseStage() rebuilds every entity fresh from JSON on every call (stairs,
     // Stage Select, etc.), so re-apply any previously-persisted Defeated/Collected status here --
@@ -586,7 +588,7 @@ void Game::f_LoadStage(const std::string& l_strId, StageArrival l_eArrival) {
         for (const std::string& l_strName : toms::f_VfsListDir(l_strDir)) {
             try {
                 nlohmann::json l_jJ = f_ReadJsonFile(l_strDir + l_strName);
-                int l_iIdx = l_jJ.value("index", 0);
+                int l_iIdx = l_jJ.value(toms::field::g_pszIndex, 0);
                 if (l_iIdx > m_iTotalStages) m_iTotalStages = l_iIdx;
             } catch (...) {}
         }

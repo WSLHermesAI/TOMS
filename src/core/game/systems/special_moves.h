@@ -25,6 +25,7 @@
 //
 // Pure: data and functions only; no Game dependency.
 #pragma once
+#include "game_names.h"   // toms::state, toms::battle_event, ... (no hard-coded name)
 #include <json.hpp>
 
 #include "play_type.h"
@@ -56,7 +57,7 @@ struct ShowBeat {
 
 struct SkillPlaySpec {
     PlayType m_eType = PlayType::eDRAW_SHAPE;
-    std::string m_strShape = "pentagram";
+    std::string m_strShape = toms::gesture::g_pszPentagram;
     int m_iPoints = 5;                 // shape: its corners (set from the shape); others: how many
     int m_iTimeMs = 6000;              // shape / mash / free: the whole play's time
     float m_fHitDamage = 1.0f;         // free: each swipe or tap, times a normal attack
@@ -72,7 +73,7 @@ struct SkillPlaySpec {
 };
 
 struct SpecialMove {
-    std::string m_strId, m_strName, m_strWeapon, m_strUse = "ultimate";   // use: ultimate, skill, guard
+    std::string m_strId, m_strName, m_strWeapon, m_strUse = toms::move_use::g_pszUltimate;   // use: ultimate, skill, guard
     SkillPlaySpec m_oPlay;
     std::vector<ShowBeat> m_vDemo, m_vStep, m_vFinish;
     float m_fDamage = 10.0f;           // times a normal attack (the owner: N = 10 to start); a guard skill: unused

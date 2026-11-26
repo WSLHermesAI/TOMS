@@ -151,3 +151,41 @@ python tools/naming/rename_cpp.py apply                套用計畫
   `f_StaticType`），以及少數經由泛型 lambda 存取的成員。
 - **只差大小寫的兩個名稱**會變成同一個（`setName` 與 `SetName` 都是 `f_SetName`）。`Node` 的 `name()`/`setName()` 原本只呼叫
   `Object` 的 `Name()`/`SetName()`，改名後會呼叫自己；已刪除。報告的衝突段落只檢查同一個範圍；類別與其基底類別要手動檢查。
+
+## 7. 不寫死名稱：用常數，或由資料提供
+
+擁有者，2026-11-26：遊戲程式碼不以字串直接寫出名稱。凡是與資料或 UI 共用的名稱，都是常數，來自
+`src/core/game/core/` 的四個標頭檔之一：
+
+| 標頭檔 | 內容 | 產生方式 | 例子 |
+|---|---|---|---|
+| [res_keys.h](../../../src/core/game/core/res_keys.h) | 檔案，依 `assets/media/resources.json` 的鍵值 | 自動產生：`python tools/make_res_keys.py` | `toms::key::g_pszSfxBossIntro`，不寫 `"sfx.boss_intro"` |
+| [text_keys.h](../../../src/core/game/core/text_keys.h) | 一行文字，依 `assets/data/text.json` `"strings"` 的鍵值 | 自動產生：`python tools/make_text_keys.py` | `f_Tr(toms::text::g_pszBattleWordParry)`，不寫 `f_Tr("battle.word_parry")` |
+| [field_keys.h](../../../src/core/game/core/field_keys.h) | 資料檔的欄位（battle.json、存檔、情境檔、遊戲寫出的 glTF、文字的 `{placeholder}`） | 手寫，依名稱排序 | `l_jJ.value(toms::field::g_pszDark, 0.85f)`，不寫 `value("dark", 0.85f)` |
+| [ui_names.h](../../../src/core/game/core/ui_names.h) | UI 檔使用的名稱：資料模型與綁定、.rml 以 `act('...')` 送出的事件、元素 id 與選擇器、程式加在繪製物上的 RCSS class | 手寫，依名稱排序 | `toms::ui::g_pszStagePick`，不寫 `"stage_pick"` |
+| [game_names.h](../../../src/core/game/core/game_names.h) | 程式使用的其他名稱，每類一個命名空間：`toms::state`（狀態與片段）、`battle_event`、`moment`、`pop_style`、`story_action`、`gesture`、`key_prefix`（`"story."` + id）…… | 手寫 | `toms::state::g_pszPower`，不寫 `"power"` |
+
+兩個自動產生的標頭檔跟著來源檔：在 resources.json 或 text.json 新增、改名或移除鍵值後，執行對應的指令碼
+（過期時 `unit.res_keys_test` 與 `data.text_keys_up_to_date` 會失敗）。被移除的鍵值，程式中用到它的地方就無法編譯。
+同一段文字屬於兩類就是兩個常數（跳字的 `"hit"` 樣式不是戰鬥事件 `"hit"`）。只有資料使用的名稱不需要常數（武器資料指定的片段）。
+
+```cpp
+f_FoeLook(l_iFoe, toms::state::g_pszPower);                  // 不寫 f_FoeLook(l_iFoe, "power")
+f_PopWord(m_oLocale.f_Tr(toms::text::g_pszBattleWordParry), -1, toms::pop_style::g_pszParry);
+if (l_strName == toms::ui::g_pszStagePick) { ... }           // .rml 仍寫 act('stage_pick')
+```
+
+新名稱：先在對應的標頭檔加一行（或執行產生器），再使用。
+
+**仍是字串的：** 記錄與錯誤訊息，以及顯示的文字（`"x3"`）。檢查程式分不出來的行，加上註解 `// name-ok`。
+
+**檢查：** `python tools/naming/check_names.py`（測試 `lint.game_names`，任何遊戲 C++ 變更時 `tools\test.cmd` 都會選到）
+列出（註解除外）：在讀寫欄位處以字串寫出的欄位（`.value("k"`、`["k"]`、`->contains("k")`、`f_Str(l_jA, "k")`、
+`{"k", v}` 配對、`f_TrParam(text, "k", v)`）；交給 RmlUi 的字串（`RegisterMember`、`Bind`、`GetElementById`、
+`IsClassSet`……）；等於 game_names.h、text_keys.h 或 res_keys.h（其 `key` 命名空間）中名稱的字面值；以及在 UI 程式
+（`game_ui.cpp`、`game_player_menu.cpp`）中等於 ui_names.h 名稱的字面值。不在任何標頭檔裡的名稱抓不到：程式第一次需要時就加進去。
+
+**已完成（2026-11-26）：** 戰鬥、地圖物件、任務、事件、樓梯、劇情動作、手勢；所有資料欄位（約 770 個）、程式指定的所有文字鍵值
+（約 320 個）、UI 名稱（約 350 個）、以字串寫出的音效鍵值。**尚未：** 少數資料與程式共用、仍以字串比對的名稱（`game_scenario.cpp`
+中 "talk" 以外的場景名稱、條件類型如 `"runFlagSet"`、組合文字鍵值時的 `".title"` / `".desc"` 結尾），以及欄位的預設數值
+（上例的 `0.85f`）：docs/project/13 詢問數值的部分；名稱在各區域下次變更時移入 `game_names.h`。

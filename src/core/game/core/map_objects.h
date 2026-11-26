@@ -25,6 +25,7 @@
 //
 // The objects are Nodes under the floor's root (MapFloor::root), so the floor is a tree a hierarchy view can walk.
 #pragma once
+#include "game_names.h"   // toms::state, toms::battle_event, ... (no hard-coded name)
 #include "node.h"
 #include "render_iface.h"
 #include "resource_types.h"
@@ -122,7 +123,7 @@ public:
 protected:
     Game& m_oG;
     int m_iIndex;
-    std::string m_strStatus = "idle";
+    std::string m_strStatus = toms::state::g_pszIdle;
     float m_fStatusMs = 0;
     std::map<std::string, LookChain> m_mapLooks;
 };

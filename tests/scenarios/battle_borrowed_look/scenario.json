@@ -1,0 +1,9 @@
+{
+  "_comment": "A boss borrowing another monster's look (enemies.json sanctum_warden, F30: \"look\": \"astrowl\") plays that look's own clips (its intro: special_astrowl): it used to find no clip and stand invisible (2026-11-26).",
+  "scene": "battle",
+  "stage": "F30",
+  "battle3d": true,
+  "battle": { "enemy": "sanctum_warden" },
+  "test": { "frames": 120 },
+  "expect": { "scene": "battle", "foeClips": ["special_astrowl"] }
+}

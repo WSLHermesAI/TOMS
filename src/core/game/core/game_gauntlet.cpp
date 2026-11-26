@@ -7,26 +7,29 @@
 //
 // The guards: the boss's own list (a stage object's "gauntlet", else enemies.json "gauntlet"), its "party" (it never fights
 // beside a boss now), else up to battle.json "gauntlet" "count" kinds of the floor's other monsters, in the map's order.
+#include "text_keys.h"     // toms::text: every line of text by its key
+#include "field_keys.h"    // toms::field: every data field by its constant
+#include "game_names.h"   // toms::state, toms::battle_event, ... (no hard-coded name)
 #include "game_internal.h"
 
 using namespace toms::game_detail;
 
 bool Game::f_IsGauntletBoss(const std::string& l_strId) const {
     const auto l_itT = m_mapEnemyTpl.find(l_strId);
-    return l_itT != m_mapEnemyTpl.end() && l_itT->second.value("intro", false);
+    return l_itT != m_mapEnemyTpl.end() && l_itT->second.value(toms::field::g_pszIntro, false);
 }
 
 std::vector<EnemyInst> Game::f_GauntletGuards(const EnemyInst& l_oBoss, const std::vector<std::string>& l_vStageList) {
-    const nlohmann::json l_jG = m_jBattleJson.value("gauntlet", nlohmann::json::object());
+    const nlohmann::json l_jG = m_jBattleJson.value(toms::field::g_pszGauntlet, nlohmann::json::object());
     std::vector<std::string> l_vIds = l_vStageList;
     const auto l_itT = m_mapEnemyTpl.find(l_oBoss.m_strId);
     if (l_vIds.empty() && l_itT != m_mapEnemyTpl.end())
-        for (const char* l_pszKey : {"gauntlet", "party"}) {
+        for (const char* l_pszKey : {toms::field::g_pszGauntlet, toms::field::g_pszParty}) {
             if (!l_vIds.empty()) break;
             for (const auto& l_jId : l_itT->second.value(l_pszKey, nlohmann::json::array())) if (l_jId.is_string()) l_vIds.push_back(l_jId.get<std::string>());
         }
-    if (l_vIds.empty() && l_jG.value("fromFloor", true)) {   // the floor's other monsters, each kind once, in the map's order
-        const int l_iCount = std::clamp(l_jG.value("count", 3), 0, 8);
+    if (l_vIds.empty() && l_jG.value(toms::field::g_pszFromFloor, true)) {   // the floor's other monsters, each kind once, in the map's order
+        const int l_iCount = std::clamp(l_jG.value(toms::field::g_pszCount, 3), 0, 8);
         for (const Entity& l_oE : m_oSt.m_vEntities) {
             if ((int)l_vIds.size() >= l_iCount) break;
             if (l_oE.m_strKind.rfind("monster:", 0) != 0 || l_oE.m_strId == l_oBoss.m_strId || f_IsGauntletBoss(l_oE.m_strId)) continue;
@@ -47,7 +50,7 @@ void Game::f_StartGauntlet(const EnemyInst& l_oBoss, const std::vector<EnemyInst
     m_oGauntlet.m_vSteps = l_vGuards;
     m_oGauntlet.m_vSteps.push_back(l_oBoss);   // the last: the boss (on the map: winning it clears its tile)
     m_v3BattleTravel = glm::vec3(0.0f);
-    f_BattleEvent("gauntlet", -1, -1, (int)m_oGauntlet.m_vSteps.size());
+    f_BattleEvent(toms::battle_event::g_pszGauntlet, -1, -1, (int)m_oGauntlet.m_vSteps.size());
     f_StartCombat(m_oGauntlet.m_vSteps[0]);
 }
 
@@ -59,7 +62,7 @@ void Game::f_DismissVictory() {
     if (!m_oGauntlet.m_bOn) return;
     if (m_oGauntlet.m_iStep + 1 >= (int)m_oGauntlet.m_vSteps.size()) { f_EndGauntlet(); return; }
     m_oGauntlet.m_iStep++;
-    const nlohmann::json l_jG = m_jBattleJson.value("gauntlet", nlohmann::json::object());
+    const nlohmann::json l_jG = m_jBattleJson.value(toms::field::g_pszGauntlet, nlohmann::json::object());
     m_v3TravelFrom = m_v3BattleTravel;
     m_v3TravelTo = f_GauntletStepVec() * (float)m_oGauntlet.m_iStep;
     const int l_iSuper = m_oCs.m_iSuperCharge;   // the charge points go on to the next fight (the owner, 2026-11-23)
@@ -68,10 +71,10 @@ void Game::f_DismissVictory() {
     m_iRunPuffStep = -1;
     // the hero back to his idle pose (the last fight's win pose holds only while its result shows)
     m_strBattleRigState.clear();
-    f_SetBattleRigState("idle", true);
-    m_oCs.m_iTravelMs = m_oCs.m_iTravelMsMax = std::max(0, l_jG.value("travelMs", 1500));
+    f_SetBattleRigState(toms::state::g_pszIdle, true);
+    m_oCs.m_iTravelMs = m_oCs.m_iTravelMsMax = std::max(0, l_jG.value(toms::field::g_pszTravelMs, 1500));
     if (m_oCs.m_iTravelMs <= 0) m_v3BattleTravel = m_v3TravelTo;
-    f_BattleEvent("travel", m_oGauntlet.m_iStep, -1, (int)m_oGauntlet.m_vSteps.size());
+    f_BattleEvent(toms::battle_event::g_pszTravel, m_oGauntlet.m_iStep, -1, (int)m_oGauntlet.m_vSteps.size());
 }
 
 void Game::f_EndGauntlet() {
@@ -97,14 +100,14 @@ void Game::f_FillGauntletUi(toms::UiBattle& l_oB) const {
         l_oS.m_bBoss = l_nI + 1 == m_oGauntlet.m_vSteps.size();
         l_oS.m_strSprite = f_UiSprite(l_oE.m_bBoss ? std::string("boss_demonlord") : f_TypeSprite("monster", l_oE.m_strId));
         const int l_iI = (int)l_nI;
-        l_oS.m_strState = l_iI < m_oGauntlet.m_iStep ? "done" : l_iI == m_oGauntlet.m_iStep ? "now" : "next";
-        l_oS.m_strName = l_oS.m_strState == "next" ? (l_oS.m_bBoss ? m_oLocale.f_Tr("battle.gauntlet_boss") : std::string("?")) : l_oE.m_strName;
+        l_oS.m_strState = l_iI < m_oGauntlet.m_iStep ? toms::gauntlet_step::g_pszDone : l_iI == m_oGauntlet.m_iStep ? toms::gauntlet_step::g_pszNow : toms::gauntlet_step::g_pszNext;
+        l_oS.m_strName = l_oS.m_strState == toms::gauntlet_step::g_pszNext ? (l_oS.m_bBoss ? m_oLocale.f_Tr(toms::text::g_pszBattleGauntletBoss) : std::string("?")) : l_oE.m_strName;
         l_oB.m_vSteps.push_back(l_oS);
     }
 }
 
 glm::vec3 Game::f_GauntletStepVec() const {
-    const nlohmann::json l_jStep = m_jBattleJson.value("gauntlet", nlohmann::json::object()).value("step", nlohmann::json::array({0.0, 0.0, -3.5}));
+    const nlohmann::json l_jStep = m_jBattleJson.value(toms::field::g_pszGauntlet, nlohmann::json::object()).value(toms::field::g_pszStep, nlohmann::json::array({0.0, 0.0, -3.5}));
     return l_jStep.is_array() && l_jStep.size() >= 3 ? glm::vec3(l_jStep[0].get<float>(), l_jStep[1].get<float>(), l_jStep[2].get<float>())
                                                      : glm::vec3(0.0f, 0.0f, -3.5f);
 }
@@ -114,18 +117,18 @@ glm::vec3 Game::f_GauntletStepVec() const {
 void Game::f_DrawGauntletWaiting() {
     if (!m_oGauntlet.m_bOn || !f_Battle3DSpritesOn() || m_oCs.m_vFoes.empty()) return;
     const glm::vec3 l_v3Base = f_Battle3DMark(0) - m_v3TravelTo;   // the first monster's place
-    const nlohmann::json l_jH = m_jBattle3DStage.value("heights", nlohmann::json::object());
-    const nlohmann::json l_jG = m_jBattleJson.value("gauntlet", nlohmann::json::object());
-    const float l_fShade = l_jG.value("waitingShade", 0.0f);
-    const float l_arrTint[4] = {l_fShade, l_fShade * 0.9f, l_fShade * 1.2f, l_jG.value("waitingAlpha", 0.85f)};
+    const nlohmann::json l_jH = m_jBattle3DStage.value(toms::field::g_pszHeights, nlohmann::json::object());
+    const nlohmann::json l_jG = m_jBattleJson.value(toms::field::g_pszGauntlet, nlohmann::json::object());
+    const float l_fShade = l_jG.value(toms::field::g_pszWaitingShade, 0.0f);
+    const float l_arrTint[4] = {l_fShade, l_fShade * 0.9f, l_fShade * 1.2f, l_jG.value(toms::field::g_pszWaitingAlpha, 0.85f)};
     for (size_t l_nK = (size_t)m_oGauntlet.m_iStep + 1; l_nK < m_oGauntlet.m_vSteps.size(); l_nK++) {
         const EnemyInst& l_oE = m_oGauntlet.m_vSteps[l_nK];
         const std::string l_strSprite = l_oE.m_bBoss ? std::string("boss_demonlord") : f_TypeSprite("monster", l_oE.m_strId);
         const auto l_itT = m_mapEnemyTpl.find(l_oE.m_strId);
-        const bool l_bBig = l_oE.m_bBoss || (l_itT != m_mapEnemyTpl.end() && l_itT->second.value("big", false));
-        const float l_fH = l_bBig ? l_jH.value("big", 3.0f) : l_jH.value("monster", 1.6f);
+        const bool l_bBig = l_oE.m_bBoss || (l_itT != m_mapEnemyTpl.end() && l_itT->second.value(toms::field::g_pszBig, false));
+        const float l_fH = l_bBig ? l_jH.value(toms::field::g_pszBig, 3.0f) : l_jH.value(toms::field::g_pszMonster, 1.6f);
         // each a little to the side of the line, left and right in turn: the one behind is not hidden by the one in front
-        const float l_fSide = l_jG.value("waitingSide", 0.9f) * (((l_nK - (size_t)m_oGauntlet.m_iStep) % 2 == 1) ? 1.0f : -1.0f);
+        const float l_fSide = l_jG.value(toms::field::g_pszWaitingSide, 0.9f) * (((l_nK - (size_t)m_oGauntlet.m_iStep) % 2 == 1) ? 1.0f : -1.0f);
         const glm::vec3 l_v3At = l_v3Base + f_GauntletStepVec() * (float)l_nK + glm::vec3(l_fSide, 0.0f, 0.0f);
         const glm::mat4 l_mat4M = f_Battle3DSpriteMatrix(glm::vec2(50.0f, 100.0f), l_v3At, l_fH / 100.0f);
         m_pRen->f_BeginWorld(&l_mat4M[0][0], false);

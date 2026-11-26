@@ -1,3 +1,5 @@
+#include "text_keys.h"     // toms::text: every line of text by its key
+#include "field_keys.h"    // toms::field: every data field by its constant
 #include "../../engine/vfs.h"
 #include "localization.h"
 #include <cstdio>
@@ -12,32 +14,32 @@ namespace {
 // the strings this file's own UI needs, since content text lives in the JSON.
 const char* const g_arrFallbackKeys[][3] = {
     // key,          zh_TW,               en
-    {"game.title",          "魔法塔",                    "Tower of the Sorcerer"},
-    {"menu.new_game",       "新遊戲",                    "New Game"},
-    {"menu.continue",       "繼續遊戲",                  "Continue"},
-    {"menu.settings",       "設定",                      "Settings"},
-    {"menu.back",           "返回",                      "Back"},
-    {"continue.header",     "選擇存檔",                  "Select a Save File"},
-    {"continue.empty",      "空",                        "Empty"},
-    {"continue.hint",       "沒有存檔時請先開始新遊戲",   "No saves yet — start a new game first"},
-    {"continue.new_game_confirm",      "要用存檔格 {slot} 開始新遊戲嗎？", "Use slot {slot} to start the game?"},
-    {"continue.new_game_confirm.body", "這個存檔格是空的，選「是」會從第一層開始新遊戲。", "This slot is empty. Choosing Yes starts a new game from stage 1."},
-    {"menu.yes",            "是",                        "Yes"},
-    {"menu.no",             "否",                        "No"},
-    {"settings.header",     "設定",                      "Settings"},
-    {"settings.language",   "語言",                      "Language"},
-    {"settings.hint",       "左右鍵切換  Esc 返回",        "Left/Right: change   Esc: back"},
-    {"menu.hint",           "上下鍵選擇  Enter 確定  Esc 返回", "Up/Down: select   Enter: confirm   Esc: back"},
+    {toms::text::g_pszGameTitle,          "魔法塔",                    "Tower of the Sorcerer"},
+    {toms::text::g_pszMenuNewGame,       "新遊戲",                    "New Game"},
+    {toms::text::g_pszMenuContinue,       "繼續遊戲",                  "Continue"},
+    {toms::text::g_pszMenuSettings,       "設定",                      "Settings"},
+    {toms::text::g_pszMenuBack,           "返回",                      "Back"},
+    {toms::text::g_pszContinueHeader,     "選擇存檔",                  "Select a Save File"},
+    {toms::text::g_pszContinueEmpty,      "空",                        "Empty"},
+    {toms::text::g_pszContinueHint,       "沒有存檔時請先開始新遊戲",   "No saves yet — start a new game first"},
+    {toms::text::g_pszContinueNewGameConfirm,      "要用存檔格 {slot} 開始新遊戲嗎？", "Use slot {slot} to start the game?"},
+    {toms::text::g_pszContinueNewGameConfirmBody, "這個存檔格是空的，選「是」會從第一層開始新遊戲。", "This slot is empty. Choosing Yes starts a new game from stage 1."},
+    {toms::text::g_pszMenuYes,            "是",                        "Yes"},
+    {toms::text::g_pszMenuNo,             "否",                        "No"},
+    {toms::text::g_pszSettingsHeader,     "設定",                      "Settings"},
+    {toms::text::g_pszSettingsLanguage,   "語言",                      "Language"},
+    {toms::text::g_pszSettingsHint,       "左右鍵切換  Esc 返回",        "Left/Right: change   Esc: back"},
+    {toms::text::g_pszMenuHint,           "上下鍵選擇  Enter 確定  Esc 返回", "Up/Down: select   Enter: confirm   Esc: back"},
 };
 
 } // namespace
 
 Locale::Locale() {
-    m_vLangs = { {"zh_TW", "繁體中文"}, {"en", "English"} };
+    m_vLangs = { {toms::field::g_pszZhTW, "繁體中文"}, {toms::field::g_pszEn, "English"} };
     m_iIdx = 1;   // English is the default language
     for (auto& l_arrRow : g_arrFallbackKeys) {
-        m_mapStrings[l_arrRow[0]]["zh_TW"] = l_arrRow[1];
-        m_mapStrings[l_arrRow[0]]["en"]    = l_arrRow[2];
+        m_mapStrings[l_arrRow[0]][toms::field::g_pszZhTW] = l_arrRow[1];
+        m_mapStrings[l_arrRow[0]][toms::field::g_pszEn]    = l_arrRow[2];
     }
 }
 
@@ -45,23 +47,23 @@ bool Locale::f_LoadFromJson(const nlohmann::json& l_jJ) {
     if (!l_jJ.is_object()) return false;
     bool l_bOk = false;
 
-    if (l_jJ.contains("languages") && l_jJ["languages"].is_array()) {
+    if (l_jJ.contains(toms::field::g_pszLanguages) && l_jJ[toms::field::g_pszLanguages].is_array()) {
         std::vector<LanguageInfo> l_vLangs;
-        for (auto& l_jE : l_jJ["languages"]) {
+        for (auto& l_jE : l_jJ[toms::field::g_pszLanguages]) {
             if (!l_jE.is_object()) continue;
             LanguageInfo l_oLi;
-            l_oLi.m_strCode = l_jE.value("code", std::string());
-            l_oLi.m_strName = l_jE.value("name", std::string());
-            l_oLi.m_strFont = l_jE.value("font", std::string());
-            l_oLi.m_strWebFont = l_jE.value("web_font", std::string());
+            l_oLi.m_strCode = l_jE.value(toms::field::g_pszCode, std::string());
+            l_oLi.m_strName = l_jE.value(toms::field::g_pszName, std::string());
+            l_oLi.m_strFont = l_jE.value(toms::field::g_pszFont, std::string());
+            l_oLi.m_strWebFont = l_jE.value(toms::field::g_pszWebFont, std::string());
             if (!l_oLi.m_strCode.empty()) l_vLangs.push_back(l_oLi);
         }
         // "offered": the languages the player can pick (the owner, 2026-11-02: Traditional Chinese and English for now;
         // the others keep their strings for later). Missing: every language listed.
-        if (l_jJ.contains("offered") && l_jJ["offered"].is_array()) {
+        if (l_jJ.contains(toms::field::g_pszOffered) && l_jJ[toms::field::g_pszOffered].is_array()) {
             std::vector<LanguageInfo> l_vKept;
             for (const LanguageInfo& l_oLi : l_vLangs)
-                for (const auto& l_jO : l_jJ["offered"])
+                for (const auto& l_jO : l_jJ[toms::field::g_pszOffered])
                     if (l_jO.is_string() && l_jO.get<std::string>() == l_oLi.m_strCode) { l_vKept.push_back(l_oLi); break; }
             if (!l_vKept.empty()) l_vLangs = l_vKept;
         }
@@ -69,7 +71,7 @@ bool Locale::f_LoadFromJson(const nlohmann::json& l_jJ) {
             m_vLangs = l_vLangs;
             m_iIdx = 0;
             // "default": the language a new player starts in (Traditional Chinese, 2026-11-02); else English
-            const std::string l_strDef = l_jJ.value("default", std::string("en"));
+            const std::string l_strDef = l_jJ.value(toms::field::g_pszDefault, std::string("en"));
             bool l_bFound = false;
             for (size_t l_nI = 0; l_nI < m_vLangs.size() && !l_bFound; l_nI++)
                 if (m_vLangs[l_nI].m_strCode == l_strDef) { m_iIdx = (int)l_nI; l_bFound = true; }
@@ -78,8 +80,8 @@ bool Locale::f_LoadFromJson(const nlohmann::json& l_jJ) {
         }
     }
 
-    if (l_jJ.contains("strings") && l_jJ["strings"].is_object()) {
-        for (auto& [l_strKey, l_jLangs] : l_jJ["strings"].items()) {
+    if (l_jJ.contains(toms::field::g_pszStrings) && l_jJ[toms::field::g_pszStrings].is_object()) {
+        for (auto& [l_strKey, l_jLangs] : l_jJ[toms::field::g_pszStrings].items()) {
             if (!l_jLangs.is_object()) continue;
             for (auto& [l_strCode, l_jText] : l_jLangs.items()) {
                 if (!l_jText.is_string()) continue;

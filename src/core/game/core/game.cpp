@@ -1,4 +1,7 @@
+#include "perf.h"   // toms::perf: the performance checker (F4)
+#include "text_keys.h"     // toms::text: every line of text by its key
 // game.cpp — implementation of Game.
+#include "field_keys.h"    // toms::field: every data field by its constant
 #include "game.h"
 #include "node.h"   // 2D scene-graph Node (parent/child + local/world transform)
 #include "scene.h"  // render binding: GameObject / SpriteNode / TextNode / FullScreenSplash
@@ -106,7 +109,7 @@ void Game::f_NewGame(int l_iSlot) {
     // A new game is a genuinely fresh run: default stats and wiped story/entity/meta progress.
     m_oPl = Player();
     m_oPl.m_iMaxhp = m_iStartingHp; m_oPl.m_iHp = m_iStartingHp; m_oPl.m_iAtk = m_iStartingAtk; m_oPl.m_iDef = m_iStartingDef; m_oPl.m_iGold = 0; m_oPl.m_iExp = 0; m_oPl.m_iLv = 1;
-    m_oPl.m_vInv = {"potion_red", "potion_blue", "exp_up"};
+    m_oPl.m_vInv = {toms::field::g_pszPotionRed, toms::field::g_pszPotionBlue, toms::field::g_pszExpUp};
     f_ResetAttrs();
     m_oEquipped = toms::EquippedSet{};
     m_vGearOwned.clear();
@@ -150,6 +153,7 @@ void Game::f_NewGame(int l_iSlot) {
 
 
 void Game::f_Update(int l_iDtMs) {
+    toms::perf::Scope l_oPerf(toms::perf::section::g_pszUpdateGame);
     m_dIdleClockMs += l_iDtMs;   // the looping clips on the map (each object at its own phase: map_objects.cpp)
     // Hot reload (setHotReload: the editors, debug builds): files changed on disk are read again, in place. The clips
     // and effects that were playing from a reloaded file start over from its new contents.
@@ -166,17 +170,17 @@ void Game::f_Update(int l_iDtMs) {
         if (const toms::fx::Effect* l_pE = m_spPreviewFxFile->f_Find(m_strPreviewFxName)) m_oPreviewFx.f_Play(l_pE, l_pE->m_uSeed ? l_pE->m_uSeed : 1u);
         else m_oPreviewFx.f_Stop(true);
     }
-    m_oFloor.f_Update(l_iDtMs);   // the floor's objects: a door's opening clip plays out, ...
+    { toms::perf::Scope l_oP(toms::perf::section::g_pszUpdateMapObjects); m_oFloor.f_Update(l_iDtMs); }   // the floor's objects: a door's opening clip plays out, ...
     if (!m_vResourceMessages.empty() && !m_oTitle.f_IsOpen()) {   // missing files, said once the map shows (resourceMissing)
         for (const std::string& l_strM : m_vResourceMessages) m_vNotifications.push_back({l_strM, 6000});
         m_vResourceMessages.clear();
     }
     if (!m_strPreviewMeshSprite.empty()) m_dPreviewMeshMs += l_iDtMs;   // --mesh-test: the wave's clock
     const int l_iBattleDt = f_BattleFrame(l_iDtMs);   // the battle's time: 0 in a hit stop, slower in slow motion (docs/gameplay/15)
-    f_UpdateBattleRig(l_iBattleDt);   // the bow and the player's character on the battle screen (battleRigState)
-    f_UpdateMonsterRig(f_CellIntroOn() ? l_iDtMs : l_iBattleDt);  // the monster (alone in the first danger's moment): idle, attack, hurt, die (monster_battle.anim)
-    f_UpdateBattleFx(l_iDtMs);    // the weapon's particles (battle.particle)
-    f_UpdateBattleBackdrop(l_iDtMs);   // the battle's background keeps moving through a hit stop
+    { toms::perf::Scope l_oP(toms::perf::section::g_pszUpdateBattleRig); f_UpdateBattleRig(l_iBattleDt); }   // the bow and the player's character on the battle screen (battleRigState)
+    { toms::perf::Scope l_oP(toms::perf::section::g_pszUpdateMonsterRig); f_UpdateMonsterRig(f_CellIntroOn() ? l_iDtMs : l_iBattleDt); }  // the monster (alone in the first danger's moment): idle, attack, hurt, die (monster_battle.anim)
+    { toms::perf::Scope l_oP(toms::perf::section::g_pszUpdateBattleFx); f_UpdateBattleFx(l_iDtMs); }    // the weapon's particles (battle.particle)
+    { toms::perf::Scope l_oP(toms::perf::section::g_pszUpdateBackdrop); f_UpdateBattleBackdrop(l_iDtMs); }   // the battle's background keeps moving through a hit stop
     if (m_oPreviewRig.f_Character() || m_oPreviewRig.f_Held()) {   // --anim with --held: both clips, one clock
         m_oPreviewRig.f_Update(l_iDtMs);
         for (const std::string& l_strE : m_oPreviewRig.f_TakeEvents()) std::fprintf(stderr, "[anim] event %s\n", l_strE.c_str());
@@ -205,7 +209,7 @@ void Game::f_Update(int l_iDtMs) {
         else if (l_nSig + 1 != m_nEventLogSeen) {
             m_nEventLogSeen = l_nSig + 1;
             if (!(m_bInGameMenuOpen && m_eMenuTab == MenuTab::Events)) m_bNewsEvents = true;
-            const std::string l_strMsg = m_oLocale.f_Tr("events.updated");   // once, however many entries changed together
+            const std::string l_strMsg = m_oLocale.f_Tr(toms::text::g_pszEventsUpdated);   // once, however many entries changed together
             if (std::none_of(m_vNotifications.begin(), m_vNotifications.end(), [&](const auto& l_oN) { return l_oN.first == l_strMsg; }))
                 f_PushNotification(l_strMsg);
         }
@@ -236,6 +240,7 @@ void Game::f_Update(int l_iDtMs) {
         if (m_oMiniGame.m_oPlay.f_Done()) f_FinishMiniGame();
     }
   {   // the battle runs on its own time this frame (Game::battleFrame: hit stop, slow motion)
+    toms::perf::Scope l_oPerfBattle(toms::perf::section::g_pszUpdateBattleLogic);
     const int l_iDtMs = m_oCs.m_iFrameDt;
     if (m_oCs.m_iHeroDownMs > 0) m_oCs.m_iHeroDownMs = std::max(0, m_oCs.m_iHeroDownMs - l_iDtMs);   // knocked down (f_KnockDownHero)
     // An attack is playing (docs/gameplay/07_GAMEPLAY_PLAN.md §4): both sides' clocks wait for it.

@@ -232,6 +232,10 @@ RULES = [
     (['src/core/game/core/game_gauntlet.cpp', 'assets/media/ui/battle.rml', 'assets/media/ui/battle.rcss'], named('scenario.boss_gauntlet_start', 'scenario.boss_gauntlet_next'), 'a boss\'s fight as a sequence (docs/gameplay/25): its tests'),
     (['tools/stage3d/*', 'assets/media/stage3d/*', 'assets/data/stage3d.json', 'src/core/game/core/game_walk3d.cpp', 'src/game/src/floor_mesh.*'], named('scenario.walk_3d', 'scenario.walk_3d_far'), 'walking the floors in 3D (docs/gameplay/24): the 3D floor tests'),
     (['tools/check_exe_dlls.py'], None, 'checks every built exe for missing DLLs (docs/project/02 §7): no test, it is the check'),
+    (['tools/naming/check_names.py', 'src/core/game/core/game_names.h', 'src/core/game/core/field_keys.h',
+      'src/core/game/core/ui_names.h'], named('lint.game_names'), 'no hard-coded name in the game code (docs/project/12 §7): its check'),
+    (['tools/make_text_keys.py', 'src/core/game/core/text_keys.h'], named('data.text_keys_up_to_date', 'lint.game_names'),
+     'text_keys.h, made from text.json (docs/project/12 §7): it is up to date, and the code uses it'),
     (['tools/naming/*'], None, 'the C++ naming renamer (docs/project/12 §6): no test; the build checks what it renamed'),
     (['art_raw/*'], ATLAS, 'raw art (sprite PNGs): the atlas checks'),
     (['assets/media/atlas/*'], any_of(ATLAS, is_game_smoke_d3d11), 'atlas files: atlas checks + game screenshots'),
@@ -333,6 +337,10 @@ def select(files, tests, since):
 
     def game(f, why):
         take(GAME_UNIT, why)
+        if f.endswith(('.cpp', '.h')):   # no hard-coded name in the game's C++ (docs/project/12 §7)
+            take(named('lint.game_names'), why)
+        if f == 'assets/data/text.json':   # text_keys.h must still be text.json's (tools/make_text_keys.py)
+            take(named('data.text_keys_up_to_date', 'lint.game_names'), why)
         if f.startswith(('assets/data/', 'assets/media/ui/', 'assets/media/styles/')):   # text: the UI font must have it
             take(named('data.ui_font_covers_text'), why)
         if f.startswith('assets/data/'):   # the native stage editor reads every floor, type and event (and the index)
