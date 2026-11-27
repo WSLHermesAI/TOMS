@@ -1,0 +1,26 @@
+{
+  "_comment": "The long bow's ultimate, Taichi Spin (the owner, 2026-11-27; docs/gameplay/26 §6; special_moves.json taichi_spin): g at frame 10; the Taichi in the middle of the screen (at 512,346 on the test's 1024 x 768 screen, the ring's radius 170); six turns traced round it in two strokes: x2.0 of a normal attack, shared by the ten meteors of Cyclone Volley's show.",
+  "scene": "battle",
+  "player": {
+    "give": ["long_bow"],
+    "equip": ["long_bow"]
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000,
+    "super": true,
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 760,
+    "keys": "g@10",
+    "drags": "o:512:346:150:3:60@100,o:512:346:150:3:60@170"
+  },
+  "expect": {
+    "battleEvents": {
+      "skill": 1,
+      "hit": 10
+    }
+  }
+}

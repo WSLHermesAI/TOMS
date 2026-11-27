@@ -66,6 +66,12 @@ struct SkillPlaySpec {
     std::vector<std::string> m_vCues;  // swipe: each prompt, "way", a gesture or a shape name
     int m_iMinHits = 0;                // fewer steps done than this: the move fizzles (no damage; 22 §3, a chain's 6 of 10)
     std::string m_strGuideFx;          // spin: particles going round the ring the way to draw ("guideFx")
+    // spin, the long bow's Taichi (docs/gameplay/26 §6): "anyWay": a turn either way counts (no cues); "turnDamage": [[turns,
+    // x], ...]: the damage by turns done (the highest row reached, times a normal attack; none: a fizzle) instead of
+    // "damage" x the share; "picture": a picture in the ring that turns with the finger (an RCSS class, .tp.spinpic.<it>)
+    bool m_bAnyWay = false;
+    std::vector<std::pair<int, float>> m_vTurnDamage;
+    std::string m_strPicture;
     int m_iGuidePeriodMs = 900;        // ...once round in this long ("guidePeriodMs")
     std::string m_strAround = "hero";  // shape / spin: where it is drawn: "hero" (on his head, ringY), "monster" (on the one aimed at) or "center" (the screen's middle)
     float m_fRingY = -0.12f;           // spin: the ring's middle this share of the hero's box height down from its top ("ringY"; his picture
@@ -99,5 +105,12 @@ int f_ShowLength(const std::vector<ShowBeat>& l_vBeats, bool l_bFull, bool l_bLa
 std::vector<const ShowBeat*> f_BeatsDue(const std::vector<ShowBeat>& l_vBeats, int l_iFromMs, int l_iToMs);
 // The move's name as far as a step: the first `done` of `total` shares of its letters (UTF-8 kept whole).
 std::string f_NamePart(const std::string& l_strName, int l_iDone, int l_iTotal);
+
+// The damage x for so many turns (the highest row of turnDamage reached; 0: below the first row).
+inline float f_TurnDamage(const SkillPlaySpec& l_oP, int l_iTurns) {
+    float l_fX = 0.0f;
+    for (const auto& [l_iAt, l_fMul] : l_oP.m_vTurnDamage) if (l_iTurns >= l_iAt) l_fX = l_fMul;
+    return l_fX;
+}
 
 } // namespace toms

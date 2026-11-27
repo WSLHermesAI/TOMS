@@ -51,6 +51,16 @@ struct TouchPlaySettings {
     float m_fBowMoveDist = 90.0f;     // ...this far
     int m_iBowHoldMs = 1500;          // the pull's charge limit: held this long, full charge, and the arrow goes (Game: STR)
     float m_fBowShakePx = 10.0f;      // the aim's shake after 1 s held, growing with the hold (Game: less with DEX)
+    // The long bow's aim (the owner, 2026-11-27; docs/gameplay/26): the line starts at the hero's bow hand and grows while
+    // held, this share of the distance to the target a second (0: the bow's classic pull), stopping at the target's
+    // distance; dragging back lengthens it (bowPull) and steers it. Its shot is judged by rings round the target.
+    float m_fBowGrowPerSec = 0.0f;
+    glm::vec2 m_v2BowOrigin{0.0f};    // the bow hand on the screen (Game, every frame)
+    std::vector<glm::vec2> m_vBowRings{{5.0f, 1.2f}, {15.0f, 1.0f}, {50.0f, 0.8f}, {80.0f, 0.5f}, {120.0f, 0.1f}};   // (radius px, damage x), outward; beyond: 0
+    glm::vec2 m_v2BowDex{0.6f, 50.0f};   // the rings widen: Dx = 1 + k * DEX / (DEX + half)
+    glm::vec2 m_v2BowStr{0.3f, 100.0f};  // a landed shot's force: Sb = 1 + k * STR / (STR + half)
+    float m_fBowRingScale = 1.0f;     // Dx for this player (Game)
+    float m_fBowStrBonus = 1.0f;      // Sb for this player (Game)
     // slice
     CueTiming m_oSliceCue;                    // each prompt 1000 ms, of which the last 500 ms take the answer
     float m_fSliceMinLength = 70.0f;          // a shorter swipe is not a cut
@@ -73,6 +83,7 @@ struct TouchPlaySettings {
     float m_fSpinRadius = 100.0f;     // the ring drawn (a move's size / 2)
     float m_fSpinMinRadius = 30.0f;   // nearer the middle than this, the finger's angle is not read
     float m_fSpinTurnDeg = 330.0f;    // this much of a turn, the right way, is one circle (a little short of 360: a hand's circle)
+    bool m_bSpinFree = false;          // a turn either way counts (the Taichi; no cues)
     int m_iSpinPerfectMs = 900;       // a circle this soon after the last is perfect
     // circles
     int m_iCircleCountMs = 450;       // each circle lit in turn with its number
@@ -120,7 +131,8 @@ public:
     struct Circle { float m_fX = 0, m_fY = 0; int m_iState = 0; };   // 0 wait 1 hit 2 perfect 3 missed
     struct Mark { float m_fX = 0, m_fY = 0; bool m_bOk = false; int m_iAgeMs = 0; };
     // One answer, as it happens: which one (0 = the first) and, for a swipe, the way it went (degrees, 0 = right, clockwise).
-    struct Hit { bool m_bOk = false, m_bPerfect = false; float m_fX = 0, m_fY = 0; int m_iOrder = 0; float m_fAngle = 0; };
+    struct Hit { bool m_bOk = false, m_bPerfect = false; float m_fX = 0, m_fY = 0; int m_iOrder = 0; float m_fAngle = 0;
+                 float m_fMul = -1.0f; };   // m_fMul: the long bow's damage multiplier for this shot (-1: not judged so)
     enum class CirclePhase { Count, Hide, Warn, Tap };
     enum class RecallPhase { Show, Ready, Answer };   // recall: shown one by one, "Go!", the answers (chain: always Answer)
 
@@ -155,6 +167,21 @@ public:
     glm::vec2 f_Crosshair() const;                  // where the arrow would go now (with the shake)
     float f_Charge() const;                         // the pull's charge now, 0..1
     float f_ShotCharge() const { return m_iShots > 0 ? m_fChargeSum / (float)m_iShots : 0.0f; }   // the shots' average
+    // the long bow (m_fBowGrowPerSec > 0)
+    bool f_GrowMode() const { return m_oS.m_fBowGrowPerSec > 0.0f; }
+    void f_SetBowOrigin(glm::vec2 l_v2P) { m_oS.m_v2BowOrigin = l_v2P; }
+    void f_CancelHold();   // the finger's hold let go with no shot (a pull, a stroke, a slide): a monster's attack begins
+    // The bow's area moved on the screen (the camera came close on a monster for its special attack, or panned): the
+    // target goes with it, so it stays by its monster and can still be shot (the owner, 2026-11-27).
+    void f_FollowArea(const glm::vec4& l_v4Area);
+    glm::vec2 f_BowOrigin() const { return m_oS.m_v2BowOrigin; }
+    bool f_AimStopped() const { return m_bGrowStopped; }   // the line reached the target's distance: steer now
+    float f_TargetDistance() const;                 // from the bow hand to the target's middle
+    glm::vec2 f_AimDir() const;                     // the line's way: at the target, turned by the drag
+    float f_AimLength() const;                      // grown share x the distance + the drag x bowPull
+    float f_TipTier() const;                        // the ring the tip is in now (its damage x, before STR; 0: outside)
+    float f_ShotMul() const { return m_iMulShots > 0 ? m_fMulSum / (float)m_iMulShots : -1.0f; }   // the shots' average x (-1: none)
+    static float f_RingTier(float l_fDist, const TouchPlaySettings& l_oS);   // a distance's ring (its x; 0: outside), DEX widened
     // slice
     const CueTrack& f_Cues() const { return m_oCueTrack; }
     const std::string& f_CueKind(int l_iK) const { return m_vCueKinds[(size_t)l_iK]; }   // "way" or a shape
@@ -181,7 +208,8 @@ public:
     glm::vec2 f_SpinCentre() const { return m_v2SpinC; }
     float f_SpinRadius() const { return m_oS.m_fSpinRadius; }
     bool f_SpinClockwise(int l_iK) const;           // the turn k's way (true: clockwise on the screen)
-    float f_SpinProgress() const { return std::clamp(m_fSpinTurn / std::max(1.0f, m_oS.m_fSpinTurnDeg), 0.0f, 1.0f); }   // the turn going now, 0..1
+    float f_SpinProgress() const { return std::clamp(std::fabs(m_fSpinTurn) / std::max(1.0f, m_oS.m_fSpinTurnDeg), 0.0f, 1.0f); }   // the turn going now, 0..1
+    float f_SpinAngle() const { return m_fSpinTotal; }   // degrees turned in all, clockwise + (the picture in the ring turns with it)
 
 private:
     void f_NextTarget();
@@ -204,6 +232,10 @@ private:
     glm::vec2 m_v2TargetFrom{0.0f}, m_v2TargetTo{0.0f};
     int m_iTargetAgeMs = 0, m_iHoldMs = 0, m_iShots = 0;
     float m_fChargeSum = 0.0f;
+    float m_fGrow = 0.0f;            // the long bow: the line's grown share of the target's distance
+    bool m_bGrowStopped = false;
+    float m_fMulSum = 0.0f;
+    int m_iMulShots = 0;
     bool m_bAiming = false;
     glm::vec2 m_v2AimFrom{0.0f}, m_v2AimTo{0.0f};
     // slice
@@ -223,7 +255,8 @@ private:
     int m_iPhaseMs = 0;
     // spin
     glm::vec2 m_v2SpinC{0.0f};
-    float m_fSpinTurn = 0.0f;      // degrees turned the right way in the current circle (never below 0)
+    float m_fSpinTurn = 0.0f;      // degrees turned the right way in the current circle (never below 0; "anyWay": either way, signed)
+    float m_fSpinTotal = 0.0f;     // degrees turned in all, signed
     float m_fSpinLast = 0.0f;      // the last angle read
     bool m_bSpinHasLast = false;   // (none after a lift, or near the middle)
     // shape

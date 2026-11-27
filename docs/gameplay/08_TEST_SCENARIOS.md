@@ -145,6 +145,7 @@ At the end of the `test` frames:
   | `condition` | any condition in the game's own format, as in events' `requires` |
   | `tutorialStep` | the tutorial step the trial fight is on (0 = the first) |
   | `tutorialTextHas` | the tutorial box's words hold this; a text.json key stands for its words in the language on (2026-11-27) |
+  | `tutorialHowTo` | `true`: the tutorial box teaches the weapon worn (its `howTo` in data/weapon_trial.json) |
 
 A failed check prints, for example, `[scenario] <name>: FAILED  gold is 350, expected 999`. The game exits with code
 3, and the test fails. An unreadable setting file or an unknown enemy, dialogue, item or hub place fails in the same

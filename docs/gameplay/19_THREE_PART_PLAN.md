@@ -118,11 +118,14 @@ because B3–B5 change how the weapons play (Q74).
 
 **The new game's tutorial (built 2026-11-06, ahead of B6):** the weapon master's trial fight is now a lesson against 苔蛙 (`thicketoad`),
 set in `battle.json` `tutorial`, with its words in `text.json` `tutorial.*`. Each step shows its words in a box at the top and waits until the player does it:
-The first step says "Attack the toad! {play}": `{play}` is the weapon's own tutorial words, `tutorial.play_<play>`, when
-text.json has them, else its short battle hint. The magic staff has them (the owner, 2026-11-27: "add a description of
-how the magic staff plays"): the circles light up one by one with their numbers, remember the order; when they come back,
-tap them 1, 2, 3 ... or touch the first and slide through the rest; sometimes they make a shape (a ring, a row, a letter).
-The scenario `tutorial_staff` checks it.
+**The weapons and how each plays come from `data/weapon_trial.json`** (the owner, 2026-11-27: "make the selectable weapon
+list come from a file, not hard code; each weapon should have a description that teaches how to use it, like the magic
+staff"): the weapons offered, in order (bow, sword, staff, memory blade, long bow), each with its choice (`label`), its line
+when the master tells about them (`about`, his node's `{weapons}`) and how it plays (`howTo`). In `weapon_master.json`,
+`{"weaponTrial": true}` is one "Try the ..." choice a weapon of the file. The first step says "Attack the toad! {play}":
+`{play}` is the weapon's `howTo`, else `tutorial.play_<play>` (text.json), else its short battle hint. A weapon is added to
+the trial by a line in the file, with no code. Tests: `scenario.tutorial_staff`, `scenario.tutorial_long_bow` (expect
+`tutorialHowTo`), `unit.weapon_play_test` (each listed weapon exists, with its words in zh_TW and en).
 
 | Step | The player must | Meanwhile |
 |---|---|---|
@@ -134,7 +137,7 @@ The scenario `tutorial_staff` checks it.
 The toad can fall at any step, which ends the lesson early (the owner, 2026-11-06), and the hero cannot fall: the hero stops at 1 HP. Trying another weapon runs the whole lesson again, its red-cells attack and its guard included (the owner, 2026-11-13: "the monster should restore its status"; it was only Attack and Finish, `once`, which a step can still have). The Move step's box, about the red cells, and the Guard step's ("you can't dodge this one") go away 3 s after they pop up, while each step goes on until its dodge or guard (the owner, 2026-11-13; each step's `"hideMs": 3000`).
 So the owner's note "without defending you fall after a few hits" is not shown yet.
 
-**The first danger's moment (built 2026-11-06):** the first time a monster lights the cells in a fight, everything stops for 2.2 s: the camera moves in (the screen no longer dims: the owner, 2026-11-15), and only the monster, its `special` clip, the particles `danger_intro` and a banner are shown. After 1.2 s the hero and the other UI return, the cells and the tutorial's box pop up with a scale effect, and the player has the last second to read them before time runs again. The cells stay hidden until then, in every fight. Set in `battle.json` `cells.intro`.
+**The first danger's moment (built 2026-11-06):** the first time a monster lights the cells in a fight, everything stops for 2.2 s (since 2026-11-27 the camera keeps its normal view while the cells light and the monster powers up: it comes close only for the attack's introduction, and the player cannot attack then; the owner: "make the camera close to the boss only when it is going to attack, and in that time the player cannot attack"): the camera moved in (the screen no longer dims: the owner, 2026-11-15), and only the monster, its `special` clip, the particles `danger_intro` and a banner are shown. After 1.2 s the hero and the other UI return, the cells and the tutorial's box pop up with a scale effect, and the player has the last second to read them before time runs again. The cells stay hidden until then, in every fight. Set in `battle.json` `cells.intro`.
 
 **The grid (built 2026-11-07):** the cells are any size up to 32 cells. `battle.json` `cells` has `cols` and `rows` (3 and 2 now); a monster's `"cellGrid": [cols, rows]` in `enemies.json` replaces them for its fight. The hero starts on the far row's middle. Shapes fit any grid: `{"row": 0}` (negative: from the end), `{"col": 1}`, `{"rows": "each"}`, `{"cols": "each"}`, `{"allBut": "start"}`, or a list of cell numbers. On screen: `areaW`, `rowH`, `gap`, `maxH`, `perspective`. The rows grow upward and shrink past `maxH`, so 3 x 5 has rows about 25 px high on a 768 px screen.
 

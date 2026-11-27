@@ -75,6 +75,17 @@ void Game::f_EnterNode(const std::string& l_strNode) {
         // Milestone 3: a choice's optional `requires` gates whether it appears at all, evaluated
         // via the shared Condition Evaluator (condition.h).
         if (l_jC.contains(toms::field::g_pszRequires) && !f_Holds(l_jC[toms::field::g_pszRequires])) continue;
+        if (l_jC.value(toms::field::g_pszWeaponTrial, false)) {   // one "Try the ..." a weapon of data/weapon_trial.json, in its order
+            for (const TrialWeapon& l_oW : m_vTrialWeapons) {
+                if (!m_mapEquipmentDefs.count(l_oW.m_strId)) continue;   // (a weapon the items do not have)
+                DialogueChoice l_oTry;
+                l_oTry.m_strLabel = m_oLocale.f_Field(l_oW.m_jLabel);
+                l_oTry.m_jAction = {{toms::field::g_pszType, "tryWeapon"}, {toms::field::g_pszWeapon, l_oW.m_strId}};   // name-ok (the action's type)
+                l_oTry.m_strId = l_oW.m_strId;
+                m_vDlgChoices.push_back(l_oTry);
+            }
+            continue;
+        }
         DialogueChoice l_oCh;
         l_oCh.m_strLabel = l_jC.contains(toms::field::g_pszLabel) ? m_oLocale.f_Field(l_jC[toms::field::g_pszLabel]) : "";
         l_oCh.m_strNext  = l_jC.contains(toms::field::g_pszNext) && l_jC[toms::field::g_pszNext].is_string() ? l_jC[toms::field::g_pszNext].get<std::string>() : "";
@@ -452,6 +463,22 @@ void Game::f_CloseMiniGame() {
 
 // The start story: the prologue first when the data has one (docs/gameplay/23 §4, chapter 1: the morning at home; its
 // last choice takes the player to the weapon master), else the weapon master at once.
+std::string Game::f_TrialHowTo(const std::string& l_strWeapon) const {
+    for (const TrialWeapon& l_oW : m_vTrialWeapons)
+        if (l_oW.m_strId == l_strWeapon && !l_oW.m_jHowTo.is_null()) return m_oLocale.f_Field(l_oW.m_jHowTo);
+    return std::string();
+}
+
+std::string Game::f_TrialWeaponsAbout() const {
+    std::string l_strOut;
+    for (const TrialWeapon& l_oW : m_vTrialWeapons) {
+        if (l_oW.m_jAbout.is_null() || !m_mapEquipmentDefs.count(l_oW.m_strId)) continue;
+        if (!l_strOut.empty()) l_strOut += " ";   // one paragraph, as the master says it
+        l_strOut += m_oLocale.f_Field(l_oW.m_jAbout);
+    }
+    return l_strOut;
+}
+
 void Game::f_StartWeaponTrial() {
     m_setTutorialSeen.clear();
     f_StartDialogue(f_ReadDialogue("prologue_morning").is_object() ? "prologue_morning" : "weapon_master");

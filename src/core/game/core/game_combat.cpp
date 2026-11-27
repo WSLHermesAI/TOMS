@@ -381,11 +381,8 @@ void Game::f_StartCellIntro(int l_iFoe) {
     f_FoeLook(l_iFoe, m_oCellRules.m_strIntroClip);
     f_PlayBattleFx(m_oCellRules.m_strIntroFx, l_iFoe);
     const bool l_bReduced = m_oSettings.m_bReduceEffects;
-    m_oCs.m_fCamZoom = l_bReduced ? 1.0f + (m_oCellRules.m_fIntroZoom - 1.0f) * 0.4f : m_oCellRules.m_fIntroZoom;
-    m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = m_oCellRules.m_iIntroMs;
-    m_oCs.m_iCamOn = l_iFoe;
-    m_oCs.m_strCamMove.clear();
-    m_oCs.m_fCamPan = 0.0f;
+    // (no close-up here: the camera comes close on a monster only as it is about to attack, f_StartFoeIntro; the owner,
+    // 2026-11-27: "make the camera close to the boss only when it is going to attack")
     if (!m_oCellRules.m_strIntroText.empty())
         f_ShowBanner(f_TrParam(m_oLocale.f_Tr(m_oCellRules.m_strIntroText), toms::field::g_pszName, m_oCs.m_vFoes[(size_t)l_iFoe].m_oEnemy.m_strName), toms::banner::g_pszLine, m_oCellRules.m_iIntroUiMs);
     f_FeelMoment(toms::moment::g_pszPhase);
@@ -1698,6 +1695,9 @@ void Game::f_ResolveCombo(const toms::ComboResult* l_pPlayed) {
     const toms::WeaponResult* l_pRes = toms::f_WeaponResultFor(l_oWp.m_vResults.empty() ? m_oWeaponPlay.f_Get("default") : l_oWp,
                                                           l_bActiveCrit ? l_oR.m_iPoints : l_oR.m_iHits, l_oR.m_iPoints, l_bActiveCrit ? false : l_oR.m_bFailed);
     if (l_pRes) l_iDmg = (int)std::lround(l_iDmg * l_pRes->m_fDamage);
+    if (l_oR.m_fShotMul >= 0.0f) l_iDmg = (int)std::lround(l_iDmg * l_oR.m_fShotMul);   // the long bow: its rings, DEX and STR (26 §3)
+    if (l_oR.m_fCueMul != 1.0f) l_iDmg = (int)std::lround(l_iDmg * l_oR.m_fCueMul);       // harder commands cut: more (cueDamage)
+    const bool l_bGraze = l_oR.m_fShotMul > 0.0f && l_oR.m_fShotMul < 0.45f;           // a graze (x0.1): damage, but the combo breaks
     // the answers to its move (13 §6.2): a guard takes most of a hit unless a full charge breaks it; a spell breaks
     // when enough points match; a stunned monster takes more
     bool l_bGuardBroken = false;
@@ -1741,7 +1741,7 @@ void Game::f_ResolveCombo(const toms::ComboResult* l_pPlayed) {
     f_StartAttackPause();
     // a weapon whose count goes on from attack to attack (the bow): each attack is one hit of its combo (17 §19)
     const bool l_bKeepCombo = l_oWp.m_bComboKeep && !l_bUlt;
-    if (l_bKeepCombo) m_oCs.m_iComboCount = l_oR.m_bFailed || l_oR.m_iHits == 0 ? 0 : m_oCs.m_iComboCount + 1;
+    if (l_bKeepCombo) m_oCs.m_iComboCount = l_oR.m_bFailed || l_oR.m_iHits == 0 || l_bGraze ? 0 : m_oCs.m_iComboCount + 1;
     const toms::ComboTier* l_pComboTier = l_bKeepCombo ? l_oWp.f_ComboTierAt(m_oCs.m_iComboCount) : nullptr;
     if (l_bKeepCombo) f_ComboWord();
     f_FeelMoment(l_bUlt ? std::string(toms::moment::g_pszUltimate) : l_pComboTier && !l_pComboTier->m_strFeel.empty() ? l_pComboTier->m_strFeel : l_strTier);
@@ -2279,12 +2279,7 @@ void Game::f_Battle3DDangerShot(int l_iFoe, bool l_bIntro) {
     if (!m_bBattle3DOn || m_oSettings.m_bReduceEffects || !m_jBattle3DStage.is_object()) return;
     const nlohmann::json l_jD = m_jBattle3DStage.value(toms::field::g_pszCamera, nlohmann::json::object()).value(toms::field::g_pszDanger, nlohmann::json::object());
     if (l_jD.value(toms::field::g_pszOff, false)) return;
-    m_oCs.m_fCamZoom = std::max(1.01f, l_jD.value(toms::field::g_pszZoom, 2.2f));
-    if (!l_bIntro) m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = std::max(300, l_jD.value(toms::field::g_pszMs, 1000));   // (the intro keeps its own time)
-    m_oCs.m_iCamOn = l_iFoe;
-    m_oCs.m_strCamMove = "low";
-    m_oCs.m_fCamPan = 0.0f;
-    m_oCs.m_fCamDeg = l_jD.value(toms::field::g_pszDeg, 14.0f);
+    (void)l_iFoe; (void)l_bIntro;   // the danger: a rumble only; the close-up waits for the attack itself (f_StartFoeIntro, the owner 2026-11-27)
     const float l_fRumble = l_jD.value(toms::field::g_pszRumble, 6.0f);
     if (l_fRumble > 0.0f) {
         m_oCs.m_fShakePx = std::max(m_oCs.m_fShakePx, l_fRumble);
@@ -2310,8 +2305,6 @@ void Game::f_StartFoePower(int l_iFoe, bool l_bIntro) {
     f_FoeLook(l_iFoe, toms::state::g_pszPower);   // its clip (a look's "power" state may add a sound or particles of its own)
     f_PlayBattleFx(l_jS.value(toms::field::g_pszPowerFx, std::string("monster_power")), l_iFoe);
     f_PlayFoeSound(l_iFoe, l_jS.value(toms::field::g_pszPowerSound, std::string(toms::key::g_pszSfxMonsterPower)));
-    if (m_oCs.m_iCamOn == l_iFoe && m_oCs.m_iCamMs > 0)   // the close-up stays on it for the whole power-up
-        m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = std::max(m_oCs.m_iCamMsMax, l_iPower);
 }
 
 // A monster's special attack, its power-up done (the dodge): its introduction (the owner, 2026-11-20: the same rundown as
@@ -2325,6 +2318,7 @@ void Game::f_StartFoeIntro(int l_iFoe) {
     const int l_iMs = std::max(300, l_jI.value(toms::field::g_pszMs, 1700));
     m_oCs.m_iIntroFoeFire = l_iFoe;
     m_oCs.m_iIntroOwner = l_iFoe;
+    if (!m_oCs.m_oSkill.m_bOn) { m_oCs.m_oTouch.f_CancelHold(); m_bTouchHeld = false; }   // the player cannot attack now (the owner, 2026-11-27)
     m_oCs.m_iHeroIntroMs = m_oCs.m_iHeroIntroMsMax = l_iMs;
     m_oCs.m_strHeroIntroLabel = l_jI.value(toms::field::g_pszLabel, std::string(toms::text::g_pszBattleFoeSpecialLabel));
     m_oCs.m_strIntroName = !l_oM.m_strText.empty() && m_oLocale.f_Has(l_oM.m_strText) ? m_oLocale.f_Tr(l_oM.m_strText) : l_oF.m_oEnemy.m_strName;

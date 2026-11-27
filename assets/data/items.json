@@ -184,6 +184,29 @@
       "character": "anim/hero_bow.anim"
     }
   },
+  "long_bow": {
+    "type": "weapon",
+    "sprite": "gem_atk.png",
+    "name": "item.long_bow.name",
+    "desc": "item.long_bow.desc",
+    "stats": {
+      "atk": 0
+    },
+    "price": 90,
+    "important": false,
+    "bar": {
+      "v0": 12,
+      "vmax": 180,
+      "rampTime": 2.2,
+      "greenHalf": 12,
+      "blueOuter": 32,
+      "redOuter": 60,
+      "maxMult": 1.6
+    },
+    "battleAnim": {
+      "character": "anim/hero_bow.anim"
+    }
+  },
   "twin_daggers": {
     "type": "weapon",
     "sprite": "gem_atk.png",

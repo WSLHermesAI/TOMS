@@ -42,6 +42,7 @@ inline constexpr const char g_pszDataStoryVars[]       = "data.story.vars";     
 inline constexpr const char g_pszDataText[]            = "data.text";               // json ../data/text.json
 inline constexpr const char g_pszDataVersion[]         = "data.version";            // json ../data/version.json
 inline constexpr const char g_pszDataWeaponPlay[]      = "data.weapon_play";        // json ../data/weapon_play.json
+inline constexpr const char g_pszDataWeaponTrial[]     = "data.weapon_trial";       // json ../data/weapon_trial.json
 inline constexpr const char g_pszEnvDefault[]          = "env.default";             // file env/artist_workshop_1k.hdr
 inline constexpr const char g_pszFolderAssets[]        = "folder.assets";           // folder ..
 inline constexpr const char g_pszFolderChapters[]      = "folder.chapters";         // folder ../data/story/chapters
@@ -143,6 +144,7 @@ inline constexpr const char* g_arrAll[] = {
     g_pszDataText,
     g_pszDataVersion,
     g_pszDataWeaponPlay,
+    g_pszDataWeaponTrial,
     g_pszEnvDefault,
     g_pszFolderAssets,
     g_pszFolderChapters,

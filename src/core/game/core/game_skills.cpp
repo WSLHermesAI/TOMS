@@ -77,6 +77,16 @@ toms::TouchPlaySettings Game::f_TouchSettingsFor(toms::PlayType l_eType) const {
     l_oS.m_iRecallAnswerMs += l_iDex * l_oS.m_iDexWindowMs;   // the memory blade's answer time and a chain's (22 §2, §3)
     l_oS.m_iChainTimeMs += l_iDex * l_oS.m_iDexWindowMs;
     l_oS.m_iSpinTimeMs += l_iDex * l_oS.m_iDexWindowMs;     // a spin's time (22 §4)
+    if (l_eType == toms::PlayType::ePULL_RELEASE) {   // the long bow (docs/gameplay/26): its line's growth by level, DEX and STR into its rings
+        const std::string l_strKey = f_WeaponKey();
+        l_oS.m_fBowGrowPerSec = f_WeaponPlayOf(l_strKey).f_AimGrowAt(f_WeaponLevel(l_strKey));
+        if (l_oS.m_fBowGrowPerSec > 0.0f) {
+            const float l_fDex = (float)std::max(0, f_AttrValue("dex")), l_fStr = (float)std::max(0, f_AttrValue("str"));
+            l_oS.m_fBowRingScale = 1.0f + l_oS.m_v2BowDex.x * l_fDex / (l_fDex + l_oS.m_v2BowDex.y);
+            l_oS.m_fBowStrBonus = 1.0f + l_oS.m_v2BowStr.x * l_fStr / (l_fStr + l_oS.m_v2BowStr.y);
+            l_oS.m_v2BowOrigin = f_WeaponPoint();
+        }
+    }
     if (l_eType == toms::PlayType::ePULL_RELEASE) {   // STR holds the pull longer, DEX keeps the aim still (16 §3.2)
         l_oS.m_iBowHoldMs += std::max(0, f_AttrValue("str")) * l_oS.m_iBowHoldPerStr;
         l_oS.m_fBowShakePx /= 1.0f + (float)std::max(0, f_AttrValue("dex")) * l_oS.m_fBowShakePerDex;
@@ -93,6 +103,11 @@ void Game::f_ArmTouchPlay(bool l_bUltimate, int l_iPoints) {
         const std::vector<std::string> l_vShapes = f_WeaponPlayOf(l_strKey).f_SwipeCuesAt(f_WeaponLevel(l_strKey));
         l_oS.m_vSliceCues.assign((size_t)l_iPoints, l_eType == toms::PlayType::eSWIPE_GESTURE ? toms::gesture::g_pszV : toms::gesture::g_pszWay);
         for (size_t l_nK = 0; l_nK < l_vShapes.size() && l_nK < l_oS.m_vSliceCues.size(); l_nK++) l_oS.m_vSliceCues[l_oS.m_vSliceCues.size() - l_vShapes.size() + l_nK] = l_vShapes[l_nK];
+        if (l_eType == toms::PlayType::eSWIPE_CHAIN)   // all shown at once (the memory blade): each shape adds its drawing time
+            for (const std::string& l_strCue : l_oS.m_vSliceCues) {
+                const auto l_it = l_oS.m_mapCueExtraMs.find(l_strCue);
+                if (l_it != l_oS.m_mapCueExtraMs.end()) l_oS.m_iChainTimeMs += l_it->second;
+            }
         if (l_eType == toms::PlayType::eSWIPE_RECALL) {   // the memory blade's timing by its level (weapon_play.json "recall", 22 §2)
             const toms::WeaponPlay::Recall l_oR = f_WeaponPlayOf(l_strKey).f_RecallAt(f_WeaponLevel(l_strKey));
             const int l_iDexMs = l_oS.m_iRecallAnswerMs - m_oTouchSettings.m_iRecallAnswerMs;   // (what DEX added above)
@@ -127,6 +142,7 @@ void Game::f_ArmTouchPlay(bool l_bUltimate, int l_iPoints) {
 }
 
 void Game::f_BattlePointer(int l_iPhase, float l_fX, float l_fY) {
+    if (m_oCs.m_iIntroFoeFire >= 0) { m_bTouchHeld = false; return; }   // a monster is about to attack: no attack now (the owner, 2026-11-27)
     if (l_iPhase == 0 && f_CellIntroOn()) return;   // no new press while everything waits; a pull already held can still let go
     if (f_HeroDown()) { m_bTouchHeld = false; return; }   // knocked down (f_KnockDownHero): his play was stopped, nothing new
     if (!m_oCs.m_bActive || m_oCs.m_bWinPending || !m_oCs.m_oTouch.f_Running()) { m_bTouchHeld = false; return; }
@@ -150,9 +166,29 @@ void Game::f_BattlePointer(int l_iPhase, float l_fX, float l_fY) {
     f_TouchPlayed(l_iIndex, l_iHits);
 }
 
+// Every frame, the fight waiting or not: a bow's target follows its area round the monster, the long bow's line starts at
+// the hero's hand, wherever the camera has put them (a monster's special attack comes close on it and pans; the owner,
+// 2026-11-27: "the red target and the aim line become weird ... make the aim line to the red target still attackable").
+void Game::f_FollowBowPlay() {
+    toms::TouchPlay& l_oP = m_oCs.m_oTouch;
+    if (!m_oCs.m_bActive || !l_oP.f_Running() || l_oP.f_Type() != toms::PlayType::ePULL_RELEASE || m_oCs.m_oSkill.m_bOn || !m_bBattleBoxesKnown) return;
+    const glm::vec4 l_v4A = f_TouchArea();
+    if (std::fabs(l_v4A.x - m_v4TouchArmedArea.x) + std::fabs(l_v4A.y - m_v4TouchArmedArea.y) + std::fabs(l_v4A.z - m_v4TouchArmedArea.z) + std::fabs(l_v4A.w - m_v4TouchArmedArea.w) > 0.5f) {
+        l_oP.f_FollowArea(l_v4A);
+        m_v4TouchArmedArea = l_v4A;
+    }
+    if (l_oP.f_GrowMode()) l_oP.f_SetBowOrigin(f_WeaponPoint());
+}
+
 void Game::f_StepTouchPlay(int l_iDtMs) {
     const int l_iIndex = m_oCs.m_oTouch.f_Index(), l_iHits = m_oCs.m_oTouch.f_Result().m_iHits;
+    if (m_oCs.m_oTouch.f_GrowMode()) m_oCs.m_oTouch.f_SetBowOrigin(f_WeaponPoint());   // the long bow's line starts at his bow hand
     m_oCs.m_oTouch.f_Update(l_iDtMs);
+    {   // the long bow's line has reached the target's distance: a click, steer now (26 §4)
+        const bool l_bStopped = m_oCs.m_oTouch.f_GrowMode() && m_oCs.m_oTouch.f_Aiming() && m_oCs.m_oTouch.f_AimStopped();
+        if (l_bStopped && !m_bBowStopHeard) m_oAudio.f_Play(toms::key::g_pszSfxConfirmClick, 1.4f, 0.6f);
+        m_bBowStopHeard = l_bStopped;
+    }
     f_BowGather(l_iDtMs);
     f_TouchPlayed(l_iIndex, l_iHits);
 }
@@ -268,6 +304,16 @@ void Game::f_TouchPlayed(int l_iIndexBefore, int l_iHitsBefore) {
     m_oCs.m_oTouch.f_Stop();
     toms::ComboResult l_oR = m_oCs.m_oTouch.f_Result();
     l_oR.m_fCharge = l_eType == toms::PlayType::ePULL_RELEASE ? m_oCs.m_oTouch.f_ShotCharge() : m_oCs.m_fTouchCharge;   // the bow: its pull's charge
+    if (l_eType == toms::PlayType::ePULL_RELEASE) l_oR.m_fShotMul = m_oCs.m_oTouch.f_ShotMul();   // the long bow: how close to the middle
+    if (toms::f_IsSwipePlay(l_eType)) {   // the commands cut: their kinds' worth on average (the memory blade's circles and squares)
+        const toms::WeaponPlay& l_oWp = f_WeaponPlayOf(f_WeaponKey());
+        const auto& l_vMarks = m_oCs.m_oTouch.f_Marks();
+        float l_fSum = 0.0f;
+        int l_iCut = 0;
+        for (int l_iK = 0; l_iK < (int)l_vMarks.size() && l_iK < m_oCs.m_oTouch.f_Points(); l_iK++)
+            if (l_vMarks[(size_t)l_iK].m_bOk) { l_fSum += l_oWp.f_CueDamage(m_oCs.m_oTouch.f_CueKind(l_iK)); l_iCut++; }
+        if (l_iCut > 0) l_oR.m_fCueMul = l_fSum / (float)l_iCut;
+    }
     f_ResolveCombo(&l_oR);
 }
 
@@ -332,7 +378,10 @@ void Game::f_PlayHit(const toms::TouchPlay::Hit& l_oH) {
         for (int l_iK = 1; l_iK <= l_iPoints; l_iK++) l_fSum += std::pow((float)l_iK, l_fRamp);
         l_fShare = std::pow((float)std::clamp(l_oH.m_iOrder + 1, 1, l_iPoints), l_fRamp) / std::max(l_fSum, 1e-6f);
     }
-    int l_iDmg = (int)std::lround((float)f_NormalHitDamage(l_iT) * 0.5f * l_fShare * (l_oH.m_bPerfect ? 1.3f : 1.0f) * l_oF.m_fStaggerDamage);
+    float l_fCueX = 1.0f;   // a harder command hits harder (weapon_play.json cueDamage)
+    if (toms::f_IsSwipePlay(m_oCs.m_oTouch.f_Type()) && l_oH.m_iOrder >= 0 && l_oH.m_iOrder < m_oCs.m_oTouch.f_Points())
+        l_fCueX = f_WeaponPlayOf(f_WeaponKey()).f_CueDamage(m_oCs.m_oTouch.f_CueKind(l_oH.m_iOrder));
+    int l_iDmg = (int)std::lround((float)f_NormalHitDamage(l_iT) * 0.5f * l_fShare * l_fCueX * (l_oH.m_bPerfect ? 1.3f : 1.0f) * l_oF.m_fStaggerDamage);
     l_iDmg = std::max(1, l_iDmg);
     m_oCs.m_iPlayDealt += l_iDmg;
     f_BattleEvent(toms::battle_event::g_pszHit, -1, l_iT, l_iDmg, "answer");
@@ -524,6 +573,7 @@ void Game::f_UpdateSkill(int l_iDtMs) {
         l_oTs.m_iChainTimeMs = l_oD.m_oPlay.m_iTimeMs + (l_oTs.m_iChainTimeMs - m_oTouchSettings.m_iChainTimeMs);   // its time, and what DEX adds
         l_oTs.m_iSpinTimeMs = l_oD.m_oPlay.m_iTimeMs + (l_oTs.m_iSpinTimeMs - m_oTouchSettings.m_iSpinTimeMs);
         l_oTs.m_vSliceCues = l_oD.m_oPlay.m_vCues;
+        l_oTs.m_bSpinFree = l_oD.m_oPlay.m_bAnyWay;   // the Taichi: either way
         const glm::vec2 l_v2C = f_SkillShapeCentre(l_oD);   // a shape or a ring: on the hero's head (22 §4)
         glm::vec4 l_v4Area = l_eType == toms::PlayType::eDRAW_SHAPE ? glm::vec4(l_v2C.x - 100.0f, l_v2C.y - 100.0f, 200.0f, 200.0f) : f_TouchArea();
         if (l_eType == toms::PlayType::eSPIN_CIRCLE) {   // its size from the move
@@ -555,13 +605,17 @@ void Game::f_UpdateSkill(int l_iDtMs) {
         // the play is over: what was done counts (Q45: a share of the hits and the damage)
         l_oS.m_fShare = (float)m_oCs.m_oTouch.f_Result().m_iHits / (float)std::max(1, m_oCs.m_oTouch.f_Points());
         if (m_oCs.m_oTouch.f_Result().m_iHits < l_oD.m_oPlay.m_iMinHits) l_oS.m_fShare = 0.0f;   // too few: it fizzles (22 §3)
+        if (!l_oD.m_oPlay.m_vTurnDamage.empty())   // the Taichi (26 §6): any turns from the table's first row are the whole show
+            l_oS.m_fShare = toms::f_TurnDamage(l_oD.m_oPlay, m_oCs.m_oTouch.f_Result().m_iHits) > 0.0f ? 1.0f : 0.0f;
         l_oS.m_ePhase = P::Finish;
         l_oS.m_iPhaseMs = 0;
         m_oCs.m_iDimMs = 0;
         if (l_oS.m_iOwner < 0) {
             const int l_iT = m_oCs.m_iTarget;
             const float l_fStagger = l_iT < (int)m_oCs.m_vFoes.size() ? m_oCs.m_vFoes[(size_t)l_iT].m_fStaggerDamage : 1.0f;
-            l_oS.m_iHitDmg = (int)std::lround((float)f_NormalHitDamage(l_iT) * l_oD.m_fDamage * l_oS.m_fShare * l_fStagger);
+            const float l_fMoveX = l_oD.m_oPlay.m_vTurnDamage.empty() ? l_oD.m_fDamage   // the Taichi: x by the turns done
+                                                                         : toms::f_TurnDamage(l_oD.m_oPlay, m_oCs.m_oTouch.f_Result().m_iHits);
+            l_oS.m_iHitDmg = (int)std::lround((float)f_NormalHitDamage(l_iT) * l_fMoveX * l_oS.m_fShare * l_fStagger);
             if (l_oS.m_fShare <= 0.0f) f_PopWord(m_oLocale.f_Tr(toms::text::g_pszBattleMoveDefaultMiss), -1, toms::pop_style::g_pszMoveMiss);
         }
         const bool l_bFull0 = l_oS.m_fShare >= 1.0f;   // a finish beat may be for the full play only, or the partial one (22 §3)

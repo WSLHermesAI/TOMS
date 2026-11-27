@@ -87,6 +87,7 @@
     "data.circle_symbols": { "type": "json",    "path": "../data/circle_symbols.json" },
     "data.stage3d":        { "type": "json",     "path": "../data/stage3d.json" },
     "data.weapon_play":    { "type": "json",     "path": "../data/weapon_play.json" },
+    "data.weapon_trial":   { "type": "json",     "path": "../data/weapon_trial.json" },
     "data.looks":          { "type": "json",     "path": "../data/looks.json" },
     "data.moves":          { "type": "json",     "path": "../data/moves.json" },
     "data.special_moves":  { "type": "json",     "path": "../data/special_moves.json" },

@@ -1,0 +1,87 @@
+{
+  "_comment": [
+    "The weapons the new game's weapon trial offers, in this order (the owner, 2026-11-27: \"make the selectable weapon list come",
+    "from a file, not hard code; each weapon should have a description that teaches how to use it, like the magic staff\").",
+    "id: the weapon (items.json, weapon_play.json). label: its choice in the weapon master's dialogue (weapon_master.json's",
+    "{\"weaponTrial\": true} becomes one choice per weapon here). about: its line when the master tells you about them (his node's",
+    "text {weapons}). howTo: how it plays, shown in the trial fight's first tutorial step (battle.json tutorial, tutorial.attack's",
+    "{play}). A weapon not listed here is not offered. docs/gameplay/07 phase 3, docs/gameplay/19 B6."
+  ],
+  "weapons": [
+    {
+      "id": "bow",
+      "label": {
+        "zh_TW": "試試弓",
+        "en": "Try the bow"
+      },
+      "about": {
+        "zh_TW": "弓：往後拉再放開，拉得越久越有力。",
+        "en": "The bow: draw back and let go, and the longer the draw, the harder the shot."
+      },
+      "howTo": {
+        "zh_TW": "弓：在任何地方按住，往靶的反方向拉，準星就往另一邊走——讓準星對準紅靶再放開。拉得越久越有力，但準星會越晃；拉滿 1.5 秒箭會自己射出",
+        "en": "The bow: press anywhere and pull away from the target, and the crosshair moves the other way. Put it on the red target and let go. The longer you hold, the stronger the shot, but the more it shakes; at 1.5 s the arrow goes by itself"
+      }
+    },
+    {
+      "id": "sword",
+      "label": {
+        "zh_TW": "試試劍",
+        "en": "Try the sword"
+      },
+      "about": {
+        "zh_TW": "劍：照著指示的方向揮砍。",
+        "en": "The sword: slash the way it shows you."
+      },
+      "howTo": {
+        "zh_TW": "劍：箭頭一個個出現，發光時照它的方向劃過去，每一刀都馬上命中。等級高了會出現 V、M、方形等手勢，一筆畫出來",
+        "en": "The sword: arrows come one at a time; while one glows, swipe its way, and each cut hits at once. At higher levels some ask for a gesture (V, M, a square): draw it in one stroke"
+      }
+    },
+    {
+      "id": "staff",
+      "label": {
+        "zh_TW": "試試法杖",
+        "en": "Try the staff"
+      },
+      "about": {
+        "zh_TW": "法杖：依序點中出現的圓圈。",
+        "en": "The staff: touch the circles in their order."
+      },
+      "howTo": {
+        "zh_TW": "法杖：圓圈會一個個亮起數字——記住順序！它們消失後會再出現，照 1、2、3… 點擊；也可以按住第一個圓，手指不放開，照順序滑到下一個。圓圈有時會排成圖形（一圈、一排、字母），順著它走就好",
+        "en": "The staff: the circles light up one by one with their numbers. Remember the order! When they come back, tap them 1, 2, 3… or touch the first and slide through the rest in order without lifting. Sometimes they make a shape (a ring, a row, a letter): just follow it"
+      }
+    },
+    {
+      "id": "memory_blade",
+      "label": {
+        "zh_TW": "試試憶刃",
+        "en": "Try the memory blade"
+      },
+      "about": {
+        "zh_TW": "憶刃：上方一次列出所有指令，記住它們！劃出第一個後其他就會藏起來，要憑記憶照順序劃完；等級高了會出現圓形、方形，越難越痛。",
+        "en": "The memory blade: every command shows along the top at once. Remember them! After your first cut the rest hide, and you finish them in order from memory. At higher levels circles and squares appear: the harder, the harder it hits."
+      },
+      "howTo": {
+        "zh_TW": "憶刃：上方一次列出全部指令（最多 5 個）——先記住！照順序劃出：方向就順著劃一刀，圓形、方形就一筆畫出來。劃出第一個後，其他指令全部藏起來，只剩空格與「?」，要憑記憶劃完。圓形、方形比方向難，傷害也更高",
+        "en": "The memory blade: all its commands (up to 5) show along the top at once, so remember them! Do them in order: a way is one slash that way; a circle or a square is drawn in one stroke. After your first cut the rest hide (empty slots and a \"?\"): finish them from memory. Circles and squares are harder than ways, and hit harder"
+      }
+    },
+    {
+      "id": "long_bow",
+      "label": {
+        "zh_TW": "試試長弓",
+        "en": "Try the long bow"
+      },
+      "about": {
+        "zh_TW": "長弓：按住讓瞄準線從弓上伸到靶，它會晃，用小幅拖曳對準中心再放開，越靠近中心越痛。",
+        "en": "The long bow: hold, and its aim line reaches out to the target; it shakes, so steer its tip onto the centre with small drags, then let go. The closer to the middle, the harder it hits."
+      },
+      "howTo": {
+        "zh_TW": "長弓：在任何地方按住，瞄準線會從弓上一路伸向紅靶，到了靶的距離就停。線會晃，用小幅拖曳把線頭對準靶心（變金色），再放開。越靠近中心傷害越高",
+        "en": "The long bow: press anywhere and hold, and the aim line reaches out from your bow to the red target, stopping at its distance. It shakes, so keep its tip on the centre with small drags (it turns gold), then let go. The closer to the middle, the harder it hits"
+      }
+    }
+  ]
+}

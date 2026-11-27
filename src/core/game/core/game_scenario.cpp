@@ -319,7 +319,7 @@ bool Game::f_StartScenarioJson(const nlohmann::json& l_jSc, const std::string& l
             if (!f_ReadDialogue(l_strId).is_object()) return l_fnBad("no dialogue \"" + l_strId + "\" in data/dialogue/");
             f_StartDialogue(l_strId);
         }
-        if (l_jD.contains(toms::field::g_pszNode)) f_EnterNode(l_jD[toms::field::g_pszNode].get<std::string>());
+        if (l_jD.contains(toms::field::g_pszNode)) { m_strDlgNode = l_jD[toms::field::g_pszNode].get<std::string>(); f_EnterNode(m_strDlgNode); }   // its words too
     } else if (l_strS == toms::scene::g_pszTalk) {
         const std::string l_strNpc = l_jSc.value(toms::field::g_pszTalk, nlohmann::json::object()).value(toms::field::g_pszNpc, std::string());
         if (l_strNpc.empty()) return l_fnBad("\"talk\": { \"npc\": ... } is missing");
@@ -441,6 +441,12 @@ bool Game::f_ScenarioCheck(std::string& l_strReport) const {
         l_fnFail("the hero is on cell " + std::to_string(m_oCs.m_iHeroCell) + ", expected " + std::to_string(m_jScenarioExpect[toms::field::g_pszHeroCell].get<int>()));
     if (m_jScenarioExpect.contains(toms::field::g_pszTutorialStep) && m_oArena.m_iTutorialStep != m_jScenarioExpect[toms::field::g_pszTutorialStep].get<int>())
         l_fnFail("the tutorial is at step " + std::to_string(m_oArena.m_iTutorialStep) + ", expected " + std::to_string(m_jScenarioExpect[toms::field::g_pszTutorialStep].get<int>()));
+    if (m_jScenarioExpect.value(toms::field::g_pszTutorialHowTo, false)) {   // the tutorial box teaches the weapon (weapon_trial.json howTo)
+        const toms::TutorialStep* l_pStep = f_TutorialStepNow();
+        const std::string l_strHow = f_TrialHowTo(f_WeaponKey());
+        if (l_strHow.empty() || !l_pStep || f_TutorialText(*l_pStep).find(l_strHow) == std::string::npos)
+            l_fnFail("the tutorial does not teach \"" + f_WeaponKey() + "\" (data/weapon_trial.json howTo)");
+    }
     if (m_jScenarioExpect.contains(toms::field::g_pszTutorialTextHas)) {   // the tutorial box's words hold this (a text key: its words now)
         const toms::TutorialStep* l_pStep = f_TutorialStepNow();
         const std::string l_strGiven = m_jScenarioExpect[toms::field::g_pszTutorialTextHas].get<std::string>();

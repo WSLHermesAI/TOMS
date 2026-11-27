@@ -1,5 +1,6 @@
 // touch_play_test.cpp -- the plays (touch_play.h): bow, slice, circles, shape, mash. Exits 0 on success.
 #include "touch_play.h"
+#include "special_moves.h"
 
 #include <cmath>
 #include <cstdio>
@@ -180,6 +181,110 @@ int main() {
         l_oR.f_Pointer(0, l_oR.f_Circles()[0].m_fX, l_oR.f_Circles()[0].m_fY);
         for (float l_fX = l_oR.f_Circles()[0].m_fX; l_fX <= l_oR.f_Circles()[2].m_fX; l_fX += 10.0f) l_oR.f_Pointer(1, l_fX, l_oR.f_Circles()[0].m_fY);
         CHECK(l_oR.f_Result().m_iHits == 1 && !l_oR.f_Done(), "circleSlide off: only taps count");
+    }
+    {   // the long bow (docs/gameplay/26): the line from the bow hand grows by time, stops at the target's distance; the rings judge it
+        TouchPlaySettings l_oS;
+        l_oS.m_fBowShakePx = 0.0f;
+        l_oS.m_fBowGrowPerSec = 0.30f;
+        l_oS.m_v2BowOrigin = {100.0f, 500.0f};
+        TouchPlay l_oP;
+        l_oP.f_Start(PlayType::ePULL_RELEASE, 1, false, glm::vec4(500, 100, 300, 200), 7, l_oS);
+        l_oP.f_Update(600);   // the target has stopped
+        const float l_fD = l_oP.f_TargetDistance();
+        l_oP.f_Pointer(0, 900, 650);   // a press anywhere: the line starts at the bow hand
+        l_oP.f_Update(1000);
+        CHECK(std::fabs(l_oP.f_AimLength() - 0.30f * l_fD) < 1.0f && !l_oP.f_AimStopped(), "after 1 s: 30 % of the way");
+        const glm::vec2 l_v2Tip = l_oP.f_Crosshair(), l_v2O = l_oP.f_BowOrigin();
+        const glm::vec2 l_v2T(l_oP.f_Target().m_fX, l_oP.f_Target().m_fY);
+        CHECK(std::fabs((l_v2Tip.x - l_v2O.x) * (l_v2T.y - l_v2O.y) - (l_v2Tip.y - l_v2O.y) * (l_v2T.x - l_v2O.x)) < 1.0f * l_fD, "with no drag it points at the target");
+        l_oP.f_Update(3000);
+        CHECK(l_oP.f_AimStopped() && std::fabs(l_oP.f_AimLength() - l_fD) < 1.0f, "it stops at the target's distance, and grows no more");
+        CHECK(l_oP.f_Running() && !l_oP.f_Done(), "no charge limit: still aiming");
+        CHECK(l_oP.f_TipTier() >= 1.2f, "on the middle: the perfect ring");
+        l_oP.f_Pointer(1, 900, 650 + 10);   // a small drag turns it a little
+        CHECK(l_oP.f_TipTier() < 1.2f, "a small drag moves the tip off the middle");
+        l_oP.f_Pointer(1, 900, 650);
+        l_oP.f_Pointer(2, 900, 650);
+        const auto l_vHits = l_oP.f_TakeHits();
+        CHECK(l_oP.f_Done() && l_vHits.size() == 1 && l_vHits[0].m_bOk && l_vHits[0].m_bPerfect && std::fabs(l_vHits[0].m_fMul - 1.2f) < 1e-4f &&
+                  std::fabs(l_oP.f_ShotMul() - 1.2f) < 1e-4f, "let go on the middle: x1.2 (STR bonus 1)");
+
+        // the rings, widened by DEX (Dx) and the force of STR (Sb)
+        CHECK(TouchPlay::f_RingTier(4, l_oS) == 1.2f && TouchPlay::f_RingTier(15, l_oS) == 1.0f && TouchPlay::f_RingTier(40, l_oS) == 0.8f &&
+                  TouchPlay::f_RingTier(70, l_oS) == 0.5f && TouchPlay::f_RingTier(100, l_oS) == 0.1f && TouchPlay::f_RingTier(130, l_oS) == 0.0f,
+              "5 / 15 / 50 / 80 / 120 px: x1.2 / 1.0 / 0.8 / 0.5 / 0.1, beyond x0");
+        l_oS.m_fBowRingScale = 1.3f;
+        CHECK(TouchPlay::f_RingTier(104, l_oS) == 0.5f && TouchPlay::f_RingTier(6, l_oS) == 1.2f, "DEX widens them (Dx 1.3: 6 px is perfect)");
+
+        // a touch let go at once is not a shot; released short, the arrow falls short
+        l_oS.m_fBowRingScale = 1.0f;
+        l_oS.m_fBowStrBonus = 1.15f;
+        TouchPlay l_oQ;
+        l_oQ.f_Start(PlayType::ePULL_RELEASE, 1, false, glm::vec4(500, 100, 300, 200), 7, l_oS);
+        l_oQ.f_Update(600);
+        l_oQ.f_Pointer(0, 900, 650);
+        l_oQ.f_Update(50);
+        l_oQ.f_Pointer(2, 900, 650);
+        CHECK(l_oQ.f_Index() == 0, "a quick touch: no shot");
+        l_oQ.f_Pointer(0, 900, 650);
+        l_oQ.f_Update(500);
+        l_oQ.f_Pointer(2, 900, 650);
+        CHECK(l_oQ.f_Done() && l_oQ.f_Result().m_iHits == 0 && l_oQ.f_ShotMul() == 0.0f, "let go at 15 % of the way: short, x0");
+    }
+    {   // the long bow's Taichi (docs/gameplay/26 §6): turns either way count; the damage by turns done
+        TouchPlaySettings l_oS;
+        l_oS.m_bSpinFree = true;
+        TouchPlay l_oP;
+        l_oP.f_Start(PlayType::eSPIN_CIRCLE, 10, true, glm::vec4(300, 100, 340, 340), 1, l_oS);
+        const glm::vec2 l_v2C = l_oP.f_SpinCentre();
+        auto l_fnTurn = [&](float l_fFrom, float l_fBy) {   // the finger round the middle from one angle by so many degrees
+            const int l_iSteps = (int)std::ceil(std::fabs(l_fBy) / 10.0f);
+            for (int l_iK = 0; l_iK <= l_iSteps; l_iK++) {
+                const float l_fA = (l_fFrom + l_fBy * (float)l_iK / (float)l_iSteps) / 57.29578f;
+                l_oP.f_Pointer(l_iK == 0 ? 0 : 1, l_v2C.x + std::cos(l_fA) * 120.0f, l_v2C.y + std::sin(l_fA) * 120.0f);
+            }
+            l_oP.f_Pointer(2, l_v2C.x, l_v2C.y);
+        };
+        l_fnTurn(0.0f, 2.0f * 360.0f);
+        CHECK(l_oP.f_Result().m_iHits == 2 && l_oP.f_SpinAngle() > 700.0f, "two turns clockwise: 2, and the picture turned with them");
+        l_fnTurn(0.0f, -3.0f * 360.0f);
+        CHECK(l_oP.f_Result().m_iHits == 5, "three anticlockwise count too: 5");
+        l_oP.f_Update(l_oS.m_iSpinTimeMs + 100);
+        CHECK(l_oP.f_Done() && l_oP.f_Result().m_iHits == 5, "time up: 5 turns done");
+        SkillPlaySpec l_oSpec;
+        l_oSpec.m_vTurnDamage = {{1, 1.1f}, {2, 1.2f}, {3, 1.5f}, {4, 1.6f}, {5, 1.8f}, {6, 2.0f}, {8, 3.0f}, {10, 5.0f}};
+        CHECK(f_TurnDamage(l_oSpec, 0) == 0.0f && f_TurnDamage(l_oSpec, 1) == 1.1f && f_TurnDamage(l_oSpec, 5) == 1.8f && f_TurnDamage(l_oSpec, 7) == 2.0f &&
+                  f_TurnDamage(l_oSpec, 9) == 3.0f && f_TurnDamage(l_oSpec, 10) == 5.0f && f_TurnDamage(l_oSpec, 14) == 5.0f,
+              "0 turns: none; 1 x1.1, 5 x1.8, 7 counts as 6 (x2), 9 as 8 (x3), 10 and more x5");
+    }
+    {   // a monster about to attack takes the hold away (the owner, 2026-11-27): no shot, and the arrow gets its time again
+        TouchPlaySettings l_oS;
+        l_oS.m_fBowGrowPerSec = 0.30f;
+        l_oS.m_v2BowOrigin = {100.0f, 500.0f};
+        TouchPlay l_oP;
+        l_oP.f_Start(PlayType::ePULL_RELEASE, 1, false, glm::vec4(500, 100, 300, 200), 7, l_oS);
+        l_oP.f_Update(600);
+        l_oP.f_Pointer(0, 900, 650);
+        l_oP.f_Update(3000);
+        l_oP.f_CancelHold();
+        CHECK(!l_oP.f_Aiming() && l_oP.f_Index() == 0 && l_oP.f_AimLength() == 0.0f, "the hold taken away: no shot, the line gone");
+        l_oP.f_Pointer(2, 900, 650);
+        CHECK(l_oP.f_Index() == 0, "letting go afterwards shoots nothing");
+        l_oP.f_Update(l_oS.m_iBowTimeMs - 100);
+        CHECK(l_oP.f_Running() && l_oP.f_Index() == 0, "the arrow's 4 s start again");
+    }
+    {   // a chain with a shape (the memory blade): a circle drawn in one stroke is taken
+        TouchPlaySettings l_oS;
+        l_oS.m_vSliceCues = {"circle"};
+        TouchPlay l_oP;
+        l_oP.f_Start(PlayType::eSWIPE_CHAIN, 1, false, glm::vec4(300, 100, 400, 300), 3, l_oS);  // one command
+        CHECK(l_oP.f_CueKind(0) == "circle", "the command is a circle");
+        for (int l_iK = 0; l_iK <= 36; l_iK++) {
+            const float l_fA = (-90.0f + 10.0f * (float)l_iK) / 57.29578f;
+            l_oP.f_Pointer(l_iK == 0 ? 0 : 1, 500.0f + std::cos(l_fA) * 80.0f, 250.0f + std::sin(l_fA) * 80.0f);
+        }
+        l_oP.f_Pointer(2, 500.0f, 170.0f);
+        CHECK(l_oP.f_Done() && l_oP.f_Result().m_iHits == 1, "drawn round: taken");
     }
     if (g_iFail) { std::printf("touch_play_test: %d failure(s)\n", g_iFail); return 1; }
     std::printf("touch_play_test: all passed\n");

@@ -110,7 +110,7 @@ tests/scenarios/
 
 場景 `weaponTrial` 開始新遊戲的武器試煉（先是序章）；加上 `"battle": {"tryWeapon": "<武器>"}` 則直接用該武器進入試煉戰鬥（2026-11-27；情境
 `tutorial_staff`）。`expect` 的 `tutorialStep`：試煉戰鬥的教學步驟（0 為第一步）；`tutorialTextHas`：教學框的文字包含這段；給 text.json 的 key
-時，比對它在目前語言的文字。
+時，比對它在目前語言的文字；`tutorialHowTo`：`true` 表示教學框在教目前武器的玩法（data/weapon_trial.json 的 `howTo`）。
 
 ## 4. 測試檢查什麼
 

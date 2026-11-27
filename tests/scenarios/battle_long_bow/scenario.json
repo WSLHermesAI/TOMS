@@ -1,0 +1,23 @@
+{
+  "_comment": "The long bow (the owner, 2026-11-27; docs/gameplay/26): press anywhere and hold, and the aim line grows from the hero's bow hand to the red target (Lv 5: 50 % of the way a second), stopping at its distance; let go: the arrow flies to the line's tip, the rings round the target set its damage. Held 2.5 s with no drag: it lands near the middle.",
+  "scene": "battle",
+  "player": {
+    "give": ["long_bow"],
+    "equip": ["long_bow"],
+    "weaponLevel": { "long_bow": 5 }
+  },
+  "battle": {
+    "enemy": "slime",
+    "hp": 9999,
+    "atk_interval_ms": 60000,
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 330,
+    "drags": "560:600:560:600:150@120"
+  },
+  "expect": {
+    "equipped": "long_bow",
+    "battleEvents": { "combo": 1 }
+  }
+}

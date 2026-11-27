@@ -146,6 +146,38 @@
       { "at": 2100, "do": "shake", "value": 5, "ms": 500, "when": "partial" }
     ]
   },
+  "taichi_spin": {
+    "_comment": "The long bow's ultimate (the owner, 2026-11-27; docs/gameplay/26 §6): a Taichi in the middle of the screen; turn it, either way, as many times as you can in 5 s. The turns set the damage, times a normal attack (turnDamage: 1 x1.1, 2 x1.2, 3 x1.5, 4 x1.6, 5 x1.8, 6 x2, 8 x3, 10 x5; 7 and 9 count as 6 and 8); none: it fizzles. Then Cyclone Volley's show: the hero's introduction, ten arrows up, a meteor shower on the monster, sharing the damage.",
+    "name": "skill.taichi_spin",
+    "weapon": "long_bow",
+    "use": "ultimate",
+    "prompt": "skill.prompt_taichi",
+    "damage": 1,
+    "play": { "kind": "spinCircle", "timeMs": 5000, "points": 10, "size": 340, "around": "center", "anyWay": true, "picture": "taichi", "minHits": 1,
+              "guideFx": "spin_spark", "guidePeriodMs": 900,
+              "turnDamage": [[1, 1.1], [2, 1.2], [3, 1.5], [4, 1.6], [5, 1.8], [6, 2.0], [8, 3.0], [10, 5.0]] },
+    "demo": [ {"at": 0, "do": "name", "ms": 1000}, {"at": 0, "do": "fx", "fx": "volley_flash", "on": "player"}, {"at": 0, "do": "sound", "fx": "sfx.battle_ultimate"}, {"at": 900, "do": "dim"} ],
+    "step": [ {"do": "fx", "fx": "spin_burst"} ],
+    "finish": [
+      {"at": 0, "do": "intro", "text": "battle.ultimate_label", "ms": 1700, "when": "landed"},
+      {"at": 0, "do": "camera", "zoom": 1.45, "on": "player", "ms": 1700, "move": "low", "deg": 12, "value": 0.85, "when": "landed"},
+      {"at": 0, "do": "clip", "clip": "charge", "speed": 0.75, "when": "landed"},
+      {"at": 0, "do": "fx", "fx": "volley_charge", "on": "player", "when": "landed"},
+      {"at": 0, "do": "sound", "fx": "sfx.boss_intro", "when": "landed"},
+      {"at": 350, "do": "fx", "fx": "volley_flash", "on": "player", "when": "landed"},
+      {"at": 900, "do": "fx", "fx": "volley_charge", "on": "player", "when": "landed"},
+      {"at": 900, "do": "sound", "fx": "sfx.bow_charge", "when": "landed"},
+      {"at": 1800, "do": "camera", "zoom": 1.01, "move": "rain", "ms": 2500, "when": "full"},
+      {"at": 1800, "do": "dim", "ms": 2000, "when": "full"},
+      {"at": 1800, "do": "hits", "count": 10, "gapMs": 150, "clip": "attack", "speed": 4, "fx": "bow_release_3", "projectile": "volley_meteor", "impact": "volley_impact", "flightMs": 380, "extra": 2, "when": "full"},
+      {"at": 1800, "do": "fx", "fx": "volley_flash", "on": "player", "when": "full"},
+      {"at": 2180, "do": "shake", "value": 9, "ms": 1500, "when": "full"},
+      {"at": 3650, "do": "fx", "fx": "volley_impact", "on": "monster", "when": "full"},
+      {"at": 3650, "do": "fx", "fx": "volley_finale", "on": "monster", "when": "full"},
+      {"at": 3650, "do": "shake", "value": 14, "ms": 500, "when": "full"},
+      {"at": 3650, "do": "sound", "fx": "sfx.explosion", "when": "full"}
+    ]
+  },
   "cyclone_volley": {
     "_comment": "The bow's ultimate (docs/gameplay/22 §4): a big ring in the middle of the screen (\"around\": \"center\"; the owner, 2026-11-25: \"bigger and show on the center\") with sparks going round it; circle it clockwise 3 times, then anticlockwise 3 times, in 6 s. All 6 (or 3 to 5): first his own introduction, as a boss's (the camera low and close on him, the banner with the move's name typed in, his charge; the owner, 2026-11-19); all 6: then he shoots 10 arrows up in 1.5 s (the camera from behind him, over his shoulder, toward the monster; the owner, 2026-11-22) that fall on the monster as a meteor shower (the camera cranes up and looks down on it: move \"rain\") (each meteor a hit, 2 more round it for show); 3 to 5: 4 meteors (a share of the damage); under 3 it fizzles.",
     "name": "skill.cyclone_volley",

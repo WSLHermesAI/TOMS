@@ -1,0 +1,17 @@
+{
+  "_comment": "The long bow in the new game's weapon trial (the owner, 2026-11-27: \"make it selectable in the game tutorial\"; docs/gameplay/26): the weapon master offers it (weapon_master.json \"Try the long bow\"), and the tutorial's first step says how it plays (data/weapon_trial.json howTo, in tutorial.attack's {play}).",
+  "scene": "weaponTrial",
+  "battle": {
+    "tryWeapon": "long_bow",
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 120
+  },
+  "expect": {
+    "scene": "arena",
+    "equipped": "long_bow",
+    "tutorialStep": 0,
+    "tutorialHowTo": true
+  }
+}

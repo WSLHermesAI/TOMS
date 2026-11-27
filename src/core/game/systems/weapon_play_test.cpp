@@ -1,7 +1,10 @@
 // weapon_play_test.cpp -- toms::WeaponPlay rules and the shipped data/weapon_play.json (weapon_play.h). Exits 0 on success.
 // Runs in assets/ (tests/CMakeLists.txt), so the data file is "data/weapon_play.json".
 #include "weapon_play.h"
+#include "combo_play.h"
+#include "play_type.h"
 
+#include <cmath>
 #include <cstdio>
 #include <fstream>
 #include <set>
@@ -98,6 +101,40 @@ int main() {
         CHECK(l_oW.m_strPace == "stamina", "a weapon's pace");
     }
 
+    {   // the long bow (docs/gameplay/26): its aim line's growth by level; the bow keeps its classic pull
+        const WeaponPlayTable l_oT = f_LoadWeaponPlay("data/weapon_play.json");
+        const WeaponPlay& l_oL = l_oT.f_Get("long_bow");
+        CHECK(l_oL.m_strId == "long_bow" && std::fabs(l_oL.f_AimGrowAt(1) - 0.30f) < 1e-4f && std::fabs(l_oL.f_AimGrowAt(2) - 0.35f) < 1e-4f &&
+                  std::fabs(l_oL.f_AimGrowAt(10) - 0.75f) < 1e-4f, "the long bow grows 30 % a second at Lv 1, +5 % a level, 75 % at Lv 10");
+        CHECK(l_oT.f_Get("bow").f_AimGrowAt(5) == 0.0f, "the bow has no growing line");
+    }
+    {   // data/weapon_trial.json (the owner, 2026-11-27): each weapon the trial offers exists, with its choice, its line and its how-to
+        std::ifstream l_oF("data/weapon_trial.json"), l_oI("data/items.json");
+        const nlohmann::json l_jT = nlohmann::json::parse(l_oF, nullptr, false), l_jItems = nlohmann::json::parse(l_oI, nullptr, false);
+        const WeaponPlayTable l_oWp = f_LoadWeaponPlay("data/weapon_play.json");
+        const nlohmann::json l_jList = l_jT.is_object() ? l_jT.value("weapons", nlohmann::json::array()) : nlohmann::json::array();
+        CHECK(l_jList.size() >= 5, "the trial offers the bow, sword, staff, memory blade and long bow");
+        for (const auto& l_jW : l_jList) {
+            const std::string l_strId = l_jW.value("id", std::string());
+            const nlohmann::json& l_jIt = l_jItems.contains("items") ? l_jItems["items"] : l_jItems;
+            bool l_bOk = !l_strId.empty() && l_jIt.contains(l_strId) && l_oWp.m_mapWeapons.count(l_strId);
+            for (const char* l_pszK : {"label", "about", "howTo"})
+                for (const char* l_pszL : {"zh_TW", "en"})
+                    l_bOk = l_bOk && l_jW.contains(l_pszK) && l_jW[l_pszK].contains(l_pszL) && !l_jW[l_pszK][l_pszL].get<std::string>().empty();
+            if (!l_bOk) { std::printf("FAIL: weapon_trial.json \"%s\": not an item / weapon, or a label, about or howTo missing (zh_TW, en)\n", l_strId.c_str()); g_iFail++; }
+        }
+    }
+    {   // the memory blade (the owner, 2026-11-27): all its commands at once (a chain), at most 5, shapes by level worth more
+        const WeaponPlayTable l_oT = f_LoadWeaponPlay("data/weapon_play.json");
+        const WeaponPlay& l_oM = l_oT.f_Get("memory_blade");
+        CHECK(toms::f_PlayTypeFromString(l_oM.m_strPlay) == toms::PlayType::eSWIPE_CHAIN, "the memory blade plays a chain");
+        bool l_bFive = true;
+        for (int l_iLv = 1; l_iLv <= 10; l_iLv++) l_bFive = l_bFive && f_ComboSettings(l_oM, l_iLv).m_iPoints <= 5;
+        CHECK(l_bFive, "never more than 5 commands");
+        CHECK(l_oM.f_SwipeCuesAt(1).empty() && l_oM.f_SwipeCuesAt(8).size() == 3, "Lv 1: ways only; Lv 8: three shapes");
+        CHECK(l_oM.f_CueDamage("square") > l_oM.f_CueDamage("circle") && l_oM.f_CueDamage("circle") > l_oM.f_CueDamage("way") &&
+                  l_oM.f_CueDamage("way") == 1.0f, "a square is worth more than a circle, a circle more than a way");
+    }
     if (g_iFail) { std::printf("weapon_play_test: %d failure(s)\n", g_iFail); return 1; }
     std::printf("weapon_play_test: all passed\n");
     return 0;

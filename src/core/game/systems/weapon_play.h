@@ -83,11 +83,22 @@ struct WeaponPlay {
     struct SwipeCues { int m_iLv = 1; std::vector<std::string> m_vCues; };
     std::vector<SwipeCues> m_vSwipeCues;     // sorted by lv
     std::vector<std::string> f_SwipeCuesAt(int l_iLv) const;
+    // what each kind of command is worth when cut (the memory blade, the owner 2026-11-27: "harder object to draw get higher
+    // damage"): "way", "circle", "square" ... times its share; unlisted: 1
+    std::map<std::string, float> m_mapCueDamage;
+    // its own chain is a memory play (the memory blade, the owner 2026-11-27: "after the first direction is drawn the hints
+    // disappear"): all its commands show until the first is done, then the rest are drawn from memory
+    bool m_bChainMemory = false;
+    float f_CueDamage(const std::string& l_strKind) const { const auto l_it = m_mapCueDamage.find(l_strKind); return l_it == m_mapCueDamage.end() ? 1.0f : l_it->second; }
     // the memory blade's timing by level (docs/gameplay/22 §2, play "swipeRecall"): each row from `lv` on sets the keys it
     // has, the rows below it the rest; a key no row sets keeps data/battle.json "plays" (-1 here)
     struct Recall { int m_iLv = 1; int m_iShowMs = -1, m_iAnswerMs = -1, m_iPerCueMs = -1; float m_fReverse = -1.0f; };
     std::vector<Recall> m_vRecall;           // sorted by lv
     Recall f_RecallAt(int l_iLv) const;
+    // the long bow (docs/gameplay/26): its aim line grows this share of the target's distance a second, by level
+    struct AimGrow { int m_iLv = 1; float m_fPerSec = 0.0f; };
+    std::vector<AimGrow> m_vAimGrow;           // sorted by lv; empty: the bow's classic pull
+    float f_AimGrowAt(int l_iLv) const;        // the row at or under that level (0: none)
 };
 
 struct WeaponPlayTable {

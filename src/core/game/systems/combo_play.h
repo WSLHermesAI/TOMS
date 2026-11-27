@@ -41,6 +41,8 @@ struct ComboResult {
     float m_fCharge = 0;            // 0 .. 1
     bool m_bFailed = false;         // two misses in a row (a plain attack)
     int m_iPerfects = -1;           // a touch play's perfect answers (touch_play.h); -1: not counted (the track)
+    float m_fShotMul = -1.0f;       // the long bow: its shot's damage x from the rings, DEX and STR (-1: not judged so)
+    float m_fCueMul = 1.0f;         // the commands cut: their kinds' worth on average (weapon_play.json cueDamage; the memory blade)
     // The attack's power for the damage formula, 0 .. 100: the share of points hit (a fail: 0).
     float f_Power() const { return m_bFailed || m_iPoints <= 0 ? 0.0f : 100.0f * float(m_iHits) / float(m_iPoints); }
 };

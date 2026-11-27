@@ -242,6 +242,7 @@ void Game::f_Update(int l_iDtMs) {
   {   // the battle runs on its own time this frame (Game::battleFrame: hit stop, slow motion)
     toms::perf::Scope l_oPerfBattle(toms::perf::section::g_pszUpdateBattleLogic);
     const int l_iDtMs = m_oCs.m_iFrameDt;
+    f_FollowBowPlay();   // (the fight may be waiting: the camera still moves)
     if (m_oCs.m_iHeroDownMs > 0) m_oCs.m_iHeroDownMs = std::max(0, m_oCs.m_iHeroDownMs - l_iDtMs);   // knocked down (f_KnockDownHero)
     // An attack is playing (docs/gameplay/07_GAMEPLAY_PLAN.md §4): both sides' clocks wait for it.
     const bool l_bAttackPlaying = m_oCs.m_bActive && m_oCs.m_iAttackPauseMs > 0;

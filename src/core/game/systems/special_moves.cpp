@@ -82,6 +82,14 @@ SpecialMoveTable f_SpecialMovesFromJson(const nlohmann::json& l_jJ) {
             l_oS.m_oPlay.m_fCornerRadius = std::max(8.0f, l_jP.value(toms::field::g_pszCornerRadius, l_oS.m_oPlay.m_fCornerRadius));
             l_oS.m_oPlay.m_iMinHits = std::max(0, l_jP.value(toms::field::g_pszMinHits, 0));
             l_oS.m_oPlay.m_strGuideFx = l_jP.value(toms::field::g_pszGuideFx, std::string());
+            l_oS.m_oPlay.m_bAnyWay = l_jP.value(toms::field::g_pszAnyWay, false);
+            l_oS.m_oPlay.m_strPicture = l_jP.value(toms::field::g_pszPicture, std::string());
+            if (l_jP.contains(toms::field::g_pszTurnDamage) && l_jP[toms::field::g_pszTurnDamage].is_array()) {
+                for (const auto& l_jR : l_jP[toms::field::g_pszTurnDamage])
+                    if (l_jR.is_array() && l_jR.size() == 2 && l_jR[0].is_number() && l_jR[1].is_number())
+                        l_oS.m_oPlay.m_vTurnDamage.push_back({std::max(1, l_jR[0].get<int>()), std::max(0.0f, l_jR[1].get<float>())});
+                std::sort(l_oS.m_oPlay.m_vTurnDamage.begin(), l_oS.m_oPlay.m_vTurnDamage.end());
+            }
             l_oS.m_oPlay.m_iGuidePeriodMs = std::max(200, l_jP.value(toms::field::g_pszGuidePeriodMs, l_oS.m_oPlay.m_iGuidePeriodMs));
             l_oS.m_oPlay.m_fRingY = std::clamp(l_jP.value(toms::field::g_pszRingY, l_oS.m_oPlay.m_fRingY), -1.0f, 1.0f);
             l_oS.m_oPlay.m_strAround = l_jP.value(toms::field::g_pszAround, l_oS.m_oPlay.m_strAround);

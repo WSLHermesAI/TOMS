@@ -556,8 +556,7 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
             else {
                 l_oB.m_strAttackState = toms::ui::g_pszReady;
                 l_oB.m_strAttackLabel = l_oL.f_Tr(toms::text::g_pszBattleAttackReady);
-                l_oB.m_strAttackHint = l_oL.f_Tr(l_ePlayType == toms::PlayType::eTRACK ? toms::text::g_pszBattleAttackReadyHint
-                                     : std::string(toms::key_prefix::g_pszBattlePlayHint) + toms::f_PlayTypeName(l_ePlayType));
+                l_oB.m_strAttackHint = f_PlayHint();
             }
             if (const toms::TutorialStep* l_pStep = f_TutorialStepNow()) {   // the new game's tutorial (docs/gameplay/19 B6)
                 l_oB.m_strTutorial = f_TutorialText(*l_pStep);
@@ -673,7 +672,8 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
         l_oD.m_fSide = (l_fCw - (l_fCw - 80.0f) / std::max(1.0f, m_fUiScale)) * 0.5f;
         l_oD.m_strSpeaker = m_strDlgSpeaker;
         if (m_jDlgData.contains(toms::field::g_pszNodes) && m_jDlgData[toms::field::g_pszNodes].contains(m_strDlgNode) && m_jDlgData[toms::field::g_pszNodes][m_strDlgNode].contains(toms::field::g_pszText))
-            l_oD.m_strText = l_oL.f_Field(m_jDlgData[toms::field::g_pszNodes][m_strDlgNode][toms::field::g_pszText]);
+            l_oD.m_strText = f_TrParam(l_oL.f_Field(m_jDlgData[toms::field::g_pszNodes][m_strDlgNode][toms::field::g_pszText]),
+                                       toms::field::g_pszWeapons, f_TrialWeaponsAbout());   // {weapons}: the trial's weapons, one a line
         for (size_t l_nI = 0; l_nI < m_vDlgChoices.size(); l_nI++)
             l_oD.m_vChoices.push_back({m_vDlgChoices[l_nI].m_strLabel, "", (int)l_nI == m_iDlgSel, true});
     }
@@ -944,6 +944,7 @@ void Game::f_UiEvent(const std::string& l_strName, int l_iArg) {
 // "!" and the taps; a move's shape and its corners; and where each answer landed (a ring, or a cross), fading.
 void Game::f_TouchPlayUi(toms::UiBattle& l_oB) const {
     const toms::TouchPlay& l_oP = m_oCs.m_oTouch;
+    if (m_oCs.m_iIntroFoeFire >= 0 && !m_oCs.m_oSkill.m_bOn) return;   // a monster about to attack: the player's play waits, unseen
     l_oB.m_strTouchKind = toms::f_PlayTypeName(m_oCs.m_oSkill.m_bOn ? l_oP.f_Type() : f_BattlePlayType());
     auto l_fnAdd = [&](const std::string& l_strCls, float l_fCx, float l_fCy, float l_fW, float l_fH, float l_fRot = 0.0f, float l_fRadius = 0.0f,
                    float l_fOpacity = 1.0f, std::string l_strText = {}) {
@@ -993,7 +994,18 @@ void Game::f_TouchPlayUi(toms::UiBattle& l_oB) const {
         l_fnAdd(toms::ui::g_pszBull, l_oT.m_fX, l_oT.m_fY, 0.8f * l_oT.m_fR, 0.8f * l_oT.m_fR, 0.0f, 0.4f * l_oT.m_fR);
         if (l_oP.f_Points() > 1) l_fnAdd(toms::ui::g_pszCount, l_oT.m_fX, l_oT.m_fY - l_oT.m_fR - 18.0f, 80, 24, 0.0f, 0.0f, 1.0f, l_strCount);
         if (l_oP.f_Started()) l_fnAdd(toms::ui::g_pszTime, l_oT.m_fX, l_oT.m_fY + l_oT.m_fR + 10.0f, 2 * l_oT.m_fR * l_oP.f_TimeLeft(), 5, 0.0f, 2.5f);
-        if (l_oP.f_Aiming()) {
+        if (l_oP.f_Aiming() && l_oP.f_GrowMode()) {   // the long bow (docs/gameplay/26): the line from the bow hand, the rest of the way faint
+            const glm::vec2 l_v2O = l_oP.f_BowOrigin(), l_v2Tip = l_oP.f_Crosshair(), l_v2Dir = l_oP.f_AimDir();
+            const float l_fCh = l_oP.f_Charge(), l_fS = 26.0f + 40.0f * l_fCh;
+            const glm::vec2 l_v2Drag = l_oP.f_AimTo() - l_oP.f_AimFrom();
+            if (l_v2Drag.x * l_v2Drag.x + l_v2Drag.y * l_v2Drag.y > 9.0f) l_fnLine(toms::ui::g_pszPull, l_oP.f_AimFrom(), l_oP.f_AimTo(), 4, 0.6f);
+            if (!l_oP.f_AimStopped()) l_fnLine(toms::ui::g_pszShot, l_v2Tip, l_v2O + l_v2Dir * l_oP.f_TargetDistance(), 2, 0.35f);
+            l_fnLine(toms::ui::g_pszShot, l_v2O, l_v2Tip, 4);
+            l_fnAdd(toms::ui::g_pszAnchor, l_v2O.x, l_v2O.y, 14, 14, 0.0f, 7);
+            l_fnAdd(l_fCh >= 1.0f ? toms::ui::g_pszChargeFull : toms::ui::g_pszCharge, l_v2O.x, l_v2O.y, l_fS, l_fS, 0.0f, l_fS * 0.5f);
+            const bool l_bOn = l_oP.f_TipTier() >= 1.0f;   // within the two inner rings: gold
+            l_fnAdd(l_bOn ? toms::ui::g_pszCrossOn : toms::ui::g_pszCross, l_v2Tip.x, l_v2Tip.y, 28, 28, 0.0f, 14);
+        } else if (l_oP.f_Aiming()) {
             const glm::vec2 l_v2C = l_oP.f_Crosshair(), l_v2A = l_oP.f_AimFrom();
             const float l_fCh = l_oP.f_Charge(), l_fS = 26.0f + 40.0f * l_fCh;
             l_fnLine(toms::ui::g_pszPull, l_v2A, l_oP.f_AimTo(), 5);
@@ -1002,7 +1014,7 @@ void Game::f_TouchPlayUi(toms::UiBattle& l_oB) const {
             l_fnAdd(l_fCh >= 1.0f ? toms::ui::g_pszChargeFull : toms::ui::g_pszCharge, l_v2A.x, l_v2A.y, l_fS, l_fS, 0.0f, l_fS * 0.5f);   // the pull's charge (16 §3.2)
             l_fnAdd(toms::ui::g_pszCross, l_v2C.x, l_v2C.y, 28, 28, 0.0f, 14);
         } else if ((!m_oSettings.m_bBowTutorialDone || l_oB.m_strTutorialMark == toms::ui::g_pszAttack) && (l_oB.m_strTutorial.empty() || l_oB.m_strTutorialMark == toms::ui::g_pszAttack)
-                   && !l_oP.f_Started() && !m_oCs.m_oSkill.m_bOn) {
+                   && !l_oP.f_Started() && !m_oCs.m_oSkill.m_bOn && !l_oP.f_GrowMode()) {   // (the long bow: its own hint says it)
             // the first pull's tutorial: a ghost finger touches under the target, drags back and lets go (16 §3.2)
             const float l_fK = (float)(m_oCs.m_iClockMs % 1600) / 1600.0f;
             const float l_fDrag = std::clamp((l_fK - 0.25f) / 0.45f, 0.0f, 1.0f);
@@ -1077,13 +1089,24 @@ void Game::f_TouchPlayUi(toms::UiBattle& l_oB) const {
         const float l_fX0 = l_fW * 0.5f - l_fCell * (float)(l_iN - 1) * 0.5f;
         l_fnAdd(toms::ui::g_pszChainbar, l_fW * 0.5f, l_fBarY, l_fCell * (float)l_iN + 16.0f, l_fCell + 12.0f, 0.0f, 10.0f);
         const auto& l_vMarks = l_oP.f_Marks();   // one mark per answer, in order: what each came to
+        // the weapon's own memory chain (the memory blade, the owner 2026-11-27): once the first is drawn the rest hide, an
+        // empty slot each, the one due lit, "?" over the hero: drawn from memory
+        const bool l_bHidden = !m_oCs.m_oSkill.m_bOn && l_iNow >= 1 && f_WeaponPlayOf(f_WeaponKey()).m_bChainMemory;
         for (int l_iK = 0; l_iK < l_iN; l_iK++) {
+            if (l_iK < l_iNow && !m_oCs.m_oSkill.m_bOn) continue;   // the weapon's own: a command drawn disappears (the memory blade, the owner 2026-11-27)
+            if (l_bHidden) {
+                const float l_fDot = l_fCell * (l_iK == l_iNow ? 0.42f : 0.3f);
+                l_fnAdd(l_iK == l_iNow ? toms::ui::g_pszSlotNow : toms::ui::g_pszSlot, l_fX0 + l_fCell * (float)l_iK, l_fBarY, l_fDot, l_fDot, 0.0f, l_fDot * 0.5f);
+                continue;
+            }
             std::string l_strCls = toms::ui::g_pszArrow;
             if (l_iK < l_iNow) l_strCls = l_iK < (int)l_vMarks.size() && l_vMarks[(size_t)l_iK].m_bOk ? toms::ui::g_pszArrowCut : toms::ui::g_pszArrowMissed;
             else if (l_iK == l_iNow) l_strCls = toms::ui::g_pszArrowNowOpen;
             l_fnCue(l_iK, {l_fX0 + l_fCell * (float)l_iK, l_fBarY}, l_fCell / 90.0f * (l_iK == l_iNow ? 1.25f : 1.0f), l_strCls);
         }
-        if (l_iNow < l_iN)   // the one due, big over the hero's head as every attack command is (the owner, 2026-11-13), popping in as it comes due
+        if (l_bHidden && l_iNow < l_iN)
+            l_fnAdd(toms::ui::g_pszCount, l_oP.f_PromptAt().x, l_oP.f_PromptAt().y, 80, 30, 0.0f, 0.0f, 1.0f, "?");
+        else if (l_iNow < l_iN)   // the one due, big over the hero's head as every attack command is (the owner, 2026-11-13), popping in as it comes due
             l_fnCue(l_iNow, l_oP.f_PromptAt(), 1.3f * l_fnPopScale(l_vMarks.empty() ? l_oP.f_ClockMs() : l_vMarks.back().m_iAgeMs), toms::ui::g_pszArrowNowOpen);
         l_fnAdd(toms::ui::g_pszCount, l_fW * 0.5f + l_fCell * (float)l_iN * 0.5f + 48.0f, l_fBarY, 80, 28, 0.0f, 0.0f, 1.0f, std::to_string(std::min(l_iNow, l_iN)) + "/" + std::to_string(l_iN));
         l_fnAdd(toms::ui::g_pszTimeOpen, l_fW * 0.5f, l_fBarY + l_fCell * 0.5f + 16.0f, l_fCell * (float)l_iN * l_oP.f_TimeLeft(), 6, 0.0f, 3.0f);
@@ -1132,6 +1155,9 @@ void Game::f_TouchPlayUi(toms::UiBattle& l_oB) const {
         const int l_iN = l_oP.f_Points(), l_iNow = std::min(l_oP.f_Index(), l_iN - 1);
         const bool l_bCw = l_oP.f_SpinClockwise(l_iNow);
         l_fnAdd(toms::ui::g_pszSpinring, l_v2C.x, l_v2C.y, 2.0f * l_fR, 2.0f * l_fR, 0.0f, l_fR);
+        const toms::SpecialMove* l_pMove = m_oCs.m_oSkill.m_bOn ? m_oCs.m_oSkill.m_pDef : nullptr;
+        if (l_pMove && !l_pMove->m_oPlay.m_strPicture.empty())   // the Taichi: its picture in the ring, turning with the finger
+            l_fnAdd(std::string(toms::ui::g_pszSpinPic) + " " + l_pMove->m_oPlay.m_strPicture, l_v2C.x, l_v2C.y, 1.7f * l_fR, 1.7f * l_fR, l_oP.f_SpinAngle(), 0.0f);
         // the turn so far: ticks lit round the ring from the top, the way it goes
         const int l_iTicks = 24, l_iLit = (int)std::floor(l_oP.f_SpinProgress() * (float)l_iTicks + 0.001f);
         for (int l_iK = 0; l_iK < l_iTicks; l_iK++) {
@@ -1142,10 +1168,17 @@ void Game::f_TouchPlayUi(toms::UiBattle& l_oB) const {
         int l_iRunFrom = l_iNow, l_iRunTo = l_iNow;
         while (l_iRunFrom > 0 && l_oP.f_SpinClockwise(l_iRunFrom - 1) == l_bCw) l_iRunFrom--;
         while (l_iRunTo + 1 < l_iN && l_oP.f_SpinClockwise(l_iRunTo + 1) == l_bCw) l_iRunTo++;
-        const std::string l_strWay = m_oLocale.f_Tr(l_bCw ? toms::text::g_pszBattleSpinCw : toms::text::g_pszBattleSpinCcw);
-        l_fnAdd(l_bCw ? toms::ui::g_pszSpinlabel : toms::ui::g_pszSpinlabelCcw, l_v2C.x, l_v2C.y - 14.0f, 2.0f * l_fR, 30, 0.0f, 0.0f, 1.0f, l_strWay);
-        l_fnAdd(toms::ui::g_pszCount, l_v2C.x, l_v2C.y + 18.0f, 90, 30, 0.0f, 0.0f, 1.0f,
-                std::to_string(std::min(l_oP.f_Index(), l_iRunTo + 1) - l_iRunFrom + (l_oP.f_Index() <= l_iRunTo ? 1 : 0)) + "/" + std::to_string(l_iRunTo - l_iRunFrom + 1));
+        if (l_pMove && !l_pMove->m_oPlay.m_vTurnDamage.empty()) {   // the Taichi: the turns so far and the damage they make, under the ring
+            const int l_iPct = (int)std::lround(100.0f * toms::f_TurnDamage(l_pMove->m_oPlay, l_oP.f_Index()));
+            l_fnAdd(toms::ui::g_pszCount, l_v2C.x, l_v2C.y + l_fR + 66.0f, 2.0f * l_fR, 30, 0.0f, 0.0f, 1.0f,
+                    f_TrParam(f_TrParam(m_oLocale.f_Tr(toms::text::g_pszBattleSpinTurns), toms::field::g_pszN, std::to_string(l_oP.f_Index())),
+                              toms::field::g_pszPct, std::to_string(l_iPct)));
+        } else {
+            const std::string l_strWay = m_oLocale.f_Tr(l_bCw ? toms::text::g_pszBattleSpinCw : toms::text::g_pszBattleSpinCcw);
+            l_fnAdd(l_bCw ? toms::ui::g_pszSpinlabel : toms::ui::g_pszSpinlabelCcw, l_v2C.x, l_v2C.y - 14.0f, 2.0f * l_fR, 30, 0.0f, 0.0f, 1.0f, l_strWay);
+            l_fnAdd(toms::ui::g_pszCount, l_v2C.x, l_v2C.y + 18.0f, 90, 30, 0.0f, 0.0f, 1.0f,
+                    std::to_string(std::min(l_oP.f_Index(), l_iRunTo + 1) - l_iRunFrom + (l_oP.f_Index() <= l_iRunTo ? 1 : 0)) + "/" + std::to_string(l_iRunTo - l_iRunFrom + 1));
+        }
         // a dot per turn under the ring: done, missed, due, to come (the ones the other way in their own colour)
         const auto& l_vMarks = l_oP.f_Marks();
         const float l_fGap = 22.0f, l_fX0 = l_v2C.x - l_fGap * (float)(l_iN - 1) * 0.5f;
@@ -1176,9 +1209,19 @@ void Game::f_TouchPlayUi(toms::UiBattle& l_oB) const {
 std::string Game::f_TutorialText(const toms::TutorialStep& l_oStep) const {
     const toms::Locale& l_oL = m_oLocale;
     const toms::PlayType l_ePlayType = f_BattlePlayType();
+    // the weapon's own how-to (data/weapon_trial.json), else the play's tutorial words, else its short hint
     const std::string l_strOwn = std::string(toms::key_prefix::g_pszTutorialPlay) + toms::f_PlayTypeName(l_ePlayType);
-    const std::string l_strHow = l_oL.f_Has(l_strOwn) ? l_oL.f_Tr(l_strOwn)
-        : l_oL.f_Tr(l_ePlayType == toms::PlayType::eTRACK ? toms::text::g_pszBattleAttackReadyHint
-                                                          : std::string(toms::key_prefix::g_pszBattlePlayHint) + toms::f_PlayTypeName(l_ePlayType));
+    const std::string l_strTrial = f_TrialHowTo(f_WeaponKey());
+    const std::string l_strHow = !l_strTrial.empty() ? l_strTrial : l_oL.f_Has(l_strOwn) ? l_oL.f_Tr(l_strOwn) : f_PlayHint();
     return f_TrParam(l_oL.f_Tr(l_oStep.m_strText), toms::field::g_pszPlay, l_strHow);
+}
+
+// How the weapon attacks, in a few words: the weapon's own hint ("battle.play_hint_" + the weapon: the long bow), else its
+// play's ("battle.play_hint_" + the play), else the point track's.
+std::string Game::f_PlayHint() const {
+    const toms::PlayType l_ePlayType = f_BattlePlayType();
+    const std::string l_strOwn = std::string(toms::key_prefix::g_pszBattlePlayHint) + f_WeaponKey();
+    if (m_oLocale.f_Has(l_strOwn)) return m_oLocale.f_Tr(l_strOwn);
+    return m_oLocale.f_Tr(l_ePlayType == toms::PlayType::eTRACK ? toms::text::g_pszBattleAttackReadyHint
+                                                                : std::string(toms::key_prefix::g_pszBattlePlayHint) + toms::f_PlayTypeName(l_ePlayType));
 }

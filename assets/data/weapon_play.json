@@ -870,6 +870,177 @@
     "play": "pullRelease",
     "ultimate": "cyclone_volley"
   },
+  "long_bow": {
+    "levels": [
+      {
+        "lv": 1,
+        "points": 3,
+        "stats": {
+          "str": 2
+        }
+      },
+      {
+        "lv": 2,
+        "points": 3,
+        "stats": {
+          "str": 4,
+          "agi": 5
+        }
+      },
+      {
+        "lv": 3,
+        "points": 4,
+        "stats": {
+          "str": 6,
+          "agi": 10
+        }
+      },
+      {
+        "lv": 4,
+        "points": 4,
+        "stats": {
+          "str": 8,
+          "agi": 12
+        }
+      },
+      {
+        "lv": 5,
+        "points": 5,
+        "stats": {
+          "str": 12,
+          "agi": 15
+        }
+      },
+      {
+        "lv": 6,
+        "points": 5,
+        "stats": {
+          "str": 14,
+          "agi": 17
+        }
+      },
+      {
+        "lv": 7,
+        "points": 5,
+        "stats": {
+          "str": 16,
+          "agi": 19
+        }
+      },
+      {
+        "lv": 8,
+        "points": 5,
+        "stats": {
+          "str": 18,
+          "agi": 21
+        }
+      },
+      {
+        "lv": 9,
+        "points": 5,
+        "stats": {
+          "str": 20,
+          "agi": 23
+        }
+      },
+      {
+        "lv": 10,
+        "points": 5,
+        "stats": {
+          "str": 22,
+          "agi": 25
+        }
+      }
+    ],
+    "levelExp": {
+      "first": 5,
+      "scale": 2
+    }, "around": "monster",
+    "turnBack": true,
+    "sweepMs": 1700,
+    "chargeMs": 2200,
+    "chargeSpeedUp": 1.0,
+    "chargeDamage": 0.4,
+    "hitWindow": 0.07,
+    "fx": [
+      {
+        "lv": 1,
+        "release": "bow_release_1",
+        "hit": "bow_hit_1"
+      },
+      {
+        "lv": 3,
+        "release": "bow_release_2",
+        "hit": "bow_hit_2"
+      },
+      {
+        "lv": 5,
+        "release": "bow_release_3",
+        "hit": "bow_hit_3"
+      }
+    ],
+    "results": [
+      {
+        "hits": "all",
+        "name": "perfect",
+        "damage": 1.0,
+        "stunMs": 500,
+        "breakAdd": 1,
+        "fx": "bow_perfect",
+        "anim": "attack_big",
+        "move": "battle.move.bow.perfect"
+      },
+      {
+        "hits": 2,
+        "name": "great",
+        "fx": "bow_great",
+        "move": "battle.move.bow.great"
+      },
+      {
+        "hits": 0,
+        "name": "miss",
+        "fx": "miss_puff",
+        "move": "battle.move.bow.miss"
+      }
+    ],
+    "comboKeep": true,
+    "comboTiers": [
+      {
+        "from": 1,
+        "clip": "attack",
+        "fx": "bow_hit_1",
+        "feel": "hit"
+      },
+      {
+        "from": 2,
+        "clip": "attack_2",
+        "fx": "bow_hit_2",
+        "feel": "hit"
+      },
+      {
+        "from": 3,
+        "clip": "attack_3",
+        "fx": "bow_hit_3",
+        "feel": "great"
+      },
+      {
+        "from": 4,
+        "clip": "attack_4",
+        "fx": "bow_great",
+        "feel": "great"
+      },
+      {
+        "from": 5,
+        "clip": "attack_big",
+        "fx": "bow_perfect",
+        "feel": "perfect"
+      }
+    ],
+    "play": "pullRelease",
+    "_aimGrow": "the long bow (docs/gameplay/26): its aim line grows this share of the target's distance a second, by level",
+    "aimGrow": [ { "lv": 1, "perSec": 0.30 }, { "lv": 2, "perSec": 0.35 }, { "lv": 3, "perSec": 0.40 }, { "lv": 4, "perSec": 0.45 }, { "lv": 5, "perSec": 0.50 }, { "lv": 6, "perSec": 0.55 }, { "lv": 7, "perSec": 0.60 }, { "lv": 8, "perSec": 0.65 }, { "lv": 9, "perSec": 0.70 }, { "lv": 10, "perSec": 0.75 } ],
+    "ultimate": "taichi_spin"
+  },
   "sword": {
     "missBack": [
       {
@@ -1248,7 +1419,11 @@
         "feel": "perfect"
       }
     ],
-    "play": "swipeRecall",
+    "play": "swipeChain",
+    "_play": "the owner, 2026-11-27: every command shown at once along the top (as its Sigil Chain); once the first is drawn the rest hide and are drawn from memory (chainMemory); at most 5 (levels points); the recall rows above are no longer used",
+    "swipeCues": [ { "lv": 3, "cues": ["circle"] }, { "lv": 5, "cues": ["square"] }, { "lv": 6, "cues": ["circle", "square"] }, { "lv": 8, "cues": ["square", "circle", "square"] } ],
+    "cueDamage": { "way": 1.0, "circle": 1.4, "square": 1.6 },
+    "chainMemory": true,
     "ultimate": "sigil_chain",
     "recall": [
       {

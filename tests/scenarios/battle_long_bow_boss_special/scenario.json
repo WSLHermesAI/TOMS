@@ -1,0 +1,23 @@
+{
+  "_comment": "The long bow through a boss's special attack (the owner, 2026-11-27: \"while the boss makes its special attack the red target and the aim line become weird ... make the aim line to the red target still attackable\"): the line drawn (Lv 9) just before Hivebear's boss_near lights its cells; its close-up comes in (the camera on the bear, the fight waiting); the target follows the bear, the line the hero's hand (Game::f_FollowBowPlay); let go after it: a hit.",
+  "scene": "battle",
+  "player": {
+    "give": ["long_bow"],
+    "equip": ["long_bow"],
+    "weaponLevel": { "long_bow": 9 },
+    "hp": 99999
+  },
+  "battle": {
+    "enemy": "hivebear",
+    "hp": 99999,
+    "moves": ["boss_near"],
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 1100,
+    "drags": "300:640:300:640:260@750"
+  },
+  "expect": {
+    "battleEvents": { "cellIntro": 1, "combo": 1 }
+  }
+}

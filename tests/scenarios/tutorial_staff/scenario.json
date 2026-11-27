@@ -1,5 +1,5 @@
 {
-  "_comment": "The tutorial with the magic staff (the owner, 2026-11-27: \"in the tutorial, add a description of how the magic staff plays\"): straight into the trial fight with the staff (battle tryWeapon), and its first step explains the circles: watch the numbers, tap them in order or slide through them (text.json tutorial.play_sequenceClick, filled into tutorial.attack's {play}).",
+  "_comment": "The tutorial with the magic staff (the owner, 2026-11-27: \"in the tutorial, add a description of how the magic staff plays\"): straight into the trial fight with the staff (battle tryWeapon), and its first step explains the circles: watch the numbers, tap them in order or slide through them (data/weapon_trial.json howTo, in tutorial.attack's {play}).",
   "scene": "weaponTrial",
   "battle": {
     "tryWeapon": "staff",
@@ -11,6 +11,6 @@
   "expect": {
     "scene": "arena",
     "tutorialStep": 0,
-    "tutorialTextHas": "tutorial.play_sequenceClick"
+    "tutorialHowTo": true
   }
 }

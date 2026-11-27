@@ -908,8 +908,11 @@ private:
     void f_SkillBeat(const toms::ShowBeat& l_oB, glm::vec2 l_v2At);
     void f_EndSkill();
     glm::vec2 f_SkillCentre() const;                  // between the fighters (a step's burst with no place of its own)
-    std::string f_TutorialText(const toms::TutorialStep& l_oStep) const;   // a tutorial step's words, its {play} filled in
-    void f_HeroShout(const std::string& l_strOutcome);   // his voice when a move's play ends: "full", "partial", "fizzle" (battle.json heroVoice)
+    std::string f_TutorialText(const toms::TutorialStep& l_oStep) const;
+    std::string f_PlayHint() const;   // how the weapon attacks, in a few words (its own hint, else its play's)   // a tutorial step's words, its {play} filled in
+    void f_HeroShout(const std::string& l_strOutcome);
+    bool m_bBowStopHeard = false;
+    void f_FollowBowPlay();   // the bow's target and the long bow's line follow the camera, every frame   // the long bow's line stopped at the target's distance (its click played once)   // his voice when a move's play ends: "full", "partial", "fizzle" (battle.json heroVoice)
     glm::vec2 f_SkillShapeCentre(const toms::SpecialMove& l_oD) const;   // a move's shape or ring: on the hero's head (ringY), on the screen
     std::string f_SkillName() const;                  // the running skill's name, in the language
     // the training ground (16 §5): a monster's card spent for fights in a row with more EXP and weapon wins
@@ -1554,6 +1557,11 @@ private:
     toms::TimerQueue m_oTimers;
     toms::TimerOwner m_oBattleTimers;
     toms::WeaponPlayTable m_oWeaponPlay;   // data/weapon_play.json
+    // data/weapon_trial.json: the weapons the weapon trial offers, in order, each with its choice, its line and how it plays
+    struct TrialWeapon { std::string m_strId; nlohmann::json m_jLabel, m_jAbout, m_jHowTo; };
+    std::vector<TrialWeapon> m_vTrialWeapons;
+    std::string f_TrialHowTo(const std::string& l_strWeapon) const;   // how that weapon plays (weapon_trial.json howTo; "": none)
+    std::string f_TrialWeaponsAbout() const;                          // each trial weapon's line, one after another
     toms::CircleSymbolTable m_oCircleSymbols;   // data/circle_symbols.json: the staff's circles as symbols, by level
     std::vector<glm::vec2> m_vDebugSymbolPoints;   // the battle editor's "Try": every staff attack shows this symbol
     std::vector<int> m_vDebugSymbolTimesMs;

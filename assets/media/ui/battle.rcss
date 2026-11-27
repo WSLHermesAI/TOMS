@@ -151,6 +151,8 @@ body { z-index: 30; }
 .tp.shot    { background-color: #ffd54a80; }
 .tp.anchor  { background-color: #ffffff; }
 .tp.cross   { border-width: 3px; border-color: #ffd54a; }
+.tp.cross.on { border-color: #fff6c0; background-color: #ffd54a80; }   /* the long bow: the tip in the inner rings */
+.tp.spinpic.taichi { decorator: image(battle/taichi.png); }   /* the long bow's Taichi: turns with the finger */
 .tp.arrow   { background-color: #9aa1b3; }
 .tp.arrow.head { background-color: transparent; border-top-width: 6px; border-right-width: 6px; border-color: #9aa1b3; }
 .tp.arrow.now   { background-color: #ffffff; }

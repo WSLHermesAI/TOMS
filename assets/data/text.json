@@ -1271,6 +1271,18 @@
       "ko": "호호생풍",
       "es": "Viento del tigre"
     },
+    "skill.taichi_spin": {
+      "zh_TW": "太極旋",
+      "en": "Taichi Spin"
+    },
+    "skill.prompt_taichi": {
+      "zh_TW": "轉動太極！5 秒內轉越多圈越強",
+      "en": "Turn the Taichi! The more turns in 5 s, the stronger"
+    },
+    "battle.spin_turns": {
+      "zh_TW": "{n} 圈・{pct}%",
+      "en": "{n} turns · {pct}%"
+    },
     "skill.falcon_rain": {
       "zh_TW": "鷹之雨",
       "en": "Falcon Rain",
@@ -1454,10 +1466,6 @@
     "tutorial.guard": {
       "zh_TW": "這招躲不開！牠頭上出現「!」時，按防禦",
       "en": "You can't dodge this one! When \"!\" shows over it, press Guard"
-    },
-    "tutorial.play_sequenceClick": {
-      "zh_TW": "法杖：圓圈會一個個亮起數字——記住順序！它們消失後會再出現，照 1、2、3… 點擊；也可以按住第一個圓，手指不放開，照順序滑到下一個。圓圈有時會排成圖形（一圈、一排、字母），順著它走就好",
-      "en": "The staff: the circles light up one by one with their numbers. Remember the order! When they come back, tap them 1, 2, 3… or touch the first and slide through the rest in order without lifting. Sometimes they make a shape (a ring, a row, a letter): just follow it"
     },
     "tutorial.finish": {
       "zh_TW": "很好！把苔蛙打倒吧",
@@ -7684,6 +7692,18 @@
       "ja": "防御による減傷に最低保証ラインを設け、チャージに失敗しても基本的な防御を保てるようにする。",
       "ko": "방어 피해 감소에 최소 보장선을 두어, 차지에 실패해도 기본적인 방어를 유지할 수 있습니다.",
       "es": "Establece un mínimo garantizado en la reducción de daño, asegurando protección básica incluso si fallas el momento de la carga."
+    },
+    "item.long_bow.name": {
+      "zh_TW": "長弓",
+      "en": "Long Bow"
+    },
+    "item.long_bow.desc": {
+      "zh_TW": "按住時，瞄準線從弓上一路伸向紅靶（等級越高越快），到了靶的距離就停；它會晃，用小幅拖曳把線頭對準靶心再放開。越靠近中心傷害越高",
+      "en": "Hold, and the aim line reaches out from the bow to the red target (faster at higher levels), stopping at its distance; it shakes, so small drags keep its tip on the centre, then let go. The closer to the middle, the harder it hits"
+    },
+    "battle.play_hint_long_bow": {
+      "zh_TW": "按住讓瞄準線伸到靶，小幅拖曳對準中心，放開射出",
+      "en": "hold to reach the target, small drags to aim at its centre, let go"
     },
     "item.qingxiao_blade.name": {
       "zh_TW": "青霄",

@@ -19,14 +19,39 @@ sword's slash, its combo clips and its damage share (`f_PlayHit`). They do not r
 
 | Type (code) | Data name | What the player does | Used by |
 |---|---|---|---|
-| `eSWIPE_RECALL` | `swipeRecall` | watch the ways shown one by one; when they hide, swipe them back in order from memory, in one answer time | the memory blade (§2) |
-| `eSWIPE_CHAIN` | `swipeChain` | a row of commands on a bar at the top; swipe them in order (ways, or gestures and shapes) in one time | the Sigil Chain (§3) |
+| `eSWIPE_RECALL` | `swipeRecall` | watch the ways shown one by one; when they hide, swipe them back in order from memory, in one answer time | the memory blade until 11-27 (§2.1) |
+| `eSWIPE_CHAIN` | `swipeChain` | a row of commands on a bar at the top; swipe them in order (ways, or gestures and shapes) in one time | the memory blade (§2), the Sigil Chain (§3) |
 
 The same play as the memory blade was proposed for the **two-handed sword** in [14](14_WEAPON_PLAY_AND_LOOT.md) §2.5
 (Q59–Q63, still open). It was built here as a **new sword type**, so the two-handed sword keeps its V swipes until those
 answers come. Moving the play to the two-handed sword is a data change: `"play": "swipeRecall"` and its `recall` rows.
 
-## 2. The memory blade (憶刃): `swipeRecall`
+## 2. The memory blade (憶刃): `swipeChain` (since 2026-11-27)
+
+**The play now (the owner, 2026-11-27: "show all direction hint together, like its special attack; after the player
+draws the direction the hint disappears; after level up some simple directions become a square or a circle; at most 5;
+harder to draw, higher damage"):**
+
+1. **All its commands show at once** in a row along the top, as the Sigil Chain (§3), with "0/5" and one time bar.
+   The one due shows big over the hero.
+2. **Do them in order:** a way is one slash that way; a circle or a square is drawn in one stroke.
+3. **After the first command, the rest hide** (the owner, 2026-11-27: "if the hint is always there, there is no need to
+   remember"): a command done disappears from the row (cut or missed); once the first is done, the rest show only as
+   empty slots (the one due lit) and a "?" over the hero, so they are drawn **from memory**. `weapon_play.json`
+   `"chainMemory": true`; without it (the Sigil Chain, a move) the row stays shown and marked.
+4. **At most 5 commands** (`levels` `points`: 3, 3, 4, 4, 5 ... 5).
+5. **Shapes by level** (`swipeCues`, the last ones in the row become shapes): Lv 3 one circle, Lv 5 one square, Lv 6 a
+   circle and a square, Lv 8 square, circle, square.
+6. **Harder hits harder** (`cueDamage`): a way x1.0, a circle x1.4, a square x1.6, on each cut and on the attack's total
+   (the cut commands' average, `ComboResult::m_fCueMul`).
+7. **Time:** `battle.json` `plays` `chainTimeMs` (5 s), plus `cueExtraMs` for each shape in the row (circle 0.8 s,
+   square 1.1 s), plus DEX's `dexWindowMs`.
+
+Where to change it: `weapon_play.json` `"memory_blade"` (`swipeCues`, `cueDamage`, `levels` `points`) and `battle.json`
+`plays` (`chainTimeMs`, `cueExtraMs`); `"chainMemory"` turns the hiding off or on. The old play below (`swipeRecall`, its `recall` rows) is kept in the code and the
+data: `"play": "swipeRecall"` brings it back.
+
+### 2.1 Before 11-27: `swipeRecall`
 
 **The play:**
 

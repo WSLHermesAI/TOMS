@@ -97,8 +97,31 @@ void TouchPlay::f_NextTarget() {
     m_iOneMs = 0;
     m_bAiming = false;
     m_iHoldMs = 0;
+    m_fGrow = 0.0f;
+    m_bGrowStopped = false;
     const glm::vec2 l_v2P = f_TargetPos();
     m_oTarget.m_fX = l_v2P.x; m_oTarget.m_fY = l_v2P.y;
+}
+
+void TouchPlay::f_CancelHold() {
+    if (m_eType == PlayType::ePULL_RELEASE) m_iOneMs = 0;   // the arrow taken away gets its whole time again
+    m_bAiming = false;
+    m_iHoldMs = 0;
+    m_fGrow = 0.0f;
+    m_bGrowStopped = false;
+    m_vStroke.clear();
+    m_bCircleSliding = false;
+    m_bSpinHasLast = false;
+}
+
+void TouchPlay::f_FollowArea(const glm::vec4& l_v4Area) {
+    const glm::vec2 l_v2D(l_v4Area.x + l_v4Area.z * 0.5f - (m_v4Area.x + m_v4Area.z * 0.5f), l_v4Area.y + l_v4Area.w * 0.5f - (m_v4Area.y + m_v4Area.w * 0.5f));
+    m_v4Area = l_v4Area;
+    if (m_eType != PlayType::ePULL_RELEASE) return;
+    m_v2TargetFrom += l_v2D;
+    m_v2TargetTo += l_v2D;
+    m_oTarget.m_fX += l_v2D.x;
+    m_oTarget.m_fY += l_v2D.y;
 }
 
 glm::vec2 TouchPlay::f_TargetPos() const {
@@ -108,11 +131,46 @@ glm::vec2 TouchPlay::f_TargetPos() const {
 }
 
 float TouchPlay::f_Charge() const {
+    if (f_GrowMode()) return m_bAiming ? std::clamp(f_AimLength() / std::max(1.0f, f_TargetDistance()), 0.0f, 1.0f) : 0.0f;   // the line's reach
     return m_bAiming ? std::clamp((float)m_iHoldMs / (float)std::max(1, m_oS.m_iBowHoldMs), 0.0f, 1.0f) : 0.0f;
 }
 
+// ---- the long bow (docs/gameplay/26) ----
+
+float TouchPlay::f_TargetDistance() const {
+    return std::hypot(m_oTarget.m_fX - m_oS.m_v2BowOrigin.x, m_oTarget.m_fY - m_oS.m_v2BowOrigin.y);
+}
+
+glm::vec2 TouchPlay::f_AimDir() const {
+    // at the target at first; the drag (back, away from where it should go) turns it, more the longer it is: a pull the
+    // other way, weighed against twice the shortest pull, so a small drag makes a small correction
+    const glm::vec2 l_v2T = glm::vec2(m_oTarget.m_fX, m_oTarget.m_fY) - m_oS.m_v2BowOrigin;
+    const float l_fT = std::sqrt(l_v2T.x * l_v2T.x + l_v2T.y * l_v2T.y);
+    const glm::vec2 l_v2At = l_fT > 0.001f ? l_v2T / l_fT : glm::vec2(1.0f, 0.0f);
+    const glm::vec2 l_v2W = l_v2At * (2.0f * m_oS.m_fBowMinPull) - (m_v2AimTo - m_v2AimFrom);
+    const float l_fW = std::sqrt(l_v2W.x * l_v2W.x + l_v2W.y * l_v2W.y);
+    return l_fW > 0.001f ? l_v2W / l_fW : l_v2At;
+}
+
+float TouchPlay::f_AimLength() const {
+    const glm::vec2 l_v2D = m_v2AimTo - m_v2AimFrom;
+    return m_fGrow * f_TargetDistance() + std::sqrt(l_v2D.x * l_v2D.x + l_v2D.y * l_v2D.y) * m_oS.m_fBowPull;
+}
+
+float TouchPlay::f_RingTier(float l_fDist, const TouchPlaySettings& l_oS) {
+    const float l_fX = l_fDist / std::max(0.01f, l_oS.m_fBowRingScale);
+    for (const glm::vec2& l_v2R : l_oS.m_vBowRings) if (l_fX <= l_v2R.x) return l_v2R.y;
+    return 0.0f;
+}
+
+float TouchPlay::f_TipTier() const {
+    const glm::vec2 l_v2C = f_Crosshair();
+    return f_RingTier(std::hypot(l_v2C.x - m_oTarget.m_fX, l_v2C.y - m_oTarget.m_fY), m_oS);
+}
+
 glm::vec2 TouchPlay::f_Crosshair() const {   // drag back, the crosshair goes the other way (a slingshot), and it shakes
-    glm::vec2 l_v2C = m_v2AimFrom - (m_v2AimTo - m_v2AimFrom) * m_oS.m_fBowPull;
+    glm::vec2 l_v2C = f_GrowMode() ? m_oS.m_v2BowOrigin + f_AimDir() * f_AimLength()   // the long bow: the line's tip
+                                   : m_v2AimFrom - (m_v2AimTo - m_v2AimFrom) * m_oS.m_fBowPull;
     const float l_fAmp = m_oS.m_fBowShakePx * (float)m_iHoldMs / 1000.0f;
     l_v2C += glm::vec2(std::sin((float)m_iAgeMs * 0.021f), std::cos((float)m_iAgeMs * 0.017f)) * l_fAmp;
     return l_v2C;
@@ -122,6 +180,23 @@ void TouchPlay::f_Release() {
     const glm::vec2 l_v2D = m_v2AimTo - m_v2AimFrom;
     const float l_fLen = std::sqrt(l_v2D.x * l_v2D.x + l_v2D.y * l_v2D.y);
     const float l_fCh = f_Charge();
+    if (f_GrowMode()) {   // the long bow: the arrow flies to the line's tip; the rings round the target say how well
+        const bool l_bTap = m_iHoldMs < 150 && l_fLen < m_oS.m_fBowMinPull;   // a touch let go at once: not a shot
+        const glm::vec2 l_v2Tip = f_Crosshair();
+        m_bAiming = false;
+        m_iHoldMs = 0;
+        if (l_bTap) { m_fGrow = 0.0f; m_bGrowStopped = false; return; }
+        const float l_fTier = f_RingTier(std::hypot(l_v2Tip.x - m_oTarget.m_fX, l_v2Tip.y - m_oTarget.m_fY), m_oS);
+        const float l_fMul = l_fTier > 0.0f ? l_fTier * m_oS.m_fBowStrBonus : 0.0f;
+        const bool l_bPerfect = !m_oS.m_vBowRings.empty() && l_fTier >= m_oS.m_vBowRings.front().y;
+        m_fChargeSum += l_fCh;
+        m_iShots++;
+        m_fMulSum += l_fMul;
+        m_iMulShots++;
+        f_FinishOne(l_fTier > 0.0f, l_bPerfect, l_v2Tip.x, l_v2Tip.y);
+        if (!m_vHits.empty()) m_vHits.back().m_fMul = l_fMul;
+        return;
+    }
     m_bAiming = false;
     if (l_fLen < m_oS.m_fBowMinPull) { m_iHoldMs = 0; return; }   // not a shot
     const glm::vec2 l_v2C = f_Crosshair();
@@ -172,6 +247,7 @@ void TouchPlay::f_JudgeStroke() {
 // ---- spin ----
 
 bool TouchPlay::f_SpinClockwise(int l_iK) const {
+    if (m_oS.m_bSpinFree) return m_fSpinTurn >= 0.0f;   // either way: the way it goes now
     return l_iK < 0 || l_iK >= (int)m_vCueKinds.size() || m_vCueKinds[(size_t)l_iK] != "ccw";
 }
 
@@ -185,10 +261,19 @@ void TouchPlay::f_SpinPoint(glm::vec2 l_v2P) {
         float l_fDelta = l_fAng - m_fSpinLast;
         while (l_fDelta > 180.0f) l_fDelta -= 360.0f;
         while (l_fDelta < -180.0f) l_fDelta += 360.0f;
-        m_fSpinTurn = std::max(0.0f, m_fSpinTurn + (f_SpinClockwise(m_iIndex) ? l_fDelta : -l_fDelta));
-        if (m_fSpinTurn >= m_oS.m_fSpinTurnDeg) {
-            m_fSpinTurn = 0.0f;
-            f_FinishOne(true, m_iClockMs - m_iLastAnswerMs <= m_oS.m_iSpinPerfectMs, l_v2P.x, l_v2P.y);
+        m_fSpinTotal += l_fDelta;
+        if (m_oS.m_bSpinFree) {   // either way: a whole circle one way or the other is a turn (going back takes off)
+            m_fSpinTurn += l_fDelta;
+            if (std::fabs(m_fSpinTurn) >= m_oS.m_fSpinTurnDeg) {
+                m_fSpinTurn -= m_fSpinTurn > 0.0f ? m_oS.m_fSpinTurnDeg : -m_oS.m_fSpinTurnDeg;
+                f_FinishOne(true, m_iClockMs - m_iLastAnswerMs <= m_oS.m_iSpinPerfectMs, l_v2P.x, l_v2P.y);
+            }
+        } else {
+            m_fSpinTurn = std::max(0.0f, m_fSpinTurn + (f_SpinClockwise(m_iIndex) ? l_fDelta : -l_fDelta));
+            if (m_fSpinTurn >= m_oS.m_fSpinTurnDeg) {
+                m_fSpinTurn = 0.0f;
+                f_FinishOne(true, m_iClockMs - m_iLastAnswerMs <= m_oS.m_iSpinPerfectMs, l_v2P.x, l_v2P.y);
+            }
         }
     }
     m_fSpinLast = l_fAng;
@@ -274,7 +359,7 @@ void TouchPlay::f_Pointer(int l_iPhase, float l_fX, float l_fY) {
     const glm::vec2 l_v2P(l_fX, l_fY);
     switch (m_eType) {
     case PlayType::ePULL_RELEASE:
-        if (l_iPhase == 0) { m_bAiming = true; m_v2AimFrom = m_v2AimTo = l_v2P; m_iHoldMs = 0; m_bStarted = true; return; }
+        if (l_iPhase == 0) { m_bAiming = true; m_v2AimFrom = m_v2AimTo = l_v2P; m_iHoldMs = 0; m_fGrow = 0.0f; m_bGrowStopped = false; m_bStarted = true; return; }
         if (!m_bAiming) return;
         m_v2AimTo = l_v2P;
         if (l_iPhase == 2) f_Release();
@@ -383,7 +468,19 @@ void TouchPlay::f_Update(int l_iDtMs) {
         m_iTargetAgeMs += l_iDtMs;
         const glm::vec2 l_v2P = f_TargetPos();
         m_oTarget.m_fX = l_v2P.x; m_oTarget.m_fY = l_v2P.y;
-        if (m_bAiming) {
+        if (m_bAiming && f_GrowMode()) {   // the long bow: no charge limit; the line grows to the target's distance, then stops
+            m_iHoldMs += l_iDtMs;
+            if (!m_bGrowStopped) {
+                m_fGrow += m_oS.m_fBowGrowPerSec * (float)l_iDtMs / 1000.0f;
+                const float l_fD = f_TargetDistance();
+                if (f_AimLength() >= l_fD) {   // at the target's distance: it grows no more (dragging still moves it)
+                    const glm::vec2 l_v2Drag = m_v2AimTo - m_v2AimFrom;
+                    const float l_fDrag = std::sqrt(l_v2Drag.x * l_v2Drag.x + l_v2Drag.y * l_v2Drag.y) * m_oS.m_fBowPull;
+                    m_fGrow = std::max(0.0f, (l_fD - l_fDrag) / std::max(1.0f, l_fD));
+                    m_bGrowStopped = true;
+                }
+            }
+        } else if (m_bAiming) {
             m_iHoldMs += l_iDtMs;
             if (m_iHoldMs >= m_oS.m_iBowHoldMs) { m_iHoldMs = m_oS.m_iBowHoldMs; f_Release(); }   // the charge limit: the arrow goes (Q41)
         }
@@ -478,6 +575,17 @@ TouchPlaySettings f_TouchPlayFromJson(const nlohmann::json& l_jB) {
     l_oS.m_iBowTimeMs = std::max(500, l_jJ.value(toms::field::g_pszBowTimeMs, l_oS.m_iBowTimeMs));
     l_oS.m_fBowRadius = std::max(8.0f, l_jJ.value(toms::field::g_pszBowRadius, l_oS.m_fBowRadius));
     l_oS.m_fBowPull = std::max(0.1f, l_jJ.value(toms::field::g_pszBowPull, l_oS.m_fBowPull));
+    if (l_jJ.contains(toms::field::g_pszBowRings) && l_jJ[toms::field::g_pszBowRings].is_array()) {   // the long bow's rings (26 §3)
+        l_oS.m_vBowRings.clear();
+        for (const auto& l_jR : l_jJ[toms::field::g_pszBowRings])
+            if (l_jR.is_array() && l_jR.size() == 2 && l_jR[0].is_number() && l_jR[1].is_number())
+                l_oS.m_vBowRings.push_back({std::max(0.0f, l_jR[0].get<float>()), std::max(0.0f, l_jR[1].get<float>())});
+        std::sort(l_oS.m_vBowRings.begin(), l_oS.m_vBowRings.end(), [](const glm::vec2& l_v2A, const glm::vec2& l_v2B) { return l_v2A.x < l_v2B.x; });
+    }
+    for (const auto& [l_pszKey, l_pV2] : {std::pair<const char*, glm::vec2*>{toms::field::g_pszBowDex, &l_oS.m_v2BowDex},
+                                          std::pair<const char*, glm::vec2*>{toms::field::g_pszBowStr, &l_oS.m_v2BowStr}})
+        if (l_jJ.contains(l_pszKey) && l_jJ[l_pszKey].is_array() && l_jJ[l_pszKey].size() == 2)
+            *l_pV2 = {std::max(0.0f, l_jJ[l_pszKey][0].get<float>()), std::max(1.0f, l_jJ[l_pszKey][1].get<float>())};
     l_oS.m_iBowMoveMs = std::max(0, l_jJ.value(toms::field::g_pszBowMoveMs, l_oS.m_iBowMoveMs));
     l_oS.m_fBowMoveDist = std::max(0.0f, l_jJ.value(toms::field::g_pszBowMoveDist, l_oS.m_fBowMoveDist));
     l_oS.m_iBowHoldMs = std::max(200, l_jJ.value(toms::field::g_pszBowHoldMs, l_oS.m_iBowHoldMs));

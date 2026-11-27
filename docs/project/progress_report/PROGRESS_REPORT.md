@@ -15,6 +15,15 @@
 
 ## ▶ Next Step
 
+**The long bow, Taichi Spin, the trial's weapons from a file, the camera in a boss's special, the memory blade** (2026-11-27, later; [DAILY_2026-11-27.md](DAILY_2026-11-27.md)):
+- The long bow: an aim line from the bow hand that grows to the target by level, stops there, is steered against its
+  shake; damage by rings (DEX widens, STR adds). Its ultimate Taichi Spin: turn a Taichi for 5 s, 110 %-500 %.
+- The weapon trial's weapons, labels, lines and how-tos from `data/weapon_trial.json`; the long bow in it.
+- A monster's special: the camera close only at its attack, and the player cannot attack then.
+- The memory blade: all its commands at once, hidden after the first (from memory); circles and squares by level, at most 5,
+  harder shapes hit harder.
+- Committed and pushed. Changed-only 62 of 350, all passed. **Owner:** play the long bow, the memory blade and a boss's special.
+
 **The magic staff's circles: symbols from a data file, an editor, the slide** (2026-11-27; [DAILY_2026-11-27.md](DAILY_2026-11-27.md)):
 - The circles in the screen's middle, apart; often laid out as a symbol (rings, rows, a star, letters A-V) in drawing
   order, each lit at its own time; chances by staff level; all in `data/circle_symbols.json`.

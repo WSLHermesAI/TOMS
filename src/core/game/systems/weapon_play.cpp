@@ -21,6 +21,15 @@ std::vector<std::string> WeaponPlay::f_SwipeCuesAt(int l_iLv) const {
     return l_vOut;
 }
 
+float WeaponPlay::f_AimGrowAt(int l_iLv) const {
+    float l_fOut = 0.0f;
+    for (const AimGrow& l_oR : m_vAimGrow) {
+        if (l_oR.m_iLv > l_iLv) break;
+        l_fOut = l_oR.m_fPerSec;
+    }
+    return l_fOut;
+}
+
 WeaponPlay::Recall WeaponPlay::f_RecallAt(int l_iLv) const {
     Recall l_oOut;
     for (const Recall& l_oR : m_vRecall) {
@@ -133,6 +142,17 @@ WeaponPlay f_WeaponPlayFromJson(const std::string& l_strId, const nlohmann::json
             l_oW.m_vSwipeCues.push_back(l_oC);
         }
         std::sort(l_oW.m_vSwipeCues.begin(), l_oW.m_vSwipeCues.end(), [](const auto& l_oA, const auto& l_oB) { return l_oA.m_iLv < l_oB.m_iLv; });
+    }
+    l_oW.m_bChainMemory = l_jJ.value(toms::field::g_pszChainMemory, false);
+    if (l_jJ.contains(toms::field::g_pszCueDamage) && l_jJ[toms::field::g_pszCueDamage].is_object())
+        for (auto l_oIt = l_jJ[toms::field::g_pszCueDamage].begin(); l_oIt != l_jJ[toms::field::g_pszCueDamage].end(); ++l_oIt)
+            if (l_oIt.value().is_number()) l_oW.m_mapCueDamage[l_oIt.key()] = std::max(0.0f, l_oIt.value().get<float>());
+    if (l_jJ.contains(toms::field::g_pszAimGrow) && l_jJ[toms::field::g_pszAimGrow].is_array()) {   // the long bow (26 §2)
+        for (const auto& l_jE : l_jJ[toms::field::g_pszAimGrow]) {
+            if (!l_jE.is_object() || !l_jE.contains(toms::field::g_pszLv)) continue;
+            l_oW.m_vAimGrow.push_back({std::max(1, l_jE.value(toms::field::g_pszLv, 1)), std::max(0.0f, l_jE.value(toms::field::g_pszPerSec, 0.0f))});
+        }
+        std::sort(l_oW.m_vAimGrow.begin(), l_oW.m_vAimGrow.end(), [](const auto& l_oA, const auto& l_oB) { return l_oA.m_iLv < l_oB.m_iLv; });
     }
     if (l_jJ.contains(toms::field::g_pszRecall) && l_jJ[toms::field::g_pszRecall].is_array()) {
         for (const auto& l_jE : l_jJ[toms::field::g_pszRecall]) {
