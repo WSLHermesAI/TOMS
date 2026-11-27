@@ -191,6 +191,50 @@ to it. A fizzled hero's move shows only its miss word (no introduction). Tests: 
 `chainTimeMs` 5000 (a move's `timeMs` replaces it), `spinTimeMs` 6000 (the same), `spinMinRadius` 30, `spinTurnDeg` 330,
 `spinPerfectMs` 900.
 
+### 5.1 The staff's symbols: `data/circle_symbols.json` (2026-11-27)
+
+The owner: "a json file to keep special symbol positions for different levels, not written by code, so I can add any
+symbol and its chance in the json file without rewriting the code". The staff's circles are sometimes laid out as a
+symbol: their places and their tap order come from this file.
+
+- **`symbols`**: each one's `points`, `[x, y]` each 0..1 across and down the play's area (the middle of the screen, about
+  560 × 340; the circles sit inside its edge by their radius), **in tap order**. `rotate`: it may start at any of its
+  points and keep going round (a ring); `reverse`: it may run backwards; `mirror`: it may flip left to right (each half
+  the time). Shipped: `ring5`, `ring6`, `line5`, `line6`, `zigzag5`, `zigzag6`, `star5` (corner to corner as drawn),
+  `w5`, `z6`, `n6`, and **letters** traced in the order they are written (the owner, 2026-11-27: "the A B C I mentioned is
+  a symbol that looks like an A or a B"): `A5`, `A6`, `B5`, `B6`, `C5`, `C6`, `D5`, `D6`, `E6`, `M5`, `S6`, `U5`, `U6`,
+  `V5` (the number: its circles; no rotate, reverse or mirror, so they read as the letter). The circles are always
+  numbered 1, 2, 3 in their order (the A B C labels of the first try are gone).
+- **`weapons`** → `staff`: rows by level; a row sets only what it has, a level takes the rows up to it. `chance`: % of the
+  staff's attacks that show a symbol (else the circles go anywhere, apart); `symbols`: the ones it may show, with
+  weights. Now: Lv 1 20 % (rings and rows; C, U), Lv 3 35 % (+ zigzags; C, U, V), Lv 5 50 % (+ the star, W; A, B, D, M),
+  Lv 7 65 % (+ Z, N; A, B, D, E, M, S, V), Lv 9 80 %.
+- **A play of N circles** (the staff's points: 6 at Lv 1–4 and 10, 5 at Lv 5–9) picks among the row's symbols with exactly
+  N points; none: those with more (their first N); none at all: anywhere.
+- **Each circle's time** (`"times"`, ms, one a point, the first 0): when it lights up as the circles are shown, so a
+  symbol has its own rhythm (a pause, a quick run); counting ends `circleCountMs` after the last. Without `"times"` they
+  light `circleCountMs` apart. A rotated or reversed symbol keeps its rhythm: the k-th lit at the k-th time.
+- **The battle editor's Symbols tab** (the owner, 2026-11-27: "an editor to make a curve or points shown in order by time,
+  not by imagination"; FM79979's PathEditor and cCurveWithTime as its model): the symbols on the left (New, Duplicate,
+  Delete, rename); a picture of the play's area with its grid. **edit: circles**: click to add one (its time a step after
+  the last), drag to move, right-click to delete, Ctrl+click to insert after the selected one; each shows its number and
+  its ms. **edit: curve**: the same for a curve's control points (each with a time), drawn smoothed by **LOD** (1–6: each
+  step cuts every corner at a quarter and three quarters, as the engine's `IncreaseLod`); **Circles from the curve** puts N
+  circles evenly along it, each taking the curve's time there. **Times**: from first to last (ms) **by distance** (an even
+  speed) or **by index** (even steps). **Reverse the order** (the times stay), **Mirror**, **Clear**, the rotate / reverse /
+  mirror flags. A table of the points (x, y, ms) to type exact values. **▶ Play** (and loop): the circles light at their
+  times, a dot runs along the curve. Below: the staff's level rows (lv, chance %, `ring5:3, star5:2, A5:1`).
+  **Save** writes the file in its layout (the running game takes it at once); **Try in the battle** starts the test battle
+  with the staff, every attack showing this symbol (`Game::f_DebugForceCircleSymbol`); **Stop trying** goes back to the
+  chances. A symbol's `"curve"` (control points, times, LOD) is kept in the file for the next edit; the game does not read
+  it. Code: `src/editor/src/bed_symbols.{h,cpp}`, the curve math in `bed_logic` (`f_CurveLod`, `f_CurveAt`,
+  `f_CurveSample`, `f_TimesByDistance`), checked by `battle_editor --selftest`.
+- **A new symbol:** add it under `symbols` with its points in order, and give it a weight in a level's `symbols`. No code.
+- Code: `src/core/game/systems/circle_symbols.{h,cpp}` (`CircleSymbolTable::f_Pick`, chosen in `Game::f_ArmTouchPlay`),
+  placed by `TouchPlay::f_Start`; test `unit.circle_symbols_test` (the rules, the placing, and the shipped file: every
+  weight names a symbol, every staff level can show one). The key `data.circle_symbols`. It replaces the 11-27
+  `weapon_play.json` `"circleOrder"` and its built-in ring.
+
 ## 6. More ideas (not built)
 
 From the owner's request on 2026-11-18. Each reuses the play blocks (16 §2) as far as it can.
@@ -279,3 +323,8 @@ change them.
   monster aimed at: the staff, the owner: "show around the monster, not above the player"); a special move's play
   (`special_moves.json`) `"around": "monster"` draws its shape on the monster (the staff's Star Seal). The staff's clicks:
   6 (Lv 1–4, 10), 5 (Lv 5–9).
+  **Since 2026-11-27 the staff is `"center"`** (the owner: "its attack circles are too random, make them around the
+  screen center and not overlap if possible"): an area in the middle of the screen, up to 560 × 340; each circle is
+  placed apart from the others (up to 80 tries for a gap of 0.6 of its radius; when none is clear, the try farthest
+  from the others). `"center"` and `"between"` are `toms::around` (game_names.h).
+  **The circles in order as a symbol** (2026-11-27): §5.1.

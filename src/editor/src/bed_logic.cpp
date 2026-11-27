@@ -320,4 +320,150 @@ std::string f_IdsToText(const ojson& l_jIds) {
     return l_strS;
 }
 
+// ---- the staff's symbols ----
+
+std::vector<SymPoint> f_CurveLod(const std::vector<SymPoint>& l_vPoints, int l_iLod) {
+    std::vector<SymPoint> l_vOut = l_vPoints;
+    for (int l_iPass = 1; l_iPass < l_iLod && l_vOut.size() >= 2; l_iPass++) {   // as the engine's IncreaseLod
+        std::vector<SymPoint> l_vNext{l_vOut.front()};
+        for (size_t l_nI = 0; l_nI + 1 < l_vOut.size(); l_nI++) {
+            const SymPoint& l_oA = l_vOut[l_nI];
+            const SymPoint& l_oB = l_vOut[l_nI + 1];
+            l_vNext.push_back({0.75 * l_oA.m_dX + 0.25 * l_oB.m_dX, 0.75 * l_oA.m_dY + 0.25 * l_oB.m_dY});
+            l_vNext.push_back({0.25 * l_oA.m_dX + 0.75 * l_oB.m_dX, 0.25 * l_oA.m_dY + 0.75 * l_oB.m_dY});
+        }
+        l_vNext.push_back(l_vOut.back());
+        l_vOut.swap(l_vNext);
+    }
+    return l_vOut;
+}
+
+std::vector<double> f_CurveLodTimes(const std::vector<double>& l_vTimes, int l_iLod) {
+    std::vector<double> l_vOut = l_vTimes;
+    for (int l_iPass = 1; l_iPass < l_iLod && l_vOut.size() >= 2; l_iPass++) {
+        std::vector<double> l_vNext{l_vOut.front()};
+        for (size_t l_nI = 0; l_nI + 1 < l_vOut.size(); l_nI++) {
+            const double l_dD = l_vOut[l_nI + 1] - l_vOut[l_nI];
+            l_vNext.push_back(l_vOut[l_nI] + 0.25 * l_dD);
+            l_vNext.push_back(l_vOut[l_nI] + 0.75 * l_dD);
+        }
+        l_vNext.push_back(l_vOut.back());
+        l_vOut.swap(l_vNext);
+    }
+    return l_vOut;
+}
+
+double f_CurveLength(const std::vector<SymPoint>& l_vPoints) {
+    double l_dLen = 0.0;
+    for (size_t l_nI = 1; l_nI < l_vPoints.size(); l_nI++)
+        l_dLen += std::hypot(l_vPoints[l_nI].m_dX - l_vPoints[l_nI - 1].m_dX, l_vPoints[l_nI].m_dY - l_vPoints[l_nI - 1].m_dY);
+    return l_dLen;
+}
+
+SymPoint f_CurveAt(const std::vector<SymPoint>& l_vPoints, const std::vector<double>& l_vTimes, double l_dT) {
+    if (l_vPoints.empty()) return {};
+    if (l_vTimes.size() != l_vPoints.size() || l_dT <= l_vTimes.front()) return l_vPoints.front();
+    for (size_t l_nI = 1; l_nI < l_vPoints.size(); l_nI++) {
+        if (l_vTimes[l_nI] < l_dT) continue;
+        const double l_dGap = l_vTimes[l_nI] - l_vTimes[l_nI - 1];
+        const double l_dS = l_dGap > 0.0 ? (l_dT - l_vTimes[l_nI - 1]) / l_dGap : 1.0;
+        return {l_vPoints[l_nI - 1].m_dX + (l_vPoints[l_nI].m_dX - l_vPoints[l_nI - 1].m_dX) * l_dS,
+                l_vPoints[l_nI - 1].m_dY + (l_vPoints[l_nI].m_dY - l_vPoints[l_nI - 1].m_dY) * l_dS};
+    }
+    return l_vPoints.back();
+}
+
+void f_CurveSample(const std::vector<SymPoint>& l_vPoints, const std::vector<double>& l_vTimes, int l_iN,
+                   std::vector<SymPoint>& l_vOutPoints, std::vector<double>& l_vOutTimes) {
+    l_vOutPoints.clear();
+    l_vOutTimes.clear();
+    if (l_vPoints.empty() || l_iN <= 0) return;
+    const bool l_bTimes = l_vTimes.size() == l_vPoints.size();
+    if (l_vPoints.size() == 1) {
+        for (int l_iK = 0; l_iK < l_iN; l_iK++) { l_vOutPoints.push_back(l_vPoints[0]); l_vOutTimes.push_back(l_bTimes ? l_vTimes[0] : 0.0); }
+        return;
+    }
+    std::vector<double> l_vCum{0.0};
+    for (size_t l_nI = 1; l_nI < l_vPoints.size(); l_nI++)
+        l_vCum.push_back(l_vCum.back() + std::hypot(l_vPoints[l_nI].m_dX - l_vPoints[l_nI - 1].m_dX, l_vPoints[l_nI].m_dY - l_vPoints[l_nI - 1].m_dY));
+    const double l_dTotal = l_vCum.back();
+    for (int l_iK = 0; l_iK < l_iN; l_iK++) {
+        const double l_dAt = l_iN == 1 ? 0.0 : l_dTotal * (double)l_iK / (double)(l_iN - 1);
+        size_t l_nSeg = 1;
+        while (l_nSeg + 1 < l_vCum.size() && l_vCum[l_nSeg] < l_dAt) l_nSeg++;
+        const double l_dSegLen = l_vCum[l_nSeg] - l_vCum[l_nSeg - 1];
+        const double l_dS = l_dSegLen > 0.0 ? std::clamp((l_dAt - l_vCum[l_nSeg - 1]) / l_dSegLen, 0.0, 1.0) : 0.0;
+        const SymPoint& l_oA = l_vPoints[l_nSeg - 1];
+        const SymPoint& l_oB = l_vPoints[l_nSeg];
+        l_vOutPoints.push_back({l_oA.m_dX + (l_oB.m_dX - l_oA.m_dX) * l_dS, l_oA.m_dY + (l_oB.m_dY - l_oA.m_dY) * l_dS});
+        l_vOutTimes.push_back(l_bTimes ? l_vTimes[l_nSeg - 1] + (l_vTimes[l_nSeg] - l_vTimes[l_nSeg - 1]) * l_dS : 0.0);
+    }
+}
+
+std::vector<double> f_TimesByDistance(const std::vector<SymPoint>& l_vPoints, double l_dTotal) {
+    std::vector<double> l_vOut;
+    const double l_dLen = f_CurveLength(l_vPoints);
+    double l_dCum = 0.0;
+    for (size_t l_nI = 0; l_nI < l_vPoints.size(); l_nI++) {
+        if (l_nI > 0) l_dCum += std::hypot(l_vPoints[l_nI].m_dX - l_vPoints[l_nI - 1].m_dX, l_vPoints[l_nI].m_dY - l_vPoints[l_nI - 1].m_dY);
+        l_vOut.push_back(l_dLen > 0.0 ? l_dTotal * l_dCum / l_dLen : 0.0);
+    }
+    return l_vOut;
+}
+
+std::vector<double> f_TimesByIndex(size_t l_nCount, double l_dTotal) {
+    std::vector<double> l_vOut;
+    for (size_t l_nI = 0; l_nI < l_nCount; l_nI++) l_vOut.push_back(l_nCount > 1 ? l_dTotal * (double)l_nI / (double)(l_nCount - 1) : 0.0);
+    return l_vOut;
+}
+
+std::string f_WriteSymbolsFile(const ojson& l_jFile) {
+    auto l_fnIndent = [](const std::string& l_strText, const std::string& l_strPad) {   // a multi-line dump, indented
+        std::string l_strOut;
+        for (char l_cC : l_strText) {
+            l_strOut += l_cC;
+            if (l_cC == '\n') l_strOut += l_strPad;
+        }
+        return l_strOut;
+    };
+    auto l_fnPairs = [](const ojson& l_jArr) {   // [[x, y], ...] on one line
+        std::string l_strOut = "[";
+        for (size_t l_nI = 0; l_nI < l_jArr.size(); l_nI++) l_strOut += (l_nI ? ", " : "") + l_jArr[l_nI].dump();
+        return l_strOut + "]";
+    };
+    std::string l_strOut = "{\n";
+    size_t l_nTop = 0;
+    for (auto l_oIt = l_jFile.begin(); l_oIt != l_jFile.end(); ++l_oIt, ++l_nTop) {
+        const std::string l_strSep = l_nTop + 1 < l_jFile.size() ? ",\n" : "\n";
+        l_strOut += "  " + ojson(l_oIt.key()).dump() + ": ";
+        if (l_oIt.key() == "symbols" && l_oIt.value().is_object()) {
+            l_strOut += "{\n";
+            size_t l_nS = 0;
+            for (auto l_oS = l_oIt.value().begin(); l_oS != l_oIt.value().end(); ++l_oS, ++l_nS) {
+                l_strOut += "    " + ojson(l_oS.key()).dump() + ": {";
+                size_t l_nK = 0;
+                for (auto l_oK = l_oS.value().begin(); l_oK != l_oS.value().end(); ++l_oK, ++l_nK) {
+                    l_strOut += std::string(l_nK ? ",\n      " : " ") + ojson(l_oK.key()).dump() + ": ";
+                    l_strOut += l_oK.key() == "points" && l_oK.value().is_array() ? l_fnPairs(l_oK.value()) : l_oK.value().dump();
+                }
+                l_strOut += std::string(" }") + (l_nS + 1 < l_oIt.value().size() ? ",\n" : "\n");
+            }
+            l_strOut += "  }" + l_strSep;
+        } else if (l_oIt.key() == "weapons" && l_oIt.value().is_object()) {
+            l_strOut += "{\n";
+            size_t l_nW = 0;
+            for (auto l_oW = l_oIt.value().begin(); l_oW != l_oIt.value().end(); ++l_oW, ++l_nW) {
+                l_strOut += "    " + ojson(l_oW.key()).dump() + ": [\n";
+                for (size_t l_nR = 0; l_nR < l_oW.value().size(); l_nR++)
+                    l_strOut += "      " + l_oW.value()[l_nR].dump() + (l_nR + 1 < l_oW.value().size() ? ",\n" : "\n");
+                l_strOut += std::string("    ]") + (l_nW + 1 < l_oIt.value().size() ? ",\n" : "\n");
+            }
+            l_strOut += "  }" + l_strSep;
+        } else {
+            l_strOut += l_fnIndent(l_oIt.value().dump(2), "  ") + l_strSep;
+        }
+    }
+    return l_strOut + "}\n";
+}
+
 } // namespace bed

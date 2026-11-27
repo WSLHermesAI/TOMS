@@ -36,9 +36,10 @@ add_executable(battle_editor
     src/bed_main.cpp
     src/bed_window.h src/bed_window.cpp
     src/bed_logic.h src/bed_logic.cpp
+    src/bed_symbols.h src/bed_symbols.cpp   # the Symbols tab: the staff's circles as symbols (docs/gameplay/22 §5.1)
     src/bgfx_viewport.h src/bgfx_viewport.cpp)
 toms_target_defaults(battle_editor)
-set_source_files_properties(src/bed_main.cpp src/bed_window.cpp
+set_source_files_properties(src/bed_main.cpp src/bed_window.cpp src/bed_symbols.cpp
     TARGET_DIRECTORY battle_editor PROPERTIES COMPILE_DEFINITIONS QT_NO_EMIT)
 target_include_directories(battle_editor PRIVATE src ${CMAKE_SOURCE_DIR}/src/engine/src ${TOMS_THIRD_PARTY_DIR}/json)
 target_link_libraries(battle_editor PRIVATE Qt6::Widgets toms_game_host studio_common)

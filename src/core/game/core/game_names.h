@@ -175,6 +175,13 @@ inline constexpr const char g_pszSkill[]    = "skill";
 inline constexpr const char g_pszGuard[]    = "guard";
 }  // namespace move_use
 
+// Where a play shows (weapon_play.json "around", special_moves.json play "around"). "hero" and "monster" are the
+// other two; they stay literals for now (the same words name a look, a sprite kind and a beat's target).
+namespace around {
+inline constexpr const char g_pszCenter[]  = "center";    // the middle of the screen
+inline constexpr const char g_pszBetween[] = "between";   // halfway between the hero and the monster he aims at
+}  // namespace around
+
 // A mission's kind and state (missions.json; the save).
 namespace mission {
 inline constexpr const char g_pszDaily[]     = "daily";
@@ -261,6 +268,7 @@ inline constexpr const char g_pszStart[] = "start";
 // The start of a text key or an id the code builds from a name ("battle.play_hint_" + a play: "battle.play_hint_bow").
 namespace key_prefix {
 inline constexpr const char g_pszBattlePlayHint[]  = "battle.play_hint_";
+inline constexpr const char g_pszTutorialPlay[]    = "tutorial.play_";      // the tutorial's fuller words for a play (+ its name)
 inline constexpr const char g_pszStory[]           = "story.";
 inline constexpr const char g_pszMission[]         = "mission.";
 inline constexpr const char g_pszStatEffect[]      = "stat.effect.";

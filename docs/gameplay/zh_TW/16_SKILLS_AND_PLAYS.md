@@ -240,7 +240,7 @@ S1 到 S7 已做進遊戲。在擁有者另有決定之前，Q39 到 Q46 都採�
 | B4 + B5 演出與招式 | `special_moves.json`：名字、玩法、demo / step / finish 演出、傷害。節拍：pathFx、fx、dim、banner、name、namePart、count、camera、clip、hits、shake、sound | `special_moves.h`、`game_skills.cpp` |
 | 劍 | 一次一個彈出的提示；只有最後 0.5 秒接受輸入；每答對一個立刻命中。Lv 3 起有三角形提示、Lv 5 起有圓（`weapon_play.json` 的 `shapeCues`） | `touch_play.h` Slice |
 | 弓 | 靶移動 0.5 秒後停住；拉弓蓄力最多 1.5 秒 + 每點 STR 40 ms（之後箭自己射出，Q41）；瞄準每按住一秒晃 10 px，DEX 越高越少；普通攻擊一支箭；第一次射箭前有虛影手指教學 | `touch_play.h` Bow、`battle.json` 的 `"plays"` |
-| 魔杖 | 自動開始：圓圈依序數（每個 0.3 秒，2026-11-25 起，原本 0.45：battle.json `plays` `circleCountMs`）、隱藏 0.3 秒（`circleHideMs`，原本 0.5）、帶「!」回來 0.5 秒，然後依序點（每個圓 0.9 秒）；點錯算當下該點的那個沒中（Q40）；每次點擊立刻放魔法 | `touch_play.h` Circles |
+| 魔杖 | 自動開始：圓圈依序數（每個 0.3 秒，2026-11-25 起，原本 0.45：battle.json `plays` `circleCountMs`）、隱藏 0.3 秒（`circleHideMs`，原本 0.5）、**或滑過**（2026-11-27，擁有者：「不一定每個圓都要點：點第一個，然後手指照順序移到下一個」）：按住一個圓，不放開移到下一個；到達該點的圓就算點擊（完美時機相同）；經過錯誤圓圈中心 `circleSlideWrong`（半徑的 0.6）以內算點錯，且滑動結束（放開再按）；`circleSlide` 設 false 關閉（battle.json `plays`）、帶「!」回來 0.5 秒，然後依序點（每個圓 0.9 秒）；點錯算當下該點的那個沒中（Q40）；每次點擊立刻放魔法 | `touch_play.h` Circles |
 | 怪物節奏 | `moves.json` 的 `chargeMs`、`hits`、`gapsMs`、`warnMs`；連續攻擊在攻擊暫停中也保持節奏。新招式：`triple_bite`（森林狼）、`frenzy`（吸血蝙蝠） | `resolveEnemyClockFire`、`stepFoes` |
 | 防禦 | `battle.json` 防禦模式 `"warn"`（現在的預設）：只在「!」出現時有效，前 40 % 是招架（Q42），其餘是擋下；沒有「!」：太早，鎖 0.4 秒；按下會中斷玩家的攻擊。`"timing"` 與 `"bar"` 保留為選項 | `guardWarn`、`battleTapDefense` |
 | 特殊防禦 | `moves.json` 的 `guardPlay`：`doom_seal`（巫妖學徒：5 秒內畫出封印）、`ground_pound`（礦石魔像：2.2 秒內點 12 下）；傷害 × (1 − 完成比例)，全部完成：怪物硬直 | `special_moves.json` 的 `guard_pentagram`、`guard_mash` |

@@ -176,6 +176,9 @@ answered from the log rather than by watching.
 and the battle bar's **⚡ Ultimate** fills it again in the running battle (`Game::f_DebugFillUltimate`); press **G**
 (or its button) to use it. Pick the weapon in the Player tab (bow: Cyclone Volley, sword: Tiger Wind, memory blade:
 Sigil Chain, staff: Star Seal).
+**The Symbols tab** (2026-11-27): the staff's circles as symbols (`data/circle_symbols.json`): draw circles or a curve
+with a time on each point, play them, set the chances by level, save, and try one in the test battle. Doc
+[22 §5.1](22_MEMORY_BLADE_AND_SIGIL_CHAIN.md).
 
 ### 4.6 Several monsters in one battle (now: the owner, 2026-10-25)
 

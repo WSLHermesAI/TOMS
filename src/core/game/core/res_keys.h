@@ -19,6 +19,7 @@ inline constexpr const char g_pszAtlasGame[]           = "atlas.game";          
 inline constexpr const char g_pszDataActives[]         = "data.actives";            // json ../data/actives.json
 inline constexpr const char g_pszDataBattle[]          = "data.battle";             // json ../data/battle.json
 inline constexpr const char g_pszDataCharacterFit[]    = "data.character_fit";      // json ../data/character_fit.json
+inline constexpr const char g_pszDataCircleSymbols[]   = "data.circle_symbols";     // json ../data/circle_symbols.json
 inline constexpr const char g_pszDataEnemies[]         = "data.enemies";            // json ../data/enemies.json
 inline constexpr const char g_pszDataEventKinds[]      = "data.event_kinds";        // json ../data/events/kinds.json
 inline constexpr const char g_pszDataFootprints[]      = "data.footprints";         // json ../data/footprints.json
@@ -119,6 +120,7 @@ inline constexpr const char* g_arrAll[] = {
     g_pszDataActives,
     g_pszDataBattle,
     g_pszDataCharacterFit,
+    g_pszDataCircleSymbols,
     g_pszDataEnemies,
     g_pszDataEventKinds,
     g_pszDataFootprints,

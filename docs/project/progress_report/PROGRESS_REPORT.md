@@ -15,6 +15,13 @@
 
 ## ▶ Next Step
 
+**The magic staff's circles: symbols from a data file, an editor, the slide** (2026-11-27; [DAILY_2026-11-27.md](DAILY_2026-11-27.md)):
+- The circles in the screen's middle, apart; often laid out as a symbol (rings, rows, a star, letters A-V) in drawing
+  order, each lit at its own time; chances by staff level; all in `data/circle_symbols.json`.
+- The battle editor's Symbols tab: curves / points with a time each (as FM79979's PathEditor), Play, Try in the battle.
+- The slide (touch the first, move through the rest); the tutorial explains the staff; the UI font rebuilt (375 missing).
+- Committed with this report. Changed-only 58 of 346, all passed; name lint 0. **Owner:** try the Symbols tab.
+
 **Every floor 3D, no hard-coded names, the performance checker (F4)** (2026-11-26; [DAILY_2026-11-26.md](DAILY_2026-11-26.md)):
 - Every floor's battle 3D; Settings > Test: jump to any floor; the F30 / F25 bosses visible again (borrowed looks' clips).
 - No name as a string in the game's C++: game_names.h, field_keys.h, text_keys.h (generated, tools/make_text_keys.py),

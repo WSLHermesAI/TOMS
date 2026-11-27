@@ -143,6 +143,44 @@ int main() {
     }
     CHECK(f_PlayTypeFromString("bow") == PlayType::ePULL_RELEASE && f_PlayTypeFromString("shape") == PlayType::eDRAW_SHAPE &&
               f_PlayTypeFromString("anything") == PlayType::eTRACK && std::string(f_PlayTypeName(PlayType::eMASH)) == "mash", "names (the older data names too)");
+    {   // the staff's slide (the owner, 2026-11-27): touch the first circle, move on through the rest in order without lifting
+        TouchPlaySettings l_oS;
+        l_oS.m_vCircleSymbol = {{0, 0.5f}, {0.5f, 0.5f}, {1, 0.5f}};   // a row: (134, 250), (350, 250), (566, 250) in the area below
+        const glm::vec4 l_v4A(100, 100, 500, 300);
+        auto l_fnReady = [&](TouchPlay& l_oP) {   // on to the taps, all three back
+            for (int l_iK = 0; l_iK < 400 && !(l_oP.f_CirclePhase() == TouchPlay::CirclePhase::Tap && l_oP.f_CirclesShown() == 3); l_iK++) l_oP.f_Update(10);
+        };
+        TouchPlay l_oP;
+        l_oP.f_Start(PlayType::eSEQUENCE_CLICK, 3, false, l_v4A, 1, l_oS);
+        l_fnReady(l_oP);
+        const auto& l_vC = l_oP.f_Circles();
+        l_oP.f_Pointer(0, l_vC[0].m_fX, l_vC[0].m_fY);
+        for (float l_fX = l_vC[0].m_fX; l_fX <= l_vC[2].m_fX; l_fX += 10.0f) l_oP.f_Pointer(1, l_fX, l_vC[0].m_fY);   // along the row
+        CHECK(l_oP.f_Done() && l_oP.f_Result().m_iHits == 3, "one touch, slid through all three in order: three hits");
+
+        l_oS.m_vCircleSymbol = {{0, 0.5f}, {1, 0.5f}, {0.5f, 0.5f}};   // the second is at the right: the way there passes the third's middle
+        TouchPlay l_oQ;
+        l_oQ.f_Start(PlayType::eSEQUENCE_CLICK, 3, false, l_v4A, 1, l_oS);
+        l_fnReady(l_oQ);
+        const auto& l_vD = l_oQ.f_Circles();
+        l_oQ.f_Pointer(0, l_vD[0].m_fX, l_vD[0].m_fY);
+        for (float l_fX = l_vD[0].m_fX; l_fX <= l_vD[1].m_fX; l_fX += 10.0f) l_oQ.f_Pointer(1, l_fX, l_vD[0].m_fY);
+        CHECK(l_oQ.f_Result().m_iHits == 1 && l_oQ.f_Index() == 2, "through a wrong circle's middle: the one due is missed, and the slide ends");
+        l_oQ.f_Pointer(1, l_vD[2].m_fX, l_vD[2].m_fY);
+        CHECK(l_oQ.f_Result().m_iHits == 1, "after it ends, moving onto the next does not take it");
+        l_oQ.f_Pointer(2, l_vD[2].m_fX, l_vD[2].m_fY);
+        l_oQ.f_Pointer(0, l_vD[2].m_fX, l_vD[2].m_fY);
+        CHECK(l_oQ.f_Done() && l_oQ.f_Result().m_iHits == 2, "lift and touch it: taken");
+
+        l_oS.m_bCircleSlide = false;
+        l_oS.m_vCircleSymbol = {{0, 0.5f}, {0.5f, 0.5f}, {1, 0.5f}};
+        TouchPlay l_oR;
+        l_oR.f_Start(PlayType::eSEQUENCE_CLICK, 3, false, l_v4A, 1, l_oS);
+        l_fnReady(l_oR);
+        l_oR.f_Pointer(0, l_oR.f_Circles()[0].m_fX, l_oR.f_Circles()[0].m_fY);
+        for (float l_fX = l_oR.f_Circles()[0].m_fX; l_fX <= l_oR.f_Circles()[2].m_fX; l_fX += 10.0f) l_oR.f_Pointer(1, l_fX, l_oR.f_Circles()[0].m_fY);
+        CHECK(l_oR.f_Result().m_iHits == 1 && !l_oR.f_Done(), "circleSlide off: only taps count");
+    }
     if (g_iFail) { std::printf("touch_play_test: %d failure(s)\n", g_iFail); return 1; }
     std::printf("touch_play_test: all passed\n");
     return 0;

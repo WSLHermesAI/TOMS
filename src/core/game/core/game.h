@@ -42,6 +42,7 @@
 #include "player_menu_rules.h" // toms::LevelPoints -- attribute points by level (stats.json levelUp.points)
 #include "res_keys.h"        // toms::key / toms::pattern -- every file by key (assets/media/resources.json)
 #include "weapon_play.h"     // toms::WeaponPlayTable -- data/weapon_play.json (docs/gameplay/07_GAMEPLAY_PLAN.md §5.6)
+#include "circle_symbols.h"  // toms::CircleSymbolTable -- data/circle_symbols.json (docs/gameplay/22 §5.1)
 #include "combo_play.h"      // toms::ComboPlay -- Battle v3's point play (docs/gameplay/07 §4, §5.1)
 #include "touch_play.h"      // toms::TouchPlay -- each weapon's own play: bow, slice, circles (docs/gameplay/15 §3.3)
 #include "special_moves.h"          // toms::SpecialMoveTable -- special moves and special guards as data (docs/gameplay/16 §6)
@@ -485,6 +486,12 @@ public:
     void f_DebugFireFoeEvent(int l_iFoe, int l_iEvent);
     // The battle editor: the ultimate's charge full now (the owner, 2026-11-25: "I want to try special attack in battle
     // editor"); G or its button then uses it. False: no battle running.
+    // The battle editor's Symbols tab: its circle_symbols.json in use now (Save), and one symbol on every staff attack
+    // (Try; empty points: back to the table's own picks).
+    void f_DebugSetCircleSymbols(const nlohmann::json& l_jFile) { m_oCircleSymbols = toms::f_CircleSymbolsFromJson(l_jFile); }
+    void f_DebugForceCircleSymbol(const std::vector<glm::vec2>& l_vPoints, const std::vector<int>& l_vTimesMs) {
+        m_vDebugSymbolPoints = l_vPoints; m_vDebugSymbolTimesMs = l_vTimesMs;
+    }
     bool f_DebugFillUltimate() { if (!m_oCs.m_bActive) return false; m_oCs.m_iSuperCharge = m_oRun.f_SuperMax(); return true; }
     int f_BattleFoeCount() const { return m_oCs.m_bActive ? (int)m_oCs.m_vFoes.size() : 0; }
     // The battle editor: a monster's enemies.json record, edited while it fights. Every foe of that id in the running
@@ -901,6 +908,7 @@ private:
     void f_SkillBeat(const toms::ShowBeat& l_oB, glm::vec2 l_v2At);
     void f_EndSkill();
     glm::vec2 f_SkillCentre() const;                  // between the fighters (a step's burst with no place of its own)
+    std::string f_TutorialText(const toms::TutorialStep& l_oStep) const;   // a tutorial step's words, its {play} filled in
     void f_HeroShout(const std::string& l_strOutcome);   // his voice when a move's play ends: "full", "partial", "fizzle" (battle.json heroVoice)
     glm::vec2 f_SkillShapeCentre(const toms::SpecialMove& l_oD) const;   // a move's shape or ring: on the hero's head (ringY), on the screen
     std::string f_SkillName() const;                  // the running skill's name, in the language
@@ -1546,6 +1554,9 @@ private:
     toms::TimerQueue m_oTimers;
     toms::TimerOwner m_oBattleTimers;
     toms::WeaponPlayTable m_oWeaponPlay;   // data/weapon_play.json
+    toms::CircleSymbolTable m_oCircleSymbols;   // data/circle_symbols.json: the staff's circles as symbols, by level
+    std::vector<glm::vec2> m_vDebugSymbolPoints;   // the battle editor's "Try": every staff attack shows this symbol
+    std::vector<int> m_vDebugSymbolTimesMs;
     toms::LooksTable m_oLooks;             // data/looks.json: the status map (docs/gameplay/11 §4.2)
     toms::MovesTable m_oMoves;             // data/moves.json: the monsters' moves (docs/gameplay/13 §6.1)
     toms::PaceSettings m_oPaceSettings;    // data/battle.json "pace", "stamina"

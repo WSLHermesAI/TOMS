@@ -173,6 +173,37 @@ DEX 每點為回答時間加 `dexWindowMs`（10 毫秒），與所有玩法相�
 `chainTimeMs` 5000（招式的 `timeMs` 會取代它）、`spinTimeMs` 6000（同上）、`spinMinRadius` 30、`spinTurnDeg` 330、
 `spinPerfectMs` 900。
 
+### 5.1 法杖的符號：`data/circle_symbols.json`（2026-11-27）
+
+擁有者：「用一個 json 檔保存不同等級的特殊符號位置，不要寫在程式裡，這樣我可以在 json 檔加任何符號和它的機率，不用改程式」。法杖的圓圈有時會排成
+一個符號：位置與點的順序都來自這個檔案。
+
+- **`symbols`**：每個符號的 `points`，`[x, y]` 各為操作範圍（畫面正中央，約 560 × 340；圓圈依半徑放在邊緣內）的 0..1，**依點擊順序**。
+  `rotate`：可以從任何一點開始繞（環）；`reverse`：可以倒著走；`mirror`：可以左右翻轉（各一半機率）。內建：`ring5`、`ring6`、`line5`、
+  `line6`、`zigzag5`、`zigzag6`、`star5`（照畫法角到角）、`w5`、`z6`、`n6`，以及依筆順排列的**字母**（擁有者，2026-11-27：「我說的 A B C 是
+  看起來像 A 或 B 的符號」）：`A5`、`A6`、`B5`、`B6`、`C5`、`C6`、`D5`、`D6`、`E6`、`M5`、`S6`、`U5`、`U6`、`V5`（數字：圓圈數；不旋轉、不倒序、
+  不翻轉，所以看得出字母）。圓圈一律依順序標 1、2、3（第一版的 A B C 標籤已拿掉）。
+- **`weapons`** → `staff`：依等級的列；每列只設定它有的值，一個等級取到它為止的列。`chance`：法杖攻擊顯示符號的 %（否則圓圈隨處、彼此分開）；
+  `symbols`：可顯示的符號與權重。目前：Lv 1 20 %（環與排；C、U）、Lv 3 35 %（＋鋸齒；C、U、V）、Lv 5 50 %（＋星、W；A、B、D、M）、
+  Lv 7 65 %（＋Z、N；A、B、D、E、M、S、V）、Lv 9 80 %。
+- **N 個圓圈的一次攻擊**（法杖的點數：Lv 1–4 與 10 為 6，Lv 5–9 為 5）從該列中剛好 N 點的符號選；沒有：點數更多的（取前 N 個）；都沒有：隨處。
+- **每個圓圈的時間**（`"times"`，毫秒，每點一個，第一個為 0）：顯示圓圈時它何時亮起，所以符號有自己的節奏（停頓、快速連續）；最後一個之後再
+  `circleCountMs` 結束計數。沒有 `"times"` 時每隔 `circleCountMs` 亮一個。旋轉或倒序的符號保留節奏：第 k 個在第 k 個時間亮起。
+- **戰鬥編輯器的 Symbols 分頁**（擁有者，2026-11-27：「需要一個編輯器來做曲線或點、依時間顯示順序，不要靠想像」；以 FM79979 的 PathEditor 與
+  cCurveWithTime 為範本）：左邊是符號清單（New、Duplicate、Delete、改名）；中間是操作範圍與格線。**edit: circles**：點擊加圓（時間為上一個再加
+  一步）、拖曳移動、右鍵刪除、Ctrl+點擊插在選取的之後；每個顯示編號與毫秒。**edit: curve**：曲線的控制點同樣操作（各有時間），以 **LOD** 平滑
+  （1–6：每級在線段的四分之一與四分之三處切角，同引擎的 `IncreaseLod`）；**Circles from the curve** 沿曲線平均放 N 個圓，各取曲線在該處的時間。
+  **Times**：從第一到最後（毫秒）**依距離**（等速）或**依序號**（等間隔）。**Reverse the order**（時間不變）、**Mirror**、**Clear**，以及
+  rotate／reverse／mirror 旗標。點的表格（x、y、毫秒）可輸入精確值。**▶ Play**（可循環）：圓圈依時間亮起，一個點沿曲線跑。下方：法杖依等級的列
+  （lv、chance %、`ring5:3, star5:2, A5:1`）。**Save** 依檔案格式寫入（執行中的遊戲立即使用）；**Try in the battle** 以法杖開始測試戰鬥，每次攻擊
+  都顯示此符號（`Game::f_DebugForceCircleSymbol`）；**Stop trying** 回到機率。符號的 `"curve"`（控制點、時間、LOD）保存在檔案供下次編輯；遊戲不讀它。
+  程式：`src/editor/src/bed_symbols.{h,cpp}`，曲線計算在 `bed_logic`（`f_CurveLod`、`f_CurveAt`、`f_CurveSample`、`f_TimesByDistance`），由
+  `battle_editor --selftest` 檢查。
+- **新增符號：**在 `symbols` 下加入它（點依順序），並在某個等級的 `symbols` 給它權重。不用改程式。
+- 程式：`src/core/game/systems/circle_symbols.{h,cpp}`（`CircleSymbolTable::f_Pick`，在 `Game::f_ArmTouchPlay` 選），由 `TouchPlay::f_Start`
+  放置；測試 `unit.circle_symbols_test`（規則、放置、以及內建檔案：每個權重都指向存在的符號，法杖每級都能顯示一個）。key `data.circle_symbols`。
+  取代 11-27 的 `weapon_play.json` `"circleOrder"` 與它內建的環。
+
 ## 6. 更多點子（未製作）
 
 來自擁有者 2026-11-18 的要求。每個都盡量沿用玩法積木（16 第 2 節）。
@@ -251,3 +282,7 @@ DEX 每點為回答時間加 `dexWindowMs`（10 毫秒），與所有玩法相�
 - **操作顯示的位置：`"around"`**（2026-11-23）：`weapon_play.json` 武器的 `"around"`：`"hero"`（預設：主角頭上）、`"between"`
   （主角與瞄準的怪物之間、兩者頭頂上方：弓）、`"monster"`（在瞄準的怪物周圍：法杖，擁有者：「顯示在怪物周圍，不是玩家頭上」）；特殊招式的
   操作（`special_moves.json`）`"around": "monster"` 把圖形畫在怪物上（法杖的星之印）。法杖的點擊數：6（Lv 1–4、10）、5（Lv 5–9）。
+  **2026-11-27 起法杖是 `"center"`**（擁有者：「攻擊圓圈太隨機，要在畫面中央附近，可能的話不要重疊」）：畫面正中央的範圍，最大 560 × 340；
+  每個圓圈與其他圓圈分開放（最多試 80 次，找間隔達半徑 0.6 倍的位置；都不行時取離其他最遠的一次）。`"center"` 與 `"between"` 是
+  `toms::around`（game_names.h）。
+  **依序排列成符號的圓圈**（2026-11-27）：§5.1。

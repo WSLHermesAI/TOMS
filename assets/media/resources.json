@@ -84,6 +84,7 @@
     "data.enemies":        { "type": "json",     "path": "../data/enemies.json" },
     "data.stats":          { "type": "json",     "path": "../data/stats.json" },
     "data.battle":         { "type": "json",     "path": "../data/battle.json" },
+    "data.circle_symbols": { "type": "json",    "path": "../data/circle_symbols.json" },
     "data.stage3d":        { "type": "json",     "path": "../data/stage3d.json" },
     "data.weapon_play":    { "type": "json",     "path": "../data/weapon_play.json" },
     "data.looks":          { "type": "json",     "path": "../data/looks.json" },

@@ -38,16 +38,33 @@ void TouchPlay::f_Start(PlayType l_eType, int l_iPoints, bool l_bUltimate, const
     }
     if (m_eType == PlayType::eSEQUENCE_CLICK) {
         const float l_fM = m_oS.m_fCircleRadius;
-        for (int l_iK = 0; l_iK < m_iPoints; l_iK++) {   // apart from the others (a few tries; a small area takes what it gets)
-            Circle l_oC;
-            for (int l_iTryNo = 0; l_iTryNo < 12; l_iTryNo++) {
+        // Each circle apart from the others (the owner, 2026-11-27: "make it not overlap if possible; if no more space,
+        // overlap is ok"): up to 80 tries, the first clear one (a gap of 0.6 radius) kept; when none is clear (a small
+        // area), the try farthest from the others.
+        m_bCircleSliding = false;
+        m_bCircleSymbol = (int)m_oS.m_vCircleSymbol.size() >= m_iPoints;
+        if (m_bCircleSymbol) {   // a symbol (data/circle_symbols.json): each place 0..1 in the area, the circles inside its edge
+            for (int l_iK = 0; l_iK < m_iPoints; l_iK++) {
+                const glm::vec2& l_v2P = m_oS.m_vCircleSymbol[(size_t)l_iK];
+                Circle l_oC;
+                l_oC.m_fX = m_v4Area.x + l_fM + l_v2P.x * std::max(0.0f, m_v4Area.z - 2 * l_fM);
+                l_oC.m_fY = m_v4Area.y + l_fM + l_v2P.y * std::max(0.0f, m_v4Area.w - 2 * l_fM);
+                m_vCircles.push_back(l_oC);
+            }
+        }
+        for (int l_iK = m_bCircleSymbol ? m_iPoints : 0; l_iK < m_iPoints; l_iK++) {
+            Circle l_oBest;
+            float l_fBestGap = -1.0f;
+            for (int l_iTryNo = 0; l_iTryNo < 80; l_iTryNo++) {
+                Circle l_oC;
                 l_oC.m_fX = m_v4Area.x + l_fM + l_oU(m_oRng) * std::max(0.0f, m_v4Area.z - 2 * l_fM);
                 l_oC.m_fY = m_v4Area.y + l_fM + l_oU(m_oRng) * std::max(0.0f, m_v4Area.w - 2 * l_fM);
-                bool l_bClear = true;
-                for (const Circle& l_oO : m_vCircles) l_bClear = l_bClear && std::hypot(l_oC.m_fX - l_oO.m_fX, l_oC.m_fY - l_oO.m_fY) >= 2.6f * l_fM;
-                if (l_bClear) break;
+                float l_fGap = 1e9f;   // to the nearest circle placed
+                for (const Circle& l_oO : m_vCircles) l_fGap = std::min(l_fGap, std::hypot(l_oC.m_fX - l_oO.m_fX, l_oC.m_fY - l_oO.m_fY));
+                if (l_fGap > l_fBestGap) { l_fBestGap = l_fGap; l_oBest = l_oC; }
+                if (l_fGap >= 2.6f * l_fM) break;
             }
-            m_vCircles.push_back(l_oC);
+            m_vCircles.push_back(l_oBest);
         }
     }
     if (m_eType == PlayType::eSPIN_CIRCLE) {   // the ring in the area's middle; each turn's way from the cues (none: half one way, half the other)
@@ -182,6 +199,11 @@ void TouchPlay::f_SpinPoint(glm::vec2 l_v2P) {
 
 int TouchPlay::f_CirclesLit() const {
     if (m_eCirclePhase != CirclePhase::Count) return (int)m_vCircles.size();
+    if (m_oS.m_vCircleTimesMs.size() >= m_vCircles.size()) {   // a symbol's own rhythm (data/circle_symbols.json "times")
+        int l_iLit = 0;
+        while (l_iLit < (int)m_vCircles.size() && m_oS.m_vCircleTimesMs[(size_t)l_iLit] <= m_iPhaseMs) l_iLit++;
+        return std::max(1, l_iLit);
+    }
     return std::min((int)m_vCircles.size(), m_iPhaseMs / std::max(1, m_oS.m_iCircleCountMs) + 1);
 }
 
@@ -284,7 +306,30 @@ void TouchPlay::f_Pointer(int l_iPhase, float l_fX, float l_fY) {
         if (l_iPhase == 2) { m_bAiming = false; f_JudgeStroke(); m_vStroke.clear(); }
         return;
     case PlayType::eSEQUENCE_CLICK: {
-        if (l_iPhase != 0 || m_eCirclePhase != CirclePhase::Tap) return;   // only once they come back (and any "!" has gone)
+        if (l_iPhase == 2) { m_bCircleSliding = false; return; }
+        if (m_eCirclePhase != CirclePhase::Tap) return;   // only once they come back (and any "!" has gone)
+        if (l_iPhase == 1) {   // the slide (the owner, 2026-11-27): the finger moving on from a circle, still down
+            if (!m_bCircleSliding || m_bDone) return;
+            for (size_t l_nK = 0; l_nK < m_vCircles.size() && (int)l_nK < f_CirclesShown(); l_nK++) {
+                Circle& l_oC = m_vCircles[l_nK];
+                if (l_oC.m_iState != 0) continue;   // one already taken (the one it came from among them)
+                const float l_fD = std::hypot(l_fX - l_oC.m_fX, l_fY - l_oC.m_fY);
+                if ((int)l_nK == m_iIndex && l_fD <= m_oS.m_fCircleRadius * 1.2f) {   // the next in order: as a tap
+                    const bool l_bPerfect = m_iClockMs - m_iLastAnswerMs <= m_oS.m_iCirclePerfectMs;
+                    l_oC.m_iState = l_bPerfect ? 2 : 1;
+                    f_FinishOne(true, l_bPerfect, l_oC.m_fX, l_oC.m_fY);
+                    return;
+                }
+                if ((int)l_nK != m_iIndex && l_fD <= m_oS.m_fCircleRadius * m_oS.m_fCircleSlideWrong) {   // through a wrong one
+                    Circle& l_oDue = m_vCircles[(size_t)m_iIndex];
+                    l_oDue.m_iState = 3;
+                    f_FinishOne(false, false, l_oDue.m_fX, l_oDue.m_fY);
+                    m_bCircleSliding = false;   // the slide ends: lift and touch again
+                    return;
+                }
+            }
+            return;
+        }
         for (size_t l_nK = 0; l_nK < m_vCircles.size(); l_nK++) {
             Circle& l_oC = m_vCircles[l_nK];
             if ((int)l_nK >= f_CirclesShown()) break;   // not back yet: they come back in order
@@ -293,6 +338,7 @@ void TouchPlay::f_Pointer(int l_iPhase, float l_fX, float l_fY) {
                 const bool l_bPerfect = m_iClockMs - m_iLastAnswerMs <= m_oS.m_iCirclePerfectMs;
                 l_oC.m_iState = l_bPerfect ? 2 : 1;
                 f_FinishOne(true, l_bPerfect, l_oC.m_fX, l_oC.m_fY);
+                m_bCircleSliding = m_oS.m_bCircleSlide;   // still down: moving on to the next takes it too
             } else {                  // a wrong circle: the one due is missed, the play goes on (Q40)
                 Circle& l_oDue = m_vCircles[(size_t)m_iIndex];
                 l_oDue.m_iState = 3;
@@ -393,7 +439,10 @@ void TouchPlay::f_Update(int l_iDtMs) {
     case PlayType::eSEQUENCE_CLICK: {
         m_iPhaseMs += l_iDtMs;
         const int l_iN = (int)m_vCircles.size();
-        if (m_eCirclePhase == CirclePhase::Count && m_iPhaseMs >= l_iN * m_oS.m_iCircleCountMs) { m_eCirclePhase = CirclePhase::Hide; m_iPhaseMs = 0; }
+        // counting: until the last has been lit circleCountMs (with a symbol's times: its last time, then that long)
+        const int l_iCountMs = m_oS.m_vCircleTimesMs.size() >= (size_t)l_iN && l_iN > 0 ? m_oS.m_vCircleTimesMs[(size_t)l_iN - 1] + m_oS.m_iCircleCountMs
+                                                                                     : l_iN * m_oS.m_iCircleCountMs;
+        if (m_eCirclePhase == CirclePhase::Count && m_iPhaseMs >= l_iCountMs) { m_eCirclePhase = CirclePhase::Hide; m_iPhaseMs = 0; }
         if (m_eCirclePhase == CirclePhase::Hide && m_iPhaseMs >= m_oS.m_iCircleHideMs) { m_eCirclePhase = CirclePhase::Warn; m_iPhaseMs = 0; }
         // (no "!" now by default: they come back one by one, already to be tapped; 20 §2)
         if (m_eCirclePhase == CirclePhase::Warn && m_iPhaseMs >= m_oS.m_iCircleWarnMs) {
@@ -457,6 +506,8 @@ TouchPlaySettings f_TouchPlayFromJson(const nlohmann::json& l_jB) {
     l_oS.m_iCircleReturnMs = std::max(0, l_jJ.value(toms::field::g_pszCircleReturnMs, l_oS.m_iCircleReturnMs));
     l_oS.m_iCircleTapMs = std::max(200, l_jJ.value(toms::field::g_pszCircleTapMs, l_oS.m_iCircleTapMs));
     l_oS.m_iCirclePerfectMs = std::max(0, l_jJ.value(toms::field::g_pszCirclePerfectMs, l_oS.m_iCirclePerfectMs));
+    l_oS.m_bCircleSlide = l_jJ.value(toms::field::g_pszCircleSlide, l_oS.m_bCircleSlide);
+    l_oS.m_fCircleSlideWrong = std::clamp(l_jJ.value(toms::field::g_pszCircleSlideWrong, l_oS.m_fCircleSlideWrong), 0.0f, 1.5f);
     if (l_jJ.contains(toms::field::g_pszCueExtraMs) && l_jJ[toms::field::g_pszCueExtraMs].is_object())
         for (auto l_oIt = l_jJ[toms::field::g_pszCueExtraMs].begin(); l_oIt != l_jJ[toms::field::g_pszCueExtraMs].end(); ++l_oIt)
             if (l_oIt.value().is_number()) l_oS.m_mapCueExtraMs[l_oIt.key()] = std::max(0, l_oIt.value().get<int>());

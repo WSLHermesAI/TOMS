@@ -302,6 +302,9 @@ bool Game::f_StartScenarioJson(const nlohmann::json& l_jSc, const std::string& l
     } else if (l_strS == "weaponTrial") {   // the start story (docs/gameplay/07 phase 3): the weapon master's dialogue
         if (l_jSc.value(toms::field::g_pszBattle, nlohmann::json::object()).contains(toms::field::g_pszHp)) m_oTutorial.m_jOverrides[toms::field::g_pszHp] = l_jSc[toms::field::g_pszBattle][toms::field::g_pszHp];   // a short tutorial fight
         f_StartWeaponTrial();
+        // "tryWeapon": past the prologue and the weapon master, straight into the trial fight with that weapon
+        const std::string l_strTry = l_jSc.value(toms::field::g_pszBattle, nlohmann::json::object()).value(toms::field::g_pszTryWeapon, std::string());
+        if (!l_strTry.empty()) f_TryWeapon(l_strTry);
     } else if (l_strS == "dialogue") {
         const nlohmann::json l_jD = l_jSc.value(toms::field::g_pszDialogue, nlohmann::json::object());
         if (l_jD.contains(toms::field::g_pszFile)) {
@@ -438,6 +441,13 @@ bool Game::f_ScenarioCheck(std::string& l_strReport) const {
         l_fnFail("the hero is on cell " + std::to_string(m_oCs.m_iHeroCell) + ", expected " + std::to_string(m_jScenarioExpect[toms::field::g_pszHeroCell].get<int>()));
     if (m_jScenarioExpect.contains(toms::field::g_pszTutorialStep) && m_oArena.m_iTutorialStep != m_jScenarioExpect[toms::field::g_pszTutorialStep].get<int>())
         l_fnFail("the tutorial is at step " + std::to_string(m_oArena.m_iTutorialStep) + ", expected " + std::to_string(m_jScenarioExpect[toms::field::g_pszTutorialStep].get<int>()));
+    if (m_jScenarioExpect.contains(toms::field::g_pszTutorialTextHas)) {   // the tutorial box's words hold this (a text key: its words now)
+        const toms::TutorialStep* l_pStep = f_TutorialStepNow();
+        const std::string l_strGiven = m_jScenarioExpect[toms::field::g_pszTutorialTextHas].get<std::string>();
+        const std::string l_strWant = m_oLocale.f_Has(l_strGiven) ? m_oLocale.f_Tr(l_strGiven) : l_strGiven;
+        const std::string l_strText = l_pStep ? f_TutorialText(*l_pStep) : std::string();
+        if (l_strText.find(l_strWant) == std::string::npos) l_fnFail("the tutorial says \"" + l_strText + "\", not \"" + l_strWant + "\"");
+    }
     if (m_jScenarioExpect.contains(toms::field::g_pszEnding) && m_strActiveEndingId != m_jScenarioExpect[toms::field::g_pszEnding].get<std::string>())   // the ending shown (23 §6)
         l_fnFail("the ending shown is \"" + m_strActiveEndingId + "\", expected " + m_jScenarioExpect[toms::field::g_pszEnding].get<std::string>());
     if (m_jScenarioExpect.contains(toms::field::g_pszDialogueNode) && (!m_bInDialogue || m_strDlgNode != m_jScenarioExpect[toms::field::g_pszDialogueNode].get<std::string>()))

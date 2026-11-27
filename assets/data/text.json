@@ -1455,6 +1455,10 @@
       "zh_TW": "這招躲不開！牠頭上出現「!」時，按防禦",
       "en": "You can't dodge this one! When \"!\" shows over it, press Guard"
     },
+    "tutorial.play_sequenceClick": {
+      "zh_TW": "法杖：圓圈會一個個亮起數字——記住順序！它們消失後會再出現，照 1、2、3… 點擊；也可以按住第一個圓，手指不放開，照順序滑到下一個。圓圈有時會排成圖形（一圈、一排、字母），順著它走就好",
+      "en": "The staff: the circles light up one by one with their numbers. Remember the order! When they come back, tap them 1, 2, 3… or touch the first and slide through the rest in order without lifting. Sometimes they make a shape (a ring, a row, a letter): just follow it"
+    },
     "tutorial.finish": {
       "zh_TW": "很好！把苔蛙打倒吧",
       "en": "Well done! Now finish the toad"

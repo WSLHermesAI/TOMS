@@ -118,6 +118,11 @@ because B3–B5 change how the weapons play (Q74).
 
 **The new game's tutorial (built 2026-11-06, ahead of B6):** the weapon master's trial fight is now a lesson against 苔蛙 (`thicketoad`),
 set in `battle.json` `tutorial`, with its words in `text.json` `tutorial.*`. Each step shows its words in a box at the top and waits until the player does it:
+The first step says "Attack the toad! {play}": `{play}` is the weapon's own tutorial words, `tutorial.play_<play>`, when
+text.json has them, else its short battle hint. The magic staff has them (the owner, 2026-11-27: "add a description of
+how the magic staff plays"): the circles light up one by one with their numbers, remember the order; when they come back,
+tap them 1, 2, 3 ... or touch the first and slide through the rest; sometimes they make a shape (a ring, a row, a letter).
+The scenario `tutorial_staff` checks it.
 
 | Step | The player must | Meanwhile |
 |---|---|---|

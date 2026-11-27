@@ -560,9 +560,7 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
                                      : std::string(toms::key_prefix::g_pszBattlePlayHint) + toms::f_PlayTypeName(l_ePlayType));
             }
             if (const toms::TutorialStep* l_pStep = f_TutorialStepNow()) {   // the new game's tutorial (docs/gameplay/19 B6)
-                l_oB.m_strTutorial = f_TrParam(l_oL.f_Tr(l_pStep->m_strText), toms::field::g_pszPlay,
-                    l_oL.f_Tr(l_ePlayType == toms::PlayType::eTRACK ? toms::text::g_pszBattleAttackReadyHint
-                                                                    : std::string(toms::key_prefix::g_pszBattlePlayHint) + toms::f_PlayTypeName(l_ePlayType)));
+                l_oB.m_strTutorial = f_TutorialText(*l_pStep);
                 l_oB.m_strTutorialMark = l_pStep->m_strMark;
                 l_oB.m_fTutorialScale = l_fnPop(m_oArena.m_iTutorialPopMs);
                 // a step with hideMs: its box goes away that long after it popped up (the owner, 2026-11-13: the red cells'
@@ -1171,4 +1169,16 @@ void Game::f_TouchPlayUi(toms::UiBattle& l_oB) const {
     default:
         break;
     }
+}
+
+// A tutorial step's words. "{play}": how this weapon attacks: the tutorial's own fuller words for it ("tutorial.play_" + the
+// play; the owner, 2026-11-27: the staff explained), else the battle's short hint.
+std::string Game::f_TutorialText(const toms::TutorialStep& l_oStep) const {
+    const toms::Locale& l_oL = m_oLocale;
+    const toms::PlayType l_ePlayType = f_BattlePlayType();
+    const std::string l_strOwn = std::string(toms::key_prefix::g_pszTutorialPlay) + toms::f_PlayTypeName(l_ePlayType);
+    const std::string l_strHow = l_oL.f_Has(l_strOwn) ? l_oL.f_Tr(l_strOwn)
+        : l_oL.f_Tr(l_ePlayType == toms::PlayType::eTRACK ? toms::text::g_pszBattleAttackReadyHint
+                                                          : std::string(toms::key_prefix::g_pszBattlePlayHint) + toms::f_PlayTypeName(l_ePlayType));
+    return f_TrParam(l_oL.f_Tr(l_oStep.m_strText), toms::field::g_pszPlay, l_strHow);
 }

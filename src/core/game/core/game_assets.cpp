@@ -212,6 +212,7 @@ bool Game::f_LoadAssets(const std::string& l_strAssetDir) {
         }
     }
     m_oWeaponPlay = toms::f_LoadWeaponPlay(f_PathOf(toms::key::g_pszDataWeaponPlay));   // docs/gameplay/07_GAMEPLAY_PLAN.md §5.6
+    m_oCircleSymbols = toms::f_LoadCircleSymbols(f_PathOf(toms::key::g_pszDataCircleSymbols));   // the staff's symbols (22 §5.1)
     m_oLooks = toms::f_LooksFromJson(f_ReadJsonFile(f_PathOf(toms::key::g_pszDataLooks)));   // the status map (docs/gameplay/11 §4.2)
     m_oMoves = toms::f_MovesFromJson(f_ReadJsonFile(f_PathOf(toms::key::g_pszDataMoves)));   // the monsters' moves (docs/gameplay/13 §6.1)
     m_oSpecialMoves = toms::f_SpecialMovesFromJson(f_ReadJsonFile(f_PathOf(toms::key::g_pszDataSpecialMoves)));   // moves and special guards (docs/gameplay/16 §6)

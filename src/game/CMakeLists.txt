@@ -30,6 +30,7 @@ add_library(toms_core STATIC
     ${L_GAME}/systems/cycle_system.cpp ${L_GAME}/systems/roamer.cpp
     ${L_GAME}/systems/run_state.cpp ${L_GAME}/systems/floor_table.cpp
     ${L_GAME}/systems/weapon_play.cpp   # data/weapon_play.json (docs/gameplay/07 §5.6)
+    ${L_GAME}/systems/circle_symbols.cpp   # data/circle_symbols.json: the staff's circles as symbols (docs/gameplay/22 §5.1)
     ${L_GAME}/systems/combo_play.cpp    # Battle v3 point play (docs/gameplay/07 §4, §5.1)
     ${L_GAME}/systems/battle_party.cpp  # 1-3 monsters: targeting, the battle event log (docs/gameplay/13 §4.6)
     ${L_GAME}/systems/battle_rules.cpp  # looks, monster events, moves, the pace, break (docs/gameplay/13)

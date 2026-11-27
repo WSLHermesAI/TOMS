@@ -35,6 +35,12 @@ glm::vec4 Game::f_TouchArea() const {
     // heads (the bow, the owner 2026-11-23: "around the center"); "monster": round the monster aimed at (the staff, the
     // owner 2026-11-23: "show around the monster, not above the player"); else over the hero's head
     const std::string l_strAround = f_WeaponPlayOf(f_WeaponKey()).m_strAround;
+    if (l_strAround == toms::around::g_pszCenter) {   // the middle of the screen, as wide as fits (the staff, the owner, 2026-11-27)
+        const float l_fAw = std::min(560.0f, l_fW - 2.0f * l_fMargin);
+        const float l_fAh = std::min(340.0f, std::max(120.0f, l_fH - 170.0f - 2.0f * l_fTop));
+        const float l_fCy = std::clamp(l_fH * 0.45f - l_fAh * 0.5f, l_fTop, std::max(l_fTop, l_fH - 170.0f - l_fAh));
+        return glm::vec4((l_fW - l_fAw) * 0.5f, l_fCy, l_fAw, l_fAh);
+    }
     if (l_strAround == "monster" && !m_oCs.m_vFoes.empty()) {
         const glm::vec4 l_v4Foe = f_FighterBox(std::clamp(m_oCs.m_iTarget, 0, (int)m_oCs.m_vFoes.size() - 1));
         // as wide and tall as the monster's picture and a little more, at least 360 x 240 (room for the circles round it)
@@ -44,7 +50,7 @@ glm::vec4 Game::f_TouchArea() const {
         const float l_fCy = std::clamp(l_v4Foe.y + l_v4Foe.w * 0.5f - l_fAh * 0.5f, l_fTop, std::max(l_fTop, l_fH - 170.0f - l_fAh));
         return glm::vec4(l_fCx, l_fCy, l_fAw, l_fAh);
     }
-    if (l_strAround == "between" && !m_oCs.m_vFoes.empty()) {
+    if (l_strAround == toms::around::g_pszBetween && !m_oCs.m_vFoes.empty()) {
         const glm::vec4 l_v4Foe = f_FighterBox(std::clamp(m_oCs.m_iTarget, 0, (int)m_oCs.m_vFoes.size() - 1));
         const float l_fMid = (l_v4Hero.x + l_v4Hero.z * 0.5f + l_v4Foe.x + l_v4Foe.z * 0.5f) * 0.5f;
         const float l_fHeads = std::min(l_v4Hero.y, l_v4Foe.y);
@@ -94,6 +100,16 @@ void Game::f_ArmTouchPlay(bool l_bUltimate, int l_iPoints) {
             if (l_oR.m_iAnswerMs >= 0) l_oS.m_iRecallAnswerMs = l_oR.m_iAnswerMs + l_iDexMs;
             if (l_oR.m_iPerCueMs >= 0) l_oS.m_iRecallPerCueMs = l_oR.m_iPerCueMs;
             if (l_oR.m_fReverse >= 0.0f) l_oS.m_fRecallReverse = l_oR.m_fReverse;
+        }
+    }
+    if (l_eType == toms::PlayType::eSEQUENCE_CLICK) {   // the circles as a symbol, by the weapon's level (data/circle_symbols.json)
+        const std::string l_strKey = f_WeaponKey();
+        const int l_iLv = f_WeaponLevel(l_strKey);
+        l_oS.m_vCircleSymbol = m_oCircleSymbols.f_Pick(l_strKey, l_iLv, l_iPoints, m_oPlayRng, nullptr, &l_oS.m_vCircleTimesMs);
+        if (!m_vDebugSymbolPoints.empty()) {   // the battle editor's Try: its symbol, with as many circles as it has
+            l_iPoints = (int)m_vDebugSymbolPoints.size();
+            l_oS.m_vCircleSymbol = m_vDebugSymbolPoints;
+            l_oS.m_vCircleTimesMs = m_vDebugSymbolTimesMs.size() == m_vDebugSymbolPoints.size() ? m_vDebugSymbolTimesMs : std::vector<int>();
         }
     }
     m_v4TouchArmedArea = f_TouchArea();
@@ -379,7 +395,7 @@ glm::vec2 Game::f_SkillShapeCentre(const toms::SpecialMove& l_oD) const {
     const glm::vec4 l_v4Hero = f_FighterBox(-1);
     const float l_fR = l_oD.m_oPlay.m_fSize * 0.5f + 6.0f;
     const float l_fW = m_pRen ? (float)m_pRen->f_Width() : 1024.0f, l_fH = m_pRen ? (float)m_pRen->f_Height() : 768.0f;
-    if (l_oD.m_oPlay.m_strAround == "center")   // the middle of the screen (the bow's Cyclone Volley, the owner, 2026-11-25)
+    if (l_oD.m_oPlay.m_strAround == toms::around::g_pszCenter)   // the middle of the screen (the bow's Cyclone Volley, the owner, 2026-11-25)
         return {l_fW * 0.5f, std::clamp(l_fH * 0.45f, l_fR, std::max(l_fR, l_fH - l_fR))};
     if (l_oD.m_oPlay.m_strAround == "monster" && !m_oCs.m_vFoes.empty()) {   // on the monster aimed at (the staff's Star Seal, 2026-11-23)
         const glm::vec4 l_v4Foe = f_FighterBox(std::clamp(m_oCs.m_iTarget, 0, (int)m_oCs.m_vFoes.size() - 1));

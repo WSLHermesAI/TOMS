@@ -1,5 +1,6 @@
 // bed_window.cpp -- see bed_window.h.
 #include "bed_window.h"
+#include "bed_symbols.h"
 
 #include "battle_party.h"
 #include "bgfx_viewport.h"
@@ -125,6 +126,7 @@ BattleEditorWindow::BattleEditorWindow() {
     m_pTabs->addTab(f_BuildEventsTab(), tr("Events"));
     m_pTabs->addTab(f_BuildLogTab(), tr("Log"));
     m_pTabs->addTab(f_BuildScenariosTab(), tr("Scenarios"));
+    m_pTabs->addTab(f_BuildSymbolsTab(), tr("Symbols"));
     l_pSplit->addWidget(m_pTabs);
     l_pSplit->setStretchFactor(0, 0);
     l_pSplit->setStretchFactor(1, 1);
@@ -810,6 +812,13 @@ QString BattleEditorWindow::f_WeaponLevelsJson(const QString& l_oKey) const {
     return f_Qs(m_jWeaponPlay.value(f_Ss(l_oKey), ojson::object()).value("levels", ojson::array()).dump());
 }
 
+bool BattleEditorWindow::f_GrabSymbolsTab(const QString& l_oPng, const QString& l_oSymbol) {
+    m_pTabs->setCurrentWidget(m_pSymbols);
+    if (!l_oSymbol.isEmpty() && !m_pSymbols->f_SelectForTest(l_oSymbol)) return false;
+    m_pTabs->resize(1100, 900);
+    return m_pTabs->grab().save(l_oPng);
+}
+
 bool BattleEditorWindow::f_GrabWeaponTab(const QString& l_oPng) {
     resize(1500, 1000);
     m_pTabs->setCurrentIndex(1);
@@ -1393,6 +1402,31 @@ bool BattleEditorWindow::f_LoadSetup(const QString& l_oName) {
 // ---------------------------------------------------------------- the rest
 
 void BattleEditorWindow::f_Say(const QString& l_oText) { statusBar()->showMessage(l_oText, 6000); }
+
+// The staff's circles as symbols (bed_symbols.h; docs/gameplay/22 §5.1): Save hands the file to the running game, Try
+// starts the test battle with the staff and shows the symbol on every attack.
+QWidget* BattleEditorWindow::f_BuildSymbolsTab() {
+    m_pSymbols = new bed::SymbolEditor(m_oDataDir);
+    m_pSymbols->m_fnSay = [this](const QString& l_oText) { f_Say(l_oText); };
+    m_pSymbols->m_fnSaved = [this](const bed::ojson& l_jFile) {
+        if (Game* l_pG = m_pView->f_Session().f_Game()) l_pG->f_DebugSetCircleSymbols(nlohmann::json::parse(l_jFile.dump()));
+    };
+    m_pSymbols->m_fnTry = [this](const std::vector<bed::SymPoint>& l_vPoints, const std::vector<int>& l_vMs) {
+        std::vector<glm::vec2> l_vP;
+        for (const bed::SymPoint& l_oP : l_vPoints) l_vP.push_back({(float)l_oP.m_dX, (float)l_oP.m_dY});
+        if (l_vP.empty()) {
+            if (Game* l_pG = m_pView->f_Session().f_Game()) l_pG->f_DebugForceCircleSymbol({}, {});
+            f_Say(tr("Back to the symbols' own chances"));
+            return;
+        }
+        const int l_iStaff = m_pPWeapon->findData(QStringLiteral("staff"));
+        if (l_iStaff >= 0 && m_pPWeapon->currentIndex() != l_iStaff) m_pPWeapon->setCurrentIndex(l_iStaff);
+        if (!f_StartBattle()) return;   // (it says what is missing: a monster ticked)
+        if (Game* l_pG = m_pView->f_Session().f_Game()) l_pG->f_DebugForceCircleSymbol(l_vP, l_vMs);
+        f_Say(tr("Trying the symbol: every staff attack shows it (Stop trying: back to the chances)"));
+    };
+    return m_pSymbols;
+}
 
 bool BattleEditorWindow::f_Ask(const QString& l_oTitle, const QString& l_oText) {
     if (m_bQuiet) return true;

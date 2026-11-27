@@ -73,4 +73,28 @@ std::string f_MovesToText(const ojson& l_jMoves);
 ojson f_IdsFromText(const std::string& l_strText);
 std::string f_IdsToText(const ojson& l_jIds);
 
+// ---- the staff's symbols (data/circle_symbols.json; the Symbols tab; docs/gameplay/22 §5.1) ----
+// A curve as the owner's engine has it (FM79979 cCurveWithTime): control points with a time each, smoothed by LOD (each
+// pass cuts every corner at a quarter and three quarters of its segments, keeping the two ends), a position found at a
+// time between the two points around it. Points are 0..1 across and down the play's area.
+
+struct SymPoint { double m_dX = 0.0, m_dY = 0.0; };
+
+// LOD 1: the points as they are; each more: one corner-cutting pass ((n-1)*2^(L-1)+1 points). The times the same way.
+std::vector<SymPoint> f_CurveLod(const std::vector<SymPoint>& l_vPoints, int l_iLod);
+std::vector<double> f_CurveLodTimes(const std::vector<double>& l_vTimes, int l_iLod);
+double f_CurveLength(const std::vector<SymPoint>& l_vPoints);
+// The place at time t along points with their times (before the first: the first; after the last: the last).
+SymPoint f_CurveAt(const std::vector<SymPoint>& l_vPoints, const std::vector<double>& l_vTimes, double l_dT);
+// n places evenly by distance along the points (the first and last included), with the time there (from l_vTimes).
+void f_CurveSample(const std::vector<SymPoint>& l_vPoints, const std::vector<double>& l_vTimes, int l_iN,
+                   std::vector<SymPoint>& l_vOutPoints, std::vector<double>& l_vOutTimes);
+// Times from 0 to total: by distance along the points (an even speed), or by index (each step the same time).
+std::vector<double> f_TimesByDistance(const std::vector<SymPoint>& l_vPoints, double l_dTotal);
+std::vector<double> f_TimesByIndex(size_t l_nCount, double l_dTotal);
+
+// circle_symbols.json written in its own layout: a symbol's keys one a line, its points as [x, y] pairs; a weapon's
+// rows one a line; the rest as it was.
+std::string f_WriteSymbolsFile(const ojson& l_jFile);
+
 } // namespace bed

@@ -74,7 +74,7 @@ struct WeaponPlay {
     std::vector<WeaponResult> m_vResults;    // by points matched (13 §4.2); empty: the "default" entry's, else none
     std::string m_strPace;                     // "cooldown" / "stamina": this weapon's pace ("" = the battle's; 13 §6.3)
     std::string m_strPlay = "track";           // its attack: a play type's data name (play_type.h, docs/gameplay/17 §4.1)
-    std::string m_strAround = "hero";          // where its play shows: "hero" (over his head), "between" (him and the monster), "monster" (round it)
+    std::string m_strAround = "hero";          // where its play shows: "hero" (over his head), "between" (him and the monster), "monster" (round it), "center" (the screen's middle: the staff, 2026-11-27)
     std::vector<ComboTier> m_vComboTiers;      // sorted by from; empty: the plain attack clip
     bool m_bComboKeep = false;                 // the count goes on from attack to attack until a miss (the bow: one arrow an attack)
     const ComboTier* f_ComboTierAt(int l_iCount) const;   // the highest reached; null: none

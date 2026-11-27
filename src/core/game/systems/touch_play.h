@@ -82,6 +82,12 @@ struct TouchPlaySettings {
     int m_iCircleTapMs = 900;         // then the time to tap them all: this much per circle
     int m_iCirclePerfectMs = 500;     // a tap this soon after the last answer is perfect
     float m_fCircleRadius = 34.0f;
+    // the staff's slide (the owner, 2026-11-27): touch a circle, then move to the next in order without lifting; reaching
+    // the one due takes it as a tap. Passing this share of the radius from a wrong circle's middle is a wrong tap.
+    bool m_bCircleSlide = true;
+    float m_fCircleSlideWrong = 0.6f;
+    std::vector<int> m_vCircleTimesMs;        // when each lights up as they are shown (ms from the first); empty: m_iCircleCountMs apart
+    std::vector<glm::vec2> m_vCircleSymbol;   // the circles' places as a symbol, 0..1 in the area, in tap order (data/circle_symbols.json); empty: anywhere
     // shape
     std::string m_strShape = toms::gesture::g_pszPentagram;
     float m_fShapeSize = 220.0f;
@@ -168,6 +174,7 @@ public:
     int f_CirclesLit() const;                       // the count: how many have shown their number so far
     int f_CirclesShown() const;                     // on the screen now: lit while counting, none hidden, then back one by one
     bool f_CircleNumbersShown() const;              // counting, or coming back (until the last is back)
+    bool f_CircleSymbol() const { return m_bCircleSymbol; }     // laid out as a symbol (else anywhere, apart)
     // shape
     const ShapeTrace& f_Trace() const { return m_oTrace; }
     // spin
@@ -210,6 +217,8 @@ private:
     float m_fStrokeAngle = 0.0f;   // the last judged swipe's way (Hit::m_fAngle)
     // circles
     std::vector<Circle> m_vCircles;
+    bool m_bCircleSymbol = false;    // this play's layout: a symbol
+    bool m_bCircleSliding = false;   // the finger went down on a circle and has not lifted: moving on takes the next
     CirclePhase m_eCirclePhase = CirclePhase::Count;
     int m_iPhaseMs = 0;
     // spin

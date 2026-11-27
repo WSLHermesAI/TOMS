@@ -16,6 +16,7 @@
 #include <QFile>
 #include <QTimer>
 
+#include <cmath>
 #include <cstdio>
 
 namespace {
@@ -58,6 +59,27 @@ void f_LogicTests(const QString& l_oDataDir) {
           "stats.json: only the points array is rewritten");
     // moves text
     f_Check(bed::f_MovesToText(bed::f_MovesFromText("strike, heavy:2 , guard")) == "strike, heavy:2, guard", "moves text both ways");
+    // the staff's symbols: the curve as the FM79979 engine has it, the sampling, the times, the file written back
+    {
+        const std::vector<bed::SymPoint> l_vC = {{0, 0}, {1, 0}, {1, 1}};
+        f_Check(bed::f_CurveLod(l_vC, 1).size() == 3 && bed::f_CurveLod(l_vC, 2).size() == 6 && bed::f_CurveLod(l_vC, 3).size() == 12,
+                "LOD: the points, then each pass two a segment between the kept ends");
+        const std::vector<bed::SymPoint> l_vL2 = bed::f_CurveLod(l_vC, 2);
+        f_Check(std::abs(l_vL2[1].m_dX - 0.25) < 1e-9 && std::abs(l_vL2[2].m_dX - 0.75) < 1e-9 && l_vL2.back().m_dY == 1.0, "corners cut at a quarter and three quarters");
+        const bed::SymPoint l_oMid = bed::f_CurveAt(l_vC, {0, 100, 300}, 200);
+        f_Check(std::abs(l_oMid.m_dX - 1.0) < 1e-9 && std::abs(l_oMid.m_dY - 0.5) < 1e-9, "the place at a time: between its two points");
+        std::vector<bed::SymPoint> l_vP;
+        std::vector<double> l_vT;
+        bed::f_CurveSample(l_vC, {0, 100, 300}, 5, l_vP, l_vT);
+        f_Check(l_vP.size() == 5 && std::abs(l_vP[2].m_dX - 1.0) < 1e-9 && std::abs(l_vT[2] - 100.0) < 1e-9 && std::abs(l_vT[4] - 300.0) < 1e-9,
+                "5 circles evenly along the curve, each with its time there");
+        const std::vector<double> l_vD = bed::f_TimesByDistance({{0, 0}, {0.25, 0}, {1, 0}}, 1000);
+        f_Check(std::abs(l_vD[1] - 250.0) < 1e-9 && std::abs(l_vD[2] - 1000.0) < 1e-9, "times by distance: an even speed");
+        const std::string l_strFile = bed::f_WriteSymbolsFile(ojson::parse(R"({ "_comment": ["a"], "symbols": { "s": { "points": [[0, 1], [0.5, 0.5]], "times": [0, 300] } },
+                                                                         "weapons": { "staff": [ { "lv": 1, "chance": 20 } ] } })"));
+        f_Check(ojson::parse(l_strFile)["symbols"]["s"]["times"][1] == 300 && l_strFile.find("[[0,1], [0.5,0.5]]") != std::string::npos,
+                "circle_symbols.json written in its layout, read back the same");
+    }
     // a setup as a scenario and back
     bed::Setup l_oS;
     l_oS.m_strName = "two bats";
@@ -94,10 +116,11 @@ int main(int l_iArgc, char** l_pArgv) {
         QApplication::setOrganizationName(QStringLiteral("TOMS"));
         Language::f_Init();
         bool l_bSelftest = false;
-        QString l_oSmoke, l_oGrabWeapon;
+        QString l_oSmoke, l_oGrabWeapon, l_oGrabSymbols;
         for (const QString& l_oA : QApplication::arguments()) {
             if (l_oA == QStringLiteral("--selftest")) l_bSelftest = true;
             else if (l_oA.startsWith(QStringLiteral("--smoke="))) l_oSmoke = l_oA.mid(8);
+            else if (l_oA.startsWith(QStringLiteral("--grab-symbols="))) l_oGrabSymbols = l_oA.mid(15);   // <symbol>:<png>
             else if (l_oA.startsWith(QStringLiteral("--grab-weapon="))) l_oGrabWeapon = l_oA.mid(14);   // <weapon>:<png>; with -platform offscreen: no window
         }
 
@@ -105,6 +128,12 @@ int main(int l_iArgc, char** l_pArgv) {
         if (l_bSelftest) {
             l_oW.f_SetQuiet(true);
             f_LogicTests(l_oW.f_DataDir());
+            {   // the Symbols tab reads the shipped file, and writing it back changes nothing it does not edit
+                QFile l_oF(QDir(l_oW.f_DataDir()).filePath(QStringLiteral("circle_symbols.json")));
+                f_Check(l_oF.open(QIODevice::ReadOnly), "data/circle_symbols.json is there");
+                const bed::ojson l_jShipped = bed::ojson::parse(l_oF.readAll().toStdString());
+                f_Check(bed::ojson::parse(bed::f_WriteSymbolsFile(l_jShipped)) == l_jShipped, "circle_symbols.json: written back, the same data");
+            }
             f_Check(l_oW.f_MonsterCount() >= 7, "the monsters of enemies.json are listed");
             f_Check(l_oW.f_InBattle() == QStringList({QStringLiteral("slime")}), "the first one starts ticked");
             f_Check(l_oW.f_SetInBattle(QStringLiteral("bat"), true) && l_oW.f_SetInBattle(QStringLiteral("golem"), true) &&
@@ -140,6 +169,9 @@ int main(int l_iArgc, char** l_pArgv) {
             f_Check(l_oW.f_ShownScenarios().size() == l_oW.f_ScenarioCount(), "an empty filter shows them all");
             std::printf(g_iFailed ? "battle_editor selftest: %d failed\n" : "battle_editor selftest: all passed\n", g_iFailed);
             l_iRc = g_iFailed ? 1 : 0;
+        } else if (!l_oGrabSymbols.isEmpty()) {
+            l_oW.f_SetQuiet(true);
+            l_iRc = l_oW.f_GrabSymbolsTab(l_oGrabSymbols.section(QLatin1Char(':'), 1), l_oGrabSymbols.section(QLatin1Char(':'), 0, 0)) ? 0 : 1;
         } else if (!l_oGrabWeapon.isEmpty()) {
             l_oW.f_SetQuiet(true);
             const QString l_oKey = l_oGrabWeapon.section(QLatin1Char(':'), 0, 0), l_oPng = l_oGrabWeapon.section(QLatin1Char(':'), 1);

@@ -109,6 +109,9 @@ The node-animation and particle previews already have their own options (`--anim
 
 Each phase of the plan ends with its scenarios.
 
+The scene `weaponTrial` starts the new game's weapon trial (the prologue first); with `"battle": {"tryWeapon": "<weapon>"}` it goes
+straight into the trial fight with that weapon (2026-11-27; the scenario `tutorial_staff`).
+
 ## 4. What the test checks
 
 At the end of the `test` frames:
@@ -140,6 +143,8 @@ At the end of the `test` frames:
   | `inventoryHas` | items in the backpack |
   | `flags` | run flags that must be set |
   | `condition` | any condition in the game's own format, as in events' `requires` |
+  | `tutorialStep` | the tutorial step the trial fight is on (0 = the first) |
+  | `tutorialTextHas` | the tutorial box's words hold this; a text.json key stands for its words in the language on (2026-11-27) |
 
 A failed check prints, for example, `[scenario] <name>: FAILED  gold is 350, expected 999`. The game exits with code
 3, and the test fails. An unreadable setting file or an unknown enemy, dialogue, item or hub place fails in the same

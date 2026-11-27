@@ -29,6 +29,8 @@ class QTabWidget;
 class QTreeWidget;
 class AspectBox;
 
+namespace bed { class SymbolEditor; }
+
 class BattleEditorWindow : public QMainWindow {
     Q_OBJECT
 public:
@@ -46,6 +48,7 @@ public:
     bool f_SelectWeapon(const QString& l_oKey);                                       // on the Weapon tab
     bool f_SetWeaponLevelCell(int l_iLv, const QString& l_oColumn, int l_iValue);     // "points" or an attribute id, as typed
     QString f_WeaponLevelsJson(const QString& l_oKey) const;                          // its "levels" as they stand, not saved
+    bool f_GrabSymbolsTab(const QString& l_oPng, const QString& l_oSymbol);   // a picture of the Symbols tab with that symbol
     bool f_GrabWeaponTab(const QString& l_oPng);                                      // a picture of the tab (no window needed)
     QString f_CurrentMonster() const { return m_oCurrent; }
     void f_SetMonsterNumber(const QString& l_oKey, int l_iValue);   // hp, atk, def, ... as typed in the form
@@ -82,6 +85,7 @@ private:
     QWidget* f_BuildEventsTab();
     QWidget* f_BuildLogTab();
     QWidget* f_BuildScenariosTab();
+    QWidget* f_BuildSymbolsTab();   // the staff's circles as symbols (bed_symbols.h)
     void f_FillScenarioList();
     void f_ApplyScenarioFilter();
     QString f_ScenarioRoot() const;   // the repo's tests/scenarios
@@ -126,6 +130,7 @@ private:
     QListWidget* m_pMonsters = nullptr;
     QLabel* m_pInBattleLabel = nullptr;
     QTabWidget* m_pTabs = nullptr;
+    bed::SymbolEditor* m_pSymbols = nullptr;
     QTreeWidget* m_pScenarioList = nullptr;
     QLineEdit* m_pScenarioFilter = nullptr;
     QLabel* m_pScenarioCount = nullptr;

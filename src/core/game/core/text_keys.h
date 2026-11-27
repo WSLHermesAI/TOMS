@@ -1735,6 +1735,7 @@ inline constexpr const char g_pszTutorialAttack[]                   = "tutorial.
 inline constexpr const char g_pszTutorialFinish[]                   = "tutorial.finish";
 inline constexpr const char g_pszTutorialGuard[]                    = "tutorial.guard";
 inline constexpr const char g_pszTutorialMove[]                     = "tutorial.move";
+inline constexpr const char g_pszTutorialPlaySequenceClick[]        = "tutorial.play_sequenceClick";
 inline constexpr const char g_pszVillageHealed[]                    = "village.healed";
 inline constexpr const char g_pszVillageMovedIn[]                   = "village.moved_in";
 inline constexpr const char g_pszVillageNoGold[]                    = "village.no_gold";

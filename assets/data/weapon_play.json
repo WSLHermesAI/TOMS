@@ -1452,7 +1452,7 @@
         "feel": "perfect"
       }
     ],
-    "play": "sequenceClick", "around": "monster",
+    "play": "sequenceClick", "around": "center",
     "ultimate": "star_seal",
     "hitWindowMs": 140,
     "lateMs": 80
