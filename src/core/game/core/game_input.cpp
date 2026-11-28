@@ -375,6 +375,7 @@ void Game::f_AdvanceRoamers() {
 // Shared by movePlayer() (bumping a monster tile) and debugStartNearestBattle() (verification
 // harnesses): builds the EnemyInst from the entity and starts the fight -- or its dialogue gate.
 void Game::f_EngageMonster(const Entity& l_oE) {
+    if (!f_PayFight()) return;   // a climb: each fight costs stamina (docs/gameplay/27 §3.5)
     EnemyInst l_oEn;
     if (!f_EnemyFromData(l_oE.m_strId, nlohmann::json::object(), l_oEn)) return;   // enemies.json, with its moves, look and events
     l_oEn.m_iX = l_oE.m_iX; l_oEn.m_iY = l_oE.m_iY;

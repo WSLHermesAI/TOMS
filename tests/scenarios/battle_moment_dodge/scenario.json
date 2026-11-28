@@ -1,0 +1,8 @@
+{
+  "_comment": "A monster attack's beat (docs/gameplay/27 §2): the thorn boar's one attack, a lunge with its way shown (dodge: right). At 3 s (1.5 s x attackGapScale 2) the camera comes in; the swipe right in its answer time dodges it: no damage.",
+  "scene": "battle",
+  "player": { "hp": 99999 },
+  "battle": { "enemy": "thorn_boar", "hp": 9999, "atk_interval_ms": 1500, "play": "weapon" },
+  "test": { "frames": 260, "drags": "300:640:470:640:6@212" },
+  "expect": { "battleEvents": { "moment": 1, "dodge": 1, "hit": 0 } }
+}

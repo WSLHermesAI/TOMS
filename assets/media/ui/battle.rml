@@ -27,11 +27,12 @@
 
     <div id="player-hp" class="hp"><div class="fill-bar good" data-style-width="battle.player_hp_pct + '%'"></div></div>
     <div id="player-hp-text" class="hp-text">{{battle.player_hp_text}}</div>
-    <!-- the monsters, one to three (docs/gameplay/13 §4.6): each its box, HP and name; a tap makes it the target -->
+    <!-- the monsters, one to four (docs/gameplay/13 §4.6): each its box, HP and name; a tap makes it the target -->
     <!-- (each data-for sits on a wrapper, its bindings on the element inside: when a list shrinks, RmlUi removes the
          extra rows before it reads them -- see player.rml) -->
-    <div data-for="f, i : battle.foes"><div class="foe" data-class-f1="i == 1" data-class-f2="i == 2"
+    <div data-for="f, i : battle.foes"><div class="foe" data-class-f1="i == 1" data-class-f2="i == 2" data-class-f3="i == 3"
          data-class-n1="battle.foes.size == 1" data-class-n2="battle.foes.size == 2" data-class-n3="battle.foes.size == 3"
+         data-class-n4="battle.foes.size == 4"
          data-class-down="f.down" data-class-target="f.target" data-event-click="act('battle_target', i)">
         <div class="fbox"><img data-if="!f.anim" data-attr-sprite="f.sprite"/></div>
     </div></div>

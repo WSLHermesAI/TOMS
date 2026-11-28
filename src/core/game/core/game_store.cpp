@@ -28,6 +28,11 @@ void Game::f_LoadStore() {
 
 void Game::f_OpenStore() {
     if (!m_bStoreUnlocked) return;
+    if (m_oClimb.m_bOn) {   // the shop is outside the tower (docs/gameplay/27 Q138)
+        m_vNotifications.push_back({m_oLocale.f_Tr(toms::text::g_pszTowerNoStoreInTower), 2500});
+        m_oAudio.f_Play(toms::key::g_pszSfxDeny);
+        return;
+    }
     m_bStoreOpen = true;
     m_bNewsStore = false;
     m_iStoreSel = 0;
@@ -91,6 +96,7 @@ void Game::f_EnsureStageListLoaded() {
 }
 
 void Game::f_OpenStageSelect() {
+    if (m_oClimb.m_bOn) { m_oAudio.f_Play(toms::key::g_pszSfxDeny); return; }   // a climb stays in its chapter (docs/gameplay/27 §3.2)
     f_EnsureStageListLoaded();
     m_bStageSelectOpen = true;
     m_bStageSelectTest = false;

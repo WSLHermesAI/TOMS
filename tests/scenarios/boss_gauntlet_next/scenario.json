@@ -1,5 +1,5 @@
 {
-  "_comment": "A boss's sequence goes on (docs/gameplay/25_BOSS_GAUNTLET.md): its first guard (a bat) beaten, there is no result screen: the 3D stage travels on to the next monster's place and the second fight (a slime) starts by itself; the boss is last.",
+  "_comment": "A boss's sequence goes on (docs/gameplay/25_BOSS_GAUNTLET.md; rounds of 1, 2, 4 since 2026-11-28, docs/gameplay/27 §3.3): its first round (a bat alone) beaten, there is no result screen: the 3D stage travels on and the second round starts by itself, two together (a slime leading, a bat beside it); then four; the boss is last.",
   "scene": "battleWon",
   "battle3d": true,
   "battle": {
@@ -14,7 +14,7 @@
   },
   "expect": {
     "gauntlet": {
-      "steps": 3,
+      "steps": 4,
       "at": 1,
       "foe": "slime",
       "moved": true

@@ -1443,6 +1443,254 @@
       "zh_TW": "點格子移動，避開紅色",
       "en": "Tap a cell to move. Stay out of the red"
     },
+    "battle.moment_guard": {
+      "zh_TW": "防禦！",
+      "en": "Guard!"
+    },
+    "battle.moment_dodge": {
+      "zh_TW": "閃避！",
+      "en": "Dodge!"
+    },
+    "battle.moment_no_dodge": {
+      "zh_TW": "無法閃避",
+      "en": "Can't dodge"
+    },
+    "battle.moment_no_guard": {
+      "zh_TW": "無法防禦",
+      "en": "Can't guard"
+    },
+    "battle.moment_tap": {
+      "zh_TW": "點！",
+      "en": "Tap!"
+    },
+    "battle.moment_taps": {
+      "zh_TW": "連點 {n}！",
+      "en": "Tap ×{n}!"
+    },
+    "battle.moment_shape": {
+      "zh_TW": "畫！",
+      "en": "Draw!"
+    },
+    "battle.moment_move": {
+      "zh_TW": "躲開！",
+      "en": "Dodge them!"
+    },
+    "tower.title": {
+      "zh_TW": "魔塔挑戰",
+      "en": "Tower Challenge"
+    },
+    "tower.subtitle": {
+      "zh_TW": "勇闖魔塔・挑戰極限！",
+      "en": "Brave the tower, find your limits!"
+    },
+    "tower.story_orphan": {
+      "zh_TW": "孤兒的故事",
+      "en": "The Orphan's Tale"
+    },
+    "tower.story_challenge": {
+      "zh_TW": "挑戰之塔",
+      "en": "Challenge Towers"
+    },
+    "tower.challenge_01": {
+      "zh_TW": "挑戰之塔 I",
+      "en": "Challenge Tower I"
+    },
+    "tower.challenge_02": {
+      "zh_TW": "挑戰之塔 II",
+      "en": "Challenge Tower II"
+    },
+    "tower.challenge_03": {
+      "zh_TW": "挑戰之塔 III",
+      "en": "Challenge Tower III"
+    },
+    "tower.challenge_04": {
+      "zh_TW": "挑戰之塔 IV",
+      "en": "Challenge Tower IV"
+    },
+    "tower.challenge_05": {
+      "zh_TW": "挑戰之塔 V",
+      "en": "Challenge Tower V"
+    },
+    "tower.challenge_06": {
+      "zh_TW": "挑戰之塔 VI",
+      "en": "Challenge Tower VI"
+    },
+    "tower.challenge_07": {
+      "zh_TW": "挑戰之塔 VII",
+      "en": "Challenge Tower VII"
+    },
+    "tower.climb": {
+      "zh_TW": "挑戰魔塔",
+      "en": "Challenge the Tower"
+    },
+    "tower.village": {
+      "zh_TW": "村莊",
+      "en": "Village"
+    },
+    "tower.bag": {
+      "zh_TW": "背包",
+      "en": "Bag"
+    },
+    "tower.shop": {
+      "zh_TW": "商店",
+      "en": "Shop"
+    },
+    "tower.quests": {
+      "zh_TW": "任務",
+      "en": "Quests"
+    },
+    "tower.ranking": {
+      "zh_TW": "排行",
+      "en": "Ranking"
+    },
+    "tower.heroes": {
+      "zh_TW": "英雄",
+      "en": "Heroes"
+    },
+    "tower.back": {
+      "zh_TW": "返回",
+      "en": "Back"
+    },
+    "tower.pick_story": {
+      "zh_TW": "選擇故事",
+      "en": "Pick a story"
+    },
+    "tower.pick_chapter": {
+      "zh_TW": "選擇章節",
+      "en": "Pick a chapter"
+    },
+    "tower.chapter_n": {
+      "zh_TW": "第 {n} 章",
+      "en": "Chapter {n}"
+    },
+    "tower.floors": {
+      "zh_TW": "{from}–{to} 層",
+      "en": "Floors {from}–{to}"
+    },
+    "tower.cleared": {
+      "zh_TW": "已通關",
+      "en": "Cleared"
+    },
+    "tower.locked": {
+      "zh_TW": "通過前一章後開放",
+      "en": "Opens when the chapter before is cleared"
+    },
+    "tower.locked_after": {
+      "zh_TW": "通過「{name}」後開放",
+      "en": "Opens when \"{name}\" is cleared"
+    },
+    "tower.next": {
+      "zh_TW": "可以挑戰",
+      "en": "Ready"
+    },
+    "tower.level": {
+      "zh_TW": "Lv.{n}",
+      "en": "Lv.{n}"
+    },
+    "tower.atk": {
+      "zh_TW": "攻擊",
+      "en": "Attack"
+    },
+    "tower.def": {
+      "zh_TW": "防禦",
+      "en": "Defence"
+    },
+    "tower.hp": {
+      "zh_TW": "生命",
+      "en": "Life"
+    },
+    "tower.stamina_next": {
+      "zh_TW": "{time} 後 +1",
+      "en": "+1 in {time}"
+    },
+    "tower.stamina_full": {
+      "zh_TW": "體力已滿",
+      "en": "Stamina full"
+    },
+    "tower.tally_cleared": {
+      "zh_TW": "通關！",
+      "en": "Chapter cleared!"
+    },
+    "tower.tally_died": {
+      "zh_TW": "倒下了……",
+      "en": "You fell…"
+    },
+    "tower.tally_floors": {
+      "zh_TW": "樓層",
+      "en": "Floors"
+    },
+    "tower.tally_monsters": {
+      "zh_TW": "打倒的怪物",
+      "en": "Monsters beaten"
+    },
+    "tower.tally_combo": {
+      "zh_TW": "最高連擊",
+      "en": "Best combo"
+    },
+    "tower.tally_perfects": {
+      "zh_TW": "完美閃避／格擋",
+      "en": "Perfect dodges / parries"
+    },
+    "tower.tally_damage": {
+      "zh_TW": "受到的傷害",
+      "en": "Damage taken"
+    },
+    "tower.tally_time": {
+      "zh_TW": "時間",
+      "en": "Time"
+    },
+    "tower.tally_gold": {
+      "zh_TW": "帶回的金幣",
+      "en": "Gold brought back"
+    },
+    "tower.tally_crystals": {
+      "zh_TW": "帶回的水晶",
+      "en": "Crystals brought back"
+    },
+    "tower.tally_lost": {
+      "zh_TW": "失去一半：金幣 -{gold}、水晶 -{crystals}",
+      "en": "Half lost: gold -{gold}, crystals -{crystals}"
+    },
+    "tower.tally_bonus": {
+      "zh_TW": "評價獎勵：水晶 +{n}",
+      "en": "Rank bonus: crystals +{n}"
+    },
+    "tower.tally_score": {
+      "zh_TW": "分數 {n}",
+      "en": "Score {n}"
+    },
+    "tower.continue": {
+      "zh_TW": "繼續（本章第一層）",
+      "en": "Continue (the chapter's first floor)"
+    },
+    "tower.home": {
+      "zh_TW": "回主畫面",
+      "en": "Main screen"
+    },
+    "tower.no_stamina": {
+      "zh_TW": "體力不足：下一點 {time} 後回復",
+      "en": "Not enough stamina: the next point in {time}"
+    },
+    "tower.wait": {
+      "zh_TW": "等待",
+      "en": "Wait"
+    },
+    "tower.no_store_in_tower": {
+      "zh_TW": "塔裡沒有商店：回主畫面再買",
+      "en": "No shop in the tower: buy on the main screen"
+    },
+    "tower.chapter_start": {
+      "zh_TW": "這一章從這層開始",
+      "en": "This chapter starts on this floor"
+    },
+    "tower.soon": {
+      "zh_TW": "即將推出",
+      "en": "Coming soon"
+    },
+    "tower.no_places": {
+      "zh_TW": "村莊還沒有開放的地方",
+      "en": "Nothing in the village is open yet"
+    },
     "battle.word_dodge": {
       "zh_TW": "閃開！",
       "en": "Dodged!"

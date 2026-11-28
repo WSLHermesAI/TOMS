@@ -1,0 +1,24 @@
+{
+  "_comment": "A boss opens with its special (docs/gameplay/27 §3.3, Q133; battle.json bossOpensWithSpecial): Hivebear's introduction, then at once its first special's danger cells light and it powers up -- no plain strike first.",
+  "scene": "battle",
+  "battle3d": true,
+  "player": {
+    "hp": 99999
+  },
+  "battle": {
+    "enemy": "hivebear",
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 520
+  },
+  "expect": {
+    "scene": "battle",
+    "battleEvents": {
+      "bossIntro": 1,
+      "danger": 1,
+      "power": 1,
+      "hit": 0
+    }
+  }
+}

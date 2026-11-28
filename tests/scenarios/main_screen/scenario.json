@@ -1,0 +1,6 @@
+{
+  "_comment": "The main screen (docs/gameplay/27 §6): the tower of the story's chapters (chapter 1 ready, the rest locked), the hero, gold, crystals, stamina, the buttons.",
+  "scene": "main",
+  "test": { "frames": 30 },
+  "expect": { "scene": "main", "tower": { "main": true, "climb": false } }
+}

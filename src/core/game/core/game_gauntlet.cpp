@@ -47,11 +47,27 @@ std::vector<EnemyInst> Game::f_GauntletGuards(const EnemyInst& l_oBoss, const st
 void Game::f_StartGauntlet(const EnemyInst& l_oBoss, const std::vector<EnemyInst>& l_vGuards) {
     m_oGauntlet = Gauntlet{};
     m_oGauntlet.m_bOn = true;
-    m_oGauntlet.m_vSteps = l_vGuards;
+    // the rounds (the owner, 2026-11-28; docs/gameplay/27 §3.3): battle.json "gauntlet" "rounds" [1, 2, 4]: one monster, then
+    // two together, then four, taken from the guards' kinds in turn. No "rounds": each guard alone, as before (doc 25).
+    const nlohmann::json l_jRounds = m_jBattleJson.value(toms::field::g_pszGauntlet, nlohmann::json::object()).value(toms::field::g_pszRounds, nlohmann::json());
+    if (l_jRounds.is_array() && !l_jRounds.empty() && !l_vGuards.empty()) {
+        size_t l_nNext = 0;
+        for (const auto& l_jN : l_jRounds) {
+            const int l_iN = std::clamp(l_jN.is_number() ? l_jN.get<int>() : 1, 1, toms::g_iMaxFoes);
+            m_oGauntlet.m_vSteps.push_back(l_vGuards[l_nNext++ % l_vGuards.size()]);
+            std::vector<EnemyInst> l_vParty;
+            for (int l_iK = 1; l_iK < l_iN; l_iK++) l_vParty.push_back(l_vGuards[l_nNext++ % l_vGuards.size()]);
+            m_oGauntlet.m_vParties.push_back(l_vParty);
+        }
+    } else {
+        m_oGauntlet.m_vSteps = l_vGuards;
+        m_oGauntlet.m_vParties.assign(l_vGuards.size(), std::vector<EnemyInst>{});
+    }
     m_oGauntlet.m_vSteps.push_back(l_oBoss);   // the last: the boss (on the map: winning it clears its tile)
+    m_oGauntlet.m_vParties.push_back(std::vector<EnemyInst>{});
     m_v3BattleTravel = glm::vec3(0.0f);
     f_BattleEvent(toms::battle_event::g_pszGauntlet, -1, -1, (int)m_oGauntlet.m_vSteps.size());
-    f_StartCombat(m_oGauntlet.m_vSteps[0]);
+    f_StartCombat(m_oGauntlet.m_vSteps[0], m_oGauntlet.m_vParties[0]);
 }
 
 // The result screen closed: a sequence goes on to its next monster -- the stage travels there (everything waits), then it
@@ -66,7 +82,7 @@ void Game::f_DismissVictory() {
     m_v3TravelFrom = m_v3BattleTravel;
     m_v3TravelTo = f_GauntletStepVec() * (float)m_oGauntlet.m_iStep;
     const int l_iSuper = m_oCs.m_iSuperCharge;   // the charge points go on to the next fight (the owner, 2026-11-23)
-    f_StartCombat(m_oGauntlet.m_vSteps[(size_t)m_oGauntlet.m_iStep]);
+    f_StartCombat(m_oGauntlet.m_vSteps[(size_t)m_oGauntlet.m_iStep], m_oGauntlet.m_vParties[(size_t)m_oGauntlet.m_iStep]);
     m_oCs.m_iSuperCharge = l_iSuper;
     m_iRunPuffStep = -1;
     // the hero back to his idle pose (the last fight's win pose holds only while its result shows)
@@ -102,6 +118,8 @@ void Game::f_FillGauntletUi(toms::UiBattle& l_oB) const {
         const int l_iI = (int)l_nI;
         l_oS.m_strState = l_iI < m_oGauntlet.m_iStep ? toms::gauntlet_step::g_pszDone : l_iI == m_oGauntlet.m_iStep ? toms::gauntlet_step::g_pszNow : toms::gauntlet_step::g_pszNext;
         l_oS.m_strName = l_oS.m_strState == toms::gauntlet_step::g_pszNext ? (l_oS.m_bBoss ? m_oLocale.f_Tr(toms::text::g_pszBattleGauntletBoss) : std::string("?")) : l_oE.m_strName;
+        if (l_nI < m_oGauntlet.m_vParties.size() && !m_oGauntlet.m_vParties[l_nI].empty())   // a round of several: how many
+            l_oS.m_strName += " x" + std::to_string(m_oGauntlet.m_vParties[l_nI].size() + 1);
         l_oB.m_vSteps.push_back(l_oS);
     }
 }

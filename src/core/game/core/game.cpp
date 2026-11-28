@@ -77,6 +77,8 @@ void Game::f_ConfirmStageTransition() {
     bool l_bIsUp = m_bStairsConfirmIsUp;
     m_bStairsConfirmOpen = false;
     m_strStairsConfirmTarget.clear();
+    if (f_ClimbStairs(l_strTarget, l_bIsUp)) return;   // a climb: its last floor's stairs up clear the chapter (docs/gameplay/27 §3.1)
+    if (m_oClimb.m_bOn) m_oClimb.m_setFloors.insert(l_strTarget);
     // Q7: taking stairs a finished event opened finishes their "go to the stairs" event.
     const std::string l_strGo = m_strStairsConfirmGoEvent;
     m_strStairsConfirmGoEvent.clear();
@@ -149,12 +151,15 @@ void Game::f_NewGame(int l_iSlot) {
     if (l_iSlot >= 0) f_SaveCurrentRun();
     m_oTitle.f_Close();
     m_oTitle.f_SetRunInProgress(true);
+    m_oClimb = Climb{}; m_oTally = Tally{}; m_bNoStamina = false;
+    if (l_iSlot >= 0 && m_oTowerRules.m_bOn) f_OpenMainScreen();   // the main screen first; chapter 1 is the tutorial (docs/gameplay/27 §6)
 }
 
 
 void Game::f_Update(int l_iDtMs) {
     toms::perf::Scope l_oPerf(toms::perf::section::g_pszUpdateGame);
     m_dIdleClockMs += l_iDtMs;   // the looping clips on the map (each object at its own phase: map_objects.cpp)
+    f_StepStamina(l_iDtMs);      // the stamina's real-time clock (docs/gameplay/27 §3.5)
     // Hot reload (setHotReload: the editors, debug builds): files changed on disk are read again, in place. The clips
     // and effects that were playing from a reloaded file start over from its new contents.
     if (m_bHotReload && m_upRes && (m_iHotReloadMs += l_iDtMs) >= 1000) {

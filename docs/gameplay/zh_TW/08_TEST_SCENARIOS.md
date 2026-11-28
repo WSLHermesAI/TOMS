@@ -97,6 +97,8 @@ tests/scenarios/
 | `notice` | 由設定產生的通知，例如鎖住的樓梯的事件完成後的「樓梯已解鎖」 | — | `notice_stair_unlock` |
 | `ending` | 結局畫面 | `ending`：`id`（`story/endings.json` 中的 `e_01` …） | `ending` |
 | `hub` | 村莊大廳的某個地點（它的對話）；解鎖旗標要放在 `flags` | `hub`：`location` | `hub_village` |
+| `main` | 主畫面（[27](27_ATTACK_MOMENT_AND_TOWER_RUN.md) 第 6 節） | — | `main_screen`、`main_pick_chapter` |
+| `climb` | 爬一章（[27](27_ATTACK_MOMENT_AND_TOWER_RUN.md) 第 3 節）：第一層、滿 HP；要求時立刻結束 | `climb`：`chapter`、`stamina`、`cleared`（先前通過的章）、`end`（`died` 或 `cleared`） | `climb_died`、`climb_cleared` |
 
 節點動畫與粒子預覽已經有自己的選項（`--anim=<檔案>#<片段>`、`--fx=<檔案>#<特效>`；[05](../../engine/zh_TW/05_ANIMATION.md)、
 [07](../../engine/zh_TW/07_PARTICLES.md)）。
@@ -161,3 +163,6 @@ tests/scenarios/
 
 程式在 `src/core/game/core/game_scenario.cpp`（`Game::startScenario`、`Game::scenarioCheck`）、`toms::readSaveFile`
 （`save_slots.h`）、`src/game/src/main_sdl.cpp` 的 `--scenario`，以及 `tests/scenarios/run_scenario.cmake`。
+
+
+**魔塔**（2026-11-28）：預期 `"tower"`：`main`（主畫面開著）、`climb`（正在爬塔）、`end`（結算：`death` 或 `cleared`）、`cleared`（章節 id）、`stamina`（目前體力）。

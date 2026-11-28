@@ -142,6 +142,7 @@ void Game::f_ArmTouchPlay(bool l_bUltimate, int l_iPoints) {
 }
 
 void Game::f_BattlePointer(int l_iPhase, float l_fX, float l_fY) {
+    if (f_MomentOn()) { m_bTouchHeld = false; f_MomentPointer(l_iPhase, l_fX, l_fY); return; }   // a monster attack's beat: the finger answers it, no attack (27 §2.2)
     if (m_oCs.m_iIntroFoeFire >= 0) { m_bTouchHeld = false; return; }   // a monster is about to attack: no attack now (the owner, 2026-11-27)
     if (l_iPhase == 0 && f_CellIntroOn()) return;   // no new press while everything waits; a pull already held can still let go
     if (f_HeroDown()) { m_bTouchHeld = false; return; }   // knocked down (f_KnockDownHero): his play was stopped, nothing new

@@ -1,0 +1,95 @@
+/* main.rcss -- the main screen (main.rml; docs/gameplay/27 §6). Over the map and the HUD, under the dialogue, store and menus
+   it opens (they come back to it). Only the tally and the "no stamina" box show over the map during a climb. */
+body { z-index: 25; }
+body.home { background-color: #16203a; }
+
+/* the painting behind: the tower at night (our own, ComfyUI; the owner's picture only guided the layout) */
+#sky { position: absolute; left: 0; right: 0; top: 0; bottom: 0; background-color: #1d2c52; decorator: image(main/tower_bg.png cover); }   /* tools/art/make_main_tower.py */
+#title { position: absolute; left: 0; right: 0; top: 18px; text-align: center; font-size: 52px; color: #ffe39a;
+         font-effect: outline(3px #3d2200); }
+#subtitle { position: absolute; left: 0; right: 0; top: 84px; text-align: center; font-size: 20px; color: #f4ead0; }
+
+.box { background-color: #141a2ee8; border-width: 2px; border-color: #c9a45a; border-radius: 10px; }
+
+/* the hero, top left */
+#hero { position: absolute; left: 16px; top: 16px; width: 220px; padding: 10px 12px; }
+#hero-level { font-size: 22px; color: #ffe39a; margin-bottom: 6px; }
+#hero-hpbar { position: relative; height: 22px; background-color: #2b3046; border-radius: 11px; margin-bottom: 8px; }
+#hero-hpfill { position: absolute; left: 0; top: 0; bottom: 0; background-color: #4cc75a; border-radius: 11px; }
+#hero-hptext { position: absolute; left: 0; right: 0; top: 1px; text-align: center; font-size: 15px; color: #ffffff; }
+.stat { display: block; font-size: 18px; color: #f4ead0; height: 26px; }
+.stat .k { display: inline-block; width: 110px; }
+.stat .v { display: inline-block; width: 80px; text-align: right; color: #ffffff; }
+
+/* the money and stamina, top right */
+#money { position: absolute; right: 16px; top: 16px; width: 190px; }
+.coin { position: relative; height: 34px; margin-bottom: 8px; font-size: 20px; color: #ffffff; text-align: right; padding: 4px 14px 0 40px; }
+.coin .ico { position: absolute; left: 10px; top: 8px; width: 20px; height: 20px; border-radius: 10px; }
+.coin.crystal .ico { background-color: #5fd0ff; }
+.coin.gold .ico { background-color: #ffcc3a; }
+.coin.stamina .ico { background-color: #8cff6a; }
+.coin.stamina { height: 52px; }
+#stamina-next { font-size: 14px; color: #c8d6ff; }
+
+/* the tower: a column of bands, the last chapter on top */
+#tower { position: absolute; left: 50%; margin-left: -190px; top: 128px; width: 380px; }
+#spire { height: 34px; }
+.band { position: relative; height: 54px; margin: 0 auto 4px auto; width: 330px; background-color: #3a4060d0; border-width: 2px;
+        border-color: #59607e; border-radius: 6px; cursor: pointer; padding: 4px 10px; }
+.band:hover { background-color: #4a5276; }
+.band.cleared { background-color: #3d5a45d8; border-color: #7bc28a; }
+.band.next { background-color: #6a4a1ee0; border-color: #ffcf5a; }
+.band.locked { background-color: #1c1f2cc0; border-color: #3d4052; }
+.blabel { font-size: 19px; color: #ffffff; white-space: nowrap; overflow: hidden; }
+.bsub { font-size: 14px; color: #c9cbe0; }
+.band.locked .blabel, .band.locked .bsub { color: #7d8096; }
+#gate { height: 10px; }
+
+/* the buttons down the right */
+#side { position: absolute; right: 16px; top: 186px; width: 110px; }
+.sbtn { height: 44px; margin-bottom: 10px; text-align: center; font-size: 20px; line-height: 44px; color: #ffe39a; cursor: pointer;
+        background-color: #2b2416; border-width: 2px; border-color: #c9a45a; border-radius: 22px; }
+.sbtn:hover { background-color: #3d331f; }
+.sbtn.dim { color: #8a8470; border-color: #5d5440; }
+
+/* challenge the tower */
+#climb { position: absolute; left: 50%; margin-left: -170px; bottom: 22px; width: 340px; height: 66px; line-height: 64px; text-align: center;
+         font-size: 34px; color: #fff3cf; cursor: pointer; background-color: #9c2a1c; border-width: 3px; border-color: #ffd36a; border-radius: 12px;
+         font-effect: outline(2px #3d0d06); }
+#climb:hover { background-color: #b8382a; }
+
+/* a list over the tower */
+#panel { position: absolute; left: 50%; margin-left: -230px; top: 110px; width: 460px; padding: 14px; z-index: 3; }
+#ptitle { font-size: 26px; color: #ffe39a; text-align: center; margin-bottom: 10px; }
+.prow { padding: 8px 12px; margin-bottom: 6px; background-color: #2e3550; border-radius: 6px; cursor: pointer; }
+.prow:hover { background-color: #3d4668; }
+.prow.cleared { background-color: #2f4a38; }
+.prow.next { background-color: #5a3f18; }
+.prow.disabled { background-color: #22253a; }
+.plabel { font-size: 20px; color: #ffffff; }
+.prow.disabled .plabel { color: #7d8096; }
+.psub { font-size: 15px; color: #c9cbe0; }
+#pback { display: block; margin: 10px auto 0 auto; width: 160px; text-align: center; }
+
+/* a climb's tally, and the no-stamina box: in the middle, over whatever is behind */
+#tally { position: absolute; left: 50%; margin-left: -230px; top: 90px; width: 460px; padding: 16px; z-index: 5; text-align: center; }
+#ttitle { font-size: 34px; color: #ffb0a0; }
+#tally.cleared #ttitle { color: #ffe39a; }
+#trank { font-size: 64px; color: #ffe39a; font-effect: outline(3px #3d2200); }
+#tscore { font-size: 20px; color: #f4ead0; margin-bottom: 8px; }
+.trow { display: block; height: 28px; font-size: 18px; color: #f4ead0; text-align: left; }
+.trow .tk { display: inline-block; width: 300px; }
+.trow .tv { display: inline-block; width: 120px; text-align: right; color: #ffffff; }
+#tnote { font-size: 16px; color: #ffb0a0; margin-top: 6px; }
+#tbtns, #nbtns { margin-top: 14px; }
+#tbtns .btn, #nbtns .btn { display: inline-block; margin: 0 8px; min-width: 150px; text-align: center; }
+#nostam { position: absolute; left: 50%; margin-left: -210px; top: 240px; width: 420px; padding: 18px; z-index: 5; text-align: center; }
+#ntext { font-size: 22px; color: #ffffff; }
+
+/* a tall phone: the tower lower, the buttons in a row under the hero */
+@media (orientation: portrait) {
+    #tower { top: 250px; }
+    #side { right: auto; left: 16px; top: 190px; width: 100%; }
+    .sbtn { display: inline-block; width: 96px; margin-right: 6px; }
+    #panel { top: 240px; }
+}

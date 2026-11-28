@@ -360,7 +360,7 @@ bool BattleEditorWindow::f_SetInBattle(const QString& l_oId, bool l_bOn) {
 }
 
 bool BattleEditorWindow::f_AddToBattle(const QString& l_oId) {
-    if (m_oInBattle.size() >= toms::g_iMaxFoes) { f_Say(tr("A battle has up to three monsters.")); return false; }
+    if (m_oInBattle.size() >= toms::g_iMaxFoes) { f_Say(tr("A battle has up to four monsters.")); return false; }
     if (!m_jEnemies.contains(f_Ss(l_oId))) return false;
     m_oInBattle << l_oId;
     m_bFilling = true;

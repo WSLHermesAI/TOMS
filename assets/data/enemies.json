@@ -1,5 +1,6 @@
 {
   "slime": {
+    "attacks": [{"pose": "lunge", "answer": "tap"}],
     "name": { "zh_TW": "史萊姆", "en": "Slime", "zh_CN": "史莱姆", "ja": "スライム", "ko": "슬라임", "es": "Limo" },
     "sprite": "slime.png",
     "hp": 48, "body": 1,
@@ -11,6 +12,7 @@
     "atk_interval_ms": 1000
   },
   "bat": {
+    "attacks": [{"pose": "lunge", "answer": "tap"}],
     "name": { "zh_TW": "暗影蝙蝠", "en": "Shadow Bat", "zh_CN": "暗影蝙蝠", "ja": "影のコウモリ", "ko": "그림자 박쥐", "es": "Murciélago Sombrío" },
     "sprite": "bat.png",
     "hp": 36, "body": 1,
@@ -22,6 +24,7 @@
     "moves": ["strike", "jabs"]
   },
   "golem": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 25}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 15}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "noGuard": true, "chance": 15}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 15}, {"pose": "cast", "answer": "move", "waves": 3, "chance": 15}, {"pose": "slam", "answer": "taps", "need": 5, "chance": 8}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 7}],
     "bossTier": "mini",
     "big": true,
     "name": { "zh_TW": "石巨人", "en": "Stone Golem", "zh_CN": "石巨人", "ja": "石の巨人", "ko": "돌 거인", "es": "Gólem de Piedra" },
@@ -37,6 +40,7 @@
     "events": [{ "on": "hpBelow", "value": 50, "do": [{ "say": "battle.event.golem_runes" }, { "stat": "atk", "mul": 1.3 }, { "anim": "special" }] }]
   },
   "skeleton": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}],
     "name": { "zh_TW": "骷髏兵", "en": "Skeleton Soldier", "zh_CN": "骷髅兵", "ja": "骸骨兵", "ko": "해골 병사", "es": "Soldado Esqueleto" },
     "sprite": "skeleton.png",
     "hp": 80, "body": 2,
@@ -48,6 +52,7 @@
     "moves": [{ "id": "strike", "weight": 2 }, "heavy"]
   },
   "wraith": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "cast", "answer": "move", "waves": 2, "chance": 35}],
     "name": { "zh_TW": "怨靈", "en": "Wraith", "zh_CN": "怨灵", "ja": "怨霊", "ko": "원령", "es": "Espectro" },
     "sprite": "wraith.png",
     "hp": 110, "body": 2,
@@ -59,6 +64,7 @@
     "moves": ["strike", "spell"]
   },
   "demon": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "cast", "answer": "move", "waves": 2, "chance": 35}],
     "name": { "zh_TW": "小惡魔", "en": "Imp", "zh_CN": "小恶魔", "ja": "小悪魔", "ko": "임프", "es": "Diablillo" },
     "sprite": "demon.png",
     "hp": 180, "body": 2,
@@ -70,6 +76,7 @@
     "moves": ["strike", "heavy", "spell"]
   },
   "demonlord_vorkath": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 25}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 15}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "noGuard": true, "chance": 15}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 15}, {"pose": "cast", "answer": "move", "waves": 3, "chance": 15}, {"pose": "slam", "answer": "taps", "need": 5, "chance": 8}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 7}],
     "bossTier": "final",
     "name": { "zh_TW": "Vorkath 沃卡司", "en": "Vorkath", "zh_CN": "Vorkath 沃卡司", "ja": "Vorkath", "ko": "Vorkath", "es": "Vorkath" },
     "sprite": "m_demonlord_vorkath.png",
@@ -89,6 +96,7 @@
     "events": [{ "on": "hpBelow", "value": 50, "do": [{ "say": "battle.event.boss_rage" }, { "stat": "interval", "mul": 0.8 }, { "anim": "special" }] }]
   },
   "vorkath_king": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 25}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 15}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "noGuard": true, "chance": 15}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 15}, {"pose": "cast", "answer": "move", "waves": 3, "chance": 15}, {"pose": "slam", "answer": "taps", "need": 5, "chance": 8}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 7}],
     "bossTier": "final",
     "name": {
       "zh_TW": "巫師王沃卡司",
@@ -133,6 +141,7 @@
     "_boss": "chapter 7's F33 boss (docs/gameplay/23 §4): Vorkath, who sealed the Star; not \"boss\": true (that ends the old story)"
   },
   "mossling": {
+    "attacks": [{"pose": "lunge", "answer": "tap"}],
     "name": { "zh_TW": "苔蘚球", "en": "Mossling" },
     "sprite": "m_mossling.png",
     "hp": 40, "body": 1,
@@ -144,6 +153,7 @@
     "draft": true
   },
   "sprout_imp": {
+    "attacks": [{"pose": "lunge", "answer": "tap"}],
     "name": { "zh_TW": "芽苗小鬼", "en": "Sprout Imp" },
     "sprite": "m_sprout_imp.png",
     "hp": 42, "body": 1,
@@ -155,6 +165,7 @@
     "draft": true
   },
   "thorn_boar": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "tell": true}],
     "name": { "zh_TW": "荊棘野豬", "en": "Thorn Boar" },
     "sprite": "m_thorn_boar.png",
     "hp": 46, "body": 1,
@@ -166,6 +177,7 @@
     "draft": true
   },
   "forest_wolf": {
+    "attacks": [{"pose": "lunge", "answer": "tap"}],
     "name": { "zh_TW": "森林狼", "en": "Forest Wolf" },
     "moves": ["strike", "triple_bite"],
     "sprite": "m_forest_wolf.png",
@@ -178,6 +190,7 @@
     "draft": true
   },
   "horn_beetle": {
+    "attacks": [{"pose": "lunge", "answer": "tap"}],
     "name": { "zh_TW": "角甲蟲", "en": "Horn Beetle" },
     "sprite": "m_horn_beetle.png",
     "hp": 48, "body": 1,
@@ -189,6 +202,7 @@
     "draft": true
   },
   "toadstool": {
+    "attacks": [{"pose": "lunge", "answer": "tap"}],
     "name": { "zh_TW": "毒蕈怪", "en": "Toadstool" },
     "sprite": "m_toadstool.png",
     "hp": 44, "body": 1,
@@ -200,6 +214,7 @@
     "draft": true
   },
   "vine_snake": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "tell": true}],
     "name": { "zh_TW": "藤蔓蛇", "en": "Vine Snake" },
     "sprite": "m_vine_snake.png",
     "hp": 48, "body": 1,
@@ -211,6 +226,7 @@
     "draft": true
   },
   "bear_cub": {
+    "attacks": [{"pose": "lunge", "answer": "tap"}],
     "name": { "zh_TW": "暴躁小熊", "en": "Bear Cub" },
     "sprite": "m_bear_cub.png",
     "hp": 46, "body": 1,
@@ -222,6 +238,7 @@
     "draft": true
   },
   "pixie": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "tell": true}],
     "name": { "zh_TW": "惡作劇妖精", "en": "Trickster Pixie" },
     "sprite": "m_pixie.png",
     "hp": 48, "body": 1,
@@ -233,6 +250,7 @@
     "draft": true
   },
   "bandit": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "tell": true}],
     "name": { "zh_TW": "森林盜賊", "en": "Forest Bandit" },
     "sprite": "m_bandit.png",
     "hp": 50, "body": 1,
@@ -244,6 +262,7 @@
     "draft": true
   },
   "red_bat": {
+    "attacks": [{"pose": "lunge", "answer": "tap"}],
     "name": { "zh_TW": "赤洞蝙蝠", "en": "Red Cave Bat" },
     "sprite": "m_red_bat.png",
     "hp": 54, "body": 1,
@@ -255,6 +274,7 @@
     "draft": true
   },
   "rock_crab": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}],
     "name": { "zh_TW": "岩殼蟹", "en": "Rock Crab" },
     "sprite": "m_rock_crab.png",
     "hp": 84, "body": 2,
@@ -266,6 +286,7 @@
     "draft": true
   },
   "mole_miner": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}],
     "name": { "zh_TW": "鼴鼠礦工", "en": "Mole Miner" },
     "sprite": "m_mole_miner.png",
     "hp": 88, "body": 2,
@@ -277,6 +298,7 @@
     "draft": true
   },
   "crystal_spider": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}],
     "name": { "zh_TW": "水晶蜘蛛", "en": "Crystal Spider" },
     "sprite": "m_crystal_spider.png",
     "hp": 96, "body": 2,
@@ -288,6 +310,7 @@
     "draft": true
   },
   "cave_troll": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}],
     "name": { "zh_TW": "洞穴巨魔", "en": "Cave Troll" },
     "sprite": "m_cave_troll.png",
     "hp": 102, "body": 2,
@@ -299,6 +322,7 @@
     "draft": true
   },
   "gem_slime": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}],
     "name": { "zh_TW": "寶石史萊姆", "en": "Gem Slime" },
     "sprite": "m_gem_slime.png",
     "hp": 92, "body": 2,
@@ -310,6 +334,7 @@
     "draft": true
   },
   "kobold": {
+    "attacks": [{"pose": "lunge", "answer": "tap"}],
     "name": { "zh_TW": "狗頭人斥候", "en": "Kobold Scout" },
     "sprite": "m_kobold.png",
     "hp": 52, "body": 1,
@@ -321,6 +346,7 @@
     "draft": true
   },
   "stone_lizard": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}],
     "name": { "zh_TW": "石鱗蜥蜴", "en": "Stone Lizard" },
     "sprite": "m_stone_lizard.png",
     "hp": 98, "body": 2,
@@ -332,6 +358,7 @@
     "draft": true
   },
   "glow_worm": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "cast", "answer": "move", "waves": 2, "chance": 35}],
     "name": { "zh_TW": "螢光蠕蟲", "en": "Glow Worm" },
     "sprite": "m_glow_worm.png",
     "hp": 96, "body": 2,
@@ -343,6 +370,7 @@
     "draft": true
   },
   "ore_golem": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 20}, {"pose": "slam", "answer": "taps", "need": 4, "chance": 10}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 8}],
     "name": { "zh_TW": "礦石魔像", "en": "Ore Golem" },
     "moves": ["strike", "heavy", "ground_pound"],
     "sprite": "m_ore_golem.png",
@@ -355,6 +383,7 @@
     "draft": true
   },
   "zombie": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}],
     "name": { "zh_TW": "殭屍", "en": "Zombie" },
     "sprite": "m_zombie.png",
     "hp": 100, "body": 2,
@@ -366,6 +395,7 @@
     "draft": true
   },
   "ghost_maiden": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "cast", "answer": "move", "waves": 2, "chance": 35}],
     "name": { "zh_TW": "幽魂少女", "en": "Ghost Maiden" },
     "sprite": "m_ghost_maiden.png",
     "hp": 102, "body": 2,
@@ -377,6 +407,7 @@
     "draft": true
   },
   "bone_archer": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}],
     "name": { "zh_TW": "骸骨弓手", "en": "Bone Archer" },
     "sprite": "m_bone_archer.png",
     "hp": 108, "body": 2,
@@ -388,6 +419,7 @@
     "draft": true
   },
   "mummy": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}],
     "name": { "zh_TW": "木乃伊", "en": "Mummy" },
     "sprite": "m_mummy.png",
     "hp": 104, "body": 2,
@@ -399,6 +431,7 @@
     "draft": true
   },
   "vampire_bat": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}],
     "name": { "zh_TW": "吸血蝙蝠", "en": "Vampire Bat" },
     "moves": ["strike", "frenzy"],
     "sprite": "m_vampire_bat.png",
@@ -411,6 +444,7 @@
     "draft": true
   },
   "ghoul": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}],
     "name": { "zh_TW": "食屍鬼", "en": "Ghoul" },
     "sprite": "m_ghoul.png",
     "hp": 112, "body": 2,
@@ -422,6 +456,7 @@
     "draft": true
   },
   "lich": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "cast", "answer": "move", "waves": 2, "chance": 35}],
     "name": { "zh_TW": "巫妖學徒", "en": "Lich Apprentice" },
     "moves": ["strike", "spell", "doom_seal"],
     "sprite": "m_lich.png",
@@ -434,6 +469,7 @@
     "draft": true
   },
   "skull_knight": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}],
     "name": { "zh_TW": "骷髏騎士", "en": "Skull Knight" },
     "sprite": "m_skull_knight.png",
     "hp": 120, "body": 2,
@@ -445,6 +481,7 @@
     "draft": true
   },
   "banshee": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "cast", "answer": "move", "waves": 2, "chance": 35}],
     "name": { "zh_TW": "報喪女妖", "en": "Banshee" },
     "sprite": "m_banshee.png",
     "hp": 114, "body": 2,
@@ -456,6 +493,7 @@
     "draft": true
   },
   "grave_rat": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}],
     "name": { "zh_TW": "墓穴巨鼠", "en": "Grave Rat" },
     "sprite": "m_grave_rat.png",
     "hp": 92, "body": 2,
@@ -467,6 +505,7 @@
     "draft": true
   },
   "salamander": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}],
     "name": { "zh_TW": "火蜥蜴", "en": "Fire Salamander" },
     "sprite": "m_salamander.png",
     "hp": 120, "body": 2,
@@ -478,6 +517,7 @@
     "draft": true
   },
   "magma_slime": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}],
     "name": { "zh_TW": "熔岩史萊姆", "en": "Magma Slime" },
     "sprite": "m_magma_slime.png",
     "hp": 124, "body": 2,
@@ -489,6 +529,7 @@
     "draft": true
   },
   "fire_imp": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "cast", "answer": "move", "waves": 2, "chance": 35}],
     "name": { "zh_TW": "火焰小鬼", "en": "Fire Imp" },
     "sprite": "m_fire_imp.png",
     "hp": 130, "body": 2,
@@ -500,6 +541,7 @@
     "draft": true
   },
   "ember_wolf": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}],
     "name": { "zh_TW": "餘燼狼", "en": "Ember Wolf" },
     "sprite": "m_ember_wolf.png",
     "hp": 136, "body": 2,
@@ -511,6 +553,7 @@
     "draft": true
   },
   "flame_spirit": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "cast", "answer": "move", "waves": 2, "chance": 35}],
     "name": { "zh_TW": "火焰精靈", "en": "Flame Spirit" },
     "sprite": "m_flame_spirit.png",
     "hp": 146, "body": 2,
@@ -522,6 +565,7 @@
     "draft": true
   },
   "lava_golem": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}],
     "name": { "zh_TW": "熔岩魔像", "en": "Lava Golem" },
     "sprite": "m_lava_golem.png",
     "hp": 140, "body": 2,
@@ -533,6 +577,7 @@
     "draft": true
   },
   "fire_drake": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}],
     "name": { "zh_TW": "火焰飛龍", "en": "Fire Drake" },
     "sprite": "m_fire_drake.png",
     "hp": 148, "body": 2,
@@ -544,6 +589,7 @@
     "draft": true
   },
   "ash_wraith": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "cast", "answer": "move", "waves": 2, "chance": 35}],
     "name": { "zh_TW": "灰燼怨靈", "en": "Ash Wraith" },
     "sprite": "m_ash_wraith.png",
     "hp": 138, "body": 2,
@@ -555,6 +601,7 @@
     "draft": true
   },
   "phoenix_chick": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}],
     "name": { "zh_TW": "雛鳳凰", "en": "Phoenix Chick" },
     "sprite": "m_phoenix_chick.png",
     "hp": 144, "body": 2,
@@ -566,6 +613,7 @@
     "draft": true
   },
   "cinder_beetle": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}],
     "name": { "zh_TW": "灰燼甲蟲", "en": "Cinder Beetle" },
     "sprite": "m_cinder_beetle.png",
     "hp": 132, "body": 2,
@@ -577,6 +625,7 @@
     "draft": true
   },
   "ice_golem": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 20}, {"pose": "slam", "answer": "taps", "need": 4, "chance": 10}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 8}],
     "name": { "zh_TW": "冰魔像", "en": "Ice Golem" },
     "sprite": "m_ice_golem.png",
     "hp": 176, "body": 3,
@@ -588,6 +637,7 @@
     "draft": true
   },
   "frost_wolf": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 20}, {"pose": "slam", "answer": "taps", "need": 4, "chance": 10}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 8}],
     "name": { "zh_TW": "霜狼", "en": "Frost Wolf" },
     "sprite": "m_frost_wolf.png",
     "hp": 152, "body": 3,
@@ -599,6 +649,7 @@
     "draft": true
   },
   "yeti": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 20}, {"pose": "slam", "answer": "taps", "need": 4, "chance": 10}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 8}],
     "name": { "zh_TW": "雪怪", "en": "Yeti" },
     "sprite": "m_yeti.png",
     "hp": 170, "body": 3,
@@ -610,6 +661,7 @@
     "draft": true
   },
   "ice_slime": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}],
     "name": { "zh_TW": "冰史萊姆", "en": "Ice Slime" },
     "sprite": "m_ice_slime.png",
     "hp": 146, "body": 2,
@@ -621,6 +673,7 @@
     "draft": true
   },
   "frost_fairy": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 20}, {"pose": "slam", "answer": "taps", "need": 4, "chance": 10}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 8}, {"pose": "cast", "answer": "move", "waves": 3, "chance": 35}],
     "name": { "zh_TW": "霜之妖精", "en": "Frost Fairy" },
     "sprite": "m_frost_fairy.png",
     "hp": 164, "body": 3,
@@ -632,6 +685,7 @@
     "draft": true
   },
   "penguin_knight": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 20}, {"pose": "slam", "answer": "taps", "need": 4, "chance": 10}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 8}],
     "name": { "zh_TW": "企鵝騎士", "en": "Penguin Knight" },
     "sprite": "m_penguin_knight.png",
     "hp": 158, "body": 3,
@@ -643,6 +697,7 @@
     "draft": true
   },
   "ice_wraith": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 20}, {"pose": "slam", "answer": "taps", "need": 4, "chance": 10}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 8}, {"pose": "cast", "answer": "move", "waves": 3, "chance": 35}],
     "name": { "zh_TW": "冰之怨靈", "en": "Ice Wraith" },
     "sprite": "m_ice_wraith.png",
     "hp": 166, "body": 3,
@@ -654,6 +709,7 @@
     "draft": true
   },
   "mammoth": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 20}, {"pose": "slam", "answer": "taps", "need": 4, "chance": 10}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 8}],
     "name": { "zh_TW": "小長毛象", "en": "Mammoth Calf" },
     "sprite": "m_mammoth.png",
     "hp": 180, "body": 3,
@@ -665,6 +721,7 @@
     "draft": true
   },
   "crystal_serpent": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 20}, {"pose": "slam", "answer": "taps", "need": 4, "chance": 10}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 8}],
     "name": { "zh_TW": "冰晶巨蛇", "en": "Crystal Serpent" },
     "sprite": "m_crystal_serpent.png",
     "hp": 174, "body": 3,
@@ -676,6 +733,7 @@
     "draft": true
   },
   "blizzard_owl": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 20}, {"pose": "slam", "answer": "taps", "need": 4, "chance": 10}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 8}, {"pose": "cast", "answer": "move", "waves": 3, "chance": 35}],
     "name": { "zh_TW": "暴雪貓頭鷹", "en": "Blizzard Owl" },
     "sprite": "m_blizzard_owl.png",
     "hp": 160, "body": 3,
@@ -687,6 +745,7 @@
     "draft": true
   },
   "dark_knight": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 20}, {"pose": "slam", "answer": "taps", "need": 4, "chance": 10}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 8}],
     "name": { "zh_TW": "黑暗騎士", "en": "Dark Knight" },
     "sprite": "m_dark_knight.png",
     "hp": 176, "body": 3,
@@ -698,6 +757,7 @@
     "draft": true
   },
   "gargoyle": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 20}, {"pose": "slam", "answer": "taps", "need": 4, "chance": 10}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 8}],
     "name": { "zh_TW": "石像鬼", "en": "Gargoyle" },
     "sprite": "m_gargoyle.png",
     "hp": 160, "body": 3,
@@ -709,6 +769,7 @@
     "draft": true
   },
   "demon_guard": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 20}, {"pose": "slam", "answer": "taps", "need": 4, "chance": 10}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 8}],
     "name": { "zh_TW": "惡魔守衛", "en": "Demon Guard" },
     "sprite": "m_demon_guard.png",
     "hp": 184, "body": 3,
@@ -720,6 +781,7 @@
     "draft": true
   },
   "shadow_assassin": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}],
     "name": { "zh_TW": "暗影刺客", "en": "Shadow Assassin" },
     "sprite": "m_shadow_assassin.png",
     "hp": 110, "body": 2,
@@ -731,6 +793,7 @@
     "draft": true
   },
   "chimera": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 20}, {"pose": "slam", "answer": "taps", "need": 4, "chance": 10}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 8}],
     "name": { "zh_TW": "奇美拉", "en": "Chimera" },
     "sprite": "m_chimera.png",
     "hp": 192, "body": 3,
@@ -742,6 +805,7 @@
     "draft": true
   },
   "minotaur": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 20}, {"pose": "slam", "answer": "taps", "need": 4, "chance": 10}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 8}],
     "name": { "zh_TW": "牛頭人", "en": "Minotaur" },
     "sprite": "m_minotaur.png",
     "hp": 190, "body": 3,
@@ -753,6 +817,7 @@
     "draft": true
   },
   "dark_mage": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 20}, {"pose": "slam", "answer": "taps", "need": 4, "chance": 10}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 8}, {"pose": "cast", "answer": "move", "waves": 3, "chance": 35}],
     "name": { "zh_TW": "黑暗法師", "en": "Dark Mage" },
     "sprite": "m_dark_mage.png",
     "hp": 186, "body": 3,
@@ -764,6 +829,7 @@
     "draft": true
   },
   "hellhound": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 20}, {"pose": "slam", "answer": "taps", "need": 4, "chance": 10}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 8}],
     "name": { "zh_TW": "地獄犬", "en": "Hellhound" },
     "sprite": "m_hellhound.png",
     "hp": 198, "body": 3,
@@ -775,6 +841,7 @@
     "draft": true
   },
   "armored_ogre": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 20}, {"pose": "slam", "answer": "taps", "need": 4, "chance": 10}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 8}],
     "name": { "zh_TW": "鐵甲食人魔", "en": "Armored Ogre" },
     "sprite": "m_armored_ogre.png",
     "hp": 204, "body": 3,
@@ -786,6 +853,7 @@
     "draft": true
   },
   "demon_general": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 20}, {"pose": "slam", "answer": "taps", "need": 4, "chance": 10}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 8}],
     "name": { "zh_TW": "惡魔將軍", "en": "Demon General" },
     "sprite": "m_demon_general.png",
     "hp": 212, "body": 3,
@@ -797,6 +865,7 @@
     "draft": true
   },
   "sproutle": {
+    "attacks": [{"pose": "lunge", "answer": "tap"}],
     "name": { "zh_TW": "芽球", "en": "Sproutle" },
     "sprite": "slime.png",
     "look": "moss",
@@ -809,6 +878,7 @@
     "draft": true
   },
   "mossbun": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}],
     "name": { "zh_TW": "苔兔", "en": "Mossbun" },
     "sprite": "slime.png",
     "look": "moss",
@@ -822,6 +892,7 @@
     "draft": true
   },
   "thicketoad": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 25}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 15}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "noGuard": true, "chance": 15}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 15}, {"pose": "cast", "answer": "move", "waves": 3, "chance": 15}, {"pose": "slam", "answer": "taps", "need": 5, "chance": 8}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 7}],
     "bossTier": "mini",
     "intro": true,
     "name": { "zh_TW": "苔蛙", "en": "Thicketoad" },
@@ -840,6 +911,7 @@
     "draft": true
   },
   "capling": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "tell": true}],
     "name": { "zh_TW": "蘑菇仔", "en": "Capling", "zh_CN": "蘑菇仔", "ja": "キノコっこ", "ko": "버섯돌이", "es": "Setita" },
     "sprite": "m_capling.png",
     "look": "critters",
@@ -852,6 +924,7 @@
     "_new": "F01's new monster, painted from monster_concepts shroom_2 (the owner, 2026-11-14)"
   },
   "buzzlet": {
+    "attacks": [{"pose": "lunge", "answer": "tap"}],
     "name": { "zh_TW": "嗡嗡蜂", "en": "Buzzlet", "zh_CN": "嗡嗡蜂", "ja": "ブンブンバチ", "ko": "붕붕벌", "es": "Zumbita" },
     "sprite": "m_buzzlet.png",
     "look": "critters",
@@ -865,6 +938,7 @@
     "_new": "F02's new monster, painted from monster_concepts honey_2 (the owner, 2026-11-14)"
   },
   "tartling": {
+    "attacks": [{"pose": "lunge", "answer": "tap"}],
     "name": { "zh_TW": "莓果塔塔", "en": "Tartling", "zh_CN": "莓果塔塔", "ja": "ベリータルト", "ko": "딸기 타르트", "es": "Tartita" },
     "sprite": "m_tartling.png",
     "look": "critters",
@@ -877,6 +951,7 @@
     "_new": "F03's new monster, painted from monster_concepts sweet_2 (the owner, 2026-11-14)"
   },
   "bubbloon": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "tell": true}],
     "name": { "zh_TW": "泡泡水母", "en": "Bubbloon", "zh_CN": "泡泡水母", "ja": "アワクラゲ", "ko": "방울 해파리", "es": "Burbujelly" },
     "sprite": "m_bubbloon.png",
     "look": "critters",
@@ -889,6 +964,7 @@
     "_new": "F04's new monster, painted from monster_concepts tide_2 (the owner, 2026-11-14)"
   },
   "mittenpip": {
+    "attacks": [{"pose": "lunge", "answer": "tap"}],
     "name": { "zh_TW": "圍巾企鵝", "en": "Mittenpip", "zh_CN": "围巾企鹅", "ja": "マフラーペンギン", "ko": "목도리 펭귄", "es": "Pingüifanda" },
     "sprite": "m_mittenpip.png",
     "look": "critters",
@@ -901,6 +977,7 @@
     "_new": "F05's new monster, painted from monster_concepts frost_2 (the owner, 2026-11-14)"
   },
   "bonekit": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "tell": true}],
     "name": { "zh_TW": "骷髏貓", "en": "Bonekit", "zh_CN": "骷髅猫", "ja": "ホネネコ", "ko": "해골 고양이", "es": "Gatohueso" },
     "sprite": "m_bonekit.png",
     "look": "critters",
@@ -913,6 +990,7 @@
     "_new": "F06's new monster, painted from monster_concepts ghost_2 (the owner, 2026-11-14)"
   },
   "geodillo": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}],
     "name": { "zh_TW": "晶甲犰狳", "en": "Geodillo", "zh_CN": "晶甲犰狳", "ja": "ジオディロ", "ko": "수정 아르마딜로", "es": "Geodillo" },
     "sprite": "m_geodillo.png",
     "look": "critters",
@@ -925,6 +1003,7 @@
     "_new": "F07's new monster, painted from monster_concepts stone_2 (the owner, 2026-11-14)"
   },
   "stormlet": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 45}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 30}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "chance": 25}, {"pose": "cast", "answer": "move", "waves": 2, "chance": 35}],
     "name": { "zh_TW": "雷雲羊", "en": "Stormlet", "zh_CN": "雷云羊", "ja": "カミナリヒツジ", "ko": "번개구름 양", "es": "Ovejatormenta" },
     "sprite": "m_stormlet.png",
     "look": "critters",
@@ -938,6 +1017,7 @@
     "_new": "F08's new monster, painted from monster_concepts storm_2 (the owner, 2026-11-14)"
   },
   "tomebat": {
+    "attacks": [{"pose": "lunge", "answer": "tap"}],
     "name": { "zh_TW": "書頁蝙蝠", "en": "Tomebat", "zh_CN": "书页蝙蝠", "ja": "ショモツコウモリ", "ko": "책 박쥐", "es": "Murcilibro" },
     "sprite": "m_tomebat.png",
     "look": "critters",
@@ -951,6 +1031,7 @@
     "_new": "F09's new monster, painted from monster_concepts book_2 (the owner, 2026-11-14)"
   },
   "murkitten": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "tell": true}],
     "name": { "zh_TW": "夜影貓", "en": "Murkitten", "zh_CN": "夜影猫", "ja": "ヨカゲネコ", "ko": "밤그림자 고양이", "es": "Gatonoche" },
     "sprite": "m_murkitten.png",
     "look": "critters",
@@ -963,6 +1044,7 @@
     "_new": "F10's new monster, painted from monster_concepts night_2 (the owner, 2026-11-14)"
   },
   "hivebear": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 25}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 15}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "noGuard": true, "chance": 15}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 15}, {"pose": "cast", "answer": "move", "waves": 3, "chance": 15}, {"pose": "slam", "answer": "taps", "need": 5, "chance": 8}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 7}],
     "bossTier": "stage",
     "name": { "zh_TW": "蜂巢熊", "en": "Hivebear", "zh_CN": "蜂巢熊", "ja": "ハイブベア", "ko": "벌집곰", "es": "Osopanal" },
     "sprite": "m_hivebear.png",
@@ -983,6 +1065,7 @@
     "_boss": "F01's boss, beside its up stairs (the owner, 2026-11-13)"
   },
   "fungolem": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 25}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 15}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "noGuard": true, "chance": 15}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 15}, {"pose": "cast", "answer": "move", "waves": 3, "chance": 15}, {"pose": "slam", "answer": "taps", "need": 5, "chance": 8}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 7}],
     "bossTier": "stage",
     "name": { "zh_TW": "蕈菇巨像", "en": "Fungolem", "zh_CN": "蕈菇巨像", "ja": "キノコゴーレム", "ko": "버섯 골렘", "es": "Fungólem" },
     "sprite": "m_fungolem.png",
@@ -1003,6 +1086,7 @@
     "_boss": "F02's boss, beside its up stairs (the owner, 2026-11-13)"
   },
   "cragtortle": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 25}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 15}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "noGuard": true, "chance": 15}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 15}, {"pose": "cast", "answer": "move", "waves": 3, "chance": 15}, {"pose": "slam", "answer": "taps", "need": 5, "chance": 8}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 7}],
     "bossTier": "stage",
     "name": { "zh_TW": "晶岩龜", "en": "Cragtortle", "zh_CN": "晶岩龟", "ja": "クリスタルガメ", "ko": "수정바위거북", "es": "Tortucristal" },
     "sprite": "m_cragtortle.png",
@@ -1023,6 +1107,7 @@
     "_boss": "F03's boss, beside its up stairs (the owner, 2026-11-13)"
   },
   "buried_colossus": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 25}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 15}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "noGuard": true, "chance": 15}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 15}, {"pose": "cast", "answer": "move", "waves": 3, "chance": 15}, {"pose": "slam", "answer": "taps", "need": 5, "chance": 8}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 7}],
     "bossTier": "stage",
     "name": { "zh_TW": "沉睡的巨像", "en": "The Sleeping Colossus", "zh_CN": "晶岩龟", "ja": "クリスタルガメ", "ko": "수정바위거북", "es": "Tortucristal" },
     "sprite": "m_cragtortle.png",
@@ -1043,6 +1128,7 @@
     "_boss": "chapter 4's boss, F20 (the story revamp, docs/gameplay/23 §4): a Buried One woken too early; a stronger Cragtortle"
   },
   "grimoox": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 25}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 15}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "noGuard": true, "chance": 15}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 15}, {"pose": "cast", "answer": "move", "waves": 3, "chance": 15}, {"pose": "slam", "answer": "taps", "need": 5, "chance": 8}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 7}],
     "bossTier": "stage",
     "name": { "zh_TW": "魔典牛", "en": "Grimoox", "zh_CN": "魔典牛", "ja": "グリモックス", "ko": "마도서 황소", "es": "Grimobuey" },
     "sprite": "m_grimoox.png",
@@ -1063,6 +1149,7 @@
     "_boss": "F04's boss, beside its up stairs (the owner, 2026-11-13)"
   },
   "grimoox_warden": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 25}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 15}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "noGuard": true, "chance": 15}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 15}, {"pose": "cast", "answer": "move", "waves": 3, "chance": 15}, {"pose": "slam", "answer": "taps", "need": 5, "chance": 8}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 7}],
     "bossTier": "stage",
     "name": { "zh_TW": "魔典守衛", "en": "Grimoire Warden", "zh_CN": "魔典牛", "ja": "グリモックス", "ko": "마도서 황소", "es": "Grimobuey" },
     "sprite": "m_grimoox.png",
@@ -1083,6 +1170,7 @@
     "_boss": "chapter 3's boss, F15 (the story revamp, docs/gameplay/23 §4): a stronger Grimoox"
   },
   "gravewarden": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 25}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 15}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "noGuard": true, "chance": 15}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 15}, {"pose": "cast", "answer": "move", "waves": 3, "chance": 15}, {"pose": "slam", "answer": "taps", "need": 5, "chance": 8}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 7}],
     "bossTier": "stage",
     "name": { "zh_TW": "守墓骷髏騎士", "en": "Gravewarden", "zh_CN": "守墓骷髅骑士", "ja": "墓守の骸骨騎士", "ko": "묘지기 해골 기사", "es": "Guardatumbas" },
     "sprite": "m_gravewarden.png",
@@ -1103,6 +1191,7 @@
     "_boss": "F05's boss, beside its up stairs (the owner, 2026-11-13)"
   },
   "hollow_god": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 25}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 15}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "noGuard": true, "chance": 15}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 15}, {"pose": "cast", "answer": "move", "waves": 3, "chance": 15}, {"pose": "slam", "answer": "taps", "need": 5, "chance": 8}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 7}],
     "bossTier": "stage",
     "name": {
       "zh_TW": "空洞之神",
@@ -1131,6 +1220,7 @@
     "_boss": "chapter 7's last boss, F35 (docs/gameplay/23 §4): the old god's shape at the Star; the Gravewarden's look for now"
   },
   "hearthound": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 25}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 15}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "noGuard": true, "chance": 15}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 15}, {"pose": "cast", "answer": "move", "waves": 3, "chance": 15}, {"pose": "slam", "answer": "taps", "need": 5, "chance": 8}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 7}],
     "bossTier": "stage",
     "name": { "zh_TW": "爐火狐", "en": "Hearthound", "zh_CN": "炉火狐", "ja": "かまどギツネ", "ko": "화덕여우", "es": "Zorrohogar" },
     "sprite": "m_hearthound.png",
@@ -1151,6 +1241,7 @@
     "_boss": "F06's boss, beside its up stairs (the owner, 2026-11-13)"
   },
   "sphinxie": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 25}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 15}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "noGuard": true, "chance": 15}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 15}, {"pose": "cast", "answer": "move", "waves": 3, "chance": 15}, {"pose": "slam", "answer": "taps", "need": 5, "chance": 8}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 7}],
     "bossTier": "stage",
     "name": { "zh_TW": "小斯芬克斯", "en": "Sphinxie", "zh_CN": "小斯芬克斯", "ja": "ちびスフィンクス", "ko": "꼬마 스핑크스", "es": "Esfingita" },
     "sprite": "m_sphinxie.png",
@@ -1171,6 +1262,7 @@
     "_boss": "F07's boss, beside its up stairs (the owner, 2026-11-13)"
   },
   "glacibear": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 25}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 15}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "noGuard": true, "chance": 15}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 15}, {"pose": "cast", "answer": "move", "waves": 3, "chance": 15}, {"pose": "slam", "answer": "taps", "need": 5, "chance": 8}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 7}],
     "bossTier": "stage",
     "name": { "zh_TW": "冰晶熊", "en": "Glacibear", "zh_CN": "冰晶熊", "ja": "氷晶グマ", "ko": "빙정곰", "es": "Osoglacial" },
     "sprite": "m_glacibear.png",
@@ -1191,6 +1283,7 @@
     "_boss": "F08's boss, beside its up stairs (the owner, 2026-11-13)"
   },
   "astrowl": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 25}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 15}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "noGuard": true, "chance": 15}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 15}, {"pose": "cast", "answer": "move", "waves": 3, "chance": 15}, {"pose": "slam", "answer": "taps", "need": 5, "chance": 8}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 7}],
     "bossTier": "stage",
     "name": { "zh_TW": "星辰梟法師", "en": "Astrowl", "zh_CN": "星辰枭法师", "ja": "星読みフクロウ", "ko": "별빛 부엉이 마법사", "es": "Astrobúho" },
     "sprite": "m_astrowl.png",
@@ -1211,6 +1304,7 @@
     "_boss": "F09's boss, beside its up stairs (the owner, 2026-11-13)"
   },
   "sanctum_warden": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 25}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 15}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "noGuard": true, "chance": 15}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 15}, {"pose": "cast", "answer": "move", "waves": 3, "chance": 15}, {"pose": "slam", "answer": "taps", "need": 5, "chance": 8}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 7}],
     "bossTier": "stage",
     "name": {
       "zh_TW": "神殿守衛",
@@ -1239,6 +1333,7 @@
     "_boss": "chapter 6's boss, F30 (the story revamp, docs/gameplay/23 §4): it guards the parents' cage; the Astrowl's look for now"
   },
   "chronoknight": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 25}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 15}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "noGuard": true, "chance": 15}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 15}, {"pose": "cast", "answer": "move", "waves": 3, "chance": 15}, {"pose": "slam", "answer": "taps", "need": 5, "chance": 8}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 7}],
     "bossTier": "stage",
     "name": { "zh_TW": "時計騎士", "en": "Chronoknight", "zh_CN": "时钟骑士", "ja": "クロノナイト", "ko": "시계 기사", "es": "Cronocaballero" },
     "sprite": "m_chronoknight.png",
@@ -1259,6 +1354,7 @@
     "_boss": "F10's boss, beside its up stairs (the owner, 2026-11-13)"
   },
   "grey_mask": {
+    "attacks": [{"pose": "lunge", "answer": "dodge", "dodge": "right", "chance": 25}, {"pose": "sweep_low", "answer": "dodge", "dodge": "up", "chance": 15}, {"pose": "sweep_high", "answer": "dodge", "dodge": "down", "noGuard": true, "chance": 15}, {"pose": "slam", "answer": "guard", "noDodge": true, "chance": 15}, {"pose": "cast", "answer": "move", "waves": 3, "chance": 15}, {"pose": "slam", "answer": "taps", "need": 5, "chance": 8}, {"pose": "cast", "answer": "shape", "shape": "circle", "chance": 7}],
     "bossTier": "stage",
     "name": { "zh_TW": "灰面", "en": "Grey Mask", "zh_CN": "时钟骑士", "ja": "クロノナイト", "ko": "시계 기사", "es": "Cronocaballero" },
     "sprite": "m_chronoknight.png",

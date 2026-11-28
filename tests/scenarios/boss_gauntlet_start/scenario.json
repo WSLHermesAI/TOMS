@@ -1,5 +1,5 @@
 {
-  "_comment": "A boss's fight as a sequence (docs/gameplay/25_BOSS_GAUNTLET.md): bumping into F01's floor boss (the hivebear) starts its guards first, one at a time: the floor's other monster kinds in the map's order (capling, mossling, bat), then the boss -- four fights, the first a capling alone.",
+  "_comment": "A boss's fight as a sequence (docs/gameplay/25_BOSS_GAUNTLET.md): bumping into F01's floor boss (the hivebear) starts its guards first, in rounds of 1, 2 and 4 (docs/gameplay/27 §3.3) made from the floor's other monster kinds in the map's order (capling, mossling, bat), then the boss -- four fights, the first a capling alone.",
   "scene": "stage",
   "stage": "F01",
   "player": {

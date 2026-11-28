@@ -1,0 +1,7 @@
+{
+  "_comment": "A climb cleared (docs/gameplay/27 §3.1): the first challenge (on chapter 1's floors, opened by chapter 1 cleared) climbed and cleared: the tally (cleared), the chapter marked cleared, the rank's and the challenge's crystals.",
+  "scene": "climb",
+  "climb": { "chapter": "c_01", "cleared": ["ch_01"], "end": "cleared" },
+  "test": { "frames": 30 },
+  "expect": { "scene": "climb", "stage": "F01", "tower": { "end": "cleared", "cleared": ["ch_01", "c_01"] } }
+}

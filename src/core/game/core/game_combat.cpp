@@ -52,7 +52,7 @@ void Game::f_StartCombat(const EnemyInst& l_oE, const std::vector<EnemyInst>& l_
     m_oCs.m_fCamZoom = 1.0f; m_oCs.m_iCamMs = m_oCs.m_iCamMsMax = 0; m_oCs.m_iCamOn = -1; m_oCs.m_strCamMove.clear(); m_oCs.m_fCamPan = 0.0f;
     m_oCs.m_iHeroDownMs = 0;
     m_oCs.m_iBossIntroMs = m_oCs.m_iBossIntroMsMax = 0;
-    m_oCs.m_iHeroIntroMs = m_oCs.m_iHeroIntroMsMax = 0; m_oCs.m_iIntroOwner = -1; m_oCs.m_iIntroFoeFire = -1;
+    m_oCs.m_iHeroIntroMs = m_oCs.m_iHeroIntroMsMax = 0; m_oCs.m_iIntroOwner = -1; m_oCs.m_iIntroFoeFire = -1; m_oCs.m_oMoment = CombatState::Moment{}; m_oCs.m_iMomentOutcome = -1; m_oCs.m_fMomentDamage = 1.0f;
     m_oCs.m_iBossIntroFoe = -1; m_oCs.m_iBossIntroWaitMs = m_oCs.m_iBossIntroFrames = 0;
     m_oCs.m_iRevealMs = m_oCs.m_iRevealMsMax = 0; m_oCs.m_iRevealFoe = -1;
     m_oCs.m_oResult = CombatState::Result{};
@@ -104,8 +104,30 @@ void Game::f_StartCombat(const EnemyInst& l_oE, const std::vector<EnemyInst>& l_
         f_RunFoeEvents((int)l_nI, l_oC);
     }
     if (const auto l_itT = m_mapEnemyTpl.find(m_oCs.m_vFoes[0].m_oEnemy.m_strId);   // a boss: its introduction first
-        m_oCs.m_bActive && l_itT != m_mapEnemyTpl.end() && l_itT->second.value(toms::field::g_pszIntro, false))
+        m_oCs.m_bActive && l_itT != m_mapEnemyTpl.end() && l_itT->second.value(toms::field::g_pszIntro, false)) {
         f_StartBossIntro(0);
+        f_BossOpener(0);
+    }
+}
+
+// A boss opens with its special (the owner, 2026-11-28: "after its introduction it casts its magic at once"; docs/gameplay/27
+// §3.3, Q133): its first move is its first special (a move with a danger shape), its MP enough for it, its wind-up short, so
+// its cells light as soon as the introduction ends. battle.json "bossOpensWithSpecial" (default on), "openerMs".
+void Game::f_BossOpener(int l_iFoe) {
+    if (!m_jBattleJson.value(toms::field::g_pszBossOpensWithSpecial, true) || f_TutorialStepNow()) return;
+    if (l_iFoe < 0 || l_iFoe >= (int)m_oCs.m_vFoes.size()) return;
+    CombatState::Foe& l_oF = m_oCs.m_vFoes[(size_t)l_iFoe];
+    for (const toms::MoveChoice& l_oC : l_oF.m_oEnemy.m_vMoves) {
+        const toms::MoveDef& l_oM = m_oMoves.f_Get(l_oC.m_strId);
+        if (l_oM.m_strShape.empty()) continue;
+        l_oF.m_strMove = l_oC.m_strId;   // paid for (its MP spent, as a chosen move's is)
+        l_oF.m_fMp = std::max(l_oF.m_fMp, (float)f_FoeMoveMp(l_iFoe, l_oC.m_strId)) - (float)f_FoeMoveMp(l_iFoe, l_oC.m_strId);
+        l_oF.m_uDanger = 0u; l_oF.m_iPowerMs = 0; l_oF.m_bPowered = false;
+        l_oF.m_iClockMs = 0;
+        l_oF.m_iMoveMs = m_oCellRules.m_iWarnMs + std::max(0, m_jBattleJson.value(toms::field::g_pszOpenerMs, 200));
+        f_BattleEvent(toms::battle_event::g_pszIntent, l_iFoe, -1, l_oF.m_iMoveMs, l_oF.m_strMove);
+        return;
+    }
 }
 
 void Game::f_StartBossIntro(int l_iFoe) {
@@ -208,6 +230,10 @@ int Game::f_BattleFrame(int l_iDtMs) {
             m_oCs.m_iIntroOwner = -1;
             if (m_oCs.m_bActive && l_iFoe < (int)m_oCs.m_vFoes.size() && !m_oCs.m_vFoes[(size_t)l_iFoe].f_Down()) f_ResolveEnemyClockFire(l_iFoe);
         }
+        l_iBdt = 0;
+    } else if (f_MomentOn()) {   // a monster attack's beat (docs/gameplay/27 §2): it runs on real time, everything else waits
+        f_StepAttackMoment(l_iDtMs);
+        m_oCs.m_iHitStopMs = std::max(0, m_oCs.m_iHitStopMs - l_iDtMs);
         l_iBdt = 0;
     } else if (m_oCs.m_iBossIntroMs > 0) {   // a boss's introduction: everything waits (f_StartBossIntro)
         m_oCs.m_iBossIntroMs = std::max(0, m_oCs.m_iBossIntroMs - l_iDtMs);
@@ -414,6 +440,8 @@ void Game::f_ChooseFoeMove(int l_iFoe) {
     const toms::MoveDef& l_oM = m_oMoves.f_Get(l_oF.m_strMove);
     l_oF.m_iMoveMs = l_oM.m_iChargeMs > 0 ? std::max(300, (int)std::lround(l_oM.m_iChargeMs * l_oF.m_fIntervalMul))   // its wind-up in ms (16 §4.1)
                               : std::max(300, (int)std::lround(std::max(500, l_oF.m_oEnemy.m_iAtkIntervalMs) * l_oM.m_fTime * l_oF.m_fIntervalMul));
+    if (l_oM.m_strShape.empty())   // the gap between its attacks, longer (the owner, 2026-11-28; docs/gameplay/27 Q127): its specials keep theirs
+        l_oF.m_iMoveMs = (int)std::lround((float)l_oF.m_iMoveMs * std::max(0.1f, m_jBattleJson.value(toms::field::g_pszAttackGapScale, 1.0f)));
     if (!l_oF.m_oEnemy.m_vMoves.empty()) f_BattleEvent(toms::battle_event::g_pszIntent, l_iFoe, -1, l_oF.m_iMoveMs, l_oF.m_strMove);   // (a plain striker: always the same)
 }
 
@@ -476,6 +504,7 @@ void Game::f_StepFoes(int l_iDtMs) {
             const bool l_bIntro = l_oF.m_bPowered && l_oFire.m_strGuardPlay.empty() &&   // (a special guard play brings its own, in its move's finish)
                                   !f_FeelFx().value(toms::field::g_pszSpecialAttack, nlohmann::json::object()).value(toms::field::g_pszIntro, nlohmann::json::object()).value(toms::field::g_pszOff, false);
             if (l_bIntro) f_StartFoeIntro(l_iFoe);   // its introduction first; it lands after (f_BattleFrame)
+            else if (f_UseAttackMoment(l_iFoe)) { f_StartAttackMoment(l_iFoe); return; }   // its beat: everything waits (game_moment.cpp)
             else f_ResolveEnemyClockFire(l_iFoe);
         }
     }
@@ -870,7 +899,11 @@ void Game::f_DrawBattleRig() {
         if (!l_bFocus && f_BattleRigReady() && !m_strBattleRigState.empty()) m_upPlayerView->f_Draw(m_pRen, l_fnZoomed(m_v4PlayerBox + glm::vec4(m_v2HeroShift.x, m_v2HeroShift.y, 0.0f, 0.0f)));
         for (size_t l_nI = 0; l_nI < m_vFoeRigs.size() && l_nI < m_oCs.m_vFoes.size(); l_nI++) {
             const FoeRig& l_oFr = m_vFoeRigs[l_nI];
-            if (l_oFr.m_upView && !l_oFr.m_strState.empty()) l_oFr.m_upView->f_Draw(m_pRen, l_fnZoomed(f_FighterBox((int)l_nI)));
+            if (!l_oFr.m_upView || l_oFr.m_strState.empty()) continue;
+            glm::vec4 l_v4Box = f_FighterBox((int)l_nI);
+            const glm::vec4 l_v4Pose = f_MomentPose((int)l_nI);   // its attack beat's pose (docs/gameplay/27 §2.6): feet kept on the ground
+            l_v4Box = glm::vec4(l_v4Box.x + l_v4Pose.x - l_v4Box.z * (l_v4Pose.z - 1.0f) * 0.5f, l_v4Box.y + l_v4Pose.y - l_v4Box.w * (l_v4Pose.w - 1.0f), l_v4Box.z * l_v4Pose.z, l_v4Box.w * l_v4Pose.w);
+            l_oFr.m_upView->f_Draw(m_pRen, l_fnZoomed(l_v4Box));
         }
     }
     if (m_spBattleFxFile) {
@@ -977,6 +1010,8 @@ void Game::f_UpdateBattleBackdrop(int l_iDtMs) {
         const float l_fNear = m_oCs.m_iCellRows > 1 ? 1.0f - (float)l_iRow / (float)(m_oCs.m_iCellRows - 1) : 0.0f;   // 1 in the row near the monster, 0 in the far one
         const glm::vec2 l_v2Want(((float)l_iCol - (float)(m_oCs.m_iCellCols - 1) * 0.5f) * m_oCellRules.m_fShiftX + l_fNear * m_oCellRules.m_fShiftNear, -l_fNear * m_oCellRules.m_fShiftY);
         m_v2HeroShift += (l_v2Want - m_v2HeroShift) * std::min(1.0f, (float)l_iDtMs * 0.015f);
+    } else {   // a beat's dodge (docs/gameplay/27 §2.3): a quick step its way, then back
+        m_v2HeroShift += (f_MomentHeroStep() - m_v2HeroShift) * std::min(1.0f, (float)l_iDtMs * 0.03f);
     }
     m_oBackdrop.f_Update(l_iDtMs);
     for (toms::fx::EffectInstance& l_oFx : m_vBackdropFx) l_oFx.f_Update(l_iDtMs / 1000.0f);
@@ -1326,6 +1361,7 @@ void Game::f_PopDamage(int l_iDmg, int l_iWho, const std::string& l_strStyle) {
 // battleTapSuper (win) and resolveEnemyClockFire (lose) can all reach it without duplicating it.
 void Game::f_FinishCombatWin() {
     if (f_ArenaEndFight(true)) return;   // the weapon test arena: no rewards, the next fight follows
+    f_ClimbFightOver(true);   // a climb's numbers (docs/gameplay/27 §3.1)
     m_oCs.m_bActive = false; m_oCs.m_bWon = true; m_oCs.m_bWinPending = false;
     f_BattleEvent(toms::battle_event::g_pszWin, -1, -1);
     m_oPl.m_iHp = m_oCs.m_iPlayerHP;
@@ -1430,6 +1466,8 @@ void Game::f_FinishCombatLose() {
         f_TriggerEnding(l_pEnding->m_strId);
         return;   // the run is over -- no respawn, no "you fell" pause
     }
+    f_ClimbFightOver(false);
+    if (m_oClimb.m_bOn) { f_ClimbDied(); return; }   // a climb: its tally, then continue or the main screen (docs/gameplay/27 §3.1)
     m_oCs.m_iResultPauseMs = 300;   // keep the "you fell" message on screen briefly (see CombatState)
     m_oPl.m_iHp = f_EffectiveMaxHp()/2; // respawn at stage start
     f_LoadStage(m_strCurStage); // reset monsters/items
@@ -1521,6 +1559,7 @@ void Game::f_ResolveEnemyClockFire(int l_iFoe) {
                                                  : toms::f_PickDanger(m_oCellRules, l_oM.m_strShape, m_oCs.m_iHeroCell, 0.0f, m_oCs.m_iCellCols, m_oCs.m_iCellRows);
         l_bClear = l_uDanger != 0u && !(l_uDanger & (1u << m_oCs.m_iHeroCell));
     }
+    if (m_oCs.m_iMomentOutcome == 3) l_bClear = true;   // dodged in its beat (docs/gameplay/27 §2.3)
     // a special guard play (docs/gameplay/16 §4.3): the hit waits for it; endSkill comes back here with its result
     if (!l_bClear && !l_oM.m_strGuardPlay.empty() && l_oF.m_fGuardShare < 0.0f && l_oF.m_iVolleyHit == 0 && !m_oCs.m_oSkill.m_bOn)
         if (const toms::SpecialMove* l_pD = m_oSpecialMoves.f_Find(l_oM.m_strGuardPlay)) { f_StartSkill(*l_pD, l_iFoe); return; }
@@ -1557,7 +1596,12 @@ void Game::f_ResolveEnemyClockFire(int l_iFoe) {
     bool l_bGuarded = m_oCs.m_bShieldBanked;
     bool l_bParried = l_bGuarded && l_fPower >= (float)m_oBreakSettings.m_iParryPower;
     m_oCs.m_bShieldBanked = false; m_oCs.m_fShieldPower = 0.0f;
-    if (m_oGuard.m_strMode == toms::guard_mode::g_pszTiming || m_oGuard.m_strMode == toms::guard_mode::g_pszWarn) {   // one button: just before the hit (15 §3.2), or while its "!" shows (16 §4.2)
+    if (m_oCs.m_iMomentOutcome >= 0) {   // its beat's answer (docs/gameplay/27 §2.3): blocked, parried, or not
+        l_bGuarded = m_oCs.m_iMomentOutcome == 1 || m_oCs.m_iMomentOutcome == 2;
+        l_bParried = m_oCs.m_iMomentOutcome == 2;
+        l_fPower = l_bParried ? 100.0f : l_bGuarded ? m_oGuard.m_fBlockPower : 0.0f;
+        m_oCs.m_iGuardAtMs = -1;
+    } else if (m_oGuard.m_strMode == toms::guard_mode::g_pszTiming || m_oGuard.m_strMode == toms::guard_mode::g_pszWarn) {   // one button: just before the hit (15 §3.2), or while its "!" shows (16 §4.2)
         const int l_iSince = m_oCs.m_iGuardAtMs < 0 ? -1 : m_oCs.m_iClockMs - m_oCs.m_iGuardAtMs;
         const toms::GuardTiming l_eGt = m_oGuard.m_strMode == toms::guard_mode::g_pszWarn ? toms::f_GuardWarn(l_iSince, f_MoveWarnMs(l_oM), m_oGuard)
                                                            : toms::f_GuardTiming(l_iSince, m_oGuard);
@@ -1589,6 +1633,7 @@ void Game::f_ResolveEnemyClockFire(int l_iFoe) {
     int l_iDmg = 0;
     const int l_iHits = l_bVolley ? 1 : l_oM.m_eKind == toms::MoveKind::Jabs ? l_oM.m_iHits : 1;
     for (int l_iK = 0; l_iK < l_iHits; l_iK++) l_iDmg += toms::f_ComputeDefenseDamage(l_iIncoming, l_fPower, l_fFloorMitigation);
+    if (m_oCs.m_fMomentDamage < 1.0f) l_iDmg = (int)std::lround((float)l_iDmg * std::max(0.0f, m_oCs.m_fMomentDamage));   // a beat's waves: those not dodged
     if (l_oF.m_fGuardShare >= 0.0f) {   // the special guard play's result: what was done takes that much off (16 §4.3)
         l_iDmg = (int)std::lround((float)l_iDmg * (1.0f - std::clamp(l_oF.m_fGuardShare, 0.0f, 1.0f)));
         l_bGuarded = l_oF.m_fGuardShare > 0.0f;
@@ -1824,6 +1869,7 @@ void Game::f_BattleMoveToCell(int l_iCell) {
 void Game::f_BattleStepCell(int l_iDx, int l_iDy) { f_BattleMoveToCell(toms::f_CellStep(m_oCs.m_iHeroCell, l_iDx, l_iDy, m_oCs.m_iCellCols, m_oCs.m_iCellRows)); }
 
 void Game::f_BattleTapDefense() {
+    if (f_MomentOn()) { f_MomentGuard(); return; }   // a monster attack's beat: the guard answers it (docs/gameplay/27 §2.3)
     if (f_CellIntroOn()) return;
     if (!m_oCs.m_bActive || m_oCs.m_bWinPending || m_oCs.m_oSkill.m_bOn) return;
     if (m_oGuard.m_strMode == toms::guard_mode::g_pszWarn) {   // only while an "!" shows over a monster (16 §4.2); it stops the player's attack
@@ -2090,8 +2136,10 @@ glm::vec3 Game::f_Battle3DMark(int l_iWho) const {
     const nlohmann::json l_jMany = l_jMarks.value(toms::field::g_pszMonsters + std::to_string(l_iCount), nlohmann::json::array());
     if (l_iCount > 1 && l_jMany.is_array() && l_iWho < (int)l_jMany.size()) return f_Vec3Of(l_jMany[(size_t)l_iWho], glm::vec3(0.0f)) + m_v3TravelTo;
     const glm::vec3 l_v3One = f_Vec3Of(l_jMarks.value(toms::field::g_pszMonster, nlohmann::json()), glm::vec3(0.6f, 0.0f, -1.0f));
-    const float l_fGap = l_jMarks.value(toms::field::g_pszSpacing, 1.8f);
-    return l_v3One + glm::vec3(((float)l_iWho - (float)(l_iCount - 1) * 0.5f) * l_fGap, 0.0f, 0.0f) + m_v3TravelTo;   // (its own place: the hero travels to it)
+    // four (a boss's third round): closer together and moved off the hero ("spacingMany", "shiftMany")
+    const float l_fGap = l_iCount >= 4 ? l_jMarks.value(toms::field::g_pszSpacingMany, 1.4f) : l_jMarks.value(toms::field::g_pszSpacing, 1.8f);
+    const float l_fShift = l_iCount >= 4 ? l_jMarks.value(toms::field::g_pszShiftMany, 0.8f) : 0.0f;
+    return l_v3One + glm::vec3(((float)l_iWho - (float)(l_iCount - 1) * 0.5f) * l_fGap + l_fShift, 0.0f, 0.0f) + m_v3TravelTo;   // (its own place: the hero travels to it)
 }
 
 float Game::f_Battle3DHeight(int l_iWho) const {
@@ -2401,8 +2449,22 @@ void Game::f_DrawBattle3DFighter(int l_iWho) {
     glm::vec4 l_v4Box = l_iWho < 0 ? m_v4UiPlayerBox : m_arrUiFoeBox[std::min(std::max(l_iWho, 0), toms::g_iMaxFoes - 1)];
     if (l_v4Box.z <= 1.0f || l_v4Box.w <= 1.0f) l_v4Box = glm::vec4(0.0f, 0.0f, 240.0f, 320.0f);   // (no layout yet: any shape)
     const glm::vec2 l_v2Feet(l_v4Box.x + l_v4Box.z * 0.5f, l_v4Box.y + l_v4Box.w);
-    const glm::vec3 l_v3Feet = l_iWho < 0 ? f_Battle3DHeroFeet() : f_Battle3DMark(l_iWho);
-    const glm::mat4 l_mat4M = f_Battle3DSpriteMatrix(l_v2Feet, l_v3Feet, f_Battle3DHeight(l_iWho) / l_v4Box.w);
+    glm::vec3 l_v3Feet = l_iWho < 0 ? f_Battle3DHeroFeet() : f_Battle3DMark(l_iWho);
+    float l_fTall = f_Battle3DHeight(l_iWho);
+    if (l_iWho >= 0) {   // its attack beat's pose (docs/gameplay/27 §2.6): moved across the screen and up, stretched
+        const glm::vec4 l_v4Pose = f_MomentPose(l_iWho);
+        if (l_v4Pose.x != 0.0f || l_v4Pose.y != 0.0f) {
+            bool l_bOk = false;
+            float l_fPx = 0.0f;
+            f_Battle3DToDesign(l_v3Feet, l_bOk, &l_fPx);
+            if (l_bOk && l_fPx > 1.0f) {
+                const glm::vec3 l_v3Right = glm::normalize(glm::vec3(m_mat4Battle3DViewProj[0][0], 0.0f, m_mat4Battle3DViewProj[2][0]) + glm::vec3(1e-6f, 0.0f, 0.0f));
+                l_v3Feet += l_v3Right * (l_v4Pose.x / l_fPx) + glm::vec3(0.0f, -l_v4Pose.y / l_fPx, 0.0f);
+            }
+        }
+        l_fTall *= l_v4Pose.w;
+    }
+    const glm::mat4 l_mat4M = f_Battle3DSpriteMatrix(l_v2Feet, l_v3Feet, l_fTall / l_v4Box.w);
     glm::mat4 l_mat4Draw = l_mat4M;
     if (l_iWho < 0 && m_oCs.m_iTravelMs > 0) {   // a boss's sequence: the hero runs on to the next monster (the owner, 2026-11-23)
         const nlohmann::json l_jRun = m_jBattleJson.value(toms::field::g_pszGauntlet, nlohmann::json::object()).value(toms::field::g_pszRun, nlohmann::json::object());

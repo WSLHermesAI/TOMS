@@ -1,0 +1,42 @@
+{
+  "_comment": [
+    "The tower in climbs (the owner, 2026-11-28; docs/gameplay/27_ATTACK_MOMENT_AND_TOWER_RUN.md §3, §6). on: the main screen after the title, one",
+    "climb a chapter (false: the old single run). stamina: max, everySec (one point back each), perFight (Q137: 1); its file is stamina.json in the",
+    "save folder (points now, the next point's time). death: the share of the climb's gold and crystals kept (Q134, Q143). score: points per floor,",
+    "monster, combo step, perfect (a dodge or parry in a monster's attack beat), minus per damage point and second (Q139); ranks: best first, each",
+    "with its crystals. stories: the main screen's list; a story's chapters are story/chapters/<id>.json in order (each opens when the one before is",
+    "cleared); a challenge story's chapters climb another chapter's floors (floors) with stronger monsters (hpX, atkX), more gold (goldX) and",
+    "crystals when cleared (Q136, Q140: one after each story chapter, its floors fixed)."
+  ],
+  "on": true,
+  "stamina": { "max": 60, "everySec": 300, "perFight": 1 },
+  "death": { "keepGold": 0.5, "keepCrystals": 0.5 },
+  "score": { "floor": 100, "monster": 10, "combo": 5, "perfect": 20, "damage": 0.1, "second": 0.05 },
+  "ranks": [
+    { "rank": "S", "min": 900, "crystals": 30 },
+    { "rank": "A", "min": 650, "crystals": 20 },
+    { "rank": "B", "min": 400, "crystals": 10 },
+    { "rank": "C", "min": 0, "crystals": 5 }
+  ],
+  "stories": [
+    {
+      "id": "orphan",
+      "title": "tower.story_orphan",
+      "chapters": ["ch_01", "ch_02", "ch_03", "ch_04", "ch_05", "ch_06", "ch_07"]
+    },
+    {
+      "id": "challenge",
+      "title": "tower.story_challenge",
+      "challenge": true,
+      "chapters": [
+        { "id": "c_01", "title": "tower.challenge_01", "floors": "ch_01", "after": "ch_01", "hpX": 1.5, "atkX": 1.3, "goldX": 1.5, "crystals": 15 },
+        { "id": "c_02", "title": "tower.challenge_02", "floors": "ch_02", "after": "ch_02", "hpX": 1.5, "atkX": 1.3, "goldX": 1.5, "crystals": 20 },
+        { "id": "c_03", "title": "tower.challenge_03", "floors": "ch_03", "after": "ch_03", "hpX": 1.6, "atkX": 1.35, "goldX": 1.5, "crystals": 25 },
+        { "id": "c_04", "title": "tower.challenge_04", "floors": "ch_04", "after": "ch_04", "hpX": 1.6, "atkX": 1.35, "goldX": 1.5, "crystals": 30 },
+        { "id": "c_05", "title": "tower.challenge_05", "floors": "ch_05", "after": "ch_05", "hpX": 1.7, "atkX": 1.4, "goldX": 1.6, "crystals": 35 },
+        { "id": "c_06", "title": "tower.challenge_06", "floors": "ch_06", "after": "ch_06", "hpX": 1.7, "atkX": 1.4, "goldX": 1.6, "crystals": 40 },
+        { "id": "c_07", "title": "tower.challenge_07", "floors": "ch_07", "after": "ch_07", "hpX": 1.8, "atkX": 1.5, "goldX": 1.7, "crystals": 50 }
+      ]
+    }
+  ]
+}

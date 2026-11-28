@@ -350,6 +350,33 @@ struct UiStageSelect {
     std::vector<UiRow> m_vRows;           // enabled=false: locked (sub = why / preview text)
 };
 
+// The main screen (the owner, 2026-11-28; docs/gameplay/27 §6): the tower of chapters, the hero, the money and stamina,
+// the buttons; its lists (stories, chapters, the village); a climb's tally; the "no stamina" box.
+struct UiTowerRow {
+    std::string m_strLabel, m_strSub;
+    std::string m_strState;               // a band: "cleared", "next", "locked" (toms::tower_state); "" for a plain row
+    std::string m_strValue;               // a tally row's number
+    bool m_bEnabled = true;
+};
+struct UiMain {
+    bool m_bVisible = false;              // the document: the screen, or only its tally / no-stamina box over the map
+    bool m_bHome = false;                 // the main screen itself
+    int m_iPanel = 0;                     // 0 none, 1 the stories, 2 a story's chapters, 3 the village
+    std::string m_strTitle, m_strSubtitle, m_strPanelTitle;
+    std::string m_strHeroLevel, m_strHeroHp, m_strHeroAtk, m_strHeroDef, m_strAtkLabel, m_strDefLabel, m_strHpLabel;
+    float m_fHeroHpPct = 100.0f;
+    std::string m_strGoldText, m_strCrystalsText, m_strStaminaText, m_strStaminaNext;
+    std::string m_strClimbLabel, m_strVillageLabel, m_strBagLabel, m_strShopLabel, m_strQuestsLabel, m_strRankLabel, m_strHeroesLabel, m_strBackLabel;
+    std::vector<UiTowerRow> m_vTower;     // the current story's chapters as bands, the last on top
+    std::vector<UiTowerRow> m_vRows;      // the open panel's list
+    bool m_bTally = false, m_bTallyCleared = false;
+    std::string m_strTallyTitle, m_strTallyRank, m_strTallyScore, m_strTallyNote;
+    std::vector<UiTowerRow> m_vTallyRows;
+    std::string m_strContinueLabel, m_strHomeLabel;
+    bool m_bNoStamina = false;
+    std::string m_strNoStaminaText, m_strWaitLabel;
+};
+
 struct UiEnding {
     bool m_bVisible = false;
     std::string m_strName, m_strText, m_strHint;
@@ -375,6 +402,7 @@ struct UiState {
     UiStairs m_oStairs;
     UiNotice m_oNotice;
     UiStageSelect m_oStageSelect;
+    UiMain m_oMain;
     UiEnding m_oEnding;
     UiMiniGame m_oMinigame;
     UiOverlay m_oOverlay;

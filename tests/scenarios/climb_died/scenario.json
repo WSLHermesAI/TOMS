@@ -1,0 +1,7 @@
+{
+  "_comment": "A climb's death (docs/gameplay/27 §3.1, Q134/Q143): chapter 1 climbed from its first floor, then the hero falls: the tally (died) with half the climb's gold and crystals lost, and continue or the main screen.",
+  "scene": "climb",
+  "climb": { "chapter": "ch_01", "end": "died" },
+  "test": { "frames": 30 },
+  "expect": { "scene": "climb", "stage": "F01", "tower": { "climb": true, "end": "death" } }
+}

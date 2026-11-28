@@ -233,6 +233,7 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
     const bool l_bShowTalk = !l_bShowStore && !l_bShowBattle && (m_iHideMask & 2) == 0 && m_bInDialogue;
     const bool l_bShowWalk = !l_bShowStore && !l_bShowBattle && !l_bShowTalk;
 
+    f_FillMainUi(l_oU.m_oMain);   // the main screen, a climb's tally, the no-stamina box (docs/gameplay/27 §6)
     // ---- HUD (over the map) ----
     if (l_bShowWalk) {
         toms::UiHud& l_oH = l_oU.m_oHud;
@@ -567,7 +568,8 @@ void Game::f_BuildUiState(toms::UiState& l_oU) const {
                 l_oB.m_bTutorialHidden = l_pStep->m_iHideMs > 0 && m_oArena.m_iTutorialPopMs >= l_pStep->m_iHideMs;
                 if (l_pStep->m_strMark == toms::ui::g_pszCells && !f_BattleCellsVisible()) l_oB.m_strTutorial.clear();   // it comes with the cells
             }
-            if (l_ePlayType != toms::PlayType::eTRACK || m_oCs.m_oSkill.m_bOn) f_TouchPlayUi(l_oB);
+            if (f_MomentOn()) f_MomentUi(l_oB);   // a monster attack's beat: its answer; the player's play waits, unseen (27 §2)
+            else if (l_ePlayType != toms::PlayType::eTRACK || m_oCs.m_oSkill.m_bOn) f_TouchPlayUi(l_oB);
             if (m_oCs.m_iChain > 1) l_oB.m_strChainText = f_TrParam(l_oL.f_Tr(toms::text::g_pszBattleWordChain), toms::field::g_pszN, std::to_string(m_oCs.m_iChain));
             auto l_vActiveIds = toms::f_EquippedActives(m_oEquipped, m_mapEquipmentDefs);
             if (!l_vActiveIds.empty() && toms::f_CanUseActive(l_vActiveIds[0], m_mapActiveDefs, m_oCs.m_mapActiveRuntime, m_oCs.m_oActiveStatus)) {
@@ -881,6 +883,12 @@ void Game::f_UiEvent(const std::string& l_strName, int l_iArg) {
     if (l_strName == toms::ui::g_pszTitleHover)   { if (m_oTitle.f_IsOpen()) m_oTitle.f_HoverRow(l_iArg); return; }
     if (l_strName == toms::ui::g_pszTitleBack)    { if (m_oTitle.f_IsOpen()) f_HandleTitleAction(m_oTitle.f_Cancel()); return; }
     if (l_strName == toms::ui::g_pszTitleConfirm) { if (m_oTitle.f_IsOpen()) f_HandleTitleAction(m_oTitle.f_AnswerConfirm(l_iArg != 0)); return; }
+    // ---- the main screen (docs/gameplay/27 §6) ----
+    if (l_strName.rfind(toms::ui::g_pszMainClimb, 0) == 0 || l_strName == toms::ui::g_pszMainStory || l_strName == toms::ui::g_pszMainChapter ||
+        l_strName == toms::ui::g_pszMainBack || l_strName == toms::ui::g_pszMainVillage || l_strName == toms::ui::g_pszMainPlace ||
+        l_strName == toms::ui::g_pszMainBag || l_strName == toms::ui::g_pszMainShop || l_strName == toms::ui::g_pszMainQuests ||
+        l_strName == toms::ui::g_pszMainSoon || l_strName == toms::ui::g_pszMainPick || l_strName == toms::ui::g_pszTallyContinue ||
+        l_strName == toms::ui::g_pszTallyHome || l_strName == toms::ui::g_pszStaminaHome || l_strName == toms::ui::g_pszStaminaWait) { f_MainEvent(l_strName, l_iArg); return; }
     // ---- ending ----
     if (l_strName == toms::ui::g_pszEndingRebirth) { if (f_EndingActive()) f_Rebirth(); return; }
     if (l_strName == toms::ui::g_pszEndingTitle)   { if (f_EndingActive()) f_DismissEndingScreen(); return; }

@@ -1,0 +1,81 @@
+<rml>
+<head>
+    <title>Main screen</title>
+    <link type="text/rcss" href="common.rcss"/>
+    <link type="text/rcss" href="main.rcss"/>
+</head>
+<!-- The main screen (the owner, 2026-11-28; docs/gameplay/27 §6): the tower of chapters in the middle, the hero top left,
+     the money and stamina top right, the buttons down the right, "challenge the tower" at the bottom; a list panel
+     (stories, chapters, the village); a climb's tally and the "no stamina" box (those two also show over the map).
+     Data: main.* (UiMain). Events: act('main_...'), act('tally_...'), act('stamina_...'). -->
+<body data-model="game" data-class-home="main.home">
+    <div id="home" data-if="main.home">
+        <div id="sky"></div>
+        <div id="title">{{main.title}}</div>
+        <div id="subtitle">{{main.subtitle}}</div>
+        <!-- the hero -->
+        <div id="hero" class="box">
+            <div id="hero-level">{{main.hero_level}}</div>
+            <div id="hero-hpbar"><div id="hero-hpfill" data-style-width="main.hero_hp_pct + '%'"></div><div id="hero-hptext">{{main.hero_hp}}</div></div>
+            <div class="stat"><span class="k">{{main.atk_label}}</span><span class="v">{{main.hero_atk}}</span></div>
+            <div class="stat"><span class="k">{{main.def_label}}</span><span class="v">{{main.hero_def}}</span></div>
+        </div>
+        <!-- the money and the stamina -->
+        <div id="money">
+            <div class="coin crystal box"><div class="ico"></div>{{main.crystals_text}}</div>
+            <div class="coin gold box"><div class="ico"></div>{{main.gold_text}}</div>
+            <div class="coin stamina box"><div class="ico"></div>{{main.stamina_text}}<div id="stamina-next">{{main.stamina_next}}</div></div>
+        </div>
+        <!-- the tower: the story's chapters, the last on top -->
+        <div id="tower">
+            <div id="spire"></div>
+            <div data-for="b, i : main.tower"><div class="band" data-class-cleared="b.state == 'cleared'" data-class-next="b.state == 'next'"
+                 data-class-locked="b.state == 'locked'" data-event-click="act('main_chapter', main.tower.size - 1 - i)">
+                <div class="blabel">{{b.label}}</div>
+                <div class="bsub">{{b.sub}}</div>
+            </div></div>
+            <div id="gate"></div>
+        </div>
+        <!-- the buttons down the right -->
+        <div id="side">
+            <div class="sbtn dim" data-event-click="act('main_soon')">{{main.rank_label}}</div>
+            <div class="sbtn" data-event-click="act('main_quests')">{{main.quests_label}}</div>
+            <div class="sbtn" data-event-click="act('main_bag')">{{main.bag_label}}</div>
+            <div class="sbtn dim" data-event-click="act('main_soon')">{{main.heroes_label}}</div>
+            <div class="sbtn" data-event-click="act('main_shop')">{{main.shop_label}}</div>
+            <div class="sbtn" data-event-click="act('main_village')">{{main.village_label}}</div>
+        </div>
+        <div id="climb" data-event-click="act('main_climb')">{{main.climb_label}} »</div>
+        <!-- a list: the stories, a story's chapters, the village -->
+        <div id="panel" class="box" data-if="main.panel > 0">
+            <div id="ptitle">{{main.panel_title}}</div>
+            <div data-for="r, i : main.rows"><div class="prow" data-class-disabled="!r.enabled" data-class-cleared="r.state == 'cleared'"
+                 data-class-next="r.state == 'next'" data-event-click="act('main_pick', i)">
+                <div class="plabel">{{r.label}}</div>
+                <div class="psub" data-if="r.sub != ''">{{r.sub}}</div>
+            </div></div>
+            <div id="pback" class="btn btn-plain" data-event-click="act('main_back')">{{main.back_label}}</div>
+        </div>
+    </div>
+    <!-- a climb's end: the tally -->
+    <div id="tally" class="box" data-if="main.tally" data-class-cleared="main.tally_cleared">
+        <div id="ttitle">{{main.tally_title}}</div>
+        <div id="trank">{{main.tally_rank}}</div>
+        <div id="tscore">{{main.tally_score}}</div>
+        <div data-for="r : main.tally_rows"><div class="trow"><span class="tk">{{r.label}}</span><span class="tv">{{r.value}}</span></div></div>
+        <div id="tnote" data-if="main.tally_note != ''">{{main.tally_note}}</div>
+        <div id="tbtns">
+            <div class="btn btn-yes" data-if="!main.tally_cleared" data-event-click="act('tally_continue')">{{main.continue_label}}</div>
+            <div class="btn btn-plain" data-event-click="act('tally_home')">{{main.home_label}}</div>
+        </div>
+    </div>
+    <!-- no stamina for the fight -->
+    <div id="nostam" class="box" data-if="main.no_stamina">
+        <div id="ntext">{{main.no_stamina_text}}</div>
+        <div id="nbtns">
+            <div class="btn btn-plain" data-event-click="act('stamina_wait')">{{main.wait_label}}</div>
+            <div class="btn btn-yes" data-event-click="act('stamina_home')">{{main.home_label}}</div>
+        </div>
+    </div>
+</body>
+</rml>

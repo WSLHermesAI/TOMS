@@ -102,6 +102,11 @@ bool Game::f_EnemyFromData(const std::string& l_strId, const nlohmann::json& l_j
     l_oEn.m_iBreakPoints = l_jB.value(toms::field::g_pszBreak, l_jTp.value(toms::field::g_pszBreak, 0));
     l_oEn.m_jMp = l_jB.contains(toms::field::g_pszMp) ? l_jB[toms::field::g_pszMp] : l_jTp.value(toms::field::g_pszMp, nlohmann::json());
     l_oEn.m_jEvents = l_jB.contains(toms::field::g_pszEvents) ? l_jB[toms::field::g_pszEvents] : l_jTp.value(toms::field::g_pszEvents, nlohmann::json::array());
+    if (m_oClimb.m_bOn && m_oClimb.m_bChallenge) {   // a challenge chapter: stronger monsters that pay more (docs/gameplay/27 §3.2)
+        l_oEn.m_iHp = std::max(1, (int)std::lround((float)l_oEn.m_iHp * m_oClimb.m_fHpX));
+        l_oEn.m_iAtk = (int)std::lround((float)l_oEn.m_iAtk * m_oClimb.m_fAtkX);
+        l_oEn.m_iGold = (int)std::lround((float)l_oEn.m_iGold * m_oClimb.m_fGoldX);
+    }
     return true;
 }
 
@@ -348,6 +353,18 @@ bool Game::f_StartScenarioJson(const nlohmann::json& l_jSc, const std::string& l
         const std::string l_strId = l_jSc.value(toms::field::g_pszEnding, nlohmann::json::object()).value(toms::field::g_pszId, std::string());
         if (l_strId.empty()) return l_fnBad("\"ending\": { \"id\": ... } is missing");
         f_TriggerEnding(l_strId);
+    } else if (l_strS == toms::field::g_pszMain) {   // the main screen (docs/gameplay/27 §6)
+        f_OpenMainScreen();
+    } else if (l_strS == toms::field::g_pszClimb) {   // a climb: "climb": { "chapter", "stamina", "cleared": [ids before], "end": "died" | "cleared" }
+        const nlohmann::json l_jC = l_jSc.value(toms::field::g_pszClimb, nlohmann::json::object());
+        for (const auto& l_jId : l_jC.value(toms::field::g_pszCleared, nlohmann::json::array()))
+            if (l_jId.is_string()) m_oRun.f_SetFlag(std::string(toms::key_prefix::g_pszTowerCleared) + l_jId.get<std::string>());
+        if (l_jC.contains(toms::field::g_pszStamina)) { m_oStamina.m_iNow = l_jC[toms::field::g_pszStamina].get<int>(); m_oStamina.m_llNextAt = 0; }
+        f_StartClimb(l_jC.value(toms::field::g_pszChapter, std::string("ch_01")));
+        if (!m_oClimb.m_bOn) return l_fnBad("the chapter could not be climbed (unknown, or not open yet)");
+        const std::string l_strEnd = l_jC.value(toms::field::g_pszEnd, std::string());
+        if (l_strEnd == toms::field::g_pszCleared) f_ClimbCleared();
+        else if (!l_strEnd.empty()) f_ClimbDied();
     } else if (l_strS == "hub") {
         const std::string l_strLoc = l_jSc.value(toms::field::g_pszHub, nlohmann::json::object()).value(toms::field::g_pszLocation, std::string());
         if (!f_ActivateHubLocation(l_strLoc)) return l_fnBad("hub location \"" + l_strLoc + "\" is unknown or locked");
@@ -379,6 +396,8 @@ bool Game::f_ScenarioCheck(std::string& l_strReport) const {
     else if (l_strScene == "notice") l_bShowing = !m_vNotices.empty();
     else if (l_strScene == "ending") l_bShowing = f_EndingActive();
     else if (l_strScene == "hub") l_bShowing = m_bInDialogue;
+    else if (l_strScene == toms::field::g_pszMain) l_bShowing = m_bMainOpen;
+    else if (l_strScene == toms::field::g_pszClimb) l_bShowing = m_oClimb.m_bOn || m_oTally.m_bOpen;
     if (!l_bShowing) l_fnFail("the scene \"" + l_strScene + "\" is not showing");
     if (m_jScenarioExpect.contains(toms::field::g_pszMenuTab)) {
         const int l_iWant = f_MenuTabIndex(m_jScenarioExpect[toms::field::g_pszMenuTab].get<std::string>());
@@ -517,6 +536,22 @@ bool Game::f_ScenarioCheck(std::string& l_strReport) const {
         for (const CombatState::Foe& l_oF : m_oCs.m_vFoes) l_iDown += l_oF.f_Down() ? 1 : 0;
         if (l_iDown != m_jScenarioExpect[toms::field::g_pszFoesDown].get<int>())
             l_fnFail(std::to_string(l_iDown) + " monsters down, expected " + std::to_string(m_jScenarioExpect[toms::field::g_pszFoesDown].get<int>()));
+    }
+    if (m_jScenarioExpect.contains(toms::field::g_pszTower) && m_jScenarioExpect[toms::field::g_pszTower].is_object()) {   // the tower in climbs (27 §3)
+        const nlohmann::json& l_jT = m_jScenarioExpect[toms::field::g_pszTower];
+        if (l_jT.contains(toms::field::g_pszClimb) && l_jT[toms::field::g_pszClimb].get<bool>() != m_oClimb.m_bOn)
+            l_fnFail(std::string("a climb is ") + (m_oClimb.m_bOn ? "on" : "off"));
+        if (l_jT.contains(toms::field::g_pszMain) && l_jT[toms::field::g_pszMain].get<bool>() != m_bMainOpen)
+            l_fnFail(std::string("the main screen is ") + (m_bMainOpen ? "open" : "closed"));
+        if (l_jT.contains(toms::field::g_pszEnd)) {
+            const std::string l_strWant = l_jT[toms::field::g_pszEnd].get<std::string>();
+            const std::string l_strHave = !m_oTally.m_bOpen ? std::string() : m_oTally.m_bCleared ? std::string(toms::field::g_pszCleared) : std::string(toms::field::g_pszDeath);
+            if (l_strHave != l_strWant) l_fnFail("the tally is \"" + l_strHave + "\", expected \"" + l_strWant + "\"");
+        }
+        for (const auto& l_jId : l_jT.value(toms::field::g_pszCleared, nlohmann::json::array()))
+            if (l_jId.is_string() && !f_ChapterCleared(l_jId.get<std::string>())) l_fnFail("chapter " + l_jId.get<std::string>() + " is not cleared");
+        if (l_jT.contains(toms::field::g_pszStamina) && l_jT[toms::field::g_pszStamina].get<int>() != m_oStamina.m_iNow)
+            l_fnFail("stamina is " + std::to_string(m_oStamina.m_iNow) + ", expected " + std::to_string(l_jT[toms::field::g_pszStamina].get<int>()));
     }
     if (m_jScenarioExpect.contains(toms::field::g_pszBattleEvents) && m_jScenarioExpect[toms::field::g_pszBattleEvents].is_object())   // type -> how many
         for (auto l_oIt = m_jScenarioExpect[toms::field::g_pszBattleEvents].begin(); l_oIt != m_jScenarioExpect[toms::field::g_pszBattleEvents].end(); ++l_oIt) {

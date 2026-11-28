@@ -98,6 +98,8 @@ A file name in a setting file is relative to **that** file. A shared file's save
 | `notice` | a notice made by the setup, e.g. "stairs unlocked" after a locked stair's event finishes | — | `notice_stair_unlock` |
 | `ending` | an ending screen | `ending`: `id` (`e_01` … in `story/endings.json`) | `ending` |
 | `hub` | a village hub location (its dialogue); its unlock flag must be in `flags` | `hub`: `location` | `hub_village` |
+| `main` | the main screen ([27](27_ATTACK_MOMENT_AND_TOWER_RUN.md) §6) | — | `main_screen`, `main_pick_chapter` |
+| `climb` | a climb of a chapter ([27](27_ATTACK_MOMENT_AND_TOWER_RUN.md) §3): its first floor, full HP; then its end at once if asked | `climb`: `chapter`, `stamina`, `cleared` (chapters cleared before), `end` (`died` or `cleared`) | `climb_died`, `climb_cleared` |
 
 The node-animation and particle previews already have their own options (`--anim=<file>#<clip>`,
 `--fx=<file>#<effect>`; [05](../engine/05_ANIMATION.md), [07](../engine/07_PARTICLES.md)).
@@ -166,3 +168,6 @@ with a reference image, so a visual change does not break a scenario. The screen
 The code is `src/core/game/core/game_scenario.cpp` (`Game::startScenario`, `Game::scenarioCheck`),
 `toms::readSaveFile` (`save_slots.h`), `--scenario` in `src/game/src/main_sdl.cpp`, and
 `tests/scenarios/run_scenario.cmake`.
+
+
+**The tower** (2026-11-28): the expectation `"tower"`: `main` (the main screen open), `climb` (a climb on), `end` (the tally: `death` or `cleared`), `cleared` (chapter ids), `stamina` (the points now).

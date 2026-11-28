@@ -1,0 +1,29 @@
+{
+  "_comment": "Four monsters in one fight (a boss's third round, docs/gameplay/27 §3.3; g_iMaxFoes 4): all four stand on the 3D stage (spacingMany, shiftMany) with their heads, and each has its picture playing.",
+  "scene": "battle",
+  "battle3d": true,
+  "player": {
+    "hp": 99999
+  },
+  "battle": {
+    "enemy": "capling",
+    "party": [
+      "mossling",
+      "bat",
+      "slime"
+    ],
+    "play": "weapon"
+  },
+  "test": {
+    "frames": 60
+  },
+  "expect": {
+    "scene": "battle",
+    "foeClips": [
+      "idle_capling",
+      "idle",
+      "idle",
+      "idle"
+    ]
+  }
+}

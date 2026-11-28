@@ -68,13 +68,22 @@
   },
   "grade": { "parSeconds": 25, "timePenalty": 1.5, "damagePenalty": 60, "perfectBonus": 30, "chainBonus": 3,
              "s": 95, "a": 75, "b": 55, "sGold": 0.2, "sCard": 0.25 },
+  "bossOpensWithSpecial": true, "openerMs": 200,
+  "attackGapScale": 2.0,
+  "attackMoment": {
+    "_comment": "A monster attack's beat (the owner, 2026-11-28; docs/gameplay/27 §2): the camera in (zoomMs), the answer (answerMs; a shape shapeMs, taps tapsMs, move waveMs a wave), the result (resultMs; a dodge dodgeResultMs), the camera back (backMs). swipeMin: a shorter drag is a tap; tapWindowMs: a tap's beat either side of the hit; stepPx: the hero's dodge step. default: the attack of a monster without enemies.json attacks (answer guard|dodge|tap|taps|shape|move, dodge left|right|up|down, pose lunge|slam|sweep_low|sweep_high|cast, tell, noDodge, noGuard, need, shape, waves, answerMs, chance). attackGapScale (above): every monster's gap between attacks, times this (Q127). off: true turns the beats off.",
+    "zoomMs": 300, "zoom": 1.25, "answerMs": 500, "shapeMs": 1400, "tapsMs": 1000, "waveMs": 500,
+    "resultMs": 500, "dodgeResultMs": 250, "backMs": 250,
+    "swipeMin": 40, "tapWindowMs": 160, "stepPx": 70,
+    "default": { "answer": "dodge", "dodge": "right", "pose": "lunge", "tell": true }
+  },
   "guard": { "mode": "warn", "warnMs": 500, "parryShare": 0.4, "missLockMs": 400,
              "parryMs": 160, "blockMs": 550, "earlyMs": 1200, "blockPower": 70, "cooldownMs": 700 },
   "music": { "volume": 0.45, "fadeInMs": 400, "fadeOutMs": 800,
              "_comment": "the owner, 2026-11-14: one stage track (walking), a normal battle, and a boss track per enemies.json bossTier",
              "stage": "music.stage_walk", "stageVolume": 0.35, "stageFadeInMs": 1200, "normal": "music.battle_normal",
              "boss": { "mini": "music.boss_mini", "stage": "music.boss_stage", "final": "music.boss_final" } },
-  "gauntlet": { "fromFloor": true, "count": 3, "step": [0.0, 0.0, -3.5], "travelMs": 1500, "waitingShade": 0.0, "waitingAlpha": 0.85, "waitingSide": 0.9,
+  "gauntlet": { "fromFloor": true, "count": 3, "rounds": [1, 2, 4], "step": [0.0, 0.0, -3.5], "travelMs": 1500, "waitingShade": 0.0, "waitingAlpha": 0.85, "waitingSide": 0.9,
                 "run": { "stridesPerS": 2.6, "bounce": 0.09, "leanDeg": 9, "dust": "miss_puff", "dustScale": 0.6 } },
   "stages3d": [
     {
@@ -111,7 +120,7 @@
       "flash": { "onMonster": [1.0, 0.85, 0.6], "onHero": [1.0, 0.4, 0.3], "intensity": 22, "range": 8, "ms": 320 },
       "camera": { "eye": [-0.3, 1.6, 7.5], "look": [0.2, 1.0, -1.5], "fov": 40, "aspect": 1.3333, "breathe": 0.04,
                   "danger": { "zoom": 3.5, "height": 0.25, "lookAt": 0.62, "fovAdd": 10, "deg": 16, "ms": 1000, "rumble": 6 } },
-      "marks": { "hero": [-1.9, 0, 2.2], "monster": [0.5, 0, -1.5], "spacing": 1.8 },
+      "marks": { "hero": [-1.9, 0, 2.2], "monster": [0.5, 0, -1.5], "spacing": 1.8, "spacingMany": 1.4, "shiftMany": 0.8 },
       "heights": { "hero": 1.8, "monster": 1.6, "big": 3.0 }
     }
   ],

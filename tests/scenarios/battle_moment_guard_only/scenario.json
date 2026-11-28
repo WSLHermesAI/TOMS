@@ -1,0 +1,8 @@
+{
+  "_comment": "A monster attack's beat that can't be dodged (docs/gameplay/27 §2.3): the hivebear-free stone golem's attacks at random; this run's is a slam ('can't dodge'). The same swipe that dodges a lunge does nothing here: the hit lands.",
+  "scene": "battle",
+  "player": { "hp": 99999 },
+  "battle": { "enemy": "golem", "hp": 9999, "atk_interval_ms": 1500, "play": "weapon" },
+  "test": { "frames": 260, "drags": "300:640:470:640:6@212" },
+  "expect": { "battleEvents": { "moment": 1, "hit": 1, "dodge": 0 } }
+}

@@ -40,6 +40,7 @@ inline constexpr const char g_pszDataStoryCycles[]     = "data.story.cycles";   
 inline constexpr const char g_pszDataStoryEndings[]    = "data.story.endings";      // json ../data/story/endings.json
 inline constexpr const char g_pszDataStoryVars[]       = "data.story.vars";         // json ../data/story/vars.json
 inline constexpr const char g_pszDataText[]            = "data.text";               // json ../data/text.json
+inline constexpr const char g_pszDataTowerRun[]        = "data.tower_run";          // json ../data/tower_run.json
 inline constexpr const char g_pszDataVersion[]         = "data.version";            // json ../data/version.json
 inline constexpr const char g_pszDataWeaponPlay[]      = "data.weapon_play";        // json ../data/weapon_play.json
 inline constexpr const char g_pszDataWeaponTrial[]     = "data.weapon_trial";       // json ../data/weapon_trial.json
@@ -102,6 +103,7 @@ inline constexpr const char g_pszUiDialogs[]           = "ui.dialogs";          
 inline constexpr const char g_pszUiDialogue[]          = "ui.dialogue";             // file ui/dialogue.rml
 inline constexpr const char g_pszUiEnding[]            = "ui.ending";               // file ui/ending.rml
 inline constexpr const char g_pszUiHud[]               = "ui.hud";                  // file ui/hud.rml
+inline constexpr const char g_pszUiMain[]              = "ui.main";                 // file ui/main.rml
 inline constexpr const char g_pszUiMinigame[]          = "ui.minigame";             // file ui/minigame.rml
 inline constexpr const char g_pszUiOverlay[]           = "ui.overlay";              // file ui/overlay.rml
 inline constexpr const char g_pszUiPlayer[]            = "ui.player";               // file ui/player.rml
@@ -142,6 +144,7 @@ inline constexpr const char* g_arrAll[] = {
     g_pszDataStoryEndings,
     g_pszDataStoryVars,
     g_pszDataText,
+    g_pszDataTowerRun,
     g_pszDataVersion,
     g_pszDataWeaponPlay,
     g_pszDataWeaponTrial,
@@ -204,6 +207,7 @@ inline constexpr const char* g_arrAll[] = {
     g_pszUiDialogue,
     g_pszUiEnding,
     g_pszUiHud,
+    g_pszUiMain,
     g_pszUiMinigame,
     g_pszUiOverlay,
     g_pszUiPlayer,

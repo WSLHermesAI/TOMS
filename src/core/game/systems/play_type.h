@@ -30,7 +30,7 @@ inline PlayType f_PlayTypeFromString(const std::string& l_strS) {
     if (l_strS == "swipeGesture") return PlayType::eSWIPE_GESTURE;
     if (l_strS == "swipeRecall") return PlayType::eSWIPE_RECALL;
     if (l_strS == "swipeChain") return PlayType::eSWIPE_CHAIN;
-    if (l_strS == "drawShape" || l_strS == "shape") return PlayType::eDRAW_SHAPE;
+    if (l_strS == "drawShape" || l_strS == "shape") return PlayType::eDRAW_SHAPE;   // name-ok: a play type's old data name
     if (l_strS == "sequenceClick" || l_strS == "circles") return PlayType::eSEQUENCE_CLICK;
     if (l_strS == "pullRelease" || l_strS == "bow") return PlayType::ePULL_RELEASE;
     if (l_strS == "mash") return PlayType::eMASH;

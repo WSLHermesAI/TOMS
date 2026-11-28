@@ -83,6 +83,8 @@ inline constexpr const char g_pszTransform[]  = "transform";
 inline constexpr const char g_pszTravel[]     = "travel";
 inline constexpr const char g_pszUnleash[]    = "unleash";
 inline constexpr const char g_pszWin[]        = "win";
+inline constexpr const char g_pszClimbEnd[]   = "climbEnd";    // a climb ended: 1 cleared, 0 a death (27 §3.1)
+inline constexpr const char g_pszMoment[]     = "moment";      // a monster attack's beat began (27 §2)
 }  // namespace battle_event
 
 // A feel moment (battle.json "feel": its hit stop, shake and sound; FeelSettings).
@@ -267,6 +269,8 @@ inline constexpr const char g_pszStart[] = "start";
 
 // The start of a text key or an id the code builds from a name ("battle.play_hint_" + a play: "battle.play_hint_bow").
 namespace key_prefix {
+inline constexpr const char g_pszTowerCleared[] = "tower.cleared.";   // a run flag: that chapter cleared (docs/gameplay/27 §3.2)
+inline constexpr const char g_pszTowerPrologue[] = "tower.prologue";   // a run flag: the start story (the weapon trial) was begun in chapter 1
 inline constexpr const char g_pszBattlePlayHint[]  = "battle.play_hint_";
 inline constexpr const char g_pszTutorialPlay[]    = "tutorial.play_";      // the tutorial's fuller words for a play (+ its name)
 inline constexpr const char g_pszStory[]           = "story.";
@@ -275,5 +279,35 @@ inline constexpr const char g_pszStatEffect[]      = "stat.effect.";
 inline constexpr const char g_pszEvent[]           = "event_";
 inline constexpr const char g_pszPool[]            = "pool_";
 }  // namespace key_prefix
+
+// A monster attack's beat (docs/gameplay/27 §2): what the player answers with, the monster's pose, a way.
+namespace answer {
+inline constexpr const char g_pszGuard[] = "guard";   // the guard button
+inline constexpr const char g_pszDodge[] = "dodge";   // one swipe its way
+inline constexpr const char g_pszTap[]   = "tap";     // one tap on the beat
+inline constexpr const char g_pszTaps[]  = "taps";    // N taps in time
+inline constexpr const char g_pszShape[] = "shape";   // a shape drawn
+inline constexpr const char g_pszMove[]  = "move";    // waves, a swipe each
+}  // namespace answer
+namespace pose {
+inline constexpr const char g_pszLunge[]     = "lunge";
+inline constexpr const char g_pszSlam[]      = "slam";
+inline constexpr const char g_pszSweepLow[]  = "sweep_low";
+inline constexpr const char g_pszSweepHigh[] = "sweep_high";
+inline constexpr const char g_pszCast[]      = "cast";
+}  // namespace pose
+namespace way4 {
+inline constexpr const char g_pszLeft[]  = "left";
+inline constexpr const char g_pszRight[] = "right";
+inline constexpr const char g_pszUp[]    = "up";
+inline constexpr const char g_pszDown[]  = "down";
+}  // namespace way4
+
+// A chapter's place on the main screen's tower (docs/gameplay/27 §6): its band's look.
+namespace tower_state {
+inline constexpr const char g_pszCleared[] = "cleared";
+inline constexpr const char g_pszNext[]    = "next";
+inline constexpr const char g_pszLocked[]  = "locked";
+}  // namespace tower_state
 
 }  // namespace toms

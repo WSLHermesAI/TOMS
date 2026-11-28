@@ -15,7 +15,7 @@ add_library(toms_core STATIC
     ${L_ENGINE}/bitmap_font.cpp   # picture fonts: FontText (docs/engine/09_FONT_TOOL.md)
     ${L_ENGINE}/resource.cpp ${L_ENGINE}/resource_types.cpp ${L_ENGINE}/render_object.cpp   # docs/engine/12_RESOURCE_MANAGER.md
     ${L_GAME}/core/game.cpp ${L_GAME}/core/game_assets.cpp ${L_GAME}/core/game_ui.cpp
-    ${L_GAME}/core/game_scene_draw.cpp ${L_GAME}/core/game_walk3d.cpp ${L_GAME}/core/game_gauntlet.cpp ${L_GAME}/core/game_input.cpp ${L_GAME}/core/game_inventory.cpp
+    ${L_GAME}/core/game_scene_draw.cpp ${L_GAME}/core/game_walk3d.cpp ${L_GAME}/core/game_gauntlet.cpp ${L_GAME}/core/game_moment.cpp ${L_GAME}/core/game_tower.cpp ${L_GAME}/core/game_input.cpp ${L_GAME}/core/game_inventory.cpp
     ${L_GAME}/core/game_player_menu.cpp
     ${L_GAME}/core/game_store.cpp ${L_GAME}/core/game_combat.cpp ${L_GAME}/core/fighter_view.cpp ${L_GAME}/core/game_skills.cpp ${L_GAME}/core/game_story.cpp
     ${L_GAME}/core/game_title_glue.cpp
@@ -30,6 +30,7 @@ add_library(toms_core STATIC
     ${L_GAME}/systems/cycle_system.cpp ${L_GAME}/systems/roamer.cpp
     ${L_GAME}/systems/run_state.cpp ${L_GAME}/systems/floor_table.cpp
     ${L_GAME}/systems/weapon_play.cpp   # data/weapon_play.json (docs/gameplay/07 §5.6)
+    ${L_GAME}/systems/tower_run.cpp   # data/tower_run.json: stamina, chapters, a climb's score (docs/gameplay/27 §3)
     ${L_GAME}/systems/circle_symbols.cpp   # data/circle_symbols.json: the staff's circles as symbols (docs/gameplay/22 §5.1)
     ${L_GAME}/systems/combo_play.cpp    # Battle v3 point play (docs/gameplay/07 §4, §5.1)
     ${L_GAME}/systems/battle_party.cpp  # 1-3 monsters: targeting, the battle event log (docs/gameplay/13 §4.6)

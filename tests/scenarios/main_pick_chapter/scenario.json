@@ -1,0 +1,6 @@
+{
+  "_comment": "The main screen's way into a climb (docs/gameplay/27 §6): 'challenge the tower' opens the stories, the first (the orphan's) its chapters, chapter 1 starts the climb on F01 with full HP; the main screen closes.",
+  "scene": "main",
+  "test": { "frames": 70, "clicks": "515:709@10,512:182@25,512:182@40" },
+  "expect": { "scene": "stage", "stage": "F01", "tower": { "main": false, "climb": true } }
+}

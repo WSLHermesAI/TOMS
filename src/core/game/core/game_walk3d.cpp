@@ -15,6 +15,7 @@ using namespace toms::game_detail;
 
 nlohmann::json Game::f_Walk3DStage() const {
     if (!m_jStage3D.is_object() || m_oSt.m_iWidth <= 0 || m_oSt.m_iHeight <= 0) return nullptr;
+    if (m_bMainOpen) return nullptr;   // the main screen: outside the tower, no floor (docs/gameplay/27 §6)
     // the look: the floor's theme where data/stage3d.json has it (its painted textures, its light), else the default
     const nlohmann::json l_jLooks = m_jStage3D.value(toms::field::g_pszLooks, nlohmann::json::object());
     const std::string l_strLook = l_jLooks.contains(m_oSt.m_strTheme) ? m_oSt.m_strTheme : m_jStage3D.value(toms::field::g_pszDefaultLook, std::string("castle"));

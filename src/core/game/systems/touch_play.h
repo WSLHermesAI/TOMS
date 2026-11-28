@@ -170,6 +170,7 @@ public:
     // the long bow (m_fBowGrowPerSec > 0)
     bool f_GrowMode() const { return m_oS.m_fBowGrowPerSec > 0.0f; }
     void f_SetBowOrigin(glm::vec2 l_v2P) { m_oS.m_v2BowOrigin = l_v2P; }
+    void f_EndNow() { if (m_bRunning && !m_bDone) m_bDone = true; }   // over now: what was answered counts, the rest missed (a monster's attack beat)
     void f_CancelHold();   // the finger's hold let go with no shot (a pull, a stroke, a slide): a monster's attack begins
     // The bow's area moved on the screen (the camera came close on a monster for its special attack, or panned): the
     // target goes with it, so it stays by its monster and can still be shot (the owner, 2026-11-27).

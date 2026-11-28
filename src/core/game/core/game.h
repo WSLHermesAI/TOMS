@@ -14,7 +14,8 @@
 #include "object.h"      // Trackable base: Player/EnemyInst/CombatState/Game are tracked
 #include "render_iface.h"
 #include "game_state.h"  // toms::GameState — see Game::currentState()
-#include "save_slots.h"  // toms::SlotSummary -- the Save / Load screen's slot cards
+#include "save_slots.h"
+#include "tower_run.h"     // toms::TowerRunRules, StaminaClock: the tower in climbs (docs/gameplay/27 §3)  // toms::SlotSummary -- the Save / Load screen's slot cards
 #include "save_system.h" // toms::MetaSaveData — see Game::meta_ (Milestone 3; disk persistence is Milestone 5's job)
 #include "mission_system.h" // toms::MissionDefinition/MissionTracker — see Game::missionDefs_/missionTrackers_
 #include "power_bar.h"
@@ -253,6 +254,28 @@ struct CombatState : public Trackable {
     int m_iIntroOwner = -1;                          // -1 the hero (his colours, from the right); 0.. that monster (a boss's look, from the left)
     std::string m_strHeroIntroLabel, m_strIntroName; // the label's text key; the attack's name (already in the player's language)
     int m_iIntroFoeFire = -1;                        // a monster's special attack waits for its introduction, then lands (f_StartFoeIntro)
+    // A monster attack's beat (the owner, 2026-11-28; docs/gameplay/27 §2): the camera in on it, its pose and the player's
+    // answer (guard, dodge, tap, taps, shape, move), then the result; everything else waits. battle.json "attackMoment",
+    // enemies.json "attacks". f_StartAttackMoment / f_StepAttackMoment (game_moment.cpp).
+    struct Moment {
+        int m_iFoe = -1;                           // -1: none
+        int m_iPhase = 0;                          // 0 the camera comes in, 1 the answer, 2 the result
+        int m_iMs = 0;                             // in this phase
+        int m_iZoomMs = 300, m_iAnswerMs = 500, m_iResultMs = 500;
+        std::string m_strAnswer, m_strDodge, m_strPose, m_strShape;
+        bool m_bTell = false, m_bNoDodge = false, m_bNoGuard = false;
+        int m_iNeed = 1, m_iDone = 0;              // taps: how many, how many done
+        std::vector<std::string> m_vWaves;         // move: each wave's way
+        int m_iWaveMs = 500, m_iWavesDodged = 0;
+        int m_iOutcome = -1;                       // -1 not yet; 0 hit; 1 blocked; 2 parried; 3 dodged
+        bool m_bSpent = false;                     // a wrong answer: no second try
+        bool m_bDown = false;
+        glm::vec2 m_v2Down{0.0f};
+        std::vector<glm::vec2> m_vStroke;
+        std::string m_strHeroWay;                  // dodged: the way the hero stepped
+    } m_oMoment;
+    int m_iMomentOutcome = -1;                       // f_ResolveEnemyClockFire: the beat's answer (as Moment::m_iOutcome)
+    float m_fMomentDamage = 1.0f;                    // ...and its share of the damage (move: the waves not dodged)
     int m_iRevealMs = 0, m_iRevealMsMax = 0, m_iRevealFoe = -1;   // a boss's arrival: dark, then its colours come, then its banner
     int m_iTravelMs = 0, m_iTravelMsMax = 0;   // a boss sequence: the stage travelling to the next monster (everything waits)
     int m_iBossIntroMs = 0, m_iBossIntroMsMax = 0;   // a boss's introduction (f_StartBossIntro): time left; everything waits the same way
@@ -538,7 +561,7 @@ public:
     // as a modal overlay too, not just cs.active -- otherwise the world underneath (movement,
     // NPC interact, the store icon, Tab/B shortcuts) keeps responding to input while the victory
     // screen is still up. See docs/project/progress_report/PROGRESS_REPORT.md's Milestone 7 log for the report this fixes.
-    bool f_ModalActive() const { return m_oCs.m_bActive || m_oCs.m_bWon || m_oMiniGame.m_bOpen || m_bInDialogue || m_bStoreOpen || m_bStoreUnlockDlg || m_bStageSelectOpen || m_bStairsConfirmOpen || m_oTitle.f_IsOpen() || m_bInGameMenuOpen || f_EndingActive() || !m_vNotices.empty(); }  // any overlay open (combat/dialogue/inventory/store/stage-select/stairs-confirm/title/in-game menu/ending)
+    bool f_ModalActive() const { return m_oCs.m_bActive || m_oCs.m_bWon || m_oMiniGame.m_bOpen || m_bInDialogue || m_bStoreOpen || m_bStoreUnlockDlg || m_bStageSelectOpen || m_bStairsConfirmOpen || m_oTitle.f_IsOpen() || m_bInGameMenuOpen || f_EndingActive() || !m_vNotices.empty() || f_MainModal(); }  // any overlay open (combat/dialogue/inventory/store/stage-select/stairs-confirm/title/in-game menu/ending)
     bool f_CombatWon() const { return m_oCs.m_bWon; }
     bool f_CombatActive() const { return m_oCs.m_bActive; }
     // Dismisses the post-victory pause (mirrors handleTouch's existing tap-to-dismiss) -- the
@@ -867,7 +890,7 @@ private:
     nlohmann::json m_jBattle3DStage;                     // this battle's "stages3d" row (null: none); chosen when it opens
     int m_iBattle3DTimeMs = 0;                           // the camera's breathing
     glm::vec4 m_v4UiPlayerBox{262, 84, 134, 134};        // the layout's boxes (their shape is kept in 3D)
-    glm::vec4 m_arrUiFoeBox[toms::g_iMaxFoes] = {{652, 84, 134, 134}, {652, 84, 134, 134}, {652, 84, 134, 134}};
+    glm::vec4 m_arrUiFoeBox[toms::g_iMaxFoes] = {{652, 84, 134, 134}, {652, 84, 134, 134}, {652, 84, 134, 134}, {652, 84, 134, 134}};
     void f_PlaceBattle3DBoxes();
     // Design pixels -> world metres for a 2D drawing standing in the scene: pixel `anchor` at `at`, `metresPerPx` a pixel,
     // upright, parallel to the screen (facing the camera). Column 2 is the plane's normal.
@@ -953,7 +976,8 @@ private:
     // ---- a boss's fight as a sequence (game_gauntlet.cpp, docs/gameplay/25): its guards one at a time, then the boss ----
     struct Gauntlet {
         bool m_bOn = false;
-        std::vector<EnemyInst> m_vSteps;   // the guards, then the boss (last)
+        std::vector<EnemyInst> m_vSteps;   // each fight's lead: the guards' rounds, then the boss (last)
+        std::vector<std::vector<EnemyInst>> m_vParties;   // ...and who fights beside it (a round of 2 or 4: docs/gameplay/27 §3.3)
         int m_iStep = 0;                   // the fight now
         bool m_bAdvance = false;           // a guard just beaten: on to the next fight (no result screen)
     };
@@ -1289,7 +1313,71 @@ private:
     // The attack feel (docs/gameplay/20; data/battle.json "feelFx").
     void f_LaunchRain(const toms::ShowBeat& l_oB, int l_iFoe);
     // A monster's special attack (a powered move, feelFx "specialAttack"): its introduction before it lands (22 §4.2).
-    void f_StartFoeIntro(int l_iFoe);   // one of a move's falling projectiles (and its extras) at a monster
+    void f_StartFoeIntro(int l_iFoe);
+    // ---- the tower in climbs and the main screen (docs/gameplay/27 §3, §6; game_tower.cpp) ----
+    toms::TowerRunRules m_oTowerRules;
+    toms::StaminaClock m_oStamina;
+    int m_iStaminaLookMs = 0;
+    std::map<std::string, std::vector<std::string>> m_mapChapterFloors;   // a story chapter's floors (story/chapters/<id>.json)
+    std::map<std::string, std::string> m_mapChapterTitle;                 // ...and its title's text key
+    struct Climb {
+        bool m_bOn = false;
+        std::string m_strChapter;
+        std::vector<std::string> m_vFloors;
+        bool m_bChallenge = false;
+        float m_fHpX = 1.0f, m_fAtkX = 1.0f, m_fGoldX = 1.0f;
+        int m_iGold0 = 0, m_iCrystals0 = 0;                             // what the hero had at its start
+        int m_iMonsters = 0, m_iBestCombo = 0, m_iPerfects = 0, m_iDamage = 0;
+        long long m_llStart = 0;
+        std::set<std::string> m_setFloors;
+    } m_oClimb;
+    struct Tally {
+        bool m_bOpen = false, m_bCleared = false;
+        toms::ClimbStats m_oStats;
+        int m_iScore = 0;
+        std::string m_strRank;
+        int m_iGold = 0, m_iCrystals = 0, m_iLostGold = 0, m_iLostCrystals = 0, m_iBonus = 0;
+    } m_oTally;
+    bool m_bMainOpen = false, m_bNoStamina = false;
+    int m_iMainPanel = 0;                         // 0 none, 1 stories, 2 chapters, 3 village
+    std::string m_strMainStory;
+    void f_LoadTowerRules();
+    std::string f_StaminaPath() const;
+    void f_SaveStamina();
+    void f_StepStamina(int l_iDtMs);
+    bool f_PayFight();                            // a map fight in a climb: its stamina (false: not enough)
+    std::vector<std::string> f_ChapterFloors(const std::string& l_strOf) const;
+    bool f_ChapterCleared(const std::string& l_strId) const;
+    bool f_ChapterOpen(const toms::TowerChapter& l_oC) const;
+    std::string f_ChapterName(const toms::TowerChapter& l_oC) const;
+    void f_OpenMainScreen();
+    void f_CloseMainScreen();
+    const toms::TowerStory* f_MainStory() const;
+    void f_StartClimb(const std::string& l_strChapter);
+    void f_FillTally(bool l_bCleared);
+    void f_ClimbDied();
+    void f_ClimbCleared();
+    void f_TallyContinue();
+    void f_TallyHome();
+    bool f_ClimbStairs(const std::string& l_strTarget, bool l_bIsUp);   // true: the climb took the stairs (cleared, or not out of the chapter)
+    void f_ClimbFightOver(bool l_bWon);
+    void f_MainEvent(const std::string& l_strName, int l_iArg);
+    std::vector<std::string> f_VillagePlaces() const;
+    void f_FillMainUi(toms::UiMain& l_oM) const;
+    bool f_ClimbOn() const { return m_oClimb.m_bOn; }
+    bool f_MainModal() const { return m_bMainOpen || m_oTally.m_bOpen || m_bNoStamina; }
+    void f_BossOpener(int l_iFoe);                 // a boss's first move: its special, at once after its introduction (27 §3.3, Q133)
+    // a monster attack's beat (docs/gameplay/27 §2; game_moment.cpp)
+    bool f_UseAttackMoment(int l_iFoe) const;     // this attack plays one (not a special, a guard, a volley's next hit, the tutorial)
+    void f_StartAttackMoment(int l_iFoe);
+    void f_StepAttackMoment(int l_iDtMs);         // real time; everything else waits
+    void f_MomentImpact();                        // the hit lands (or is dodged): f_ResolveEnemyClockFire with the answer
+    bool f_MomentOn() const { return m_oCs.m_oMoment.m_iFoe >= 0; }
+    void f_MomentPointer(int l_iPhase, float l_fX, float l_fY);
+    void f_MomentGuard();
+    void f_MomentUi(toms::UiBattle& l_oB) const;
+    glm::vec4 f_MomentPose(int l_iFoe) const;     // the monster's pose: dx, dy (design px), x and y scale
+    glm::vec2 f_MomentHeroStep() const;           // the hero's dodge step (design px)   // one of a move's falling projectiles (and its extras) at a monster
     void f_LaunchBattleFx(const std::string& l_strEffect, glm::vec2 l_v2From, glm::vec2 l_v2To, int l_iFlightMs, const std::string& l_strImpact,
                           const std::string& l_strImpactSound);
     void f_FoeAttackFx(int l_iFoe, const toms::MoveDef& l_oMove, bool l_bReaches);   // its cast, a projectile or a strike, its sound (§5)
@@ -1310,7 +1398,7 @@ private:
     std::vector<glm::vec2> m_vComboPointsOnScreen;   // where the UI drew the track's points (GameUi, a frame late)
     // setBattleBoxes; the 1024 x 768 layout with one monster until told
     glm::vec4 m_v4PlayerBox{262, 84, 134, 134};
-    glm::vec4 m_arrFoeBox[toms::g_iMaxFoes] = {{652, 84, 134, 134}, {652, 84, 134, 134}, {652, 84, 134, 134}};
+    glm::vec4 m_arrFoeBox[toms::g_iMaxFoes] = {{652, 84, 134, 134}, {652, 84, 134, 134}, {652, 84, 134, 134}, {652, 84, 134, 134}};
     glm::vec4 f_FighterBox(int l_iWho) const { return l_iWho < 0 ? m_v4PlayerBox : m_arrFoeBox[std::min(l_iWho, toms::g_iMaxFoes - 1)]; }
     void f_UpdateBattleFx(int l_iDtMs);                      // Game::update
     std::string m_strPreviewHeldFile;                       // setPreviewHeld

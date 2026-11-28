@@ -15,6 +15,15 @@
 
 ## ▶ Next Step
 
+**The attack beat, boss rounds, the main screen and climbs by chapter** (2026-11-28; [DAILY_2026-11-28.md](DAILY_2026-11-28.md); docs/gameplay/27):
+- Every monster attack is a beat: the camera in, an answer read from its pose (guard, swipe, tap, taps, shape, waves), the
+  result, about 1-1.3 s, with no attacking meanwhile. 96 monsters' attacks are data.
+- Before a boss: rounds of 1, 2, 4 monsters (4 in a fight now); the boss opens with its special.
+- The main screen (story, then chapter); one chapter a climb; a death loses half the climb's gold and crystals; a tally;
+  stamina is 1 a fight and +1 every 5 min (stamina.json); Challenge Towers.
+- Later: the tutorial (the weapon trial) moved from New Game into chapter 1's first climb, so New Game shows the main screen.
+- Not committed. Changed-only 71 of 359, all passed. **Owner:** play the beat and the main screen; card fusion is next.
+
 **The long bow, Taichi Spin, the trial's weapons from a file, the camera in a boss's special, the memory blade** (2026-11-27, later; [DAILY_2026-11-27.md](DAILY_2026-11-27.md)):
 - The long bow: an aim line from the bow hand that grows to the target by level, stops there, is steered against its
   shake; damage by rings (DEX widens, STR adds). Its ultimate Taichi Spin: turn a Taichi for 5 s, 110 %-500 %.

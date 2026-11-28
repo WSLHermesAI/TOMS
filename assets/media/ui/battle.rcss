@@ -55,8 +55,8 @@ body { z-index: 30; }
 .intent.stagger .itext, .intent.broken .itext { color: #ffe27a; }
 /* one monster: "Slime HP 24" on one line; two or three: the name, and the HP under it (narrow slots) */
 .ftext.two { display: none; }
-.foe.n2 .ftext.one, .foe.n3 .ftext.one { display: none; }
-.foe.n2 .ftext.two, .foe.n3 .ftext.two { display: block; white-space: normal; }   /* a long name wraps too */
+.foe.n2 .ftext.one, .foe.n3 .ftext.one, .foe.n4 .ftext.one { display: none; }
+.foe.n2 .ftext.two, .foe.n3 .ftext.two, .foe.n4 .ftext.two { display: block; white-space: normal; }   /* a long name wraps too */
 /* two or three share the 390 px right of the player's HP bar */
 .foe.n2 { margin-left: 60px; width: 190px; }
 .foe.n2.f1 { margin-left: 260px; }
@@ -300,6 +300,15 @@ body { z-index: 30; }
 .foe.n3.f2 .fhp { top: 198px; width: 190px; }
 .foe.n3.f2 .ftext { top: 208px; width: 190px; }
 .foe.n3.f2 .intent { left: 18px; top: -242px; width: 154px; }
+/* four (a boss's third round, docs/gameplay/27 §3.3): a row across the middle */
+.foe.n4 { left: 50%; margin-left: -430px; top: 300px; width: 200px; height: 260px; }
+.foe.n4.f1 { margin-left: -210px; }
+.foe.n4.f2 { margin-left: 10px; }
+.foe.n4.f3 { margin-left: 230px; }
+.foe.n4 .fbox { left: 15px; top: 0; width: 170px; height: 170px; }
+.foe.n4 .fhp { top: 178px; width: 200px; height: 8px; }
+.foe.n4 .ftext { top: 188px; width: 200px; font-size: 17px; }
+.foe.n4 .intent { left: 15px; width: 170px; }
 
 /* the six cells (docs/gameplay/19 §2.1): in front of the monster, the near row on top */
 #cells { position: absolute; left: 50%; margin-left: -225px; top: 556px; width: 450px; height: 122px; transform-origin: 50% 100%; }
@@ -384,6 +393,14 @@ body.moment #play, body.moment .fhead, body.moment #chain, body.moment #crit, bo
     .foe.n3.f1 .intent { left: 125px; top: -25px; width: 110px; }
     .foe.n3.f2 { margin-left: 120px; top: 400px; }
     .foe.n3.f2 .intent { left: 40px; top: -325px; width: 110px; }
+    .foe.n4 { margin-left: -330px; top: 180px; width: 300px; height: 290px; }
+    .foe.n4.f1 { margin-left: 30px; }
+    .foe.n4.f2 { margin-left: -330px; top: 470px; }
+    .foe.n4.f3 { margin-left: 30px; top: 470px; }
+    .foe.n4 .fbox { left: 50px; width: 200px; height: 200px; }
+    .foe.n4 .fhp, .foe.n4 .ftext { width: 300px; }
+    .foe.n4 .fhp { top: 208px; }
+    .foe.n4 .ftext { top: 220px; }
 }
 
 /* a tall phone: the monsters lower, nearer the thumbs */
@@ -465,3 +482,11 @@ body.moment #play, body.moment .fhead, body.moment #chain, body.moment #crit, bo
 #gauntlet .gstep.boss.next .gname { color: #ff6050; font-size: 22px; }
 #gauntlet .gstep.boss.now { border-color: #ff6050; background-color: #401010e8; }
 #gauntlet .garrow { width: 0; height: 14px; margin: 2px auto; border-left-width: 3px; border-color: #a08a60; }
+
+/* a monster attack's beat (docs/gameplay/27 §2): its answer's word, the "can't" sign, the tap ring, the dots, the time */
+.tp.mtext  { font-size: 34px; color: #ffe066; font-effect: outline(3px #3a2400); text-align: center; }
+.tp.msign  { font-size: 22px; color: #ffffff; background-color: #b0202acc; border-radius: 8px; text-align: center; padding-top: 4px; }
+.tp.mring  { border-width: 4px; border-color: #ffe066; }
+.tp.mdot   { background-color: #ffffff66; }
+.tp.mdot.now { background-color: #ffe066; }
+.tp.mtime  { background-color: #ff7a3a; }

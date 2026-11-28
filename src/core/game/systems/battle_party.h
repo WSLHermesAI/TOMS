@@ -9,7 +9,7 @@
 
 namespace toms {
 
-constexpr int g_iMaxFoes = 3;   // monsters in one battle
+constexpr int g_iMaxFoes = 4;   // monsters in one battle (4: a boss's third round, docs/gameplay/27 §3.3)
 
 // The foe the target moves to: from `from`, `dir` steps (+1 next, -1 previous; 0 = stay), skipping the fallen, wrapping
 // around. `hp` is each foe's HP (<= 0: fallen). -1 when every foe has fallen.

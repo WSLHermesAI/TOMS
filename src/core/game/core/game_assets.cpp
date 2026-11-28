@@ -198,6 +198,7 @@ bool Game::f_LoadAssets(const std::string& l_strAssetDir) {
             m_oMonsterMp = toms::f_MonsterMpFromJson(l_jBj);   // a monster's MP (its special attacks cost it)
             m_oRun.f_SetBaseSuperMax(l_jBj.value(toms::field::g_pszSuperPoints, toms::RunStoryState::m_iDefaultSuperMax));   // the ultimate's points
             m_oTutorial = toms::f_TutorialFromJson(l_jBj);     // the new game's trial fight (docs/gameplay/19 B6)
+            f_LoadTowerRules();                                // data/tower_run.json, the stamina file (docs/gameplay/27 §3)
             m_oTouchSettings = toms::f_TouchPlayFromJson(l_jBj);   // the plays' numbers (docs/gameplay/16 §3)
             m_jFeelFx = l_jBj.value(toms::field::g_pszFeelFx, nlohmann::json::object());   // the attack feel (docs/gameplay/20)
             m_jBodyScale = l_jBj.value(toms::field::g_pszBodyScale, nlohmann::json::object());   // a monster's body type -> its size

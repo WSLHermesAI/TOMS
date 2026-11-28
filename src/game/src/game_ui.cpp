@@ -25,6 +25,7 @@ const DocSpec g_arrDocs[] = {
     {toms::key::g_pszUiDialogue,     [](const toms::UiState& l_oS) { return l_oS.m_oDialogue.m_bVisible; }},
     {toms::key::g_pszUiStore,        [](const toms::UiState& l_oS) { return l_oS.m_oStore.m_bVisible; }},
     {toms::key::g_pszUiStageSelect,  [](const toms::UiState& l_oS) { return l_oS.m_oStageSelect.m_bVisible; }},
+    {toms::key::g_pszUiMain,         [](const toms::UiState& l_oS) { return l_oS.m_oMain.m_bVisible; }},
     {toms::key::g_pszUiPlayer,       [](const toms::UiState& l_oS) { return l_oS.m_oPlayer.m_bVisible; }},
     {toms::key::g_pszUiSaveload,     [](const toms::UiState& l_oS) { return l_oS.m_oSaveload.m_bVisible; }},
     {toms::key::g_pszUiDialogs,      [](const toms::UiState& l_oS) { return l_oS.m_oStairs.m_bVisible || l_oS.m_oStore.m_bUnlockedDialog || l_oS.m_oNotice.m_bVisible; }},
@@ -454,6 +455,56 @@ void f_RegisterTypes(Rml::DataModelConstructor& l_oC) {
         l_oS.RegisterMember(toms::ui::g_pszCloseLabel, &UiStageSelect::m_strCloseLabel);
         l_oS.RegisterMember(toms::ui::g_pszRows, &UiStageSelect::m_vRows);
     }
+    if (auto l_oS = l_oC.RegisterStruct<UiTowerRow>()) {   // the main screen (docs/gameplay/27 §6)
+        l_oS.RegisterMember(toms::ui::g_pszLabel, &UiTowerRow::m_strLabel);
+        l_oS.RegisterMember(toms::ui::g_pszSub, &UiTowerRow::m_strSub);
+        l_oS.RegisterMember(toms::ui::g_pszState, &UiTowerRow::m_strState);
+        l_oS.RegisterMember(toms::ui::g_pszValue, &UiTowerRow::m_strValue);
+        l_oS.RegisterMember(toms::ui::g_pszEnabled, &UiTowerRow::m_bEnabled);
+    }
+    l_oC.RegisterArray<std::vector<UiTowerRow>>();
+    if (auto l_oS = l_oC.RegisterStruct<UiMain>()) {
+        l_oS.RegisterMember(toms::ui::g_pszVisible, &UiMain::m_bVisible);
+        l_oS.RegisterMember(toms::ui::g_pszHome, &UiMain::m_bHome);
+        l_oS.RegisterMember(toms::ui::g_pszPanel, &UiMain::m_iPanel);
+        l_oS.RegisterMember(toms::ui::g_pszTitle, &UiMain::m_strTitle);
+        l_oS.RegisterMember(toms::ui::g_pszSubtitle, &UiMain::m_strSubtitle);
+        l_oS.RegisterMember(toms::ui::g_pszPanelTitle, &UiMain::m_strPanelTitle);
+        l_oS.RegisterMember(toms::ui::g_pszHeroLevel, &UiMain::m_strHeroLevel);
+        l_oS.RegisterMember(toms::ui::g_pszHeroHp, &UiMain::m_strHeroHp);
+        l_oS.RegisterMember(toms::ui::g_pszHeroHpPct, &UiMain::m_fHeroHpPct);
+        l_oS.RegisterMember(toms::ui::g_pszHeroAtk, &UiMain::m_strHeroAtk);
+        l_oS.RegisterMember(toms::ui::g_pszHeroDef, &UiMain::m_strHeroDef);
+        l_oS.RegisterMember(toms::ui::g_pszAtkLabel, &UiMain::m_strAtkLabel);
+        l_oS.RegisterMember(toms::ui::g_pszDefLabel, &UiMain::m_strDefLabel);
+        l_oS.RegisterMember(toms::ui::g_pszHpLabel, &UiMain::m_strHpLabel);
+        l_oS.RegisterMember(toms::ui::g_pszGoldText, &UiMain::m_strGoldText);
+        l_oS.RegisterMember(toms::ui::g_pszCrystalsText, &UiMain::m_strCrystalsText);
+        l_oS.RegisterMember(toms::ui::g_pszStaminaText, &UiMain::m_strStaminaText);
+        l_oS.RegisterMember(toms::ui::g_pszStaminaNext, &UiMain::m_strStaminaNext);
+        l_oS.RegisterMember(toms::ui::g_pszClimbLabel, &UiMain::m_strClimbLabel);
+        l_oS.RegisterMember(toms::ui::g_pszVillageLabel, &UiMain::m_strVillageLabel);
+        l_oS.RegisterMember(toms::ui::g_pszBagLabel, &UiMain::m_strBagLabel);
+        l_oS.RegisterMember(toms::ui::g_pszShopLabel, &UiMain::m_strShopLabel);
+        l_oS.RegisterMember(toms::ui::g_pszQuestsLabel, &UiMain::m_strQuestsLabel);
+        l_oS.RegisterMember(toms::ui::g_pszRankLabel, &UiMain::m_strRankLabel);
+        l_oS.RegisterMember(toms::ui::g_pszHeroesLabel, &UiMain::m_strHeroesLabel);
+        l_oS.RegisterMember(toms::ui::g_pszBackLabel, &UiMain::m_strBackLabel);
+        l_oS.RegisterMember(toms::ui::g_pszTower, &UiMain::m_vTower);
+        l_oS.RegisterMember(toms::ui::g_pszRows, &UiMain::m_vRows);
+        l_oS.RegisterMember(toms::ui::g_pszTally, &UiMain::m_bTally);
+        l_oS.RegisterMember(toms::ui::g_pszTallyCleared, &UiMain::m_bTallyCleared);
+        l_oS.RegisterMember(toms::ui::g_pszTallyTitle, &UiMain::m_strTallyTitle);
+        l_oS.RegisterMember(toms::ui::g_pszTallyRank, &UiMain::m_strTallyRank);
+        l_oS.RegisterMember(toms::ui::g_pszTallyScore, &UiMain::m_strTallyScore);
+        l_oS.RegisterMember(toms::ui::g_pszTallyNote, &UiMain::m_strTallyNote);
+        l_oS.RegisterMember(toms::ui::g_pszTallyRows, &UiMain::m_vTallyRows);
+        l_oS.RegisterMember(toms::ui::g_pszContinueLabel, &UiMain::m_strContinueLabel);
+        l_oS.RegisterMember(toms::ui::g_pszHomeLabel, &UiMain::m_strHomeLabel);
+        l_oS.RegisterMember(toms::ui::g_pszNoStamina, &UiMain::m_bNoStamina);
+        l_oS.RegisterMember(toms::ui::g_pszNoStaminaText, &UiMain::m_strNoStaminaText);
+        l_oS.RegisterMember(toms::ui::g_pszWaitLabel, &UiMain::m_strWaitLabel);
+    }
     if (auto l_oS = l_oC.RegisterStruct<UiEnding>()) {
         l_oS.RegisterMember(toms::ui::g_pszVisible, &UiEnding::m_bVisible);
         l_oS.RegisterMember(toms::ui::g_pszName, &UiEnding::m_strName);
@@ -493,6 +544,7 @@ bool GameUi::f_Init(Rml::Context* l_pCtx, Game* l_pGame, const std::string& l_st
     l_oC.Bind(toms::ui::g_pszStairs, &m_oState.m_oStairs);
     l_oC.Bind(toms::ui::g_pszNotice, &m_oState.m_oNotice);
     l_oC.Bind(toms::ui::g_pszStageSelect, &m_oState.m_oStageSelect);
+    l_oC.Bind(toms::ui::g_pszMain, &m_oState.m_oMain);
     l_oC.Bind(toms::ui::g_pszEnding, &m_oState.m_oEnding);
     l_oC.Bind(toms::ui::g_pszMinigame, &m_oState.m_oMinigame);
     l_oC.Bind(toms::ui::g_pszOverlay, &m_oState.m_oOverlay);
@@ -629,6 +681,7 @@ void GameUi::f_Sync() {
     l_fnTake(m_oState.m_oStairs, l_oNext.m_oStairs);
     l_fnTake(m_oState.m_oNotice, l_oNext.m_oNotice);
     l_fnTake(m_oState.m_oStageSelect, l_oNext.m_oStageSelect);
+    l_fnTake(m_oState.m_oMain, l_oNext.m_oMain);
     l_fnTake(m_oState.m_oEnding, l_oNext.m_oEnding);
     l_fnTake(m_oState.m_oMinigame, l_oNext.m_oMinigame);   // a reward event (docs/gameplay/07 phase 6)
     if (l_oNext.m_oStore.m_bVisible || l_oNext.m_oStore.m_bUnlockedDialog) m_oState.m_oStore = std::move(l_oNext.m_oStore);
@@ -646,6 +699,7 @@ void GameUi::f_Sync() {
             {toms::ui::g_pszStore, m_oState.m_oStore.m_bVisible || m_oState.m_oStore.m_bUnlockedDialog},
             {toms::ui::g_pszMenu, m_oState.m_oMenu.m_bVisible},         {toms::ui::g_pszStairs, m_oState.m_oStairs.m_bVisible},
             {toms::ui::g_pszNotice, m_oState.m_oNotice.m_bVisible},     {toms::ui::g_pszStageSelect, m_oState.m_oStageSelect.m_bVisible},
+            {toms::ui::g_pszMain, m_oState.m_oMain.m_bVisible},
             {toms::ui::g_pszEnding, m_oState.m_oEnding.m_bVisible},     {toms::ui::g_pszMinigame, m_oState.m_oMinigame.m_bVisible},
         };
         static_assert(std::size(l_arrScreens) <= m_nScreens, "GameUi::m_arrWasShown: one per screen");

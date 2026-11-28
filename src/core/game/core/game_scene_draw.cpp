@@ -23,6 +23,7 @@ void Game::f_Draw() {
     // M7 (first slice): an active ending takes over the whole screen the same way the title does
     // -- nothing behind it is meaningful once a run has actually ended (see triggerEnding()).
     if (f_EndingActive()) { f_DrawPreviewAnim(); f_EndSprites(); return; }
+    if (m_bMainOpen) { f_EndSprites(); return; }   // the main screen (docs/gameplay/27 §6): outside the tower, no floor behind it
     const bool l_bShowStore = f_StoreModal();
     // Milestone 7 bugfix (still relevant under Battle System v2): this used to fall back to
     // scanning cs.log for the substring "倒下" to keep the overlay open during the brief post-lose

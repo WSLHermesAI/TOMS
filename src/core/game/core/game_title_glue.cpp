@@ -131,6 +131,8 @@ void Game::f_ApplyLoadedRun(const toms::MetaSaveData& l_oM, const toms::RunSaveD
     f_LoadStage(l_oR.m_strCurrentStageId.empty() ? std::string("stage01") : l_oR.m_strCurrentStageId);
     m_oTitle.f_Close();
     m_oTitle.f_SetRunInProgress(true);
+    m_oClimb = Climb{}; m_oTally = Tally{}; m_bNoStamina = false;
+    if (m_oTowerRules.m_bOn) f_OpenMainScreen();   // back from the title: the main screen (docs/gameplay/27 §6)
 }
 
 bool Game::f_ContinueFromSlot(int l_iSlot) {
@@ -159,12 +161,12 @@ void Game::f_NewGame() { f_NewGame(0); }
 void Game::f_HandleTitleAction(toms::TitleAction l_eA) {
     switch (l_eA) {
         case toms::TitleAction::NewGame:             // then the start story (docs/gameplay/07 phase 3)
-            f_NewGame();
-            if (!m_bSkipStartStory) f_StartWeaponTrial();
+            f_NewGame();   // the tower on: the main screen; the start story comes with chapter 1's first climb (game_tower.cpp)
+            if (!m_bSkipStartStory && !m_oTowerRules.m_bOn) f_StartWeaponTrial();
             break;
         case toms::TitleAction::StartNewGameInSlot:
             f_NewGame(m_oTitle.f_PendingSlot());
-            if (!m_bSkipStartStory) f_StartWeaponTrial();
+            if (!m_bSkipStartStory && !m_oTowerRules.m_bOn) f_StartWeaponTrial();
             break;
         case toms::TitleAction::LoadSlot:            f_ContinueFromSlot(m_oTitle.f_PendingSlot()); break;
         case toms::TitleAction::OpenContinue:        f_RefreshSlots(); break;   // always show current files

@@ -73,3 +73,7 @@ Down the left side of the battle screen, one block a fight, the boss's at the bo
 | **Q124** Each guard pays as a normal win (gold, EXP, card)? | yes (built) | yes |  |
 | **Q125** A loss: start again from the first guard, or from the fight lost? | from the first guard (built) | from the first guard |  |
 | **Q126** The guards waiting further on: show them standing in the distance, or only on the ladder? | — | — | **in the distance, as dark shapes** (the owner, 2026-11-22) |
+
+## 6. Since 2026-11-28: rounds of 1, 2, 4
+
+The guards now come in **rounds** (the owner; [27](27_ATTACK_MOMENT_AND_TOWER_RUN.md) §3.3): one monster, then two together, then four together, taken from the guards' kinds in turn (battle.json `"gauntlet"` `"rounds"`: [1, 2, 4]; without it, each guard alone as above). The ladder shows a round as its lead with "x2" / "x4". The boss then opens with its special at once.
